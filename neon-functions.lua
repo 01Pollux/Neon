@@ -48,6 +48,7 @@ function link_engine_library()
     links
     {
         "NeonEngine",
+        "Flecs",
         "d3d12",
         "dxgi",
     }
@@ -58,4 +59,21 @@ function select_launch_kind()
     filter "configurations: Dist"
         kind "WindowedApp"
     filter {}
+end
+
+function common_neon()
+    defines "flecs_STATIC"
+
+    files
+    {
+        "**.cpp",
+        "**.hpp",
+        "**.natvis"
+    }
+
+    includedirs
+    {
+        "%{CommonDir.Deps.Inc}",
+        "%{prj.location}"
+    }
 end

@@ -7,17 +7,9 @@ project "NeonEngine"
     
 	common_dir_setup()
     common_add_pch("EnginePCH")
-    
-    files
-    {
-        "**.cpp",
-        "**.hpp",
-        "**.natvis"
-    }
+    common_neon()
 
     includedirs
     {
-        "%{CommonDir.Neon.Engine}",
-        "%{CommonDir.Deps.Inc}",
-        "%{prj.location}"
+        "%{CommonDir.Neon.Engine}"
     }

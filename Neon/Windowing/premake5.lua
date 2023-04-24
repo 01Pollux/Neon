@@ -7,17 +7,9 @@ project "NeonWindowing"
     
 	common_dir_setup()
     common_add_pch("WindowPCH")
+    common_neon()
     
-    files
-    {
-        "**.cpp",
-        "**.hpp",
-        "**.natvis"
-    }
-
     includedirs
     {
-        "%{CommonDir.Neon.Windowing}",
-        "%{CommonDir.Deps.Inc}",
-        "%{prj.location}"
+        "%{CommonDir.Neon.Windowing}"
     }

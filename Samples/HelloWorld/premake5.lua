@@ -6,19 +6,11 @@ project "HelloWorld"
 
     select_launch_kind()
     common_dir_setup()
-
-    files
-    {
-        "**.cpp",
-        "**.hpp",
-        "**.natvis"
-    }
+    common_neon()
 
     includedirs
     {
-        "%{CommonDir.Deps.Inc}",
-        "%{CommonDir.Neon.Engine}",
-        "%{prj.location}"
+        "%{CommonDir.Neon.Engine}"
     }
 
     link_engine_library()

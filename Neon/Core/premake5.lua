@@ -7,17 +7,9 @@ project "NeonCore"
     
 	common_dir_setup()
     common_add_pch("CorePCH")
-    
-    files
-    {
-        "**.cpp",
-        "**.hpp",
-        "**.natvis"
-    }
+    common_neon()
 
     includedirs
     {
-        "%{CommonDir.Neon.Core}",
-        "%{CommonDir.Deps.Inc}",
-        "%{prj.location}"
+        "%{CommonDir.Neon.Core}"
     }
