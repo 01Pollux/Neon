@@ -54,9 +54,11 @@ function link_engine_library()
 end
 
 function select_launch_kind()
-    kind "ConsoleApp"
-    filter "configurations: Dist"
+    filter "configurations:Dist"
         kind "WindowedApp"
+    filter {}
+    filter "configurations:not Dist"
+        kind "ConsoleApp"
     filter {}
 end
 
