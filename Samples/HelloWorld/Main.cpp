@@ -1,8 +1,9 @@
-#include <iostream>
 #include <Runtime/GameEngine.hpp>
 
-int main()
+int Neon::Main(
+    int      argc,
+    wchar_t* argv[])
 {
-	Neon::DefaultGameEngine Engine;
-	return Engine.Run();
+    DefaultGameEngine Engine;
+    return Engine.Run();
 }

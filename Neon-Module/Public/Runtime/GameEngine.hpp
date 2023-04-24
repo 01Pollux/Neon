@@ -2,22 +2,26 @@
 
 namespace Neon
 {
-	class DefaultGameEngine
-	{
-	public:
-		DefaultGameEngine();
+    extern int Main(
+        int      argc,
+        wchar_t* argv[]);
 
-		DefaultGameEngine(const DefaultGameEngine&) = delete;
-		DefaultGameEngine& operator=(const DefaultGameEngine&) = delete;
+    class DefaultGameEngine
+    {
+    public:
+        DefaultGameEngine();
 
-		DefaultGameEngine(DefaultGameEngine&&) = delete;
-		DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
+        DefaultGameEngine(const DefaultGameEngine&)            = delete;
+        DefaultGameEngine& operator=(const DefaultGameEngine&) = delete;
 
-		~DefaultGameEngine();
+        DefaultGameEngine(DefaultGameEngine&&)             = delete;
+        DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
 
-		/// <summary>
-		/// Run the engine and return when the engine is closed or an error occurs.
-		/// </summary>
-		int Run();
-	};
-}
+        ~DefaultGameEngine();
+
+        /// <summary>
+        /// Run the engine and return when the engine is closed or an error occurs.
+        /// </summary>
+        int Run();
+    };
+} // namespace Neon
