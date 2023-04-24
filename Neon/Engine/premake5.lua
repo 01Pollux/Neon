@@ -1,4 +1,4 @@
-project "Engine"
+project "NeonEngine"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"

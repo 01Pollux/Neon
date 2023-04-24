@@ -5,7 +5,7 @@ namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine()
     {
-        ImportModule<Module::Core>();
+        //ImportModule<Module::Core>();
     }
 
     DefaultGameEngine::~DefaultGameEngine()

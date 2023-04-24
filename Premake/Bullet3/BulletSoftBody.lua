@@ -20,7 +20,7 @@ project "BulletSoftBody"
 
 	includedirs
 	{
-        "%{CommonDir.Deps.Inc}/Externals/Bullet3/src"
+        "%{CommonDir.Deps.Inc}/Bullet3"
 	}
 
 	files

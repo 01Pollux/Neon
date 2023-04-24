@@ -47,7 +47,7 @@ end
 function link_engine_library()
     links
     {
-        "Neon/Engine",
+        "NeonEngine",
         "d3d12",
         "dxgi",
     }

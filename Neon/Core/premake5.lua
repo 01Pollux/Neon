@@ -1,4 +1,4 @@
-project "Core"
+project "NeonCore"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"

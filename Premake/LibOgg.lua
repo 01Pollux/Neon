@@ -18,7 +18,7 @@ project "LibOgg"
 	
     includedirs
     {
-        "%{CommonDir.Deps.Inc}/Externals/libogg-1.3.0/include"
+        "%{CommonDir.Deps.Inc}/LibOgg"
     }
 
 	disablewarnings

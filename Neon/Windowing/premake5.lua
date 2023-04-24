@@ -1,4 +1,4 @@
-project "Windowing"
+project "NeonWindowing"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"

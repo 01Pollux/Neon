@@ -85,10 +85,11 @@ Copy-IncludePath "ImGui\misc" "ImGui" -Recurse
 #
 Write-Output "Copying LibOgg files..."
 Remove-Directory $(Get-DepIncPath("LibOgg"))
-Make-Directory $(Get-DepIncPath("LibOgg"))
+Make-Directory $(Get-DepIncPath("LibOgg\ogg"))
 
 Copy-Item Premake\LibOgg.lua $(Get-DepSrcPath("libogg-1.3.0\premake5.lua"))
 
+Copy-IncludePath "libogg-1.3.0\include\ogg\*.h" "LibOgg\ogg"
 Copy-IncludePath "libogg-1.3.0\include\ogg\*.h" "LibOgg"
 
 
