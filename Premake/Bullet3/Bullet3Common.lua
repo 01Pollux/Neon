@@ -20,7 +20,7 @@ project "Bullet3Common"
 
 	includedirs
 	{
-        "%{IncludeDir.NeonDeps}/Externals/Bullet3/src"
+        "%{CommonDir.Deps.Inc}/Externals/Bullet3/src"
 	}
 
 	files

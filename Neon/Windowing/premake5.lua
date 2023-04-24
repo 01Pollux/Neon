@@ -1,4 +1,4 @@
-project "Neon-Module"
+project "Windowing"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
@@ -6,7 +6,7 @@ project "Neon-Module"
     architecture "x86_64"
     
 	common_dir_setup()
-    common_add_pch("NModulePCH")
+    common_add_pch("WindowPCH")
     
     files
     {
@@ -17,6 +17,7 @@ project "Neon-Module"
 
     includedirs
     {
-        "%{IncludeDir.NeonModule}",
+        "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Deps.Inc}",
         "%{prj.location}"
     }

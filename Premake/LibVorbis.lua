@@ -42,7 +42,7 @@ project "LibVorbis"
 	{
         "./include",
         "./lib",
-        "%{IncludeDir.NeonDeps}/Externals/libogg-1.3.0/include"
+        "%{CommonDir.Deps.Inc}/Externals/libogg-1.3.0/include"
 	}
 
     disablewarnings

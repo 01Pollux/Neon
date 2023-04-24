@@ -1,12 +1,13 @@
-project "HelloWorld"
+project "Engine"
+    kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
     staticruntime "On"
     architecture "x86_64"
-
-    select_launch_kind()
-    common_dir_setup()
-
+    
+	common_dir_setup()
+    common_add_pch("EnginePCH")
+    
     files
     {
         "**.cpp",
@@ -16,10 +17,7 @@ project "HelloWorld"
 
     includedirs
     {
-        "%{CommonDir.Deps.Inc}",
         "%{CommonDir.Neon.Engine}",
+        "%{CommonDir.Deps.Inc}",
         "%{prj.location}"
     }
-
-    link_engine_library()
-    copy_engine_resources()

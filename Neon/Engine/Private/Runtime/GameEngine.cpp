@@ -1,10 +1,11 @@
-#include <NModulePCH.hpp>
+#include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine()
     {
+        ImportModule<Module::Core>();
     }
 
     DefaultGameEngine::~DefaultGameEngine()
@@ -24,10 +25,10 @@ namespace Neon
 
 #define NEON_ENTRTY_POINT()
 int WINAPI wWinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPTSTR    lpCmdLine,
-    int       nShowCmd)
+    HINSTANCE,
+    HINSTANCE,
+    LPTSTR,
+    int)
 {
     return Neon::Main(__argc, __wargv);
 }
@@ -35,10 +36,10 @@ int WINAPI wWinMain(
 #else
 
 int main(
-    int       argc,
-    wchar_t** argv)
+    int       Argc,
+    wchar_t** Argv)
 {
-    return Neon::Main(argc, argv);
+    return Neon::Main(Argc, Argv);
 }
 
 #endif

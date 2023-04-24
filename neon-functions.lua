@@ -16,8 +16,8 @@ end
 function copy_engine_resources()
     copyres_and_remove_extension("Assets")
 
-    copy_to_targetdir("%{IncludeDir.NeonDepsLib}/DxC/bin/x86_64", "dxcompiler.dll")
-    copy_to_targetdir("%{IncludeDir.NeonDepsLib}/DxC/bin/x86_64", "dxil.dll")
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxcompiler.dll")
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxil.dll")
 end
 
 function common_dir_setup()
@@ -47,7 +47,7 @@ end
 function link_engine_library()
     links
     {
-        "Neon-Module",
+        "Neon/Engine",
         "d3d12",
         "dxgi",
     }

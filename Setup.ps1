@@ -58,7 +58,7 @@ Function Make-Directory
 #
 # flecs
 #
-Write-Output "Inserting flecs files..."
+Write-Output "Copying flecs files..."
 Copy-Item Premake\flecs.lua $(Get-DepSrcPath("flecs\premake5.lua"))
 
 Remove-Directory $(Get-DepIncPath("flecs"))
@@ -68,7 +68,7 @@ Copy-Item -Recurse $(Get-DepSrcPath("flecs\include")) $(Get-DepIncPath("flecs"))
 #
 # ImGui
 #
-Write-Output "Inserting ImGui files..."
+Write-Output "Copying ImGui files..."
 Remove-Directory $(Get-DepIncPath("ImGui"))
 Make-Directory $(Get-DepIncPath("ImGui\backends"))
 Make-Directory $(Get-DepIncPath("ImGui\misc"))
@@ -83,7 +83,7 @@ Copy-IncludePath "ImGui\misc" "ImGui" -Recurse
 #
 # LibOgg
 #
-Write-Output "Inserting LibOgg files..."
+Write-Output "Copying LibOgg files..."
 Remove-Directory $(Get-DepIncPath("LibOgg"))
 Make-Directory $(Get-DepIncPath("LibOgg"))
 
@@ -95,7 +95,7 @@ Copy-IncludePath "libogg-1.3.0\include\ogg\*.h" "LibOgg"
 #
 # Vorbis
 #
-Write-Output "Inserting Vorbis files..."
+Write-Output "Copying Vorbis files..."
 Remove-Directory $(Get-DepIncPath("Vorbis"))
 Make-Directory $(Get-DepIncPath("Vorbis"))
 
@@ -107,7 +107,7 @@ Copy-IncludePath "vorbis\include\vorbis\*.h" "Vorbis"
 #
 # ZipLib
 #
-Write-Output "Inserting ZipLib files..."
+Write-Output "Copying ZipLib files..."
 Remove-Directory $(Get-DepIncPath("ZipLib"))
 Make-Directory $(Get-DepIncPath("ZipLib"))
 
@@ -129,7 +129,7 @@ Copy-Item $(Get-DepSrcPath("ZipLib\extlibs\bzip2")) $(Get-DepIncPath("ZipLib\ext
 #
 # Bullet3
 #
-Write-Output "Inserting Bullet3 files..."
+Write-Output "Copying Bullet3 files..."
 Remove-Directory $(Get-DepIncPath("Bullet3"))
 Make-Directory $(Get-DepIncPath("Bullet3"))
 
