@@ -1,11 +1,12 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
+#include <Module/Core.hpp>
 
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine()
     {
-        //ImportModule<Module::Core>();
+        ImportModule<Module::Core>();
     }
 
     DefaultGameEngine::~DefaultGameEngine()

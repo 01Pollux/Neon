@@ -11,5 +11,6 @@ project "NeonWindowing"
     
     includedirs
     {
+        "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Windowing}"
     }

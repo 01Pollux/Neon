@@ -9,7 +9,13 @@ project "NeonEngine"
     common_add_pch("EnginePCH")
     common_neon()
 
+    links
+    {
+        "NeonCore"
+    }
+
     includedirs
     {
+        "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Engine}"
     }

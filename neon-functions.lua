@@ -48,7 +48,6 @@ function link_engine_library()
     links
     {
         "NeonEngine",
-        "Flecs",
         "d3d12",
         "dxgi",
     }
@@ -63,6 +62,11 @@ end
 
 function common_neon()
     defines "flecs_STATIC"
+
+    links
+    {
+        "Flecs"
+    }
 
     files
     {
