@@ -26,6 +26,7 @@
 *.vcxproj*
 *.sln
 .vs/*
+Deps/Public/*
 
 # Premake5's generated files
 bin/*
