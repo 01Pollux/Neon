@@ -5,7 +5,7 @@
 
 namespace Neon::Windowing
 {
-    enum class EWindowStyle
+    enum class EWindowStyle : uint8_t
     {
         TitleBar,
         Resize,
@@ -102,9 +102,11 @@ namespace Neon::Windowing
 
         /// <summary>
         /// Peek event with option to erase it from the queue
-        /// returns nullptr if no event is available
+        /// return true if event was found, false otherwise
         /// </summary>
-        [[nodiscard]] virtual const Event* PeekEvent(
-            bool Erase) const = 0;
+        [[nodiscard]] virtual bool PeekEvent(
+            Event* Msg,
+            bool   Erase = true,
+            bool   Block = false) = 0;
     };
 } // namespace Neon::Windowing

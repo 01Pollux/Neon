@@ -15,10 +15,25 @@ namespace Neon
 
     int DefaultGameEngine::Run()
     {
-        while (true)
+        std::optional<int> ExitCode;
+        Windowing::Event   Msg;
+
+        while (!ExitCode)
         {
+            while (m_Window->PeekEvent(&Msg))
+            {
+                if (auto Close = std::get_if<Windowing::Events::Close>(&Msg))
+                {
+                    ExitCode = Close->ExitCode;
+                }
+                else if (auto SizeChanged = std::get_if<Windowing::Events::SizeChanged>(&Msg))
+                {
+                    printf("%i,%i\n", SizeChanged->NewSize.Width(), SizeChanged->NewSize.Height());
+                }
+            }
         }
-        return 0;
+
+        return *ExitCode;
     }
 
     //

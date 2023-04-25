@@ -3,15 +3,25 @@
 #include <Window/Window.hpp>
 #include <Private/Window/WindowHeaders.hpp>
 
+#include <queue>
+
 namespace Neon::Windowing
 {
+    enum class EWindowFlags : uint8_t
+    {
+        Resizing,
+
+        _Last_Enum
+    };
+    using MWindowFlags = BitMask<EWindowFlags>;
+
     class WindowApp final : public IWindowApp
     {
     public:
         WindowApp(
-            const String& Title,
-            const Size2I& Size,
-            MWindowStyle  Style);
+            const String&       Title,
+            const Size2I&       Size,
+            const MWindowStyle& Style);
 
         ~WindowApp() override;
 
@@ -46,8 +56,10 @@ namespace Neon::Windowing
 
         [[nodiscard]] bool hasFocus() const override;
 
-        [[nodiscard]] const Event* PeekEvent(
-            bool Erase) const override;
+        [[nodiscard]] bool PeekEvent(
+            Event* Msg,
+            bool   Erase,
+            bool   Block) override;
 
     public:
         static LRESULT WndProc(
@@ -65,6 +77,14 @@ namespace Neon::Windowing
             DWORD_PTR RefData);
 
     private:
+        void ProcessMessages();
+
+        /// <summary>
+        /// Emplace an event into the event queue.
+        /// </summary>
+        void QueueEvent(
+            Event Msg);
+
         void ProcessMessage(
             UINT   Message,
             WPARAM wParam,
@@ -72,5 +92,9 @@ namespace Neon::Windowing
 
     private:
         HWND m_Handle = nullptr;
+
+        std::queue<Event> m_PendingEvents;
+        Size2I            m_WindowSize;
+        MWindowFlags      m_WindowFlags;
     };
 } // namespace Neon::Windowing

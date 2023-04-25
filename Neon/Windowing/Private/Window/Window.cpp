@@ -169,9 +169,10 @@ namespace Neon::Windowing
     }
 
     WindowApp::WindowApp(
-        const String& Title,
-        const Size2I& Size,
-        MWindowStyle  Style)
+        const String&       Title,
+        const Size2I&       Size,
+        const MWindowStyle& Style) :
+        m_WindowSize(Size)
     {
         Impl::InitializeClassName();
 
@@ -252,7 +253,9 @@ namespace Neon::Windowing
 
     Size2I WindowApp::GetSize() const
     {
-        throw std::logic_error("Not implemented");
+        RECT Rect;
+        GetClientRect(m_Handle, &Rect);
+        return { Rect.right - Rect.left, Rect.bottom - Rect.top };
     }
 
     void WindowApp::SetSize(
@@ -295,10 +298,34 @@ namespace Neon::Windowing
         throw std::logic_error("Not implemented");
     }
 
-    const Event* WindowApp::PeekEvent(
-        bool Erase) const
+    bool WindowApp::PeekEvent(
+        Event* Msg,
+        bool   Erase,
+        bool   Block)
     {
-        throw std::logic_error("Not implemented");
+        if (m_PendingEvents.empty())
+        {
+            ProcessMessages();
+            if (Block)
+            {
+                while (m_PendingEvents.empty())
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    ProcessMessages();
+                }
+            }
+            else if (m_PendingEvents.empty())
+            {
+                return false;
+            }
+        }
+
+        *Msg = m_PendingEvents.back();
+        if (Erase)
+        {
+            m_PendingEvents.pop();
+        }
+        return true;
     }
 
 } // namespace Neon::Windowing

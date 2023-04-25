@@ -11,13 +11,9 @@ namespace Neon::Windowing
         WPARAM wParam,
         LPARAM lParam)
     {
-        switch (Message)
-        {
-        [[unlikely]] case WM_DESTROY:
+        if (Message == WM_DESTROY) [[unlikely]]
         {
             PostQuitMessage(0);
-            return 0;
-        }
         }
         return DefWindowProc(Handle, Message, wParam, lParam);
     }
@@ -49,10 +45,66 @@ namespace Neon::Windowing
         return DefSubclassProc(Handle, Message, wParam, lParam);
     }
 
+    //
+
+    void WindowApp::ProcessMessages()
+    {
+        MSG Msg;
+        while (PeekMessage(&Msg, nullptr, 0, 0, PM_REMOVE))
+        {
+            if (Msg.message == WM_QUIT)
+            {
+                QueueEvent(Events::Close{ .ExitCode = int(Msg.wParam) });
+            }
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
+    }
+
+    void WindowApp::QueueEvent(
+        Event Msg)
+    {
+        m_PendingEvents.emplace(std::move(Msg));
+    }
+
     void WindowApp::ProcessMessage(
         UINT   Message,
         WPARAM wParam,
         LPARAM lParam)
     {
+        switch (Message)
+        {
+        case WM_SIZE:
+        {
+            Size2I Size = GetSize(); // TODO: Use wParam
+
+            if (wParam != SIZE_MINIMIZED &&
+                !m_WindowFlags.Test(EWindowFlags::Resizing) &&
+                m_WindowSize != Size)
+            {
+                m_WindowSize = Size;
+                QueueEvent(Events::SizeChanged{
+                    .NewSize = Size });
+            }
+        }
+        case WM_ENTERSIZEMOVE:
+        {
+            m_WindowFlags.Set(EWindowFlags::Resizing);
+            break;
+        }
+        case WM_EXITSIZEMOVE:
+        {
+            Size2I Size = GetSize(); // TODO: Use wParam
+            m_WindowFlags.Set(EWindowFlags::Resizing, false);
+
+            if (m_WindowSize != Size)
+            {
+                m_WindowSize = Size;
+                QueueEvent(Events::SizeChanged{
+                    .NewSize = Size });
+            }
+            break;
+        }
+        }
     }
 } // namespace Neon::Windowing
