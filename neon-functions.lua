@@ -51,6 +51,12 @@ function link_engine_library()
         "d3d12",
         "dxgi",
     }
+    includedirs
+    {
+        "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Neon.Engine}",
+    }
 end
 
 function select_launch_kind()

@@ -1,0 +1,16 @@
+#pragma once
+#include "Core/String.hpp"
+
+namespace Neon::Config
+{
+    struct WindowConfig
+    {
+        String Title = STR("Neon");
+        Size2I Size  = { 1280, 720 };
+
+        bool StartFullScreen : 1 = false;
+        bool WithCloseButton : 1 = true;
+        bool CanResize       : 1 = true;
+        bool HasTitleBar     : 1 = true;
+    };
+} // namespace Neon::Config

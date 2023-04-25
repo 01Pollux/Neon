@@ -8,10 +8,5 @@ project "HelloWorld"
     common_dir_setup()
     common_neon()
 
-    includedirs
-    {
-        "%{CommonDir.Neon.Engine}"
-    }
-
     link_engine_library()
     copy_engine_resources()

@@ -9,6 +9,11 @@ project "NeonWindowing"
     common_add_pch("WindowPCH")
     common_neon()
     
+    links
+    {
+        "Comctl32"
+    }
+
     includedirs
     {
         "%{CommonDir.Neon.Core}",
