@@ -327,16 +327,37 @@ namespace Neon::Windowing
     }
 
     void WindowApp::SetIcon(
-        const StringU8& IconPath)
-    {
-        throw std::logic_error("Not implemented");
-    }
-
-    void WindowApp::SetIcon(
         const void*      IconData,
         const Vector2DI& Size)
     {
-        throw std::logic_error("Not implemented");
+        if (m_Icon)
+            DestroyIcon(m_Icon);
+
+        if (!IconData)
+        {
+            m_Icon = nullptr;
+            return;
+        }
+
+        // Create the icon from the pixel array
+        m_Icon = CreateIcon(
+            GetModuleHandleW(nullptr),
+            Size.x(),
+            Size.y(),
+            1,
+            32,
+            nullptr,
+            std::bit_cast<const uint8_t*>(IconData));
+
+        if (m_Icon)
+        {
+            SendMessageW(m_Handle, WM_SETICON, ICON_BIG, std::bit_cast<LPARAM>(m_Icon));
+            SendMessageW(m_Handle, WM_SETICON, ICON_SMALL, std::bit_cast<LPARAM>(m_Icon));
+        }
+        else
+        {
+            NEON_WARNING("Failed to set the window's icon");
+        }
     }
 
     void WindowApp::SetVisible(

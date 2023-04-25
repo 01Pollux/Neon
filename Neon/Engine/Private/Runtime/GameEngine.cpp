@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
+#include <fstream>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -63,5 +65,19 @@ namespace Neon
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
         m_Window.reset(Windowing::IWindowApp::Create(Config.Title, Config.Size, Style));
+
+        std::vector<uint8_t> IconData(100 * 100 * 4 * 4);
+        for (int i = 0; i < 400; i++)
+        {
+            for (int j = 0; j < 400; j += 4)
+            {
+                IconData[i * 100 + j + 0] = 0xFF;
+                IconData[i * 100 + j + 1] = 0xFF;
+                IconData[i * 100 + j + 2] = 0;
+                IconData[i * 100 + j + 3] = 0xFF;
+            }
+        }
+
+        m_Window->SetIcon(IconData.data(), { 100, 100 });
     }
 } // namespace Neon

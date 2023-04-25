@@ -49,9 +49,6 @@ namespace Neon::Windowing
             const Size2I& Size) override;
 
         void SetIcon(
-            const StringU8& IconPath) override;
-
-        void SetIcon(
             const void*      IconData,
             const Vector2DI& Size) override;
 
@@ -114,7 +111,8 @@ namespace Neon::Windowing
             LPARAM lParam);
 
     private:
-        HWND m_Handle = nullptr;
+        HWND  m_Handle = nullptr;
+        HICON m_Icon   = nullptr;
 
         Size2I m_WindowSize;
         Size2I m_UncappedWindowSize;

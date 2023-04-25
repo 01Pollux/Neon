@@ -90,12 +90,6 @@ namespace Neon::Windowing
         /// Set window icon
         /// </summary>
         virtual void SetIcon(
-            const StringU8& IconPath) = 0;
-
-        /// <summary>
-        /// Set window icon
-        /// </summary>
-        virtual void SetIcon(
             const void*      IconData,
             const Vector2DI& Size) = 0;
 
