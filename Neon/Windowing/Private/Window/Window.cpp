@@ -245,7 +245,7 @@ namespace Neon::Windowing
 
     void WindowApp::Close()
     {
-        throw std::logic_error("Not implemented");
+        PostMessage(m_Handle, WM_CLOSE, 0, 0);
     }
 
     MWindowStyle WindowApp::GetStyle() const
@@ -363,22 +363,31 @@ namespace Neon::Windowing
     void WindowApp::SetVisible(
         bool Show)
     {
-        throw std::logic_error("Not implemented");
+        ShowWindow(m_Handle, Show ? SW_SHOW : SW_HIDE);
     }
 
-    bool WindowApp::IsVisible() const
+    void WindowApp::RequestFocus()
     {
-        throw std::logic_error("Not implemented");
-    }
-
-    void WindowApp::Focus(bool Show)
-    {
-        throw std::logic_error("Not implemented");
+        if (HasFocus())
+        {
+            SetForegroundWindow(m_Handle);
+        }
+        else
+        {
+            FLASHWINFO Info{
+                .cbSize    = sizeof(Info),
+                .hwnd      = m_Handle,
+                .dwFlags   = FLASHW_TRAY,
+                .uCount    = 3,
+                .dwTimeout = 0
+            };
+            FlashWindowEx(&Info);
+        }
     }
 
     bool WindowApp::HasFocus() const
     {
-        throw std::logic_error("Not implemented");
+        return m_Handle == GetForegroundWindow();
     }
 
     bool WindowApp::PeekEvent(

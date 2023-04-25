@@ -100,15 +100,9 @@ namespace Neon::Windowing
             bool Show) = 0;
 
         /// <summary>
-        /// Get window visbility
-        /// </summary>
-        [[nodiscard]] virtual bool IsVisible() const = 0;
-
-        /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        virtual void Focus(
-            bool Show) = 0;
+        virtual void RequestFocus() = 0;
 
         /// <summary>
         /// Set the current window to be made the active foreground window

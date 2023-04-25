@@ -55,10 +55,7 @@ namespace Neon::Windowing
         void SetVisible(
             bool Show) override;
 
-        [[nodiscard]] bool IsVisible() const override;
-
-        void Focus(
-            bool Show) override;
+        void RequestFocus() override;
 
         [[nodiscard]] bool HasFocus() const override;
 
