@@ -10,13 +10,18 @@ namespace Neon::Windowing
         TitleBar,
         Resize,
         Close,
+
+        Windowed,
         Fullscreen,
 
         _Last_Enum
     };
     using MWindowStyle = BitMask<EWindowStyle>;
 
-    static inline MWindowStyle s_DefaultWindowStyle = MWindowStyle().Flip();
+    static constexpr MWindowStyle s_DefaultWindowStyle = BitMask_Or(
+        EWindowStyle::TitleBar,
+        EWindowStyle::Resize,
+        EWindowStyle::Close);
 
     class NEON_NOVTABLE IWindowApp
     {
@@ -42,6 +47,22 @@ namespace Neon::Windowing
         /// The window will remain valid until its destructor is called
         /// </summary>
         virtual void Close() = 0;
+
+        /// <summary>
+        /// Get window style
+        /// </summary>
+        [[nodiscard]] virtual MWindowStyle GetStyle() const = 0;
+
+        /// <summary>
+        /// Set window style
+        /// </summary>
+        virtual void SetStyle(
+            const MWindowStyle& Style) = 0;
+
+        /// <summary>
+        /// Get window screen caps
+        /// </summary>
+        [[nodiscard]] virtual Size2I GetScreenCaps() const = 0;
 
         /// <summary>
         /// Get window position
@@ -98,7 +119,7 @@ namespace Neon::Windowing
         /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        [[nodiscard]] virtual bool hasFocus() const = 0;
+        [[nodiscard]] virtual bool HasFocus() const = 0;
 
         /// <summary>
         /// Peek event with option to erase it from the queue

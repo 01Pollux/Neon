@@ -125,8 +125,8 @@ namespace Neon::Windowing
             if (hFile == INVALID_HANDLE_VALUE)
                 return EXCEPTION_CONTINUE_SEARCH;
 
-            MiniDumpWriteDumpFn WriteMiniDump = std::bit_cast<MiniDumpWriteDumpFn>(GetProcAddress(
-                std::bit_cast<HMODULE>(DBGHelp.get()),
+            auto WriteMiniDump = std::bit_cast<MiniDumpWriteDumpFn>(GetProcAddress(
+                HMODULE(DBGHelp.get()),
                 "MiniDumpWriteDump"));
 
             MINIDUMP_EXCEPTION_INFORMATION MiniDumpInfo{
@@ -151,12 +151,24 @@ namespace Neon::Windowing
                 ExceptionInfo->ExceptionRecord->ExceptionCode = EXCEPTION_BREAKPOINT;
                 return EXCEPTION_EXECUTE_HANDLER;
             }
-            else
-            {
-                return EXCEPTION_CONTINUE_SEARCH;
-            }
+            return EXCEPTION_CONTINUE_SEARCH;
         }
     } // namespace Impl
+
+    void SetFullscreenWithBorder(HWND Hwnd)
+    {
+        SetWindowLong(Hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+        RECT Rect;
+        GetWindowRect(Hwnd, &Rect);
+        SetWindowPos(
+            Hwnd,
+            HWND_TOPMOST,
+            0,
+            0,
+            GetSystemMetrics(SM_CXSCREEN),
+            GetSystemMetrics(SM_CYSCREEN),
+            SWP_SHOWWINDOW);
+    }
 
     //
 
@@ -172,31 +184,20 @@ namespace Neon::Windowing
         const String&       Title,
         const Size2I&       Size,
         const MWindowStyle& Style) :
-        m_WindowSize(Size)
+        m_WindowSize(Size),
+        m_WindowStyle(Style)
     {
         Impl::InitializeClassName();
 
         Size2I FinalSize = Size;
 
-        HDC screenDC = GetDC(nullptr);
-        int Left     = (GetDeviceCaps(screenDC, HORZRES) - FinalSize.Width()) / 2;
-        int Top      = (GetDeviceCaps(screenDC, VERTRES) - FinalSize.Height()) / 2;
-        ReleaseDC(nullptr, screenDC);
+        HDC WindowDC   = GetDC(nullptr);
+        int Left       = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
+        int Top        = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
+        m_BitsPerPixel = GetDeviceCaps(WindowDC, BITSPIXEL);
+        ReleaseDC(nullptr, WindowDC);
 
-        DWORD WinStyle = WS_VISIBLE;
-        if (Style.None())
-        {
-            WinStyle |= WS_POPUP;
-        }
-        else
-        {
-            if (Style.Test(EWindowStyle::TitleBar))
-                WinStyle |= WS_CAPTION | WS_MINIMIZEBOX;
-            if (Style.Test(EWindowStyle::Resize))
-                WinStyle |= WS_THICKFRAME | WS_MAXIMIZEBOX;
-            if (Style.Test(EWindowStyle::Close))
-                WinStyle |= WS_SYSMENU;
-        }
+        DWORD WinStyle = GetWindowStyle(Style);
 
         if (!Style.Test(EWindowStyle::Fullscreen))
         {
@@ -211,14 +212,21 @@ namespace Neon::Windowing
             Impl::s_ClassName,
             Title.c_str(),
             WinStyle,
-            CW_USEDEFAULT,
-            CW_USEDEFAULT,
+            Left,
+            Top,
             FinalSize.Width(),
             FinalSize.Height(),
             nullptr,
             nullptr,
             GetModuleHandle(nullptr),
             this);
+
+        SetSize(Size);
+
+        if (Style.Test(EWindowStyle::Fullscreen))
+        {
+            SwitchToFullscreen();
+        }
 
         SetWindowSubclass(m_Handle, &WindowApp::WndSubClassProc, NULL, std::bit_cast<DWORD_PTR>(this));
     }
@@ -232,7 +240,7 @@ namespace Neon::Windowing
 
     void* WindowApp::GetPlatformHandle() const
     {
-        throw std::logic_error("Not implemented");
+        return m_Handle;
     }
 
     void WindowApp::Close()
@@ -240,15 +248,63 @@ namespace Neon::Windowing
         throw std::logic_error("Not implemented");
     }
 
+    MWindowStyle WindowApp::GetStyle() const
+    {
+        return m_WindowStyle;
+    }
+
+    void WindowApp::SetStyle(
+        const MWindowStyle& Style)
+    {
+        m_WindowStyle = Style;
+
+        DWORD WinStyle = GetWindowStyle(m_WindowStyle);
+        SetWindowLong(m_Handle, GWL_STYLE, WinStyle);
+
+        if (m_WindowStyle.Test(EWindowStyle::Fullscreen))
+        {
+            SwitchToFullscreen();
+        }
+        else
+        {
+            RECT Rect;
+            GetClientRect(m_Handle, &Rect);
+
+            SetWindowPos(
+                m_Handle,
+                HWND_NOTOPMOST,
+                Rect.left,
+                Rect.top,
+                Rect.right - Rect.left,
+                Rect.bottom - Rect.top,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+            ShowWindow(m_Handle, SW_NORMAL);
+        }
+    }
+
+    Size2I WindowApp::GetScreenCaps() const
+    {
+        HDC    WindowDC = GetDC(m_Handle);
+        Size2I Size{
+            GetDeviceCaps(WindowDC, DESKTOPHORZRES),
+            GetDeviceCaps(WindowDC, DESKTOPVERTRES)
+        };
+        ReleaseDC(m_Handle, WindowDC);
+        return Size;
+    }
+
     Vector2DI WindowApp::GetPosition() const
     {
-        throw std::logic_error("Not implemented");
+        RECT Rect;
+        GetClientRect(m_Handle, &Rect);
+        return { Rect.left, Rect.top };
     }
 
     void WindowApp::SetPosition(
         const Vector2DI& Position)
     {
-        throw std::logic_error("Not implemented");
+        SetWindowPos(m_Handle, nullptr, Position.x(), Position.y(), 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
     Size2I WindowApp::GetSize() const
@@ -261,7 +317,13 @@ namespace Neon::Windowing
     void WindowApp::SetSize(
         const Size2I& Size)
     {
-        throw std::logic_error("Not implemented");
+        RECT Rect = { 0, 0, Size.Width(), Size.Height() };
+        AdjustWindowRect(&Rect, static_cast<DWORD>(GetWindowLongPtr(m_Handle, GWL_STYLE)), false);
+
+        int Width  = Rect.right - Rect.left;
+        int Height = Rect.bottom - Rect.top;
+
+        SetWindowPos(m_Handle, nullptr, 0, 0, Width, Height, SWP_NOMOVE | SWP_NOZORDER);
     }
 
     void WindowApp::SetIcon(
@@ -293,7 +355,7 @@ namespace Neon::Windowing
         throw std::logic_error("Not implemented");
     }
 
-    bool WindowApp::hasFocus() const
+    bool WindowApp::HasFocus() const
     {
         throw std::logic_error("Not implemented");
     }
@@ -326,6 +388,52 @@ namespace Neon::Windowing
             m_PendingEvents.pop();
         }
         return true;
+    }
+
+    //
+
+    DWORD WindowApp::GetWindowStyle(
+        const MWindowStyle& Flags)
+    {
+        DWORD WinStyle = WS_VISIBLE;
+        if (Flags.Test(EWindowStyle::Fullscreen) && !Flags.Test(EWindowStyle::TitleBar))
+        {
+            WinStyle |= WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+        }
+        else
+        {
+            if (Flags.Test(EWindowStyle::TitleBar))
+                WinStyle |= WS_CAPTION | WS_MINIMIZEBOX;
+            if (Flags.Test(EWindowStyle::Resize))
+                WinStyle |= WS_THICKFRAME | WS_MAXIMIZEBOX;
+            if (Flags.Test(EWindowStyle::Close))
+                WinStyle |= WS_SYSMENU;
+
+            if (WinStyle == WS_VISIBLE)
+                WinStyle |= WS_POPUP;
+        }
+
+        if (!Flags.Test(BitMask_Or(EWindowStyle::Fullscreen, EWindowStyle::Windowed)))
+        {
+            NEON_WARNING("Window must be either fullscreen, fullscreen borderless or windowed");
+        }
+        return WinStyle;
+    }
+
+    void WindowApp::SwitchToFullscreen()
+    {
+        if (m_WindowStyle.Test(EWindowStyle::Windowed))
+        {
+            ShowWindow(m_Handle, SW_MAXIMIZE);
+            return;
+        }
+
+        constexpr DWORD Flags = WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+        SetWindowLongPtr(m_Handle, GWL_STYLE, LONG_PTR(Flags));
+        SetWindowLongPtr(m_Handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
+
+        SetWindowPos(m_Handle, HWND_TOP, 0, 0, m_WindowSize.Width(), m_WindowSize.Height(), SWP_FRAMECHANGED);
+        ShowWindow(m_Handle, SW_SHOW);
     }
 
 } // namespace Neon::Windowing

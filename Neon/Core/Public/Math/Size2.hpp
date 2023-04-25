@@ -8,7 +8,9 @@ namespace Neon
     {
     public:
         using Vector2DI::Vector2DI;
-        Size2I(int Width, int Height) :
+        Size2I(
+            int Width,
+            int Height) :
             Vector2DI(Width, Height)
         {
         }
@@ -21,7 +23,9 @@ namespace Neon
     {
     public:
         using Vector2D::Vector2D;
-        Size2F(float Width, float Height) :
+        Size2F(
+            float Width,
+            float Height) :
             Vector2D(Width, Height)
         {
         }

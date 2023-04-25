@@ -8,7 +8,8 @@ namespace Neon::Config
         String Title = STR("Neon");
         Size2I Size  = { 1280, 720 };
 
-        bool StartFullScreen : 1 = false;
+        bool Windowed        : 1 = false;
+        bool Fullscreen      : 1 = false;
         bool WithCloseButton : 1 = true;
         bool CanResize       : 1 = true;
         bool HasTitleBar     : 1 = true;

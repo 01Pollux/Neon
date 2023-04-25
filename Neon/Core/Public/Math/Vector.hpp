@@ -40,8 +40,6 @@ namespace Neon
         static const Vector2DI One;
         static const Vector2DI Zero;
 
-        MVECTOR_IMPL_MATHVEC_DECLARATIONS(Vector2DI);
-
         MVECTOR_IMPL_ACCESSOR(0, x);
         MVECTOR_IMPL_ACCESSOR(1, y);
     };

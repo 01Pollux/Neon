@@ -54,7 +54,11 @@ namespace Neon
         {
             Style.Set(Windowing::EWindowStyle::TitleBar);
         }
-        if (Config.StartFullScreen)
+        if (Config.Windowed)
+        {
+            Style.Set(Windowing::EWindowStyle::Windowed);
+        }
+        if (Config.Fullscreen)
         {
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }

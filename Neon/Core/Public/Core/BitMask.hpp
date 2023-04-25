@@ -30,13 +30,13 @@ namespace Neon
         {
         }
 
-        explicit constexpr BitMask(
+        constexpr BitMask(
             uint64_t Val) noexcept :
             m_Bitset(Val)
         {
         }
 
-        explicit constexpr BitMask(
+        constexpr BitMask(
             uint32_t Val) noexcept :
             m_Bitset(static_cast<uint64_t>(Val))
         {
@@ -264,47 +264,65 @@ namespace Neon
     //
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator&(const BitMask<_ETy>& l, const BitMask<_ETy>& r) noexcept
+    _NODISCARD BitMask<_ETy> operator&(
+        const BitMask<_ETy>& Lhs,
+        const BitMask<_ETy>& Rhs) noexcept
     {
-        auto ret = l;
-        return ret &= r;
+        auto ret = Lhs;
+        return ret &= Rhs;
     }
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator|(const BitMask<_ETy>& l, const BitMask<_ETy>& r) noexcept
+    _NODISCARD BitMask<_ETy> operator|(
+        const BitMask<_ETy>& Lhs,
+        const BitMask<_ETy>& Rhs) noexcept
     {
-        auto ret = l;
-        return ret |= r;
+        auto ret = Lhs;
+        return ret |= Rhs;
     }
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator^(const BitMask<_ETy>& l, const BitMask<_ETy>& r) noexcept
+    _NODISCARD BitMask<_ETy> operator^(
+        const BitMask<_ETy>& Lhs,
+        const BitMask<_ETy>& Rhs) noexcept
     {
-        auto ret = l;
-        return ret ^= r;
+        auto ret = Lhs;
+        return ret ^= Rhs;
+    }
+
+    //
+
+    template<typename... _ETy>
+    [[nodiscard]] constexpr auto BitMask_Or(
+        _ETy... Vals) noexcept
+    {
+        using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
+        uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) | ...);
+        return BitMask<FirstType>(Mask);
     }
 
     template<typename... _ETy>
-    constexpr uint64_t BitMask_Or(_ETy... vals) noexcept
+    [[nodiscard]] constexpr auto BitMask_Xor(
+        _ETy... Vals) noexcept
     {
-        return ((1Ui64 << static_cast<uint64_t>(vals)) | ...);
-    }
-
-    template<typename... _ETy>
-    constexpr uint64_t BitMask_Xor(_ETy... vals) noexcept
-    {
-        return ((1Ui64 << static_cast<uint64_t>(vals)) ^ ...);
+        using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
+        uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) ^ ...);
+        return BitMask<FirstType>(Mask);
     }
 
     template<typename _ETy>
-    constexpr uint64_t BitMask_Not(_ETy vals) noexcept
+    [[nodiscard]] constexpr auto BitMask_Not(
+        _ETy Vals) noexcept
     {
-        return (~(1Ui64 << static_cast<uint64_t>(vals)));
+        return BitMask<_ETy>{ (~(1Ui64 << static_cast<uint64_t>(Vals))) };
     }
 
     template<typename... _ETy>
-    constexpr uint64_t BitMask_And(_ETy... vals) noexcept
+    [[nodiscard]] constexpr auto BitMask_And(
+        _ETy... Vals) noexcept
     {
-        return ((1Ui64 << static_cast<uint64_t>(vals)) & ...);
+        using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
+        uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) & ...);
+        return BitMask<FirstType>(Mask);
     }
 } // namespace Neon

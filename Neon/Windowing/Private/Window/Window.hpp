@@ -23,11 +23,20 @@ namespace Neon::Windowing
             const Size2I&       Size,
             const MWindowStyle& Style);
 
+        NEON_CLASS_NO_COPYMOVE(WindowApp);
+
         ~WindowApp() override;
 
         [[nodiscard]] void* GetPlatformHandle() const override;
 
         void Close() override;
+
+        [[nodiscard]] MWindowStyle GetStyle() const override;
+
+        void SetStyle(
+            const MWindowStyle& Style) override;
+
+        [[nodiscard]] Size2I GetScreenCaps() const override;
 
         [[nodiscard]] Vector2DI GetPosition() const override;
 
@@ -54,7 +63,7 @@ namespace Neon::Windowing
         void Focus(
             bool Show) override;
 
-        [[nodiscard]] bool hasFocus() const override;
+        [[nodiscard]] bool HasFocus() const override;
 
         [[nodiscard]] bool PeekEvent(
             Event* Msg,
@@ -77,6 +86,20 @@ namespace Neon::Windowing
             DWORD_PTR RefData);
 
     private:
+        /// <summary>
+        /// Get window style from MWindowStyle
+        /// </summary>
+        [[nodiscard]] static DWORD GetWindowStyle(
+            const MWindowStyle& Flags);
+
+        /// <summary>
+        /// Switch to fullscreen mode.
+        /// </summary>
+        void SwitchToFullscreen();
+
+        /// <summary>
+        /// Process all events in the event queue.
+        /// </summary>
         void ProcessMessages();
 
         /// <summary>
@@ -93,8 +116,12 @@ namespace Neon::Windowing
     private:
         HWND m_Handle = nullptr;
 
+        Size2I m_WindowSize;
+        Size2I m_UncappedWindowSize;
+        int    m_BitsPerPixel;
+
         std::queue<Event> m_PendingEvents;
-        Size2I            m_WindowSize;
         MWindowFlags      m_WindowFlags;
+        MWindowStyle      m_WindowStyle;
     };
 } // namespace Neon::Windowing
