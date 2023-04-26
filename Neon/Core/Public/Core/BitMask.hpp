@@ -246,10 +246,24 @@ namespace Neon
             return *this;
         }
 
-        [[nodiscard]] bool Test(
+        [[nodiscard]] bool TestAll(
             const BitMask& Other) const
         {
-            return Other.ToUllong() == ToUllong();
+            uint64_t Flags = Other.ToUllong();
+            return (Flags & ToUllong()) == Flags;
+        }
+
+        [[nodiscard]] bool TestAny(
+            const BitMask& Other) const
+        {
+            uint64_t Flags = Other.ToUllong();
+            return (Flags & ToUllong()) != 0;
+        }
+
+        [[nodiscard]] bool TestNone(
+            const BitMask& Other) const
+        {
+            return !TestAny(Other);
         }
 
         static constexpr BitMask Empty() noexcept

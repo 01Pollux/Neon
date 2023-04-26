@@ -47,9 +47,7 @@ end
 function link_engine_library()
     links
     {
-        "NeonEngine",
-        "d3d12",
-        "dxgi",
+        "NeonEngine"
     }
     includedirs
     {
@@ -73,7 +71,8 @@ function common_neon()
 
     links
     {
-        "Flecs"
+        "Flecs",
+        "spdlog"
     }
 
     files

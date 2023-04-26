@@ -3,6 +3,8 @@
 
 #include <CommCtrl.h>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Windowing
 {
     LRESULT WindowApp::WndProc(
@@ -37,6 +39,10 @@ namespace Neon::Windowing
 
         case WM_NCDESTROY:
         {
+            NEON_TRACE_TAG(
+                "Window", "Destroying Window: {}",
+                StringUtils::StringTransform<StringU8>(Window->GetTitle()));
+
             RemoveWindowSubclass(Handle, &WindowApp::WndSubClassProc, IdSubclass);
             break;
         }

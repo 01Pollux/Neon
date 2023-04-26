@@ -31,6 +31,14 @@ namespace Neon::Windowing
 
         void Close() override;
 
+        String GetTitle() const override;
+
+        /// <summary>
+        /// Set window title
+        /// </summary>
+        void SetTitle(
+            const String& Title) override;
+
         [[nodiscard]] MWindowStyle GetStyle() const override;
 
         void SetStyle(

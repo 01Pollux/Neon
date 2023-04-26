@@ -49,6 +49,17 @@ namespace Neon::Windowing
         virtual void Close() = 0;
 
         /// <summary>
+        /// Get window title
+        /// </summary>
+        [[nodiscard]] virtual String GetTitle() const = 0;
+
+        /// <summary>
+        /// Set window title
+        /// </summary>
+        virtual void SetTitle(
+            const String& Title) = 0;
+
+        /// <summary>
         /// Get window style
         /// </summary>
         [[nodiscard]] virtual MWindowStyle GetStyle() const = 0;

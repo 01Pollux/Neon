@@ -33,6 +33,10 @@ namespace Neon::Windowing
             std::lock_guard ClassInit(s_ClassNameInitMutex);
             if (!s_ClassNameInits++)
             {
+                NEON_TRACE_TAG(
+                    "Window", "Registering Classname: {}",
+                    StringUtils::StringTransform<StringU8>(s_ClassName));
+
                 s_ExceptionHandler = AddVectoredExceptionHandler(TRUE, &OnRaiseException);
 
 #if !NEON_DIST
@@ -58,6 +62,10 @@ namespace Neon::Windowing
             std::lock_guard ClassInit(s_ClassNameInitMutex);
             if (!--s_ClassNameInits)
             {
+                NEON_TRACE_TAG(
+                    "Window", "Unregistering Classname: {}",
+                    StringUtils::StringTransform<StringU8>(s_ClassName));
+
 #if !NEON_DIST
                 NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
 #endif
@@ -71,12 +79,14 @@ namespace Neon::Windowing
 
         LONG NTAPI OnRaiseException(_In_ PEXCEPTION_POINTERS ExceptionInfo)
         {
+            NEON_TRACE("Unhandled expcetion caught");
+
             using LibraryPtr = std::unique_ptr<
                 void,
                 decltype([](void* Handle)
                          { FreeLibrary(std::bit_cast<HMODULE>(Handle)); })>;
 
-            LibraryPtr DBGHelp{ static_cast<void*>(LoadLibraryW(STR("DBGHelp.dll"))) };
+            LibraryPtr DBGHelp{ LoadLibraryW(STR("DBGHelp.dll")) };
             if (!DBGHelp)
                 return EXCEPTION_CONTINUE_SEARCH;
 
@@ -114,7 +124,10 @@ namespace Neon::Windowing
                     _In_opt_ PMINIDUMP_CALLBACK_INFORMATION    CallbackParam);
 
             HANDLE hFile = CreateFileW(
-                std::format(L"./Logs/Fatal_{0:%g}_{0:%h}_{0:%d}_{0:%H}_{0:%OM}_{0:%OS}.dmp", std::chrono::system_clock::now()).c_str(),
+                StringUtils::Format(
+                    STR("./Logs/Fatal_{0:%g}_{0:%h}_{0:%d}_{0:%H}_{0:%OM}_{0:%OS}.dmp"),
+                    std::chrono::system_clock::now())
+                    .c_str(),
                 GENERIC_WRITE,
                 NULL,
                 nullptr,
@@ -155,21 +168,6 @@ namespace Neon::Windowing
         }
     } // namespace Impl
 
-    void SetFullscreenWithBorder(HWND Hwnd)
-    {
-        SetWindowLong(Hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-        RECT Rect;
-        GetWindowRect(Hwnd, &Rect);
-        SetWindowPos(
-            Hwnd,
-            HWND_TOPMOST,
-            0,
-            0,
-            GetSystemMetrics(SM_CXSCREEN),
-            GetSystemMetrics(SM_CYSCREEN),
-            SWP_SHOWWINDOW);
-    }
-
     //
 
     IWindowApp* IWindowApp::Create(
@@ -187,6 +185,12 @@ namespace Neon::Windowing
         m_WindowSize(Size),
         m_WindowStyle(Style)
     {
+        NEON_TRACE_TAG(
+            "Window", "Creating Window '{}' -- Size: {}x{}",
+            StringUtils::StringTransform<StringU8>(Title),
+            Size.Width(),
+            Size.Height());
+
         Impl::InitializeClassName();
 
         Size2I FinalSize = Size;
@@ -246,6 +250,20 @@ namespace Neon::Windowing
     void WindowApp::Close()
     {
         PostMessage(m_Handle, WM_CLOSE, 0, 0);
+    }
+
+    String WindowApp::GetTitle() const
+    {
+        int    TitleLength = GetWindowTextLengthW(m_Handle) + 1;
+        String Title(TitleLength, '\0');
+        GetWindowTextW(m_Handle, Title.data(), TitleLength);
+        return Title;
+    }
+
+    void WindowApp::SetTitle(
+        const String& Title)
+    {
+        SetWindowTextW(m_Handle, Title.c_str());
     }
 
     MWindowStyle WindowApp::GetStyle() const
@@ -443,7 +461,7 @@ namespace Neon::Windowing
                 WinStyle |= WS_POPUP;
         }
 
-        if (!Flags.Test(BitMask_Or(EWindowStyle::Fullscreen, EWindowStyle::Windowed)))
+        if (Flags.TestNone(BitMask_Or(EWindowStyle::Fullscreen, EWindowStyle::Windowed)))
         {
             NEON_WARNING("Window must be either fullscreen, fullscreen borderless or windowed");
         }

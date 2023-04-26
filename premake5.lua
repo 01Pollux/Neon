@@ -48,6 +48,9 @@ workspace "Neon"
     group "Dependencies/ECS"
         include "Deps/Externals/flecs"
     
+    group "Dependencies/Logging"
+        include "Deps/Externals/spdlog"
+    
     group "Dependencies/UI"
         include "Deps/Externals/ImGui"
 

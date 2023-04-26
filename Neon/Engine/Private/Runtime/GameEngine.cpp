@@ -1,16 +1,20 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
+        Logger::Initialize();
         CreateWindow(Config.Window);
     }
 
     DefaultGameEngine::~DefaultGameEngine()
     {
+        Logger::Shutdown();
     }
 
     int DefaultGameEngine::Run()
@@ -63,5 +67,6 @@ namespace Neon
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
         m_Window.reset(Windowing::IWindowApp::Create(Config.Title, Config.Size, Style));
+        auto X = m_Window->GetTitle();
     }
 } // namespace Neon

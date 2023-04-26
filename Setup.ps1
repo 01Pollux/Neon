@@ -142,6 +142,19 @@ Copy-Item Premake\Bullet3\BulletInverseDynamics.lua $(Get-DepSrcPath("Bullet3\sr
 Copy-Item Premake\Bullet3\BulletSoftBody.lua $(Get-DepSrcPath("Bullet3\src\BulletSoftBody\premake5.lua"))
 Copy-Item Premake\Bullet3\LinearMath.lua $(Get-DepSrcPath("Bullet3\src\LinearMath\premake5.lua"))
 
+
+#
+# spdlog
+#
+Write-Output "Copying spdlog files..."
+Remove-Directory $(Get-DepIncPath("spdlog"))
+Make-Directory $(Get-DepIncPath("spdlog"))
+
+Copy-Item Premake\spdlog.lua $(Get-DepSrcPath("spdlog\premake5.lua"))
+
+Copy-IncludePath "spdlog\include\spdlog" "." -Recurse
+
+
 $SrcPath = $(Get-DepSrcPath("Bullet3\src"))
 Get-ChildItem $SrcPath -Recurse -Filter "*.h" |
 Foreach {

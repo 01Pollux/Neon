@@ -1,127 +1,157 @@
 #include <CorePCH.hpp>
 #include <Log/Logger.hpp>
 
-#include <cassert>
-#include <chrono>
-#include <fstream>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/msvc_sink.h>
+#include <spdlog/spdlog.h>
+
 #include <filesystem>
 
 namespace Neon::Logger
 {
-    class LoggerImpl
+    struct LogDetails
     {
-    public:
-        LoggerImpl();
-        ~LoggerImpl();
-
-        void LogMessage(const StringU8& Message);
-
-    private:
-        std::ofstream m_LogFile;
-        StringU8      m_FileName;
+        LogSeverity Severity;
+        bool        Enabled;
     };
 
-    std::unique_ptr<LoggerImpl> s_LoggerImpl;
+    static inline std::map<StringU8, LogDetails> s_LogDetails;
+
+    static inline uint32_t   s_LogInitCount = 0;
+    static inline std::mutex s_LogInitMutex;
+
+    static inline std::unique_ptr<spdlog::logger> s_EngineLogger;
 
     void Initialize()
     {
-        s_LoggerImpl = std::make_unique<LoggerImpl>();
+        std::lock_guard LogInit(s_LogInitMutex);
+        if (!s_LogInitCount++)
+        {
+            if (!std::filesystem::exists("Logs"))
+                std::filesystem::create_directories("Logs");
+
+            std::vector<spdlog::sink_ptr> Sinks{
+                std::make_shared<spdlog::sinks::basic_file_sink_mt>("Logs/Engine.log", true),
+#ifndef NEON_DIST
+                std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
+                std::make_shared<spdlog::sinks::msvc_sink_mt>()
+#endif
+            };
+
+            Sinks[0]->set_pattern("[%c] [%l] %n: %v");
+
+#ifndef NEON_DIST
+            for (auto& Skin : Sinks | std::views::drop(1))
+            {
+                Skin->set_pattern("%^[%T] %n: %v%$");
+            }
+#endif
+
+            s_EngineLogger = std::make_unique<spdlog::logger>("Neon", Sinks.begin(), Sinks.end());
+
+#ifdef NEON_DEBUG
+            s_EngineLogger->set_level(spdlog::level::trace);
+#elif defined NEON_RELEASE
+            s_EngineLogger->set_level(spdlog::level::info);
+#elif defined NEON_DIST
+            s_EngineLogger->set_level(spdlog::level::warn);
+#endif
+        }
     }
 
-    void LogData(
-        const StringU8& Message,
+    void LogMessage(
         LogSeverity     Severity,
-        const char*     FunctionName,
-        const char*     SourcePath,
-        uint32_t        LineNum)
+        const StringU8& Tag,
+        const StringU8& Message)
     {
-        const char* Tag = "";
-        switch (Severity)
+#ifdef NEON_DIST
+        if (Severity < Logger::LogSeverity::Warning)
         {
-#if !NEON_DIST
-        case Logger::LogSeverity::Info:
-            Tag = "Info";
-            break;
-        case Logger::LogSeverity::Message:
-            Tag = "Message";
-            break;
-        case Logger::LogSeverity::Warning:
-            Tag = "Warning";
-            break;
-        case Logger::LogSeverity::Assert:
-#endif
-        case Logger::LogSeverity::Error:
-            Tag = "Error";
-            break;
-        case Logger::LogSeverity::Fatal:
-            Tag = "Fatal";
-            break;
+            return;
         }
+#endif
 
-#if !NEON_DIST
-        StringU8 FormattedMsg =
-            StringUtils::Format(
-                "[{}]\t'{}': {}:({}) :: {}.\n",
-                Tag,
-                FunctionName,
-                SourcePath,
-                LineNum,
-                Message);
-
-        if (Severity == LogSeverity::Assert)
+        auto& Detail = s_LogDetails[Tag];
+        if (Detail.Enabled && Detail.Severity <= Severity)
         {
-#if NEON_RELEASE
-            throw std::runtime_error(FormattedMsg);
-#else
-            auto wMessage    = StringUtils::StringTransform<String>(Message);
-            auto wSourcePath = StringUtils::StringTransform<String>(SourcePath);
-
-            Logger::Shutdown();
-            _wassert(wMessage.c_str(), wSourcePath.c_str(), LineNum);
-            Logger::Initialize();
+            switch (Severity)
+            {
+#ifndef NEON_DIST
+            case Logger::LogSeverity::Trace:
+                s_EngineLogger->trace("[{0}] {1}", Tag, Message);
+                break;
+            case Logger::LogSeverity::Info:
+                s_EngineLogger->info("[{0}] {1}", Tag, Message);
+                break;
 #endif
+            case Logger::LogSeverity::Warning:
+                s_EngineLogger->warn("[{0}] {1}", Tag, Message);
+                break;
+            case Logger::LogSeverity::Error:
+                s_EngineLogger->error("[{0}] {1}", Tag, Message);
+                break;
+            case Logger::LogSeverity::Fatal:
+                s_EngineLogger->critical("[{0}] {1}", Tag, Message);
+                break;
+            }
         }
-#else
-        StringU8 FormattedMsg =
-            StringUtils::Format(
-                "[{}]\t :: {}.\n",
-                Tag,
-                Message);
+    }
+
+    void LogMessage(
+        LogSeverity     Severity,
+        const StringU8& Message)
+    {
+#ifdef NEON_DIST
+        if (Severity < Logger::LogSeverity::Warning)
+        {
+            return;
+        }
 #endif
-        s_LoggerImpl->LogMessage(FormattedMsg);
+
+        auto& Detail = s_LogDetails[""];
+        if (Detail.Enabled && Detail.Severity <= Severity)
+        {
+            switch (Severity)
+            {
+#ifndef NEON_DIST
+            case Logger::LogSeverity::Trace:
+                s_EngineLogger->trace(Message);
+                break;
+            case Logger::LogSeverity::Info:
+                s_EngineLogger->info(Message);
+                break;
+#endif
+            case Logger::LogSeverity::Warning:
+                s_EngineLogger->warn(Message);
+                break;
+            case Logger::LogSeverity::Error:
+                s_EngineLogger->error(Message);
+                break;
+            case Logger::LogSeverity::Fatal:
+                s_EngineLogger->critical(Message);
+                break;
+            }
+        }
     }
 
     void Shutdown()
     {
-        s_LoggerImpl = nullptr;
-    }
-
-    LoggerImpl::LoggerImpl()
-    {
-        m_FileName = StringUtils::Format(
-            "./Logs/Session_{0:%g}_{0:%h}_{0:%d} ({0:%H}-{0:%OM}-{0:%OS}).log",
-            std::chrono::system_clock::now());
-
-        if (!std::filesystem::exists("Logs"))
+        std::lock_guard LogInit(s_LogInitMutex);
+        if (!--s_LogInitCount)
         {
-            std::filesystem::create_directory("Logs");
-        }
-        m_LogFile.open(m_FileName);
-        NEON_ASSERT(m_LogFile);
-    }
-
-    LoggerImpl::~LoggerImpl()
-    {
-        if (!m_LogFile.tellp())
-        {
-            m_LogFile.close();
-            std::remove(m_FileName.c_str());
+            s_EngineLogger = nullptr;
+            spdlog::drop_all();
         }
     }
 
-    void LoggerImpl::LogMessage(const StringU8& Message)
+    void SetLogTag(
+        const StringU8& Tag,
+        LogSeverity     Severity,
+        bool            Enabled)
     {
-        m_LogFile << Message;
-        m_LogFile << std::flush;
+        auto& Detail    = s_LogDetails[Tag];
+        Detail.Severity = Severity;
+        Detail.Enabled  = Enabled;
     }
 } // namespace Neon::Logger
