@@ -19,4 +19,4 @@
 	url = https://github.com/01Pollux/flecs.git
 [submodule "Deps/Externals/spdlog"]
 	path = Deps/Externals/spdlog
-	url = https://github.com/gabime/spdlog
+	url = https://github.com/01Pollux/spdlog
