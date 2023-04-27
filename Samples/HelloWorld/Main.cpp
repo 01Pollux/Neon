@@ -18,16 +18,8 @@ NEON_MAIN(Argc, Argv)
         return Engine.Run();
     };
 
-    std::vector<std::future<int>> Engines;
-
-    for (size_t i = 0; i < 1; i++)
-    {
-        Engines.emplace_back(std::async(func, STR("Engine 1")));
-        Engines.emplace_back(std::async(func, STR("Engine 2")));
-    }
-    return 0;
-    /*auto eng1 = std::async(func, STR("Engine 1"));
+    auto eng1 = std::async(func, STR("Engine 1"));
     auto eng2 = std::async(func, STR("Engine 2"));
 
-    return eng1.get() + eng2.get();*/
+    return eng1.get() + eng2.get();
 }

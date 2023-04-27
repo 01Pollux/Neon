@@ -67,6 +67,5 @@ namespace Neon
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
         m_Window.reset(Windowing::IWindowApp::Create(Config.Title, Config.Size, Style));
-        auto X = m_Window->GetTitle();
     }
 } // namespace Neon

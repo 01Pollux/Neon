@@ -1,6 +1,6 @@
 #pragma once
 
-#include <flecs/flecs.h>
+#include <World/World.hpp>
 #include <Window/Window.hpp>
 #include <Config/Engine.hpp>
 
@@ -39,7 +39,7 @@ namespace Neon
     private:
         UPtr<Windowing::IWindowApp> m_Window;
 
-        flecs::world m_World;
+        World m_World;
     };
 } // namespace Neon
 
