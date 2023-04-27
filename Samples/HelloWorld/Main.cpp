@@ -25,9 +25,9 @@ NEON_MAIN(Argc, Argv)
         Engines.emplace_back(std::async(func, STR("Engine 1")));
         Engines.emplace_back(std::async(func, STR("Engine 2")));
     }
-
-    auto eng1 = std::async(func, STR("Engine 1"));
+    return 0;
+    /*auto eng1 = std::async(func, STR("Engine 1"));
     auto eng2 = std::async(func, STR("Engine 2"));
 
-    return eng1.get() + eng2.get();
+    return eng1.get() + eng2.get();*/
 }
