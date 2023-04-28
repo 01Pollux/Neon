@@ -28,6 +28,17 @@ namespace Neon
             return m_World.get();
         }
 
+        template<typename _Ty, typename... _Args>
+        void Import(
+            _Args&&... Args)
+        {
+            _Ty* Module = m_World->import <_Ty>().get_mut<_Ty>();
+            if constexpr (sizeof...(Args) > 1)
+            {
+                std::construct_at(Module, *m_World, std::forward<_Args>(Args)...);
+            }
+        }
+
     private:
         std::unique_ptr<flecs::world> m_World;
     };

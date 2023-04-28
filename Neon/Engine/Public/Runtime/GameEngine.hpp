@@ -1,7 +1,6 @@
 #pragma once
 
 #include <World/World.hpp>
-#include <Window/Window.hpp>
 #include <Config/Engine.hpp>
 
 namespace Neon
@@ -37,8 +36,6 @@ namespace Neon
             const Config::WindowConfig& Config);
 
     private:
-        UPtr<Windowing::IWindowApp> m_Window;
-
         World m_World;
     };
 } // namespace Neon

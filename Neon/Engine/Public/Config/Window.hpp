@@ -1,5 +1,7 @@
 #pragma once
-#include "Core/String.hpp"
+
+#include <Math/Size2.hpp>
+#include <Core/String.hpp>
 
 namespace Neon::Config
 {

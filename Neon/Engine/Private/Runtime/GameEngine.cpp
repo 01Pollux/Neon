@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
+#include <Module/Window.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon
@@ -19,25 +21,11 @@ namespace Neon
 
     int DefaultGameEngine::Run()
     {
-        std::optional<int> ExitCode;
-        Windowing::Event   Msg;
-
-        while (!ExitCode)
+        while (!m_World->should_quit())
         {
-            while (m_Window->PeekEvent(&Msg))
-            {
-                if (auto Close = std::get_if<Windowing::Events::Close>(&Msg))
-                {
-                    ExitCode = Close->ExitCode;
-                }
-                else if (auto SizeChanged = std::get_if<Windowing::Events::SizeChanged>(&Msg))
-                {
-                    printf("%i,%i\n", SizeChanged->NewSize.Width(), SizeChanged->NewSize.Height());
-                }
-            }
+            m_World->progress();
         }
-
-        return *ExitCode;
+        return m_World->get<Module::Window>()->GetExitCode();
     }
 
     //
@@ -66,6 +54,6 @@ namespace Neon
         {
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
-        m_Window.reset(Windowing::IWindowApp::Create(Config.Title, Config.Size, Style));
+        m_World.Import<Module::Window>(Config.Title, Config.Size, Style);
     }
 } // namespace Neon
