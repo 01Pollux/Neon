@@ -66,10 +66,11 @@ workspace "Neon"
 
         
     group "Neon"
-        include "Neon/Engine"
         include "Neon/Core"
+        include "Neon/Resource"
         include "Neon/Windowing"
-    group ""
+        include "Neon/Engine"
+        group ""
 
     group "Samples"
         include "Samples/HelloWorld"

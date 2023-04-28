@@ -8,6 +8,7 @@ CommonDir["Neon"] = {}
 CommonDir["Deps"]["Inc"] = "%{wks.location}/Deps/Public"
 CommonDir["Deps"]["Libs"] = "%{wks.location}/Deps/Libs"
 CommonDir["Neon"]["Core"] = "%{wks.location}/Neon/Core/Public"
+CommonDir["Neon"]["Resource"] = "%{wks.location}/Neon/Resource/Public"
 CommonDir["Neon"]["Engine"] = "%{wks.location}/Neon/Engine/Public"
 CommonDir["Neon"]["Windowing"] = "%{wks.location}/Neon/Windowing/Public"
 CommonDir["Neon"]["Graphics"] = "%{wks.location}/Neon/Graphics/Public"

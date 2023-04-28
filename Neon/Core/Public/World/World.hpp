@@ -35,6 +35,7 @@ namespace Neon
             _Ty* Module = m_World->import <_Ty>().get_mut<_Ty>();
             if constexpr (sizeof...(Args) > 1)
             {
+                std::destroy_at(Module);
                 std::construct_at(Module, *m_World, std::forward<_Args>(Args)...);
             }
         }
