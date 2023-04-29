@@ -5,11 +5,16 @@
 
 #include <Log/Logger.hpp>
 
+#include <Resource/Handle.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
+        Asset::AssetHandle Handle(Guid{ 1, 2, 3, { 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x1, 0x00 } });
+        auto               p = Handle.GetPack();
+
         Logger::Initialize();
         CreateWindow(Config.Window);
     }
