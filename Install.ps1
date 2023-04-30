@@ -1,4 +1,4 @@
-# .\Scripts\Boost.ps1
+.\Scripts\Boost.ps1
 
 Function Get-DepSrcPath
 {

@@ -4,7 +4,7 @@ if (!(Test-Path -path ".\Deps\Libs\boost"))
 }
 
 cd Deps
-# git clone --recursive https://github.com/boostorg/boost.git
+#git clone --recursive https://github.com/boostorg/boost.git
 
 cd boost
 #.\bootstrap.bat
@@ -13,7 +13,10 @@ cd boost
 cd ../..
 
 Write-Output "Copying boost headers..."
-Copy-Item -Force -Recurse .\Deps\boost\boost .\Deps\Public
+#Copy-Item -Force -Recurse .\Deps\boost\boost .\Deps\Public
 
 Write-Output "Copying boost libraries..."
-Copy-Item .\Deps\boost\stage\lib\*.lib .\Deps\Libs\boost -Recurse
+#Copy-Item .\Deps\boost\stage\lib\*.lib .\Deps\Libs\boost -Recurse
+
+Write-Output "Clearing boost files..."
+Remove-Item .\Deps\boost -Recurse -Force
