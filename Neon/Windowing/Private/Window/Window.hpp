@@ -13,7 +13,7 @@ namespace Neon::Windowing
 
         _Last_Enum
     };
-    using MWindowFlags = BitMask<EWindowFlags>;
+    using MWindowFlags = Bitmask<EWindowFlags>;
 
     class WindowApp final : public IWindowApp
     {

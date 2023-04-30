@@ -4,7 +4,7 @@
 
 namespace Neon::Asset
 {
-    class AssetPack : public IAssetPack
+  /*  class AssetPack : public IAssetPack
     {
         using LoadedAssetsMap = std::unordered_map<AssetHandle, Ptr<IAssetResource>>;
 
@@ -19,5 +19,5 @@ namespace Neon::Asset
 
     private:
         LoadedAssetsMap m_LoadedAssets;
-    };
+    };*/
 } // namespace Neon::Asset

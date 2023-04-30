@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Window/Event.hpp>
-#include <Core/BitMask.hpp>
+#include <Core/Bitmask.hpp>
 
 namespace Neon::Windowing
 {
@@ -16,7 +16,7 @@ namespace Neon::Windowing
 
         _Last_Enum
     };
-    using MWindowStyle = BitMask<EWindowStyle>;
+    using MWindowStyle = Bitmask<EWindowStyle>;
 
     static constexpr MWindowStyle s_DefaultWindowStyle = BitMask_Or(
         EWindowStyle::TitleBar,

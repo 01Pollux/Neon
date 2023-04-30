@@ -38,3 +38,6 @@ bin-int/*
 # generated Resources
 *.zip
 *.log
+
+# dependencies
+/Deps/Libs

@@ -69,6 +69,21 @@ end
 function common_neon()
     defines "flecs_STATIC"
 
+    libdirs "%{CommonDir.Deps.Libs}"
+
+    filter "configurations:Dist"
+        links
+        {
+            "boost/libboost_chrono-vc143-mt-s-x64-1_83.lib"
+        }
+    filter {}
+    filter "configurations:not Dist"
+        links
+        {
+            "boost/libboost_chrono-vc143-mt-sgd-x64-1_83.lib"
+        }
+    filter {}
+
     links
     {
         "Flecs",

@@ -3,7 +3,7 @@
 
 namespace Neon::Asset
 {
-    Ref<IAssetResource> AssetPack::Load(
+    /*Ref<IAssetResource> AssetPack::Load(
         const AssetHandle& Handle)
     {
         auto& LoadedAsset = m_LoadedAssets[Handle];
@@ -22,5 +22,5 @@ namespace Neon::Asset
     void AssetPack::Flush()
     {
         m_LoadedAssets.clear();
-    }
+    }*/
 } // namespace Neon::Asset

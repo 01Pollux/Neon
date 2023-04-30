@@ -6,44 +6,46 @@
 namespace Neon
 {
     template<typename _ETy>
-    class BitMask
+    class Bitmask
     {
     public:
+        static constexpr size_t bits_count = static_cast<size_t>(_ETy::_Last_Enum);
+
         using type             = _ETy;
-        using bitset_type      = std::bitset<static_cast<size_t>(_ETy::_Last_Enum)>;
+        using bitset_type      = std::bitset<bits_count>;
         using bitset_reference = bitset_type::reference;
 
     public:
-        static constexpr BitMask FromEnum(
+        static constexpr Bitmask FromEnum(
             _ETy Val) noexcept
         {
-            BitMask mask;
+            Bitmask mask;
             mask.Set(Val);
             return mask;
         }
 
-        constexpr BitMask() = default;
+        constexpr Bitmask() = default;
 
-        constexpr BitMask(
-            const BitMask& Other) :
+        constexpr Bitmask(
+            const Bitmask& Other) :
             m_Bitset(Other.m_Bitset)
         {
         }
 
-        constexpr BitMask(
+        constexpr Bitmask(
             uint64_t Val) noexcept :
             m_Bitset(Val)
         {
         }
 
-        constexpr BitMask(
+        constexpr Bitmask(
             uint32_t Val) noexcept :
             m_Bitset(static_cast<uint64_t>(Val))
         {
         }
 
         template<class _Ty, class _Tr, class _Alloc>
-        explicit BitMask(
+        explicit Bitmask(
             const std::basic_string<_Ty, _Tr, _Alloc>&              Str,
             typename std::basic_string<_Ty, _Tr, _Alloc>::size_type Pos   = 0,
             typename std::basic_string<_Ty, _Tr, _Alloc>::size_type Count = std::basic_string<_Ty, _Tr, _Alloc>::npos,
@@ -53,7 +55,7 @@ namespace Neon
         }
 
         template<class _Ty>
-        explicit BitMask(
+        explicit Bitmask(
             const _Ty*                                 Ntcts,
             typename std::basic_string<_Ty>::size_type Count = std::basic_string<_Ty>::npos,
             _Ty                                        Zero  = static_cast<_Ty>('0'),
@@ -62,35 +64,35 @@ namespace Neon
         {
         }
 
-        BitMask& Set() noexcept
+        Bitmask& Set() noexcept
         {
             m_Bitset.set();
             return *this;
         }
-        BitMask& Set(
+        Bitmask& Set(
             type Pos,
             bool Val = true)
         {
             m_Bitset.set(static_cast<size_t>(Pos), Val);
             return *this;
         }
-        [[nodiscard]] BitMask& Flip() noexcept
+        [[nodiscard]] Bitmask& Flip() noexcept
         {
             m_Bitset.flip();
             return *this;
         }
-        [[nodiscard]] BitMask& Flip(
+        [[nodiscard]] Bitmask& Flip(
             type Pos)
         {
             m_Bitset.flip(static_cast<size_t>(Pos));
             return *this;
         }
-        [[nodiscard]] BitMask& Reset() noexcept
+        [[nodiscard]] Bitmask& Reset() noexcept
         {
             m_Bitset.reset();
             return *this;
         }
-        [[nodiscard]] BitMask& Reset(
+        [[nodiscard]] Bitmask& Reset(
             type Pos)
         {
             m_Bitset.reset(static_cast<size_t>(Pos));
@@ -216,7 +218,7 @@ namespace Neon
             return *this;
         }
         auto operator^=(
-            const BitMask& Right) noexcept
+            const Bitmask& Right) noexcept
         {
             operator^=(Right.Get());
             return *this;
@@ -228,7 +230,7 @@ namespace Neon
             return *this;
         }
         auto operator|=(
-            const BitMask& Right) noexcept
+            const Bitmask& Right) noexcept
         {
             operator|=(Right.Get());
             return *this;
@@ -240,33 +242,33 @@ namespace Neon
             return *this;
         }
         auto operator&=(
-            const BitMask& Right) noexcept
+            const Bitmask& Right) noexcept
         {
             operator&=(Right.Get());
             return *this;
         }
 
         [[nodiscard]] bool TestAll(
-            const BitMask& Other) const
+            const Bitmask& Other) const
         {
             uint64_t Flags = Other.ToUllong();
             return (Flags & ToUllong()) == Flags;
         }
 
         [[nodiscard]] bool TestAny(
-            const BitMask& Other) const
+            const Bitmask& Other) const
         {
             uint64_t Flags = Other.ToUllong();
             return (Flags & ToUllong()) != 0;
         }
 
         [[nodiscard]] bool TestNone(
-            const BitMask& Other) const
+            const Bitmask& Other) const
         {
             return !TestAny(Other);
         }
 
-        static constexpr BitMask Empty() noexcept
+        static constexpr Bitmask Empty() noexcept
         {
             return {};
         }
@@ -278,27 +280,27 @@ namespace Neon
     //
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator&(
-        const BitMask<_ETy>& Lhs,
-        const BitMask<_ETy>& Rhs) noexcept
+    _NODISCARD Bitmask<_ETy> operator&(
+        const Bitmask<_ETy>& Lhs,
+        const Bitmask<_ETy>& Rhs) noexcept
     {
         auto ret = Lhs;
         return ret &= Rhs;
     }
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator|(
-        const BitMask<_ETy>& Lhs,
-        const BitMask<_ETy>& Rhs) noexcept
+    _NODISCARD Bitmask<_ETy> operator|(
+        const Bitmask<_ETy>& Lhs,
+        const Bitmask<_ETy>& Rhs) noexcept
     {
         auto ret = Lhs;
         return ret |= Rhs;
     }
 
     template<typename _ETy>
-    _NODISCARD BitMask<_ETy> operator^(
-        const BitMask<_ETy>& Lhs,
-        const BitMask<_ETy>& Rhs) noexcept
+    _NODISCARD Bitmask<_ETy> operator^(
+        const Bitmask<_ETy>& Lhs,
+        const Bitmask<_ETy>& Rhs) noexcept
     {
         auto ret = Lhs;
         return ret ^= Rhs;
@@ -312,7 +314,7 @@ namespace Neon
     {
         using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
         uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) | ...);
-        return BitMask<FirstType>(Mask);
+        return Bitmask<FirstType>(Mask);
     }
 
     template<typename... _ETy>
@@ -321,14 +323,14 @@ namespace Neon
     {
         using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
         uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) ^ ...);
-        return BitMask<FirstType>(Mask);
+        return Bitmask<FirstType>(Mask);
     }
 
     template<typename _ETy>
     [[nodiscard]] constexpr auto BitMask_Not(
         _ETy Vals) noexcept
     {
-        return BitMask<_ETy>{ (~(1Ui64 << static_cast<uint64_t>(Vals))) };
+        return Bitmask<_ETy>{ (~(1Ui64 << static_cast<uint64_t>(Vals))) };
     }
 
     template<typename... _ETy>
@@ -337,6 +339,6 @@ namespace Neon
     {
         using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
         uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) & ...);
-        return BitMask<FirstType>(Mask);
+        return Bitmask<FirstType>(Mask);
     }
 } // namespace Neon

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="Neon::Bitmask&lt;*&gt;">
+		<Expand>
+			<CustomListItems>
+				<Variable Name="Count" InitialValue="0"/>
+				<Variable Name="FirstFlags" InitialValue="1"/>
+
+				<Loop Condition="Count != (int)bits_count">
+					<If Condition="((m_Bitset._Array[Count / m_Bitset._Bitsperword] &gt;&gt; (Count % m_Bitset._Bitsperword)) &amp; 1)">
+						<Item>($T1)Count</Item>
+					</If>
+					<Exec>Count++</Exec>
+				</Loop>
+			</CustomListItems>
+		</Expand>
+	</Type>
+</AutoVisualizer>

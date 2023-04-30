@@ -7,11 +7,20 @@
 
 #include <Resource/Handle.hpp>
 
+#include <boost/chrono.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
+        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+
+        for (long i = 0; i < 10000000; ++i)
+            (void)std::sqrt(123.456L); // burn some time
+
+        boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
+
         Logger::Initialize();
         CreateWindow(Config.Window);
     }
