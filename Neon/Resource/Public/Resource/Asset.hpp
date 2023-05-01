@@ -6,6 +6,7 @@
 namespace Neon::Asset
 {
     class AssetHandle;
+    class IAssetResourceHandler;
 
     class IAssetResource
     {

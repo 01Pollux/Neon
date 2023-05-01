@@ -8,23 +8,22 @@ namespace Neon::Asset
     class IAssetPack
     {
     public:
+        using AssetResourceHandlerMap = std::map<uint32_t, UPtr<IAssetResourceHandler>>;
+
         virtual ~IAssetPack() = default;
 
         /// <summary>
         /// Load asset from pack file.
         /// </summary>
         virtual Ref<IAssetResource> Load(
-            const AssetHandle& Handle) = 0;
+            const AssetResourceHandlerMap& Handlers,
+            const AssetHandle&             Handle) = 0;
 
+    protected:
         /// <summary>
-        /// Remove asset from pack file.
+        /// Remove resource's original data from the cache
         /// </summary>
-        virtual void Remove(
+        virtual void UnrefAsset(
             const AssetHandle& Handle) = 0;
-
-        /// <summary>
-        /// Clear the pack file's cache.
-        /// </summary>
-        virtual void Flush() = 0;
     };
 } // namespace Neon::Asset

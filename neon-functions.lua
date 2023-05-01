@@ -74,13 +74,79 @@ function common_neon()
     filter "configurations:Dist"
         links
         {
-            "boost/libboost_chrono-vc143-mt-s-x64-1_83.lib"
+            "boost/libboost_atomic-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_chrono-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_container-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_context-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_contract-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_coroutine-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_date_time-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_exception-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_fiber-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_filesystem-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_graph-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_iostreams-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_json-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_locale-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_c99-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_c99f-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_c99l-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_tr1-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_tr1f-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_math_tr1l-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_nowide-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_program_options-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_python39-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_random-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_regex-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_serialization-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_system-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_thread-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_timer-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_type_erasure-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_unit_test_framework-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_url-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_wave-vc143-mt-s-x64-1_83.lib",
+            "boost/libboost_wserialization-vc143-mt-s-x64-1_83.lib"
         }
     filter {}
     filter "configurations:not Dist"
         links
         {
-            "boost/libboost_chrono-vc143-mt-sgd-x64-1_83.lib"
+            "boost/libboost_atomic-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_chrono-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_container-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_context-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_contract-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_coroutine-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_date_time-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_exception-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_fiber-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_filesystem-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_graph-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_iostreams-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_json-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_locale-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_c99-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_c99f-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_c99l-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_tr1-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_tr1f-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_math_tr1l-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_nowide-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_program_options-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_python39-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_random-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_regex-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_serialization-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_system-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_thread-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_timer-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_type_erasure-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_unit_test_framework-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_url-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_wave-vc143-mt-sgd-x64-1_83.lib",
+            "boost/libboost_wserialization-vc143-mt-sgd-x64-1_83.lib"
         }
     filter {}
 

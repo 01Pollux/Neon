@@ -1,23 +1,29 @@
 #pragma once
 
-#include <Core/Guid.hpp>
+#include <boost/uuid/uuid.hpp>
 
 namespace Neon::Asset
 {
     class AssetHandle
     {
     public:
-        explicit AssetHandle(const Guid& Uid) :
-            m_Uid(Uid)
+        constexpr AssetHandle(
+            const boost::uuids::uuid& Uid) :
+            m_Uuid(Uid)
         {
         }
 
         /// <summary>
-        /// Get pack index containning asset
+        /// Get underlying Uuid
+        /// </summary>
+        [[nodiscard]] const boost::uuids::uuid& Get() const noexcept;
+
+        /// <summary>
+        /// Get pack index containing asset
         /// </summary>
         [[nodiscard]] uint16_t GetPack() const noexcept;
 
     private:
-        Guid m_Uid;
+        boost::uuids::uuid m_Uuid;
     };
 } // namespace Neon::Asset

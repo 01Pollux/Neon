@@ -1,3 +1,4 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <Runtime/GameEngine.hpp>
 #include <Log/Logger.hpp>
 

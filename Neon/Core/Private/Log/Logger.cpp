@@ -39,12 +39,12 @@ namespace Neon::Logger
 #endif
             };
 
-            Sinks[0]->set_pattern("[%c] [%l] %n: %v");
+            Sinks[0]->set_pattern("[%c] [%l] %n: %v.");
 
 #ifndef NEON_DIST
             for (auto& Skin : Sinks | std::views::drop(1))
             {
-                Skin->set_pattern("%^[%T] %n: %v%$");
+                Skin->set_pattern("%^[%T] %n: %v%$.");
             }
 #endif
 
