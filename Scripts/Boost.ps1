@@ -12,14 +12,19 @@ Pop-Location -StackName "TempPath"
 
 #
 
+Write-Output "Copying boost headers..."
+
 Remove-Item -Force -Recurse .\Deps\Public\boost -ErrorAction SilentlyContinue
 New-Item .\Deps\Public\boost -Type Directory | Out-Null
-
-Write-Output "Copying boost headers..."
 Copy-Item -Force -Recurse .\tmp\boost\boost\* .\Deps\Public\boost
 
+
 Write-Output "Copying boost libraries..."
+
+Remove-Item -Force -Recurse .\Deps\Libs\boost -ErrorAction SilentlyContinue
+New-Item .\Deps\Libs\boost -Type Directory | Out-Null
 Copy-Item -Recurse.\tmp\boost\stage\lib\*.lib .\Deps\Libs\boost
+
 
 Write-Output "Clearing boost files..."
 Remove-Item tmp\boost -Recurse -Force
