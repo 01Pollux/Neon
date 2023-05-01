@@ -1,22 +1,22 @@
-if (!(Test-Path -path ".\Deps\Libs\boost"))
-{
-    New-Item ".\Deps\Libs\boost" -Type Directory | Out-Null
-}
+Push-Location -Path .\tmp -StackName "TempPath"
 
-cd Deps
-#git clone --recursive https://github.com/boostorg/boost.git
+git clone --recursive https://github.com/boostorg/boost.git
 
-cd boost
-#.\bootstrap.bat
-#.\b2 runtime-link=static threading=multi
+Push-Location -Path .\boost -StackName "BoostTempPath"
 
-cd ../..
+.\bootstrap.bat
+.\b2 runtime-link=static threading=multi
+
+Pop-Location -StackName "BoostTempPath"
+Pop-Location -StackName "TempPath"
+
+#
 
 Write-Output "Copying boost headers..."
-#Copy-Item -Force -Recurse .\Deps\boost\boost .\Deps\Public
+#Copy-Item -Force -Recurse .\tmp\boost\boost .\Deps\Public
 
 Write-Output "Copying boost libraries..."
-#Copy-Item .\Deps\boost\stage\lib\*.lib .\Deps\Libs\boost -Recurse
+#Copy-Item -Recurse.\tmp\boost\libs\*.lib .\Deps\Libs\boost
 
 Write-Output "Clearing boost files..."
-Remove-Item .\Deps\boost -Recurse -Force
+# Remove-Item tmp\boost -Recurse -Force
