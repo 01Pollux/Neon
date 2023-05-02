@@ -1,5 +1,5 @@
 #include <ResourcePCH.hpp>
-#include <Private/Resource/Pack.hpp>
+#include <Private/Resource/ZipPack.hpp>
 #include <Resource/Handler.hpp>
 
 #include <boost/uuid/uuid_io.hpp>
@@ -7,24 +7,36 @@
 
 namespace Neon::Asset
 {
-    Ref<IAssetResource> AssetPack::Load(
+    void ZipAssetPack::Import(
+        const StringU8& FilePath)
+    {
+    }
+
+    void ZipAssetPack::Export(
+        const StringU8& FilePath)
+    {
+    }
+
+    Ref<IAssetResource> ZipAssetPack::Load(
         const AssetResourceHandlerMap& Handlers,
         const AssetHandle&             Handle)
     {
-        auto& LoadedAsset = m_LoadedAssets[Handle.Get()];
+        auto& LoadedAsset = m_LoadedAssets[Handle];
+
+        // Resource already loaded
         if (LoadedAsset)
         {
             return LoadedAsset;
         }
 
-        NEON_INFO_TAG("Resource", "Loading asset: {}", boost::uuids::to_string(Handle.Get()));
+        NEON_INFO_TAG("Resource", "Loading asset: {}", boost::uuids::to_string(Handle));
 
         StringU8 ErrorText;
         auto     Asset = LoadAsset(Handlers, Handle, ErrorText);
 
         if (ErrorText.empty())
         {
-            NEON_WARNING_TAG("Resource", ErrorText, boost::uuids::to_string(Handle.Get()));
+            NEON_WARNING_TAG("Resource", ErrorText, boost::uuids::to_string(Handle));
         }
         else
         {
@@ -34,39 +46,32 @@ namespace Neon::Asset
         return Asset;
     }
 
-    void AssetPack::UnrefAsset(
-        const AssetHandle& Handle)
+    void ZipAssetPack::Save(
+        const AssetResourceHandlerMap& Handlers,
+        const AssetHandle&             Handle,
+        const Ptr<IAssetResource>&     Resource)
     {
-        m_PendingAssets->PendingAssets.erase(Handle.Get());
-        if (m_PendingAssets->PendingAssets.empty())
-        {
-            m_PendingAssets = nullptr;
-        }
+        m_LoadedAssets[Handle] = Resource;
     }
 
     //
 
-    Ref<IAssetResource> AssetPack::LoadAsset(
+    Ref<IAssetResource> ZipAssetPack::LoadAsset(
         const AssetResourceHandlerMap& Handlers,
         const AssetHandle&             Handle,
         StringU8&                      ErrorText)
     {
         Ref<IAssetResource> Asset;
-        if (!m_PendingAssets)
-        {
-            ErrorText = "Tried loading asset '{}' that doesn't exists";
-            return Asset;
-        }
 
-        auto Iter = m_PendingAssets->PendingAssets.find(Handle.Get());
-        if (Iter == m_PendingAssets->PendingAssets.end())
+        auto Iter = m_AssetsInfo.find(Handle);
+        if (Iter == m_AssetsInfo.end())
         {
             ErrorText = "Tried loading asset '{}' that doesn't exists";
             return Asset;
         }
 
         auto& Info    = Iter->second;
-        auto  DataPtr = std::bit_cast<const uint8_t*>(m_PendingAssets->FileView.data()) + Info.Offset;
+        auto  DataPtr = std::bit_cast<const uint8_t*>(m_FileView.data()) + Info.Offset;
 
         auto HandlerIter = Handlers.find(Info.LoaderId);
         if (HandlerIter == Handlers.end())

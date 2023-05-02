@@ -8,47 +8,49 @@
 
 namespace Neon::Asset
 {
-    class AssetPack : public IAssetPack
+    class ZipAssetPack : public IAssetPack
     {
         struct PackInfo
         {
             /// <summary>
             /// Hash of the data in the mapped filed
             /// </summary>
-            // char Hash[41];
+            char Hash[41]{};
 
             /// <summary>
             /// Id of the loader to use
             /// </summary>
-            uint32_t LoaderId;
+            uint32_t LoaderId = 0;
 
             /// <summary>
             /// Offset of data in mapped file
             /// </summary>
-            size_t Offset;
+            size_t Offset = 0;
 
             /// <summary>
             /// Size of data in mapped file
             /// </summary>
-            size_t Size;
+            size_t Size = 0;
         };
 
-        using LoadedAssetsMap = std::unordered_map<boost::uuids::uuid, Ptr<IAssetResource>, boost::hash<boost::uuids::uuid>>;
-        using PendingAssetMap = std::unordered_map<boost::uuids::uuid, PackInfo, boost::hash<boost::uuids::uuid>>;
-
-        struct PendingPacksInfo
-        {
-            PendingAssetMap               PendingAssets;
-            boost::iostreams::mapped_file FileView;
-        };
+        using LoadedAssetsMap = std::unordered_map<AssetHandle, Ptr<IAssetResource>, boost::hash<boost::uuids::uuid>>;
+        using AssetInfoMap    = std::unordered_map<AssetHandle, PackInfo, boost::hash<boost::uuids::uuid>>;
 
     public:
+        void Import(
+            const StringU8& FilePath) override;
+
+        void Export(
+            const StringU8& FilePath) override;
+
         Ref<IAssetResource> Load(
             const AssetResourceHandlerMap& Handlers,
             const AssetHandle&             Handle) override;
 
-        void UnrefAsset(
-            const AssetHandle& Handle) override;
+        void Save(
+            const AssetResourceHandlerMap& Handlers,
+            const AssetHandle&             Handle,
+            const Ptr<IAssetResource>&     Resource);
 
     private:
         Ref<IAssetResource> LoadAsset(
@@ -57,8 +59,10 @@ namespace Neon::Asset
             StringU8&                      ErrorText);
 
     private:
-        LoadedAssetsMap m_LoadedAssets;
+        boost::iostreams::mapped_file m_FileView;
+        size_t                        m_DataSize = 0;
 
-        std::unique_ptr<PendingPacksInfo> m_PendingAssets;
+        LoadedAssetsMap m_LoadedAssets;
+        AssetInfoMap    m_AssetsInfo;
     };
 } // namespace Neon::Asset

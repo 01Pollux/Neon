@@ -13,17 +13,30 @@ namespace Neon::Asset
         virtual ~IAssetPack() = default;
 
         /// <summary>
+        /// Import asset pack file and overwrite current content of the pack.
+        /// </summary>
+        virtual void Import(
+            const StringU8& FilePath) = 0;
+
+        /// <summary>
+        /// Export asset pack file.
+        /// </summary>
+        virtual void Export(
+            const StringU8& FilePath) = 0;
+
+        /// <summary>
         /// Load asset from pack file.
         /// </summary>
         virtual Ref<IAssetResource> Load(
             const AssetResourceHandlerMap& Handlers,
             const AssetHandle&             Handle) = 0;
 
-    protected:
         /// <summary>
-        /// Remove resource's original data from the cache
+        /// Save asset to pack file.
         /// </summary>
-        virtual void UnrefAsset(
-            const AssetHandle& Handle) = 0;
+        virtual void Save(
+            const AssetResourceHandlerMap& Handlers,
+            const AssetHandle&             Handle,
+            const Ptr<IAssetResource>&     Resource) = 0;
     };
 } // namespace Neon::Asset
