@@ -26,7 +26,7 @@ namespace Neon::Asset
         auto& Pack = m_LoadedPacks[Handle.GetPack()];
         if (!Pack)
         {
-            Pack = std::make_shared<AssetPack>();
+            Pack = std::make_shared<ZipAssetPack>();
         }
         Pack->Save(m_Handlers, Handle, Resource);
     }

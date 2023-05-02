@@ -15,7 +15,7 @@ namespace Neon::Asset
             /// <summary>
             /// Hash of the data in the mapped filed
             /// </summary>
-            char Hash[41]{};
+            std::array<uint8_t, 32> Hash;
 
             /// <summary>
             /// Id of the loader to use
@@ -57,6 +57,9 @@ namespace Neon::Asset
             const AssetResourceHandlerMap& Handlers,
             const AssetHandle&             Handle,
             StringU8&                      ErrorText);
+
+    private:
+        bool ReadHeader();
 
     private:
         boost::iostreams::mapped_file m_FileView;
