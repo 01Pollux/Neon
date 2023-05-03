@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <Resource/Handle.hpp>
 
 namespace Neon::Asset
 {
     class IAssetResource;
-
     class IAssetResourceHandler
     {
     public:
@@ -25,8 +25,9 @@ namespace Neon::Asset
         /// Load data from bytes.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetResource> Load(
-            const uint8_t* Data,
-            size_t         DataSize) = 0;
+            const AssetHandle& Handle,
+            const uint8_t*     Data,
+            size_t             DataSize) = 0;
 
         /// <summary>
         /// Save data to bytes.

@@ -4,18 +4,5 @@
 
 namespace Neon::Asset
 {
-    class AssetHandle : public boost::uuids::uuid
-    {
-    public:
-        /// <summary>
-        /// Get pack index containing asset
-        /// </summary>
-        [[nodiscard]] uint16_t GetPack() const noexcept;
-
-        /// <summary>
-        /// Set pack index containing asset
-        /// </summary>
-        [[nodiscard]] void SetPack(
-            uint16_t Index) noexcept;
-    };
+    using AssetHandle = boost::uuids::uuid;
 } // namespace Neon::Asset

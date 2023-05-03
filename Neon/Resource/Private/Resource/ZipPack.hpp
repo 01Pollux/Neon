@@ -38,9 +38,6 @@ namespace Neon::Asset
         using AssetInfoMap    = std::unordered_map<AssetHandle, PackInfo, boost::hash<boost::uuids::uuid>>;
 
     public:
-        ZipAssetPack(
-            uint16_t PackId);
-
         void Import(
             const StringU8& FilePath) override;
 

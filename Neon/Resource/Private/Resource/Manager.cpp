@@ -17,37 +17,22 @@ namespace Neon::Asset
         const StringU8& Path,
         const StringU8& Tag)
     {
-        NEON_ASSERT(!m_LoadedPacksTags.contains(Tag), "Loading pack with duplicate tag");
+        NEON_ASSERT(!m_LoadedPacks.contains(Tag), "Loading pack with duplicate tag");
 
-        uint16_t PackId = 0;
-        for (auto& Id : m_LoadedPacks | std::views::keys)
-        {
-            if (PackId != Id)
-            {
-                break;
-            }
-            ++PackId;
-        }
-        NEON_ASSERT(!m_LoadedPacks.contains(PackId));
-
-        Ptr<IAssetPack> Pack = OpenPack(Path, PackId);
+        Ptr<IAssetPack> Pack = OpenPack(Path);
         NEON_VALIDATE(Pack);
 
-        NEON_INFO("Resource", "Loading pack: '{:X}' with tag: '{}' and id: '{}'", static_cast<void*>(Pack.get()), Tag, PackId);
+        NEON_INFO("Resource", "Loading pack: '{:X}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
         Pack->Import(Path);
 
-        auto Iter = m_LoadedPacks.emplace(PackId, Pack).first;
-        m_LoadedPacksTags.emplace(Tag, Iter);
+        m_LoadedPacks.emplace(Tag, Pack);
     }
 
     void IResourceManager::UnloadPack(
         const StringU8& Tag)
     {
-        auto Iter = m_LoadedPacksTags.find(Tag);
-        NEON_ASSERT(Iter != m_LoadedPacksTags.end(), "Pack doesn't exists");
-
-        m_LoadedPacks.erase(Iter->second);
-        m_LoadedPacksTags.erase(Iter);
+        bool Erased = m_LoadedPacks.erase(Tag) > 0;
+        NEON_VALIDATE(Erased, "Resource pack '{}' doesn't exists", Tag);
     }
 
     //
@@ -86,8 +71,8 @@ namespace Neon::Asset
     IAssetPack* IResourceManager::GetPack(
         const StringU8& Tag)
     {
-        auto Iter = m_LoadedPacksTags.find(Tag);
-        NEON_VALIDATE(Iter == m_LoadedPacksTags.end(), "Resource pack '{}' doesn't exists", Tag);
-        return Iter->second->second.get();
+        auto Iter = m_LoadedPacks.find(Tag);
+        NEON_VALIDATE(Iter == m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
+        return Iter->second.get();
     }
 } // namespace Neon::Asset

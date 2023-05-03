@@ -11,12 +11,6 @@ namespace Neon::Asset
     class IAssetPack
     {
     public:
-        IAssetPack(
-            uint16_t PackId) :
-            m_PackId(PackId)
-        {
-        }
-
         virtual ~IAssetPack() = default;
 
         /// <summary>
@@ -46,8 +40,5 @@ namespace Neon::Asset
             const AssetResourceHandlers& Handlers,
             const AssetHandle&           Handle,
             const Ptr<IAssetResource>&   Resource) = 0;
-
-    protected:
-        uint16_t m_PackId;
     };
 } // namespace Neon::Asset

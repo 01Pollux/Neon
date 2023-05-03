@@ -5,9 +5,6 @@
 
 namespace Neon::Asset
 {
-    class AssetHandle;
-    class IAssetResourceHandler;
-
     class IAssetResource
     {
     public:
@@ -24,7 +21,10 @@ namespace Neon::Asset
         /// <summary>
         /// Get asset handle.
         /// </summary>
-        [[nodiscard]] const AssetHandle& GetHandle() const noexcept;
+        [[nodiscard]] const AssetHandle& GetHandle() const noexcept
+        {
+            return m_Handle;
+        }
 
     private:
         AssetHandle m_Handle;

@@ -17,12 +17,6 @@ namespace buuid = boost::uuids;
 
 namespace Neon::Asset
 {
-    ZipAssetPack::ZipAssetPack(
-        uint16_t PackId) :
-        IAssetPack(PackId)
-    {
-    }
-
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
@@ -150,7 +144,7 @@ namespace Neon::Asset
             return Asset;
         }
 
-        return Handler->Load(DataPtr, Info.Size);
+        return Handler->Load(Handle, DataPtr, Info.Size);
     }
 
     //

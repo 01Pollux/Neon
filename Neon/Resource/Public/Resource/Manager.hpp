@@ -10,8 +10,7 @@ namespace Neon::Asset
 {
     class IResourceManager
     {
-        using AssetPackMap    = std::map<uint16_t, Ptr<IAssetPack>>;
-        using AssetPackTagMap = std::map<StringU8, AssetPackMap::const_iterator>;
+        using AssetPackMap = std::map<StringU8, Ptr<IAssetPack>>;
 
     public:
         static constexpr const char* Global_RuntimePack = "_runtime.np";
@@ -74,8 +73,7 @@ namespace Neon::Asset
         /// Open pack file from path
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetPack> OpenPack(
-            const StringU8& Path,
-            uint16_t        PackId) = 0;
+            const StringU8& Path) = 0;
 
     private:
         /// <summary>
@@ -87,6 +85,5 @@ namespace Neon::Asset
     private:
         AssetResourceHandlers m_Handlers;
         AssetPackMap          m_LoadedPacks;
-        AssetPackTagMap       m_LoadedPacksTags;
     };
 } // namespace Neon::Asset
