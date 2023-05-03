@@ -13,19 +13,27 @@ namespace Neon::Asset
 
     //
 
-    void IResourceManager::LoadPack(
-        const StringU8& Path,
+    IAssetPack* IResourceManager::GetPack(
         const StringU8& Tag)
     {
-        NEON_ASSERT(!m_LoadedPacks.contains(Tag), "Loading pack with duplicate tag");
+        auto Iter = m_LoadedPacks.find(Tag);
+        NEON_VALIDATE(Iter == m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
+        return Iter->second.get();
+    }
 
-        Ptr<IAssetPack> Pack = OpenPack(Path);
+    IAssetPack* IResourceManager::LoadPack(
+        const StringU8& Tag,
+        const StringU8& Path)
+    {
+        PackIsUnique(Tag);
+
+        UPtr<IAssetPack> Pack = OpenPack(Path);
         NEON_VALIDATE(Pack);
 
         NEON_INFO("Resource", "Loading pack: '{:X}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
         Pack->Import(Path);
 
-        m_LoadedPacks.emplace(Tag, Pack);
+        return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
     }
 
     void IResourceManager::UnloadPack(
@@ -35,44 +43,9 @@ namespace Neon::Asset
         NEON_VALIDATE(Erased, "Resource pack '{}' doesn't exists", Tag);
     }
 
-    //
-
-    void IResourceManager::ImportPack(
-        const StringU8& Tag,
-        const StringU8& FilePath)
+    void IResourceManager::PackIsUnique(
+        const StringU8& Tag) const
     {
-        GetPack(Tag)->Import(FilePath);
-    }
-
-    void IResourceManager::ExportPack(
-        const StringU8& Tag,
-        const StringU8& FilePath)
-    {
-        GetPack(Tag)->Export(m_Handlers, FilePath);
-    }
-
-    Ref<IAssetResource> IResourceManager::LoadPack(
-        const StringU8&    Tag,
-        const AssetHandle& Handle)
-    {
-        return GetPack(Tag)->Load(m_Handlers, Handle);
-    }
-
-    void IResourceManager::SavePack(
-        const StringU8&            Tag,
-        const AssetHandle&         Handle,
-        const Ptr<IAssetResource>& Resource)
-    {
-        GetPack(Tag)->Save(m_Handlers, Handle, Resource);
-    }
-
-    //
-
-    IAssetPack* IResourceManager::GetPack(
-        const StringU8& Tag)
-    {
-        auto Iter = m_LoadedPacks.find(Tag);
-        NEON_VALIDATE(Iter == m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
-        return Iter->second.get();
+        NEON_ASSERT(!m_LoadedPacks.contains(Tag), "Loading pack with duplicate tag");
     }
 } // namespace Neon::Asset

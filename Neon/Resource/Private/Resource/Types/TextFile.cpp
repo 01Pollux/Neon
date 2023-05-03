@@ -4,9 +4,7 @@
 namespace Neon::Asset
 {
     TextFileAsset::TextFileAsset(
-        const AssetHandle& Handle,
-        String             Text) :
-        IAssetResource(Handle),
+        String Text) :
         m_Utf16Text(std::move(Text))
     {
     }
@@ -55,20 +53,21 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> TextFileAsset::Handler::Load(
-        const AssetHandle& Handle,
-        const uint8_t*     Data,
-        size_t             DataSize)
+        std::istream& Stream,
+        size_t        DataSize)
     {
-        return std::make_shared<TextFileAsset>(Handle, String(std::bit_cast<wchar_t*>(Data), DataSize));
+        String Str(DataSize, '\0');
+        Stream.read(std::bit_cast<char*>(Str.data()), DataSize);
+        return std::make_shared<TextFileAsset>(std::move(Str));
     }
 
     void TextFileAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        uint8_t*                   Data,
+        std::ostream&              Stream,
         size_t                     DataSize)
     {
         auto TextFile = static_cast<TextFileAsset*>(Resource.get());
-        auto SrcData  = std::bit_cast<uint8_t*>(TextFile->AsUtf16().data());
-        std::copy_n(SrcData, DataSize, Data);
+        auto SrcData  = std::bit_cast<char*>(TextFile->AsUtf16().data());
+        Stream.write(SrcData, DataSize);
     }
 } // namespace Neon::Asset

@@ -1,35 +1,43 @@
 #include <ResourcePCH.hpp>
-#include <Private/Resource/ZipPack.hpp>
+#include <Resource/Packs/ZipPack.hpp>
 #include <Resource/Handler.hpp>
 
 #include <future>
-#include <Core/SHA256.hpp>
+#include <filesystem>
 
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/stream.hpp>
+#include <Core/SHA256.hpp>
+#include <Math/Common.hpp>
+
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 
 #include <Log/Logger.hpp>
 
-namespace bio   = boost::iostreams;
 namespace buuid = boost::uuids;
 
 namespace Neon::Asset
 {
+    ZipAssetPack::ZipAssetPack(
+        const AssetResourceHandlers& Handlers) :
+        IAssetPack(Handlers)
+    {
+    }
+
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
+        std::lock_guard Lock(m_PackMutex);
+
         m_AssetsInfo.clear();
         m_LoadedAssets.clear();
 
-        OpenFile(FilePath);
+        m_FileStream = std::fstream(FilePath, std::ios::in);
 
         try
         {
             if (!ReadFile())
             {
-                m_FileView = {};
+                m_FileStream = {};
                 NEON_ERROR("Resource", "Invalid pack file '{}'", FilePath);
             }
         }
@@ -40,13 +48,14 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::Export(
-        const AssetResourceHandlers& Handlers,
-        const StringU8&              FilePath)
+        const StringU8& FilePath)
     {
-        size_t FileSize = 0;
+        std::lock_guard Lock(m_PackMutex);
+
+        size_t FileSize = SizeOfHeader(m_AssetsInfo.size());
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            if (!Handlers.Get(Info.LoaderId))
+            if (!m_Handlers.Get(Info.LoaderId))
             {
                 NEON_WARNING("Resource", "Tried to export a resource '{}' with an unknown handler", buuid::to_string(Handle));
                 continue;
@@ -56,21 +65,21 @@ namespace Neon::Asset
             FileSize += Info.Size;
         }
 
-        bio::mapped_file_params Params(FilePath);
-        Params.flags         = bio::mapped_file::readwrite;
-        Params.new_file_size = FileSize;
+        m_FileStream = {};
+        std::filesystem::resize_file(FilePath, FileSize);
 
-        m_FileView = bio::mapped_file(Params);
-        WriteFile(Handlers);
-        OpenFile(FilePath);
+        m_FileStream = std::fstream(FilePath, std::ios::out);
+        WriteFile();
+        m_FileStream = std::fstream(FilePath, std::ios::in);
     }
 
     //
 
     Ref<IAssetResource> ZipAssetPack::Load(
-        const AssetResourceHandlers& Handlers,
-        const AssetHandle&           Handle)
+        const AssetHandle& Handle)
     {
+        std::lock_guard Lock(m_PackMutex);
+
         auto& LoadedAsset = m_LoadedAssets[Handle];
 
         // Resource already loaded
@@ -82,7 +91,7 @@ namespace Neon::Asset
         NEON_INFO_TAG("Resource", "Loading asset: {}", buuid::to_string(Handle));
 
         StringU8 ErrorText;
-        auto     Asset = LoadAsset(Handlers, Handle, ErrorText);
+        auto     Asset = LoadAsset(m_Handlers, Handle, ErrorText);
 
         if (ErrorText.empty())
         {
@@ -97,11 +106,12 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::Save(
-        const AssetResourceHandlers& Handlers,
-        const AssetHandle&           Handle,
-        const Ptr<IAssetResource>&   Resource)
+        const AssetHandle&         Handle,
+        const Ptr<IAssetResource>& Resource)
     {
-        for (auto& [LoaderId, Handler] : Handlers.Get())
+        std::lock_guard Lock(m_PackMutex);
+
+        for (auto& [LoaderId, Handler] : m_Handlers.Get())
         {
             if (Handler->CanCastTo(Resource))
             {
@@ -134,8 +144,8 @@ namespace Neon::Asset
             return Asset;
         }
 
-        auto& Info    = Iter->second;
-        auto  DataPtr = std::bit_cast<const uint8_t*>(m_FileView.data()) + Info.Offset;
+        auto& Info = Iter->second;
+        m_FileStream.seekg(Info.Offset);
 
         auto Handler = Handlers.Get(Info.LoaderId);
         if (!Handler)
@@ -144,7 +154,7 @@ namespace Neon::Asset
             return Asset;
         }
 
-        return Handler->Load(Handle, DataPtr, Info.Size);
+        return Handler->Load(m_FileStream, Info.Size);
     }
 
     //
@@ -171,13 +181,10 @@ namespace Neon::Asset
 
     //
 
-    void ZipAssetPack::OpenFile(
-        const StringU8& FilePath)
+    size_t ZipAssetPack::SizeOfHeader(
+        size_t NumberOfSections)
     {
-        bio::mapped_file_params Params(FilePath);
-        Params.flags = bio::mapped_file::readonly;
-
-        m_FileView = bio::mapped_file(Params);
+        return sizeof(AssetPackHeader) + NumberOfSections * sizeof(AssetPackSection);
     }
 
     bool ZipAssetPack::ReadFile()
@@ -187,10 +194,8 @@ namespace Neon::Asset
 
     bool ZipAssetPack::Header_ReadSections()
     {
-        bio::stream<bio::mapped_file> Stream(m_FileView);
-
         AssetPackHeader Header;
-        Stream.read(std::bit_cast<char*>(&Header), sizeof(Header));
+        m_FileStream.read(std::bit_cast<char*>(&Header), sizeof(Header));
 
         if (Header.Signature != AssetPackHeader::DefaultSignature ||
             Header.NumberOfResources == 0)
@@ -201,13 +206,13 @@ namespace Neon::Asset
         AssetPackSection Section;
         for (uint16_t i = 0; i < Header.NumberOfResources; i++)
         {
-            Stream >> Section.Signature;
+            m_FileStream >> Section.Signature;
             if (Header.Signature != Section.Signature)
             {
                 NEON_INFO("Resource", "Invalid resource signature");
                 return false;
             }
-            Stream >> Section.Handle;
+            m_FileStream >> Section.Handle;
 
             auto& Info = m_AssetsInfo[Section.Handle];
             if (Info.Size)
@@ -216,8 +221,7 @@ namespace Neon::Asset
                 return false;
             }
 
-            Stream.read(std::bit_cast<char*>(&Info), sizeof(Info));
-            // Info = Section.PackInfo;
+            m_FileStream.read(std::bit_cast<char*>(&Info), sizeof(Info));
         }
 
         return true;
@@ -227,89 +231,83 @@ namespace Neon::Asset
     {
         bool Succeeded = true;
 
-        std::vector<std::future<void>> AssetsValidators;
+        // std::vector<std::future<void>> AssetsValidators;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            AssetsValidators.emplace_back(
+            /*AssetsValidators.emplace_back(
                 std::async(
                     [this, &Handle, &Info, &Succeeded]
-                    {
-                        bio::stream<bio::mapped_file> Stream(m_FileView);
+                    {*/
+            SHA256 Sha256;
+            char   Byte;
 
-                        SHA256 Sha256;
-                        char   Byte;
+            m_FileStream.seekg(Info.Offset);
+            for (size_t i = 0; i < Info.Size && Succeeded; i++)
+            {
+                m_FileStream >> Byte;
+                Sha256.Append(Byte);
+            }
 
-                        Stream.seekg(Info.Offset);
-                        for (size_t i = 0; i < Info.Size && Succeeded; i++)
-                        {
-                            Stream >> Byte;
-                            Sha256.Append(Byte);
-                        }
-
-                        if (Succeeded && Sha256.Digest() != Info.Hash)
-                        {
-                            NEON_INFO("Resource", "Invalid resource Sha256 for '{}'", buuid::to_string(Handle));
-                            Succeeded = false;
-                        }
-                    }));
+            if (Succeeded && Sha256.Digest() != Info.Hash)
+            {
+                NEON_INFO("Resource", "Invalid resource Sha256 for '{}'", buuid::to_string(Handle));
+                Succeeded = false;
+            }
+            //}));
         }
 
-        AssetsValidators.clear();
+        // AssetsValidators.clear();
         return Succeeded;
     }
 
     //
 
-    void ZipAssetPack::WriteFile(
-        const AssetResourceHandlers& Handlers)
+    void ZipAssetPack::WriteFile()
     {
         Header_WriteSections();
-        Header_WriteBody(Handlers);
-
-        bio::stream<bio::mapped_file> Stream(m_FileView);
-
-        AssetPackSection Section;
+        Header_WriteBody();
 
         AssetPackHeader Header{
             .Signature         = AssetPackHeader::DefaultSignature,
             .Version           = AssetPackHeader::LatestVersion,
             .NumberOfResources = uint16_t(m_AssetsInfo.size())
         };
-        Stream.write(std::bit_cast<const char*>(&Header), sizeof(Header));
+        m_FileStream.seekp(0);
+        m_FileStream.write(std::bit_cast<const char*>(&Header), sizeof(Header));
     }
 
     void ZipAssetPack::Header_WriteSections()
     {
-        bio::stream<bio::mapped_file> Stream(m_FileView);
-
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            Stream << AssetPackSection::DefaultSignature;
-            Stream << Handle;
-            Stream.write(std::bit_cast<const char*>(&Info), sizeof(Info));
+            m_FileStream << AssetPackSection::DefaultSignature;
+            m_FileStream << Handle;
+            m_FileStream.write(std::bit_cast<const char*>(&Info), sizeof(Info));
         }
     }
 
-    void ZipAssetPack::Header_WriteBody(
-        const AssetResourceHandlers& Handlers)
+    void ZipAssetPack::Header_WriteBody()
     {
         std::vector<std::future<void>> AssetsWriter;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            AssetsWriter.emplace_back(
-                std::async(
-                    [this, &Handle, &Info, &Handlers]
-                    {
-                        auto  Handler  = Handlers.Get(Info.LoaderId);
-                        auto& Resource = m_LoadedAssets[Handle];
+            // AssetsWriter.emplace_back(
+            // std::async(
+            //[this, &Handle, &Info]
+            //{
 
-                        uint8_t* Data = std::bit_cast<uint8_t*>(m_FileView.data() + Info.Offset);
-                        Handler->Save(Resource, Data, Info.Size);
+            auto  Handler  = m_Handlers.Get(Info.LoaderId);
+            auto& Resource = m_LoadedAssets[Handle];
 
-                        SHA256 Sha256;
-                        Sha256.Append(Data, Info.Size);
-                        Info.Hash = Sha256.Digest();
-                    }));
+            auto DataPos = m_FileStream.tellp();
+            Handler->Save(Resource, m_FileStream, Info.Size);
+            auto RestorePos = m_FileStream.tellp();
+
+            // TODO:
+            SHA256 Sha256;
+            Sha256.Append("TODO");
+            Info.Hash = Sha256.Digest();
+            //}));
         }
     }
 } // namespace Neon::Asset

@@ -11,6 +11,12 @@ namespace Neon::Asset
     class IAssetPack
     {
     public:
+        IAssetPack(
+            const AssetResourceHandlers& Handlers) noexcept :
+            m_Handlers(Handlers)
+        {
+        }
+
         virtual ~IAssetPack() = default;
 
         /// <summary>
@@ -23,22 +29,22 @@ namespace Neon::Asset
         /// Export asset pack file.
         /// </summary>
         virtual void Export(
-            const AssetResourceHandlers& Handlers,
-            const StringU8&              FilePath) = 0;
+            const StringU8& FilePath) = 0;
 
         /// <summary>
         /// Load asset from pack file.
         /// </summary>
         virtual Ref<IAssetResource> Load(
-            const AssetResourceHandlers& Handlers,
-            const AssetHandle&           Handle) = 0;
+            const AssetHandle& Handle) = 0;
 
         /// <summary>
         /// Save asset to pack file.
         /// </summary>
         virtual void Save(
-            const AssetResourceHandlers& Handlers,
-            const AssetHandle&           Handle,
-            const Ptr<IAssetResource>&   Resource) = 0;
+            const AssetHandle&         Handle,
+            const Ptr<IAssetResource>& Resource) = 0;
+
+    protected:
+        const AssetResourceHandlers& m_Handlers;
     };
 } // namespace Neon::Asset

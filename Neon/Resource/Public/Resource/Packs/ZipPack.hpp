@@ -3,7 +3,7 @@
 #include <Resource/Pack.hpp>
 #include <Core/String.hpp>
 
-#include <boost/iostreams/device/mapped_file.hpp>
+#include <fstream>
 #include <boost/functional/hash.hpp>
 
 namespace Neon::Asset
@@ -38,21 +38,22 @@ namespace Neon::Asset
         using AssetInfoMap    = std::unordered_map<AssetHandle, PackInfo, boost::hash<boost::uuids::uuid>>;
 
     public:
+        ZipAssetPack(
+            const AssetResourceHandlers& Handlers);
+
+    public:
         void Import(
             const StringU8& FilePath) override;
 
         void Export(
-            const AssetResourceHandlers& Handlers,
-            const StringU8&              FilePath) override;
+            const StringU8& FilePath) override;
 
         Ref<IAssetResource> Load(
-            const AssetResourceHandlers& Handlers,
-            const AssetHandle&           Handle) override;
+            const AssetHandle& Handle) override;
 
         void Save(
-            const AssetResourceHandlers& Handlers,
-            const AssetHandle&           Handle,
-            const Ptr<IAssetResource>&   Resource) override;
+            const AssetHandle&         Handle,
+            const Ptr<IAssetResource>& Resource) override;
 
     private:
         Ref<IAssetResource> LoadAsset(
@@ -62,10 +63,10 @@ namespace Neon::Asset
 
     private:
         /// <summary>
-        /// Open file as read only mode.
+        /// Get size of header + sections in file
         /// </summary>
-        void OpenFile(
-            const StringU8& FilePath);
+        [[nodiscard]] static size_t SizeOfHeader(
+            size_t NumberOfSections);
 
         /// <summary>
         /// Read file and validate if it contains valid header + valid data.
@@ -86,8 +87,7 @@ namespace Neon::Asset
         /// <summary>
         /// Write to file header and data.
         /// </summary>
-        void WriteFile(
-            const AssetResourceHandlers& Handlers);
+        void WriteFile();
 
         /// <summary>
         /// Write sections to the header.
@@ -97,12 +97,11 @@ namespace Neon::Asset
         /// <summary>
         /// Write body to the header.
         /// </summary>
-        void Header_WriteBody(
-            const AssetResourceHandlers& Handlers);
+        void Header_WriteBody();
 
     private:
-        boost::iostreams::mapped_file m_FileView;
-
+        std::fstream    m_FileStream;
+        std::mutex      m_PackMutex;
         LoadedAssetsMap m_LoadedAssets;
         AssetInfoMap    m_AssetsInfo;
     };

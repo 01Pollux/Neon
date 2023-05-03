@@ -25,16 +25,15 @@ namespace Neon::Asset
         /// Load data from bytes.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetResource> Load(
-            const AssetHandle& Handle,
-            const uint8_t*     Data,
-            size_t             DataSize) = 0;
+            std::istream& Stream,
+            size_t        DataSize) = 0;
 
         /// <summary>
         /// Save data to bytes.
         /// </summary>
         [[nodiscard]] virtual void Save(
             const Ptr<IAssetResource>& Resource,
-            uint8_t*                   Data,
+            std::ostream&              Stream,
             size_t                     DataSize) = 0;
     };
 

@@ -7,6 +7,9 @@
 
 #include <Resource/Runtime/Manager.hpp>
 
+#include <Resource/Types/TextFile.hpp>
+#include <Resource/Packs/ZipPack.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -67,6 +70,16 @@ namespace Neon
 
     void DefaultGameEngine::LoadResourcePacks()
     {
+        auto TextFile = std::make_shared<Asset::TextFileAsset>(
+            L"Hello world");
+
         m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
+
+        auto Pack = m_AssetManager->NewPack<Asset::ZipAssetPack>("main_asset");
+        Pack->Save(
+            Asset::AssetHandle::Random(),
+            TextFile);
+
+        Pack->Export(R"(D:\Dev\Engines\Neon\test.np)");
     }
 } // namespace Neon

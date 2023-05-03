@@ -11,8 +11,7 @@ namespace Neon::Asset
     {
     public:
         TextFileAsset(
-            const AssetHandle& Handle,
-            String             Text = L"");
+            String Text = L"");
 
         /// <summary>
         /// Load string as utf8
@@ -47,13 +46,12 @@ namespace Neon::Asset
                 const Ptr<IAssetResource>& Resource) override;
 
             Ptr<IAssetResource> Load(
-                const AssetHandle& Handle,
-                const uint8_t*     Data,
-                size_t             DataSize) override;
+                std::istream& Stream,
+                size_t        DataSize) override;
 
             void Save(
                 const Ptr<IAssetResource>& Resource,
-                uint8_t*                   Data,
+                std::ostream&              Stream,
                 size_t                     DataSize) override;
         };
 

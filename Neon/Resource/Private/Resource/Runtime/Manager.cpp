@@ -1,7 +1,7 @@
 #include <ResourcePCH.hpp>
 #include <Resource/Runtime/Manager.hpp>
 
-#include <Private/Resource/ZipPack.hpp>
+#include <Resource/Packs/ZipPack.hpp>
 
 #include <Resource/Types/TextFile.hpp>
 
@@ -12,12 +12,12 @@ namespace Neon::Asset
         AddHandler<TextFileAsset::Handler>();
     }
 
-    Ptr<IAssetPack> RuntimeResourceManager::OpenPack(
+    UPtr<IAssetPack> RuntimeResourceManager::OpenPack(
         const StringU8& Path)
     {
         if (Path.ends_with(".np"))
         {
-            return std::make_shared<ZipAssetPack>();
+            return InstantiatePack<ZipAssetPack>();
         }
         return nullptr;
     }

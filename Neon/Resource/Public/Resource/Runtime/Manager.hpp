@@ -10,7 +10,7 @@ namespace Neon::Asset
         RuntimeResourceManager();
 
     protected:
-        Ptr<IAssetPack> OpenPack(
+        UPtr<IAssetPack> OpenPack(
             const StringU8& Path) override;
     };
 } // namespace Neon::Asset

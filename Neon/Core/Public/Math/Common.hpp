@@ -18,7 +18,7 @@
 #pragma intrinsic(_mm_crc32_u64)
 #endif
 
-namespace Math
+namespace Neon::Math
 {
     template<typename _Ty>
     [[nodiscard]] constexpr _Ty AlignUpWithMask(
@@ -82,4 +82,4 @@ namespace Math
     {
         return ((Value / Divisor) * Divisor) == Value;
     }
-} // namespace Math
+} // namespace Neon::Math
