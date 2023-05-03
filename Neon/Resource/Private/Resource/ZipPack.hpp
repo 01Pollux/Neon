@@ -10,6 +10,7 @@ namespace Neon::Asset
 {
     class ZipAssetPack : public IAssetPack
     {
+    public:
         struct PackInfo
         {
             /// <summary>
@@ -20,7 +21,7 @@ namespace Neon::Asset
             /// <summary>
             /// Id of the loader to use
             /// </summary>
-            uint32_t LoaderId = 0;
+            size_t LoaderId = 0;
 
             /// <summary>
             /// Offset of data in mapped file
@@ -41,7 +42,8 @@ namespace Neon::Asset
             const StringU8& FilePath) override;
 
         void Export(
-            const StringU8& FilePath) override;
+            const AssetResourceHandlerMap& Handlers,
+            const StringU8&                FilePath) override;
 
         Ref<IAssetResource> Load(
             const AssetResourceHandlerMap& Handlers,
@@ -59,11 +61,47 @@ namespace Neon::Asset
             StringU8&                      ErrorText);
 
     private:
-        bool ReadHeader();
+        /// <summary>
+        /// Open file as read only mode.
+        /// </summary>
+        void OpenFile(
+            const StringU8& FilePath);
+
+        /// <summary>
+        /// Read file and validate if it contains valid header + valid data.
+        /// </summary>
+        bool ReadFile();
+
+        /// <summary>
+        /// Read sections to the header.
+        /// </summary>
+        bool Header_ReadSections();
+
+        /// <summary>
+        /// Read body to the file.
+        /// </summary>
+        bool Header_ReadBody();
+
+    public:
+        /// <summary>
+        /// Write to file header and data.
+        /// </summary>
+        void WriteFile(
+            const AssetResourceHandlerMap& Handlers);
+
+        /// <summary>
+        /// Write sections to the header.
+        /// </summary>
+        void Header_WriteSections();
+
+        /// <summary>
+        /// Write body to the header.
+        /// </summary>
+        void Header_WriteBody(
+            const AssetResourceHandlerMap& Handlers);
 
     private:
         boost::iostreams::mapped_file m_FileView;
-        size_t                        m_DataSize = 0;
 
         LoadedAssetsMap m_LoadedAssets;
         AssetInfoMap    m_AssetsInfo;

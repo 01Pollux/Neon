@@ -9,7 +9,7 @@ namespace Neon::Asset
     class IResourceManager
     {
         using AssetPackMap            = std::map<uint16_t, Ptr<IAssetPack>>;
-        using AssetResourceHandlerMap = std::map<uint32_t, UPtr<IAssetResourceHandler>>;
+        using AssetResourceHandlerMap = std::map<size_t, UPtr<IAssetResourceHandler>>;
 
     public:
         /// <summary>

@@ -21,6 +21,9 @@ namespace Neon::Asset
 
         virtual ~IAssetResource() = default;
 
+        /// <summary>
+        /// Get asset handle.
+        /// </summary>
         [[nodiscard]] const AssetHandle& GetHandle() const noexcept;
 
     private:

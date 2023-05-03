@@ -1,168 +1,162 @@
 #include <CorePCH.hpp>
 #include <Core/SHA256.hpp>
+#include <numeric>
 
 namespace Neon
 {
+    static constexpr std::array<uint32_t, 64> SHA256_Table = {
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    };
+
     SHA256::SHA256() :
-        m_BlockLen(0),
-        m_Bitlen(0)
+        m_Data{
+            0x6a09e667,
+            0xbb67ae85,
+            0x3c6ef372,
+            0xa54ff53a,
+            0x510e527f,
+            0x9b05688c,
+            0x1f83d9ab,
+            0x5be0cd19
+        }
     {
-        m_State[0] = 0x6a09e667;
-        m_State[1] = 0xbb67ae85;
-        m_State[2] = 0x3c6ef372;
-        m_State[3] = 0xa54ff53a;
-        m_State[4] = 0x510e527f;
-        m_State[5] = 0x9b05688c;
-        m_State[6] = 0x1f83d9ab;
-        m_State[7] = 0x5be0cd19;
     }
 
-    void SHA256::Append(uint8_t data)
+    void SHA256::Append(
+        const uint8_t* Data,
+        size_t         Size)
     {
-        m_Data[m_BlockLen++] = data;
-        if (m_BlockLen == 64)
+        m_DataSize += Size;
+        /* If there is data left in buff, concatenate it to process as new chunk */
+        if ((Size + m_ChunkSize) >= 64)
         {
-            transform();
+            std::array<uint8_t, 64> Tmp;
 
-            // End of the block
-            m_Bitlen += 512;
-            m_BlockLen = 0;
+            std::copy_n(m_LastChunk.data(), m_ChunkSize, Tmp.data());
+            std::copy_n(Data, m_LastChunk.size() - m_ChunkSize, Tmp.data() + m_ChunkSize);
+
+            Data += (m_LastChunk.size() - m_ChunkSize);
+            Size -= (m_LastChunk.size() - m_ChunkSize);
+
+            m_ChunkSize = 0;
+            ProcessChunk(Tmp.data());
         }
-    }
 
-    void SHA256::Append(const uint8_t* data, size_t length)
-    {
-        for (size_t i = 0; i < length; i++)
+        /* Run over data chunks */
+        while (Size >= m_LastChunk.size())
         {
-            Append(data[i]);
+            ProcessChunk(Data);
+            Data += m_LastChunk.size();
+            Size -= m_LastChunk.size();
         }
+
+        /* Save remaining data in buff, will be reused on next call or finalize */
+        std::copy_n(Data, Size, m_LastChunk.data() + m_ChunkSize);
+        m_ChunkSize += uint8_t(Size);
     }
 
     void SHA256::Append(
         const std::string& data)
     {
-        Append(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
+        Append(std::bit_cast<const uint8_t*>(data.c_str()), data.size());
     }
 
     auto SHA256::Digest() -> Bytes
     {
-        Bytes hash{};
+        m_LastChunk[m_ChunkSize++] = 0x80;
+        std::memset(m_LastChunk.data() + m_ChunkSize, 0, m_LastChunk.size() - m_ChunkSize);
 
-        pad();
-        revert(hash);
-
-        return hash;
-    }
-
-    uint32_t SHA256::choose(uint32_t e, uint32_t f, uint32_t g)
-    {
-        return (e & f) ^ (~e & g);
-    }
-
-    uint32_t SHA256::majority(uint32_t a, uint32_t b, uint32_t c)
-    {
-        return (a & (b | c)) | (b & c);
-    }
-
-    uint32_t SHA256::sig0(uint32_t x)
-    {
-        return std::rotr(x, 7) ^ std::rotr(x, 18) ^ (x >> 3);
-    }
-
-    uint32_t SHA256::sig1(uint32_t x)
-    {
-        return std::rotr(x, 17) ^ std::rotr(x, 19) ^ (x >> 10);
-    }
-
-    void SHA256::transform()
-    {
-        uint32_t maj, xorA, ch, xorE, sum, newA, newE, m[64];
-        uint32_t state[8];
-
-        for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
-        { // Split data in 32 bit blocks for the 16 first words
-            m[i] = (m_Data[j] << 24) | (m_Data[j + 1] << 16) | (m_Data[j + 2] << 8) | (m_Data[j + 3]);
-        }
-
-        for (uint8_t k = 16; k < 64; k++)
-        { // Remaining 48 blocks
-            m[k] = SHA256::sig1(m[k - 2]) + m[k - 7] + SHA256::sig0(m[k - 15]) + m[k - 16];
-        }
-
-        for (uint8_t i = 0; i < 8; i++)
+        /* If there isn't enough space to fit int64, pad chunk with zeroes and prepare next chunk */
+        if (m_ChunkSize > 56)
         {
-            state[i] = m_State[i];
+            ProcessChunk(m_LastChunk.data());
+            m_LastChunk = {};
         }
 
-        for (uint8_t i = 0; i < 64; i++)
+        /* Add total size as big-endian int64 x8 */
+        uint64_t Size = m_DataSize * 8;
+        for (int i = 8; i > 0; --i)
         {
-            maj  = SHA256::majority(state[0], state[1], state[2]);
-            xorA = std::rotr(state[0], 2) ^ std::rotr(state[0], 13) ^ std::rotr(state[0], 22);
-
-            ch = choose(state[4], state[5], state[6]);
-
-            xorE = std::rotr(state[4], 6) ^ std::rotr(state[4], 11) ^ std::rotr(state[4], 25);
-
-            sum  = m[i] + K[i] + state[7] + ch + xorE;
-            newA = xorA + maj + sum;
-            newE = state[3] + sum;
-
-            state[7] = state[6];
-            state[6] = state[5];
-            state[5] = state[4];
-            state[4] = newE;
-            state[3] = state[2];
-            state[2] = state[1];
-            state[1] = state[0];
-            state[0] = newA;
+            m_LastChunk[55 + i] = Size & 0xFF;
+            Size >>= 8;
         }
 
-        for (uint8_t i = 0; i < 8; i++)
+        ProcessChunk(m_LastChunk.data());
+
+        Bytes Hash{};
+        for (int i = 0; i < 8; i++)
         {
-            m_State[i] += state[i];
+            Hash[i * 4]     = (m_Data[i] >> 24) & 0xFF;
+            Hash[i * 4 + 1] = (m_Data[i] >> 16) & 0xFF;
+            Hash[i * 4 + 2] = (m_Data[i] >> 8) & 0xFF;
+            Hash[i * 4 + 3] = m_Data[i] & 0xFF;
         }
+        return Hash;
     }
 
-    void SHA256::pad()
+    //
+
+    void SHA256::ProcessChunk(
+        const uint8_t* Chunk)
     {
-        uint64_t i   = m_BlockLen;
-        uint8_t  end = m_BlockLen < 56 ? 56 : 64;
+        std::array<uint32_t, 64> w;
 
-        m_Data[i++] = 0x80; // Append a bit 1
-        while (i < end)
+        for (int i = 0; i < 16; ++i)
         {
-            m_Data[i++] = 0x00; // Pad with zeros
+            w[i] = (uint32_t)Chunk[0] << 24 | (uint32_t)Chunk[1] << 16 | (uint32_t)Chunk[2] << 8 | (uint32_t)Chunk[3];
+            Chunk += 4;
         }
 
-        if (m_BlockLen >= 56)
+        for (int i = 16; i < 64; ++i)
         {
-            transform();
-            memset(m_Data, 0, 56);
+            uint32_t s0 = std::rotr(w[i - 15], 7) ^ std::rotr(w[i - 15], 18) ^ (w[i - 15] >> 3);
+            uint32_t s1 = std::rotr(w[i - 2], 17) ^ std::rotr(w[i - 2], 19) ^ (w[i - 2] >> 10);
+            w[i]        = w[i - 16] + s0 + w[i - 7] + s1;
         }
 
-        // Append to the padding the total message's length in bits and transform.
-        m_Bitlen += m_BlockLen * 8;
-        m_Data[63] = uint8_t(m_Bitlen);
-        m_Data[62] = uint8_t(m_Bitlen >> 8);
-        m_Data[61] = uint8_t(m_Bitlen >> 16);
-        m_Data[60] = uint8_t(m_Bitlen >> 24);
-        m_Data[59] = uint8_t(m_Bitlen >> 32);
-        m_Data[58] = uint8_t(m_Bitlen >> 40);
-        m_Data[57] = uint8_t(m_Bitlen >> 48);
-        m_Data[56] = uint8_t(m_Bitlen >> 56);
-        transform();
+        auto tv = m_Data;
+        for (int i = 0; i < 64; ++i)
+        {
+            uint32_t S1 = std::rotr(tv[4], 6) ^ std::rotr(tv[4], 11) ^ std::rotr(tv[4], 25);
+            uint32_t ch = (tv[4] & tv[5]) ^ (~tv[4] & tv[6]);
+
+            uint32_t temp1 = tv[7] + S1 + ch + SHA256_Table[i] + w[i];
+            uint32_t S0    = std::rotr(tv[0], 2) ^ std::rotr(tv[0], 13) ^ std::rotr(tv[0], 22);
+
+            uint32_t maj   = (tv[0] & tv[1]) ^ (tv[0] & tv[2]) ^ (tv[1] & tv[2]);
+            uint32_t temp2 = S0 + maj;
+
+            tv[7] = tv[6];
+            tv[6] = tv[5];
+            tv[5] = tv[4];
+            tv[4] = tv[3] + temp1;
+            tv[3] = tv[2];
+            tv[2] = tv[1];
+            tv[1] = tv[0];
+            tv[0] = temp1 + temp2;
+        }
+
+        std::transform(tv.begin(), tv.end(), m_Data.begin(), m_Data.begin(), std::plus<>{});
     }
 
-    void SHA256::revert(std::array<uint8_t, 32>& hash)
+    std::string SHA256::Bytes::ToString() const
     {
-        // SHA uses big endian byte ordering
-        // Revert all bytes
-        for (uint8_t i = 0; i < 4; i++)
+        constexpr const char Hex[] = "0123456789abcdef";
+
+        std::string Hash(64, '\0');
+        for (size_t i = 0; i < size(); i++)
         {
-            for (uint8_t j = 0; j < 8; j++)
-            {
-                hash[i + (j * 4)] = (m_State[j] >> (24 - i * 8)) & 0x000000ff;
-            }
+            uint8_t c       = data()[i];
+            Hash[i * 2]     = static_cast<char>(Hex[c >> 4]);
+            Hash[i * 2 + 1] = static_cast<char>(Hex[c & 0xF]);
         }
+        return Hash;
     }
 } // namespace Neon

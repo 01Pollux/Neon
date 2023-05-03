@@ -9,7 +9,7 @@ namespace Neon::Asset
     class IAssetPack
     {
     public:
-        using AssetResourceHandlerMap = std::map<uint32_t, UPtr<IAssetResourceHandler>>;
+        using AssetResourceHandlerMap = std::map<size_t, UPtr<IAssetResourceHandler>>;
 
         virtual ~IAssetPack() = default;
 
@@ -23,7 +23,8 @@ namespace Neon::Asset
         /// Export asset pack file.
         /// </summary>
         virtual void Export(
-            const StringU8& FilePath) = 0;
+            const AssetResourceHandlerMap& Handlers,
+            const StringU8&                FilePath) = 0;
 
         /// <summary>
         /// Load asset from pack file.

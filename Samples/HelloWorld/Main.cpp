@@ -4,6 +4,8 @@
 
 #include <future>
 
+#include <Core/SHA256.hpp>
+
 NEON_MAIN(Argc, Argv)
 {
     Neon::Logger::SetLogTag("", Logger::LogSeverity::Warning);
