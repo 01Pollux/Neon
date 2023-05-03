@@ -5,6 +5,11 @@
 
 namespace Neon
 {
+    namespace Asset
+    {
+        class IResourceManager;
+    }
+
     extern int Main(
         int      Argc,
         wchar_t* Argv[]);
@@ -28,6 +33,12 @@ namespace Neon
         /// </summary>
         int Run();
 
+    protected:
+        /// <summary>
+        /// Get resource manager
+        /// </summary>
+        [[nodiscard]] Asset::IResourceManager* GetResourceManager();
+
     private:
         /// <summary>
         /// Create window application
@@ -35,8 +46,15 @@ namespace Neon
         void CreateWindow(
             const Config::WindowConfig& Config);
 
+        /// <summary>
+        /// Load resource packs
+        /// </summary>
+        void LoadResourcePacks();
+
     private:
         World m_World;
+
+        Ptr<Asset::IResourceManager> m_AssetManager;
     };
 } // namespace Neon
 

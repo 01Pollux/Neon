@@ -5,24 +5,16 @@
 
 #include <Log/Logger.hpp>
 
-#include <Resource/Handle.hpp>
-
-#include <boost/chrono.hpp>
+#include <Resource/Runtime/Manager.hpp>
 
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
-        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
-
-        for (long i = 0; i < 10000000; ++i)
-            (void)std::sqrt(123.456L); // burn some time
-
-        boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
-
         Logger::Initialize();
         CreateWindow(Config.Window);
+        LoadResourcePacks();
     }
 
     DefaultGameEngine::~DefaultGameEngine()
@@ -37,6 +29,11 @@ namespace Neon
             m_World->progress();
         }
         return m_World->get<Module::Window>()->GetExitCode();
+    }
+
+    Asset::IResourceManager* DefaultGameEngine::GetResourceManager()
+    {
+        return m_AssetManager.get();
     }
 
     //
@@ -66,5 +63,10 @@ namespace Neon
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
         m_World.Import<Module::Window>(Config.Title, Config.Size, Style);
+    }
+
+    void DefaultGameEngine::LoadResourcePacks()
+    {
+        m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
     }
 } // namespace Neon

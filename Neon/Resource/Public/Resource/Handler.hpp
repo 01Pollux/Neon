@@ -36,4 +36,31 @@ namespace Neon::Asset
             uint8_t*                   Data,
             size_t                     DataSize) = 0;
     };
+
+    class AssetResourceHandlers
+    {
+    public:
+        /// <summary>
+        /// Add resource handler
+        /// </summary>
+        void Append(
+            UPtr<IAssetResourceHandler> Handler);
+
+        /// <summary>
+        /// Get resource handler
+        /// </summary>
+        [[nodiscard]] IAssetResourceHandler* Get(
+            size_t LoaderId) const noexcept;
+
+        /// <summary>
+        /// Get current handlers
+        /// </summary>
+        [[nodiscard]] const auto& Get() const noexcept
+        {
+            return m_Handlers;
+        }
+
+    private:
+        std::map<size_t, UPtr<IAssetResourceHandler>> m_Handlers;
+    };
 } // namespace Neon::Asset

@@ -38,27 +38,30 @@ namespace Neon::Asset
         using AssetInfoMap    = std::unordered_map<AssetHandle, PackInfo, boost::hash<boost::uuids::uuid>>;
 
     public:
+        ZipAssetPack(
+            uint16_t PackId);
+
         void Import(
             const StringU8& FilePath) override;
 
         void Export(
-            const AssetResourceHandlerMap& Handlers,
-            const StringU8&                FilePath) override;
+            const AssetResourceHandlers& Handlers,
+            const StringU8&              FilePath) override;
 
         Ref<IAssetResource> Load(
-            const AssetResourceHandlerMap& Handlers,
-            const AssetHandle&             Handle) override;
+            const AssetResourceHandlers& Handlers,
+            const AssetHandle&           Handle) override;
 
         void Save(
-            const AssetResourceHandlerMap& Handlers,
-            const AssetHandle&             Handle,
-            const Ptr<IAssetResource>&     Resource);
+            const AssetResourceHandlers& Handlers,
+            const AssetHandle&           Handle,
+            const Ptr<IAssetResource>&   Resource) override;
 
     private:
         Ref<IAssetResource> LoadAsset(
-            const AssetResourceHandlerMap& Handlers,
-            const AssetHandle&             Handle,
-            StringU8&                      ErrorText);
+            const AssetResourceHandlers& Handlers,
+            const AssetHandle&           Handle,
+            StringU8&                    ErrorText);
 
     private:
         /// <summary>
@@ -82,12 +85,12 @@ namespace Neon::Asset
         /// </summary>
         bool Header_ReadBody();
 
-    public:
+    private:
         /// <summary>
         /// Write to file header and data.
         /// </summary>
         void WriteFile(
-            const AssetResourceHandlerMap& Handlers);
+            const AssetResourceHandlers& Handlers);
 
         /// <summary>
         /// Write sections to the header.
@@ -98,7 +101,7 @@ namespace Neon::Asset
         /// Write body to the header.
         /// </summary>
         void Header_WriteBody(
-            const AssetResourceHandlerMap& Handlers);
+            const AssetResourceHandlers& Handlers);
 
     private:
         boost::iostreams::mapped_file m_FileView;

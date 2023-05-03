@@ -6,23 +6,37 @@
 
 #include <Core/SHA256.hpp>
 
+class TestGameEngine : public Neon::DefaultGameEngine
+{
+public:
+    TestGameEngine() :
+        Neon::DefaultGameEngine(GetConfig())
+    {
+    }
+
+private:
+    [[nodiscard]] static Neon::Config::EngineConfig GetConfig()
+    {
+        Neon::Config::EngineConfig Config;
+        Config.Window.Title      = L"Test Engine";
+        Config.Window.Windowed   = true;
+        Config.Window.Fullscreen = false;
+        return Config;
+    }
+};
+
 NEON_MAIN(Argc, Argv)
 {
     Neon::Logger::SetLogTag("", Logger::LogSeverity::Warning);
     Neon::Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
 
-    auto func = [](String Name) -> int
+    auto func = []
     {
-        DefaultGameEngine Engine(Config::EngineConfig{
-            .Window{
-                .Title      = std::move(Name),
-                .Windowed   = true,
-                .Fullscreen = false } });
+        TestGameEngine Engine;
         return Engine.Run();
     };
 
-    auto eng1 = std::async(func, STR("Engine 1"));
-    auto eng2 = std::async(func, STR("Engine 2"));
+    auto eng1 = std::async(func);
 
-    return eng1.get() + eng2.get();
+    return eng1.get();
 }

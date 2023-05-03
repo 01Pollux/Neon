@@ -2,14 +2,20 @@
 
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
+
 #include <Resource/Asset.hpp>
 
 namespace Neon::Asset
 {
+    class AssetResourceHandlers;
     class IAssetPack
     {
     public:
-        using AssetResourceHandlerMap = std::map<size_t, UPtr<IAssetResourceHandler>>;
+        IAssetPack(
+            uint16_t PackId) :
+            m_PackId(PackId)
+        {
+        }
 
         virtual ~IAssetPack() = default;
 
@@ -23,22 +29,25 @@ namespace Neon::Asset
         /// Export asset pack file.
         /// </summary>
         virtual void Export(
-            const AssetResourceHandlerMap& Handlers,
-            const StringU8&                FilePath) = 0;
+            const AssetResourceHandlers& Handlers,
+            const StringU8&              FilePath) = 0;
 
         /// <summary>
         /// Load asset from pack file.
         /// </summary>
         virtual Ref<IAssetResource> Load(
-            const AssetResourceHandlerMap& Handlers,
-            const AssetHandle&             Handle) = 0;
+            const AssetResourceHandlers& Handlers,
+            const AssetHandle&           Handle) = 0;
 
         /// <summary>
         /// Save asset to pack file.
         /// </summary>
         virtual void Save(
-            const AssetResourceHandlerMap& Handlers,
-            const AssetHandle&             Handle,
-            const Ptr<IAssetResource>&     Resource) = 0;
+            const AssetResourceHandlers& Handlers,
+            const AssetHandle&           Handle,
+            const Ptr<IAssetResource>&   Resource) = 0;
+
+    protected:
+        uint16_t m_PackId;
     };
 } // namespace Neon::Asset

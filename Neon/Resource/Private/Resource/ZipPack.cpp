@@ -17,6 +17,12 @@ namespace buuid = boost::uuids;
 
 namespace Neon::Asset
 {
+    ZipAssetPack::ZipAssetPack(
+        uint16_t PackId) :
+        IAssetPack(PackId)
+    {
+    }
+
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
@@ -40,14 +46,13 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::Export(
-        const AssetResourceHandlerMap& Handlers,
-        const StringU8&                FilePath)
+        const AssetResourceHandlers& Handlers,
+        const StringU8&              FilePath)
     {
         size_t FileSize = 0;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            auto Iter = Handlers.find(Info.LoaderId);
-            if (Iter == Handlers.end())
+            if (!Handlers.Get(Info.LoaderId))
             {
                 NEON_WARNING("Resource", "Tried to export a resource '{}' with an unknown handler", buuid::to_string(Handle));
                 continue;
@@ -69,8 +74,8 @@ namespace Neon::Asset
     //
 
     Ref<IAssetResource> ZipAssetPack::Load(
-        const AssetResourceHandlerMap& Handlers,
-        const AssetHandle&             Handle)
+        const AssetResourceHandlers& Handlers,
+        const AssetHandle&           Handle)
     {
         auto& LoadedAsset = m_LoadedAssets[Handle];
 
@@ -98,11 +103,11 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::Save(
-        const AssetResourceHandlerMap& Handlers,
-        const AssetHandle&             Handle,
-        const Ptr<IAssetResource>&     Resource)
+        const AssetResourceHandlers& Handlers,
+        const AssetHandle&           Handle,
+        const Ptr<IAssetResource>&   Resource)
     {
-        for (auto& [LoaderId, Handler] : Handlers)
+        for (auto& [LoaderId, Handler] : Handlers.Get())
         {
             if (Handler->CanCastTo(Resource))
             {
@@ -122,9 +127,9 @@ namespace Neon::Asset
     //
 
     Ref<IAssetResource> ZipAssetPack::LoadAsset(
-        const AssetResourceHandlerMap& Handlers,
-        const AssetHandle&             Handle,
-        StringU8&                      ErrorText)
+        const AssetResourceHandlers& Handlers,
+        const AssetHandle&           Handle,
+        StringU8&                    ErrorText)
     {
         Ref<IAssetResource> Asset;
 
@@ -138,14 +143,14 @@ namespace Neon::Asset
         auto& Info    = Iter->second;
         auto  DataPtr = std::bit_cast<const uint8_t*>(m_FileView.data()) + Info.Offset;
 
-        auto HandlerIter = Handlers.find(Info.LoaderId);
-        if (HandlerIter == Handlers.end())
+        auto Handler = Handlers.Get(Info.LoaderId);
+        if (!Handler)
         {
             ErrorText = "Tried loading asset '{}' with handler that doesn't exists";
             return Asset;
         }
 
-        return HandlerIter->second->Load(DataPtr, Info.Size);
+        return Handler->Load(DataPtr, Info.Size);
     }
 
     //
@@ -262,7 +267,7 @@ namespace Neon::Asset
     //
 
     void ZipAssetPack::WriteFile(
-        const AssetResourceHandlerMap& Handlers)
+        const AssetResourceHandlers& Handlers)
     {
         Header_WriteSections();
         Header_WriteBody(Handlers);
@@ -292,7 +297,7 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::Header_WriteBody(
-        const AssetResourceHandlerMap& Handlers)
+        const AssetResourceHandlers& Handlers)
     {
         std::vector<std::future<void>> AssetsWriter;
         for (auto& [Handle, Info] : m_AssetsInfo)
@@ -301,7 +306,7 @@ namespace Neon::Asset
                 std::async(
                     [this, &Handle, &Info, &Handlers]
                     {
-                        auto& Handler  = Handlers.find(Info.LoaderId)->second;
+                        auto  Handler  = Handlers.Get(Info.LoaderId);
                         auto& Resource = m_LoadedAssets[Handle];
 
                         uint8_t* Data = std::bit_cast<uint8_t*>(m_FileView.data() + Info.Offset);

@@ -93,6 +93,7 @@ namespace Neon::Logger
         if (!(Expr))                                          \
         {                                                     \
             NEON_FATAL_TAG("Assertion Failure", __VA_ARGS__); \
+            __debugbreak();                                   \
         }                                                     \
     } while (false)
 
