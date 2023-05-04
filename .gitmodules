@@ -20,3 +20,9 @@
 [submodule "Deps/Externals/spdlog"]
 	path = Deps/Externals/spdlog
 	url = https://github.com/01Pollux/spdlog
+[submodule "Deps/Externals/zlib"]
+	path = Deps/Externals/zlib
+	url = https://github.com/01Pollux/zlib
+[submodule "Deps/Externals/bzip2"]
+	path = Deps/Externals/bzip2
+	url = https://github.com/01Pollux/bzip2
