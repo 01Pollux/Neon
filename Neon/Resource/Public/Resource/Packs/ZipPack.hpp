@@ -78,13 +78,13 @@ namespace Neon::Asset
         /// Copy and decompress file into temp folder.
         /// </summary>
         void DecompressCopy(
-            const std::filesystem::path& FilePath);
+            const StringU8& FilePath);
 
         /// <summary>
         /// Copy and decompress file into temp folder.
         /// </summary>
         void CompressCopy(
-            const std::filesystem::path& FilePath);
+            const StringU8& FilePath);
 
     private:
         /// <summary>
@@ -113,6 +113,11 @@ namespace Neon::Asset
         /// Write to file header and data.
         /// </summary>
         void WriteFile();
+
+        /// <summary>
+        /// Write header information to the header.
+        /// </summary>
+        void Header_WriteHeader();
 
         /// <summary>
         /// Write sections to the header.

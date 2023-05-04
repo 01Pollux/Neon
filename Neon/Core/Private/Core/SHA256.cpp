@@ -30,34 +30,71 @@ namespace Neon
     }
 
     void SHA256::Append(
+        std::istream& Stream,
+        size_t        Size)
+    {
+        m_DataSize += Size;
+
+        char c;
+        // Flush out remaining chunks
+        if (m_ChunkSize)
+        {
+            for (; m_ChunkSize < m_LastChunk.size() && Size > 0; Size--, m_ChunkSize++)
+            {
+                Stream >> c;
+                m_LastChunk[m_ChunkSize] = static_cast<uint8_t>(c);
+            }
+
+            // If we processed every byte in stream, but there is room left in temp buffer
+            if (!Size)
+                return;
+
+            ProcessChunk(m_LastChunk.data());
+            m_ChunkSize = 0;
+        }
+
+        // Process in granularity
+        while (Size >= 64)
+        {
+            Stream.read(std::bit_cast<char*>(m_LastChunk.data()), m_LastChunk.size());
+            ProcessChunk(m_LastChunk.data());
+            Size -= 64;
+        }
+
+        Stream.read(std::bit_cast<char*>(m_LastChunk.data() + m_ChunkSize), Size);
+        m_ChunkSize += uint8_t(Size);
+    }
+
+    void SHA256::Append(
         const uint8_t* Data,
         size_t         Size)
     {
         m_DataSize += Size;
-        /* If there is data left in buff, concatenate it to process as new chunk */
-        if ((Size + m_ChunkSize) >= 64)
+
+        // Flush out remaining chunks
+        if (m_ChunkSize)
         {
-            std::array<uint8_t, 64> Tmp;
+            for (; m_ChunkSize < m_LastChunk.size() && Size > 0; Size--, m_ChunkSize++)
+            {
+                m_LastChunk[m_ChunkSize] = *Data++;
+            }
 
-            std::copy_n(m_LastChunk.data(), m_ChunkSize, Tmp.data());
-            std::copy_n(Data, m_LastChunk.size() - m_ChunkSize, Tmp.data() + m_ChunkSize);
+            // If we processed every byte in stream, but there is room left in temp buffer
+            if (!Size)
+                return;
 
-            Data += (m_LastChunk.size() - m_ChunkSize);
-            Size -= (m_LastChunk.size() - m_ChunkSize);
-
+            ProcessChunk(m_LastChunk.data());
             m_ChunkSize = 0;
-            ProcessChunk(Tmp.data());
         }
 
-        /* Run over data chunks */
-        while (Size >= m_LastChunk.size())
+        // Process in granularity
+        while (Size >= 64)
         {
             ProcessChunk(Data);
-            Data += m_LastChunk.size();
-            Size -= m_LastChunk.size();
+            Data += 64;
+            Size -= 64;
         }
 
-        /* Save remaining data in buff, will be reused on next call or finalize */
         std::copy_n(Data, Size, m_LastChunk.data() + m_ChunkSize);
         m_ChunkSize += uint8_t(Size);
     }

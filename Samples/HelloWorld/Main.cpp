@@ -1,10 +1,7 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include <Runtime/GameEngine.hpp>
-#include <Log/Logger.hpp>
-
 #include <future>
 
-#include <Core/SHA256.hpp>
+#include <Log/Logger.hpp>
 
 class TestGameEngine : public Neon::DefaultGameEngine
 {

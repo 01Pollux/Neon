@@ -11,8 +11,8 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
 #include <Log/Logger.hpp>
@@ -81,6 +81,9 @@ namespace Neon::Asset
 
         OpenTempNew();
         WriteFile();
+
+        CompressCopy(FilePath);
+        DecompressCopy(FilePath);
     }
 
     //
@@ -172,14 +175,14 @@ namespace Neon::Asset
     StringU8 ZipAssetPack::GetTempFileName() const
     {
         return StringUtils::Format(
-            "{}NPACK_{:X}",
+            "{}_{}.rnp",
             std::filesystem::temp_directory_path().string(),
             static_cast<const void*>(this));
     }
 
     void ZipAssetPack::OpenTempNew()
     {
-        if (m_FileStream)
+        if (m_FileStream.is_open())
         {
             m_FileStream.seekp(0);
             m_FileStream.seekg(0);
@@ -191,28 +194,28 @@ namespace Neon::Asset
     }
 
     void ZipAssetPack::DecompressCopy(
-        const std::filesystem::path& FilePath)
+        const StringU8& FilePath)
     {
         OpenTempNew();
-        std::ifstream File(FilePath, std::ios::binary);
 
-        bio::filtering_istreambuf Filter;
+        bio::filtering_istream Filter;
         Filter.push(bio::gzip_decompressor());
-        Filter.push(File);
+        Filter.push(bio::file_source(FilePath, std::ios::in | std::ios::binary));
 
-        bio::copy(Filter, m_FileStream);
+        m_FileStream << Filter.rdbuf();
     }
 
     void ZipAssetPack::CompressCopy(
-        const std::filesystem::path& FilePath)
+        const StringU8& FilePath)
     {
-        std::ofstream File(FilePath, std::ios::trunc | std::ios::binary);
+        m_FileStream.seekp(0);
+        m_FileStream.seekg(0);
 
-        bio::filtering_ostreambuf Filter;
+        bio::filtering_ostream Filter;
         Filter.push(bio::gzip_compressor());
-        Filter.push(File);
+        Filter.push(bio::file_sink(FilePath, std::ios::out | std::ios::trunc | std::ios::binary));
 
-        bio::copy(m_FileStream, Filter);
+        Filter << m_FileStream.rdbuf();
     }
 
     //
@@ -258,20 +261,21 @@ namespace Neon::Asset
         if (Header.Signature != AssetPackHeader::DefaultSignature ||
             Header.NumberOfResources == 0)
         {
+            NEON_INFO("Resource", "Invalid header signature");
             return false;
         }
 
         AssetPackSection Section;
         for (uint16_t i = 0; i < Header.NumberOfResources; i++)
         {
-            m_FileStream >> Section.Signature;
-            if (Header.Signature != Section.Signature)
+            m_FileStream.read(std::bit_cast<char*>(&Section.Signature), sizeof(Section.Signature));
+            if (Section.Signature != AssetPackSection::DefaultSignature)
             {
                 NEON_INFO("Resource", "Invalid resource signature");
                 return false;
             }
-            m_FileStream >> Section.Handle;
 
+            m_FileStream.read(std::bit_cast<char*>(&Section.Handle), sizeof(Section.Handle));
             auto& Info = m_AssetsInfo[Section.Handle];
             if (Info.Size)
             {
@@ -322,31 +326,40 @@ namespace Neon::Asset
 
     void ZipAssetPack::WriteFile()
     {
+        Header_WriteHeader();
         Header_WriteSections();
         Header_WriteBody();
+    }
+
+    void ZipAssetPack::Header_WriteHeader()
+    {
+        m_FileStream.seekp(0);
 
         AssetPackHeader Header{
             .Signature         = AssetPackHeader::DefaultSignature,
             .Version           = AssetPackHeader::LatestVersion,
             .NumberOfResources = uint16_t(m_AssetsInfo.size())
         };
-        m_FileStream.seekp(0);
         m_FileStream.write(std::bit_cast<const char*>(&Header), sizeof(Header));
     }
 
     void ZipAssetPack::Header_WriteSections()
     {
-        AssetPackSection Section;
+        m_FileStream.seekp(sizeof(AssetPackHeader));
+
+        auto Signature = AssetPackSection::DefaultSignature;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            m_FileStream << AssetPackSection::DefaultSignature;
-            m_FileStream << Handle;
+            m_FileStream.write(std::bit_cast<const char*>(&Signature), sizeof(Signature));
+            m_FileStream.write(std::bit_cast<const char*>(&Handle), sizeof(Handle));
             m_FileStream.write(std::bit_cast<const char*>(&Info), sizeof(Info));
         }
     }
 
     void ZipAssetPack::Header_WriteBody()
     {
+        m_FileStream.seekp(SizeOfHeader(m_AssetsInfo.size()));
+
         std::vector<std::future<void>> AssetsWriter;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
@@ -362,9 +375,9 @@ namespace Neon::Asset
             Handler->Save(Resource, m_FileStream, Info.Size);
             auto RestorePos = m_FileStream.tellp();
 
-            // TODO:
+            m_FileStream.seekp(DataPos);
             SHA256 Sha256;
-            Sha256.Append("TODO");
+            Sha256.Append(m_FileStream, RestorePos - DataPos);
             Info.Hash = Sha256.Digest();
             //}));
         }

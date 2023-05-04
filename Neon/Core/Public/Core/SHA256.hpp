@@ -20,6 +20,10 @@ namespace Neon
         SHA256();
 
         void Append(
+            std::istream& Stream,
+            size_t        Size);
+
+        void Append(
             const uint8_t* Data,
             size_t         Size);
 

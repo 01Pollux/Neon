@@ -49,7 +49,7 @@ namespace Neon::Asset
         const Ptr<IAssetResource>& Resource)
     {
         auto TextFile = static_cast<TextFileAsset*>(Resource.get());
-        return TextFile->AsUtf16().size() * sizeof(wchar_t);
+        return (TextFile->AsUtf16().size() + 1) * sizeof(wchar_t);
     }
 
     Ptr<IAssetResource> TextFileAsset::Handler::Load(
