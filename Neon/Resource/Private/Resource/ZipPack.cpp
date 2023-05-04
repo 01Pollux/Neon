@@ -11,8 +11,13 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include <Log/Logger.hpp>
 
+namespace bio   = boost::iostreams;
 namespace buuid = boost::uuids;
 
 namespace Neon::Asset
@@ -23,6 +28,15 @@ namespace Neon::Asset
     {
     }
 
+    ZipAssetPack::~ZipAssetPack()
+    {
+        if (m_FileStream)
+        {
+            m_FileStream = {};
+            std::filesystem::remove(GetTempFileName());
+        }
+    }
+
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
@@ -31,7 +45,7 @@ namespace Neon::Asset
         m_AssetsInfo.clear();
         m_LoadedAssets.clear();
 
-        m_FileStream = std::fstream(FilePath, std::ios::in);
+        DecompressCopy(FilePath);
 
         try
         {
@@ -65,12 +79,8 @@ namespace Neon::Asset
             FileSize += Info.Size;
         }
 
-        m_FileStream = {};
-        std::filesystem::resize_file(FilePath, FileSize);
-
-        m_FileStream = std::fstream(FilePath, std::ios::out);
+        OpenTempNew();
         WriteFile();
-        m_FileStream = std::fstream(FilePath, std::ios::in);
     }
 
     //
@@ -155,6 +165,54 @@ namespace Neon::Asset
         }
 
         return Handler->Load(m_FileStream, Info.Size);
+    }
+
+    //
+
+    StringU8 ZipAssetPack::GetTempFileName() const
+    {
+        return StringUtils::Format(
+            "{}NPACK_{:X}",
+            std::filesystem::temp_directory_path().string(),
+            static_cast<const void*>(this));
+    }
+
+    void ZipAssetPack::OpenTempNew()
+    {
+        if (m_FileStream)
+        {
+            m_FileStream.seekp(0);
+            m_FileStream.seekg(0);
+        }
+        else
+        {
+            m_FileStream = std::fstream(GetTempFileName(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+        }
+    }
+
+    void ZipAssetPack::DecompressCopy(
+        const std::filesystem::path& FilePath)
+    {
+        OpenTempNew();
+        std::ifstream File(FilePath, std::ios::binary);
+
+        bio::filtering_istreambuf Filter;
+        Filter.push(bio::gzip_decompressor());
+        Filter.push(File);
+
+        bio::copy(Filter, m_FileStream);
+    }
+
+    void ZipAssetPack::CompressCopy(
+        const std::filesystem::path& FilePath)
+    {
+        std::ofstream File(FilePath, std::ios::trunc | std::ios::binary);
+
+        bio::filtering_ostreambuf Filter;
+        Filter.push(bio::gzip_compressor());
+        Filter.push(File);
+
+        bio::copy(m_FileStream, Filter);
     }
 
     //
@@ -278,6 +336,7 @@ namespace Neon::Asset
 
     void ZipAssetPack::Header_WriteSections()
     {
+        AssetPackSection Section;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             m_FileStream << AssetPackSection::DefaultSignature;

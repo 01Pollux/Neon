@@ -41,6 +41,8 @@ namespace Neon::Asset
         ZipAssetPack(
             const AssetResourceHandlers& Handlers);
 
+        ~ZipAssetPack() override;
+
     public:
         void Import(
             const StringU8& FilePath) override;
@@ -60,6 +62,29 @@ namespace Neon::Asset
             const AssetResourceHandlers& Handlers,
             const AssetHandle&           Handle,
             StringU8&                    ErrorText);
+
+    private:
+        /// <summary>
+        /// Get file name in temp folder.
+        /// </summary>
+        [[nodiscard]] StringU8 GetTempFileName() const;
+
+        /// <summary>
+        /// Truncate existing file (if it exists) and open new one.
+        /// </summary>
+        void OpenTempNew();
+
+        /// <summary>
+        /// Copy and decompress file into temp folder.
+        /// </summary>
+        void DecompressCopy(
+            const std::filesystem::path& FilePath);
+
+        /// <summary>
+        /// Copy and decompress file into temp folder.
+        /// </summary>
+        void CompressCopy(
+            const std::filesystem::path& FilePath);
 
     private:
         /// <summary>
