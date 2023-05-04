@@ -66,88 +66,60 @@ function select_launch_kind()
     filter {}
 end
 
+function link_boost_lib(lib_name)
+    filter "configurations:Dist"
+        links
+        {
+            "boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
+        }
+    filter "configurations:not Dist"
+        links
+        {
+            "boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
+        }
+end
+
 function common_neon()
     defines "flecs_STATIC"
 
     libdirs "%{CommonDir.Deps.Libs}"
 
-    filter "configurations:Dist"
-        links
-        {
-            "boost/libboost_atomic-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_chrono-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_container-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_context-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_contract-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_coroutine-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_date_time-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_exception-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_fiber-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_filesystem-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_graph-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_iostreams-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_json-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_locale-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_c99-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_c99f-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_c99l-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_tr1-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_tr1f-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_math_tr1l-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_nowide-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_program_options-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_python39-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_random-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_regex-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_serialization-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_system-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_thread-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_timer-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_type_erasure-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_unit_test_framework-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_url-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_wave-vc143-mt-s-x64-1_83.lib",
-            "boost/libboost_wserialization-vc143-mt-s-x64-1_83.lib"
-        }
-    filter {}
-    filter "configurations:not Dist"
-        links
-        {
-            "boost/libboost_atomic-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_chrono-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_container-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_context-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_contract-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_coroutine-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_date_time-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_exception-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_fiber-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_filesystem-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_graph-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_iostreams-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_json-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_locale-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_c99-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_c99f-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_c99l-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_tr1-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_tr1f-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_math_tr1l-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_nowide-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_program_options-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_python39-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_random-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_regex-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_serialization-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_system-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_thread-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_timer-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_type_erasure-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_unit_test_framework-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_url-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_wave-vc143-mt-sgd-x64-1_83.lib",
-            "boost/libboost_wserialization-vc143-mt-sgd-x64-1_83.lib"
-        }
+    link_boost_lib("atomic")
+    link_boost_lib("chrono")
+    link_boost_lib("container")
+    link_boost_lib("context")
+    link_boost_lib("contract")
+    link_boost_lib("coroutine")
+    link_boost_lib("date_time")
+    link_boost_lib("exception")
+    link_boost_lib("fiber")
+    link_boost_lib("filesystem")
+    link_boost_lib("graph")
+    link_boost_lib("iostreams")
+    link_boost_lib("json")
+    link_boost_lib("locale")
+    link_boost_lib("math_c99")
+    link_boost_lib("math_c99f")
+    link_boost_lib("math_c99l")
+    link_boost_lib("math_tr1")
+    link_boost_lib("math_tr1f")
+    link_boost_lib("math_tr1l")
+    link_boost_lib("nowide")
+    link_boost_lib("program_options")
+    link_boost_lib("python39")
+    link_boost_lib("random")
+    link_boost_lib("regex")
+    link_boost_lib("serialization")
+    link_boost_lib("system")
+    link_boost_lib("thread")
+    link_boost_lib("timer")
+    link_boost_lib("type_erasure")
+    link_boost_lib("unit_test_framework")
+    link_boost_lib("url")
+    link_boost_lib("wave")
+    link_boost_lib("wserialization")
+    link_boost_lib("zlib")
+  
     filter {}
 
     links

@@ -109,29 +109,6 @@ Copy-Item Premake\LibVorbis.lua $(Get-DepSrcPath("vorbis\premake5.lua"))
 
 Copy-IncludePath "vorbis\include\vorbis\*.h" "Vorbis"
 
-
-#
-# ZipLib
-#
-Write-Output "Copying ZipLib files..."
-Remove-Directory $(Get-DepIncPath("ZipLib"))
-Make-Directory $(Get-DepIncPath("ZipLib"))
-
-Copy-Item Premake\ZipLib\ZipLib.lua $(Get-DepSrcPath("ZipLib\premake5.lua"))
-Copy-Item Premake\ZipLib\bzip2.lua $(Get-DepSrcPath("ZipLib\extlibs\bzip2\premake5.lua"))
-Copy-Item Premake\ZipLib\lzma.lua $(Get-DepSrcPath("ZipLib\extlibs\lzma\premake5.lua"))
-Copy-Item Premake\ZipLib\zlib.lua $(Get-DepSrcPath("ZipLib\extlibs\zlib\premake5.lua"))
-
-Copy-Item $(Get-DepSrcPath("ZipLib\*.h")) $(Get-DepIncPath("ZipLib"))
-Copy-Item $(Get-DepSrcPath("ZipLib\utils")) $(Get-DepIncPath("ZipLib\utils")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\streams")) $(Get-DepIncPath("ZipLib\streams")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\methods")) $(Get-DepIncPath("ZipLib\methods")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\compression")) $(Get-DepIncPath("ZipLib\compression")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\extlibs\zlib")) $(Get-DepIncPath("ZipLib\extlibs\zlib")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\extlibs\lzma")) $(Get-DepIncPath("ZipLib\extlibs\lzma")) -Recurse
-Copy-Item $(Get-DepSrcPath("ZipLib\extlibs\bzip2")) $(Get-DepIncPath("ZipLib\extlibs\bzip2")) -Recurse
-
-
 #
 # Bullet3
 #

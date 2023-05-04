@@ -57,9 +57,6 @@ workspace "Neon"
     group "Dependencies/Bullet3"
         include "Deps/Externals/Bullet3/src"
 
-    group "Dependencies/ZipLib"
-        include "Deps/Externals/ZipLib"
-        
     group "Dependencies/Audio"
         include "Deps/Externals/libogg-1.3.0"
         include "Deps/Externals/vorbis"
