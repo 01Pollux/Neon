@@ -19,6 +19,8 @@ namespace Neon
 
         SHA256();
 
+        void Reset();
+
         void Append(
             std::istream& Stream,
             size_t        Size);

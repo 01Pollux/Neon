@@ -2,6 +2,7 @@
 
 #include <Resource/Pack.hpp>
 #include <Core/String.hpp>
+#include <Core/SHA256.hpp>
 
 #include <fstream>
 #include <boost/functional/hash.hpp>
@@ -99,14 +100,22 @@ namespace Neon::Asset
         bool ReadFile();
 
         /// <summary>
+        /// Read file header to the header.
+        /// </summary>
+        bool Header_ReadHeader(
+            struct AssetPackHeader& HeaderInfo);
+
+        /// <summary>
         /// Read sections to the header.
         /// </summary>
-        bool Header_ReadSections();
+        bool Header_ReadSections(
+            SHA256&                       Header,
+            const struct AssetPackHeader& HeaderInfo);
 
         /// <summary>
         /// Read body to the file.
         /// </summary>
-        bool Header_ReadBody();
+        void Header_ReadBody();
 
     private:
         /// <summary>
@@ -117,12 +126,14 @@ namespace Neon::Asset
         /// <summary>
         /// Write header information to the header.
         /// </summary>
-        void Header_WriteHeader();
+        void Header_WriteHeader(
+            SHA256& Header);
 
         /// <summary>
         /// Write sections to the header.
         /// </summary>
-        void Header_WriteSections();
+        void Header_WriteSections(
+            SHA256& Header);
 
         /// <summary>
         /// Write body to the header.

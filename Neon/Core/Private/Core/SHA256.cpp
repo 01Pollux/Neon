@@ -15,8 +15,14 @@ namespace Neon
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
     };
 
-    SHA256::SHA256() :
-        m_Data{
+    SHA256::SHA256()
+    {
+        Reset();
+    }
+
+    void SHA256::Reset()
+    {
+        m_Data = {
             0x6a09e667,
             0xbb67ae85,
             0x3c6ef372,
@@ -25,8 +31,9 @@ namespace Neon
             0x9b05688c,
             0x1f83d9ab,
             0x5be0cd19
-        }
-    {
+        };
+        m_DataSize  = 0;
+        m_ChunkSize = 0;
     }
 
     void SHA256::Append(
