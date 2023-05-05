@@ -12,7 +12,7 @@ namespace Neon::Asset
     {
     public:
         IAssetPack(
-            const AssetResourceHandlers& Handlers) noexcept :
+            const AssetResourceHandlers& Handlers) :
             m_Handlers(Handlers)
         {
         }

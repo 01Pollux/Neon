@@ -13,6 +13,11 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 
+//
+
+#include <Resource/Pack.hpp>
+#include <Resource/Handler.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -79,7 +84,11 @@ namespace Neon
         // auto p  = Asset::AssetHandle::Random();
         // auto px = boost::uuids::to_string(p);
 
-        Asset::AssetHandle Hndl(boost::uuids::string_generator()("6d9c45d1-657d-43ce-a0e2-6bb23add1755"));
+        // Asset::AssetHandle Hndl(boost::uuids::string_generator()("6d9c45d1-657d-43ce-a0e2-6bb23add1755"));
+
+        Asset::AssetResourceHandlers handlers;
+
+        Asset::ZipAssetPack* z = new Asset::ZipAssetPack(handlers);
 
         m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
 
@@ -92,11 +101,11 @@ namespace Neon
 
         auto Pack2 = m_AssetManager->LoadPack("teee", "Test.np");
 
-        auto Asset = Pack2->Load(Hndl);
+        // auto Asset = Pack2->Load(Hndl);
 
-        auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset.lock());
-        NEON_INFO(Text->AsUtf8());
+        // auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset.lock());
+        // NEON_INFO(Text->AsUtf8());
 
-        int x;
+        // int x;
     }
 } // namespace Neon

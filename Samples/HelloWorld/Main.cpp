@@ -24,7 +24,8 @@ private:
 
 NEON_MAIN(Argc, Argv)
 {
-    Neon::Logger::SetLogTag("", Logger::LogSeverity::Warning);
+    Neon::Logger::SetLogTag("", Logger::LogSeverity::Trace);
+    Neon::Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
     Neon::Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
 
     auto func = []

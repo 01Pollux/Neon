@@ -26,7 +26,7 @@ namespace Neon
         DefaultGameEngine(DefaultGameEngine&&)             = delete;
         DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
 
-        ~DefaultGameEngine();
+        virtual ~DefaultGameEngine();
 
         /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.

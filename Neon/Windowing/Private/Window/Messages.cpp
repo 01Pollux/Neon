@@ -13,22 +13,7 @@ namespace Neon::Windowing
         WPARAM wParam,
         LPARAM lParam)
     {
-        if (Message == WM_DESTROY) [[unlikely]]
-        {
-            PostQuitMessage(0);
-        }
-        return DefWindowProc(Handle, Message, wParam, lParam);
-    }
-
-    LRESULT WindowApp::WndSubClassProc(
-        HWND      Handle,
-        UINT      Message,
-        WPARAM    wParam,
-        LPARAM    lParam,
-        UINT_PTR  IdSubclass,
-        DWORD_PTR RefData)
-    {
-        auto Window = std::bit_cast<WindowApp*>(RefData);
+        auto Window = std::bit_cast<WindowApp*>(GetWindowLongPtr(Handle, GWLP_USERDATA));
         switch (Message)
         {
         [[likely]] default:
@@ -37,18 +22,24 @@ namespace Neon::Windowing
             break;
         }
 
-        case WM_NCDESTROY:
+        [[unlikely]] case WM_DESTROY:
         {
             NEON_TRACE_TAG(
                 "Window", "Destroying Window: {}",
                 StringUtils::StringTransform<StringU8>(Window->GetTitle()));
+            PostQuitMessage(0);
+            return 0;
+        }
 
-            RemoveWindowSubclass(Handle, &WindowApp::WndSubClassProc, IdSubclass);
+        [[unlikely]] case WM_CREATE:
+        {
+            CREATESTRUCT* CreateInfo = std::bit_cast<CREATESTRUCT*>(lParam);
+            SetWindowLongPtr(Handle, GWLP_USERDATA, std::bit_cast<LONG_PTR>(CreateInfo->lpCreateParams));
             break;
         }
         }
 
-        return DefSubclassProc(Handle, Message, wParam, lParam);
+        return DefWindowProc(Handle, Message, wParam, lParam);
     }
 
     //
@@ -92,6 +83,7 @@ namespace Neon::Windowing
                 QueueEvent(Events::SizeChanged{
                     .NewSize = Size });
             }
+            break;
         }
         case WM_ENTERSIZEMOVE:
         {
@@ -100,7 +92,7 @@ namespace Neon::Windowing
         }
         case WM_EXITSIZEMOVE:
         {
-            Size2I Size = GetSize(); // TODO: Use wParam
+            Size2I Size = GetSize();
             m_WindowFlags.Set(EWindowFlags::Resizing, false);
 
             if (m_WindowSize != Size)

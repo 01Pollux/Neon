@@ -79,14 +79,6 @@ namespace Neon::Windowing
             WPARAM wParam,
             LPARAM lParam);
 
-        static LRESULT WndSubClassProc(
-            HWND      Handle,
-            UINT      Message,
-            WPARAM    wParam,
-            LPARAM    lParam,
-            UINT_PTR  IdSubclass,
-            DWORD_PTR RefData);
-
     private:
         /// <summary>
         /// Get window style from MWindowStyle

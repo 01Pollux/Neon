@@ -79,7 +79,8 @@ namespace Neon::Windowing
 
         LONG NTAPI OnRaiseException(_In_ PEXCEPTION_POINTERS ExceptionInfo)
         {
-            NEON_TRACE("Unhandled expcetion caught");
+            NEON_TRACE("Unhandled expcetion caught, Dumping memory dump file...");
+            Logger::Shutdown();
 
             using LibraryPtr = std::unique_ptr<
                 void,
@@ -231,14 +232,11 @@ namespace Neon::Windowing
         {
             SwitchToFullscreen();
         }
-
-        SetWindowSubclass(m_Handle, &WindowApp::WndSubClassProc, NULL, std::bit_cast<DWORD_PTR>(this));
     }
 
     WindowApp::~WindowApp()
     {
         DestroyWindow(m_Handle);
-
         Impl::ShutdownClassName();
     }
 
