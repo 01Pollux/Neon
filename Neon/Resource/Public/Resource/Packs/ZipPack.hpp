@@ -59,7 +59,7 @@ namespace Neon::Asset
             const Ptr<IAssetResource>& Resource) override;
 
     private:
-        Ref<IAssetResource> LoadAsset(
+        Ptr<IAssetResource> LoadAsset(
             const AssetResourceHandlers& Handlers,
             const AssetHandle&           Handle,
             StringU8&                    ErrorText);

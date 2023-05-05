@@ -26,7 +26,7 @@ function common_dir_setup()
 
     debugdir "$(targetdir)"
     
-    filter "configurations: not Dist"
+    filter "configurations:not Dist"
         sanitize
         {
             "Address"

@@ -102,13 +102,13 @@ namespace Neon::Asset
         StringU8 ErrorText;
         auto     Asset = LoadAsset(m_Handlers, Handle, ErrorText);
 
-        if (ErrorText.empty())
+        if (!ErrorText.empty())
         {
             NEON_WARNING_TAG("Resource", ErrorText, buuid::to_string(Handle));
         }
         else
         {
-            LoadedAsset = Asset.lock();
+            LoadedAsset = Asset;
         }
 
         return Asset;
@@ -139,18 +139,16 @@ namespace Neon::Asset
 
     //
 
-    Ref<IAssetResource> ZipAssetPack::LoadAsset(
+    Ptr<IAssetResource> ZipAssetPack::LoadAsset(
         const AssetResourceHandlers& Handlers,
         const AssetHandle&           Handle,
         StringU8&                    ErrorText)
     {
-        Ref<IAssetResource> Asset;
-
         auto Iter = m_AssetsInfo.find(Handle);
         if (Iter == m_AssetsInfo.end())
         {
             ErrorText = "Tried loading asset '{}' that doesn't exists";
-            return Asset;
+            return nullptr;
         }
 
         auto& Info = Iter->second;
@@ -160,7 +158,7 @@ namespace Neon::Asset
         if (!Handler)
         {
             ErrorText = "Tried loading asset '{}' with handler that doesn't exists";
-            return Asset;
+            return nullptr;
         }
 
         return Handler->Load(m_FileStream, Info.Size);
