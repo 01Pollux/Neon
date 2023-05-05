@@ -63,7 +63,7 @@ namespace Neon::Asset
     {
         std::lock_guard Lock(m_PackMutex);
 
-        size_t FileSize = SizeOfHeader(m_AssetsInfo.size());
+        size_t FileSize = OffsetToBody();
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             if (!m_Handlers.Get(Info.LoaderId))
@@ -80,7 +80,6 @@ namespace Neon::Asset
         WriteFile();
 
         CompressCopy(FilePath);
-        DecompressCopy(FilePath);
     }
 
     //
@@ -222,28 +221,29 @@ namespace Neon::Asset
         static constexpr uint16_t DefaultSignature = 0xF139;
         static constexpr uint8_t  LatestVersion    = 0;
 
-        uint16_t      Signature;
+        uint16_t      Signature = DefaultSignature;
         uint16_t      NumberOfResources;
         SHA256::Bytes Hash;
-        uint8_t       Version;
+        uint8_t       Version = LatestVersion;
     };
 
     struct AssetPackSection
     {
         static constexpr uint16_t DefaultSignature = AssetPackHeader::DefaultSignature;
 
-        uint16_t               Signature;
+        uint16_t               Signature = DefaultSignature;
         AssetHandle            Handle;
         ZipAssetPack::PackInfo PackInfo;
     };
 
     //
 
-    size_t ZipAssetPack::SizeOfHeader(
-        size_t NumberOfSections)
+    size_t ZipAssetPack::OffsetToBody() const
     {
-        return sizeof(AssetPackHeader) + NumberOfSections * sizeof(AssetPackSection);
+        return sizeof(AssetPackHeader) + m_AssetsInfo.size() * sizeof(AssetPackSection);
     }
+
+    //
 
     bool ZipAssetPack::ReadFile()
     {
@@ -267,7 +267,10 @@ namespace Neon::Asset
     bool ZipAssetPack::Header_ReadHeader(
         AssetPackHeader& HeaderInfo)
     {
+        m_FileStream.seekg(0);
+
         m_FileStream.read(std::bit_cast<char*>(&HeaderInfo), sizeof(HeaderInfo));
+        NEON_ASSERT(m_FileStream.tellg() == sizeof(AssetPackHeader));
 
         if (HeaderInfo.Signature != AssetPackHeader::DefaultSignature ||
             HeaderInfo.NumberOfResources == 0)
@@ -276,6 +279,7 @@ namespace Neon::Asset
             return false;
         }
 
+        NEON_ASSERT(m_FileStream.tellg() == sizeof(AssetPackHeader));
         return true;
     }
 
@@ -283,35 +287,38 @@ namespace Neon::Asset
         SHA256&                Header,
         const AssetPackHeader& HeaderInfo)
     {
+        m_FileStream.seekg(sizeof(AssetPackHeader));
+
         AssetPackSection Section;
         for (uint16_t i = 0; i < HeaderInfo.NumberOfResources; i++)
         {
-            m_FileStream.read(std::bit_cast<char*>(&Section.Signature), sizeof(Section.Signature));
-            if (Section.Signature != AssetPackSection::DefaultSignature)
+            m_FileStream.read(std::bit_cast<char*>(&Section), sizeof(Section));
+            if (Section.Signature != AssetPackSection::DefaultSignature ||
+                !Section.PackInfo.Size)
             {
                 NEON_INFO("Resource", "Invalid resource signature");
                 return false;
             }
 
-            m_FileStream.read(std::bit_cast<char*>(&Section.Handle), sizeof(Section.Handle));
-            auto& Info = m_AssetsInfo[Section.Handle];
-            if (Info.Size)
+            auto [InfoIter, Inserted] = m_AssetsInfo.emplace(Section.Handle, Section.PackInfo);
+            if (!Inserted)
             {
                 NEON_INFO("Resource", "Duplicate resource '{}'", buuid::to_string(Section.Handle));
                 return false;
             }
 
-            m_FileStream.read(std::bit_cast<char*>(&Info), sizeof(Info));
-            Header.Append(std::bit_cast<const uint8_t*>(&Info), sizeof(Info));
+            Header.Append(std::bit_cast<const uint8_t*>(&Section.PackInfo), sizeof(Section.PackInfo));
         }
 
+        NEON_ASSERT(m_FileStream.tellg() == OffsetToBody());
         return true;
     }
 
     void ZipAssetPack::Header_ReadBody()
     {
-        SHA256 Sha256;
+        m_FileStream.seekg(OffsetToBody());
 
+        SHA256 Sha256;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             m_FileStream.seekg(Info.Offset);
@@ -343,12 +350,12 @@ namespace Neon::Asset
         Header.Append(m_AssetsInfo.size());
 
         AssetPackHeader HeaderInfo{
-            .Signature         = AssetPackHeader::DefaultSignature,
             .NumberOfResources = uint16_t(m_AssetsInfo.size()),
             .Hash              = Header.Digest(),
-            .Version           = AssetPackHeader::LatestVersion
         };
-        m_FileStream.write(std::bit_cast<const char*>(&Header), sizeof(Header));
+
+        m_FileStream.write(std::bit_cast<const char*>(&HeaderInfo), sizeof(HeaderInfo));
+        NEON_ASSERT(m_FileStream.tellp() == sizeof(AssetPackHeader));
     }
 
     void ZipAssetPack::Header_WriteSections(
@@ -356,21 +363,23 @@ namespace Neon::Asset
     {
         m_FileStream.seekp(sizeof(AssetPackHeader));
 
-        auto Signature = AssetPackSection::DefaultSignature;
+        AssetPackSection Section;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
-            m_FileStream.write(std::bit_cast<const char*>(&Signature), sizeof(Signature));
-            m_FileStream.write(std::bit_cast<const char*>(&Handle), sizeof(Handle));
-            m_FileStream.write(std::bit_cast<const char*>(&Info), sizeof(Info));
+            Section.PackInfo = Info;
+            Section.Handle   = Handle;
+            m_FileStream.write(std::bit_cast<const char*>(&Section), sizeof(Section));
             Header.Append(std::bit_cast<const uint8_t*>(&Info), sizeof(Info));
         }
+
+        NEON_ASSERT(m_FileStream.tellp() == OffsetToBody());
     }
 
     void ZipAssetPack::Header_WriteBody()
     {
-        m_FileStream.seekp(SizeOfHeader(m_AssetsInfo.size()));
-        SHA256 Sha256;
+        m_FileStream.seekp(OffsetToBody());
 
+        SHA256 Sha256;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             auto  Handler  = m_Handlers.Get(Info.LoaderId);

@@ -73,13 +73,19 @@ namespace Neon
         auto TextFile = std::make_shared<Asset::TextFileAsset>(
             L"Hello world");
 
+        auto p = Asset::AssetHandle::Random();
+
         m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
 
         auto Pack = m_AssetManager->NewPack<Asset::ZipAssetPack>("main_asset");
         Pack->Save(
-            Asset::AssetHandle::Random(),
+            p,
             TextFile);
 
-        Pack->Export(R"(D:\Dev\Engines\Neon\test.np)");
+        Pack->Export("Test.np");
+
+        // auto Pack2 = m_AssetManager->LoadPack("teee", "Test.np");
+
+        int x;
     }
 } // namespace Neon

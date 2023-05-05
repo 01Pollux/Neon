@@ -89,10 +89,9 @@ namespace Neon::Asset
 
     private:
         /// <summary>
-        /// Get size of header + sections in file
+        /// Get offset to body.
         /// </summary>
-        [[nodiscard]] static size_t SizeOfHeader(
-            size_t NumberOfSections);
+        [[nodiscard]] size_t OffsetToBody() const;
 
         /// <summary>
         /// Read file and validate if it contains valid header + valid data.
