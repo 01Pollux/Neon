@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Resource/Handle.hpp>
+#include <map>
 
 namespace Neon::Asset
 {

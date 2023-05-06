@@ -70,7 +70,7 @@ workspace "Neon"
         include "Neon/Resource"
         include "Neon/Windowing"
         include "Neon/Engine"
-        group ""
+    group ""
 
     group "Samples"
         include "Samples/HelloWorld"

@@ -10,6 +10,8 @@
 
 #define NEON_NOVTABLE __declspec(novtable)
 
+// #define NEON_NO_LOG
+
 #define NEON_CLASS_NO_COPY(Class)            \
     Class(const Class&)            = delete; \
     Class& operator=(const Class&) = delete

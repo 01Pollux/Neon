@@ -71,6 +71,27 @@ namespace Neon::Logger
     }
 } // namespace Neon::Logger
 
+#ifdef NEON_NO_LOG
+
+#define NEON_WARNING_TAG(Tag, ...)
+#define NEON_ERROR_TAG(Tag, ...)
+#define NEON_FATAL_TAG(Tag, ...)
+
+#define NEON_WARNING(...)
+#define NEON_ERROR(...)
+#define NEON_FATAL(...)
+
+#define NEON_TRACE_TAG(Tag, ...)
+#define NEON_INFO_TAG(Tag, ...)
+
+#define NEON_TRACE(...) NEON_TRACE_TAG("", __VA_ARGS__)
+#define NEON_INFO(...)  NEON_INFO_TAG("", __VA_ARGS__)
+
+#define NEON_ASSERT(Expr, ...)   (void)(Expr)
+#define NEON_VALIDATE(Expr, ...) (void)(Expr)
+
+#else
+
 #define NEON_WARNING_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Warning, Tag, __VA_ARGS__)
 #define NEON_ERROR_TAG(Tag, ...)   Neon::Logger::LogTag(Neon::Logger::LogSeverity::Error, Tag, __VA_ARGS__)
 #define NEON_FATAL_TAG(Tag, ...)   Neon::Logger::LogTag(Neon::Logger::LogSeverity::Fatal, Tag, __VA_ARGS__)
@@ -117,3 +138,5 @@ namespace Neon::Logger
             NEON_FATAL_TAG("Validation Failure", __VA_ARGS__); \
         }                                                      \
     } while (false)
+
+#endif

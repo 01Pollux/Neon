@@ -14,8 +14,6 @@ function copyres_and_remove_extension(name)
 end
 
 function copy_engine_resources()
-    copyres_and_remove_extension("Assets")
-
     copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxcompiler.dll")
     copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxil.dll")
 end
@@ -53,7 +51,8 @@ function link_engine_library()
     {
         "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Windowing}",
-        "%{CommonDir.Neon.Engine}",
+        "%{CommonDir.Neon.Resource}",
+        "%{CommonDir.Neon.Engine}"
     }
 end
 
@@ -85,7 +84,7 @@ function common_neon()
     defines "flecs_STATIC"
 
     libdirs "%{CommonDir.Deps.Libs}"
-
+    
     link_boost_lib("atomic")
     link_boost_lib("chrono")
     link_boost_lib("container")
@@ -119,7 +118,7 @@ function common_neon()
     link_boost_lib("wave")
     link_boost_lib("wserialization")
     link_boost_lib("zlib")
-  
+    
     filter {}
 
     links
