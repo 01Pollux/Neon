@@ -3,8 +3,6 @@
 
 #include <Module/Window.hpp>
 
-#include <Log/Logger.hpp>
-
 #include <Resource/Runtime/Manager.hpp>
 
 #include <Resource/Types/TextFile.hpp>
@@ -23,14 +21,12 @@ namespace Neon
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
-        Logger::Initialize();
         CreateWindow(Config.Window);
         LoadResourcePacks();
     }
 
     DefaultGameEngine::~DefaultGameEngine()
     {
-        Logger::Shutdown();
     }
 
     int DefaultGameEngine::Run()
@@ -78,13 +74,6 @@ namespace Neon
 
     void DefaultGameEngine::LoadResourcePacks()
     {
-        Asset::AssetHandle Hndl(boost::uuids::string_generator()("6d9c45d1-657d-43ce-a0e2-6bb23add1755"));
         m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
-
-        auto Pack  = m_AssetManager->LoadPack("teee", "Test.np");
-        auto Asset = Pack->Load(Hndl);
-
-        auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset.lock());
-        NEON_INFO(Text->AsUtf8());
     }
 } // namespace Neon

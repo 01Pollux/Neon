@@ -60,23 +60,20 @@ namespace Neon
 
 #if NEON_DIST
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-#define NEON_MAIN(Argc, Argv)             \
-    int WINAPI wWinMain(                  \
-        HINSTANCE hInstance,              \
-        HINSTANCE hPrevInstance,          \
-        LPTSTR    lpCmdLine,              \
-        int       nShowCmd)               \
-    {                                     \
-        Neon::Logger::Initialize();       \
-        int Ret = Neon::Main(argc, argv); \
-        Neon::Logger::Shutdown();         \
-        return Ret;                       \
-    }                                     \
-    int Neon::Main(                       \
-        int      Argc,                    \
+#define NEON_MAIN(Argc, Argv)                  \
+    int __stdcall wWinMain(                    \
+        void*,                                 \
+        void*,                                 \
+        const wchar_t*,                        \
+        int)                                   \
+    {                                          \
+        Neon::Logger::Initialize();            \
+        int Ret = Neon::Main(__argc, __wargv); \
+        Neon::Logger::Shutdown();              \
+        return Ret;                            \
+    }                                          \
+    int Neon::Main(                            \
+        int      Argc,                         \
         wchar_t* Argv[])
 
 #else

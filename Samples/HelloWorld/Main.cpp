@@ -3,15 +3,12 @@
 
 #include <Log/Logger.hpp>
 
-#include <fstream>
-
 class TestGameEngine : public Neon::DefaultGameEngine
 {
 public:
     TestGameEngine() :
         Neon::DefaultGameEngine(GetConfig())
     {
-        std::fstream eFile("f.s", std::ios::in);
     }
 
 private:
