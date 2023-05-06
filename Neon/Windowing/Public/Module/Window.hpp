@@ -1,23 +1,15 @@
 #pragma once
 
 #include <Window/Window.hpp>
-#include <flecs/flecs.h>
-
-namespace flecs
-{
-    struct world;
-}
+#include <World/World.hpp>
 
 namespace Neon::Module
 {
     class Window
     {
     public:
-        Window(flecs::world&)
-        {
-        }
         explicit Window(
-            flecs::world&                  World,
+            Neon::World&                   World,
             const String&                  Title,
             const Size2I&                  Size,
             const Windowing::MWindowStyle& Style);

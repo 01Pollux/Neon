@@ -33,8 +33,11 @@ workspace "Neon"
 
     filter "configurations:Release"
         defines "NEON_RELEASE"
-        runtime "Release"
+        runtime "Debug"
+        symbols "On"
         optimize "On"
+		defines "DEBUG"
+		defines "_DEBUG"
     filter {}
 
     filter "configurations:Dist"

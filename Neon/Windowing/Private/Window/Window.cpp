@@ -17,9 +17,6 @@ namespace Neon::Windowing
         static inline std::mutex s_ClassNameInitMutex;
         static inline int        s_ClassNameInits = 0;
 
-        static LONG NTAPI OnRaiseException(
-            _In_ PEXCEPTION_POINTERS ExceptionInfo);
-
 #if !NEON_DIST
         BOOL ConsoleCloseRoutine(
             DWORD CtrlType)
@@ -37,11 +34,7 @@ namespace Neon::Windowing
                     "Window", "Registering Classname: {}",
                     StringUtils::StringTransform<StringU8>(s_ClassName));
 
-                s_ExceptionHandler = AddVectoredExceptionHandler(TRUE, &OnRaiseException);
-
 #if !NEON_DIST
-                int ReportFlags = _CrtSetDbgFlag(_CRTDBG_REPORT_FLAG);
-                _CrtSetDbgFlag(ReportFlags | _CRTDBG_LEAK_CHECK_DF);
                 NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, TRUE) != 0);
 #endif
 
@@ -52,8 +45,8 @@ namespace Neon::Windowing
                 WndClass.hInstance     = GetModuleHandle(nullptr);
                 WndClass.lpszClassName = s_ClassName;
 
-                NEON_ASSERT(RegisterClassEx(&WndClass) != 0);
-                NEON_ASSERT(SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)));
+                NEON_VALIDATE(RegisterClassEx(&WndClass) != 0);
+                NEON_VALIDATE(SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)));
             }
         }
 
@@ -67,7 +60,7 @@ namespace Neon::Windowing
                     StringUtils::StringTransform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
-                NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
+                NEON_VALIDATE(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
 #endif
 
                 CoUninitialize();
@@ -75,97 +68,6 @@ namespace Neon::Windowing
 
                 RemoveVectoredExceptionHandler(s_ExceptionHandler);
             }
-        }
-
-        LONG NTAPI OnRaiseException(_In_ PEXCEPTION_POINTERS ExceptionInfo)
-        {
-            NEON_TRACE("Unhandled expcetion caught, Dumping memory dump file...");
-            Logger::Shutdown();
-
-            using LibraryPtr = std::unique_ptr<
-                void,
-                decltype([](void* Handle)
-                         { FreeLibrary(std::bit_cast<HMODULE>(Handle)); })>;
-
-            LibraryPtr DBGHelp{ LoadLibraryW(STR("DBGHelp.dll")) };
-            if (!DBGHelp)
-                return EXCEPTION_CONTINUE_SEARCH;
-
-            switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
-            {
-            case EXCEPTION_ACCESS_VIOLATION:
-            case EXCEPTION_INVALID_HANDLE:
-            case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
-            case EXCEPTION_DATATYPE_MISALIGNMENT:
-            case EXCEPTION_ILLEGAL_INSTRUCTION:
-            case EXCEPTION_INT_DIVIDE_BY_ZERO:
-            case EXCEPTION_STACK_OVERFLOW:
-            case EXCEPTION_STACK_INVALID:
-            case EXCEPTION_WRITE_FAULT:
-            case EXCEPTION_READ_FAULT:
-            case STATUS_STACK_BUFFER_OVERRUN:
-            case STATUS_HEAP_CORRUPTION:
-                break;
-            case EXCEPTION_BREAKPOINT:
-                if (!(ExceptionInfo->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE))
-                    return EXCEPTION_CONTINUE_SEARCH;
-                break;
-            default:
-                return EXCEPTION_CONTINUE_SEARCH;
-            }
-
-            using MiniDumpWriteDumpFn =
-                BOOL(WINAPI*)(
-                    _In_ HANDLE                                hProcess,
-                    _In_ DWORD                                 ProcessId,
-                    _In_ HANDLE                                hFile,
-                    _In_ MINIDUMP_TYPE                         DumpType,
-                    _In_opt_ PMINIDUMP_EXCEPTION_INFORMATION   ExceptionParam,
-                    _In_opt_ PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-                    _In_opt_ PMINIDUMP_CALLBACK_INFORMATION    CallbackParam);
-
-            HANDLE hFile = CreateFileW(
-                StringUtils::Format(
-                    STR("./Logs/Fatal_{0:%g}_{0:%h}_{0:%d}_{0:%H}_{0:%OM}_{0:%OS}.dmp"),
-                    std::chrono::system_clock::now())
-                    .c_str(),
-                GENERIC_WRITE,
-                NULL,
-                nullptr,
-                CREATE_NEW,
-                FILE_ATTRIBUTE_NORMAL,
-                nullptr);
-
-            if (hFile == INVALID_HANDLE_VALUE)
-                return EXCEPTION_CONTINUE_SEARCH;
-
-            auto WriteMiniDump = std::bit_cast<MiniDumpWriteDumpFn>(GetProcAddress(
-                HMODULE(DBGHelp.get()),
-                "MiniDumpWriteDump"));
-
-            MINIDUMP_EXCEPTION_INFORMATION MiniDumpInfo{
-                .ThreadId          = GetCurrentThreadId(),
-                .ExceptionPointers = ExceptionInfo,
-                .ClientPointers    = FALSE
-            };
-
-            BOOL Res = WriteMiniDump(
-                GetCurrentProcess(),
-                GetCurrentProcessId(),
-                hFile,
-                static_cast<MINIDUMP_TYPE>(MiniDumpWithUnloadedModules | MiniDumpWithFullMemoryInfo | MiniDumpWithCodeSegs),
-                &MiniDumpInfo,
-                nullptr,
-                nullptr);
-
-            CloseHandle(hFile);
-
-            if (Res)
-            {
-                ExceptionInfo->ExceptionRecord->ExceptionCode = EXCEPTION_BREAKPOINT;
-                return EXCEPTION_EXECUTE_HANDLER;
-            }
-            return EXCEPTION_CONTINUE_SEARCH;
         }
     } // namespace Impl
 

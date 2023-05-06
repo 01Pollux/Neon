@@ -1,5 +1,3 @@
-.\Scripts\Boost.ps1
-
 Function Get-DepSrcPath
 {
     Param([string]$LibName)

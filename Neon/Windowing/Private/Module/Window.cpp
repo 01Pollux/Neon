@@ -5,14 +5,14 @@
 namespace Neon::Module
 {
     Window::Window(
-        flecs::world&                  World,
+        Neon::World&                   World,
         const String&                  Title,
         const Size2I&                  Size,
         const Windowing::MWindowStyle& Style)
     {
         m_Window.reset(Windowing::IWindowApp::Create(Title, Size, Style));
 
-        World.system("Window::MessageLoop")
+        World->system("Window::MessageLoop")
             .kind(flecs::PreFrame)
             .iter([this](flecs::iter& Iter)
                   { MessageLoop(Iter); });

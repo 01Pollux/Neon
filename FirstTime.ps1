@@ -2,9 +2,10 @@ Remove-Item -Force -Recurse .\tmp -ErrorAction SilentlyContinue
 
 New-Item .\tmp -Type Directory | Out-Null
 
-.\Install.ps1
+.\Scripts\Boost.ps1
 
 Write-Output "Clearing temporary files..."
 Remove-Item -Force -Recurse tmp | Out-Null
 
+.\Install.ps1
 .\Setup.ps1

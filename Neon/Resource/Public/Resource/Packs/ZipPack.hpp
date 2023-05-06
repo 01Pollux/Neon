@@ -140,8 +140,8 @@ namespace Neon::Asset
         void Header_WriteBody();
 
     private:
-        std::fstream    m_FileStream{};
-        std::mutex      m_PackMutex{};
+        std::fstream    m_FileStream;
+        std::mutex      m_PackMutex;
         LoadedAssetsMap m_LoadedAssets;
         AssetInfoMap    m_AssetsInfo;
     };

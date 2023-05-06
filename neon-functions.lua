@@ -72,11 +72,13 @@ function link_boost_lib(lib_name)
         {
             "boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
         }
+    filter {}
     filter "configurations:not Dist"
         links
         {
             "boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
         }
+    filter {}
 end
 
 function common_neon()

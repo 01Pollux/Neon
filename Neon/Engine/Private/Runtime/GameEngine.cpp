@@ -39,7 +39,7 @@ namespace Neon
         {
             m_World->progress();
         }
-        return m_World->get<Module::Window>()->GetExitCode();
+        return m_World.Module<Module::Window>()->GetExitCode();
     }
 
     Asset::IResourceManager* DefaultGameEngine::GetResourceManager()
@@ -77,35 +77,14 @@ namespace Neon
     }
 
     void DefaultGameEngine::LoadResourcePacks()
-    { /*
-         auto TextFile = std::make_shared<Asset::TextFileAsset>(
-             L"Hello world");*/
-
-        // auto p  = Asset::AssetHandle::Random();
-        // auto px = boost::uuids::to_string(p);
-
-        // Asset::AssetHandle Hndl(boost::uuids::string_generator()("6d9c45d1-657d-43ce-a0e2-6bb23add1755"));
-
-        Asset::AssetResourceHandlers handlers;
-
-        Asset::ZipAssetPack* z = new Asset::ZipAssetPack(handlers);
-
+    {
+        Asset::AssetHandle Hndl(boost::uuids::string_generator()("6d9c45d1-657d-43ce-a0e2-6bb23add1755"));
         m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
 
-        // auto Pack = m_AssetManager->NewPack<Asset::ZipAssetPack>("main_asset");
-        // Pack->Save(
-        //     p,
-        //     TextFile);
+        auto Pack  = m_AssetManager->LoadPack("teee", "Test.np");
+        auto Asset = Pack->Load(Hndl);
 
-        // Pack->Export("Test.np");
-
-        auto Pack2 = m_AssetManager->LoadPack("teee", "Test.np");
-
-        // auto Asset = Pack2->Load(Hndl);
-
-        // auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset.lock());
-        // NEON_INFO(Text->AsUtf8());
-
-        // int x;
+        auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset.lock());
+        NEON_INFO(Text->AsUtf8());
     }
 } // namespace Neon

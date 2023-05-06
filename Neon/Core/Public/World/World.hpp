@@ -8,6 +8,15 @@ namespace Neon
     class World
     {
     public:
+        template<typename _Ty>
+        struct ModuleWrapper
+        {
+            ModuleWrapper(flecs::world&)
+            {
+            }
+            UPtr<_Ty> Module;
+        };
+
         World();
         NEON_CLASS_NO_COPYMOVE(World);
         ~World();
@@ -32,12 +41,16 @@ namespace Neon
         void Import(
             _Args&&... Args)
         {
-            _Ty* Module = m_World->import <_Ty>().get_mut<_Ty>();
-            if constexpr (sizeof...(Args) > 1)
-            {
-                std::destroy_at(Module);
-                std::construct_at(Module, *m_World, std::forward<_Args>(Args)...);
-            }
+            auto Entity     = m_World->import <ModuleWrapper<_Ty>>();
+            auto Wrapper    = Entity.get_mut<ModuleWrapper<_Ty>>();
+            Wrapper->Module = std::make_unique<_Ty>(*this, std::forward<_Args>(Args)...);
+        }
+
+        template<typename _Ty>
+        [[nodiscard]] _Ty* Module()
+        {
+            auto Wrapper = m_World->get<ModuleWrapper<_Ty>>();
+            return Wrapper->Module.get();
         }
 
     private:
