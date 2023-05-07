@@ -60,11 +60,11 @@ namespace Neon::Windowing
                     StringUtils::StringTransform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
-                NEON_VALIDATE(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
+                NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
 #endif
 
                 CoUninitialize();
-                NEON_ASSERT(UnregisterClass(s_ClassName, GetModuleHandle(nullptr)) != 0);
+                NEON_VALIDATE(UnregisterClass(s_ClassName, GetModuleHandle(nullptr)) != 0);
 
                 RemoveVectoredExceptionHandler(s_ExceptionHandler);
             }

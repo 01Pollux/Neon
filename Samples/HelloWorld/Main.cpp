@@ -1,5 +1,7 @@
 #include <Runtime/GameEngine.hpp>
-#include <Resource/Manager.hpp>
+#include <Module/Resource.hpp>
+#include <Resource/Runtime/Manager.hpp>
+
 #include <Resource/Packs/ZipPack.hpp>
 #include <Resource/Types/TextFile.hpp>
 
@@ -20,7 +22,7 @@ public:
 
     void WriteResources()
     {
-        auto Manager = GetResourceManager();
+        auto Manager = GetWorld().Module<Module::ResourceManager>()->Get();
         auto Pack    = Manager->NewPack<Asset::ZipAssetPack>("MainPack");
 
         const Asset::AssetHandle* Guids[]{
@@ -43,7 +45,7 @@ public:
 
     void LoadResources()
     {
-        auto Manager = GetResourceManager();
+        auto Manager = GetWorld().Module<Module::ResourceManager>()->Get();
         auto Pack    = Manager->LoadPack("SamePack", "Data.np");
 
         const Asset::AssetHandle* Guids[]{
@@ -53,9 +55,7 @@ public:
         };
         for (int i = 0; i < 3; i++)
         {
-            auto Text = std::dynamic_pointer_cast<Asset::TextFileAsset>(
-                Pack->Load(*Guids[i]).lock());
-            NEON_INFO(Text->AsUtf8());
+            Pack->LoadAsync(*Guids[i]);
         }
     }
 
@@ -63,9 +63,12 @@ private:
     [[nodiscard]] static Config::EngineConfig GetConfig()
     {
         Config::EngineConfig Config;
+
         Config.Window.Title      = L"Test Engine";
         Config.Window.Windowed   = true;
         Config.Window.Fullscreen = false;
+
+        Config.Resource.Manager = NEON_NEW Asset::RuntimeResourceManager;
         return Config;
     }
 

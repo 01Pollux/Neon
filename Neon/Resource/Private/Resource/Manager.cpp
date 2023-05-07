@@ -13,6 +13,11 @@ namespace Neon::Asset
 
     //
 
+    auto IResourceManager::GetPacks() const -> const AssetPackMap&
+    {
+        return m_LoadedPacks;
+    }
+
     IAssetPack* IResourceManager::GetPack(
         const StringU8& Tag)
     {

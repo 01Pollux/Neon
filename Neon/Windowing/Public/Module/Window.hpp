@@ -8,7 +8,7 @@ namespace Neon::Module
     class Window
     {
     public:
-        explicit Window(
+        Window(
             Neon::World&                   World,
             const String&                  Title,
             const Size2I&                  Size,

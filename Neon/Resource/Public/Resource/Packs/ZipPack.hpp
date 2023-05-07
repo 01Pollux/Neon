@@ -74,9 +74,9 @@ namespace Neon::Asset
         [[nodiscard]] StringU8 GetTempFileName() const;
 
         /// <summary>
-        /// Truncate existing file (if it exists) and open new one.
+        /// Reset read/write offset of the file
         /// </summary>
-        void OpenTempNew();
+        void ResetReadWrite();
 
         /// <summary>
         /// Copy and decompress file into temp folder.

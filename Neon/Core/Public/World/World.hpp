@@ -38,12 +38,13 @@ namespace Neon
         }
 
         template<typename _Ty, typename... _Args>
-        void Import(
+        _Ty* Import(
             _Args&&... Args)
         {
             auto Entity     = m_World->import <ModuleWrapper<_Ty>>();
             auto Wrapper    = Entity.get_mut<ModuleWrapper<_Ty>>();
             Wrapper->Module = std::make_unique<_Ty>(*this, std::forward<_Args>(Args)...);
+            return Wrapper->Module.get();
         }
 
         template<typename _Ty>

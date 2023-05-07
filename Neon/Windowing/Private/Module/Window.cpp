@@ -1,6 +1,5 @@
 #include <WindowPCH.hpp>
 #include <Module/Window.hpp>
-#include <Window/Window.hpp>
 
 namespace Neon::Module
 {

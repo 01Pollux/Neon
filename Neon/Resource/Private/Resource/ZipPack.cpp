@@ -23,6 +23,7 @@ namespace Neon::Asset
         const AssetResourceHandlers& Handlers) :
         IAssetPack(Handlers)
     {
+        m_FileStream = std::fstream(GetTempFileName(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
     }
 
     ZipAssetPack::~ZipAssetPack()
@@ -76,7 +77,7 @@ namespace Neon::Asset
             FileSize += Info.Size;
         }
 
-        OpenTempNew();
+        ResetReadWrite();
         WriteFile();
 
         CompressCopy(FilePath);
@@ -185,23 +186,16 @@ namespace Neon::Asset
             static_cast<const void*>(this));
     }
 
-    void ZipAssetPack::OpenTempNew()
+    void ZipAssetPack::ResetReadWrite()
     {
-        if (m_FileStream.is_open())
-        {
-            m_FileStream.seekp(0);
-            m_FileStream.seekg(0);
-        }
-        else
-        {
-            m_FileStream = std::fstream(GetTempFileName(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
-        }
+        m_FileStream.seekp(0);
+        m_FileStream.seekg(0);
     }
 
     void ZipAssetPack::DecompressCopy(
         const StringU8& FilePath)
     {
-        OpenTempNew();
+        ResetReadWrite();
 
         bio::filtering_istream Filter;
         Filter.push(bio::gzip_decompressor());
@@ -213,8 +207,7 @@ namespace Neon::Asset
     void ZipAssetPack::CompressCopy(
         const StringU8& FilePath)
     {
-        m_FileStream.seekp(0);
-        m_FileStream.seekg(0);
+        ResetReadWrite();
 
         bio::filtering_ostream Filter;
         Filter.push(bio::gzip_compressor());

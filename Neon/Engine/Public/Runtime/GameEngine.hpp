@@ -33,11 +33,10 @@ namespace Neon
         /// </summary>
         int Run();
 
-    protected:
         /// <summary>
-        /// Get resource manager
+        /// Get engine's current world.
         /// </summary>
-        [[nodiscard]] Asset::IResourceManager* GetResourceManager();
+        World& GetWorld();
 
     private:
         /// <summary>
@@ -49,12 +48,11 @@ namespace Neon
         /// <summary>
         /// Load resource packs
         /// </summary>
-        void LoadResourcePacks();
+        void LoadResourcePacks(
+            const Config::ResourceConfig& Config);
 
     private:
         World m_World;
-
-        Ptr<Asset::IResourceManager> m_AssetManager;
     };
 } // namespace Neon
 

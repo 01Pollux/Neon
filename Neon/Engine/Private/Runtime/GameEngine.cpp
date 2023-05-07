@@ -2,19 +2,7 @@
 #include <Runtime/GameEngine.hpp>
 
 #include <Module/Window.hpp>
-
-#include <Resource/Runtime/Manager.hpp>
-
-#include <Resource/Types/TextFile.hpp>
-#include <Resource/Packs/ZipPack.hpp>
-
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/string_generator.hpp>
-
-//
-
-#include <Resource/Pack.hpp>
-#include <Resource/Handler.hpp>
+#include <Module/Resource.hpp>
 
 namespace Neon
 {
@@ -22,7 +10,7 @@ namespace Neon
         const Config::EngineConfig& Config)
     {
         CreateWindow(Config.Window);
-        LoadResourcePacks();
+        LoadResourcePacks(Config.Resource);
     }
 
     DefaultGameEngine::~DefaultGameEngine()
@@ -38,9 +26,9 @@ namespace Neon
         return m_World.Module<Module::Window>()->GetExitCode();
     }
 
-    Asset::IResourceManager* DefaultGameEngine::GetResourceManager()
+    World& DefaultGameEngine::GetWorld()
     {
-        return m_AssetManager.get();
+        return m_World;
     }
 
     //
@@ -72,8 +60,13 @@ namespace Neon
         m_World.Import<Module::Window>(Config.Title, Config.Size, Style);
     }
 
-    void DefaultGameEngine::LoadResourcePacks()
+    void DefaultGameEngine::LoadResourcePacks(
+        const Config::ResourceConfig& Config)
     {
-        m_AssetManager = std::make_shared<Asset::RuntimeResourceManager>();
+        auto Manager = m_World.Import<Module::ResourceManager>(Config.Manager)->Get();
+        for (auto& [Tag, Path] : Config.Packs)
+        {
+            Manager->LoadPack(Tag, Path);
+        }
     }
 } // namespace Neon

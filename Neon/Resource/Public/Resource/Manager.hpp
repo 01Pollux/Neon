@@ -52,6 +52,11 @@ namespace Neon::Asset
         }
 
         /// <summary>
+        /// Get current loaded packs.
+        /// </summary>
+        [[nodiscard]] const AssetPackMap& GetPacks() const;
+
+        /// <summary>
         /// Get pack from tag.
         /// </summary>
         [[nodiscard]] IAssetPack* GetPack(

@@ -9,47 +9,37 @@ namespace Neon::Asset
     {
     }
 
-    void IAssetPack::Flush(
-        const std::function<void(float Progress)>& FlushCallback)
+    void IAssetPack::Flush()
     {
         std::lock_guard Lock(m_AsyncMutex);
 
-        float  Count = 0.f;
-        size_t Size  = m_PendingOperations.size();
-
-        if (FlushCallback)
+        if (!m_PendingOperations.empty())
         {
-            FlushCallback(0.f);
-        }
-
-        for (auto& Op : m_PendingOperations)
-        {
-            boost::apply_visitor(
-                VariantVisitor{
-                    [this](const ImportOperation& Op)
-                    {
-                        Import(Op.Path);
-                    },
-                    [this](const ExportOperation& Op)
-                    {
-                        Export(Op.Path);
-                    },
-                    [this](const LoadOperation& Op)
-                    {
-                        Load(Op.Handle);
-                    },
-                    [this](const SaveOperation& Op)
-                    {
-                        Save(Op.Handle, Op.Resource);
-                    },
+            VariantVisitor Visitor{
+                [this](const ImportOperation& Op)
+                {
+                    Import(Op.Path);
                 },
-                Op);
-
-            Count++;
-            if (FlushCallback)
+                [this](const ExportOperation& Op)
+                {
+                    Export(Op.Path);
+                },
+                [this](const LoadOperation& Op)
+                {
+                    Load(Op.Handle);
+                },
+                [this](const SaveOperation& Op)
+                {
+                    Save(Op.Handle, Op.Resource);
+                },
+            };
+            for (auto& Op : m_PendingOperations)
             {
-                FlushCallback(Count / Size);
+                boost::apply_visitor(
+                    Visitor,
+                    Op);
             }
+            m_PendingOperations.clear();
         }
     }
 

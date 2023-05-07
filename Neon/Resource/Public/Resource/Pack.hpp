@@ -87,8 +87,7 @@ namespace Neon::Asset
         /// <summary>
         /// Empty the pending asynchronous operations.
         /// </summary>
-        void Flush(
-            const std::function<void(float Progress)>& FlushCallback = nullptr);
+        void Flush();
 
         /// <summary>
         /// Import asset pack file and overwrite current content of the pack asynchronously.
