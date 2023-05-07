@@ -31,12 +31,13 @@ public:
         for (int i = 0; i < 3; i++)
         {
             auto Text = std::make_shared<Asset::TextFileAsset>(
-                StringUtils::Format(L"Data{0}, this is some data {0}", i));
-            Pack->Save(
+                StringUtils::Format(L"Data{0}, - this is some data {0}", i));
+            Pack->SaveAsync(
                 *Guids[i],
                 Text);
         }
 
+        Pack->Flush();
         Pack->Export("Data.np");
     }
 

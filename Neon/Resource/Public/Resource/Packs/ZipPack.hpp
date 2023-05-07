@@ -58,6 +58,9 @@ namespace Neon::Asset
             const AssetHandle&         Handle,
             const Ptr<IAssetResource>& Resource) override;
 
+        ContainType ContainsResource(
+            const AssetHandle& Handle) override;
+
     private:
         Ptr<IAssetResource> LoadAsset(
             const AssetResourceHandlers& Handlers,

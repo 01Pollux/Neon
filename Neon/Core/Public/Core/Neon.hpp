@@ -2,6 +2,15 @@
 
 #include <memory>
 
+namespace Neon
+{
+    template<class... _Ty>
+    struct VariantVisitor : _Ty...
+    {
+        using _Ty::operator()...;
+    };
+} // namespace Neon
+
 #if NEON_DIST
 #define NEON_NEW new
 #else

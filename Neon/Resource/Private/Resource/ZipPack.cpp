@@ -37,7 +37,7 @@ namespace Neon::Asset
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
-        std::lock_guard Lock(m_PackMutex);
+        std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
 
         m_AssetsInfo.clear();
         m_LoadedAssets.clear();
@@ -61,7 +61,7 @@ namespace Neon::Asset
     void ZipAssetPack::Export(
         const StringU8& FilePath)
     {
-        std::lock_guard Lock(m_PackMutex);
+        std::scoped_lock Async(m_AsyncMutex, m_PackMutex);
 
         size_t FileSize = OffsetToBody();
         for (auto& [Handle, Info] : m_AssetsInfo)
@@ -87,7 +87,7 @@ namespace Neon::Asset
     Ref<IAssetResource> ZipAssetPack::Load(
         const AssetHandle& Handle)
     {
-        std::lock_guard Lock(m_PackMutex);
+        std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
 
         auto& LoadedAsset = m_LoadedAssets[Handle];
 
@@ -118,7 +118,7 @@ namespace Neon::Asset
         const AssetHandle&         Handle,
         const Ptr<IAssetResource>& Resource)
     {
-        std::lock_guard Lock(m_PackMutex);
+        std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
 
         for (auto& [LoaderId, Handler] : m_Handlers.Get())
         {
@@ -135,6 +135,17 @@ namespace Neon::Asset
         }
 
         NEON_WARNING("Resource", "No handler support resource '{}'", buuid::to_string(Handle));
+    }
+
+    auto ZipAssetPack::ContainsResource(
+        const AssetHandle& Handle) -> ContainType
+    {
+        std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
+        if (m_LoadedAssets.contains(Handle))
+        {
+            return ContainType::Loaded;
+        }
+        return m_AssetsInfo.contains(Handle) ? ContainType::NotLoaded : ContainType::Missing;
     }
 
     //
