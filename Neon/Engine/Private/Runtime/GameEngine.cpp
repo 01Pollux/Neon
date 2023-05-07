@@ -9,8 +9,8 @@ namespace Neon
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
-        CreateWindow(Config.Window);
         LoadResourcePacks(Config.Resource);
+        CreateWindow(Config.Window);
     }
 
     DefaultGameEngine::~DefaultGameEngine()
