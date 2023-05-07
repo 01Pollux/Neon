@@ -59,7 +59,9 @@ namespace Neon::Asset
             const Ptr<IAssetResource>& Resource) override;
 
         ContainType ContainsResource(
-            const AssetHandle& Handle) override;
+            const AssetHandle& Handle) const override;
+
+        AssetHandleList GetAssets() const override;
 
     private:
         Ptr<IAssetResource> LoadAsset(
@@ -143,9 +145,9 @@ namespace Neon::Asset
         void Header_WriteBody();
 
     private:
-        std::fstream    m_FileStream;
-        std::mutex      m_PackMutex;
-        LoadedAssetsMap m_LoadedAssets;
-        AssetInfoMap    m_AssetsInfo;
+        mutable std::mutex m_PackMutex;
+        std::fstream       m_FileStream;
+        LoadedAssetsMap    m_LoadedAssets;
+        AssetInfoMap       m_AssetsInfo;
     };
 } // namespace Neon::Asset

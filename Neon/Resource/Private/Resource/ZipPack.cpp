@@ -139,7 +139,7 @@ namespace Neon::Asset
     }
 
     auto ZipAssetPack::ContainsResource(
-        const AssetHandle& Handle) -> ContainType
+        const AssetHandle& Handle) const -> ContainType
     {
         std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
         if (m_LoadedAssets.contains(Handle))
@@ -150,6 +150,14 @@ namespace Neon::Asset
     }
 
     //
+
+    auto ZipAssetPack::GetAssets() const -> AssetHandleList
+    {
+        std::scoped_lock Lock(m_AsyncMutex, m_PackMutex);
+        AssetHandleList  Assets;
+        Assets.insert_range(Assets.begin(), m_AssetsInfo | std::views::keys);
+        return Assets;
+    }
 
     Ptr<IAssetResource> ZipAssetPack::LoadAsset(
         const AssetResourceHandlers& Handlers,

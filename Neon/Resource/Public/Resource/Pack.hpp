@@ -40,6 +40,8 @@ namespace Neon::Asset
         using PendingAssetOperations = std::vector<PendingOperations, boost::pool_allocator<PendingOperations>>;
 
     public:
+        using AssetHandleList = std::vector<AssetHandle, boost::pool_allocator<AssetHandle>>;
+
         enum class ContainType : uint8_t
         {
             Missing,
@@ -81,7 +83,12 @@ namespace Neon::Asset
         /// Check if the asset was not loaded, loaded or missing.
         /// </summary>
         virtual ContainType ContainsResource(
-            const AssetHandle& Handle) = 0;
+            const AssetHandle& Handle) const = 0;
+
+        /// <summary>
+        /// Check if the asset was not loaded, loaded or missing.
+        /// </summary>
+        virtual AssetHandleList GetAssets() const = 0;
 
     public:
         /// <summary>
@@ -116,7 +123,7 @@ namespace Neon::Asset
 
     protected:
         const AssetResourceHandlers& m_Handlers;
-        std::recursive_mutex         m_AsyncMutex;
+        mutable std::recursive_mutex m_AsyncMutex;
 
     private:
         PendingAssetOperations m_PendingOperations;
