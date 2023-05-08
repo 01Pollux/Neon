@@ -2,18 +2,10 @@
 
 namespace Neon::RHI
 {
-	enum class RenderDeviceType : unsigned char
-	{
-		Unknown,
-		DirectX12,
-	};
-
 	class IRenderDevice
 	{
 	public:
-		template<RenderDeviceType>
 		static IRenderDevice* CreateGlobal();
-		template<RenderDeviceType>
 		static void DestroyGlobal();
 
 		/// <summary>

@@ -14,12 +14,12 @@ namespace Neon
     {
         LoadResourcePacks(Config.Resource);
         CreateWindow(Config.Window);
-        RHI::IRenderDevice::CreateGlobal<RHI::RenderDeviceType::DirectX12>();
+        RHI::IRenderDevice::CreateGlobal();
     }
 
     DefaultGameEngine::~DefaultGameEngine()
     {
-        RHI::IRenderDevice::DestroyGlobal<RHI::RenderDeviceType::DirectX12>();
+        RHI::IRenderDevice::DestroyGlobal();
     }
 
     int DefaultGameEngine::Run()
