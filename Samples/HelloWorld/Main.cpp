@@ -33,6 +33,7 @@ NEON_MAIN(Argc, Argv)
     Neon::Logger::SetLogTag("", Logger::LogSeverity::Trace);
     Neon::Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
     Neon::Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
+    Neon::Logger::SetLogTag("Graphics", Logger::LogSeverity::Trace);
 
     auto func = []
     {

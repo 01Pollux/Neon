@@ -13,6 +13,7 @@ project "NeonEngine"
     {
         "NeonCore",
         "NeonWindowing",
+        "NeonGraphics",
         "NeonResource"
     }
 
@@ -20,6 +21,7 @@ project "NeonEngine"
     {
         "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Neon.Graphics}",
         "%{CommonDir.Neon.Resource}",
         "%{CommonDir.Neon.Engine}"
     }

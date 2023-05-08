@@ -4,6 +4,9 @@
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
 
+//
+#include <RHI/Device.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -11,6 +14,7 @@ namespace Neon
     {
         LoadResourcePacks(Config.Resource);
         CreateWindow(Config.Window);
+        m_RenderDevice.reset(RHI::IRenderDevice::Create<RHI::RenderDeviceType::DirectX12>());
     }
 
     DefaultGameEngine::~DefaultGameEngine()

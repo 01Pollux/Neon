@@ -69,6 +69,7 @@ workspace "Neon"
         include "Neon/Core"
         include "Neon/Resource"
         include "Neon/Windowing"
+        include "Neon/Graphics"
         include "Neon/Engine"
     group ""
 

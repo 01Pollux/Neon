@@ -5,6 +5,11 @@
 
 namespace Neon
 {
+    namespace RHI
+    {
+        class IRenderDevice;
+    }
+
     namespace Asset
     {
         class IResourceManager;
@@ -53,6 +58,8 @@ namespace Neon
 
     private:
         World m_World;
+
+        UPtr<RHI::IRenderDevice> m_RenderDevice;
     };
 } // namespace Neon
 
