@@ -12,6 +12,11 @@ namespace Neon::RHI
 
 	private:
 		/// <summary>
+		/// Enable debug layer if needed.
+		/// </summary>
+		void EnableDebugLayerIfNeeded();
+
+		/// <summary>
 		/// Create dxgi factory.
 		/// </summary>
 		void CreateFactory();

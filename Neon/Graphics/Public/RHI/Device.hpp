@@ -12,7 +12,14 @@ namespace Neon::RHI
 	{
 	public:
 		template<RenderDeviceType>
-		[[nodiscard]] static IRenderDevice* Create();
+		static IRenderDevice* CreateGlobal();
+		template<RenderDeviceType>
+		static void DestroyGlobal();
+
+		/// <summary>
+		/// Gets the global render device.
+		/// </summary>
+		[[nodiscard]] static IRenderDevice* Get();
 
 		virtual ~IRenderDevice() = default;
 	};

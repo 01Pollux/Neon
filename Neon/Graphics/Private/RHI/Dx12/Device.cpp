@@ -5,16 +5,53 @@
 
 namespace Neon::RHI
 {
+	static inline std::mutex s_CreateDeviceMutex;
+	static inline uint16_t s_NumDevices = 0;
+	static inline IRenderDevice* s_Device = nullptr;
+
 	template<>
-	IRenderDevice* IRenderDevice::Create<RenderDeviceType::DirectX12>()
+	IRenderDevice* IRenderDevice::CreateGlobal<RenderDeviceType::DirectX12>()
 	{
-		return new Dx12RenderDevice();
+		std::lock_guard Lock(s_CreateDeviceMutex);
+		if (!s_NumDevices++)
+		{
+			NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
+			s_Device = new Dx12RenderDevice();
+		}
+		return s_Device;
 	}
+
+	template<>
+	void IRenderDevice::DestroyGlobal<RenderDeviceType::DirectX12>()
+	{
+		std::lock_guard Lock(s_CreateDeviceMutex);
+		if (!--s_NumDevices)
+		{
+			NEON_INFO_TAG("Graphics", "Destroying DirectX 12 Render Device");
+			delete s_Device;
+			s_Device = nullptr;
+		}
+	}
+
+	IRenderDevice* IRenderDevice::Get()
+	{
+		return s_Device;
+	}
+
+	//
 
 	Dx12RenderDevice::Dx12RenderDevice()
 	{
+		EnableDebugLayerIfNeeded();
 		CreateFactory();
 		CreateDevice();
+	}
+
+	void Dx12RenderDevice::EnableDebugLayerIfNeeded()
+	{
+		Win32::ComPtr<ID3D12Debug> DebugController;
+		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
+		DebugController->EnableDebugLayer();
 	}
 
 	void Dx12RenderDevice::CreateFactory()
@@ -28,8 +65,8 @@ namespace Neon::RHI
 		auto Adapter = GetBestAdapter();
 		Adapter->GetDesc(&Desc);
 
-		NEON_TRACE_TAG("Graphics", "Vendor: {}", Desc.VendorId);
-		NEON_TRACE_TAG("Graphics", "Device: {}", Desc.DeviceId);
+		NEON_TRACE_TAG("Graphics", "Vendor: {:X}", Desc.VendorId);
+		NEON_TRACE_TAG("Graphics", "Device: {:X}", Desc.DeviceId);
 		NEON_TRACE_TAG("Graphics", "Revision: {}", Desc.Revision);
 		NEON_TRACE_TAG("Graphics", "Dedicated Video Memory: {} Gb", Desc.DedicatedVideoMemory / (1024.f * 1024.f * 1024.f));
 		NEON_TRACE_TAG("Graphics", "Dedicated System Memory: {} Gb", Desc.DedicatedSystemMemory / (1024.f * 1024.f * 1024.f));

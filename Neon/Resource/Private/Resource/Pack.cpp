@@ -1,5 +1,5 @@
-#include "ResourcePCH.hpp"
-#include "Pack.hpp"
+#include <ResourcePCH.hpp>
+#include <Resource/Pack.hpp>
 
 namespace Neon::Asset
 {

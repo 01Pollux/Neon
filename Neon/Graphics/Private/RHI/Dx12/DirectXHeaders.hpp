@@ -21,6 +21,9 @@
 
 namespace DX = DirectX;
 
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3d12.lib")
+
 namespace Neon::RHI
 {
 	class InputLayoutDesc

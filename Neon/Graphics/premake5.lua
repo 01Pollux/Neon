@@ -9,12 +9,6 @@ project "NeonGraphics"
     common_add_pch("GraphicsPCH")
     common_neon()
     
-    links
-    {
-        "d3d12",
-        "dxgi"
-    }
-
     includedirs
     {
         "%{CommonDir.Neon.Core}",
