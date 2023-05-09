@@ -45,11 +45,6 @@ namespace Neon::RHI
         virtual void Present() = 0;
 
         /// <summary>
-        /// Get swapchain's size.
-        /// </summary>
-        virtual const Size2I& GetSize() = 0;
-
-        /// <summary>
         /// Set swapchain's size.
         /// </summary>
         virtual void Resize(

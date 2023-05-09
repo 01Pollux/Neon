@@ -15,29 +15,49 @@ namespace Neon::RHI
     }
 
     Dx12Swapchain::Dx12Swapchain(
-        const InitDesc& Desc)
+        const InitDesc& Desc) :
+        m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics))
     {
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
+
+        auto WindowSize = Desc.Window->GetSize();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
+            Win32::ComPtr<IDXGISwapChain1> Swapchain1;
+
+            DXGI_SWAP_CHAIN_DESC1 SCDesc{
+                .Width      = UINT(WindowSize.Width()),
+                .Height     = UINT(WindowSize.Height()),
+                .Format     = SwapchainFormat,
+                .SampleDesc = {
+                    .Count   = Desc.Sample.Count,
+                    .Quality = Desc.Sample.Quality,
+                },
+                .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+                .BufferCount = Desc.FramesInFlight,
+                .SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD,
+                .Flags       = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+            };
+
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
-                nullptr,
+                m_CommandQueue->Get(),
                 HWND(Desc.Window->GetPlatformHandle()),
+                &SCDesc,
                 nullptr,
                 nullptr,
-                nullptr,
-                nullptr));
+                Swapchain1.GetAddressOf()));
+
+            m_Swapchain = Swapchain1;
         }
         else
         {
-            auto WindowSize = Desc.Window->GetSize();
 
             DXGI_SWAP_CHAIN_DESC SCDesc{
                 .BufferDesc = {
-                    .Width       = WindowSize.Width(),
-                    .Height      = WindowSize.Height(),
+                    .Width       = UINT(WindowSize.Width()),
+                    .Height      = UINT(WindowSize.Height()),
                     .RefreshRate = {
                         .Numerator   = Desc.RefreshRate.Numerator,
                         .Denominator = Desc.RefreshRate.Denominator,
@@ -51,11 +71,12 @@ namespace Neon::RHI
                 .BufferCount  = Desc.FramesInFlight,
                 .OutputWindow = HWND(Desc.Window->GetPlatformHandle()),
                 .Windowed     = TRUE,
-                .Flags        = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT | DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+                .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD,
+                .Flags        = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
             };
 
             DxgiFactory->CreateSwapChain(
-                nullptr,
+                m_CommandQueue->Get(),
                 &SCDesc,
                 m_Swapchain.GetAddressOf());
         }
@@ -73,12 +94,8 @@ namespace Neon::RHI
     {
     }
 
-    const Size2I& Dx12Swapchain::GetSize()
-    {
-        // TODO: insert return statement here
-    }
-
-    void Dx12Swapchain::Resize(const Size2I& Size)
+    void Dx12Swapchain::Resize(
+        const Size2I& Size)
     {
     }
 } // namespace Neon::RHI

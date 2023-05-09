@@ -3,6 +3,8 @@
 #include <RHI/Swapchain.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 
+#include <Private/RHI/Dx12/Commands/CommandsQueue.hpp>
+
 namespace Neon::RHI
 {
     class Dx12Swapchain final : public ISwapchain
@@ -17,12 +19,11 @@ namespace Neon::RHI
 
         void Present() override;
 
-        const Size2I& GetSize() override;
-
         void Resize(
             const Size2I& Size) override;
 
     private:
         Win32::ComPtr<IDXGISwapChain> m_Swapchain;
+        UPtr<Dx12CommandQueue>        m_CommandQueue;
     };
 } // namespace Neon::RHI
