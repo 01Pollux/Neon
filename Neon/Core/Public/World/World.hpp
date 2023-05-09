@@ -48,7 +48,13 @@ namespace Neon
         }
 
         template<typename _Ty>
-        [[nodiscard]] _Ty* Module()
+        flecs::entity ModuleScope()
+        {
+            return m_World->module<ModuleWrapper<_Ty>>();
+        }
+
+        template<typename _Ty>
+        [[nodiscard]] _Ty* GetModule()
         {
             auto Wrapper = m_World->get<ModuleWrapper<_Ty>>();
             return Wrapper->Module.get();

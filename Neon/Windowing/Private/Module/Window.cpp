@@ -9,6 +9,8 @@ namespace Neon::Module
         const Size2I&                  Size,
         const Windowing::MWindowStyle& Style)
     {
+        World.ModuleScope<Window>();
+
         m_Window.reset(Windowing::IWindowApp::Create(Title, Size, Style));
 
         World->system("Window::MessageLoop")

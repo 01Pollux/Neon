@@ -22,7 +22,7 @@ namespace Neon::RHI
         auto WindowSize  = Desc.Window->GetSize();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
-        if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
+        if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))) && false)
         {
             Win32::ComPtr<IDXGISwapChain1> Swapchain1;
 

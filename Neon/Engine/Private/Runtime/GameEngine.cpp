@@ -19,7 +19,7 @@ namespace Neon
         RHI::IRenderDevice::CreateGlobal();
 
         RHI::ISwapchain::InitDesc Desc{
-            .Window = m_World.Module<Module::Window>()->GetWindow(),
+            .Window = m_World.GetModule<Module::Window>()->GetWindow(),
         };
         m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
     }
@@ -36,7 +36,7 @@ namespace Neon
         {
             m_World->progress();
         }
-        return m_World.Module<Module::Window>()->GetExitCode();
+        return m_World.GetModule<Module::Window>()->GetExitCode();
     }
 
     World& DefaultGameEngine::GetWorld()

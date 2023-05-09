@@ -8,6 +8,8 @@ namespace Neon::Module
         Neon::World&             World,
         Asset::IResourceManager* Manager)
     {
+        World.ModuleScope<ResourceManager>();
+
         m_Manager.reset(Manager);
         World->system("Resource::Flush")
             .kind(flecs::OnLoad)
