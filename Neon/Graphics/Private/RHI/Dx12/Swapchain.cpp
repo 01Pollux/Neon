@@ -19,15 +19,14 @@ namespace Neon::RHI
         m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics))
     {
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
-
-        auto WindowSize = Desc.Window->GetSize();
+        auto WindowSize  = Desc.Window->GetSize();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
             Win32::ComPtr<IDXGISwapChain1> Swapchain1;
 
-            DXGI_SWAP_CHAIN_DESC1 SCDesc{
+            DXGI_SWAP_CHAIN_DESC1 SwapchainDesc{
                 .Width      = UINT(WindowSize.Width()),
                 .Height     = UINT(WindowSize.Height()),
                 .Format     = SwapchainFormat,
@@ -41,11 +40,19 @@ namespace Neon::RHI
                 .Flags       = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
             };
 
+            DXGI_SWAP_CHAIN_FULLSCREEN_DESC FullscreenDesc{
+                .RefreshRate = {
+                    .Numerator   = Desc.RefreshRate.Numerator,
+                    .Denominator = Desc.RefreshRate.Denominator,
+                },
+                .Windowed = TRUE,
+            };
+
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
                 m_CommandQueue->Get(),
                 HWND(Desc.Window->GetPlatformHandle()),
-                &SCDesc,
-                nullptr,
+                &SwapchainDesc,
+                &FullscreenDesc,
                 nullptr,
                 Swapchain1.GetAddressOf()));
 
@@ -53,7 +60,6 @@ namespace Neon::RHI
         }
         else
         {
-
             DXGI_SWAP_CHAIN_DESC SCDesc{
                 .BufferDesc = {
                     .Width       = UINT(WindowSize.Width()),

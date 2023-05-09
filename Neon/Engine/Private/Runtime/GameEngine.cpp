@@ -6,6 +6,7 @@
 
 //
 #include <RHI/Device.hpp>
+#include <RHI/Swapchain.hpp>
 
 namespace Neon
 {
@@ -14,11 +15,18 @@ namespace Neon
     {
         LoadResourcePacks(Config.Resource);
         CreateWindow(Config.Window);
+
         RHI::IRenderDevice::CreateGlobal();
+
+        RHI::ISwapchain::InitDesc Desc{
+            .Window = m_World.Module<Module::Window>()->GetWindow(),
+        };
+        m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
     }
 
     DefaultGameEngine::~DefaultGameEngine()
     {
+        m_Swapchain.reset();
         RHI::IRenderDevice::DestroyGlobal();
     }
 

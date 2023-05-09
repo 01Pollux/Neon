@@ -19,6 +19,11 @@ namespace Neon::Module
         /// </summary>
         [[nodiscard]] int GetExitCode() const noexcept;
 
+        /// <summary>
+        /// Get associated window.
+        /// </summary>
+        [[nodiscard]] Windowing::IWindowApp* GetWindow() const noexcept;
+
     private:
         /// <summary>
         /// Called on ::PreFrame

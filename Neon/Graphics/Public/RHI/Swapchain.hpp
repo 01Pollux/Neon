@@ -17,8 +17,8 @@ namespace Neon::RHI
             Windowing::IWindowApp* Window;
             struct
             {
-                uint16_t Numerator   = 60;
-                uint16_t Denominator = 1;
+                uint16_t Numerator   = 0;
+                uint16_t Denominator = 0;
             } RefreshRate;
             struct
             {

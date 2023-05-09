@@ -7,7 +7,7 @@ namespace Neon
 {
     namespace RHI
     {
-        class IRenderDevice;
+        class ISwapchain;
     }
 
     namespace Asset
@@ -59,7 +59,7 @@ namespace Neon
     private:
         World m_World;
 
-        UPtr<RHI::IRenderDevice> m_RenderDevice;
+        UPtr<RHI::ISwapchain> m_Swapchain;
     };
 } // namespace Neon
 

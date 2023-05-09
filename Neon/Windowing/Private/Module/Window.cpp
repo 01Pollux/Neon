@@ -22,6 +22,11 @@ namespace Neon::Module
         return m_ExitCode;
     }
 
+    Windowing::IWindowApp* Window::GetWindow() const noexcept
+    {
+        return m_Window.get();
+    }
+
     void Window::MessageLoop(
         flecs::iter& Iter)
     {
