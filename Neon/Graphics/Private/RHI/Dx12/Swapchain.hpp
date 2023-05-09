@@ -3,7 +3,9 @@
 #include <RHI/Swapchain.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 
-#include <Private/RHI/Dx12/Commands/CommandsQueue.hpp>
+#include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
+#include <Private/RHI/Dx12/Commands/CommandAllocator.hpp>
+#include <Private/RHI/Dx12/Commands/CommandList.hpp>
 
 namespace Neon::RHI
 {
@@ -15,6 +17,8 @@ namespace Neon::RHI
         Dx12Swapchain(
             const InitDesc& Desc);
 
+        ~Dx12Swapchain() override;
+
         void PrepareFrame() override;
 
         void Present() override;
@@ -23,7 +27,17 @@ namespace Neon::RHI
             const Size2I& Size) override;
 
     private:
-        Win32::ComPtr<IDXGISwapChain> m_Swapchain;
-        UPtr<Dx12CommandQueue>        m_CommandQueue;
+        void TestCommandList();
+
+    private:
+        Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
+
+        UPtr<Dx12CommandQueue> m_CommandQueue;
+
+        std::vector<UPtr<Dx12CommandAllocator>> m_CommandAllocators;
+
+        UPtr<Dx12CommandList> m_CommandList;
+
+        std::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
     };
 } // namespace Neon::RHI

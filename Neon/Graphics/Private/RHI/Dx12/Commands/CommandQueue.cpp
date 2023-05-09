@@ -1,5 +1,5 @@
 #include <GraphicsPCH.hpp>
-#include <Private/RHI/Dx12/Commands/CommandsQueue.hpp>
+#include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
 #include <Private/RHI/Dx12/Commands/Commands.hpp>

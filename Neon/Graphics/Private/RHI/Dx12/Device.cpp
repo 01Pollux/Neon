@@ -71,7 +71,7 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::CreateFactory()
     {
-        ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&m_DxgiFactory)));
+        ThrowIfFailed(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_DxgiFactory)));
     }
 
     void Dx12RenderDevice::CreateDevice()
