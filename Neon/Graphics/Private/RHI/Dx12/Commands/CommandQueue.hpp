@@ -11,6 +11,19 @@ namespace Neon::RHI
         Dx12CommandQueue(
             CommandQueueType Type);
 
+        ICommandList* AllocateCommandList(
+            CommandQueueType Type) override;
+
+        std::vector<ICommandList*> AllocateCommandLists(
+            CommandQueueType Type, size_t Count) override;
+
+        void Upload(
+            ICommandList* Command) override;
+
+        void Upload(
+            const std::vector<ICommandList*>& Commands) override;
+
+    public:
         /// <summary>
         /// Get underlying D3D12 command queue.
         /// </summary>

@@ -5,7 +5,7 @@
 
 namespace Neon::RHI
 {
-    class Dx12CommandList final : public ICommandList
+    class Dx12CommandList : public virtual ICommandList
     {
     public:
         Dx12CommandList(
@@ -13,7 +13,9 @@ namespace Neon::RHI
             CommandQueueType   Type);
 
         void Reset(
-            ICommandAllocator* Allocator);
+            ICommandAllocator* Allocator) override;
+
+        void Close() override;
 
     public:
         /// <summary>
@@ -21,7 +23,37 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] ID3D12GraphicsCommandList* Get();
 
-    private:
+    protected:
         Win32::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
+    };
+
+    class Dx12CommonCommandList : public virtual ICommonCommandList,
+                                  public Dx12CommandList
+
+    {
+    public:
+        using Dx12CommandList::Dx12CommandList;
+    };
+
+    class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
+                                          public Dx12CommonCommandList
+
+    {
+    public:
+        using Dx12CommonCommandList::Dx12CommonCommandList;
+
+        void ClearRtv(
+            const CpuDescriptorHandle& RtvHandle,
+            const Color4&              Color) override;
+
+        void SetRenderTargets(
+            const CpuDescriptorHandle& ContiguousRtvs,
+            size_t                     RenderTargetCount = 0,
+            const CpuDescriptorHandle* DepthStencil      = nullptr) override;
+
+        void SetRenderTargets(
+            const CpuDescriptorHandle* Rtvs,
+            size_t                     RenderTargetCount = 0,
+            const CpuDescriptorHandle* DepthStencil      = nullptr) override;
     };
 } // namespace Neon::RHI

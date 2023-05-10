@@ -4,6 +4,12 @@
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
 
+#include <Private/RHI/Dx12/Commands/CommandList.hpp>
+#include <Math/Colors.hpp>
+#include <RHI/Resource/Common.hpp>
+#include <RHI/Commands/CommandList.hpp>
+#include <RHI/Commands/CommandsContext.hpp>
+
 #include <Window/Window.hpp>
 
 namespace Neon::RHI
@@ -18,8 +24,8 @@ namespace Neon::RHI
         const InitDesc& Desc) :
         m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics))
     {
-        m_CommandAllocators.resize(Desc.FramesInFlight);
-        TestCommandList();
+        // TODO remove
+        srand(time(nullptr));
 
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
         auto WindowSize  = Desc.Window->GetSize();
@@ -120,9 +126,9 @@ namespace Neon::RHI
         HANDLE PresentHandle = m_Swapchain->GetFrameLatencyWaitableObject();
         WaitForSingleObject(PresentHandle, INFINITE);
 
+        TCommandContext<CommandQueueType::Graphics> Context(m_CommandQueue.get());
+
         uint32_t FrameIndex = m_Swapchain->GetCurrentBackBufferIndex();
-        m_CommandAllocators[FrameIndex]->Reset();
-        m_CommandList->Reset(m_CommandAllocators[FrameIndex].get());
 
         Win32::ComPtr<ID3D12Resource> Buffer;
         m_Swapchain->GetBuffer(FrameIndex, IID_PPV_ARGS(&Buffer));
@@ -143,7 +149,7 @@ namespace Neon::RHI
             Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer.Get(), nullptr, Rtv);
         }
 
-        auto CommandList = m_CommandList->Get();
+        auto CommandList = dynamic_cast<Dx12CommandList*>(Context.operator->())->Get();
 
         {
             // transition buffer resource to render target state
@@ -154,14 +160,14 @@ namespace Neon::RHI
         }
 
         Time += 0.008f;
-        float Color[]{
+        Color4 Color{
             sin(2.f * Time + 1.f) / 2.f + .5f,
             sin(3.f * Time + 2.f) / 2.f + .5f,
             sin(5.f * Time + 3.f) / 2.f + .5f,
             1.0f
         };
-        CommandList->ClearRenderTargetView(Rtv, Color, 0, nullptr);
-        CommandList->OMSetRenderTargets(1, &Rtv, FALSE, nullptr);
+        Context->ClearRtv({ Rtv.ptr }, Color);
+        Context->SetRenderTargets({ Rtv.ptr }, 1);
 
         {
             // transition buffer resource to render target state
@@ -171,9 +177,7 @@ namespace Neon::RHI
             CommandList->ResourceBarrier(1, &barrier);
         }
 
-        CommandList->Close();
-        auto Commands = static_cast<ID3D12CommandList*>(m_CommandList->Get());
-        m_CommandQueue->Get()->ExecuteCommandLists(1, &Commands);
+        Context.Upload();
 
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
@@ -185,16 +189,5 @@ namespace Neon::RHI
     void Dx12Swapchain::Resize(
         const Size2I& Size)
     {
-    }
-
-    //
-
-    void Dx12Swapchain::TestCommandList()
-    {
-        for (auto& Allocator : m_CommandAllocators)
-        {
-            Allocator = std::make_unique<Dx12CommandAllocator>(CommandQueueType::Graphics);
-        }
-        m_CommandList = std::make_unique<Dx12CommandList>(m_CommandAllocators[0].get(), CommandQueueType::Graphics);
     }
 } // namespace Neon::RHI
