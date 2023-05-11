@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RHI/Swapchain.hpp>
+#include <RHI/Fence.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
@@ -28,6 +29,9 @@ namespace Neon::RHI
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
 
         UPtr<Dx12CommandQueue> m_CommandQueue;
+
+        uint64_t     m_FenceValue = 0;
+        UPtr<IFence> m_FrameFence;
 
         std::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
     };

@@ -22,7 +22,8 @@ namespace Neon::RHI
 
     Dx12Swapchain::Dx12Swapchain(
         const InitDesc& Desc) :
-        m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics))
+        m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics)),
+        m_FrameFence(IFence::Create())
     {
         // TODO remove
         srand(time(nullptr));
@@ -106,13 +107,8 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
-        Win32::ComPtr<ID3D12Fence> Fence;
-        Dx12RenderDevice::Get()->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&Fence));
-
-        m_CommandQueue->Get()->Signal(Fence.Get(), 1);
-
-        Win32::WinHandlePtr Handle(CreateEvent(nullptr, FALSE, FALSE, nullptr));
-        Fence->SetEventOnCompletion(1, Handle.Get());
+        m_FrameFence->SignalGPU(m_CommandQueue.get(), m_FenceValue);
+        m_FrameFence->WaitCPU(m_FenceValue);
 
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
     }
@@ -123,8 +119,7 @@ namespace Neon::RHI
     {
         static float Time = float(rand());
 
-        HANDLE PresentHandle = m_Swapchain->GetFrameLatencyWaitableObject();
-        WaitForSingleObject(PresentHandle, INFINITE);
+        m_FrameFence->CmpWaitCPU(m_FenceValue);
 
         TCommandContext<CommandQueueType::Graphics> Context(m_CommandQueue.get());
 
@@ -178,6 +173,7 @@ namespace Neon::RHI
         }
 
         Context.Upload();
+        m_FrameFence->SignalGPU(m_CommandQueue.get(), ++m_FenceValue);
 
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }

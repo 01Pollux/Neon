@@ -21,6 +21,11 @@ namespace Neon::RHI
             return m_CommandList;
         }
 
+        [[nodiscard]] ICommandList* Get()
+        {
+            return m_CommandList;
+        }
+
         /// <summary>
         /// Submit the command list to the GPU.
         /// </summary>
@@ -46,6 +51,11 @@ namespace Neon::RHI
         }
 
         [[nodiscard]] CommandListType* operator->()
+        {
+            return dynamic_cast<CommandListType*>(m_CommandList);
+        }
+
+        [[nodiscard]] CommandListType* Get()
         {
             return dynamic_cast<CommandListType*>(m_CommandList);
         }
