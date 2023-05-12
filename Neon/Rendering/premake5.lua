@@ -1,4 +1,4 @@
-project "NeonRenderering"
+project "NeonRendering"
     kind "StaticLib"
     language "C++"
     cppdialect "C++latest"
@@ -14,5 +14,5 @@ project "NeonRenderering"
         "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Renderer}"
+        "%{CommonDir.Neon.Rendering}"
     }
