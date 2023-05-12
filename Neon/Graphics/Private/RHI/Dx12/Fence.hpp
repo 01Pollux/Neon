@@ -35,8 +35,8 @@ namespace Neon::RHI
         Win32::WinHandlePtr        m_FenceSingalEvent;
     };
 
-    class Dx12MultiFence : public virtual IMultiFence,
-                           public Dx12Fence
+    class Dx12MultiFence final : public virtual IMultiFence,
+                                 public Dx12Fence
     {
         using WaitSignalList = std::list<Win32::WinHandlePtr>;
 
