@@ -2,8 +2,8 @@
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/Fence.hpp>
-#include <Private/RHI/Dx12/DirectXHeaders.hpp>
 
+#include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 
 namespace Neon::RHI
@@ -26,13 +26,24 @@ namespace Neon::RHI
             const Size2I& Size) override;
 
     private:
+        /// <summary>
+        /// Create the swapchain.
+        /// </summary>
+        void CreateSwapchain(
+            const InitDesc& Desc);
+
+        void ResizeBackbuffers(
+            size_t NewSize);
+
+    private:
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
 
-        UPtr<Dx12CommandQueue> m_CommandQueue;
+        UPtr<Dx12CommandQueue>         m_CommandQueue;
+        std::vector<UPtr<Dx12Texture>> m_BackBuffers;
 
         uint64_t     m_FenceValue = 0;
         UPtr<IFence> m_FrameFence;
 
-        std::map<ID3D12Resource*, D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
+        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
     };
 } // namespace Neon::RHI

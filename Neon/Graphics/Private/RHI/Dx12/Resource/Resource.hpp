@@ -7,7 +7,26 @@
 
 namespace Neon::RHI
 {
-    class Dx12Buffer : public virtual IBuffer
+    class Dx12GpuResource : public virtual IGpuResource
+    {
+    public:
+        /// <summary>
+        /// Get the underlying D3D12 resource.
+        /// </summary>
+        [[nodiscard]] ID3D12Resource* GetResource() const;
+
+        /// <summary>
+        /// Get the underlying D3D12 resource allocation.
+        /// </summary>
+        [[nodiscard]] D3D12MA::Allocation* GetAllocation() const;
+
+    protected:
+        Win32::ComPtr<ID3D12Resource>      m_Resource;
+        Win32::ComPtr<D3D12MA::Allocation> m_Allocation;
+    };
+
+    class Dx12Buffer : public virtual IBuffer,
+                       public Dx12GpuResource
     {
     public:
         [[nodiscard]] size_t GetSize() const override;
@@ -49,17 +68,22 @@ namespace Neon::RHI
 
     //
 
-    class Dx12Texture : public ITexture
+    class Dx12Texture : public virtual ITexture,
+                        public Dx12GpuResource
     {
     public:
-        [[nodiscard]] const Vector3D& GetDimensions() const override;
+        Dx12Texture() = default;
 
-        [[nodiscard]] uint8_t GetMipLevels() const override;
+        Dx12Texture(
+            Win32::ComPtr<ID3D12Resource>      Texture    = nullptr,
+            Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
+
+        [[nodiscard]] const Vector3DI& GetDimensions() const override;
+
+        [[nodiscard]] uint16_t GetMipLevels() const override;
 
     protected:
-        Win32::ComPtr<ID3D12Resource> m_Texture;
-
-        Vector3D m_Dimensions;
-        uint8_t  m_MipLevels;
+        Vector3DI m_Dimensions;
+        uint16_t  m_MipLevels = 0;
     };
 } // namespace Neon::RHI

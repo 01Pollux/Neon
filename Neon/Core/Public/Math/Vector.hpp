@@ -92,8 +92,6 @@ namespace Neon
         static const Vector3DI One;
         static const Vector3DI Zero;
 
-        MVECTOR_IMPL_MATHVEC_DECLARATIONS(Vector3DI);
-
         MVECTOR_IMPL_ACCESSOR(0, x);
         MVECTOR_IMPL_ACCESSOR(1, y);
         MVECTOR_IMPL_ACCESSOR(2, z);
@@ -143,8 +141,6 @@ namespace Neon
 
         static const Vector4DI One;
         static const Vector4DI Zero;
-
-        MVECTOR_IMPL_MATHVEC_DECLARATIONS(Vector4DI);
 
         MVECTOR_IMPL_ACCESSOR(0, x);
         MVECTOR_IMPL_ACCESSOR(1, y);

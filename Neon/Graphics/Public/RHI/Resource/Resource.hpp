@@ -4,7 +4,7 @@
 
 namespace Neon
 {
-    class Vector3D;
+    class Vector3DI;
 }
 
 namespace Neon::RHI
@@ -66,11 +66,11 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the dimensions of the texture.
         /// </summary>
-        [[nodiscard]] virtual const Vector3D& GetDimensions() const = 0;
+        [[nodiscard]] virtual const Vector3DI& GetDimensions() const = 0;
 
         /// <summary>
         /// Returns the number of mip levels in the texture.
         /// </summary>
-        [[nodiscard]] virtual uint8_t GetMipLevels() const = 0;
+        [[nodiscard]] virtual uint16_t GetMipLevels() const = 0;
     };
 } // namespace Neon::RHI
