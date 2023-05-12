@@ -101,7 +101,7 @@ namespace Neon::RHI
 
         //
 
-        EResourceFormat Format = EResourceFormat::UNKNOWN;
+        EResourceFormat Format = EResourceFormat::Unknown;
         ViewVariant     View;
     };
 
@@ -191,7 +191,7 @@ namespace Neon::RHI
 
         //
 
-        EResourceFormat        Format = EResourceFormat::UNKNOWN;
+        EResourceFormat        Format = EResourceFormat::Unknown;
         ShaderComponentMapping Mapping;
         ViewVariant            View;
     };
@@ -266,7 +266,7 @@ namespace Neon::RHI
 
         //
 
-        EResourceFormat Format = EResourceFormat::UNKNOWN;
+        EResourceFormat Format = EResourceFormat::Unknown;
         ViewVariant     View;
     };
 
@@ -316,10 +316,26 @@ namespace Neon::RHI
 
         //
 
-        EResourceFormat Format = EResourceFormat::UNKNOWN;
+        EResourceFormat Format = EResourceFormat::Unknown;
         ViewVariant     View;
 
         bool OnlyDepth   : 1;
         bool OnlyStencil : 1;
+    };
+
+    //
+
+    struct SamplerDesc
+    {
+        ESamplerFilter Filter;
+        ESamplerMode   WrapU;
+        ESamplerMode   WrapV;
+        ESamplerMode   WrapW;
+        float          MipLODBias;
+        uint32_t       MaxAnisotropy;
+        ESamplerCmp    ComparisonFunc;
+        float          BorderColor[4];
+        float          MinLOD;
+        float          MaxLOD;
     };
 } // namespace Neon::RHI

@@ -43,6 +43,7 @@ namespace Neon::RHI
         EnableDebugLayerIfNeeded();
         CreateFactory();
         CreateDevice();
+        FillInDescriptorSizes();
     }
 
     IResourceStateManager* Dx12RenderDevice::GetStateManager()
@@ -63,6 +64,24 @@ namespace Neon::RHI
     ID3D12Device* Dx12RenderDevice::GetDevice()
     {
         return m_Device.Get();
+    }
+
+    uint32_t Dx12RenderDevice::GetDescriptorSize(
+        D3D12_DESCRIPTOR_HEAP_TYPE Type) const
+    {
+        switch (Type)
+        {
+        case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+            return m_HeapDescriptorSize.CBV;
+        case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+            return m_HeapDescriptorSize.SAM;
+        case D3D12_DESCRIPTOR_HEAP_TYPE_RTV:
+            return m_HeapDescriptorSize.RTV;
+        case D3D12_DESCRIPTOR_HEAP_TYPE_DSV:
+            return m_HeapDescriptorSize.DSV;
+        default:
+            std::unreachable();
+        }
     }
 
     //
@@ -117,5 +136,15 @@ namespace Neon::RHI
             }
         }
         return BestAdapter;
+    }
+
+    //
+
+    void Dx12RenderDevice::FillInDescriptorSizes()
+    {
+        m_HeapDescriptorSize.RTV = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        m_HeapDescriptorSize.DSV = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+        m_HeapDescriptorSize.SAM = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+        m_HeapDescriptorSize.CBV = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 } // namespace Neon::RHI

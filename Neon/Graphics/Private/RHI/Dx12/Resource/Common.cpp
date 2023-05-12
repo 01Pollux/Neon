@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Resource/Common.hpp>
+#include <Private/RHI/Dx12/Resource/Resource.hpp>
 
 namespace Neon::RHI
 {
@@ -30,6 +31,11 @@ namespace Neon::RHI
             std::pair{ D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ, EResourceState::VideoEncodeRead },
             std::pair{ D3D12_RESOURCE_STATE_VIDEO_ENCODE_WRITE, EResourceState::VideoEncodeWrite }
         };
+    }
+
+    ID3D12Resource* GetDx12Resource(IGpuResource* Resource)
+    {
+        return dynamic_cast<Dx12GpuResource*>(Resource)->GetResource();
     }
 
     D3D12_RESOURCE_STATES CastResourceStates(

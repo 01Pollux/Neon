@@ -265,12 +265,6 @@ namespace Neon::RHI
 
     //
 
-    ID3D12Resource* Dx12ResourceStateManager::GetDx12Resource(
-        IGpuResource* Resource)
-    {
-        return dynamic_cast<Dx12GpuResource*>(Resource)->GetResource();
-    }
-
     bool Dx12ResourceStateManager::IsNewStateRedundant(
         D3D12_RESOURCE_STATES CurrentState,
         D3D12_RESOURCE_STATES NewState)

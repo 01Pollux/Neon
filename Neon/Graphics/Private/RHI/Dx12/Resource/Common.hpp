@@ -5,6 +5,16 @@
 
 namespace Neon::RHI
 {
+    class Dx12GpuResource;
+
+    /// <summary>
+    /// Get D3D12 resource from Neon resource.
+    /// </summary>
+    ID3D12Resource* GetDx12Resource(
+        IGpuResource* Resource);
+
+    //
+
     /// <summary>
     /// Convert Neon resource state to D3D12 resource states.
     /// </summary>

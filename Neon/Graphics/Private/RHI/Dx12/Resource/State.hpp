@@ -92,12 +92,6 @@ namespace Neon::RHI
 
     public:
         /// <summary>
-        /// Get DX12 resource from IGpuResource
-        /// </summary>
-        [[nodiscard]] static ID3D12Resource* GetDx12Resource(
-            IGpuResource* Resource);
-
-        /// <summary>
         /// Transition is redundant if either states completely match
         /// or current state is a read state and new state is a partial or complete subset of the current
         /// (which implies that it is also a read state)
