@@ -49,7 +49,6 @@ namespace Neon::RHI
         uint32_t FrameIndex = uint32_t(m_FenceValue % m_RenderTargets.size());
 
         TCommandContext<CommandQueueType::Graphics> Context(m_CommandQueue.get());
-        auto                                        CommandList = dynamic_cast<Dx12CommandList*>(Context.operator->())->Get();
 
         auto& Rtv = m_RenderTargets[FrameIndex];
 

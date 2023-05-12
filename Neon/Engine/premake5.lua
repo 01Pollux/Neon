@@ -12,16 +12,18 @@ project "NeonEngine"
     links
     {
         "NeonCore",
+        "NeonResource",
         "NeonWindowing",
         "NeonGraphics",
-        "NeonResource"
+        "NeonRenderering"
     }
 
     includedirs
     {
         "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Resource}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Resource}",
+        "%{CommonDir.Neon.Renderering}",
         "%{CommonDir.Neon.Engine}"
     }
