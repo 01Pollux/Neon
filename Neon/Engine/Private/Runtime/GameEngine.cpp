@@ -36,6 +36,7 @@ namespace Neon
         {
             m_World->progress();
             m_Swapchain->PrepareFrame();
+            m_Swapchain->Present();
         }
         return m_World.GetModule<Module::Window>()->GetExitCode();
     }

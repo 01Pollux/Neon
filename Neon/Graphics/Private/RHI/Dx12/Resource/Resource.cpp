@@ -1,8 +1,19 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Resource/State.hpp>
 
 namespace Neon::RHI
 {
+    Dx12GpuResource::~Dx12GpuResource()
+    {
+        if (m_Resource)
+        {
+            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(IRenderDevice::Get()->GetStateManager());
+            Dx12StateManager->StopTrakingResource(m_Resource.Get());
+        }
+    }
+
     ID3D12Resource* Dx12GpuResource::GetResource() const
     {
         return m_Resource.Get();
@@ -52,6 +63,7 @@ namespace Neon::RHI
 
     Dx12Texture::Dx12Texture(
         Win32::ComPtr<ID3D12Resource>      Texture,
+        D3D12_RESOURCE_STATES              InitialState,
         Win32::ComPtr<D3D12MA::Allocation> Allocation)
     {
         m_Resource   = std::move(Texture);
@@ -65,6 +77,9 @@ namespace Neon::RHI
                              int(Desc.Height),
                              int(Desc.DepthOrArraySize) };
             m_MipLevels  = Desc.MipLevels;
+
+            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(IRenderDevice::Get()->GetStateManager());
+            Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
         }
     }
 

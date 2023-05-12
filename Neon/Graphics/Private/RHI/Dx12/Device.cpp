@@ -45,6 +45,11 @@ namespace Neon::RHI
         CreateDevice();
     }
 
+    IResourceStateManager* Dx12RenderDevice::GetStateManager()
+    {
+        return &m_StateManager;
+    }
+
     Dx12RenderDevice* Dx12RenderDevice::Get()
     {
         return static_cast<Dx12RenderDevice*>(IRenderDevice::Get());

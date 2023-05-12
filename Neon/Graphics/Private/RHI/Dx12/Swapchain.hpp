@@ -38,8 +38,8 @@ namespace Neon::RHI
     private:
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
 
-        UPtr<Dx12CommandQueue>         m_CommandQueue;
-        std::vector<UPtr<Dx12Texture>> m_BackBuffers;
+        UPtr<Dx12CommandQueue>   m_CommandQueue;
+        std::vector<Dx12Texture> m_BackBuffers;
 
         uint64_t     m_FenceValue = 0;
         UPtr<IFence> m_FrameFence;

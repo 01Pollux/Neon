@@ -53,13 +53,9 @@ namespace Neon::RHI
 
         auto& Rtv = m_RenderTargets[FrameIndex];
 
-        {
-            // transition buffer resource to render target state
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-                m_BackBuffers[FrameIndex]->GetResource(),
-                D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-            CommandList->ResourceBarrier(1, &barrier);
-        }
+        auto StateManager = IRenderDevice::Get()->GetStateManager();
+        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
+        StateManager->FlushBarriers(Context.Get());
 
         Time += 0.008f;
         Color4 Color{
@@ -71,22 +67,16 @@ namespace Neon::RHI
         Context->ClearRtv({ Rtv.ptr }, Color);
         Context->SetRenderTargets({ Rtv.ptr }, 1);
 
-        {
-            // transition buffer resource to render target state
-            const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-                m_BackBuffers[FrameIndex]->GetResource(),
-                D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-            CommandList->ResourceBarrier(1, &barrier);
-        }
+        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
+        StateManager->FlushBarriers(Context.Get());
 
         Context.Upload();
-        m_FrameFence->SignalGPU(m_CommandQueue.get(), ++m_FenceValue);
-
-        ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
     void Dx12Swapchain::Present()
     {
+        m_FrameFence->SignalGPU(m_CommandQueue.get(), ++m_FenceValue);
+        ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
     void Dx12Swapchain::Resize(
@@ -193,7 +183,7 @@ namespace Neon::RHI
         {
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(std::make_unique<Dx12Texture>(std::move(BackBuffer)));
+            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
             // TODO
 
@@ -201,7 +191,7 @@ namespace Neon::RHI
             Dx12Device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&Heap));
 
             m_RenderTargets[i] = Heap->GetCPUDescriptorHandleForHeapStart();
-            Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer->GetResource(), nullptr, m_RenderTargets[i]);
+            Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer.GetResource(), nullptr, m_RenderTargets[i]);
         }
     }
 } // namespace Neon::RHI

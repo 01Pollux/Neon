@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RHI/Commands/Commands.hpp>
+#include <RHI/Commands/CommandList.hpp>
 #include <list>
 
 namespace Neon::RHI
@@ -12,6 +12,8 @@ namespace Neon::RHI
     class CommandContext
     {
     public:
+        CommandContext() = default;
+
         CommandContext(
             ICommandQueue*   Queue,
             CommandQueueType Type);
@@ -26,14 +28,19 @@ namespace Neon::RHI
             return m_CommandList;
         }
 
+        [[nodiscard]] operator bool() const noexcept
+        {
+            return m_CommandList != nullptr;
+        }
+
         /// <summary>
         /// Submit the command list to the GPU.
         /// </summary>
         void Upload();
 
     protected:
-        ICommandQueue* m_Queue;
-        ICommandList*  m_CommandList;
+        ICommandQueue* m_Queue       = nullptr;
+        ICommandList*  m_CommandList = nullptr;
     };
 
     template<CommandQueueType _Type>
@@ -44,7 +51,9 @@ namespace Neon::RHI
             _Type == CommandQueueType::Graphics, IGraphicsCommandList,
             nullptr_t>;
 
-        TCommandContext(
+        TCommandContext() = default;
+
+        explicit TCommandContext(
             ICommandQueue* Queue) :
             CommandContext(Queue, _Type)
         {

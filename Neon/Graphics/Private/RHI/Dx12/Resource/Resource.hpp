@@ -10,6 +10,8 @@ namespace Neon::RHI
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
+        ~Dx12GpuResource() override;
+
         /// <summary>
         /// Get the underlying D3D12 resource.
         /// </summary>
@@ -75,7 +77,8 @@ namespace Neon::RHI
         Dx12Texture() = default;
 
         Dx12Texture(
-            Win32::ComPtr<ID3D12Resource>      Texture    = nullptr,
+            Win32::ComPtr<ID3D12Resource>      Texture,
+            D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
 
         [[nodiscard]] const Vector3DI& GetDimensions() const override;

@@ -60,7 +60,7 @@ namespace Neon::RHI
 
     //
 
-    class ITexture : public IGpuResource
+    class ITexture : public virtual IGpuResource
     {
     public:
         /// <summary>
