@@ -32,4 +32,18 @@ namespace Neon::RHI
     /// </summary>
     MResourceState CastResourceStates(
         D3D12_RESOURCE_STATES States);
+
+    //
+
+    /// <summary>
+    /// Convert Neon resource format to D3D12 resource dimension.
+    /// </summary>
+    constexpr DXGI_FORMAT CastFormat(
+        EResourceFormat Format) noexcept;
+
+    /// <summary>
+    /// Convert D3D12 format to Neon resource format.
+    /// </summary>
+    constexpr EResourceFormat CastFormat(
+        DXGI_FORMAT Format) noexcept;
 } // namespace Neon::RHI

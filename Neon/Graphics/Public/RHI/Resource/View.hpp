@@ -39,7 +39,7 @@ namespace Neon::RHI
             return Type((m_Mapping >> (uint32_t(Component) * c_ShfitCount)) & c_ShfitMask);
         }
 
-        constexpr operator uint32_t()
+        constexpr operator uint32_t() const noexcept
         {
             return m_Mapping;
         }
@@ -68,7 +68,7 @@ namespace Neon::RHI
 
         struct Texture1DArray : Texture1D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -80,7 +80,7 @@ namespace Neon::RHI
 
         struct Texture2DArray : Texture2D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -126,7 +126,7 @@ namespace Neon::RHI
 
         struct Texture1DArray : Texture1D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -140,7 +140,7 @@ namespace Neon::RHI
 
         struct Texture2DArray : Texture2D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -150,7 +150,7 @@ namespace Neon::RHI
 
         struct Texture2DMSArray : Texture2DMS
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -167,7 +167,7 @@ namespace Neon::RHI
 
         struct TextureCubeArray : TextureCube
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -221,7 +221,7 @@ namespace Neon::RHI
 
         struct Texture1DArray : Texture1D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -233,7 +233,7 @@ namespace Neon::RHI
 
         struct Texture2DArray : Texture2D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -243,7 +243,7 @@ namespace Neon::RHI
 
         struct Texture2DMSArray : Texture2DMS
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -281,7 +281,7 @@ namespace Neon::RHI
 
         struct Texture1DArray : Texture1D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -292,7 +292,7 @@ namespace Neon::RHI
 
         struct Texture2DArray : Texture2D
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 
@@ -302,7 +302,7 @@ namespace Neon::RHI
 
         struct Texture2DMSArray : Texture2DMS
         {
-            uint32_t StartSlice;
+            uint32_t StartSlice = 0;
             uint32_t Size;
         };
 

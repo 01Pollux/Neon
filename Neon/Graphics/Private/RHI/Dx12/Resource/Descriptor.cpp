@@ -192,11 +192,115 @@ namespace Neon::RHI
         if (Desc)
         {
             Dx12DescPtr = &Dx12Desc;
+
+            std::visit(
+                VariantVisitor{
+                    [&Dx12Desc](const SRVDesc::Buffer& Buffer)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+                        Dx12Desc.Buffer        = {
+                                   .FirstElement        = Buffer.FirstElement,
+                                   .NumElements         = Buffer.Count,
+                                   .StructureByteStride = Buffer.SizeOfStruct,
+                                   .Flags               = Buffer.Raw ? D3D12_BUFFER_SRV_FLAG_RAW : D3D12_BUFFER_SRV_FLAG_NONE
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture1D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+                        Dx12Desc.Texture1D     = {
+                                .MostDetailedMip     = Texture.MostDetailedMip,
+                                .MipLevels           = Texture.MipLevels,
+                                .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture1DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+                        Dx12Desc.Texture1DArray = {
+                            .MostDetailedMip     = Texture.MostDetailedMip,
+                            .MipLevels           = Texture.MipLevels,
+                            .FirstArraySlice     = Texture.StartSlice,
+                            .ArraySize           = Texture.Size,
+                            .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture2D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                        Dx12Desc.Texture2D     = {
+                                .MostDetailedMip     = Texture.MostDetailedMip,
+                                .MipLevels           = Texture.MipLevels,
+                                .PlaneSlice          = Texture.PlaneSlice,
+                                .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture2DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+                        Dx12Desc.Texture2DArray = {
+                            .MostDetailedMip     = Texture.MostDetailedMip,
+                            .MipLevels           = Texture.MipLevels,
+                            .FirstArraySlice     = Texture.StartSlice,
+                            .ArraySize           = Texture.Size,
+                            .PlaneSlice          = Texture.PlaneSlice,
+                            .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture2DMS& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+                        Dx12Desc.Texture2DMS   = {};
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture2DMSArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+                        Dx12Desc.Texture2DArray = {
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::Texture3D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+                        Dx12Desc.Texture3D     = {
+                                .MostDetailedMip     = Texture.MostDetailedMip,
+                                .MipLevels           = Texture.MipLevels,
+                                .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::TextureCube& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+                        Dx12Desc.TextureCube   = {
+                              .MostDetailedMip     = Texture.MostDetailedMip,
+                              .MipLevels           = Texture.MipLevels,
+                              .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::TextureCubeArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension    = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+                        Dx12Desc.TextureCubeArray = {
+                            .MostDetailedMip     = Texture.MostDetailedMip,
+                            .MipLevels           = Texture.MipLevels,
+                            .First2DArrayFace    = Texture.StartSlice,
+                            .NumCubes            = Texture.Size,
+                            .ResourceMinLODClamp = Texture.MinLODClamp
+                        };
+                    },
+                    [&Dx12Desc](const SRVDesc::RaytracingAccelerationStructure& AccelStruct)
+                    {
+                        Dx12Desc.ViewDimension                   = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+                        Dx12Desc.RaytracingAccelerationStructure = {
+                            .Location = AccelStruct.Resource.Value
+                        };
+                    } },
+                Desc->View);
         }
 
-        Dx12Desc.Format                  = Desc->Format;
-        Dx12Desc.ViewDimension           = CastSRVDimension(Desc->Dimension);
-        Dx12Desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        Dx12Desc.Format                  = CastFormat(Desc->Format);
+        Dx12Desc.Shader4ComponentMapping = Desc->Mapping;
 
         Dx12Device->CreateShaderResourceView(
             GetDx12Resource(Resource),
