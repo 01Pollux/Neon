@@ -38,13 +38,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon resource format to D3D12 resource dimension.
     /// </summary>
-    constexpr DXGI_FORMAT CastFormat(
+    DXGI_FORMAT CastFormat(
         EResourceFormat Format) noexcept;
 
     /// <summary>
     /// Convert D3D12 format to Neon resource format.
     /// </summary>
-    constexpr EResourceFormat CastFormat(
+    EResourceFormat CastFormat(
         DXGI_FORMAT Format) noexcept;
 
     //
@@ -52,13 +52,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon sampler filter to D3D12 sampler filter.
     /// </summary>
-    constexpr D3D12_FILTER CastFilter(
+    D3D12_FILTER CastFilter(
         ESamplerFilter Filter) noexcept;
 
     /// <summary>
     /// Convert D3D12 sampler filter to Neon sampler filter.
     /// </summary>
-    constexpr ESamplerFilter CastFilter(
+    ESamplerFilter CastFilter(
         D3D12_FILTER Filter) noexcept;
 
     //
@@ -66,13 +66,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon texture address mode to D3D12 texture address mode.
     /// </summary>
-    constexpr D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
+    D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
         ESamplerMode AddressMode) noexcept;
 
     /// <summary>
     /// Convert D3D12 texture address mode to Neon sampler filter.
     /// </summary>
-    constexpr ESamplerMode CastAddressMode(
+    ESamplerMode CastAddressMode(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept;
 
     //
@@ -80,13 +80,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon sampler comparison function to D3D12 comparison function.
     /// </summary>
-    constexpr D3D12_COMPARISON_FUNC CastComparisonFunc(
+    D3D12_COMPARISON_FUNC CastComparisonFunc(
         ESamplerCmp CmpFunc) noexcept;
 
     /// <summary>
     /// Convert D3D12 comparison function to Neon sampler comparison function.
     /// </summary>
-    constexpr ESamplerMode CastComparisonFunc(
+    ESamplerMode CastComparisonFunc(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept;
 
 } // namespace Neon::RHI

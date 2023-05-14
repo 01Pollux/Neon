@@ -2,26 +2,32 @@
 
 #include <RHI/Commands/CommandQueue.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
+#include <mutex>
 
 namespace Neon::RHI
 {
+    class ISwapchain;
+
     class Dx12CommandQueue final : public ICommandQueue
     {
     public:
         Dx12CommandQueue(
+            ISwapchain*      Swapchain,
             CommandQueueType Type);
-
-        ICommandList* AllocateCommandList(
-            CommandQueueType Type) override;
 
         std::vector<ICommandList*> AllocateCommandLists(
             CommandQueueType Type, size_t Count) override;
 
-        void Upload(
-            ICommandList* Command) override;
+        void FreeCommandLists(
+            CommandQueueType         Type,
+            std::span<ICommandList*> Commands) override;
 
         void Upload(
-            const std::vector<ICommandList*>& Commands) override;
+            std::span<ICommandList*> Commands) override;
+
+        void Reset(
+            CommandQueueType         Type,
+            std::span<ICommandList*> Commands) override;
 
     public:
         /// <summary>
@@ -30,6 +36,8 @@ namespace Neon::RHI
         [[nodiscard]] ID3D12CommandQueue* Get();
 
     private:
+        ISwapchain* m_Swapchain;
+
         Win32::ComPtr<ID3D12CommandQueue> m_CommandQueue;
     };
 } // namespace Neon::RHI

@@ -9,29 +9,15 @@ namespace Neon
 
 namespace Neon::RHI
 {
-    class ICommandAllocator;
+    class ISwapchain;
+
     struct CpuDescriptorHandle;
     struct GpuDescriptorHandle;
 
     class ICommandList
     {
     public:
-        [[nodiscard]] static ICommandList* Create(
-            ICommandAllocator* Allocator,
-            CommandQueueType   Type);
-
         virtual ~ICommandList() = default;
-
-        /// <summary>
-        /// Reset command list.
-        /// </summary>
-        virtual void Reset(
-            ICommandAllocator* Allocator) = 0;
-
-        /// <summary>
-        /// Close command list.
-        /// </summary>
-        virtual void Close() = 0;
     };
 
     //

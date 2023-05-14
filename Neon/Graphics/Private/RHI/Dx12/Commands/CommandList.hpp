@@ -5,26 +5,29 @@
 
 namespace Neon::RHI
 {
+    class Dx12Swapchain;
+
     class Dx12CommandList : public virtual ICommandList
     {
     public:
-        Dx12CommandList(
-            ICommandAllocator* Allocator,
-            CommandQueueType   Type);
-
-        void Reset(
-            ICommandAllocator* Allocator) override;
-
-        void Close() override;
+        Dx12CommandList() = default;
+        NEON_CLASS_NO_COPYMOVE(Dx12CommandList);
+        ~Dx12CommandList() override;
 
     public:
+        /// <summary>
+        /// Attach D3D12 command list.
+        /// </summary>
+        void AttachCommandList(
+            ID3D12GraphicsCommandList* CommandList);
+
         /// <summary>
         /// Get underlying D3D12 command list.
         /// </summary>
         [[nodiscard]] ID3D12GraphicsCommandList* Get();
 
     protected:
-        Win32::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
+        ID3D12GraphicsCommandList* m_CommandList = nullptr;
     };
 
     class Dx12CommonCommandList : public virtual ICommonCommandList,

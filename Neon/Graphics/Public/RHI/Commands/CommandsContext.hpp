@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Neon.hpp>
 #include <RHI/Commands/CommandList.hpp>
 #include <list>
 
@@ -13,34 +14,50 @@ namespace Neon::RHI
     {
     public:
         CommandContext() = default;
-
         CommandContext(
             ICommandQueue*   Queue,
             CommandQueueType Type);
 
-        [[nodiscard]] ICommandList* operator->()
-        {
-            return m_CommandList;
-        }
+        NEON_CLASS_NO_COPY(CommandContext);
+        CommandContext(
+            CommandContext&& Context) noexcept;
+        CommandContext& operator=(
+            CommandContext&& Context) noexcept;
 
-        [[nodiscard]] ICommandList* Get()
-        {
-            return m_CommandList;
-        }
-
-        [[nodiscard]] operator bool() const noexcept
-        {
-            return m_CommandList != nullptr;
-        }
+        ~CommandContext();
 
         /// <summary>
-        /// Submit the command list to the GPU.
+        /// Add new command lists to the batch.
+        /// </summary>
+        size_t Append(
+            size_t Size);
+
+        /// <summary>
+        /// Add new command lists to the batch.
+        /// </summary>
+        ICommandList* Append();
+
+        /// <summary>
+        /// Get a command list in the batch.
+        /// </summary>
+        [[nodiscard]] ICommandList* operator[](
+            size_t Index);
+
+        /// <summary>
+        /// Submit list of command lists to the GPU.
         /// </summary>
         void Upload();
 
-    protected:
-        ICommandQueue* m_Queue       = nullptr;
-        ICommandList*  m_CommandList = nullptr;
+        /// <summary>
+        /// Reset the command lists.
+        /// </summary>
+        void Reset();
+
+    private:
+        ICommandQueue*   m_Queue = nullptr;
+        CommandQueueType m_Type;
+
+        std::vector<ICommandList*> m_CommandLists;
     };
 
     template<CommandQueueType _Type>
@@ -59,50 +76,21 @@ namespace Neon::RHI
         {
         }
 
-        [[nodiscard]] CommandListType* operator->()
-        {
-            return dynamic_cast<CommandListType*>(m_CommandList);
-        }
-
-        [[nodiscard]] CommandListType* Get()
-        {
-            return dynamic_cast<CommandListType*>(m_CommandList);
-        }
-    };
-
-    class CommandContextBatcher
-    {
-    public:
-        CommandContextBatcher(
-            ICommandQueue*   Queue,
-            CommandQueueType Type);
-
         /// <summary>
-        /// Add a new command list to the batch.
+        /// Add new command lists to the batch.
         /// </summary>
-        [[nodiscard]] ICommandList* Append();
+        CommandListType* Append()
+        {
+            return dynamic_cast<CommandListType*>(CommandContext::Append());
+        }
 
         /// <summary>
         /// Get a command list in the batch.
         /// </summary>
-        [[nodiscard]] ICommandList* operator[](
-            size_t Index);
-
-        /// <summary>
-        /// Add new command lists to the batch.
-        /// </summary>
-        void Append(
-            size_t Size);
-
-        /// <summary>
-        /// Submit list of command lists to the GPU.
-        /// </summary>
-        void Upload();
-
-    private:
-        ICommandQueue*   m_Queue;
-        CommandQueueType m_Type;
-
-        std::vector<ICommandList*> m_CommandLists;
+        [[nodiscard]] CommandListType* operator[](
+            size_t Index)
+        {
+            return dynamic_cast<CommandListType*>(CommandContext::operator[](Index));
+        }
     };
 } // namespace Neon::RHI

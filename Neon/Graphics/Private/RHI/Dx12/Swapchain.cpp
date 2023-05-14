@@ -22,8 +22,7 @@ namespace Neon::RHI
 
     Dx12Swapchain::Dx12Swapchain(
         const InitDesc& Desc) :
-        m_CommandQueue(std::make_unique<Dx12CommandQueue>(CommandQueueType::Graphics)),
-        m_FrameFence(IFence::Create())
+        m_BudgetManager(this)
     {
         // TODO remove
         srand(time(nullptr));
@@ -33,9 +32,6 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
-        m_FrameFence->SignalGPU(m_CommandQueue.get(), m_FenceValue);
-        m_FrameFence->WaitCPU(m_FenceValue);
-
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
     }
 
@@ -43,18 +39,20 @@ namespace Neon::RHI
 
     void Dx12Swapchain::PrepareFrame()
     {
+        m_BudgetManager.NewFrame();
+        uint32_t FrameIndex = m_BudgetManager.GetFrameIndex();
+
         static float Time = float(rand());
 
-        m_FrameFence->CmpWaitCPU(m_FenceValue);
-        uint32_t FrameIndex = uint32_t(m_FenceValue % m_RenderTargets.size());
+        TCommandContext<CommandQueueType::Graphics> CtxBatch(&m_BudgetManager.GetQueueManager()->GetGraphics()->Queue);
 
-        TCommandContext<CommandQueueType::Graphics> Context(m_CommandQueue.get());
+        auto Context = CtxBatch.Append();
 
         auto& Rtv = m_RenderTargets[FrameIndex];
 
         auto StateManager = IRenderDevice::Get()->GetStateManager();
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
-        StateManager->FlushBarriers(Context.Get());
+        StateManager->FlushBarriers(Context);
 
         Time += 0.008f;
         Color4 Color{
@@ -67,14 +65,14 @@ namespace Neon::RHI
         Context->SetRenderTargets({ Rtv.ptr }, 1);
 
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
-        StateManager->FlushBarriers(Context.Get());
+        StateManager->FlushBarriers(Context);
 
-        Context.Upload();
+        CtxBatch.Upload();
     }
 
     void Dx12Swapchain::Present()
     {
-        m_FrameFence->SignalGPU(m_CommandQueue.get(), ++m_FenceValue);
+        m_BudgetManager.EndFrame();
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
@@ -92,6 +90,8 @@ namespace Neon::RHI
         auto WindowSize  = Desc.Window->GetSize();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
+
+        auto GraphicsQueue = m_BudgetManager.GetQueueManager()->GetGraphics()->Queue.Get();
 
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
@@ -120,7 +120,7 @@ namespace Neon::RHI
             };
 
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
-                m_CommandQueue->Get(),
+                GraphicsQueue,
                 HWND(Desc.Window->GetPlatformHandle()),
                 &SwapchainDesc,
                 &FullscreenDesc,
@@ -155,7 +155,7 @@ namespace Neon::RHI
             };
 
             DxgiFactory->CreateSwapChain(
-                m_CommandQueue->Get(),
+                GraphicsQueue,
                 &SCDesc,
                 Swapchain.GetAddressOf());
 
@@ -184,13 +184,13 @@ namespace Neon::RHI
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
-            // TODO
-
             auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
             Dx12Device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&Heap));
 
             m_RenderTargets[i] = Heap->GetCPUDescriptorHandleForHeapStart();
             Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer.GetResource(), nullptr, m_RenderTargets[i]);
         }
+
+        m_BudgetManager.ResizeFrames(NewSize);
     }
 } // namespace Neon::RHI

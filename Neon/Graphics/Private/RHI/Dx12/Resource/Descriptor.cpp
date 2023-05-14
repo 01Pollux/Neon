@@ -602,9 +602,9 @@ namespace Neon::RHI
         switch (Type)
         {
         case AllocationType::Ring:
-            return NEON_NEW RingDescriptorHeapAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+            return NEON_NEW Dx12RingDescriptorHeapAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
         case AllocationType::Buddy:
-            return NEON_NEW DescriptorHeapBuddyAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+            return NEON_NEW Dx12DescriptorHeapBuddyAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
         default:
             std::unreachable();
         }
@@ -612,7 +612,7 @@ namespace Neon::RHI
 
     //
 
-    RingDescriptorHeapAllocator::RingDescriptorHeapAllocator(
+    Dx12RingDescriptorHeapAllocator::Dx12RingDescriptorHeapAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         size_t                     MaxCount,
         bool                       ShaderVisible) :
@@ -620,7 +620,7 @@ namespace Neon::RHI
     {
     }
 
-    DescriptorHeapHandle RingDescriptorHeapAllocator::Allocate(
+    DescriptorHeapHandle Dx12RingDescriptorHeapAllocator::Allocate(
         size_t DescriptorSize)
     {
         std::lock_guard DescLock(m_DescriptorLock);
@@ -640,16 +640,16 @@ namespace Neon::RHI
         };
     }
 
-    void RingDescriptorHeapAllocator::Free(
+    void Dx12RingDescriptorHeapAllocator::Free(
         const DescriptorHeapHandle& Data)
     {
     }
 
-    void RingDescriptorHeapAllocator::FreeAll()
+    void Dx12RingDescriptorHeapAllocator::FreeAll()
     {
     }
 
-    IDescriptorHeap* RingDescriptorHeapAllocator::GetHeap(
+    IDescriptorHeap* Dx12RingDescriptorHeapAllocator::GetHeap(
         size_t)
     {
         return &m_HeapDescriptor;
@@ -657,14 +657,14 @@ namespace Neon::RHI
 
     //
 
-    DescriptorHeapBuddyAllocator::BuddyBlock::BuddyBlock(
+    Dx12DescriptorHeapBuddyAllocator::BuddyBlock::BuddyBlock(
         const HeapDescriptorAllocInfo& Info) :
         Heap(Info.DescriptorType, Info.SizeOfHeap, Info.ShaderVisible),
         Allocator(Info.SizeOfHeap)
     {
     }
 
-    DescriptorHeapBuddyAllocator::DescriptorHeapBuddyAllocator(
+    Dx12DescriptorHeapBuddyAllocator::Dx12DescriptorHeapBuddyAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         size_t                     SizeOfHeap,
         bool                       ShaderVisible) :
@@ -672,7 +672,7 @@ namespace Neon::RHI
     {
     }
 
-    DescriptorHeapHandle DescriptorHeapBuddyAllocator::Allocate(
+    DescriptorHeapHandle Dx12DescriptorHeapBuddyAllocator::Allocate(
         size_t DescriptorSize)
     {
         std::lock_guard HeapLock(m_HeapsBlockMutex);
@@ -711,7 +711,7 @@ namespace Neon::RHI
         };
     }
 
-    void DescriptorHeapBuddyAllocator::Free(
+    void Dx12DescriptorHeapBuddyAllocator::Free(
         const DescriptorHeapHandle& Data)
     {
         std::lock_guard HeapLock(m_HeapsBlockMutex);
@@ -727,7 +727,7 @@ namespace Neon::RHI
         NEON_ASSERT(false, "Tried to free a non-existant heap");
     }
 
-    void DescriptorHeapBuddyAllocator::FreeAll()
+    void Dx12DescriptorHeapBuddyAllocator::FreeAll()
     {
         std::lock_guard HeapLock(m_HeapsBlockMutex);
 
@@ -737,7 +737,7 @@ namespace Neon::RHI
         }
     }
 
-    IDescriptorHeap* DescriptorHeapBuddyAllocator::GetHeap(
+    IDescriptorHeap* Dx12DescriptorHeapBuddyAllocator::GetHeap(
         size_t Index)
     {
         NEON_ASSERT(Index <= m_HeapBlocks.size());

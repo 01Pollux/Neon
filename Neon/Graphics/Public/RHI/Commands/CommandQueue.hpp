@@ -5,21 +5,17 @@
 
 namespace Neon::RHI
 {
+    class ISwapchain;
     class ICommandList;
 
     class ICommandQueue
     {
     public:
         [[nodiscard]] static ICommandQueue* Create(
+            ISwapchain*      Swapchain,
             CommandQueueType Type);
 
         virtual ~ICommandQueue() = default;
-
-        /// <summary>
-        /// Allocate a command list.
-        /// </summary>
-        virtual ICommandList* AllocateCommandList(
-            CommandQueueType Type) = 0;
 
         /// <summary>
         /// Allocate group of command lists in advance.
@@ -29,15 +25,23 @@ namespace Neon::RHI
             size_t           Count) = 0;
 
         /// <summary>
-        /// Submit a command list to the GPU.
+        /// Free group of command lists.
         /// </summary>
-        virtual void Upload(
-            ICommandList* Command) = 0;
+        virtual void FreeCommandLists(
+            CommandQueueType         Type,
+            std::span<ICommandList*> Commands) = 0;
 
         /// <summary>
         /// Submit command lists to the GPU.
         /// </summary>
         virtual void Upload(
-            const std::vector<ICommandList*>& Commands) = 0;
+            std::span<ICommandList*> Commands) = 0;
+
+        /// <summary>
+        /// Reset the command list.
+        /// </summary>
+        virtual void Reset(
+            CommandQueueType         Type,
+            std::span<ICommandList*> Commands) = 0;
     };
 } // namespace Neon::RHI

@@ -4,18 +4,22 @@
 
 #include <Private/RHI/Dx12/Commands/Commands.hpp>
 #include <Private/RHI/Dx12/Commands/CommandList.hpp>
-#include <Private/RHI/Dx12/Commands/CommandAllocator.hpp>
+
+#include <Private/RHI/Dx12/Swapchain.hpp>
 
 namespace Neon::RHI
 {
     ICommandQueue* ICommandQueue::Create(
+        ISwapchain*      Swapchain,
         CommandQueueType Type)
     {
-        return NEON_NEW Dx12CommandQueue(Type);
+        return NEON_NEW Dx12CommandQueue(Swapchain, Type);
     }
 
     Dx12CommandQueue::Dx12CommandQueue(
-        CommandQueueType Type)
+        ISwapchain*      Swapchain,
+        CommandQueueType Type) :
+        m_Swapchain(Swapchain)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
 
@@ -27,47 +31,42 @@ namespace Neon::RHI
             IID_PPV_ARGS(&m_CommandQueue)));
     }
 
-    ICommandList* Dx12CommandQueue::AllocateCommandList(
-        CommandQueueType Type)
-    {
-        ICommandList* CommandList = nullptr;
-        auto Allocator            = NEON_NEW Dx12CommandAllocator(Type);
-
-        switch (Type)
-        {
-        case CommandQueueType::Graphics:
-            CommandList = NEON_NEW Dx12GraphicsCommandList(Allocator, Type);
-            break;
-        default:
-            break;
-        }
-
-        if (CommandList)
-        {
-            Allocator->Reset();
-            CommandList->Reset(Allocator);
-        }
-        return CommandList;
-    }
-
     std::vector<ICommandList*> Dx12CommandQueue::AllocateCommandLists(
         CommandQueueType Type,
         size_t           Count)
     {
-        return std::vector<ICommandList*>();
+        return static_cast<Dx12Swapchain*>(m_Swapchain)->AllocateCommandLists(CastCommandQueueType(Type), Count);
+    }
+
+    void Dx12CommandQueue::FreeCommandLists(
+        CommandQueueType         Type,
+        std::span<ICommandList*> Commands)
+    {
+        static_cast<Dx12Swapchain*>(m_Swapchain)->FreeCommandLists(CastCommandQueueType(Type), Commands);
     }
 
     void Dx12CommandQueue::Upload(
-        ICommandList* Command)
+        std::span<ICommandList*> Commands)
     {
-        Command->Close();
-        auto Dx12Command = static_cast<ID3D12CommandList*>(dynamic_cast<Dx12CommandList*>(Command)->Get());
-        m_CommandQueue->ExecuteCommandLists(1, &Dx12Command);
+        std::vector<ID3D12CommandList*> Dx12Commands;
+        Dx12Commands.reserve(Commands.size());
+        std::ranges::transform(
+            Commands, std::back_inserter(Dx12Commands),
+            [](ICommandList* Command)
+            {
+                auto Dx12Command = static_cast<ID3D12GraphicsCommandList*>(dynamic_cast<Dx12CommandList*>(Command)->Get());
+                Dx12Command->Close();
+                return static_cast<ID3D12CommandList*>(Dx12Command);
+            });
+
+        m_CommandQueue->ExecuteCommandLists(UINT(Dx12Commands.size()), Dx12Commands.data());
     }
 
-    void Dx12CommandQueue::Upload(
-        const std::vector<ICommandList*>& Commands)
+    void Dx12CommandQueue::Reset(
+        CommandQueueType         Type,
+        std::span<ICommandList*> Commands)
     {
+        static_cast<Dx12Swapchain*>(m_Swapchain)->ResetCommandLists(CastCommandQueueType(Type), Commands);
     }
 
     ID3D12CommandQueue* Dx12CommandQueue::Get()

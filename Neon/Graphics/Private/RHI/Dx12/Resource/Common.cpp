@@ -81,7 +81,7 @@ namespace Neon::RHI
 
     //
 
-    constexpr DXGI_FORMAT CastFormat(
+    DXGI_FORMAT CastFormat(
         EResourceFormat Format) noexcept
     {
         switch (Format)
@@ -329,7 +329,7 @@ namespace Neon::RHI
         }
     }
 
-    constexpr EResourceFormat CastFormat(
+    EResourceFormat CastFormat(
         DXGI_FORMAT Format) noexcept
     {
         switch (Format)
@@ -579,7 +579,7 @@ namespace Neon::RHI
 
     //
 
-    constexpr D3D12_FILTER CastFilter(
+    D3D12_FILTER CastFilter(
         ESamplerFilter Filter) noexcept
     {
         switch (Filter)
@@ -661,7 +661,7 @@ namespace Neon::RHI
         }
     }
 
-    constexpr ESamplerFilter CastFilter(
+    ESamplerFilter CastFilter(
         D3D12_FILTER Filter) noexcept
     {
         switch (Filter)
@@ -745,7 +745,7 @@ namespace Neon::RHI
 
     //
 
-    constexpr D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
+    D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
         ESamplerMode AddressMode) noexcept
     {
         switch (AddressMode)
@@ -765,7 +765,7 @@ namespace Neon::RHI
         }
     }
 
-    constexpr ESamplerMode CastAddressMode(
+    ESamplerMode CastAddressMode(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
     {
         switch (AddressMode)
@@ -787,7 +787,7 @@ namespace Neon::RHI
 
     //
 
-    constexpr D3D12_COMPARISON_FUNC CastComparisonFunc(
+    D3D12_COMPARISON_FUNC CastComparisonFunc(
         ESamplerCmp CmpFunc) noexcept
     {
         switch (CmpFunc)
@@ -813,7 +813,7 @@ namespace Neon::RHI
         }
     }
 
-    constexpr ESamplerMode CastComparisonFunc(
+    ESamplerMode CastComparisonFunc(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
     {
         switch (AddressMode)

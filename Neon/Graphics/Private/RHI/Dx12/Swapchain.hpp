@@ -6,6 +6,8 @@
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 
+#include <Private/RHI/Dx12/Budget.hpp>
+
 namespace Neon::RHI
 {
     class Dx12Swapchain final : public ISwapchain
@@ -25,6 +27,28 @@ namespace Neon::RHI
         void Resize(
             const Size2I& Size) override;
 
+    public:
+        /// <summary>
+        /// Allocate or reuse command lists
+        /// </summary>
+        [[nodiscard]] std::vector<ICommandList*> AllocateCommandLists(
+            D3D12_COMMAND_LIST_TYPE Type,
+            size_t                  Count);
+
+        /// <summary>
+        /// Free command lists.
+        /// </summary>
+        void FreeCommandLists(
+            D3D12_COMMAND_LIST_TYPE  Type,
+            std::span<ICommandList*> Commands);
+
+        /// <summary>
+        /// Reset command lists with new command allocator.
+        /// </summary>
+        void ResetCommandLists(
+            D3D12_COMMAND_LIST_TYPE  Type,
+            std::span<ICommandList*> Commands);
+
     private:
         /// <summary>
         /// Create the swapchain.
@@ -37,13 +61,9 @@ namespace Neon::RHI
 
     private:
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
+        std::vector<Dx12Texture>       m_BackBuffers;
 
-        UPtr<Dx12CommandQueue>   m_CommandQueue;
-        std::vector<Dx12Texture> m_BackBuffers;
-
-        uint64_t     m_FenceValue = 0;
-        UPtr<IFence> m_FrameFence;
-
+        BudgetManager                            m_BudgetManager;
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
     };
 } // namespace Neon::RHI

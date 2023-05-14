@@ -2,17 +2,22 @@
 
 #include <list>
 
-namespace Allocator
+namespace Neon::Allocator
 {
     template<typename _Ty>
     class FreeList
     {
+        using ListType = std::list<_Ty>;
+
     public:
+        using Iterator      = typename ListType::iterator;
+        using ConstIterator = typename ListType::const_iterator;
+
         /// <summary>
         /// Allocate from free list with option to reconstruct
         /// </summary>
         template<bool _InitializeExisting = false, typename... _Args>
-        [[nodiscard]] typename std::list<_Ty>::iterator Allocate(
+        [[nodiscard]] Iterator Allocate(
             _Args&&... Args)
         {
             if (m_FreeObjects.empty())
@@ -36,7 +41,7 @@ namespace Allocator
         /// Allocate and reconstruct object
         /// </summary>
         template<typename... _Args>
-        [[nodiscard]] typename std::list<_Ty>::iterator EmplaceBack(
+        [[nodiscard]] Iterator EmplaceBack(
             _Args&&... Args)
         {
             return Allocate<true>(std::forward<_Args>(Args)...);
@@ -47,7 +52,7 @@ namespace Allocator
         /// </summary>
         template<bool _Destruct = false>
         void Free(
-            typename std::list<_Ty>::const_iterator Object)
+            ConstIterator Object)
         {
             if constexpr (_Destruct)
             {
@@ -60,7 +65,7 @@ namespace Allocator
         /// Release and destruct object
         /// </summary>
         void Release(
-            typename std::list<_Ty>::iterator Object)
+            ConstIterator Object)
         {
             Free<true>(Object);
         }
@@ -91,6 +96,14 @@ namespace Allocator
         }
 
         /// <summary>
+        /// Clear list of active only
+        /// </summary>
+        void ClearActives()
+        {
+            m_FreeObjects.splice(m_FreeObjects.end(), m_ActiveObjects);
+        }
+
+        /// <summary>
         /// Emplace object to free list
         /// </summary>
         void Reserve(
@@ -100,6 +113,6 @@ namespace Allocator
         }
 
     private:
-        std::list<_Ty> m_FreeObjects, m_ActiveObjects;
+        ListType m_FreeObjects, m_ActiveObjects;
     };
-} // namespace Allocator
+} // namespace Neon::Allocator

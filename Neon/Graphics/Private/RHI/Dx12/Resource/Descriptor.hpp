@@ -143,10 +143,10 @@ namespace Neon::RHI
         bool                       ShaderVisible;
     };
 
-    class RingDescriptorHeapAllocator final : public IDescriptorHeapAllocator
+    class Dx12RingDescriptorHeapAllocator final : public IDescriptorHeapAllocator
     {
     public:
-        RingDescriptorHeapAllocator(
+        Dx12RingDescriptorHeapAllocator(
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             size_t                     MaxCount,
             bool                       ShaderVisible);
@@ -171,7 +171,7 @@ namespace Neon::RHI
 
     //
 
-    class DescriptorHeapBuddyAllocator final : public IDescriptorHeapAllocator
+    class Dx12DescriptorHeapBuddyAllocator final : public IDescriptorHeapAllocator
     {
         struct BuddyBlock
         {
@@ -183,7 +183,7 @@ namespace Neon::RHI
         };
 
     public:
-        DescriptorHeapBuddyAllocator(
+        Dx12DescriptorHeapBuddyAllocator(
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             size_t                     SizeOfHeap,
             bool                       ShaderVisible);

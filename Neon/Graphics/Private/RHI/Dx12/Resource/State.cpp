@@ -61,7 +61,9 @@ namespace Neon::RHI
         {
             TCommandContext<CommandQueueType::Graphics> Context(Queue);
 
-            auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(Context.Get())->Get();
+            auto CommandList = Context.Append();
+
+            auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
             Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
 
             return Context;
