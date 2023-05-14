@@ -33,7 +33,7 @@ namespace Neon::RHI
         /// Flush all the pending barriers into newly created command list.
         /// </summary>
         [[nodiscard]] virtual CommandContext FlushBarriers(
-            ICommandQueue* Queue) = 0;
+            ISwapchain* Swapchain) = 0;
 
         /// <summary>
         /// Flush all the pending barriers into the given command list.

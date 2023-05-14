@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
+#include <Private/RHI/Dx12/Commands/Commands.hpp>
 
 namespace Neon::RHI
 {
@@ -22,5 +23,10 @@ namespace Neon::RHI
         std::span<ICommandList*> Commands)
     {
         m_BudgetManager.ResetCommandLists(Type, Commands);
+    }
+
+    ICommandQueue* Dx12Swapchain::GetQueue(CommandQueueType Type)
+    {
+        return &m_BudgetManager.GetQueueManager()->Get(CastCommandQueueType(Type))->Queue;
     }
 } // namespace Neon::RHI

@@ -40,7 +40,7 @@ namespace Neon::RHI
             const SubresourceStates& NewStates) override;
 
         CommandContext FlushBarriers(
-            ICommandQueue* Queue) override;
+            ISwapchain* Swapchain) override;
 
         void FlushBarriers(
             ICommandList* CommandList) override;

@@ -49,11 +49,15 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
+        [[nodiscard]] ICommandQueue* GetQueue(
+            CommandQueueType Type) override;
+
     private:
         /// <summary>
         /// Create the swapchain.
         /// </summary>
-        void CreateSwapchain(
+        void
+        CreateSwapchain(
             const InitDesc& Desc);
 
         void ResizeBackbuffers(

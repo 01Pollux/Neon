@@ -44,7 +44,7 @@ namespace Neon::RHI
 
         static float Time = float(rand());
 
-        TCommandContext<CommandQueueType::Graphics> CtxBatch(&m_BudgetManager.GetQueueManager()->GetGraphics()->Queue);
+        TCommandContext<CommandQueueType::Graphics> CtxBatch(this);
 
         auto Context = CtxBatch.Append();
 

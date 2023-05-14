@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Math/Size2.hpp>
+#include <RHI/Commands/Commands.hpp>
 
 namespace Neon::Windowing
 {
@@ -9,6 +10,9 @@ namespace Neon::Windowing
 
 namespace Neon::RHI
 {
+    class ICommandQueue;
+    class IFence;
+
     class ISwapchain
     {
     public:
@@ -49,5 +53,11 @@ namespace Neon::RHI
         /// </summary>
         virtual void Resize(
             const Size2I& Size) = 0;
+
+        /// <summary>
+        /// Get the swapchain's queue.
+        /// </summary>
+        [[nodiscard]] virtual ICommandQueue* GetQueue(
+            CommandQueueType Type) = 0;
     };
 } // namespace Neon::RHI

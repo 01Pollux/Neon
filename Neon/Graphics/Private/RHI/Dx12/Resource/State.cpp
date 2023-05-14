@@ -55,18 +55,18 @@ namespace Neon::RHI
     }
 
     CommandContext Dx12ResourceStateManager::FlushBarriers(
-        ICommandQueue* Queue)
+        ISwapchain* Swapchain)
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            TCommandContext<CommandQueueType::Graphics> Context(Queue);
+            TCommandContext<CommandQueueType::Graphics> CtxBach(Swapchain);
 
-            auto CommandList = Context.Append();
+            auto CommandList = CtxBach.Append();
 
             auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
             Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
 
-            return Context;
+            return CtxBach;
         }
         return {};
     }

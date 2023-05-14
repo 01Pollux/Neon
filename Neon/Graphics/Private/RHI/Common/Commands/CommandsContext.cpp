@@ -1,20 +1,21 @@
 #include <GraphicsPCH.hpp>
 #include <RHI/Commands/CommandsContext.hpp>
 #include <RHI/Commands/CommandQueue.hpp>
+#include <RHI/Swapchain.hpp>
 
 namespace Neon::RHI
 {
     CommandContext::CommandContext(
-        ICommandQueue*   Queue,
+        ISwapchain*      Swapchain,
         CommandQueueType Type) :
-        m_Queue(Queue),
+        m_Swapchain(Swapchain),
         m_Type(Type)
     {
     }
 
     CommandContext::CommandContext(
         CommandContext&& Context) noexcept :
-        m_Queue(Context.m_Queue),
+        m_Swapchain(Context.m_Swapchain),
         m_Type(Context.m_Type),
         m_CommandLists(std::exchange(Context.m_CommandLists, {}))
     {
@@ -25,7 +26,7 @@ namespace Neon::RHI
     {
         if (this != &Context)
         {
-            m_Queue        = Context.m_Queue;
+            m_Swapchain    = Context.m_Swapchain;
             m_CommandLists = std::exchange(Context.m_CommandLists, {});
         }
         return *this;
@@ -35,7 +36,8 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            m_Queue->FreeCommandLists(m_Type, m_CommandLists);
+            auto Queue = m_Swapchain->GetQueue(m_Type);
+            Queue->FreeCommandLists(m_Type, m_CommandLists);
         }
     }
 
@@ -43,7 +45,8 @@ namespace Neon::RHI
         size_t Size)
     {
         size_t Pos      = m_CommandLists.size();
-        auto   Commands = m_Queue->AllocateCommandLists(m_Type, Size);
+        auto   Queue    = m_Swapchain->GetQueue(m_Type);
+        auto   Commands = Queue->AllocateCommandLists(m_Type, Size);
         m_CommandLists.insert_range(m_CommandLists.end(), Commands);
         return Pos;
     }
@@ -63,7 +66,8 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            m_Queue->Upload(m_CommandLists);
+            auto Queue = m_Swapchain->GetQueue(m_Type);
+            Queue->Upload(m_CommandLists);
         }
     }
 
@@ -71,7 +75,8 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            m_Queue->Reset(m_Type, m_CommandLists);
+            auto Queue = m_Swapchain->GetQueue(m_Type);
+            Queue->Reset(m_Type, m_CommandLists);
         }
     }
 } // namespace Neon::RHI
