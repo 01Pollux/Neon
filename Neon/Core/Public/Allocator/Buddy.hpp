@@ -3,7 +3,7 @@
 #include <Math/Common.hpp>
 #include <map>
 
-namespace Allocator
+namespace Neon::Allocator
 {
     class BuddyAllocator
     {
@@ -108,4 +108,4 @@ namespace Allocator
         OffsetMapType m_FreeOffsets;
         SizeMapType   m_FreeSizes;
     };
-} // namespace Allocator
+} // namespace Neon::Allocator

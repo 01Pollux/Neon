@@ -55,7 +55,7 @@ namespace Neon::RHI
         const CpuDescriptorHandle& RtvHandle,
         const Color4&              Color)
     {
-        m_CommandList->ClearRenderTargetView({ RtvHandle.Handle }, Color.data(), 0, nullptr);
+        m_CommandList->ClearRenderTargetView({ RtvHandle.Value }, Color.data(), 0, nullptr);
     }
 
     void Dx12GraphicsCommandList::SetRenderTargets(
@@ -63,11 +63,11 @@ namespace Neon::RHI
         size_t                     RenderTargetCount,
         const CpuDescriptorHandle* DepthStencil)
     {
-        D3D12_CPU_DESCRIPTOR_HANDLE Rtv(ContiguousRtvs.Handle);
+        D3D12_CPU_DESCRIPTOR_HANDLE Rtv(ContiguousRtvs.Value);
         D3D12_CPU_DESCRIPTOR_HANDLE Dsv;
         if (DepthStencil)
         {
-            Dsv = { DepthStencil->Handle };
+            Dsv = { DepthStencil->Value };
         }
 
         m_CommandList->OMSetRenderTargets(
@@ -83,14 +83,16 @@ namespace Neon::RHI
         const CpuDescriptorHandle* DepthStencil)
     {
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> Rtv;
+        Rtv.reserve(RenderTargetCount);
+
         std::transform(Rtvs, Rtvs + RenderTargetCount, std::back_inserter(Rtv),
                        [](const CpuDescriptorHandle& Rtv) -> D3D12_CPU_DESCRIPTOR_HANDLE
-                       { return { Rtv.Handle }; });
+                       { return { Rtv.Value }; });
 
         D3D12_CPU_DESCRIPTOR_HANDLE Dsv;
         if (DepthStencil)
         {
-            Dsv = { DepthStencil->Handle };
+            Dsv = { DepthStencil->Value };
         }
 
         m_CommandList->OMSetRenderTargets(

@@ -87,7 +87,7 @@ namespace Neon::RHI
         struct Texture3D
         {
             uint32_t MipSlice;
-            uint32_t FlirstWSlice;
+            uint32_t FirstWSlice;
             uint32_t Size;
         };
 
@@ -328,9 +328,9 @@ namespace Neon::RHI
     struct SamplerDesc
     {
         ESamplerFilter Filter;
-        ESamplerMode   WrapU;
-        ESamplerMode   WrapV;
-        ESamplerMode   WrapW;
+        ESamplerMode   AddressU;
+        ESamplerMode   AddressV;
+        ESamplerMode   AddressW;
         float          MipLODBias;
         uint32_t       MaxAnisotropy;
         ESamplerCmp    ComparisonFunc;

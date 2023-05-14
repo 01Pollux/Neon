@@ -3,6 +3,8 @@
 #include <Private/RHI/Dx12/Resource/Descriptor.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::RHI
 {
     DescriptorType CastDescriptorType(
@@ -73,12 +75,12 @@ namespace Neon::RHI
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
         ThrowIfFailed(Dx12Device->CreateDescriptorHeap(
             &Desc,
-            IID_PPV_ARGS(&m_HeapDescriptor)));
+            IID_PPV_ARGS(&m_DescriptorHeap)));
 
-        m_CpuHandle = m_HeapDescriptor->GetCPUDescriptorHandleForHeapStart();
+        m_CpuHandle = m_DescriptorHeap->GetCPUDescriptorHandleForHeapStart();
         if (ShaderVisible)
         {
-            m_GpuHandle = m_HeapDescriptor->GetGPUDescriptorHandleForHeapStart();
+            m_GpuHandle = m_DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
         }
     }
 
@@ -314,6 +316,81 @@ namespace Neon::RHI
         const UAVDesc* Desc,
         IGpuResource*  CounterBuffer)
     {
+        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC  Dx12Desc;
+        D3D12_UNORDERED_ACCESS_VIEW_DESC* Dx12DescPtr = nullptr;
+
+        if (Desc)
+        {
+            Dx12DescPtr = &Dx12Desc;
+            std::visit(
+                VariantVisitor{
+                    [&Dx12Desc](const UAVDesc::Buffer& Buffer)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+                        Dx12Desc.Buffer        = {
+                                   .FirstElement         = Buffer.FirstElement,
+                                   .NumElements          = Buffer.Count,
+                                   .StructureByteStride  = Buffer.SizeOfStruct,
+                                   .CounterOffsetInBytes = Buffer.CounterOffset,
+                                   .Flags                = Buffer.Raw ? D3D12_BUFFER_UAV_FLAG_RAW : D3D12_BUFFER_UAV_FLAG_NONE
+
+                        };
+                    },
+                    [&Dx12Desc](const UAVDesc::Texture1D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+                        Dx12Desc.Texture1D     = {
+                                .MipSlice = Texture.MipSlice
+                        };
+                    },
+                    [&Dx12Desc](const UAVDesc::Texture1DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+                        Dx12Desc.Texture1DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const UAVDesc::Texture2D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+                        Dx12Desc.Texture2D     = {
+                                .MipSlice   = Texture.MipSlice,
+                                .PlaneSlice = Texture.PlaneSlice
+                        };
+                    },
+                    [&Dx12Desc](const UAVDesc::Texture2DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+                        Dx12Desc.Texture2DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size,
+                            .PlaneSlice      = Texture.PlaneSlice
+                        };
+                    },
+                    [&Dx12Desc](const UAVDesc::Texture3D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+                        Dx12Desc.Texture3D     = {
+                                .MipSlice    = Texture.MipSlice,
+                                .FirstWSlice = Texture.FirstWSlice,
+                                .WSize       = Texture.Size
+                        };
+                    } },
+                Desc->View);
+        }
+
+        Dx12Desc.Format = CastFormat(Desc->Format);
+
+        Dx12Device->CreateUnorderedAccessView(
+            GetDx12Resource(Resource),
+            CounterBuffer ? GetDx12Resource(CounterBuffer) : nullptr,
+            Dx12DescPtr,
+            { GetCPUAddress(DescriptorIndex).Value });
     }
 
     void Dx12DescriptorHeap::CreateRenderTargetView(
@@ -321,6 +398,88 @@ namespace Neon::RHI
         IGpuResource*  Resource,
         const RTVDesc* Desc)
     {
+        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+
+        D3D12_RENDER_TARGET_VIEW_DESC  Dx12Desc;
+        D3D12_RENDER_TARGET_VIEW_DESC* Dx12DescPtr = nullptr;
+
+        if (Desc)
+        {
+            Dx12DescPtr = &Dx12Desc;
+            std::visit(
+                VariantVisitor{
+                    [&Dx12Desc](const RTVDesc::Buffer& Buffer)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
+                        Dx12Desc.Buffer        = {
+                                   .FirstElement = Buffer.FirstElement,
+                                   .NumElements  = Buffer.Count
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture1D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE1D;
+                        Dx12Desc.Texture1D     = {
+                                .MipSlice = Texture.MipSlice
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture1DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_RTV_DIMENSION_TEXTURE1DARRAY;
+                        Dx12Desc.Texture1DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture2D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+                        Dx12Desc.Texture2D     = {
+                                .MipSlice   = Texture.MipSlice,
+                                .PlaneSlice = Texture.PlaneSlice
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture2DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+                        Dx12Desc.Texture2DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size,
+                            .PlaneSlice      = Texture.PlaneSlice
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture2DMS& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture2DMSArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension    = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+                        Dx12Desc.Texture2DMSArray = {
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const RTVDesc::Texture3D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+                        Dx12Desc.Texture3D     = {
+                                .MipSlice    = Texture.MipSlice,
+                                .FirstWSlice = Texture.FirstWSlice,
+                                .WSize       = Texture.WSize
+                        };
+                    } },
+                Desc->View);
+        }
+
+        Dx12Desc.Format = CastFormat(Desc->Format);
+
+        Dx12Device->CreateRenderTargetView(
+            GetDx12Resource(Resource),
+            Dx12DescPtr,
+            { GetCPUAddress(DescriptorIndex).Value });
     }
 
     void Dx12DescriptorHeap::CreateDepthStencilView(
@@ -328,19 +487,108 @@ namespace Neon::RHI
         IGpuResource*  Resource,
         const DSVDesc* Desc)
     {
+        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+
+        D3D12_DEPTH_STENCIL_VIEW_DESC  Dx12Desc;
+        D3D12_DEPTH_STENCIL_VIEW_DESC* Dx12DescPtr = nullptr;
+
+        if (Desc)
+        {
+            Dx12DescPtr = &Dx12Desc;
+            std::visit(
+                VariantVisitor{
+                    [&Dx12Desc](const DSVDesc::Texture1D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;
+                        Dx12Desc.Texture1D     = {
+                                .MipSlice = Texture.MipSlice
+                        };
+                    },
+                    [&Dx12Desc](const DSVDesc::Texture1DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_DSV_DIMENSION_TEXTURE1DARRAY;
+                        Dx12Desc.Texture1DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const DSVDesc::Texture2D& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+                        Dx12Desc.Texture2D     = {
+                                .MipSlice = Texture.MipSlice
+                        };
+                    },
+                    [&Dx12Desc](const DSVDesc::Texture2DArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension  = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+                        Dx12Desc.Texture2DArray = {
+                            .MipSlice        = Texture.MipSlice,
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    },
+                    [&Dx12Desc](const DSVDesc::Texture2DMS& Texture)
+                    {
+                        Dx12Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+                    },
+                    [&Dx12Desc](const DSVDesc::Texture2DMSArray& Texture)
+                    {
+                        Dx12Desc.ViewDimension    = D3D12_DSV_DIMENSION_TEXTURE2DMSARRAY;
+                        Dx12Desc.Texture2DMSArray = {
+                            .FirstArraySlice = Texture.StartSlice,
+                            .ArraySize       = Texture.Size
+                        };
+                    } },
+                Desc->View);
+        }
+
+        Dx12Desc.Format = CastFormat(Desc->Format);
+
+        Dx12Device->CreateDepthStencilView(
+            GetDx12Resource(Resource),
+            Dx12DescPtr,
+            { GetCPUAddress(DescriptorIndex).Value });
     }
 
     void Dx12DescriptorHeap::CreateSampler(
         size_t             DescriptorIndex,
         const SamplerDesc& Desc)
     {
+        auto               Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+        D3D12_SAMPLER_DESC Dx12Desc   = {
+              .Filter         = CastFilter(Desc.Filter),
+              .AddressU       = CastAddressMode(Desc.AddressU),
+              .AddressV       = CastAddressMode(Desc.AddressV),
+              .AddressW       = CastAddressMode(Desc.AddressW),
+              .MipLODBias     = Desc.MipLODBias,
+              .MaxAnisotropy  = Desc.MaxAnisotropy,
+              .ComparisonFunc = CastComparisonFunc(Desc.ComparisonFunc),
+              .BorderColor    = { Desc.BorderColor[0], Desc.BorderColor[1], Desc.BorderColor[2], Desc.BorderColor[3] },
+              .MinLOD         = Desc.MinLOD,
+              .MaxLOD         = Desc.MaxLOD
+        };
+        Dx12Device->CreateSampler(
+            &Dx12Desc,
+            { GetCPUAddress(DescriptorIndex).Value });
     }
 
     //
 
     ID3D12DescriptorHeap* Dx12DescriptorHeap::Get() const noexcept
     {
-        return nullptr;
+        return m_DescriptorHeap.Get();
+    }
+
+    size_t Dx12DescriptorHeap::GetSize() const noexcept
+    {
+        return m_HeapSize;
+    }
+
+    D3D12_DESCRIPTOR_HEAP_TYPE Dx12DescriptorHeap::GetType() const noexcept
+    {
+        return m_HeapType;
     }
 
     //
@@ -351,7 +599,15 @@ namespace Neon::RHI
         size_t         SizeOfHeap,
         bool           ShaderVisible)
     {
-        return nullptr;
+        switch (Type)
+        {
+        case AllocationType::Ring:
+            return NEON_NEW RingDescriptorHeapAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+        case AllocationType::Buddy:
+            return NEON_NEW DescriptorHeapBuddyAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+        default:
+            std::unreachable();
+        }
     }
 
     //
@@ -359,14 +615,29 @@ namespace Neon::RHI
     RingDescriptorHeapAllocator::RingDescriptorHeapAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         size_t                     MaxCount,
-        bool                       ShaderVisible)
+        bool                       ShaderVisible) :
+        m_HeapDescriptor(DescriptorType, MaxCount, ShaderVisible)
     {
     }
 
     DescriptorHeapHandle RingDescriptorHeapAllocator::Allocate(
         size_t DescriptorSize)
     {
-        return DescriptorHeapHandle();
+        std::lock_guard DescLock(m_DescriptorLock);
+
+        size_t HeapOffset = m_CurrentDescriptorOffset;
+        m_CurrentDescriptorOffset += DescriptorSize;
+        if (m_CurrentDescriptorOffset >= m_HeapDescriptor.GetSize())
+        {
+            m_CurrentDescriptorOffset %= m_HeapDescriptor.GetSize();
+            HeapOffset = 0;
+        }
+
+        return {
+            .Heap   = &m_HeapDescriptor,
+            .Offset = HeapOffset,
+            .Size   = DescriptorSize
+        };
     }
 
     void RingDescriptorHeapAllocator::Free(
@@ -378,38 +649,98 @@ namespace Neon::RHI
     {
     }
 
+    IDescriptorHeap* RingDescriptorHeapAllocator::GetHeap(
+        size_t)
+    {
+        return &m_HeapDescriptor;
+    }
+
     //
 
     DescriptorHeapBuddyAllocator::BuddyBlock::BuddyBlock(
-        const HeapDescriptorAllocInfo& Info)
+        const HeapDescriptorAllocInfo& Info) :
+        Heap(Info.DescriptorType, Info.SizeOfHeap, Info.ShaderVisible),
+        Allocator(Info.SizeOfHeap)
     {
     }
 
     DescriptorHeapBuddyAllocator::DescriptorHeapBuddyAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         size_t                     SizeOfHeap,
-        bool                       ShaderVisible)
+        bool                       ShaderVisible) :
+        m_HeapBlockAllocInfo{ SizeOfHeap, DescriptorType, ShaderVisible }
     {
     }
 
     DescriptorHeapHandle DescriptorHeapBuddyAllocator::Allocate(
         size_t DescriptorSize)
     {
-        return DescriptorHeapHandle();
+        std::lock_guard HeapLock(m_HeapsBlockMutex);
+
+        bool Allocated = false;
+        for (auto Iter = m_HeapBlocks.begin(); Iter != m_HeapBlocks.end(); Iter++)
+        {
+            if (auto Hndl = Iter->Allocator.Allocate(DescriptorSize))
+            {
+                return {
+                    .Heap   = &Iter->Heap,
+                    .Offset = Hndl.Offset,
+                    .Size   = Hndl.Size
+                };
+            }
+        }
+
+        // Grow the heap for each new allocation
+        if (m_HeapBlocks.empty()) [[likely]]
+        {
+            m_HeapBlockAllocInfo.SizeOfHeap *= 2;
+        }
+
+        while (m_HeapBlockAllocInfo.SizeOfHeap < DescriptorSize)
+        {
+            m_HeapBlockAllocInfo.SizeOfHeap *= 2;
+        }
+
+        auto& Block = m_HeapBlocks.emplace_back(m_HeapBlockAllocInfo);
+        auto  Hndl  = Block.Allocator.Allocate(DescriptorSize);
+
+        return {
+            .Heap   = &Block.Heap,
+            .Offset = Hndl.Offset,
+            .Size   = Hndl.Size
+        };
     }
 
     void DescriptorHeapBuddyAllocator::Free(
         const DescriptorHeapHandle& Data)
     {
+        std::lock_guard HeapLock(m_HeapsBlockMutex);
+
+        for (auto& Block : m_HeapBlocks)
+        {
+            if (Data.Heap == &Block.Heap)
+            {
+                Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
+                return;
+            }
+        }
+        NEON_ASSERT(false, "Tried to free a non-existant heap");
     }
 
     void DescriptorHeapBuddyAllocator::FreeAll()
     {
+        std::lock_guard HeapLock(m_HeapsBlockMutex);
+
+        for (auto& Block : m_HeapBlocks)
+        {
+            Block.Allocator = Allocator::BuddyAllocator(Block.Heap.GetSize());
+        }
     }
 
     IDescriptorHeap* DescriptorHeapBuddyAllocator::GetHeap(
         size_t Index)
     {
-        return nullptr;
+        NEON_ASSERT(Index <= m_HeapBlocks.size());
+        return &std::next(m_HeapBlocks.begin(), Index)->Heap;
     }
 } // namespace Neon::RHI

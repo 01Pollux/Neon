@@ -576,4 +576,260 @@ namespace Neon::RHI
             std::unreachable();
         }
     }
+
+    //
+
+    constexpr D3D12_FILTER CastFilter(
+        ESamplerFilter Filter) noexcept
+    {
+        switch (Filter)
+        {
+        case ESamplerFilter::MinMagMipPoint:
+            return D3D12_FILTER_MIN_MAG_MIP_POINT;
+        case ESamplerFilter::MinMagPoint_MipLinear:
+            return D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::MinPoint_MagLinear_MipPoint:
+            return D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::MinPoint_MagMipLinear:
+            return D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR;
+        case ESamplerFilter::MinLinear_MagMipPoint:
+            return D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT;
+        case ESamplerFilter::MinLinear_MagPoint_MipLinear:
+            return D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::MinMagLinear_MipPoint:
+            return D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::MinMagMipLinear:
+            return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+        case ESamplerFilter::Anisotropic:
+            return D3D12_FILTER_ANISOTROPIC;
+        case ESamplerFilter::Comparison_MinMagMipPoint:
+            return D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT;
+        case ESamplerFilter::Comparison_MinMagPoint_MipLinear:
+            return D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Comparison_MinPoint_MagLinear_MipPoint:
+            return D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Comparison_MinPoint_MagMipLinear:
+            return D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR;
+        case ESamplerFilter::Comparison_MinLinear_MagMipPoint:
+            return D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT;
+        case ESamplerFilter::Comparison_MinLinear_MagPoint_MipLinear:
+            return D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Comparison_MinMagLinear_MipPoint:
+            return D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Comparison_MinMagMipLinear:
+            return D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+        case ESamplerFilter::Comparison_Anisotropic:
+            return D3D12_FILTER_COMPARISON_ANISOTROPIC;
+        case ESamplerFilter::Minimum_MinMagMipPoint:
+            return D3D12_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
+        case ESamplerFilter::Minimum_MinMagPoint_MipLinear:
+            return D3D12_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Minimum_MinPoint_MagLinear_MipPoint:
+            return D3D12_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Minimum_MinPoint_MagMipLinear:
+            return D3D12_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR;
+        case ESamplerFilter::Minimum_MinLinear_MagMipPoint:
+            return D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_MIP_POINT;
+        case ESamplerFilter::Minimum_MinLinear_MagPoint_MipLinear:
+            return D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Minimum_MinMagLinear_MipPoint:
+            return D3D12_FILTER_MINIMUM_MIN_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Minimum_MinMagMipLinear:
+            return D3D12_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR;
+        case ESamplerFilter::Minimum_Anisotropic:
+            return D3D12_FILTER_MINIMUM_ANISOTROPIC;
+        case ESamplerFilter::Maximum_MinMagMipPoint:
+            return D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_POINT;
+        case ESamplerFilter::Maximum_MinMagPoint_MipLinear:
+            return D3D12_FILTER_MAXIMUM_MIN_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Maximum_MinPoint_MagLinear_MipPoint:
+            return D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Maximum_MinPoint_MagMipLinear:
+            return D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_MIP_LINEAR;
+        case ESamplerFilter::Maximum_MinLinear_MagMipPoint:
+            return D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_MIP_POINT;
+        case ESamplerFilter::Maximum_MinLinear_MagPoint_MipLinear:
+            return D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
+        case ESamplerFilter::Maximum_MinMagLinear_MipPoint:
+            return D3D12_FILTER_MAXIMUM_MIN_MAG_LINEAR_MIP_POINT;
+        case ESamplerFilter::Maximum_MinMagMipLinear:
+            return D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR;
+        case ESamplerFilter::Maximum_Anisotropic:
+            return D3D12_FILTER_MAXIMUM_ANISOTROPIC;
+        default:
+            std::unreachable();
+        }
+    }
+
+    constexpr ESamplerFilter CastFilter(
+        D3D12_FILTER Filter) noexcept
+    {
+        switch (Filter)
+        {
+        case D3D12_FILTER_MIN_MAG_MIP_POINT:
+            return ESamplerFilter::MinMagMipPoint;
+        case D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::MinMagPoint_MipLinear;
+        case D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::MinPoint_MagLinear_MipPoint;
+        case D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR:
+            return ESamplerFilter::MinPoint_MagMipLinear;
+        case D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT:
+            return ESamplerFilter::MinLinear_MagMipPoint;
+        case D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::MinLinear_MagPoint_MipLinear;
+        case D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::MinMagLinear_MipPoint;
+        case D3D12_FILTER_MIN_MAG_MIP_LINEAR:
+            return ESamplerFilter::MinMagMipLinear;
+        case D3D12_FILTER_ANISOTROPIC:
+            return ESamplerFilter::Anisotropic;
+        case D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT:
+            return ESamplerFilter::Comparison_MinMagMipPoint;
+        case D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Comparison_MinMagPoint_MipLinear;
+        case D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Comparison_MinPoint_MagLinear_MipPoint;
+        case D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR:
+            return ESamplerFilter::Comparison_MinPoint_MagMipLinear;
+        case D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT:
+            return ESamplerFilter::Comparison_MinLinear_MagMipPoint;
+        case D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Comparison_MinLinear_MagPoint_MipLinear;
+        case D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Comparison_MinMagLinear_MipPoint;
+        case D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR:
+            return ESamplerFilter::Comparison_MinMagMipLinear;
+        case D3D12_FILTER_COMPARISON_ANISOTROPIC:
+            return ESamplerFilter::Comparison_Anisotropic;
+        case D3D12_FILTER_MINIMUM_MIN_MAG_MIP_POINT:
+            return ESamplerFilter::Minimum_MinMagMipPoint;
+        case D3D12_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Minimum_MinMagPoint_MipLinear;
+        case D3D12_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Minimum_MinPoint_MagLinear_MipPoint;
+        case D3D12_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR:
+            return ESamplerFilter::Minimum_MinPoint_MagMipLinear;
+        case D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_MIP_POINT:
+            return ESamplerFilter::Minimum_MinLinear_MagMipPoint;
+        case D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Minimum_MinLinear_MagPoint_MipLinear;
+        case D3D12_FILTER_MINIMUM_MIN_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Minimum_MinMagLinear_MipPoint;
+        case D3D12_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR:
+            return ESamplerFilter::Minimum_MinMagMipLinear;
+        case D3D12_FILTER_MINIMUM_ANISOTROPIC:
+            return ESamplerFilter::Minimum_Anisotropic;
+        case D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_POINT:
+            return ESamplerFilter::Maximum_MinMagMipPoint;
+        case D3D12_FILTER_MAXIMUM_MIN_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Maximum_MinMagPoint_MipLinear;
+        case D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Maximum_MinPoint_MagLinear_MipPoint;
+        case D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_MIP_LINEAR:
+            return ESamplerFilter::Maximum_MinPoint_MagMipLinear;
+        case D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_MIP_POINT:
+            return ESamplerFilter::Maximum_MinLinear_MagMipPoint;
+        case D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR:
+            return ESamplerFilter::Maximum_MinLinear_MagPoint_MipLinear;
+        case D3D12_FILTER_MAXIMUM_MIN_MAG_LINEAR_MIP_POINT:
+            return ESamplerFilter::Maximum_MinMagLinear_MipPoint;
+        case D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR:
+            return ESamplerFilter::Maximum_MinMagMipLinear;
+        case D3D12_FILTER_MAXIMUM_ANISOTROPIC:
+            return ESamplerFilter::Maximum_Anisotropic;
+        default:
+            std::unreachable();
+        }
+    }
+
+    //
+
+    constexpr D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
+        ESamplerMode AddressMode) noexcept
+    {
+        switch (AddressMode)
+        {
+        case ESamplerMode::Wrap:
+            return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+        case ESamplerMode::Mirror:
+            return D3D12_TEXTURE_ADDRESS_MODE_MIRROR;
+        case ESamplerMode::Clamp:
+            return D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        case ESamplerMode::Border:
+            return D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+        case ESamplerMode::MirrorOnce:
+            return D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
+        default:
+            std::unreachable();
+        }
+    }
+
+    constexpr ESamplerMode CastAddressMode(
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
+    {
+        switch (AddressMode)
+        {
+        case D3D12_TEXTURE_ADDRESS_MODE_WRAP:
+            return ESamplerMode::Wrap;
+        case D3D12_TEXTURE_ADDRESS_MODE_MIRROR:
+            return ESamplerMode::Mirror;
+        case D3D12_TEXTURE_ADDRESS_MODE_CLAMP:
+            return ESamplerMode::Clamp;
+        case D3D12_TEXTURE_ADDRESS_MODE_BORDER:
+            return ESamplerMode::Border;
+        case D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE:
+            return ESamplerMode::MirrorOnce;
+        default:
+            std::unreachable();
+        }
+    }
+
+    //
+
+    constexpr D3D12_COMPARISON_FUNC CastComparisonFunc(
+        ESamplerCmp CmpFunc) noexcept
+    {
+        switch (CmpFunc)
+        {
+        case ESamplerCmp::Never:
+            return D3D12_COMPARISON_FUNC_NEVER;
+        case ESamplerCmp::Less:
+            return D3D12_COMPARISON_FUNC_LESS;
+        case ESamplerCmp::Equal:
+            return D3D12_COMPARISON_FUNC_EQUAL;
+        case ESamplerCmp::LessEqual:
+            return D3D12_COMPARISON_FUNC_LESS_EQUAL;
+        case ESamplerCmp::Greater:
+            return D3D12_COMPARISON_FUNC_GREATER;
+        case ESamplerCmp::NotEqual:
+            return D3D12_COMPARISON_FUNC_NOT_EQUAL;
+        case ESamplerCmp::GreaterEqual:
+            return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
+        case ESamplerCmp::Always:
+            return D3D12_COMPARISON_FUNC_ALWAYS;
+        default:
+            std::unreachable();
+        }
+    }
+
+    constexpr ESamplerMode CastComparisonFunc(
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
+    {
+        switch (AddressMode)
+        {
+        case D3D12_TEXTURE_ADDRESS_MODE_WRAP:
+            return ESamplerMode::Wrap;
+        case D3D12_TEXTURE_ADDRESS_MODE_MIRROR:
+            return ESamplerMode::Mirror;
+        case D3D12_TEXTURE_ADDRESS_MODE_CLAMP:
+            return ESamplerMode::Clamp;
+        case D3D12_TEXTURE_ADDRESS_MODE_BORDER:
+            return ESamplerMode::Border;
+        case D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE:
+            return ESamplerMode::MirrorOnce;
+        default:
+            std::unreachable();
+        }
+    }
 } // namespace Neon::RHI

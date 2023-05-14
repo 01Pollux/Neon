@@ -114,8 +114,18 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] ID3D12DescriptorHeap* Get() const noexcept;
 
+        /// <summary>
+        /// Get heap descriptor size
+        /// </summary>
+        [[nodiscard]] size_t GetSize() const noexcept;
+
+        /// <summary>
+        /// Get heap descriptor type
+        /// </summary>
+        [[nodiscard]] D3D12_DESCRIPTOR_HEAP_TYPE GetType() const noexcept;
+
     protected:
-        Win32::ComPtr<ID3D12DescriptorHeap> m_HeapDescriptor;
+        Win32::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 
         D3D12_CPU_DESCRIPTOR_HANDLE m_CpuHandle{};
         D3D12_GPU_DESCRIPTOR_HANDLE m_GpuHandle{};
@@ -150,9 +160,7 @@ namespace Neon::RHI
         void FreeAll() override;
 
         IDescriptorHeap* GetHeap(
-            size_t) override
-        {
-        }
+            size_t) override;
 
     private:
         std::mutex m_DescriptorLock;

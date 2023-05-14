@@ -15,7 +15,7 @@ project "NeonEngine"
         "NeonResource",
         "NeonWindowing",
         "NeonGraphics",
-        "NeonRendering"
+        --"NeonRendering"
     }
 
     includedirs
@@ -24,6 +24,6 @@ project "NeonEngine"
         "%{CommonDir.Neon.Resource}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Rendering}",
+        --"%{CommonDir.Neon.Rendering}",
         "%{CommonDir.Neon.Engine}"
     }
