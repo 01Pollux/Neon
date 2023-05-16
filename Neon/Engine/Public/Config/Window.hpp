@@ -15,5 +15,6 @@ namespace Neon::Config
         bool WithCloseButton : 1 = true;
         bool CanResize       : 1 = true;
         bool HasTitleBar     : 1 = true;
+        bool StartInMiddle   : 1 = false;
     };
 } // namespace Neon::Config

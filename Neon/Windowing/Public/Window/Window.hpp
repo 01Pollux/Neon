@@ -29,7 +29,8 @@ namespace Neon::Windowing
         [[nodiscard]] static IWindowApp* Create(
             const String&       Title,
             const Size2I&       Size,
-            const MWindowStyle& Style);
+            const MWindowStyle& Style,
+            bool                StartInMiddle);
 
         IWindowApp() = default;
 

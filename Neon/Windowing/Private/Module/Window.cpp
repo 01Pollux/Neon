@@ -7,11 +7,12 @@ namespace Neon::Module
         Neon::World&                   World,
         const String&                  Title,
         const Size2I&                  Size,
-        const Windowing::MWindowStyle& Style)
+        const Windowing::MWindowStyle& Style,
+        bool                           StartInMiddle)
     {
         World.ModuleScope<Window>();
 
-        m_Window.reset(Windowing::IWindowApp::Create(Title, Size, Style));
+        m_Window.reset(Windowing::IWindowApp::Create(Title, Size, Style, StartInMiddle));
 
         World->system("Window::MessageLoop")
             .kind(flecs::PreFrame)

@@ -72,7 +72,7 @@ namespace Neon
         {
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
-        m_World.Import<Module::Window>(Config.Title, Config.Size, Style);
+        m_World.Import<Module::Window>(Config.Title, Config.Size, Style, Config.StartInMiddle);
     }
 
     void DefaultGameEngine::LoadResourcePacks(

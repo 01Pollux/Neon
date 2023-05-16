@@ -8,6 +8,8 @@
 
 #include <Private/RHI/Dx12/Budget.hpp>
 
+#include <random>
+
 namespace Neon::RHI
 {
     class Dx12Swapchain final : public ISwapchain
@@ -69,5 +71,14 @@ namespace Neon::RHI
 
         BudgetManager                            m_BudgetManager;
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
+
+        // TODO: remove this
+        float m_Time = []() -> float
+        {
+            std::random_device                    Device;
+            std::mt19937                          Engine{ Device() };
+            std::uniform_real_distribution<float> Distribution{ 0.0f, 60.0f };
+            return Distribution(Engine);
+        }();
     };
 } // namespace Neon::RHI

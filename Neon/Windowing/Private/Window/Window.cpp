@@ -76,15 +76,17 @@ namespace Neon::Windowing
     IWindowApp* IWindowApp::Create(
         const String&       Title,
         const Size2I&       Size,
-        const MWindowStyle& Style)
+        const MWindowStyle& Style,
+        bool                StartInMiddle)
     {
-        return NEON_NEW WindowApp(Title, Size, Style);
+        return NEON_NEW WindowApp(Title, Size, Style, StartInMiddle);
     }
 
     WindowApp::WindowApp(
         const String&       Title,
         const Size2I&       Size,
-        const MWindowStyle& Style) :
+        const MWindowStyle& Style,
+        bool                StartInMiddle) :
         m_WindowSize(Size),
         m_WindowStyle(Style)
     {
@@ -98,9 +100,17 @@ namespace Neon::Windowing
 
         Size2I FinalSize = Size;
 
-        HDC WindowDC   = GetDC(nullptr);
-        int Left       = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
-        int Top        = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
+        HDC WindowDC = GetDC(nullptr);
+        int Left, Top;
+        if (!StartInMiddle)
+        {
+            Left = Top = CW_USEDEFAULT;
+        }
+        else
+        {
+            Left = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
+            Top  = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
+        }
         m_BitsPerPixel = GetDeviceCaps(WindowDC, BITSPIXEL);
         ReleaseDC(nullptr, WindowDC);
 

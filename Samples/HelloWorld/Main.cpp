@@ -4,6 +4,8 @@
 
 #include <Log/Logger.hpp>
 
+#include <future>
+
 using namespace Neon;
 
 class TestGameEngine : public DefaultGameEngine
@@ -30,10 +32,10 @@ private:
 
 NEON_MAIN(Argc, Argv)
 {
-    Neon::Logger::SetLogTag("", Logger::LogSeverity::Trace);
-    Neon::Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
-    Neon::Logger::SetLogTag("Graphics", Logger::LogSeverity::Trace);
+    Logger::SetLogTag("", Logger::LogSeverity::Trace);
+    Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
+    Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
+    Logger::SetLogTag("Graphics", Logger::LogSeverity::Trace);
 
     auto func = []
     {
@@ -41,8 +43,8 @@ NEON_MAIN(Argc, Argv)
         return Engine.Run();
     };
 
-    return func();
-    // auto eng1 = std::async(func);
+    auto eng2 = std::async(func);
+    auto eng1 = std::async(func);
 
-    // return eng1.get();
+    return eng1.get() + eng2.get();
 }

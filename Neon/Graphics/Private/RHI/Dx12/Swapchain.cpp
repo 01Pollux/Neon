@@ -24,8 +24,6 @@ namespace Neon::RHI
         const InitDesc& Desc) :
         m_BudgetManager(this)
     {
-        // TODO remove
-        srand(time(nullptr));
         CreateSwapchain(Desc);
         ResizeBackbuffers(Desc.FramesInFlight);
     }
@@ -42,8 +40,6 @@ namespace Neon::RHI
         m_BudgetManager.NewFrame();
         uint32_t FrameIndex = m_BudgetManager.GetFrameIndex();
 
-        static float Time = float(rand());
-
         TCommandContext<CommandQueueType::Graphics> CtxBatch(this);
 
         auto Context = CtxBatch.Append();
@@ -54,11 +50,11 @@ namespace Neon::RHI
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
         StateManager->FlushBarriers(Context);
 
-        Time += 0.008f;
+        m_Time += 0.008f;
         Color4 Color{
-            sin(2.f * Time + 1.f) / 2.f + .5f,
-            sin(3.f * Time + 2.f) / 2.f + .5f,
-            sin(5.f * Time + 3.f) / 2.f + .5f,
+            sin(2.f * m_Time + 1.f) / 2.f + .5f,
+            sin(3.f * m_Time + 2.f) / 2.f + .5f,
+            sin(5.f * m_Time + 3.f) / 2.f + .5f,
             1.0f
         };
         Context->ClearRtv({ Rtv.ptr }, Color);
