@@ -33,7 +33,7 @@ namespace Neon::RHI
         void TransitionResource(
             IGpuResource*  Resource,
             MResourceState NewState,
-            uint32_t       SubresourceIndex) override;
+            uint32_t       SubresourceIndex = Resource_AllSubresources) override;
 
         void TransitionResource(
             IGpuResource*            Resource,
@@ -90,7 +90,7 @@ namespace Neon::RHI
             ID3D12Resource*                 Resource,
             const Dx12SubresourceStateList& NewStates);
 
-    public:
+    private:
         /// <summary>
         /// Transition is redundant if either states completely match
         /// or current state is a read state and new state is a partial or complete subset of the current

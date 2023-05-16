@@ -2,7 +2,6 @@
 
 #include <RHI/Device.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
-#include <Private/RHI/Dx12/Resource/State.hpp>
 
 namespace Neon::RHI
 {
@@ -10,8 +9,6 @@ namespace Neon::RHI
     {
     public:
         Dx12RenderDevice();
-
-        [[nodiscard]] IResourceStateManager* GetStateManager() override;
 
     public:
         /// <summary>
@@ -79,7 +76,6 @@ namespace Neon::RHI
         Win32::ComPtr<IDXGIFactory> m_DxgiFactory;
         Win32::ComPtr<ID3D12Device> m_Device;
 
-        Dx12ResourceStateManager m_StateManager;
-        HeapDescriptorSizeType   m_HeapDescriptorSize;
+        HeapDescriptorSizeType m_HeapDescriptorSize;
     };
 } // namespace Neon::RHI

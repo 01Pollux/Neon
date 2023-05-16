@@ -10,6 +10,8 @@ namespace Neon::RHI
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
+        Dx12GpuResource(
+            ISwapchain* Swapchain);
         ~Dx12GpuResource() override;
 
         /// <summary>
@@ -74,9 +76,11 @@ namespace Neon::RHI
                         public Dx12GpuResource
     {
     public:
-        Dx12Texture() = default;
+        Dx12Texture(
+            ISwapchain* Swapchain);
 
         Dx12Texture(
+            ISwapchain*                        Swapchain,
             Win32::ComPtr<ID3D12Resource>      Texture,
             D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);

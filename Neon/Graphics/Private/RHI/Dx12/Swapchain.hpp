@@ -5,7 +5,7 @@
 
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
-
+#include <Private/RHI/Dx12/Resource/State.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
 
 #include <random>
@@ -29,6 +29,11 @@ namespace Neon::RHI
         void Resize(
             const Size2I& Size) override;
 
+        [[nodiscard]] ICommandQueue* GetQueue(
+            CommandQueueType Type) override;
+
+        [[nodiscard]] IResourceStateManager* GetStateManager() override;
+
     public:
         /// <summary>
         /// Allocate or reuse command lists
@@ -51,9 +56,6 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
-        [[nodiscard]] ICommandQueue* GetQueue(
-            CommandQueueType Type) override;
-
     private:
         /// <summary>
         /// Create the swapchain.
@@ -71,6 +73,8 @@ namespace Neon::RHI
 
         BudgetManager                            m_BudgetManager;
         std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
+
+        Dx12ResourceStateManager m_StateManager;
 
         // TODO: remove this
         float m_Time = []() -> float

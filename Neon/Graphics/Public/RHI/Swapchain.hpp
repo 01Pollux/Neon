@@ -10,6 +10,7 @@ namespace Neon::Windowing
 
 namespace Neon::RHI
 {
+    class IResourceStateManager;
     class ICommandQueue;
     class IFence;
 
@@ -59,5 +60,10 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] virtual ICommandQueue* GetQueue(
             CommandQueueType Type) = 0;
+
+        /// <summary>
+        /// Get the resource state manager.
+        /// </summary>
+        [[nodiscard]] virtual IResourceStateManager* GetStateManager() = 0;
     };
 } // namespace Neon::RHI

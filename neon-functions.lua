@@ -1,21 +1,28 @@
-function copy_to_targetdir(from_dir, name)
+function copy_to_targetdir(from_dir, folder, name)
     postbuildcommands
     {
-        string.format("{COPYFILE} %s/%s $(targetdir)/%s", from_dir, name, name)
+        string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
     }
 end
-
-function copyres_and_remove_extension(name)
+function move_to_targetdir(from_dir, folder, name)
     postbuildcommands
     {
-        string.format("tar -a -C %%{wks.location}Resources -cf  $(targetdir)%s.zip *", name),
-        string.format("{MOVE} $(targetdir)%s.zip $(targetdir)%s", name, name)
+        string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
     }
 end
 
 function copy_engine_resources()
-    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxcompiler.dll")
-    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "dxil.dll")
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "", "dxcompiler.dll")
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x86_64", "", "dxil.dll")
+    postbuildcommands
+    {
+        'if not exist "$(targetdir)D3D12" mkdir "$(targetdir)D3D12"'
+    }
+    move_to_targetdir(".", "D3D12/", "D3D12Core.dll")
+    move_to_targetdir(".", "D3D12/", "D3D12Core.pdb")
+    move_to_targetdir(".", "D3D12/", "D3D12SDKLayers.dll")
+    move_to_targetdir(".", "D3D12/", "D3D12SDKLayers.pdb")
+
 end
 
 function common_dir_setup()

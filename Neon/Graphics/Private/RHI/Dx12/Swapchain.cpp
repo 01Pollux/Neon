@@ -46,9 +46,8 @@ namespace Neon::RHI
 
         auto& Rtv = m_RenderTargets[FrameIndex];
 
-        auto StateManager = IRenderDevice::Get()->GetStateManager();
-        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
-        StateManager->FlushBarriers(Context);
+        m_StateManager.TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
+        m_StateManager.FlushBarriers(Context);
 
         m_Time += 0.008f;
         Color4 Color{
@@ -60,8 +59,8 @@ namespace Neon::RHI
         Context->ClearRtv({ Rtv.ptr }, Color);
         Context->SetRenderTargets({ Rtv.ptr }, 1);
 
-        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
-        StateManager->FlushBarriers(Context);
+        m_StateManager.TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
+        m_StateManager.FlushBarriers(Context);
 
         CtxBatch.Upload();
     }
@@ -75,6 +74,7 @@ namespace Neon::RHI
     void Dx12Swapchain::Resize(
         const Size2I& Size)
     {
+        m_BudgetManager.IdleGPU();
     }
 
     //
@@ -178,10 +178,10 @@ namespace Neon::RHI
         {
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            auto& Buffer = m_BackBuffers.emplace_back(this, std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
             auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
-            Dx12Device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&Heap));
+            ThrowIfFailed(Dx12Device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&Heap)));
 
             m_RenderTargets[i] = Heap->GetCPUDescriptorHandleForHeapStart();
             Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer.GetResource(), nullptr, m_RenderTargets[i]);

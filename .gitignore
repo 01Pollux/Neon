@@ -41,3 +41,6 @@ bin-int/*
 
 # dependencies
 /Deps/Libs
+
+# NuGet Packages
+/packages/*

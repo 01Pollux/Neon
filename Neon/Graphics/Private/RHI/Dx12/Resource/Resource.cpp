@@ -1,15 +1,23 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
-#include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Swapchain.hpp>
 
 namespace Neon::RHI
 {
+
+    Dx12GpuResource::Dx12GpuResource(
+        ISwapchain* Swapchain) :
+        IGpuResource(Swapchain)
+    {
+    }
+
     Dx12GpuResource::~Dx12GpuResource()
     {
         if (m_Resource)
         {
-            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(IRenderDevice::Get()->GetStateManager());
+            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StopTrakingResource(m_Resource.Get());
         }
     }
@@ -62,9 +70,19 @@ namespace Neon::RHI
     //
 
     Dx12Texture::Dx12Texture(
+        ISwapchain* Swapchain) :
+        IGpuResource(Swapchain),
+        Dx12GpuResource(Swapchain)
+    {
+    }
+
+    Dx12Texture::Dx12Texture(
+        ISwapchain*                        Swapchain,
         Win32::ComPtr<ID3D12Resource>      Texture,
         D3D12_RESOURCE_STATES              InitialState,
-        Win32::ComPtr<D3D12MA::Allocation> Allocation)
+        Win32::ComPtr<D3D12MA::Allocation> Allocation) :
+        IGpuResource(Swapchain),
+        Dx12GpuResource(Swapchain)
     {
         m_Resource   = std::move(Texture);
         m_Allocation = std::move(Allocation);
@@ -78,7 +96,7 @@ namespace Neon::RHI
                              int(Desc.DepthOrArraySize) };
             m_MipLevels  = Desc.MipLevels;
 
-            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(IRenderDevice::Get()->GetStateManager());
+            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
         }
     }

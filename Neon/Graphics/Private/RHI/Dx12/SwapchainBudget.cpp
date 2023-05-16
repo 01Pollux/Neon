@@ -29,4 +29,9 @@ namespace Neon::RHI
     {
         return &m_BudgetManager.GetQueueManager()->Get(CastCommandQueueType(Type))->Queue;
     }
+
+    IResourceStateManager* Dx12Swapchain::GetStateManager()
+    {
+        return &m_StateManager;
+    }
 } // namespace Neon::RHI

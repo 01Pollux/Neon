@@ -9,17 +9,27 @@ namespace Neon
 
 namespace Neon::RHI
 {
+    class ISwapchain;
+
     class IGpuResource
     {
     public:
+        IGpuResource(
+            ISwapchain* Swapchain);
+        NEON_CLASS_COPYMOVE(IGpuResource);
         virtual ~IGpuResource() = default;
+
+    protected:
+        ISwapchain* m_OwningSwapchain = nullptr;
     };
 
     //
 
-    class IBuffer : public IGpuResource
+    class IBuffer : public virtual IGpuResource
     {
     public:
+        using IGpuResource::IGpuResource;
+
         /// <summary>
         /// Get the size of the buffer in bytes.
         /// </summary>
@@ -31,6 +41,8 @@ namespace Neon::RHI
     class IUploadBuffer : public virtual IBuffer
     {
     public:
+        using IBuffer::IBuffer;
+
         /// <summary>
         /// Makes the buffer available for reading/writing by the CPU.
         /// </summary>
@@ -47,6 +59,8 @@ namespace Neon::RHI
     class IReadbackBuffer : public virtual IBuffer
     {
     public:
+        using IBuffer::IBuffer;
+
         /// <summary>
         /// Makes the buffer available for reading by the CPU.
         /// </summary>
@@ -63,6 +77,8 @@ namespace Neon::RHI
     class ITexture : public virtual IGpuResource
     {
     public:
+        using IGpuResource::IGpuResource;
+
         /// <summary>
         /// Returns the dimensions of the texture.
         /// </summary>

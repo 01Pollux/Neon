@@ -3,6 +3,12 @@
 
 #include <Log/Logger.hpp>
 
+extern "C"
+{
+    __declspec(dllexport) extern const UINT D3D12SDKVersion = 610;
+    __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
+}
+
 namespace Neon::RHI
 {
     static inline std::mutex     s_CreateDeviceMutex;
@@ -44,11 +50,6 @@ namespace Neon::RHI
         CreateFactory();
         CreateDevice();
         FillInDescriptorSizes();
-    }
-
-    IResourceStateManager* Dx12RenderDevice::GetStateManager()
-    {
-        return &m_StateManager;
     }
 
     Dx12RenderDevice* Dx12RenderDevice::Get()
