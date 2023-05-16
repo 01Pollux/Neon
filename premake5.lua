@@ -2,7 +2,7 @@ include "neon-config.lua"
 include "neon-functions.lua"
 
 workspace "Neon"
-    architecture "x86_64"
+    architecture "x64"
     startproject "HelloWorld"
 
     configurations

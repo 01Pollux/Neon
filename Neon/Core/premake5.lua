@@ -3,7 +3,7 @@ project "NeonCore"
     language "C++"
     cppdialect "C++latest"
     staticruntime "On"
-    architecture "x86_64"
+    architecture "x64"
     
 	common_dir_setup()
     common_add_pch("CorePCH")

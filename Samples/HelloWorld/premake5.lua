@@ -2,7 +2,7 @@ project "HelloWorld"
     language "C++"
     cppdialect "C++latest"
     staticruntime "On"
-    architecture "x86_64"
+    architecture "x64"
 
     select_launch_kind()
     common_dir_setup()
