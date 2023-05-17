@@ -49,6 +49,11 @@ namespace Neon::RHI
         void CreateDevice();
 
         /// <summary>
+        /// Check device features.
+        /// </summary>
+        void CheckDeviceFeatures();
+
+        /// <summary>
         /// Get best adapter for render device.
         /// </summary>
         Win32::ComPtr<IDXGIAdapter> GetBestAdapter() const;

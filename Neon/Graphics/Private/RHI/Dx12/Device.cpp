@@ -49,6 +49,7 @@ namespace Neon::RHI
         EnableDebugLayerIfNeeded();
         CreateFactory();
         CreateDevice();
+        CheckDeviceFeatures();
         FillInDescriptorSizes();
     }
 
@@ -114,6 +115,12 @@ namespace Neon::RHI
         NEON_TRACE_TAG("Graphics", "Description: {}", StringUtils::StringTransform<StringU8>(Desc.Description));
 
         ThrowIfFailed(D3D12CreateDevice(Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
+    }
+
+    void Dx12RenderDevice::CheckDeviceFeatures()
+    {
+        CD3DX12FeatureSupport FeatureSupport;
+        ThrowIfFailed(FeatureSupport.Init(m_Device.Get()));
     }
 
     Win32::ComPtr<IDXGIAdapter> Dx12RenderDevice::GetBestAdapter() const

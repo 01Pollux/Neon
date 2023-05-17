@@ -23,3 +23,6 @@
 [submodule "Deps/Externals/bzip2"]
 	path = Deps/Externals/bzip2
 	url = https://github.com/01Pollux/bzip2
+[submodule "Deps/Externals/DirectX-Headers"]
+	path = Deps/Externals/DirectX-Headers
+	url = https://github.com/01Pollux/DirectX-Headers

@@ -147,3 +147,15 @@ Foreach {
 #
 Write-Output "Copying DxC files..."
 Copy-Item .\Vendors\DxC .\Deps\Libs -Force -Recurse
+
+#
+# Dxc
+#
+Write-Output "Copying DirectX Header files..."
+Remove-Directory $(Get-DepIncPath("DX"))
+Make-Directory $(Get-DepIncPath("DX"))
+Copy-IncludePath "DirectX-Headers\include\directx\*.h" "DX"
+Copy-IncludePath "DirectX-Headers\include\dxguids\*.h" "DX"
+Copy-IncludePath "DirectX-Headers\include\wsl\stubs" "DX" -Recurse
+Copy-IncludePath "DirectX-Headers\include\wsl\winadapter.h" "DX"
+Copy-IncludePath "DirectX-Headers\include\wsl\wrladapter.h" "DX"

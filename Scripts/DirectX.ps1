@@ -8,9 +8,6 @@ Pop-Location -StackName "TempPath"
 
 #
 
-Write-Output "Copying DirectX Agility SDK headers..."
-Copy-Item -Force -Recurse .\tmp\Agility\build\native\include\* .\Deps\Public
-
 Write-Output "Copying DirectX Agility SDK libraries..."
 Remove-Item -Force -Recurse .\Deps\Libs\DxAgility -ErrorAction SilentlyContinue
 New-Item .\Deps\Libs\DxAgility -Type Directory | Out-Null
