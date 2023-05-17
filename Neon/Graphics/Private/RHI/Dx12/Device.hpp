@@ -22,6 +22,11 @@ namespace Neon::RHI
         [[nodiscard]] IDXGIFactory* GetDxgiFactory();
 
         /// <summary>
+        /// Get dx12 dxgi adapter.
+        /// </summary>
+        [[nodiscard]] IDXGIAdapter* GetAdapter();
+
+        /// <summary>
         /// Get dx12 device.
         /// </summary>
         [[nodiscard]] ID3D12Device* GetDevice();
@@ -79,6 +84,7 @@ namespace Neon::RHI
 
     private:
         Win32::ComPtr<IDXGIFactory> m_DxgiFactory;
+        Win32::ComPtr<IDXGIAdapter> m_Adapter;
         Win32::ComPtr<ID3D12Device> m_Device;
 
         HeapDescriptorSizeType m_HeapDescriptorSize;

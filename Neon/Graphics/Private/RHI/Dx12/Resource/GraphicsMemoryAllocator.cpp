@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -57,10 +58,15 @@ namespace Neon::RHI
         StateManager.StopTrakingResource(Resource.Get());
     }
 
-    void GraphicsMemoryAllocator::Initialize(
-        const D3D12MA::ALLOCATOR_DESC& Desc)
+    RHI::GraphicsMemoryAllocator::GraphicsMemoryAllocator()
     {
-        NEON_ASSERT(!m_Allocator);
+        auto Dx12Device  = Dx12RenderDevice::Get()->GetDevice();
+        auto Dx12Adapter = Dx12RenderDevice::Get()->GetAdapter();
+
+        D3D12MA::ALLOCATOR_DESC Desc{
+            .pDevice  = Dx12Device,
+            .pAdapter = Dx12Adapter,
+        };
         CreateAllocator(&Desc, &m_Allocator);
     }
 

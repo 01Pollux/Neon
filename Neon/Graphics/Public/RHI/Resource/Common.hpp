@@ -264,4 +264,20 @@ namespace Neon::RHI
         GreaterEqual,
         Always
     };
+
+    //
+
+    enum class EResourceFlags
+    {
+        AllowRenderTarget,
+        AllowDepthStencil,
+        AllowUnorderedAccess,
+        AllowCrossAdapter,
+        AllowSimultaneousAccess,
+        DenyShaderResource,
+        RayTracingAccelerationStruct,
+
+        _Last_Enum
+    };
+    using MResourceFlags = Bitmask<EResourceFlags>;
 } // namespace Neon::RHI

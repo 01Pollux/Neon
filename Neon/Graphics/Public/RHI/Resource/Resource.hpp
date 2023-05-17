@@ -25,40 +25,34 @@ namespace Neon::RHI
 
     //
 
-    enum class BufferUsage
+    struct BufferDesc
     {
-        VertexBuffer,
-        IndexBuffer,
-        ConstantBuffer,
-        StructuredBuffer,
-        RawBuffer,
-        IndirectBuffer,
-        AccelerationStructure,
+        size_t         Size;
+        uint32_t       Alignment = 0;
+        MResourceFlags Flags;
     };
 
     class IBuffer : public virtual IGpuResource
     {
     public:
-        struct Desc
-        {
-            size_t      Size;
-            uint32_t    Alignment;
-            BufferUsage Usage;
-        };
-
         using IGpuResource::IGpuResource;
 
         /// <summary>
         /// Creates a buffer.
         /// </summary>
         [[nodiscard]] static IBuffer* Create(
-            ISwapchain* Swapchain,
-            const Desc& Desc);
+            ISwapchain*       Swapchain,
+            const BufferDesc& Desc);
 
         /// <summary>
         /// Get the size of the buffer in bytes.
         /// </summary>
         [[nodiscard]] virtual size_t GetSize() const = 0;
+
+        /// <summary>
+        /// Get resource handle in gpu.
+        /// </summary>
+        [[nodiscard]] virtual GpuResourceHandle GetHandle() const = 0;
     };
 
     //
@@ -72,8 +66,8 @@ namespace Neon::RHI
         /// Creates an upload buffer.
         /// </summary>
         [[nodiscard]] static IUploadBuffer* Create(
-            ISwapchain* Swapchain,
-            const Desc& Desc);
+            ISwapchain*       Swapchain,
+            const BufferDesc& Desc);
 
         /// <summary>
         /// Makes the buffer available for reading/writing by the CPU.
@@ -84,6 +78,16 @@ namespace Neon::RHI
         /// Makes the buffer available for reading/writing by the CPU.
         /// </summary>
         virtual void Unmap() = 0;
+
+        /// <summary>
+        /// Maps the buffer to the specified type.
+        /// </summary>
+        template<typename _Ty>
+        [[nodiscard]] _Ty* Map(
+            size_t Offset = 0)
+        {
+            return std::bit_cast<_Ty*>(Map() + Offset);
+        }
     };
 
     //
@@ -97,8 +101,8 @@ namespace Neon::RHI
         /// Creates a readback buffer.
         /// </summary>
         [[nodiscard]] static IReadbackBuffer* Create(
-            ISwapchain* Swapchain,
-            const Desc& Desc);
+            ISwapchain*       Swapchain,
+            const BufferDesc& Desc);
 
         /// <summary>
         /// Makes the buffer available for reading by the CPU.

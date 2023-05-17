@@ -7,6 +7,15 @@
 
 namespace Neon::RHI
 {
+    enum class GraphicsBufferType : uint8_t
+    {
+        Default,
+        Upload,
+        Readback,
+
+        Count
+    };
+
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
@@ -34,16 +43,30 @@ namespace Neon::RHI
     {
     public:
         Dx12Buffer(
-            ISwapchain* Swapchain,
-            const Desc& Desc);
+            ISwapchain*        Swapchain,
+            const BufferDesc&  Desc,
+            GraphicsBufferType Type);
+
+        ~Dx12Buffer() override;
 
         [[nodiscard]] size_t GetSize() const override;
 
+        GpuResourceHandle GetHandle() const override;
+
     protected:
-        Win32::ComPtr<ID3D12Resource> m_Buffer;
+        /// <summary>
+        /// Free resource buffer from gpu
+        /// </summary>
+        void FreeBuffer(
+            GraphicsBufferType Type) const;
+
+    protected:
+        GpuResourceHandle m_Handle;
 
         size_t m_BufferSize;
         size_t m_BufferOffset;
+
+        D3D12_RESOURCE_FLAGS m_BufferFlags;
     };
 
     //
@@ -52,6 +75,13 @@ namespace Neon::RHI
                              public Dx12Buffer
     {
     public:
+        Dx12UploadBuffer(
+            ISwapchain*        Swapchain,
+            const BufferDesc&  Desc,
+            GraphicsBufferType Type);
+
+        ~Dx12UploadBuffer() override;
+
         [[nodiscard]] uint8_t* Map() override;
 
         void Unmap() override;
@@ -66,6 +96,13 @@ namespace Neon::RHI
                                public Dx12Buffer
     {
     public:
+        Dx12ReadbackBuffer(
+            ISwapchain*        Swapchain,
+            const BufferDesc&  Desc,
+            GraphicsBufferType Type);
+
+        ~Dx12ReadbackBuffer() override;
+
         [[nodiscard]] const uint8_t* Map() override;
 
         void Unmap() override;

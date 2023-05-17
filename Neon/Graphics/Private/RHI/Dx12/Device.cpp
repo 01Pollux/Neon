@@ -63,6 +63,11 @@ namespace Neon::RHI
         return m_DxgiFactory.Get();
     }
 
+    IDXGIAdapter* Dx12RenderDevice::GetAdapter()
+    {
+        return m_Adapter.Get();
+    }
+
     ID3D12Device* Dx12RenderDevice::GetDevice()
     {
         return m_Device.Get();
@@ -103,8 +108,8 @@ namespace Neon::RHI
     void Dx12RenderDevice::CreateDevice()
     {
         DXGI_ADAPTER_DESC Desc;
-        auto              Adapter = GetBestAdapter();
-        Adapter->GetDesc(&Desc);
+        m_Adapter = GetBestAdapter();
+        m_Adapter->GetDesc(&Desc);
 
         NEON_TRACE_TAG("Graphics", "Vendor: {:X}", Desc.VendorId);
         NEON_TRACE_TAG("Graphics", "Device: {:X}", Desc.DeviceId);
@@ -114,7 +119,7 @@ namespace Neon::RHI
         NEON_TRACE_TAG("Graphics", "Shared System Memory: {} Gb", Desc.SharedSystemMemory / (1024.f * 1024.f * 1024.f));
         NEON_TRACE_TAG("Graphics", "Description: {}", StringUtils::StringTransform<StringU8>(Desc.Description));
 
-        ThrowIfFailed(D3D12CreateDevice(Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
+        ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
     }
 
     void Dx12RenderDevice::CheckDeviceFeatures()

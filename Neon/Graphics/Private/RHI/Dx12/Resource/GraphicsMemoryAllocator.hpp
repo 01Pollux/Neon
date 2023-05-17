@@ -2,6 +2,7 @@
 
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
+#include <Private/RHI/Dx12/Resource/Resource.hpp>
 
 #include <Allocator/Buddy.hpp>
 #include <Window/Win32/WinPtr.hpp>
@@ -12,15 +13,6 @@
 namespace Neon::RHI
 {
     class Dx12ResourceStateManager;
-
-    enum class GraphicsBufferType : uint8_t
-    {
-        Default,
-        Upload,
-        Readback,
-
-        Count
-    };
 
     class GraphicsMemoryAllocator
     {
@@ -65,11 +57,7 @@ namespace Neon::RHI
             D3D12_RESOURCE_FLAGS          Flags;
         };
 
-        /// <summary>
-        /// Initialize allocator
-        /// </summary>
-        void Initialize(
-            const D3D12MA::ALLOCATOR_DESC& Desc);
+        GraphicsMemoryAllocator();
 
         /// <summary>
         /// Get allocator

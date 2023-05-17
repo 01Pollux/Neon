@@ -39,13 +39,13 @@ namespace Neon::RHI
     /// Convert Neon resource format to D3D12 resource dimension.
     /// </summary>
     DXGI_FORMAT CastFormat(
-        EResourceFormat Format) noexcept;
+        EResourceFormat Format);
 
     /// <summary>
     /// Convert D3D12 format to Neon resource format.
     /// </summary>
     EResourceFormat CastFormat(
-        DXGI_FORMAT Format) noexcept;
+        DXGI_FORMAT Format);
 
     //
 
@@ -53,13 +53,13 @@ namespace Neon::RHI
     /// Convert Neon sampler filter to D3D12 sampler filter.
     /// </summary>
     D3D12_FILTER CastFilter(
-        ESamplerFilter Filter) noexcept;
+        ESamplerFilter Filter);
 
     /// <summary>
     /// Convert D3D12 sampler filter to Neon sampler filter.
     /// </summary>
     ESamplerFilter CastFilter(
-        D3D12_FILTER Filter) noexcept;
+        D3D12_FILTER Filter);
 
     //
 
@@ -67,13 +67,13 @@ namespace Neon::RHI
     /// Convert Neon texture address mode to D3D12 texture address mode.
     /// </summary>
     D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
-        ESamplerMode AddressMode) noexcept;
+        ESamplerMode AddressMode);
 
     /// <summary>
     /// Convert D3D12 texture address mode to Neon sampler filter.
     /// </summary>
     ESamplerMode CastAddressMode(
-        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept;
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode);
 
     //
 
@@ -81,12 +81,25 @@ namespace Neon::RHI
     /// Convert Neon sampler comparison function to D3D12 comparison function.
     /// </summary>
     D3D12_COMPARISON_FUNC CastComparisonFunc(
-        ESamplerCmp CmpFunc) noexcept;
+        ESamplerCmp CmpFunc);
 
     /// <summary>
     /// Convert D3D12 comparison function to Neon sampler comparison function.
     /// </summary>
     ESamplerMode CastComparisonFunc(
-        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept;
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode);
 
+    //
+
+    /// <summary>
+    /// Convert Neon resource flags to D3D12 resource flags.
+    /// </summary>
+    MResourceFlags CastResourceFlags(
+        D3D12_RESOURCE_FLAGS Flags);
+
+    /// <summary>
+    /// Convert Neon resource flags to D3D12 resource flags.
+    /// </summary>
+    D3D12_RESOURCE_FLAGS CastResourceFlags(
+        const MResourceFlags& Flags);
 } // namespace Neon::RHI

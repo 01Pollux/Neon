@@ -4,7 +4,7 @@
 
 namespace Neon::RHI
 {
-    [[nodiscard]] static constexpr auto GetTranslationList() noexcept
+    [[nodiscard]] static constexpr auto GetResourceStateList() noexcept
     {
         return std::array{
             std::pair{ D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, EResourceState::VertexAndConstantBuffer },
@@ -33,6 +33,21 @@ namespace Neon::RHI
         };
     }
 
+    [[nodiscard]] static constexpr auto GetResourceFlagList() noexcept
+    {
+        return std::array{
+            std::pair{ D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, EResourceFlags::AllowRenderTarget },
+            std::pair{ D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, EResourceFlags::AllowDepthStencil },
+            std::pair{ D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, EResourceFlags::AllowUnorderedAccess },
+            std::pair{ D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE, EResourceFlags::DenyShaderResource },
+            std::pair{ D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER, EResourceFlags::AllowCrossAdapter },
+            std::pair{ D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, EResourceFlags::AllowSimultaneousAccess },
+            std::pair{ D3D12_RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE, EResourceFlags::RayTracingAccelerationStruct }
+        };
+    }
+
+    //
+
     ID3D12Resource* GetDx12Resource(IGpuResource* Resource)
     {
         return dynamic_cast<Dx12GpuResource*>(Resource)->GetResource();
@@ -41,7 +56,7 @@ namespace Neon::RHI
     D3D12_RESOURCE_STATES CastResourceStates(
         EResourceState States)
     {
-        for (auto& State : GetTranslationList())
+        for (auto& State : GetResourceStateList())
         {
             if (States == State.second)
             {
@@ -55,7 +70,7 @@ namespace Neon::RHI
         const MResourceState& States)
     {
         D3D12_RESOURCE_STATES Res = D3D12_RESOURCE_STATE_COMMON;
-        for (auto& State : GetTranslationList())
+        for (auto& State : GetResourceStateList())
         {
             if (States.Test(State.second))
             {
@@ -69,7 +84,7 @@ namespace Neon::RHI
         D3D12_RESOURCE_STATES States)
     {
         MResourceState Res;
-        for (auto& State : GetTranslationList())
+        for (auto& State : GetResourceStateList())
         {
             if ((States & State.first) == State.first)
             {
@@ -82,7 +97,7 @@ namespace Neon::RHI
     //
 
     DXGI_FORMAT CastFormat(
-        EResourceFormat Format) noexcept
+        EResourceFormat Format)
     {
         switch (Format)
         {
@@ -330,7 +345,7 @@ namespace Neon::RHI
     }
 
     EResourceFormat CastFormat(
-        DXGI_FORMAT Format) noexcept
+        DXGI_FORMAT Format)
     {
         switch (Format)
         {
@@ -580,7 +595,7 @@ namespace Neon::RHI
     //
 
     D3D12_FILTER CastFilter(
-        ESamplerFilter Filter) noexcept
+        ESamplerFilter Filter)
     {
         switch (Filter)
         {
@@ -662,7 +677,7 @@ namespace Neon::RHI
     }
 
     ESamplerFilter CastFilter(
-        D3D12_FILTER Filter) noexcept
+        D3D12_FILTER Filter)
     {
         switch (Filter)
         {
@@ -746,7 +761,7 @@ namespace Neon::RHI
     //
 
     D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
-        ESamplerMode AddressMode) noexcept
+        ESamplerMode AddressMode)
     {
         switch (AddressMode)
         {
@@ -766,7 +781,7 @@ namespace Neon::RHI
     }
 
     ESamplerMode CastAddressMode(
-        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode)
     {
         switch (AddressMode)
         {
@@ -788,7 +803,7 @@ namespace Neon::RHI
     //
 
     D3D12_COMPARISON_FUNC CastComparisonFunc(
-        ESamplerCmp CmpFunc) noexcept
+        ESamplerCmp CmpFunc)
     {
         switch (CmpFunc)
         {
@@ -814,7 +829,7 @@ namespace Neon::RHI
     }
 
     ESamplerMode CastComparisonFunc(
-        D3D12_TEXTURE_ADDRESS_MODE AddressMode) noexcept
+        D3D12_TEXTURE_ADDRESS_MODE AddressMode)
     {
         switch (AddressMode)
         {
@@ -831,5 +846,35 @@ namespace Neon::RHI
         default:
             std::unreachable();
         }
+    }
+
+    //
+
+    MResourceFlags CastResourceFlags(
+        D3D12_RESOURCE_FLAGS Flags)
+    {
+        MResourceFlags Res;
+        for (auto& State : GetResourceFlagList())
+        {
+            if ((Flags & State.first) == State.first)
+            {
+                Res.Set(State.second);
+            }
+        }
+        return Res;
+    }
+
+    D3D12_RESOURCE_FLAGS CastResourceFlags(
+        const MResourceFlags& Flags)
+    {
+        D3D12_RESOURCE_FLAGS Res = D3D12_RESOURCE_FLAG_NONE;
+        for (auto& State : GetResourceFlagList())
+        {
+            if (Flags.Test(State.second))
+            {
+                Res |= State.first;
+            }
+        }
+        return Res;
     }
 } // namespace Neon::RHI

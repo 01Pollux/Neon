@@ -4,10 +4,7 @@
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
 
-#include <Private/RHI/Dx12/Commands/CommandList.hpp>
 #include <Math/Colors.hpp>
-#include <RHI/Resource/Common.hpp>
-#include <RHI/Commands/CommandList.hpp>
 #include <RHI/Commands/CommandsContext.hpp>
 
 #include <Window/Window.hpp>
@@ -46,8 +43,9 @@ namespace Neon::RHI
 
         auto& Rtv = m_RenderTargets[FrameIndex];
 
-        m_StateManager.TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
-        m_StateManager.FlushBarriers(Context);
+        auto StateManager = GetStateManager();
+        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
+        StateManager->FlushBarriers(Context);
 
         m_Time += 0.008f;
         Color4 Color{
@@ -59,8 +57,24 @@ namespace Neon::RHI
         Context->ClearRtv({ Rtv.ptr }, Color);
         Context->SetRenderTargets({ Rtv.ptr }, 1);
 
-        m_StateManager.TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
-        m_StateManager.FlushBarriers(Context);
+        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
+        StateManager->FlushBarriers(Context);
+
+        //
+
+        struct Vertex
+        {
+            DX::XMFLOAT4 Position;
+            DX::XMFLOAT4 Color;
+        };
+
+        auto Buffer = IBuffer::Create(this, { .Size = sizeof(Vertex) });
+        auto Upload = IUploadBuffer::Create(this, { .Size = sizeof(Vertex) });
+
+        auto Vertices        = Upload->Map<Vertex>();
+        Vertices[0].Position = { -0.5f, -0.5f, 0.0f, 1.0f };
+        Vertices[0].Color    = { 1.0f, 0.0f, 0.0f, 1.0f };
+        Upload->Unmap();
 
         CtxBatch.Upload();
     }

@@ -1,7 +1,6 @@
 #include <GraphicsPCH.hpp>
-#include <Private/RHI/Dx12/Resource/Resource.hpp>
+#include <Private/RHI/Dx12/Resource/Common.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
-#include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
 
 namespace Neon::RHI
@@ -35,27 +34,34 @@ namespace Neon::RHI
     //
 
     IBuffer* IBuffer::Create(
-        ISwapchain* Swapchain,
-        const Desc& Desc)
+        ISwapchain*       Swapchain,
+        const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12Buffer(Swapchain, Desc);
+        return NEON_NEW Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Default);
     }
 
     Dx12Buffer::Dx12Buffer(
-        ISwapchain* Swapchain,
-        const Desc& Desc) :
+        ISwapchain*        Swapchain,
+        const BufferDesc&  Desc,
+        GraphicsBufferType Type) :
         IGpuResource(Swapchain),
         Dx12GpuResource(Swapchain)
     {
+        m_BufferFlags = CastResourceFlags(Desc.Flags);
+
         auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
-        auto Handle    = Allocator->AllocateBuffer(GraphicsBufferType::Default, Desc.Size, size_t(Desc.Alignment), Flags);
+        auto Handle    = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), m_BufferFlags);
 
         m_Resource     = Handle.Resource;
         m_BufferSize   = Handle.Size;
         m_BufferOffset = Handle.Offset;
-        m_BufferFlags  = Flags;
 
-        m_GpuAddress = m_Resource->GetGPUVirtualAddress() + m_BufferOffset;
+        m_Handle = { m_Resource->GetGPUVirtualAddress() + m_BufferOffset };
+    }
+
+    Dx12Buffer::~Dx12Buffer()
+    {
+        FreeBuffer(GraphicsBufferType::Default);
     }
 
     size_t Dx12Buffer::GetSize() const
@@ -63,42 +69,91 @@ namespace Neon::RHI
         return m_BufferSize;
     }
 
+    GpuResourceHandle Dx12Buffer::GetHandle() const
+    {
+        return m_Handle;
+    }
+
+    void Dx12Buffer::FreeBuffer(
+        GraphicsBufferType Type) const
+    {
+        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
+        Allocator->FreeBuffer(
+            { .Resource = m_Resource,
+              .Offset   = m_BufferOffset,
+              .Size     = m_BufferSize,
+              .Type     = Type,
+              .Flags    = m_BufferFlags });
+    }
+
     //
 
-    IUploadBuffer* IUploadBuffer::Create(ISwapchain* Swapchain, const Desc& Desc)
+    IUploadBuffer* IUploadBuffer::Create(
+        ISwapchain*       Swapchain,
+        const BufferDesc& Desc)
     {
-        return nullptr;
+        return NEON_NEW Dx12UploadBuffer(Swapchain, Desc, GraphicsBufferType::Upload);
+    }
+
+    Dx12UploadBuffer::Dx12UploadBuffer(
+        ISwapchain*        Swapchain,
+        const BufferDesc&  Desc,
+        GraphicsBufferType Type) :
+        IGpuResource(Swapchain),
+        Dx12Buffer(Swapchain, Desc, Type)
+    {
+    }
+
+    Dx12UploadBuffer::~Dx12UploadBuffer()
+    {
+        FreeBuffer(GraphicsBufferType::Upload);
     }
 
     uint8_t* Dx12UploadBuffer::Map()
     {
         void* MappedData = nullptr;
-        ThrowIfFailed(m_Buffer->Map(0, nullptr, &MappedData));
+        ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
         return std::bit_cast<uint8_t*>(MappedData) + m_BufferOffset;
     }
 
     void Dx12UploadBuffer::Unmap()
     {
-        m_Buffer->Unmap(0, nullptr);
+        m_Resource->Unmap(0, nullptr);
     }
 
     //
 
-    IReadbackBuffer* IReadbackBuffer::Create(ISwapchain* Swapchain, const Desc& Desc)
+    IReadbackBuffer* IReadbackBuffer::Create(
+        ISwapchain*       Swapchain,
+        const BufferDesc& Desc)
     {
-        return nullptr;
+        return NEON_NEW Dx12ReadbackBuffer(Swapchain, Desc, GraphicsBufferType::Readback);
+    }
+
+    Dx12ReadbackBuffer::Dx12ReadbackBuffer(
+        ISwapchain*        Swapchain,
+        const BufferDesc&  Desc,
+        GraphicsBufferType Type) :
+        IGpuResource(Swapchain),
+        Dx12Buffer(Swapchain, Desc, Type)
+    {
+    }
+
+    Dx12ReadbackBuffer::~Dx12ReadbackBuffer()
+    {
+        FreeBuffer(GraphicsBufferType::Readback);
     }
 
     const uint8_t* Dx12ReadbackBuffer::Map()
     {
         void* MappedData = nullptr;
-        ThrowIfFailed(m_Buffer->Map(0, nullptr, &MappedData));
+        ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
         return std::bit_cast<const uint8_t*>(MappedData) + m_BufferOffset;
     }
 
     void Dx12ReadbackBuffer::Unmap()
     {
-        m_Buffer->Unmap(0, nullptr);
+        m_Resource->Unmap(0, nullptr);
     }
 
     //
