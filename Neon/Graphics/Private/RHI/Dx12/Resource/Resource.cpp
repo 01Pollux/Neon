@@ -34,12 +34,41 @@ namespace Neon::RHI
 
     //
 
+    IBuffer* IBuffer::Create(
+        ISwapchain* Swapchain,
+        const Desc& Desc)
+    {
+        return NEON_NEW Dx12Buffer(Swapchain, Desc);
+    }
+
+    Dx12Buffer::Dx12Buffer(
+        ISwapchain* Swapchain,
+        const Desc& Desc) :
+        IGpuResource(Swapchain),
+        Dx12GpuResource(Swapchain)
+    {
+        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
+        auto Handle    = Allocator->AllocateBuffer(GraphicsBufferType::Default, Desc.Size, size_t(Desc.Alignment), Flags);
+
+        m_Resource     = Handle.Resource;
+        m_BufferSize   = Handle.Size;
+        m_BufferOffset = Handle.Offset;
+        m_BufferFlags  = Flags;
+
+        m_GpuAddress = m_Resource->GetGPUVirtualAddress() + m_BufferOffset;
+    }
+
     size_t Dx12Buffer::GetSize() const
     {
         return m_BufferSize;
     }
 
     //
+
+    IUploadBuffer* IUploadBuffer::Create(ISwapchain* Swapchain, const Desc& Desc)
+    {
+        return nullptr;
+    }
 
     uint8_t* Dx12UploadBuffer::Map()
     {
@@ -54,6 +83,11 @@ namespace Neon::RHI
     }
 
     //
+
+    IReadbackBuffer* IReadbackBuffer::Create(ISwapchain* Swapchain, const Desc& Desc)
+    {
+        return nullptr;
+    }
 
     const uint8_t* Dx12ReadbackBuffer::Map()
     {

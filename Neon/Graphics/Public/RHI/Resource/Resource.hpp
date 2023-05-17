@@ -25,10 +25,35 @@ namespace Neon::RHI
 
     //
 
+    enum class BufferUsage
+    {
+        VertexBuffer,
+        IndexBuffer,
+        ConstantBuffer,
+        StructuredBuffer,
+        RawBuffer,
+        IndirectBuffer,
+        AccelerationStructure,
+    };
+
     class IBuffer : public virtual IGpuResource
     {
     public:
+        struct Desc
+        {
+            size_t      Size;
+            uint32_t    Alignment;
+            BufferUsage Usage;
+        };
+
         using IGpuResource::IGpuResource;
+
+        /// <summary>
+        /// Creates a buffer.
+        /// </summary>
+        [[nodiscard]] static IBuffer* Create(
+            ISwapchain* Swapchain,
+            const Desc& Desc);
 
         /// <summary>
         /// Get the size of the buffer in bytes.
@@ -42,6 +67,13 @@ namespace Neon::RHI
     {
     public:
         using IBuffer::IBuffer;
+
+        /// <summary>
+        /// Creates an upload buffer.
+        /// </summary>
+        [[nodiscard]] static IUploadBuffer* Create(
+            ISwapchain* Swapchain,
+            const Desc& Desc);
 
         /// <summary>
         /// Makes the buffer available for reading/writing by the CPU.
@@ -60,6 +92,13 @@ namespace Neon::RHI
     {
     public:
         using IBuffer::IBuffer;
+
+        /// <summary>
+        /// Creates a readback buffer.
+        /// </summary>
+        [[nodiscard]] static IReadbackBuffer* Create(
+            ISwapchain* Swapchain,
+            const Desc& Desc);
 
         /// <summary>
         /// Makes the buffer available for reading by the CPU.

@@ -25,6 +25,11 @@ namespace Neon::RHI
         m_BudgetManager.ResetCommandLists(Type, Commands);
     }
 
+    GraphicsMemoryAllocator* Dx12Swapchain::GetAllocator()
+    {
+        return &m_MemoryAllocator;
+    }
+
     ICommandQueue* Dx12Swapchain::GetQueue(CommandQueueType Type)
     {
         return &m_BudgetManager.GetQueueManager()->Get(CastCommandQueueType(Type))->Queue;
@@ -32,6 +37,6 @@ namespace Neon::RHI
 
     IResourceStateManager* Dx12Swapchain::GetStateManager()
     {
-        return &m_StateManager;
+        return m_MemoryAllocator.GetStateManager();
     }
 } // namespace Neon::RHI

@@ -5,7 +5,7 @@
 
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
-#include <Private/RHI/Dx12/Resource/State.hpp>
+#include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
 
 #include <random>
@@ -56,6 +56,12 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
+    public:
+        /// <summary>
+        /// Get memory allocator
+        /// </summary>
+        [[nodiscard]] GraphicsMemoryAllocator* GetAllocator();
+
     private:
         /// <summary>
         /// Create the swapchain.
@@ -64,11 +70,14 @@ namespace Neon::RHI
         CreateSwapchain(
             const InitDesc& Desc);
 
+        /// <summary>
+        /// Resize the swapchain.
+        /// </summary>
         void ResizeBackbuffers(
             size_t NewSize);
 
     private:
-        Dx12ResourceStateManager m_StateManager;
+        GraphicsMemoryAllocator m_MemoryAllocator;
 
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
         std::vector<Dx12Texture>       m_BackBuffers;

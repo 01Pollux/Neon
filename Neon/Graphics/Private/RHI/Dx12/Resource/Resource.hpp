@@ -33,6 +33,10 @@ namespace Neon::RHI
                        public Dx12GpuResource
     {
     public:
+        Dx12Buffer(
+            ISwapchain* Swapchain,
+            const Desc& Desc);
+
         [[nodiscard]] size_t GetSize() const override;
 
     protected:
