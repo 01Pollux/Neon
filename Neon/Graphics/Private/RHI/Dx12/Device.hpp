@@ -5,6 +5,24 @@
 
 namespace Neon::RHI
 {
+    class Dx12DeviceFeatures
+    {
+        friend class Dx12RenderDevice;
+
+    public:
+        /// <summary>
+        /// Get root signature version.
+        /// </summary>
+        D3D_ROOT_SIGNATURE_VERSION GetRootSignatureVersion() const;
+
+    private:
+        void Initialize(
+            ID3D12Device* Device);
+
+    private:
+        D3D_ROOT_SIGNATURE_VERSION m_RootSignatureVersion;
+    };
+
     class Dx12RenderDevice final : public IRenderDevice
     {
     public:
@@ -36,6 +54,11 @@ namespace Neon::RHI
         /// </summary>
         uint32_t GetDescriptorSize(
             D3D12_DESCRIPTOR_HEAP_TYPE Type) const;
+
+        /// <summary>
+        /// Get device features.
+        /// </summary>
+        const Dx12DeviceFeatures& GetFeatures() const;
 
     private:
         /// <summary>
@@ -88,5 +111,6 @@ namespace Neon::RHI
         Win32::ComPtr<ID3D12Device> m_Device;
 
         HeapDescriptorSizeType m_HeapDescriptorSize;
+        Dx12DeviceFeatures     m_DeviceFeatures;
     };
 } // namespace Neon::RHI

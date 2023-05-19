@@ -126,6 +126,8 @@ namespace Neon::RHI
         DenyDSAccess,
         DenyGSAccess,
         DenyPSAccess,
+
+        _Last_Enum
     };
     using MRootSignatureBuilderFlags = Bitmask<ERootSignatureBuilderFlags>;
 

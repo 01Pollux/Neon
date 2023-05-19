@@ -122,10 +122,14 @@ namespace Neon::RHI
         ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
     }
 
+    const Dx12DeviceFeatures& Dx12RenderDevice::GetFeatures() const
+    {
+        return m_DeviceFeatures;
+    }
+
     void Dx12RenderDevice::CheckDeviceFeatures()
     {
-        CD3DX12FeatureSupport FeatureSupport;
-        ThrowIfFailed(FeatureSupport.Init(m_Device.Get()));
+        m_DeviceFeatures.Initialize(m_Device.Get());
     }
 
     Win32::ComPtr<IDXGIAdapter> Dx12RenderDevice::GetBestAdapter() const

@@ -290,6 +290,8 @@ namespace Neon::RHI
         Data_Volatile,
         Data_Static_While_Execute,
         Data_Static,
+
+        _Last_Enum
     };
     using MRootDescriptorFlags = Bitmask<ERootDescriptorFlags>;
 } // namespace Neon::RHI
