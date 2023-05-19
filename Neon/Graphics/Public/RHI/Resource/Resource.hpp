@@ -14,13 +14,7 @@ namespace Neon::RHI
     class IGpuResource
     {
     public:
-        IGpuResource(
-            ISwapchain* Swapchain);
-        NEON_CLASS_COPYMOVE(IGpuResource);
         virtual ~IGpuResource() = default;
-
-    protected:
-        ISwapchain* m_OwningSwapchain = nullptr;
     };
 
     //

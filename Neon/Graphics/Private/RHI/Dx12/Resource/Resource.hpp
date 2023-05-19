@@ -34,6 +34,7 @@ namespace Neon::RHI
         [[nodiscard]] D3D12MA::Allocation* GetAllocation() const;
 
     protected:
+        ISwapchain*                        m_OwningSwapchain = nullptr;
         Win32::ComPtr<ID3D12Resource>      m_Resource;
         Win32::ComPtr<D3D12MA::Allocation> m_Allocation;
     };

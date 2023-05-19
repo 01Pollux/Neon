@@ -8,7 +8,7 @@ namespace Neon::RHI
 
     Dx12GpuResource::Dx12GpuResource(
         ISwapchain* Swapchain) :
-        IGpuResource(Swapchain)
+        m_OwningSwapchain(Swapchain)
     {
     }
 
@@ -44,7 +44,6 @@ namespace Neon::RHI
         ISwapchain*        Swapchain,
         const BufferDesc&  Desc,
         GraphicsBufferType Type) :
-        IGpuResource(Swapchain),
         Dx12GpuResource(Swapchain)
     {
         m_BufferFlags = CastResourceFlags(Desc.Flags);
@@ -99,7 +98,6 @@ namespace Neon::RHI
         ISwapchain*        Swapchain,
         const BufferDesc&  Desc,
         GraphicsBufferType Type) :
-        IGpuResource(Swapchain),
         Dx12Buffer(Swapchain, Desc, Type)
     {
     }
@@ -134,7 +132,6 @@ namespace Neon::RHI
         ISwapchain*        Swapchain,
         const BufferDesc&  Desc,
         GraphicsBufferType Type) :
-        IGpuResource(Swapchain),
         Dx12Buffer(Swapchain, Desc, Type)
     {
     }
@@ -160,7 +157,6 @@ namespace Neon::RHI
 
     Dx12Texture::Dx12Texture(
         ISwapchain* Swapchain) :
-        IGpuResource(Swapchain),
         Dx12GpuResource(Swapchain)
     {
     }
@@ -170,7 +166,6 @@ namespace Neon::RHI
         Win32::ComPtr<ID3D12Resource>      Texture,
         D3D12_RESOURCE_STATES              InitialState,
         Win32::ComPtr<D3D12MA::Allocation> Allocation) :
-        IGpuResource(Swapchain),
         Dx12GpuResource(Swapchain)
     {
         m_Resource   = std::move(Texture);

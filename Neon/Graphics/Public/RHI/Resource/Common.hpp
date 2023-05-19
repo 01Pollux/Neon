@@ -267,7 +267,7 @@ namespace Neon::RHI
 
     //
 
-    enum class EResourceFlags
+    enum class EResourceFlags : uint8_t
     {
         AllowRenderTarget,
         AllowDepthStencil,
@@ -280,4 +280,16 @@ namespace Neon::RHI
         _Last_Enum
     };
     using MResourceFlags = Bitmask<EResourceFlags>;
+
+    //
+
+    enum class ERootDescriptorFlags : uint8_t
+    {
+        Descriptor_Volatile,
+        Descriptor_Static_Bounds_Check,
+        Data_Volatile,
+        Data_Static_While_Execute,
+        Data_Static,
+    };
+    using MRootDescriptorFlags = Bitmask<ERootDescriptorFlags>;
 } // namespace Neon::RHI
