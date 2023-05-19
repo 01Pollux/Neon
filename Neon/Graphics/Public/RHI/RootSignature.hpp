@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RHI/Resource/Common.hpp>
+#include <RHI/Resource/View.hpp>
 #include <Core/Neon.hpp>
 #include <vector>
 #include <variant>
@@ -25,17 +25,29 @@ namespace Neon::RHI
         Sampler,
     };
 
+    struct StaticSamplerDesc : SamplerDesc
+    {
+        uint32_t         ShaderRegister;
+        uint32_t         RegisterSpace;
+        ShaderVisibility Visibility = ShaderVisibility::Pixel;
+    };
+
     struct RootDescriptorTableParam
     {
         uint32_t             ShaderRegister;
         uint32_t             RegisterSpace;
-        uint32_t             DescriptorCount = 1;
+        uint32_t             DescriptorCount;
         MRootDescriptorFlags Flags;
         DescriptorTableParam Type;
     };
 
-    struct RootDescriptorTable
+    class RootDescriptorTable
     {
+    public:
+        RootDescriptorTable() = default;
+        RootDescriptorTable(
+            size_t Reserve);
+
         /// <summary>
         /// Add srv descriptor entries
         /// </summary>
@@ -72,16 +84,6 @@ namespace Neon::RHI
             uint32_t             NumDescriptors,
             MRootDescriptorFlags Flags = {});
 
-        /// <summary>
-        /// Add descriptor entries
-        /// </summary>
-        RootDescriptorTable& AddDescriptorRange(
-            uint32_t                    BaseShaderRegister,
-            uint32_t                    RegisterSpace,
-            D3D12_DESCRIPTOR_RANGE_TYPE Type,
-            uint32_t                    NumDescriptors,
-            MRootDescriptorFlags        Flags = {});
-
     private:
         std::vector<RootDescriptorTableParam> m_DescriptorRanges;
     };
@@ -96,21 +98,36 @@ namespace Neon::RHI
             uint32_t RegisterSpace;
         };
 
+        using DescriptorType = DescriptorTableParam;
         struct Descriptor
         {
-            uint32_t ShaderRegister;
-            uint32_t RegisterSpace;
+
+            uint32_t       ShaderRegister;
+            uint32_t       RegisterSpace;
+            DescriptorType Type;
         };
 
-    private:
-        std::variant<
-            RootDescriptorTable,
-            Constants,
-            Descriptor>
-            m_Parameter;
+        using Variant = std::variant<RootDescriptorTable, Constants, Descriptor>;
 
+        RootParameter(
+            Variant          Param,
+            ShaderVisibility Visibility);
+
+    private:
+        Variant          m_Parameter;
         ShaderVisibility m_Visibility;
     };
+
+    enum class ERootSignatureBuilderFlags : uint8_t
+    {
+        AllowInputLayout,
+        DenyVSAccess,
+        DenyHSAccess,
+        DenyDSAccess,
+        DenyGSAccess,
+        DenyPSAccess,
+    };
+    using MRootSignatureBuilderFlags = Bitmask<ERootSignatureBuilderFlags>;
 
     class RootSignatureBuilder
     {
@@ -119,11 +136,8 @@ namespace Neon::RHI
         /// Add descriptor table
         /// </summary>
         RootSignatureBuilder& AddDescriptorTable(
-            DescriptorTableParam Type,
-            uint32_t             ShaderRegister,
-            uint32_t             RegisterSpace,
-            uint32_t             DescriptorCount,
-            ShaderVisibility     Visibility = ShaderVisibility::All);
+            RootDescriptorTable Table,
+            ShaderVisibility    Visibility = ShaderVisibility::All);
 
         /// <summary>
         /// Add 32 bit root constant
@@ -181,14 +195,31 @@ namespace Neon::RHI
             MRootDescriptorFlags Flags      = {},
             ShaderVisibility     Visibility = ShaderVisibility::All);
 
+        /// <summary>
+        /// Add static sampler
+        /// </summary>
+        RootSignatureBuilder& AddSampler(
+            const StaticSamplerDesc& Desc);
+
+        /// <summary>
+        /// Set flags for root signature
+        /// </summary>
+        RootSignatureBuilder& SetFlags(
+            ERootSignatureBuilderFlags Flag,
+            bool                       Value = true);
+
     private:
-        std::vector<RootParameter> m_Parameters;
-        // std::vector<StaticSampler> m_Samplers;
+        std::vector<RootParameter>     m_Parameters;
+        std::vector<StaticSamplerDesc> m_StaticSamplers;
+        MRootSignatureBuilderFlags     m_Flags;
     };
 
     class IRootSignature
     {
     public:
+        [[nodiscard]] Ptr<IRootSignature> Create(
+            const RootSignatureBuilder& Builder);
+
         virtual ~IRootSignature() = default;
 
         /// <summary>
