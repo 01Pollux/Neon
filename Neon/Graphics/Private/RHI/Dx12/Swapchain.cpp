@@ -54,29 +54,12 @@ namespace Neon::RHI
             sin(5.f * m_Time + 3.f) / 2.f + .5f,
             1.0f
         };
+
         Context->ClearRtv(Rtv, Color);
         Context->SetRenderTargets(Rtv, 1);
 
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
         StateManager->FlushBarriers(Context);
-
-        //
-
-        struct Vertex
-        {
-            DX::XMFLOAT4 Position;
-            DX::XMFLOAT4 Color;
-        };
-
-        auto Buffer = IBuffer::Create(this, { .Size = sizeof(Vertex) });
-        auto Upload = IUploadBuffer::Create(this, { .Size = sizeof(Vertex) });
-
-        auto Vertices        = Upload->Map<Vertex>();
-        Vertices[0].Position = { -0.5f, -0.5f, 0.0f, 1.0f };
-        Vertices[0].Color    = { 1.0f, 0.0f, 0.0f, 1.0f };
-        Upload->Unmap();
-
-        CtxBatch.Upload();
     }
 
     void Dx12Swapchain::Present()

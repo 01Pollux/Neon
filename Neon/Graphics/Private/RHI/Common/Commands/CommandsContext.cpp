@@ -37,6 +37,7 @@ namespace Neon::RHI
         if (!m_CommandLists.empty())
         {
             auto Queue = m_Swapchain->GetQueue(m_Type);
+            Queue->Upload(m_CommandLists);
             Queue->FreeCommandLists(m_Type, m_CommandLists);
         }
     }

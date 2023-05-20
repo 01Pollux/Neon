@@ -10,6 +10,7 @@ namespace Neon::Windowing
 
 namespace Neon::RHI
 {
+    class IGpuResource;
     class IResourceStateManager;
     class ICommandQueue;
     class IFence;
