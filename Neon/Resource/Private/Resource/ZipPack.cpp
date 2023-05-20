@@ -50,12 +50,12 @@ namespace Neon::Asset
             if (!ReadFile())
             {
                 m_FileStream = {};
-                NEON_ERROR("Resource", "Invalid pack file '{}'", FilePath);
+                NEON_ERROR_TAG("Resource", "Invalid pack file '{}'", FilePath);
             }
         }
         catch (const std::exception& Exception)
         {
-            NEON_ERROR("Resource", "Exception caught while trying to read file '{}', ({})", FilePath, Exception.what());
+            NEON_ERROR_TAG("Resource", "Exception caught while trying to read file '{}', ({})", FilePath, Exception.what());
         }
     }
 
@@ -69,7 +69,7 @@ namespace Neon::Asset
         {
             if (!m_Handlers.Get(Info.LoaderId))
             {
-                NEON_WARNING("Resource", "Tried to export a resource '{}' with an unknown handler", buuid::to_string(Handle));
+                NEON_WARNING_TAG("Resource", "Tried to export a resource '{}' with an unknown handler", buuid::to_string(Handle));
                 continue;
             }
 
@@ -135,7 +135,7 @@ namespace Neon::Asset
             }
         }
 
-        NEON_WARNING("Resource", "No handler support resource '{}'", buuid::to_string(Handle));
+        NEON_WARNING_TAG("Resource", "No handler support resource '{}'", buuid::to_string(Handle));
     }
 
     auto ZipAssetPack::ContainsResource(
@@ -285,7 +285,7 @@ namespace Neon::Asset
         if (HeaderInfo.Signature != AssetPackHeader::DefaultSignature ||
             HeaderInfo.NumberOfResources == 0)
         {
-            NEON_INFO("Resource", "Invalid header's information");
+            NEON_INFO_TAG("Resource", "Invalid header's information");
             return false;
         }
 
@@ -306,14 +306,14 @@ namespace Neon::Asset
             if (Section.Signature != AssetPackSection::DefaultSignature ||
                 !Section.PackInfo.Size)
             {
-                NEON_INFO("Resource", "Invalid resource signature");
+                NEON_INFO_TAG("Resource", "Invalid resource signature");
                 return false;
             }
 
             auto [InfoIter, Inserted] = m_AssetsInfo.emplace(Section.Handle, Section.PackInfo);
             if (!Inserted)
             {
-                NEON_INFO("Resource", "Duplicate resource '{}'", buuid::to_string(Section.Handle));
+                NEON_INFO_TAG("Resource", "Duplicate resource '{}'", buuid::to_string(Section.Handle));
                 return false;
             }
 

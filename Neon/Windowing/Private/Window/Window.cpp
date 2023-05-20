@@ -284,7 +284,7 @@ namespace Neon::Windowing
         }
         else
         {
-            NEON_WARNING("Failed to set the window's icon");
+            NEON_WARNING_TAG("Window", "Failed to set the window's icon");
         }
     }
 
@@ -373,7 +373,7 @@ namespace Neon::Windowing
 
         if (Flags.TestNone(BitMask_Or(EWindowStyle::Fullscreen, EWindowStyle::Windowed)))
         {
-            NEON_WARNING("Window must be either fullscreen, fullscreen borderless or windowed");
+            NEON_WARNING_TAG("Window", "Window must be either fullscreen, fullscreen borderless or windowed");
         }
         return WinStyle;
     }

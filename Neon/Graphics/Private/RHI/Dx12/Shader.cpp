@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Shader.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
 
 namespace Neon::RHI
 {
@@ -12,7 +13,8 @@ namespace Neon::RHI
     IShader* IShader::Create(
         const ShaderCompileDesc& Desc)
     {
-        return nullptr;
+        auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
+        return IShader::Create(ShaderCompiler->Compile(Desc));
     }
 
     //
