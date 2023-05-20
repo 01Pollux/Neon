@@ -3,7 +3,6 @@
 #include <GraphicsPCH.hpp>
 #include <RHI/Resource/State.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
-#include <Core/LockedData.hpp>
 
 namespace Neon::RHI
 {
@@ -27,7 +26,6 @@ namespace Neon::RHI
             ResourceStateMapType CurrentStates;
             ResourceStateMapType PendingStates;
         };
-        using MTResourceStateMapInfo = LockableData<ResourceStateMapInfo, std::recursive_mutex>;
 
     public:
         void TransitionResource(
@@ -80,8 +78,7 @@ namespace Neon::RHI
         /// Get current resource's states
         /// </summary>
         Dx12SubresourceStateList& GetCurrentStates_Internal(
-            ID3D12Resource*       Resource,
-            ResourceStateMapInfo& States);
+            ID3D12Resource* Resource);
 
         /// <summary>
         /// Immediately record new state for a resource
@@ -100,7 +97,16 @@ namespace Neon::RHI
             D3D12_RESOURCE_STATES CurrentState,
             D3D12_RESOURCE_STATES NewState);
 
+        /// <summary>
+        /// Lock resource states mutex
+        /// </summary>
+        [[nodiscard]] auto LockStates()
+        {
+            return std::scoped_lock{ m_StatesMutex };
+        }
+
     private:
-        MTResourceStateMapInfo m_ResoureStates;
+        std::recursive_mutex m_StatesMutex;
+        ResourceStateMapInfo m_ResoureStates;
     };
 } // namespace Neon::RHI

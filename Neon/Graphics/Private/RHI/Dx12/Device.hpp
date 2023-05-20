@@ -27,6 +27,7 @@ namespace Neon::RHI
     {
     public:
         Dx12RenderDevice();
+        ~Dx12RenderDevice() override;
 
     public:
         /// <summary>

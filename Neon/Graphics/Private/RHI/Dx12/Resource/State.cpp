@@ -14,22 +14,23 @@ namespace Neon::RHI
         uint32_t       SubresourceIndex)
     {
         auto Dx12Resource = GetDx12Resource(Resource);
-        auto States       = m_ResoureStates.Lock();
+        auto Lock         = LockStates();
 
-        auto& PendingStates         = States->PendingStates[Dx12Resource];
-        auto& CurrentResourceStates = GetCurrentStates_Internal(Dx12Resource, *States);
+        auto& PendingStates         = m_ResoureStates.PendingStates[Dx12Resource];
+        auto& CurrentResourceStates = GetCurrentStates_Internal(Dx12Resource);
 
+        auto State = CastResourceStates(NewState);
         if (SubresourceIndex == Resource_AllSubresources)
         {
             PendingStates.reserve(CurrentResourceStates.size());
             for (size_t i = 0; i < CurrentResourceStates.size(); i++)
             {
-                PendingStates.emplace_back(CastResourceStates(NewState), uint32_t(i));
+                PendingStates.emplace_back(State, uint32_t(i));
             }
         }
         else
         {
-            PendingStates.emplace_back(CastResourceStates(NewState), SubresourceIndex);
+            PendingStates.emplace_back(State, SubresourceIndex);
         }
     }
 
@@ -38,13 +39,15 @@ namespace Neon::RHI
         const SubresourceStates& NewStates)
     {
         auto Dx12Resource = GetDx12Resource(Resource);
-        auto States       = m_ResoureStates.Lock();
+        auto Lock         = LockStates();
 
-        auto& PendingStates = States->PendingStates[Dx12Resource];
+        auto& PendingStates = m_ResoureStates.PendingStates[Dx12Resource];
+        PendingStates.reserve(PendingStates.size() + NewStates.size());
+
         std::transform(
             NewStates.begin(),
             NewStates.end(),
-            PendingStates.end(),
+            std::back_inserter(PendingStates),
             [](auto& Iter)
             {
                 return Dx12SubresourceState{
@@ -85,18 +88,15 @@ namespace Neon::RHI
         IGpuResource* Resource) -> SubresourceStates
     {
         auto Dx12Resource = GetDx12Resource(Resource);
-        auto States       = m_ResoureStates.Lock();
+        auto Lock         = LockStates();
 
         SubresourceStates Res;
 
-        auto& CurrentStates = GetCurrentStates_Internal(Dx12Resource, *States);
-        std::for_each(
-            CurrentStates.begin(),
-            CurrentStates.end(),
-            [&Res](auto& Iter)
-            {
-                Res.emplace(Iter.SubresourceIndex, CastResourceStates(Iter.State));
-            });
+        auto& CurrentStates = GetCurrentStates_Internal(Dx12Resource);
+        for (auto& Iter : CurrentStates)
+        {
+            Res.emplace(Iter.SubresourceIndex, CastResourceStates(Iter.State));
+        }
 
         return Res;
     }
@@ -107,14 +107,13 @@ namespace Neon::RHI
         ID3D12Resource*       Resource,
         D3D12_RESOURCE_STATES InitialState)
     {
-        auto States = m_ResoureStates.Lock();
-        auto Desc   = Resource->GetDesc();
+        auto Desc = Resource->GetDesc();
 
         uint32_t SubresourceCount = Desc.DepthOrArraySize * Desc.MipLevels;
 
-        auto& CurrentStates = States->CurrentStates[Resource];
+        auto  Lock          = LockStates();
+        auto& CurrentStates = m_ResoureStates.CurrentStates[Resource];
         CurrentStates.reserve(SubresourceCount);
-
         for (uint32_t i = 0; i < SubresourceCount; i++)
         {
             CurrentStates.emplace_back(InitialState, i);
@@ -124,25 +123,25 @@ namespace Neon::RHI
     void Dx12ResourceStateManager::StopTrakingResource(
         ID3D12Resource* Resource)
     {
-        auto States = m_ResoureStates.Lock();
-        States->CurrentStates.erase(Resource);
-        States->PendingStates.erase(Resource);
+        auto Lock = LockStates();
+        m_ResoureStates.CurrentStates.erase(Resource);
+        m_ResoureStates.PendingStates.erase(Resource);
     }
 
     //
 
     auto Dx12ResourceStateManager::Flush() -> Dx12ResourceBarrierList
     {
-        auto States = m_ResoureStates.Lock();
+        auto Lock = LockStates();
 
         Dx12ResourceBarrierList Barriers;
-        for (auto& [Resource, States] : States->PendingStates)
+        for (auto& [Resource, States] : m_ResoureStates.PendingStates)
         {
             auto TempBarriers = TransitionToStatesImmediately(Resource, States);
             Barriers.insert(Barriers.begin(), TempBarriers.begin(), TempBarriers.end());
         }
 
-        States->PendingStates.clear();
+        m_ResoureStates.PendingStates.clear();
         return Barriers;
     }
 
@@ -150,9 +149,8 @@ namespace Neon::RHI
         ID3D12Resource*                 Resource,
         const Dx12SubresourceStateList& NewStates) -> Dx12ResourceBarrierList
     {
-        auto States = m_ResoureStates.Lock();
-
-        auto& CurrentSubresources = GetCurrentStates_Internal(Resource, *States);
+        auto  Lock                = LockStates();
+        auto& CurrentSubresources = GetCurrentStates_Internal(Resource);
 
         Dx12ResourceBarrierList NewStateBarriers;
 
@@ -202,12 +200,11 @@ namespace Neon::RHI
     //
 
     auto Dx12ResourceStateManager::GetCurrentStates_Internal(
-        ID3D12Resource*       Resource,
-        ResourceStateMapInfo& States) -> Dx12SubresourceStateList&
+        ID3D12Resource* Resource) -> Dx12SubresourceStateList&
     {
-        auto Iter = States.CurrentStates.find(Resource);
+        auto Iter = m_ResoureStates.CurrentStates.find(Resource);
         NEON_ASSERT(
-            Iter != States.CurrentStates.end(),
+            Iter != m_ResoureStates.CurrentStates.end(),
             "Resource is not registered / not being tracked. It may have been deallocated before transitions were applied");
         return Iter->second;
     }
@@ -216,9 +213,8 @@ namespace Neon::RHI
         ID3D12Resource*                 Resource,
         const Dx12SubresourceStateList& NewStates) -> Dx12ResourceBarrierList
     {
-        auto States = m_ResoureStates.Lock();
-
-        auto& CurrentSubresources = GetCurrentStates_Internal(Resource, *States);
+        auto  Lock                = LockStates();
+        auto& CurrentSubresources = GetCurrentStates_Internal(Resource);
 
         Dx12ResourceBarrierList NewStateBarriers;
 

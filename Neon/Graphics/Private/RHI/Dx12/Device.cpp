@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/RootSignature.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -20,7 +21,6 @@ namespace Neon::RHI
         std::lock_guard Lock(s_CreateDeviceMutex);
         if (!s_NumDevices++)
         {
-            NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
             s_Device = new Dx12RenderDevice();
         }
         return s_Device;
@@ -31,7 +31,6 @@ namespace Neon::RHI
         std::lock_guard Lock(s_CreateDeviceMutex);
         if (!--s_NumDevices)
         {
-            NEON_INFO_TAG("Graphics", "Destroying DirectX 12 Render Device");
             delete s_Device;
             s_Device = nullptr;
         }
@@ -46,12 +45,22 @@ namespace Neon::RHI
 
     Dx12RenderDevice::Dx12RenderDevice()
     {
+        NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
+
         EnableDebugLayerIfNeeded();
         CreateFactory();
         CreateDevice();
         CheckDeviceFeatures();
         FillInDescriptorSizes();
     }
+
+    Dx12RenderDevice::~Dx12RenderDevice()
+    {
+        Dx12RootSignatureCache::Flush();
+        NEON_INFO_TAG("Graphics", "Destroying DirectX 12 Render Device");
+    }
+
+    //
 
     Dx12RenderDevice* Dx12RenderDevice::Get()
     {

@@ -177,6 +177,10 @@ namespace Neon::RHI
         DenyDSAccess,
         DenyGSAccess,
         DenyPSAccess,
+        AllowStreamOutput,
+        LocalRootSignature,
+        DenyAmpAcess,
+        DenyMeshAccess,
 
         _Last_Enum
     };

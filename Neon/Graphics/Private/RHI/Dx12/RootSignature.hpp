@@ -51,9 +51,7 @@ namespace Neon::RHI
     {
     public:
         Dx12RootSignature(
-            const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
-            uint32_t                                     ResourceCount,
-            uint32_t                                     SamplerCount);
+            const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc);
 
         ~Dx12RootSignature();
 
@@ -72,7 +70,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get or save root signature from cache
         /// </summary>
-        [[nodiscard]] static Ptr<Dx12RootSignature> Load(
+        [[nodiscard]] static Ptr<IRootSignature> Load(
             const RootSignatureBuilder& Builder);
 
     private:
@@ -82,6 +80,7 @@ namespace Neon::RHI
             std::list<std::vector<CD3DX12_DESCRIPTOR_RANGE1>> RangesList;
             std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
             std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;
+            D3D12_ROOT_SIGNATURE_FLAGS                        Flags;
         };
 
         /// <summary

@@ -3,13 +3,17 @@
 #include <Private/RHI/Dx12/RootSignature.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
-#include <execution>
 #include <Core/SHA256.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::RHI
 {
+    std::mutex                                   s_RootSignatureCacheMutex;
+    std::map<SHA256::Bytes, Ptr<IRootSignature>> s_RootSignatureCache;
+
+    //
+
     [[nodiscard]] static constexpr auto GetRootDescriptorTableFlagList() noexcept
     {
         return std::array{
@@ -21,12 +25,32 @@ namespace Neon::RHI
         };
     }
 
+    //
+
     [[nodiscard]] static constexpr auto GetRootDescriptorFlagList() noexcept
     {
         return std::array{
             std::pair{ D3D12_ROOT_DESCRIPTOR_FLAG_DATA_VOLATILE, ERootDescriptorFlags::Data_Volatile },
             std::pair{ D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE, ERootDescriptorFlags::Data_Static_While_Execute },
             std::pair{ D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, ERootDescriptorFlags::Data_Static },
+        };
+    }
+
+    //
+
+    [[nodiscard]] static constexpr auto GetRooSignatureFlagsList() noexcept
+    {
+        return std::array{
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT, ERootSignatureBuilderFlags::AllowInputLayout },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyVSAccess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyHSAccess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyDSAccess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyGSAccess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyPSAccess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT, ERootSignatureBuilderFlags::AllowStreamOutput },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE, ERootSignatureBuilderFlags::LocalRootSignature },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyAmpAcess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyMeshAccess },
         };
     }
 
@@ -139,6 +163,22 @@ namespace Neon::RHI
 
     //
 
+    D3D12_ROOT_SIGNATURE_FLAGS CastRootSignatureFlags(
+        MRootSignatureBuilderFlags Flags)
+    {
+        D3D12_ROOT_SIGNATURE_FLAGS Res = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+        for (auto& State : GetRooSignatureFlagsList())
+        {
+            if (Flags.Test(State.second))
+            {
+                Res |= State.first;
+            }
+        }
+        return Res;
+    }
+
+    //
+
     Ptr<IRootSignature> IRootSignature::Create(
         const RootSignatureBuilder& Builder)
     {
@@ -146,9 +186,7 @@ namespace Neon::RHI
     }
 
     Dx12RootSignature::Dx12RootSignature(
-        const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
-        uint32_t                                     ResourceCount,
-        uint32_t                                     SamplerCount)
+        const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc)
     {
         Win32::ComPtr<ID3DBlob> SignatureBlob;
         Win32::ComPtr<ID3DBlob> ErrorBlob;
@@ -186,12 +224,33 @@ namespace Neon::RHI
 
     //
 
-    Ptr<Dx12RootSignature> Dx12RootSignatureCache::Load(
+    void Dx12RootSignatureCache::Flush()
+    {
+        std::scoped_lock Lock(s_RootSignatureCacheMutex);
+        s_RootSignatureCache.clear();
+    }
+
+    Ptr<IRootSignature> Dx12RootSignatureCache::Load(
         const RootSignatureBuilder& Builder)
     {
         auto Result = Dx12RootSignatureCache::Build(Builder);
 
-        return Ptr<Dx12RootSignature>();
+        std::scoped_lock Lock(s_RootSignatureCacheMutex);
+
+        auto& Cache = s_RootSignatureCache[Result.Digest];
+        if (!Cache)
+        {
+            CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC Desc(
+                UINT(Result.Parameters.size()),
+                Result.Parameters.data(),
+                UINT(Result.StaticSamplers.size()),
+                Result.StaticSamplers.data(),
+                Result.Flags);
+
+            Cache = std::make_shared<Dx12RootSignature>(Desc);
+        }
+
+        return Cache;
     }
 
     auto Dx12RootSignatureCache::Build(
@@ -203,7 +262,8 @@ namespace Neon::RHI
 
         SHA256 Hash;
 
-        Hash.Append(Builder.GetFlags().ToUllong());
+        auto Flags = CastRootSignatureFlags(Builder.GetFlags());
+        Hash.Append(std::bit_cast<uint8_t*>(&Flags), sizeof(Flags));
 
         auto& NParameters = Builder.GetParameters();
         Parameters.reserve(NParameters.size());
@@ -248,7 +308,7 @@ namespace Neon::RHI
                         }
 
                         Hash.Append(std::bit_cast<uint8_t*>(Ranges.data()), sizeof(Ranges[0]) * Ranges.size());
-                        Parameters.emplace_back().InitAsDescriptorTable(Ranges.size(), Ranges.data(), Visibility);
+                        Parameters.emplace_back().InitAsDescriptorTable(UINT(Ranges.size()), Ranges.data(), Visibility);
                     },
                     [&Hash, &Parameters, Visibility](const RootParameter::Constants& Constants)
                     {
@@ -295,12 +355,14 @@ namespace Neon::RHI
 
             auto CompareColor = [&Sampler](float Col)
             {
-                return std::equal(
-                    std::execution::par_unseq,
-                    std::begin(Sampler.BorderColor),
-                    std::end(Sampler.BorderColor),
-                    [Col](float Cur)
-                    { return Cur == Col; });
+                for (auto Cur : Sampler.BorderColor)
+                {
+                    if (Cur != Col)
+                    {
+                        return false;
+                    }
+                }
+                return true;
             };
             D3D12_STATIC_BORDER_COLOR BorderColor;
             if (CompareColor(0.f))
@@ -337,6 +399,7 @@ namespace Neon::RHI
             .RangesList     = std::move(RangesList),
             .Parameters     = std::move(Parameters),
             .StaticSamplers = std::move(StaticSamplers),
+            .Flags          = Flags
         };
     }
 } // namespace Neon::RHI
