@@ -280,18 +280,4 @@ namespace Neon::RHI
         _Last_Enum
     };
     using MResourceFlags = Bitmask<EResourceFlags>;
-
-    //
-
-    enum class ERootDescriptorFlags : uint8_t
-    {
-        Descriptor_Volatile,
-        Descriptor_Static_Bounds_Check,
-        Data_Volatile,
-        Data_Static_While_Execute,
-        Data_Static,
-
-        _Last_Enum
-    };
-    using MRootDescriptorFlags = Bitmask<ERootDescriptorFlags>;
 } // namespace Neon::RHI

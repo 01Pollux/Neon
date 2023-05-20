@@ -10,7 +10,7 @@ namespace Neon::RHI
     /// <summary>
     /// Get D3D12 resource from Neon resource.
     /// </summary>
-    ID3D12Resource* GetDx12Resource(
+    [[nodiscard]] ID3D12Resource* GetDx12Resource(
         IGpuResource* Resource);
 
     //
@@ -18,19 +18,19 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon resource state to D3D12 resource states.
     /// </summary>
-    D3D12_RESOURCE_STATES CastResourceStates(
+    [[nodiscard]] D3D12_RESOURCE_STATES CastResourceStates(
         EResourceState States);
 
     /// <summary>
     /// Convert Neon resource states to D3D12 resource states.
     /// </summary>
-    D3D12_RESOURCE_STATES CastResourceStates(
+    [[nodiscard]] D3D12_RESOURCE_STATES CastResourceStates(
         const MResourceState& States);
 
     /// <summary>
     /// Convert D3D12 resource states to Neon resource states.
     /// </summary>
-    MResourceState CastResourceStates(
+    [[nodiscard]] MResourceState CastResourceStates(
         D3D12_RESOURCE_STATES States);
 
     //
@@ -38,13 +38,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon resource format to D3D12 resource dimension.
     /// </summary>
-    DXGI_FORMAT CastFormat(
+    [[nodiscard]] DXGI_FORMAT CastFormat(
         EResourceFormat Format);
 
     /// <summary>
     /// Convert D3D12 format to Neon resource format.
     /// </summary>
-    EResourceFormat CastFormat(
+    [[nodiscard]] EResourceFormat CastFormat(
         DXGI_FORMAT Format);
 
     //
@@ -52,13 +52,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon sampler filter to D3D12 sampler filter.
     /// </summary>
-    D3D12_FILTER CastFilter(
+    [[nodiscard]] D3D12_FILTER CastFilter(
         ESamplerFilter Filter);
 
     /// <summary>
     /// Convert D3D12 sampler filter to Neon sampler filter.
     /// </summary>
-    ESamplerFilter CastFilter(
+    [[nodiscard]] ESamplerFilter CastFilter(
         D3D12_FILTER Filter);
 
     //
@@ -66,13 +66,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon texture address mode to D3D12 texture address mode.
     /// </summary>
-    D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
+    [[nodiscard]] D3D12_TEXTURE_ADDRESS_MODE CastAddressMode(
         ESamplerMode AddressMode);
 
     /// <summary>
     /// Convert D3D12 texture address mode to Neon sampler filter.
     /// </summary>
-    ESamplerMode CastAddressMode(
+    [[nodiscard]] ESamplerMode CastAddressMode(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode);
 
     //
@@ -80,13 +80,13 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon sampler comparison function to D3D12 comparison function.
     /// </summary>
-    D3D12_COMPARISON_FUNC CastComparisonFunc(
+    [[nodiscard]] D3D12_COMPARISON_FUNC CastComparisonFunc(
         ESamplerCmp CmpFunc);
 
     /// <summary>
     /// Convert D3D12 comparison function to Neon sampler comparison function.
     /// </summary>
-    ESamplerMode CastComparisonFunc(
+    [[nodiscard]] ESamplerMode CastComparisonFunc(
         D3D12_TEXTURE_ADDRESS_MODE AddressMode);
 
     //
@@ -94,12 +94,12 @@ namespace Neon::RHI
     /// <summary>
     /// Convert Neon resource flags to D3D12 resource flags.
     /// </summary>
-    MResourceFlags CastResourceFlags(
+    [[nodiscard]] MResourceFlags CastResourceFlags(
         D3D12_RESOURCE_FLAGS Flags);
 
     /// <summary>
     /// Convert Neon resource flags to D3D12 resource flags.
     /// </summary>
-    D3D12_RESOURCE_FLAGS CastResourceFlags(
+    [[nodiscard]] D3D12_RESOURCE_FLAGS CastResourceFlags(
         const MResourceFlags& Flags);
 } // namespace Neon::RHI

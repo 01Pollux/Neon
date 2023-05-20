@@ -10,10 +10,10 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddSrvRange(
-        uint32_t             BaseShaderRegister,
-        uint32_t             RegisterSpace,
-        uint32_t             NumDescriptors,
-        MRootDescriptorFlags Flags)
+        uint32_t                  BaseShaderRegister,
+        uint32_t                  RegisterSpace,
+        uint32_t                  NumDescriptors,
+        MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(RootDescriptorTableParam{
             .ShaderRegister  = BaseShaderRegister,
@@ -25,10 +25,10 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddUavRange(
-        uint32_t             BaseShaderRegister,
-        uint32_t             RegisterSpace,
-        uint32_t             NumDescriptors,
-        MRootDescriptorFlags Flags)
+        uint32_t                  BaseShaderRegister,
+        uint32_t                  RegisterSpace,
+        uint32_t                  NumDescriptors,
+        MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(RootDescriptorTableParam{
             .ShaderRegister  = BaseShaderRegister,
@@ -40,10 +40,10 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddCbvRange(
-        uint32_t             BaseShaderRegister,
-        uint32_t             RegisterSpace,
-        uint32_t             NumDescriptors,
-        MRootDescriptorFlags Flags)
+        uint32_t                  BaseShaderRegister,
+        uint32_t                  RegisterSpace,
+        uint32_t                  NumDescriptors,
+        MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(RootDescriptorTableParam{
             .ShaderRegister  = BaseShaderRegister,
@@ -55,10 +55,10 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddSamplerRange(
-        uint32_t             BaseShaderRegister,
-        uint32_t             RegisterSpace,
-        uint32_t             NumDescriptors,
-        MRootDescriptorFlags Flags)
+        uint32_t                  BaseShaderRegister,
+        uint32_t                  RegisterSpace,
+        uint32_t                  NumDescriptors,
+        MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(RootDescriptorTableParam{
             .ShaderRegister  = BaseShaderRegister,
@@ -148,10 +148,10 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddUnorderedAccessViewWithCounter(
-        uint32_t             ShaderRegister,
-        uint32_t             RegisterSpace,
-        MRootDescriptorFlags Flags,
-        ShaderVisibility     Visibility)
+        uint32_t                  ShaderRegister,
+        uint32_t                  RegisterSpace,
+        MRootDescriptorTableFlags Flags,
+        ShaderVisibility          Visibility)
     {
         RootDescriptorTable Table(1);
         Table.AddUavRange(ShaderRegister, RegisterSpace, 1, Flags);
@@ -167,7 +167,7 @@ namespace Neon::RHI
 
     RootSignatureBuilder& RootSignatureBuilder::SetFlags(
         ERootSignatureBuilderFlags Flag,
-        bool                       Value = true)
+        bool                       Value)
     {
         m_Flags.Set(Flag, Value);
         return *this;

@@ -7,6 +7,30 @@
 
 namespace Neon::RHI
 {
+    enum class ERootDescriptorTableFlags : uint8_t
+    {
+        Descriptor_Volatile,
+        Descriptor_Static_Bounds_Check,
+        Data_Volatile,
+        Data_Static_While_Execute,
+        Data_Static,
+
+        _Last_Enum
+    };
+    using MRootDescriptorTableFlags = Bitmask<ERootDescriptorTableFlags>;
+
+    enum class ERootDescriptorFlags : uint8_t
+    {
+        Data_Volatile,
+        Data_Static_While_Execute,
+        Data_Static,
+
+        _Last_Enum
+    };
+    using MRootDescriptorFlags = Bitmask<ERootDescriptorFlags>;
+
+    //
+
     enum class ShaderVisibility : uint8_t
     {
         All,
@@ -34,11 +58,11 @@ namespace Neon::RHI
 
     struct RootDescriptorTableParam
     {
-        uint32_t             ShaderRegister;
-        uint32_t             RegisterSpace;
-        uint32_t             DescriptorCount;
-        MRootDescriptorFlags Flags;
-        DescriptorTableParam Type;
+        uint32_t                  ShaderRegister;
+        uint32_t                  RegisterSpace;
+        uint32_t                  DescriptorCount;
+        MRootDescriptorTableFlags Flags;
+        DescriptorTableParam      Type;
     };
 
     class RootDescriptorTable
@@ -52,37 +76,46 @@ namespace Neon::RHI
         /// Add srv descriptor entries
         /// </summary>
         RootDescriptorTable& AddSrvRange(
-            uint32_t             BaseShaderRegister,
-            uint32_t             RegisterSpace,
-            uint32_t             NumDescriptors,
-            MRootDescriptorFlags Flags = MRootDescriptorFlags::FromEnum(ERootDescriptorFlags::Data_Volatile));
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add uav descriptor entries
         /// </summary>
         RootDescriptorTable& AddUavRange(
-            uint32_t             BaseShaderRegister,
-            uint32_t             RegisterSpace,
-            uint32_t             NumDescriptors,
-            MRootDescriptorFlags Flags = MRootDescriptorFlags::FromEnum(ERootDescriptorFlags::Data_Volatile));
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add cbv descriptor entries
         /// </summary>
         RootDescriptorTable& AddCbvRange(
-            uint32_t             BaseShaderRegister,
-            uint32_t             RegisterSpace,
-            uint32_t             NumDescriptors,
-            MRootDescriptorFlags Flags = MRootDescriptorFlags::FromEnum(ERootDescriptorFlags::Data_Static_While_Execute));
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Static_While_Execute));
 
         /// <summary>
         /// Add sampler descriptor entries
         /// </summary>
         RootDescriptorTable& AddSamplerRange(
-            uint32_t             BaseShaderRegister,
-            uint32_t             RegisterSpace,
-            uint32_t             NumDescriptors,
-            MRootDescriptorFlags Flags = {});
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            MRootDescriptorTableFlags Flags = {});
+
+    public:
+        /// <summary>
+        /// Get the descriptor ranges of this table
+        /// </summary>
+        [[nodiscard]] const auto& GetRanges() const noexcept
+        {
+            return m_DescriptorRanges;
+        }
 
     private:
         std::vector<RootDescriptorTableParam> m_DescriptorRanges;
@@ -91,6 +124,8 @@ namespace Neon::RHI
     class RootParameter
     {
     public:
+        using DescriptorTable = RootDescriptorTable;
+
         struct Constants
         {
             uint32_t ShaderRegister;
@@ -101,17 +136,33 @@ namespace Neon::RHI
         using DescriptorType = DescriptorTableParam;
         struct Descriptor
         {
-
-            uint32_t       ShaderRegister;
-            uint32_t       RegisterSpace;
-            DescriptorType Type;
+            uint32_t             ShaderRegister;
+            uint32_t             RegisterSpace;
+            DescriptorType       Type;
+            MRootDescriptorFlags Flags;
         };
 
-        using Variant = std::variant<RootDescriptorTable, Constants, Descriptor>;
+        using Variant = std::variant<DescriptorTable, Constants, Descriptor>;
 
         RootParameter(
             Variant          Param,
             ShaderVisibility Visibility);
+
+        /// <summary>
+        /// Get the parameter variant
+        /// </summary>
+        [[nodiscard]] const auto& GetParameter() const noexcept
+        {
+            return m_Parameter;
+        }
+
+        /// <summary>
+        /// Get the visibility of this parameter
+        /// </summary>
+        [[nodiscard]] auto GetVisibility() const noexcept
+        {
+            return m_Visibility;
+        }
 
     private:
         Variant          m_Parameter;
@@ -192,10 +243,10 @@ namespace Neon::RHI
         /// Add uav with counter root
         /// </summary>
         RootSignatureBuilder& AddUnorderedAccessViewWithCounter(
-            uint32_t             ShaderRegister,
-            uint32_t             RegisterSpace,
-            MRootDescriptorFlags Flags      = {},
-            ShaderVisibility     Visibility = ShaderVisibility::All);
+            uint32_t                  ShaderRegister,
+            uint32_t                  RegisterSpace,
+            MRootDescriptorTableFlags Flags      = {},
+            ShaderVisibility          Visibility = ShaderVisibility::All);
 
         /// <summary>
         /// Add static sampler
@@ -210,6 +261,32 @@ namespace Neon::RHI
             ERootSignatureBuilderFlags Flag,
             bool                       Value = true);
 
+    public:
+        /// <summary>
+        /// Get parameters of root signature
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] const auto& GetParameters() const noexcept
+        {
+            return m_Parameters;
+        }
+
+        /// <summary>
+        /// Get static samplers of root signature
+        /// </summary>
+        [[nodiscard]] const auto& GetSamplers() const noexcept
+        {
+            return m_StaticSamplers;
+        }
+
+        /// <summary>
+        /// Get flags of root signature
+        /// </summary>
+        [[nodiscard]] const auto& GetFlags() const noexcept
+        {
+            return m_Flags;
+        }
+
     private:
         std::vector<RootParameter>     m_Parameters;
         std::vector<StaticSamplerDesc> m_StaticSamplers;
@@ -223,15 +300,5 @@ namespace Neon::RHI
             const RootSignatureBuilder& Builder);
 
         virtual ~IRootSignature() = default;
-
-        /// <summary>
-        /// Get resource count
-        /// </summary>
-        [[nodiscard]] virtual uint32_t GetResourceCount() = 0;
-
-        /// <summary>
-        /// Get sampler count
-        /// </summary>
-        [[nodiscard]] virtual uint32_t GetSamplerCount() = 0;
     };
 } // namespace Neon::RHI
