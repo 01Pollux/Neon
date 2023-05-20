@@ -299,10 +299,10 @@ namespace Neon::RHI
                         };
                     } },
                 Desc->View);
-        }
 
-        Dx12Desc.Format                  = CastFormat(Desc->Format);
-        Dx12Desc.Shader4ComponentMapping = Desc->Mapping;
+            Dx12Desc.Format                  = CastFormat(Desc->Format);
+            Dx12Desc.Shader4ComponentMapping = Desc->Mapping;
+        }
 
         Dx12Device->CreateShaderResourceView(
             GetDx12Resource(Resource),
@@ -382,9 +382,9 @@ namespace Neon::RHI
                         };
                     } },
                 Desc->View);
-        }
 
-        Dx12Desc.Format = CastFormat(Desc->Format);
+            Dx12Desc.Format = CastFormat(Desc->Format);
+        }
 
         Dx12Device->CreateUnorderedAccessView(
             GetDx12Resource(Resource),
@@ -472,9 +472,9 @@ namespace Neon::RHI
                         };
                     } },
                 Desc->View);
-        }
 
-        Dx12Desc.Format = CastFormat(Desc->Format);
+            Dx12Desc.Format = CastFormat(Desc->Format);
+        }
 
         Dx12Device->CreateRenderTargetView(
             GetDx12Resource(Resource),
@@ -542,9 +542,9 @@ namespace Neon::RHI
                         };
                     } },
                 Desc->View);
-        }
 
-        Dx12Desc.Format = CastFormat(Desc->Format);
+            Dx12Desc.Format = CastFormat(Desc->Format);
+        }
 
         Dx12Device->CreateDepthStencilView(
             GetDx12Resource(Resource),

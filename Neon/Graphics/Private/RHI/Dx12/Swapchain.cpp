@@ -41,7 +41,7 @@ namespace Neon::RHI
 
         auto Context = CtxBatch.Append();
 
-        auto& Rtv = m_RenderTargets[FrameIndex];
+        auto Rtv = m_RenderTargets.GetCpuHandle(FrameIndex);
 
         auto StateManager = GetStateManager();
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
@@ -54,8 +54,8 @@ namespace Neon::RHI
             sin(5.f * m_Time + 3.f) / 2.f + .5f,
             1.0f
         };
-        Context->ClearRtv({ Rtv.ptr }, Color);
-        Context->SetRenderTargets({ Rtv.ptr }, 1);
+        Context->ClearRtv(Rtv, Color);
+        Context->SetRenderTargets(Rtv, 1);
 
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
         StateManager->FlushBarriers(Context);
@@ -180,13 +180,9 @@ namespace Neon::RHI
     {
         m_BackBuffers.clear();
         m_BackBuffers.reserve(NewSize);
-        m_RenderTargets.resize(NewSize);
-
-        ID3D12DescriptorHeap*      Heap;
-        D3D12_DESCRIPTOR_HEAP_DESC Desc{
-            .Type           = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-            .NumDescriptors = 1
-        };
+        m_RenderTargets = Views::RenderTarget(
+            NewSize,
+            m_BudgetManager.GetDescriptorHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false));
 
         for (size_t i = 0; i < NewSize; ++i)
         {
@@ -194,11 +190,10 @@ namespace Neon::RHI
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(this, std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
-            auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
-            ThrowIfFailed(Dx12Device->CreateDescriptorHeap(&Desc, IID_PPV_ARGS(&Heap)));
-
-            m_RenderTargets[i] = Heap->GetCPUDescriptorHandleForHeapStart();
-            Dx12RenderDevice::Get()->GetDevice()->CreateRenderTargetView(Buffer.GetResource(), nullptr, m_RenderTargets[i]);
+            m_RenderTargets.Bind(
+                &Buffer,
+                nullptr,
+                i);
         }
 
         m_BudgetManager.ResizeFrames(NewSize);

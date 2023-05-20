@@ -3,6 +3,8 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/Fence.hpp>
 
+#include <RHI/Resource/Views/RenderTarget.hpp>
+
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 #include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
@@ -82,8 +84,8 @@ namespace Neon::RHI
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
         std::vector<Dx12Texture>       m_BackBuffers;
 
-        BudgetManager                            m_BudgetManager;
-        std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> m_RenderTargets;
+        BudgetManager       m_BudgetManager;
+        Views::RenderTarget m_RenderTargets;
 
         // TODO: remove this
         float m_Time = []() -> float

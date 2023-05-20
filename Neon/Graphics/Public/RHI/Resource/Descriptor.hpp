@@ -126,7 +126,7 @@ namespace Neon::RHI
         size_t           Offset = std::numeric_limits<size_t>::max();
         size_t           Size   = 0;
 
-        operator bool() const noexcept
+        constexpr operator bool() const noexcept
         {
             return Heap != nullptr;
         }

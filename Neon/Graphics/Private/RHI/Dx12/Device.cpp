@@ -2,6 +2,8 @@
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/RootSignature.hpp>
 
+#include <dxgidebug.h>
+
 #include <Log/Logger.hpp>
 
 extern "C"
@@ -12,18 +14,17 @@ extern "C"
 
 namespace Neon::RHI
 {
-    static inline std::mutex     s_CreateDeviceMutex;
-    static inline uint16_t       s_NumDevices = 0;
-    static inline IRenderDevice* s_Device     = nullptr;
+    static inline std::mutex          s_CreateDeviceMutex;
+    static inline uint16_t            s_NumDevices = 0;
+    static inline UPtr<IRenderDevice> s_Device     = nullptr;
 
-    IRenderDevice* IRenderDevice::CreateGlobal()
+    void IRenderDevice::CreateGlobal()
     {
         std::lock_guard Lock(s_CreateDeviceMutex);
         if (!s_NumDevices++)
         {
-            s_Device = new Dx12RenderDevice();
+            s_Device.reset(NEON_NEW Dx12RenderDevice);
         }
-        return s_Device;
     }
 
     void IRenderDevice::DestroyGlobal()
@@ -31,14 +32,21 @@ namespace Neon::RHI
         std::lock_guard Lock(s_CreateDeviceMutex);
         if (!--s_NumDevices)
         {
-            delete s_Device;
             s_Device = nullptr;
+
+            Win32::ComPtr<IDXGIDebug1> Debug;
+            if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&Debug))))
+            {
+                // DXGI_DEBUG_ALL
+                GUID DebugAll = { 0xe48ae283, 0xda80, 0x490b, 0x87, 0xe6, 0x43, 0xe9, 0xa9, 0xcf, 0xda, 0x8 };
+                Debug->ReportLiveObjects(DebugAll, DXGI_DEBUG_RLO_SUMMARY);
+            }
         }
     }
 
     IRenderDevice* IRenderDevice::Get()
     {
-        return s_Device;
+        return s_Device.get();
     }
 
     //

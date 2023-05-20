@@ -114,7 +114,7 @@ namespace Neon
 
     auto SHA256::Digest() -> Bytes
     {
-        m_LastChunk[m_ChunkSize++] = 0x80;
+        Append(0x80);
         std::memset(m_LastChunk.data() + m_ChunkSize, 0, m_LastChunk.size() - m_ChunkSize);
 
         /* If there isn't enough space to fit int64, pad chunk with zeroes and prepare next chunk */

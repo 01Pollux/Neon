@@ -9,6 +9,8 @@
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 
+#include <RHI/RootSignature.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -23,6 +25,17 @@ namespace Neon
             .Window = m_World.GetModule<Module::Window>()->GetWindow(),
         };
         m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
+
+        // RHI::RootSignatureBuilder Builder;
+        // Builder
+        //     .Add32BitConstants(
+        //         0, 4, 0, RHI::ShaderVisibility::All)
+        //     .AddDescriptorTable(
+        //         RHI::RootDescriptorTable(2)
+        //             .AddCbvRange(1, 0, 10)
+        //             .AddSrvRange(1, 0, 10));
+
+        //// auto Signature = RHI::IRootSignature::Create(Builder);
     }
 
     DefaultGameEngine::~DefaultGameEngine()

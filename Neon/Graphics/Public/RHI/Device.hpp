@@ -5,8 +5,8 @@ namespace Neon::RHI
     class IRenderDevice
     {
     public:
-        static IRenderDevice* CreateGlobal();
-        static void           DestroyGlobal();
+        static void CreateGlobal();
+        static void DestroyGlobal();
 
         virtual ~IRenderDevice() = default;
 

@@ -300,7 +300,7 @@ namespace Neon::RHI
     class IRootSignature
     {
     public:
-        [[nodiscard]] Ptr<IRootSignature> Create(
+        [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);
 
         virtual ~IRootSignature() = default;
