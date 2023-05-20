@@ -2,6 +2,7 @@
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/RootSignature.hpp>
 
+#include <ShlObj_core.h>
 #include <dxgidebug.h>
 
 #include <Log/Logger.hpp>
@@ -55,6 +56,7 @@ namespace Neon::RHI
     {
         NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
 
+        LoadPixRuntime();
         EnableDebugLayerIfNeeded();
         CreateFactory();
         CreateDevice();
@@ -109,6 +111,67 @@ namespace Neon::RHI
     }
 
     //
+
+    void Dx12RenderDevice::LoadPixRuntime()
+    {
+#if !NEON_DIST
+        if (GetModuleHandleW(STR("WinPixGpuCapturer.dll")))
+        {
+            return;
+        }
+
+        LPWSTR programFilesPath = nullptr;
+        SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, NULL, &programFilesPath);
+
+        String pixSearchPath = StringUtils::Format(STR("{}\\Microsoft PIX\\*"), programFilesPath);
+
+        WIN32_FIND_DATA findData;
+        String          NewestVersionFound;
+
+        HANDLE hFind = INVALID_HANDLE_VALUE;
+        try
+        {
+            hFind = FindFirstFile(pixSearchPath.c_str(), &findData);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                do
+                {
+                    if (((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) &&
+                        (findData.cFileName[0] != '.'))
+                    {
+                        String FoundFile = findData.cFileName;
+                        if (NewestVersionFound != FoundFile)
+                        {
+                            NewestVersionFound = std::move(FoundFile);
+                        }
+                    }
+                } while (FindNextFile(hFind, &findData) != 0);
+            }
+        }
+        catch (...)
+        {
+            NEON_WARNING("Couldn't find a PIX gpu debugger");
+        }
+
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            FindClose(hFind);
+        }
+
+        if (NewestVersionFound.empty())
+        {
+            NEON_WARNING("Couldn't find a PIX gpu debugger");
+            return;
+        }
+
+        pixSearchPath.pop_back();
+        pixSearchPath += NewestVersionFound + STR("\\WinPixGpuCapturer.dll");
+        if (!LoadLibraryW(pixSearchPath.c_str()))
+        {
+            NEON_WARNING(StringUtils::Format("Couldn't load PIX gpu debugger"));
+        }
+#endif
+    }
 
     void Dx12RenderDevice::EnableDebugLayerIfNeeded()
     {

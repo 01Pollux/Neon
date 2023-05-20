@@ -9,8 +9,6 @@
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 
-#include <RHI/RootSignature.hpp>
-
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(

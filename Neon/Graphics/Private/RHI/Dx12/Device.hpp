@@ -63,6 +63,11 @@ namespace Neon::RHI
 
     private:
         /// <summary>
+        /// Load pix runtime.
+        /// </summary>
+        void LoadPixRuntime();
+
+        /// <summary>
         /// Enable debug layer if needed.
         /// </summary>
         void EnableDebugLayerIfNeeded();
