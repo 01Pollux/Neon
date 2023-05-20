@@ -51,8 +51,7 @@ namespace Neon::RHI
     struct ShaderCompileDesc
     {
         std::vector<std::pair<String, String>> Defines;
-
-        std::vector<String> IncludeDirectories;
+        std::map<String, String>               IncludeFiles;
 
         ShaderProfile Profile = ShaderProfile::SP_6_5;
         ShaderStage   Stage;
