@@ -143,17 +143,26 @@ Foreach {
 }
 
 #
-# Dxc
+# DirectX Compiler
 #
+Remove-Directory $(Get-DepIncPath("DxC"))
+Make-Directory $(Get-DepIncPath("DxC"))
+
+Remove-Directory $(Get-DepLibPath("DxC"))
+Make-Directory $(Get-DepLibPath("DxC"))
+
 Write-Output "Copying DxC files..."
-Copy-Item .\Vendors\DxC .\Deps\Libs -Force -Recurse
+Copy-Item "Vendors\DxC\inc\*.h" $(Get-DepIncPath("DxC"))
+Copy-Item "Vendors\DxC\bin"  $(Get-DepLibPath("DxC\bin")) -Force -Recurse
+Copy-Item "Vendors\DxC\lib"  $(Get-DepLibPath("DxC\lib")) -Force -Recurse
 
 #
-# Dxc
+# DirectX
 #
-Write-Output "Copying DirectX Header files..."
 Remove-Directory $(Get-DepIncPath("DX"))
 Make-Directory $(Get-DepIncPath("DX"))
+
+Write-Output "Copying DirectX Header files..."
 Copy-IncludePath "DirectX-Headers\include\directx\*.h" "DX"
 Copy-IncludePath "DirectX-Headers\include\dxguids\*.h" "DX"
 Copy-IncludePath "DirectX-Headers\include\wsl\stubs" "DX" -Recurse

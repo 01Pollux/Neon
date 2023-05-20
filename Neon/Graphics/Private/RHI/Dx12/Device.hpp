@@ -2,6 +2,7 @@
 
 #include <RHI/Device.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
+#include <Private/RHI/Dx12/ShaderCompiler.hpp>
 
 namespace Neon::RHI
 {
@@ -53,13 +54,18 @@ namespace Neon::RHI
         /// <summary>
         /// Get descriptor size.
         /// </summary>
-        uint32_t GetDescriptorSize(
+        [[nodiscard]] uint32_t GetDescriptorSize(
             D3D12_DESCRIPTOR_HEAP_TYPE Type) const;
 
         /// <summary>
         /// Get device features.
         /// </summary>
-        const Dx12DeviceFeatures& GetFeatures() const;
+        [[nodiscard]] const Dx12DeviceFeatures& GetFeatures() const;
+
+        /// <summary>
+        /// Get shader compiler.
+        /// </summary>
+        [[nodiscard]] Dx12ShaderCompiler* GetShaderCompiler();
 
     private:
         /// <summary>
@@ -90,7 +96,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get best adapter for render device.
         /// </summary>
-        Win32::ComPtr<IDXGIAdapter> GetBestAdapter() const;
+        [[nodiscard]] Win32::ComPtr<IDXGIAdapter> GetBestAdapter() const;
 
     private:
         /// <summary>
@@ -118,5 +124,7 @@ namespace Neon::RHI
 
         HeapDescriptorSizeType m_HeapDescriptorSize;
         Dx12DeviceFeatures     m_DeviceFeatures;
+
+        Dx12ShaderCompiler m_Compiler;
     };
 } // namespace Neon::RHI

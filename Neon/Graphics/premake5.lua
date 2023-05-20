@@ -15,3 +15,8 @@ project "NeonGraphics"
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}"
     }
+
+    links
+    {
+        "%{CommonDir.Deps.Libs}/DxC/lib/x64/dxcompiler.lib"
+    }

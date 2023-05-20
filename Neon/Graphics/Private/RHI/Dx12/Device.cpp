@@ -207,6 +207,11 @@ namespace Neon::RHI
         return m_DeviceFeatures;
     }
 
+    Dx12ShaderCompiler* Dx12RenderDevice::GetShaderCompiler()
+    {
+        return &m_Compiler;
+    }
+
     void Dx12RenderDevice::CheckDeviceFeatures()
     {
         m_DeviceFeatures.Initialize(m_Device.Get());
