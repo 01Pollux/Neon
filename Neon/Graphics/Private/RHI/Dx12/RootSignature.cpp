@@ -217,7 +217,9 @@ namespace Neon::RHI
                     {
                         auto& Ranges = RangesList.emplace_back();
 
-                        for (auto& Range : Table.GetRanges())
+                        auto& NRanges = Table.GetRanges();
+                        Ranges.reserve(NRanges.size());
+                        for (auto& Range : NRanges)
                         {
                             D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
