@@ -7,8 +7,10 @@
 
 namespace Neon::RHI
 {
-    class InputLayoutDesc;
-    class RawBufferLayout;
+    namespace MBuffer
+    {
+        class RawLayout;
+    }
 
     enum class ShaderStage : uint8_t
     {
@@ -83,14 +85,13 @@ namespace Neon::RHI
         /// Create input layout to graphics / rawlayout
         /// </summary>
         virtual void CreateInputLayout(
-            InputLayoutDesc* GraphicsLayout = nullptr,
-            RawBufferLayout* Layout         = nullptr) = 0;
+            MBuffer::RawLayout& Layout) = 0;
 
         /// <summary>
         /// Create output layout rawlayout
         /// </summary>
         virtual void CreateOuputLayout(
-            RawBufferLayout& Layout) = 0;
+            MBuffer::RawLayout& Layout) = 0;
 
         /// <summary>
         /// Get shader bytecode

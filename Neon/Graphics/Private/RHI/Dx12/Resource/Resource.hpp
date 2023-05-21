@@ -104,7 +104,7 @@ namespace Neon::RHI
 
         ~Dx12ReadbackBuffer() override;
 
-        [[nodiscard]] const uint8_t* Map() override;
+        [[nodiscard]] uint8_t* Map() override;
 
         void Unmap() override;
 

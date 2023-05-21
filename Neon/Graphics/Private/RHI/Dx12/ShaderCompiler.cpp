@@ -1,6 +1,7 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <Private/RHI/Dx12/ShaderCompiler.hpp>
+#include <RHI/Resource/MappedBuffer.hpp>
 
 #include <execution>
 
@@ -101,6 +102,77 @@ namespace Neon::RHI
         const std::map<String, String>& m_IncludeFiles;
     };
 
+    class ReflectionBlob : public IDxcBlob
+    {
+    public:
+        ReflectionBlob(
+            const void* Data,
+            size_t      Size) :
+            m_Data(Data),
+            m_Size(Size)
+        {
+        }
+
+        HRESULT STDMETHODCALLTYPE QueryInterface(
+            REFIID riid,
+            void** ppvObject) override
+        {
+            if (ppvObject == nullptr)
+            {
+                return E_POINTER;
+            }
+
+            if (riid == IID_IUnknown)
+            {
+                *ppvObject = static_cast<IUnknown*>(this);
+                AddRef();
+                return S_OK;
+            }
+
+            if (riid == __uuidof(IDxcBlob))
+            {
+                *ppvObject = static_cast<IDxcBlob*>(this);
+                AddRef();
+                return S_OK;
+            }
+
+            return E_NOINTERFACE;
+        }
+
+        ULONG STDMETHODCALLTYPE AddRef() override
+        {
+            return ++m_RefCount;
+        }
+
+        ULONG STDMETHODCALLTYPE Release() override
+        {
+            ULONG Result = --m_RefCount;
+            if (Result == 0)
+            {
+                delete this;
+            }
+            return Result;
+        }
+
+        LPVOID STDMETHODCALLTYPE GetBufferPointer() override
+        {
+            return const_cast<void*>(m_Data);
+        }
+
+        SIZE_T STDMETHODCALLTYPE GetBufferSize() override
+        {
+            return m_Size;
+        }
+
+    private:
+        ULONG m_RefCount = 0;
+
+        const void* m_Data;
+        size_t      m_Size;
+    };
+
+    //
+
     IShader::ByteCode Dx12ShaderCompiler::Compile(
         const ShaderCompileDesc& Desc)
     {
@@ -108,7 +180,7 @@ namespace Neon::RHI
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
             Desc.SourceCode.c_str(),
             uint32_t(Desc.SourceCode.size()),
-            0,
+            DXC_CP_ACP,
             &ShaderCodeBlob));
 
         std::vector<const wchar_t*> Options;
@@ -162,7 +234,7 @@ namespace Neon::RHI
         DxcBuffer Buffer{
             .Ptr      = ShaderCodeBlob->GetBufferPointer(),
             .Size     = ShaderCodeBlob->GetBufferSize(),
-            .Encoding = 0
+            .Encoding = DXC_CP_ACP
         };
 
         Win32::ComPtr<IDxcResult> Result;
@@ -225,24 +297,160 @@ namespace Neon::RHI
         return { CodePtr.release(), CodeSize };
     }
 
-    void Dx12ShaderCompiler::ReflectInputLayout(
-        const void*      ShaderCode,
-        size_t           ByteLength,
-        InputLayoutDesc* GraphicsLayout,
-        RawBufferLayout* Layout,
-        bool             IsOutput)
+    void Dx12ShaderCompiler::ReflectLayout(
+        const void*         ShaderCode,
+        size_t              ByteLength,
+        MBuffer::RawLayout& Layout,
+        bool                IsOutput)
     {
+        Win32::ComPtr<IDxcContainerReflection> Reflection;
+        ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
+
+        Win32::ComPtr<ReflectionBlob> Blob;
+        Blob.Attach(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
+        ThrowIfFailed(Reflection->Load(Blob.Get()));
+
+        uint32_t DxilPart;
+        ThrowIfFailed(Reflection->FindFirstPartKind(MAKEFOURCC('D', 'X', 'I', 'L'), &DxilPart));
+
+        Win32::ComPtr<ID3D12ShaderReflection> ShaderReflection;
+        ThrowIfFailed(Reflection->GetPartReflection(DxilPart, IID_PPV_ARGS(&ShaderReflection)));
+
+        ReflectLayout(
+            ShaderReflection.Get(),
+            Layout,
+            IsOutput);
     }
 
-    void Dx12ShaderCompiler::ReflectInputLayout(
+    void Dx12ShaderCompiler::ReflectLayout(
         ID3D12ShaderReflection* ShaderReflection,
-        InputLayoutDesc*        GraphicsLayout,
-        RawBufferLayout*        Layout,
+        MBuffer::RawLayout&     Layout,
         bool                    IsOutput)
     {
+        D3D12_SHADER_DESC ShaderDesc;
+        ThrowIfFailed(ShaderReflection->GetDesc(&ShaderDesc));
+
+        uint32_t ParamsCount = IsOutput ? ShaderDesc.OutputParameters : ShaderDesc.InputParameters;
+
+        D3D12_SIGNATURE_PARAMETER_DESC SigParam;
+
+        for (uint32_t i = 0; i < ParamsCount; i++)
+        {
+            if (IsOutput)
+                ShaderReflection->GetOutputParameterDesc(i, &SigParam);
+            else
+                ShaderReflection->GetInputParameterDesc(i, &SigParam);
+
+            MBuffer::Type Type;
+
+            auto SelectFrom = [](D3D_REGISTER_COMPONENT_TYPE Type, auto UIntType, auto IntType, auto FloatType)
+            {
+                switch (Type)
+                {
+                case D3D_REGISTER_COMPONENT_UINT32:
+                    return UIntType;
+                case D3D_REGISTER_COMPONENT_SINT32:
+                    return IntType;
+                case D3D_REGISTER_COMPONENT_FLOAT32:
+                    return FloatType;
+                default:
+                    std::unreachable();
+                    break;
+                }
+            };
+
+            if (SigParam.Mask & (1 << 3))
+            {
+                Type = SelectFrom(
+                    SigParam.ComponentType,
+                    MBuffer::Type::UInt4,
+                    MBuffer::Type::Int4,
+                    MBuffer::Type::Float4);
+            }
+            else if (SigParam.Mask & (1 << 2))
+            {
+                Type = SelectFrom(
+                    SigParam.ComponentType,
+                    MBuffer::Type::UInt3,
+                    MBuffer::Type::Int3,
+                    MBuffer::Type::Float3);
+            }
+            else if (SigParam.Mask & (1 << 1))
+            {
+                Type = SelectFrom(
+                    SigParam.ComponentType,
+                    MBuffer::Type::UInt2,
+                    MBuffer::Type::Int2,
+                    MBuffer::Type::Float2);
+            }
+            else
+            {
+                Type = SelectFrom(
+                    SigParam.ComponentType,
+                    MBuffer::Type::UInt,
+                    MBuffer::Type::Int,
+                    MBuffer::Type::Float);
+            }
+
+            StringU8 Name = SigParam.SemanticName;
+            if (SigParam.SemanticIndex != 0)
+            {
+                Name += "#" + std::to_string(SigParam.SemanticIndex);
+            }
+            Layout.Append(Type, std::move(Name));
+        }
     }
-    String Dx12ShaderCompiler::GetShaderModel(ShaderStage Stage, ShaderProfile Profile)
+
+    String Dx12ShaderCompiler::GetShaderModel(
+        ShaderStage   Stage,
+        ShaderProfile Profile)
     {
-        return String();
+        String Model;
+
+        switch (Stage)
+        {
+        case ShaderStage::Vertex:
+            Model = STR("vs");
+            break;
+        case ShaderStage::Geometry:
+            Model = STR("gs");
+            break;
+        case ShaderStage::Hull:
+            Model = STR("hs");
+            break;
+        case ShaderStage::Domain:
+            Model = STR("ds");
+            break;
+        case ShaderStage::Pixel:
+            Model = STR("ps");
+            break;
+        }
+
+        switch (Profile)
+        {
+        case ShaderProfile::SP_6_0:
+            Model += STR("_6_0");
+            break;
+        case ShaderProfile::SP_6_1:
+            Model += STR("_6_1");
+            break;
+        case ShaderProfile::SP_6_2:
+            Model += STR("_6_2");
+            break;
+        case ShaderProfile::SP_6_3:
+            Model += STR("_6_3");
+            break;
+        case ShaderProfile::SP_6_4:
+            Model += STR("_6_4");
+            break;
+        case ShaderProfile::SP_6_5:
+            Model += STR("_6_5");
+            break;
+        case ShaderProfile::SP_6_6:
+            Model += STR("_6_6");
+            break;
+        }
+
+        return Model;
     }
 } // namespace Neon::RHI

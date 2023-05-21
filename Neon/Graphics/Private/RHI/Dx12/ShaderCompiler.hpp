@@ -21,22 +21,29 @@ namespace Neon::RHI
         IShader::ByteCode Compile(
             const ShaderCompileDesc& Desc);
 
-        void ReflectInputLayout(
-            const void*      ShaderCode,
-            size_t           ByteLength,
-            InputLayoutDesc* GraphicsLayout,
-            RawBufferLayout* Layout,
-            bool             IsOutput);
+        /// <summary>
+        /// Reflect shader layout from shader bytecode
+        /// </summary>
+        void ReflectLayout(
+            const void*         ShaderCode,
+            size_t              ByteLength,
+            MBuffer::RawLayout& Layout,
+            bool                IsOutput);
 
     private:
-        void ReflectInputLayout(
+        /// <summary>
+        /// Reflect shader layout from shader bytecode
+        /// </summary>
+        void ReflectLayout(
             ID3D12ShaderReflection* ShaderReflection,
-            InputLayoutDesc*        GraphicsLayout,
-            RawBufferLayout*        Layout,
+            MBuffer::RawLayout&     Layout,
             bool                    IsOutput);
 
     private:
-        String GetShaderModel(
+        /// <summary>
+        /// Get shader model from shader stage and profile
+        /// </summary>
+        [[nodiscard]] static String GetShaderModel(
             ShaderStage   Stage,
             ShaderProfile Profile);
 
