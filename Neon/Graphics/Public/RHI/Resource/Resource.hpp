@@ -101,7 +101,7 @@ namespace Neon::RHI
         /// <summary>
         /// Makes the buffer available for reading by the CPU.
         /// </summary>
-        [[nodiscard]] virtual const uint8_t* Map() = 0;
+        [[nodiscard]] virtual uint8_t* Map() = 0;
 
         /// <summary>
         /// Makes the buffer available for reading by the CPU.

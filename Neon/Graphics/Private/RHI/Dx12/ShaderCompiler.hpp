@@ -22,17 +22,17 @@ namespace Neon::RHI
             const ShaderCompileDesc& Desc);
 
         void ReflectInputLayout(
-            const void*      ShaderCode,
-            size_t           ByteLength,
-            InputLayoutDesc* GraphicsLayout,
-            RawBufferLayout* Layout,
-            bool             IsOutput);
+            const void*         ShaderCode,
+            size_t              ByteLength,
+            InputLayoutDesc*    GraphicsLayout,
+            MBuffer::RawLayout* Layout,
+            bool                IsOutput);
 
     private:
         void ReflectInputLayout(
             ID3D12ShaderReflection* ShaderReflection,
             InputLayoutDesc*        GraphicsLayout,
-            RawBufferLayout*        Layout,
+            MBuffer::RawLayout*     Layout,
             bool                    IsOutput);
 
     private:

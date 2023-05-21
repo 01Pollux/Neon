@@ -141,11 +141,11 @@ namespace Neon::RHI
         FreeBuffer(GraphicsBufferType::Readback);
     }
 
-    const uint8_t* Dx12ReadbackBuffer::Map()
+    uint8_t* Dx12ReadbackBuffer::Map()
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<const uint8_t*>(MappedData) + m_BufferOffset;
+        return std::bit_cast<uint8_t*>(MappedData) + m_BufferOffset;
     }
 
     void Dx12ReadbackBuffer::Unmap()
