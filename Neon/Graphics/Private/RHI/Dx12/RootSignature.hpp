@@ -53,10 +53,8 @@ namespace Neon::RHI
         Dx12RootSignature(
             const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc);
 
-        ~Dx12RootSignature();
-
     private:
-        ID3D12RootSignature* m_RootSignature;
+        Win32::ComPtr<ID3D12RootSignature> m_RootSignature;
     };
 
     class Dx12RootSignatureCache

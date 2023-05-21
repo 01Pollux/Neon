@@ -1,98 +1,141 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <RHI/Resource/Common.hpp>
+#include <RHI/Resource/MappedBuffer.hpp>
+#include <variant>
+#include <span>
 
 namespace Neon::RHI
 {
-    /*class PipelineStateBuilder
+    class IShader;
+    class IRootSignature;
+
+    struct PipelineStateBuilder
     {
-        public:
-        PipelineStateBuilder() = default;
+        struct RenderTarget
+        {
+            struct LogicBlend
+            {
+                LogicOp Op = LogicOp::Noop;
+            };
 
-        PipelineStateBuilder& SetVertexShader(
-            const std::string& Path);
+            struct ColorBlend
+            {
+                BlendTarget SrcBlend  = BlendTarget::One;
+                BlendTarget DestBlend = BlendTarget::Zero;
+                BlendOp     Op        = BlendOp::Add;
 
-        PipelineStateBuilder& SetPixelShader(
-            const std::string& Path);
+                BlendTarget SrcBlendAlpha  = BlendTarget::One;
+                BlendTarget DestBlendAlpha = BlendTarget::Zero;
+                BlendOp     OpAlpha        = BlendOp::Add;
+            };
 
-        PipelineStateBuilder& SetVertexLayout(
-            const std::vector<VertexElement>& Elements);
+            std::variant<LogicBlend, ColorBlend> Blend;
 
-        PipelineStateBuilder& SetDepthStencilState(
-            const DepthStencilState& State);
+            uint8_t WriteMask = 0xF;
+        };
 
-        PipelineStateBuilder& SetRasterizerState(
-            const RasterizerState& State);
+        struct BlendState
+        {
+            bool         AlphaToCoverageEnable  = false;
+            bool         IndependentBlendEnable = false;
+            RenderTarget RenderTarget[8];
+        };
 
-        PipelineStateBuilder& SetBlendState(
-            const BlendState& State);
+        struct RasterizerState
+        {
+            FillMode FillMode              = FillMode::Solid;
+            CullMode CullMode              = CullMode::Back;
+            bool     FrontCounterClockwise = false;
+            int32_t  DepthBias             = 0;
+            float    DepthBiasClamp        = 0.0f;
+            float    SlopeScaledDepthBias  = 0.0f;
+            bool     DepthClipEnable       = true;
+            bool     MultisampleEnable     = false;
+            bool     AntialiasedLineEnable = false;
+            uint32_t ForcedSampleCount     = 0;
+            bool     ConservativeRaster    = false;
+        };
 
-        PipelineStateBuilder& SetPrimitiveTopology(
-            D3D12_PRIMITIVE_TOPOLOGY_TYPE Topology);
+        class DepthStencilState
+        {
+            bool             DepthEnable      = true;
+            EDepthStencilCmp DepthCmpFunc     = EDepthStencilCmp::Less;
+            bool             DepthWriteEnable = true;
 
-        PipelineStateBuilder& SetRenderTargetFormats(
-            const std::vector<DXGI_FORMAT>& Formats);
+            bool    StencilEnable    = false;
+            uint8_t StencilReadMask  = 0xFF;
+            uint8_t StencilWriteMask = 0xFF;
 
-        PipelineStateBuilder& SetDepthStencilFormat(
-            DXGI_FORMAT Format);
+            struct
+            {
+                EStencilOp       FailOp      = EStencilOp::Keep;
+                EStencilOp       DepthFailOp = EStencilOp::Keep;
+                EStencilOp       PassOp      = EStencilOp::Keep;
+                EDepthStencilCmp CmpOp       = EDepthStencilCmp::Always;
+            } StencilFrontFace, StencilBackFace;
+        };
 
-        PipelineStateBuilder& SetSampleDesc(
-            const DXGI_SAMPLE_DESC& SampleDesc);
+        enum class StripCutType : uint8_t
+        {
+            None,
+            MaxUInt16,
+            MaxUInt32
+        };
 
-        PipelineStateBuilder& SetSampleMask(
-            UINT SampleMask);
+        enum class PrimitiveTopologyType : uint8_t
+        {
+            Undefined,
+            Point,
+            Line,
+            Triangle,
+            Patch
+        };
 
-        PipelineStateBuilder& SetNodeMask(
-            UINT NodeMask);
+        IRootSignature* RootSignature = nullptr;
 
-        PipelineStateBuilder& SetCachedPSO(
-            const D3D12_CACHED_PIPELINE_STATE& CachedPSO);
+        IShader* VertexShader   = nullptr;
+        IShader* PixelShader    = nullptr;
+        IShader* GeometryShader = nullptr;
+        IShader* HullShader     = nullptr;
+        IShader* DomainShader   = nullptr;
 
-        PipelineStateBuilder& SetFlags(
-            D3D12_PIPELINE_STATE_FLAGS Flags);
+        BlendState BlendState;
+        uint32_t   SampleMask = 0xFFFFFFFF;
 
-        PipelineStateBuilder& SetInputLayout(
-            const D3D12_INPUT_LAYOUT_DESC& InputLayout);
+        RasterizerState RasterizerState;
 
-        PipelineStateBuilder& SetIBStripCutValue(
-            D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBStripCutValue);
+        DepthStencilState DepthStencilState;
 
-        PipelineStateBuilder& SetPrimitiveRestartEnable(
-            bool PrimitiveRestartEnable);
+        MBuffer::RawLayout InputLayout;
 
-        PipelineStateBuilder& SetDepthClipEnable(
-            bool DepthClipEnable);
+        StripCutType StripCut = StripCutType::None;
 
-        PipelineStateBuilder& SetMultisampleEnable(
-            bool MultisampleEnable);
+        PrimitiveTopologyType PrimitiveTopology = PrimitiveTopologyType::Undefined;
 
-        PipelineStateBuilder& SetAntialiasedLineEnable(
-            bool AntialiasedLineEnable);
+        std::vector<EResourceFormat> RTFormats;
+        EResourceFormat              DSFormat = EResourceFormat::Unknown;
 
-        PipelineStateBuilder& SetForcedSampleCount(
-            UINT ForcedSampleCount);
+        uint32_t SampleCount   = 1;
+        uint32_t SampleQuality = 0;
+    };
 
-        PipelineStateBuilder& SetConservativeRaster(
-            D3D12_CONSERVATIVE_RASTERIZATION_MODE ConservativeRaster);
-
-        PipelineStateBuilder& SetDepthBias(
-            INT DepthBias);
-
-        PipelineStateBuilder& SetDepthBiasClamp(
-            FLOAT DepthBiasClamp);
-
-        PipelineStateBuilder& SetSlopeScaledDepthBias(
-            FLOAT SlopeScaledDepthBias);
-
-        PipelineStateBuilder& SetDepthBoundsTestEnable(
-            bool DepthBoundsTestEnable);
-
-        Pipeline
-    };>*/
+    struct ComputePipelineStateBuilder
+    {
+        IRootSignature* RootSignature = nullptr;
+        IShader*        ComputeShader = nullptr;
+    };
 
     class IPipelineState
     {
     public:
+        [[nodiscard]] Ptr<IPipelineState> Create(
+            const PipelineStateBuilder& Builder);
+
+        [[nodiscard]] Ptr<IPipelineState> Create(
+            const ComputePipelineStateBuilder& Builder);
+
         virtual ~IPipelineState() = default;
     };
 } // namespace Neon::RHI

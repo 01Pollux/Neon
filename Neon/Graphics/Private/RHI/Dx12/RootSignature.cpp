@@ -213,15 +213,6 @@ namespace Neon::RHI
             IID_PPV_ARGS(&m_RootSignature)));
     }
 
-    Dx12RootSignature::~Dx12RootSignature()
-    {
-        if (m_RootSignature)
-        {
-            m_RootSignature->Release();
-            m_RootSignature = nullptr;
-        }
-    }
-
     //
 
     void Dx12RootSignatureCache::Flush()

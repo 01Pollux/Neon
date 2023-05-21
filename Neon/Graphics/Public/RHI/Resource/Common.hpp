@@ -280,4 +280,87 @@ namespace Neon::RHI
         _Last_Enum
     };
     using MResourceFlags = Bitmask<EResourceFlags>;
+
+    //
+
+    enum class BlendTarget : uint8_t
+    {
+        Zero,
+        One,
+        SrcColor,
+        InvSrcColor,
+        SrcAlpha,
+        InvSrcAlpha,
+        DestAlpha,
+        InvDestAlpha,
+        DestColor,
+        InvDestColor,
+        SrcAlphaSat,
+        BlendFactor,
+        InvBlendFactor,
+        Src1Color,
+        InvSrc1Color,
+        Src1Alpha,
+        InvSrc1Alpha
+    };
+
+    enum class BlendOp : uint8_t
+    {
+        Add,
+        Subtract,
+        RevSubtract,
+        Min,
+        Max
+    };
+
+    enum class LogicOp : uint8_t
+    {
+        Clear,
+        Set,
+        Copy,
+        CopyInverted,
+        Noop,
+        Invert,
+        And,
+        Nand,
+        Or,
+        Nor,
+        Xor,
+        Equiv,
+        AndReverse,
+        AndInverted,
+        OrReverse,
+        OrInverted
+    };
+
+    //
+
+    enum class FillMode : uint8_t
+    {
+        Wireframe,
+        Solid
+    };
+
+    enum class CullMode : uint8_t
+    {
+        None,
+        Front,
+        Back
+    };
+
+    //
+
+    using EDepthStencilCmp = ESamplerCmp;
+
+    enum class EStencilOp : uint8_t
+    {
+        Keep,
+        Zero,
+        Replace,
+        IncrSat,
+        DecrSat,
+        Invert,
+        Incr,
+        Decr
+    };
 } // namespace Neon::RHI
