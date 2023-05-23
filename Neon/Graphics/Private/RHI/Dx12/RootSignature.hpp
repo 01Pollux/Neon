@@ -51,10 +51,22 @@ namespace Neon::RHI
     {
     public:
         Dx12RootSignature(
-            const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc);
+            const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
+            SHA256::Bytes&&                              Hash);
+
+        /// <summary>
+        /// Get the underlying D3D12 root signature
+        /// </summary>
+        [[nodiscard]] ID3D12RootSignature* Get();
+
+        /// <summary>
+        /// Get the root signature hash digest
+        /// </summary>
+        [[nodiscard]] const SHA256::Bytes& GetHash() const;
 
     private:
         Win32::ComPtr<ID3D12RootSignature> m_RootSignature;
+        SHA256::Bytes                      m_Hash;
     };
 
     class Dx12RootSignatureCache
@@ -79,6 +91,11 @@ namespace Neon::RHI
             std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
             std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;
             D3D12_ROOT_SIGNATURE_FLAGS                        Flags;
+
+            BuildResult() = default;
+            NEON_CLASS_NO_COPY(BuildResult);
+            NEON_CLASS_MOVE(BuildResult);
+            ~BuildResult() = default;
         };
 
         /// <summary

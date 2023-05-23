@@ -185,8 +185,12 @@ namespace Neon::RHI
         return Dx12RootSignatureCache::Load(Builder);
     }
 
+    //
+
     Dx12RootSignature::Dx12RootSignature(
-        const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc)
+        const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
+        SHA256::Bytes&&                              Hash) :
+        m_Hash(std::move(Hash))
     {
         Win32::ComPtr<ID3DBlob> SignatureBlob;
         Win32::ComPtr<ID3DBlob> ErrorBlob;
@@ -200,17 +204,23 @@ namespace Neon::RHI
             &SignatureBlob,
             &ErrorBlob);
 
-        if (FAILED(Result))
-        {
-            auto Error = static_cast<const char*>(ErrorBlob->GetBufferPointer());
-            NEON_VALIDATE(false, Error);
-        }
+        NEON_VALIDATE(SUCCEEDED(Result), static_cast<const char*>(ErrorBlob->GetBufferPointer()));
 
         ThrowIfFailed(Dx12Device->CreateRootSignature(
             0,
             SignatureBlob->GetBufferPointer(),
             SignatureBlob->GetBufferSize(),
             IID_PPV_ARGS(&m_RootSignature)));
+    }
+
+    ID3D12RootSignature* Dx12RootSignature::Get()
+    {
+        return m_RootSignature.Get();
+    }
+
+    const SHA256::Bytes& Dx12RootSignature::GetHash() const
+    {
+        return m_Hash;
     }
 
     //
@@ -238,18 +248,18 @@ namespace Neon::RHI
                 Result.StaticSamplers.data(),
                 Result.Flags);
 
-            Cache = std::make_shared<Dx12RootSignature>(Desc);
+            Cache = std::make_shared<Dx12RootSignature>(Desc, std::move(Result.Digest));
         }
 
         return Cache;
     }
 
+    //
+
     auto Dx12RootSignatureCache::Build(
         const RootSignatureBuilder& Builder) -> BuildResult
     {
-        std::list<std::vector<CD3DX12_DESCRIPTOR_RANGE1>> RangesList;
-        std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
-        std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;
+        BuildResult Result;
 
         SHA256 Hash;
 
@@ -257,16 +267,16 @@ namespace Neon::RHI
         Hash.Append(std::bit_cast<uint8_t*>(&Flags), sizeof(Flags));
 
         auto& NParameters = Builder.GetParameters();
-        Parameters.reserve(NParameters.size());
+        Result.Parameters.reserve(NParameters.size());
         for (auto& Param : NParameters)
         {
             auto Visibility = CastShaderVisibility(Param.GetVisibility());
 
             std::visit(
                 VariantVisitor{
-                    [&Hash, &Parameters, &RangesList, Visibility](const RootParameter::DescriptorTable& Table)
+                    [&Hash, &Result, Visibility](const RootParameter::DescriptorTable& Table)
                     {
-                        auto& Ranges = RangesList.emplace_back();
+                        auto& Ranges = Result.RangesList.emplace_back();
 
                         auto& NRanges = Table.GetRanges();
                         Ranges.reserve(NRanges.size());
@@ -299,21 +309,21 @@ namespace Neon::RHI
                         }
 
                         Hash.Append(std::bit_cast<uint8_t*>(Ranges.data()), sizeof(Ranges[0]) * Ranges.size());
-                        Parameters.emplace_back().InitAsDescriptorTable(UINT(Ranges.size()), Ranges.data(), Visibility);
+                        Result.Parameters.emplace_back().InitAsDescriptorTable(UINT(Ranges.size()), Ranges.data(), Visibility);
                     },
-                    [&Hash, &Parameters, Visibility](const RootParameter::Constants& Constants)
+                    [&Hash, &Result, Visibility](const RootParameter::Constants& Constants)
                     {
                         Hash.Append(std::bit_cast<uint8_t*>(&Constants), sizeof(Constants));
-                        Parameters.emplace_back().InitAsConstants(
+                        Result.Parameters.emplace_back().InitAsConstants(
                             Constants.Num32BitValues,
                             Constants.ShaderRegister,
                             Constants.RegisterSpace,
                             Visibility);
                     },
-                    [&Hash, &Parameters, Visibility](const RootParameter::Descriptor& Descriptor)
+                    [&Hash, &Result, Visibility](const RootParameter::Descriptor& Descriptor)
                     {
                         Hash.Append(std::bit_cast<uint8_t*>(&Descriptor), sizeof(Descriptor));
-                        auto& Param            = Parameters.emplace_back();
+                        auto& Param            = Result.Parameters.emplace_back();
                         Param.ShaderVisibility = Visibility;
 
                         switch (Descriptor.Type)
@@ -339,7 +349,7 @@ namespace Neon::RHI
         }
 
         auto& Nsamplers = Builder.GetSamplers();
-        StaticSamplers.reserve(Nsamplers.size());
+        Result.StaticSamplers.reserve(Nsamplers.size());
         for (auto& Sampler : Nsamplers)
         {
             Hash.Append(std::bit_cast<uint8_t*>(&Sampler), sizeof(Sampler));
@@ -369,7 +379,7 @@ namespace Neon::RHI
                 BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
             }
 
-            StaticSamplers.emplace_back(
+            Result.StaticSamplers.emplace_back(
                 Sampler.ShaderRegister,
                 CastFilter(Sampler.Filter),
                 CastAddressMode(Sampler.AddressU),
@@ -385,12 +395,9 @@ namespace Neon::RHI
                 Sampler.RegisterSpace);
         }
 
-        return {
-            .Digest         = Hash.Digest(),
-            .RangesList     = std::move(RangesList),
-            .Parameters     = std::move(Parameters),
-            .StaticSamplers = std::move(StaticSamplers),
-            .Flags          = Flags
-        };
+        Result.Digest = Hash.Digest(),
+        Result.Flags  = Flags;
+
+        return Result;
     }
 } // namespace Neon::RHI

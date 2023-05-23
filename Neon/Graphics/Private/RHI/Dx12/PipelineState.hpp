@@ -30,28 +30,47 @@ namespace Neon::RHI
         /// Get or save pipeline state from cache
         /// </summary>
         [[nodiscard]] static Ptr<IPipelineState> Load(
-            const PipelineStateBuilder& Builder);
+            const PipelineStateBuilder<false>& Builder);
 
         /// <summary>
         /// Get or save pipeline state from cache
         /// </summary>
         [[nodiscard]] static Ptr<IPipelineState> Load(
-            const ComputePipelineStateBuilder& Builder);
+            const PipelineStateBuilder<true>& Builder);
 
     private:
-        struct BuildResult
+        struct GraphicsBuildResult
         {
-            SHA256::Bytes                                     Digest;
-            std::list<std::vector<CD3DX12_DESCRIPTOR_RANGE1>> RangesList;
-            std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
-            std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;
-            D3D12_ROOT_SIGNATURE_FLAGS                        Flags;
+            SHA256::Bytes                         Digest;
+            D3D12_GRAPHICS_PIPELINE_STATE_DESC    Desc{};
+            std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
+
+            GraphicsBuildResult() = default;
+            NEON_CLASS_NO_COPY(GraphicsBuildResult);
+            NEON_CLASS_MOVE(GraphicsBuildResult);
+            ~GraphicsBuildResult() = default;
+        };
+        struct ComputeBuildResult
+        {
+            SHA256::Bytes                     Digest;
+            D3D12_COMPUTE_PIPELINE_STATE_DESC Desc{};
+
+            ComputeBuildResult() = default;
+            NEON_CLASS_NO_COPY(ComputeBuildResult);
+            NEON_CLASS_MOVE(ComputeBuildResult);
+            ~ComputeBuildResult() = default;
         };
 
         /// <summary
-        /// Get or save root signature from cache
+        /// Build the pipeline state
         /// </summary>
-        [[nodiscard]] static BuildResult Build(
-            const RootSignatureBuilder& Builder);
+        [[nodiscard]] static GraphicsBuildResult Build(
+            const PipelineStateBuilder<false>& Builder);
+
+        /// <summary
+        /// Build the pipeline state
+        /// </summary>
+        [[nodiscard]] static ComputeBuildResult Build(
+            const PipelineStateBuilder<true>& Builder);
     };
 } // namespace Neon::RHI

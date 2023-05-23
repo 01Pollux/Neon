@@ -11,27 +11,26 @@ namespace Neon::RHI
     class IShader;
     class IRootSignature;
 
-    struct PipelineStateBuilder
+    template<bool _Compute>
+    struct PipelineStateBuilder;
+
+    template<>
+    struct PipelineStateBuilder<false>
     {
         struct RenderTarget
         {
-            struct LogicBlend
-            {
-                LogicOp Op = LogicOp::Noop;
-            };
+            bool BlendEnable : 1 = false;
+            bool LogicEnable : 1 = false;
 
-            struct ColorBlend
-            {
-                BlendTarget SrcBlend  = BlendTarget::One;
-                BlendTarget DestBlend = BlendTarget::Zero;
-                BlendOp     Op        = BlendOp::Add;
+            LogicOp OpLogic = LogicOp::Noop;
 
-                BlendTarget SrcBlendAlpha  = BlendTarget::One;
-                BlendTarget DestBlendAlpha = BlendTarget::Zero;
-                BlendOp     OpAlpha        = BlendOp::Add;
-            };
+            BlendTarget Src   = BlendTarget::One;
+            BlendTarget Dest  = BlendTarget::Zero;
+            BlendOp     OpSrc = BlendOp::Add;
 
-            std::variant<LogicBlend, ColorBlend> Blend;
+            BlendTarget SrcAlpha  = BlendTarget::One;
+            BlendTarget DestAlpha = BlendTarget::Zero;
+            BlendOp     OpAlpha   = BlendOp::Add;
 
             uint8_t WriteMask = 0xF;
         };
@@ -40,7 +39,7 @@ namespace Neon::RHI
         {
             bool         AlphaToCoverageEnable  = false;
             bool         IndependentBlendEnable = false;
-            RenderTarget RenderTarget[8];
+            RenderTarget RenderTargets[8];
         };
 
         struct RasterizerState
@@ -58,7 +57,7 @@ namespace Neon::RHI
             bool     ConservativeRaster    = false;
         };
 
-        class DepthStencilState
+        struct DepthStencilState
         {
             bool             DepthEnable      = true;
             EDepthStencilCmp DepthCmpFunc     = EDepthStencilCmp::Less;
@@ -121,7 +120,8 @@ namespace Neon::RHI
         uint32_t SampleQuality = 0;
     };
 
-    struct ComputePipelineStateBuilder
+    template<>
+    struct PipelineStateBuilder<true>
     {
         IRootSignature* RootSignature = nullptr;
         IShader*        ComputeShader = nullptr;
@@ -131,10 +131,10 @@ namespace Neon::RHI
     {
     public:
         [[nodiscard]] Ptr<IPipelineState> Create(
-            const PipelineStateBuilder& Builder);
+            const PipelineStateBuilder<false>& Builder);
 
         [[nodiscard]] Ptr<IPipelineState> Create(
-            const ComputePipelineStateBuilder& Builder);
+            const PipelineStateBuilder<true>& Builder);
 
         virtual ~IPipelineState() = default;
     };

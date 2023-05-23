@@ -189,7 +189,19 @@ namespace Neon::RHI::MBuffer
             /// </summary>
             [[nodiscard]] Type GetType() const noexcept;
 
-        private:
+            /// <summary>
+            /// Cast to struct
+            /// </summary>
+            [[nodiscard]] const Element::StructData* AsStruct() const noexcept;
+
+            /// <summary>
+            /// Cast to array
+            /// </summary>
+            [[nodiscard]] const Element::ArrayData* AsArray() const noexcept;
+
+            /// <summary>
+            /// Get hash code of the layout
+            /// </summary>
             [[nodiscard]] void GetHashCode(
                 SHA256& Sha256) const;
 
@@ -199,9 +211,15 @@ namespace Neon::RHI::MBuffer
 
         static constexpr size_t ShaderAlignement = 16;
 
-        RawLayout(size_t Alignement = 1u);
+        RawLayout(
+            size_t Alignement = 1u);
 
         [[nodiscard]] ElementView GetView() noexcept
+        {
+            return ElementView(&m_Element);
+        }
+
+        [[nodiscard]] ElementView GetView() const noexcept
         {
             return ElementView(&m_Element);
         }
@@ -251,8 +269,8 @@ namespace Neon::RHI::MBuffer
             bool GPULayout) const;
 
     private:
-        Element  m_Element = Element(Type::Struct);
-        uint16_t m_Alignement;
+        mutable Element m_Element = Element(Type::Struct);
+        uint16_t        m_Alignement;
     };
 
     class CookedLayout

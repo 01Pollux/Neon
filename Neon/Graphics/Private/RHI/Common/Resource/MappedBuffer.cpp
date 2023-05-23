@@ -138,6 +138,16 @@ namespace Neon::RHI::MBuffer
         return m_Element->GetType();
     }
 
+    auto RawLayout::ElementView::AsStruct() const noexcept -> const Element::StructData*
+    {
+        return m_Element->AsStruct();
+    }
+
+    auto RawLayout::ElementView::AsArray() const noexcept -> const Element::ArrayData*
+    {
+        return m_Element->AsArray();
+    }
+
     void RawLayout::ElementView::GetHashCode(
         SHA256& Sha256) const
     {
