@@ -83,7 +83,7 @@ namespace Neon::RHI
             MaxUInt32
         };
 
-        enum class PrimitiveTopologyType : uint8_t
+        enum class Toplogy : uint8_t
         {
             Undefined,
             Point,
@@ -111,7 +111,7 @@ namespace Neon::RHI
 
         StripCutType StripCut = StripCutType::None;
 
-        PrimitiveTopologyType PrimitiveTopology = PrimitiveTopologyType::Undefined;
+        Toplogy PrimitiveTopology = Toplogy::Undefined;
 
         std::vector<EResourceFormat> RTFormats;
         EResourceFormat              DSFormat = EResourceFormat::Unknown;
@@ -130,10 +130,10 @@ namespace Neon::RHI
     class IPipelineState
     {
     public:
-        [[nodiscard]] Ptr<IPipelineState> Create(
+        [[nodiscard]] static Ptr<IPipelineState> Create(
             const PipelineStateBuilder<false>& Builder);
 
-        [[nodiscard]] Ptr<IPipelineState> Create(
+        [[nodiscard]] static Ptr<IPipelineState> Create(
             const PipelineStateBuilder<true>& Builder);
 
         virtual ~IPipelineState() = default;

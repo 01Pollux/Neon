@@ -33,7 +33,7 @@ namespace Neon::RHI
                 Description = StringUtils::StringTransform<StringU8>(Error.ErrorMessage());
             }
 
-            NEON_ASSERT(SUCCEEDED(Result), StringUtils::Format(Message, uint32_t(Result), Message));
+            NEON_ASSERT(SUCCEEDED(Result), StringUtils::Format(Message, uint32_t(Result), Description));
         }
     }
 } // namespace Neon::RHI

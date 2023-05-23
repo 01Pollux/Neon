@@ -14,6 +14,13 @@
 
 namespace Neon::RHI
 {
+    // TODO : remove
+
+    class IRootSignature;
+    class IPipelineState;
+
+    //
+
     class Dx12Swapchain final : public ISwapchain
     {
         static constexpr DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -95,5 +102,8 @@ namespace Neon::RHI
             std::uniform_real_distribution<float> Distribution{ 0.0f, 60.0f };
             return Distribution(Engine);
         }();
+
+        Ptr<IRootSignature> m_RootSignature;
+        Ptr<IPipelineState> m_PipelineState;
     };
 } // namespace Neon::RHI

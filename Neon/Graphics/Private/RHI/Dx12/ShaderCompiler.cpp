@@ -96,8 +96,8 @@ namespace Neon::RHI
         }
 
     private:
-        ULONG      m_RefCount = 0;
-        IDxcUtils* m_Utils;
+        std::atomic<ULONG> m_RefCount = 0;
+        IDxcUtils*         m_Utils;
 
         const std::map<String, String>& m_IncludeFiles;
     };
@@ -165,7 +165,7 @@ namespace Neon::RHI
         }
 
     private:
-        ULONG m_RefCount = 0;
+        std::atomic<ULONG> m_RefCount = 0;
 
         const void* m_Data;
         size_t      m_Size;
@@ -178,7 +178,7 @@ namespace Neon::RHI
     {
         Win32::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
-            Desc.SourceCode.c_str(),
+            Desc.SourceCode.data(),
             uint32_t(Desc.SourceCode.size()),
             DXC_CP_ACP,
             &ShaderCodeBlob));
@@ -239,8 +239,7 @@ namespace Neon::RHI
 
         Win32::ComPtr<IDxcResult> Result;
         {
-            Win32::ComPtr<IncludeHandler> Handler;
-            Handler.Attach(NEON_NEW IncludeHandler(Desc.IncludeFiles, m_Utils.Get()));
+            Win32::ComPtr<IncludeHandler> Handler(NEON_NEW IncludeHandler(Desc.IncludeFiles, m_Utils.Get()));
 
             ThrowIfFailed(m_Compiler->Compile(
                 &Buffer,
@@ -253,9 +252,9 @@ namespace Neon::RHI
         Win32::ComPtr<IDxcBlobUtf8> Error;
         if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
         {
-            size_t StrLen = Error->GetStringLength();
             if (Error && Error->GetStringLength() > 0)
             {
+                size_t StrLen = Error->GetStringLength();
                 NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
                 return {};
             }
@@ -306,8 +305,7 @@ namespace Neon::RHI
         Win32::ComPtr<IDxcContainerReflection> Reflection;
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
 
-        Win32::ComPtr<ReflectionBlob> Blob;
-        Blob.Attach(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
+        Win32::ComPtr<ReflectionBlob> Blob(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
         ThrowIfFailed(Reflection->Load(Blob.Get()));
 
         uint32_t DxilPart;

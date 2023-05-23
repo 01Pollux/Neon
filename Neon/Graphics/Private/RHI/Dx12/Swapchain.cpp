@@ -9,6 +9,13 @@
 
 #include <Window/Window.hpp>
 
+//
+
+#include <fstream>
+
+#include <RHI/PipelineState.hpp>
+#include <RHI/RootSignature.hpp>
+
 namespace Neon::RHI
 {
     ISwapchain* ISwapchain::Create(
@@ -34,6 +41,49 @@ namespace Neon::RHI
 
     void Dx12Swapchain::PrepareFrame()
     {
+        static bool test = false;
+        {
+            if (!test)
+            {
+                test = true;
+
+                std::stringstream Stream;
+                std::ifstream     File(L"D:\\Dev\\Shader.hlsl");
+
+                Stream << File.rdbuf();
+                auto Text = Stream.str();
+
+                ShaderCompileDesc Desc{
+                    .Stage      = ShaderStage::Vertex,
+                    .SourceCode = Text,
+                    .EntryPoint = STR("VSMain")
+                };
+
+                auto VsShader = Ptr<IShader>(IShader::Create(Desc));
+
+                Desc.Stage      = ShaderStage::Pixel;
+                Desc.EntryPoint = STR("PSMain");
+
+                auto PsShader = Ptr<IShader>(IShader::Create(Desc));
+
+                m_RootSignature = IRootSignature::Create(
+                    RootSignatureBuilder().SetFlags(ERootSignatureBuilderFlags::AllowInputLayout));
+
+                PipelineStateBuilder<false> Builder{
+                    .RootSignature     = m_RootSignature.get(),
+                    .VertexShader      = VsShader.get(),
+                    .PixelShader       = PsShader.get(),
+                    .DepthStencilState = { .DepthEnable = false },
+                    .PrimitiveTopology = PipelineStateBuilder<false>::Toplogy::Triangle,
+                    .RTFormats         = { EResourceFormat::R8G8B8A8_UNorm },
+                };
+
+                VsShader->CreateInputLayout(Builder.InputLayout);
+
+                m_PipelineState = IPipelineState::Create(Builder);
+            }
+        }
+
         m_BudgetManager.NewFrame();
         uint32_t FrameIndex = m_BudgetManager.GetFrameIndex();
 

@@ -325,10 +325,10 @@ namespace Neon::RHI
         {
             for (auto [TargetShader, SrcShader] : {
                      std::pair{ &Result.Desc.VS, Builder.VertexShader },
-                     std::pair{ &Result.Desc.VS, Builder.PixelShader },
-                     std::pair{ &Result.Desc.VS, Builder.GeometryShader },
-                     std::pair{ &Result.Desc.VS, Builder.HullShader },
-                     std::pair{ &Result.Desc.VS, Builder.DomainShader } })
+                     std::pair{ &Result.Desc.PS, Builder.PixelShader },
+                     std::pair{ &Result.Desc.GS, Builder.GeometryShader },
+                     std::pair{ &Result.Desc.HS, Builder.HullShader },
+                     std::pair{ &Result.Desc.DS, Builder.DomainShader } })
             {
                 if (SrcShader)
                 {
@@ -484,19 +484,19 @@ namespace Neon::RHI
         {
             switch (Builder.PrimitiveTopology)
             {
-            case PipelineStateBuilder<false>::PrimitiveTopologyType::Undefined:
+            case PipelineStateBuilder<false>::Toplogy::Undefined:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
                 break;
-            case PipelineStateBuilder<false>::PrimitiveTopologyType::Point:
+            case PipelineStateBuilder<false>::Toplogy::Point:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
                 break;
-            case PipelineStateBuilder<false>::PrimitiveTopologyType::Line:
+            case PipelineStateBuilder<false>::Toplogy::Line:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
                 break;
-            case PipelineStateBuilder<false>::PrimitiveTopologyType::Triangle:
+            case PipelineStateBuilder<false>::Toplogy::Triangle:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
                 break;
-            case PipelineStateBuilder<false>::PrimitiveTopologyType::Patch:
+            case PipelineStateBuilder<false>::Toplogy::Patch:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
                 break;
             }
