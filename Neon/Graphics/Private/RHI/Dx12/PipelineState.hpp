@@ -14,6 +14,11 @@ namespace Neon::RHI
         Dx12PipelineState(
             const D3D12_COMPUTE_PIPELINE_STATE_DESC& ComputeDesc);
 
+        /// <summary>
+        /// Get underlying D3D12 pipeline state.
+        /// </summary>
+        [[nodiscard]] ID3D12PipelineState* Get();
+
     private:
         Win32::ComPtr<ID3D12PipelineState> m_PipelineState;
     };

@@ -5,20 +5,10 @@
 
 namespace Neon::RHI
 {
-
     Dx12GpuResource::Dx12GpuResource(
         ISwapchain* Swapchain) :
         m_OwningSwapchain(Swapchain)
     {
-    }
-
-    Dx12GpuResource::~Dx12GpuResource()
-    {
-        if (m_Resource)
-        {
-            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
-            Dx12StateManager->StopTrakingResource(m_Resource.Get());
-        }
     }
 
     ID3D12Resource* Dx12GpuResource::GetResource() const
@@ -46,43 +36,25 @@ namespace Neon::RHI
         GraphicsBufferType Type) :
         Dx12GpuResource(Swapchain)
     {
-        m_BufferFlags = CastResourceFlags(Desc.Flags);
-
         auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
-        auto Handle    = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), m_BufferFlags);
-
-        m_Resource     = Handle.Resource;
-        m_BufferSize   = Handle.Size;
-        m_BufferOffset = Handle.Offset;
-
-        m_Handle = { m_Resource->GetGPUVirtualAddress() + m_BufferOffset };
+        m_Buffer       = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), CastResourceFlags(Desc.Flags));
+        m_Resource     = m_Buffer.Resource;
     }
 
     Dx12Buffer::~Dx12Buffer()
     {
-        FreeBuffer(GraphicsBufferType::Default);
+        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
+        Allocator->FreeBuffer(m_Buffer);
     }
 
     size_t Dx12Buffer::GetSize() const
     {
-        return m_BufferSize;
+        return m_Buffer.Size;
     }
 
     GpuResourceHandle Dx12Buffer::GetHandle() const
     {
-        return m_Handle;
-    }
-
-    void Dx12Buffer::FreeBuffer(
-        GraphicsBufferType Type) const
-    {
-        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
-        Allocator->FreeBuffer(
-            { .Resource = m_Resource,
-              .Offset   = m_BufferOffset,
-              .Size     = m_BufferSize,
-              .Type     = Type,
-              .Flags    = m_BufferFlags });
+        return { m_Resource->GetGPUVirtualAddress() + m_Buffer.Offset };
     }
 
     //
@@ -102,16 +74,11 @@ namespace Neon::RHI
     {
     }
 
-    Dx12UploadBuffer::~Dx12UploadBuffer()
-    {
-        FreeBuffer(GraphicsBufferType::Upload);
-    }
-
     uint8_t* Dx12UploadBuffer::Map()
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + m_BufferOffset;
+        return std::bit_cast<uint8_t*>(MappedData) + m_Buffer.Offset;
     }
 
     void Dx12UploadBuffer::Unmap()
@@ -136,16 +103,11 @@ namespace Neon::RHI
     {
     }
 
-    Dx12ReadbackBuffer::~Dx12ReadbackBuffer()
-    {
-        FreeBuffer(GraphicsBufferType::Readback);
-    }
-
     uint8_t* Dx12ReadbackBuffer::Map()
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + m_BufferOffset;
+        return std::bit_cast<uint8_t*>(MappedData) + m_Buffer.Offset;
     }
 
     void Dx12ReadbackBuffer::Unmap()
@@ -182,6 +144,15 @@ namespace Neon::RHI
 
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
+        }
+    }
+
+    Dx12Texture::~Dx12Texture()
+    {
+        if (m_Resource)
+        {
+            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
+            Dx12StateManager->StopTrakingResource(m_Resource.Get());
         }
     }
 

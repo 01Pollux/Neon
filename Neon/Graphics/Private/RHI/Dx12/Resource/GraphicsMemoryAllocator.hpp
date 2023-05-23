@@ -48,15 +48,6 @@ namespace Neon::RHI
         using BufferAllocatorByFlags = std::map<D3D12_RESOURCE_FLAGS, BufferAllocatorsType>;
 
     public:
-        struct Handle
-        {
-            Win32::ComPtr<ID3D12Resource> Resource;
-            size_t                        Offset;
-            size_t                        Size;
-            GraphicsBufferType            Type;
-            D3D12_RESOURCE_FLAGS          Flags;
-        };
-
         GraphicsMemoryAllocator();
 
         /// <summary>
@@ -67,7 +58,7 @@ namespace Neon::RHI
         /// <summary>
         /// Allocate buffer of size
         /// </summary>
-        [[nodiscard]] Handle AllocateBuffer(
+        [[nodiscard]] Dx12Buffer::Handle AllocateBuffer(
             GraphicsBufferType   Type,
             size_t               BufferSize,
             size_t               Alignement,
@@ -77,7 +68,7 @@ namespace Neon::RHI
         /// Free current buffer handle
         /// </summary>
         void FreeBuffer(
-            const Handle& Data);
+            const Dx12Buffer::Handle& Data);
 
     public:
         /// <summary>

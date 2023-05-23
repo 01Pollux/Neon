@@ -7,6 +7,7 @@
 
 namespace Neon::RHI
 {
+
     enum class GraphicsBufferType : uint8_t
     {
         Default,
@@ -21,7 +22,6 @@ namespace Neon::RHI
     public:
         Dx12GpuResource(
             ISwapchain* Swapchain);
-        ~Dx12GpuResource() override;
 
         /// <summary>
         /// Get the underlying D3D12 resource.
@@ -43,6 +43,15 @@ namespace Neon::RHI
                        public Dx12GpuResource
     {
     public:
+        struct Handle
+        {
+            Win32::ComPtr<ID3D12Resource> Resource;
+            size_t                        Offset;
+            size_t                        Size;
+            GraphicsBufferType            Type;
+            D3D12_RESOURCE_FLAGS          Flags;
+        };
+
         Dx12Buffer(
             ISwapchain*        Swapchain,
             const BufferDesc&  Desc,
@@ -55,19 +64,7 @@ namespace Neon::RHI
         GpuResourceHandle GetHandle() const override;
 
     protected:
-        /// <summary>
-        /// Free resource buffer from gpu
-        /// </summary>
-        void FreeBuffer(
-            GraphicsBufferType Type) const;
-
-    protected:
-        GpuResourceHandle m_Handle;
-
-        size_t m_BufferSize;
-        size_t m_BufferOffset;
-
-        D3D12_RESOURCE_FLAGS m_BufferFlags;
+        Handle m_Buffer;
     };
 
     //
@@ -80,8 +77,6 @@ namespace Neon::RHI
             ISwapchain*        Swapchain,
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
-
-        ~Dx12UploadBuffer() override;
 
         [[nodiscard]] uint8_t* Map() override;
 
@@ -101,8 +96,6 @@ namespace Neon::RHI
             ISwapchain*        Swapchain,
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
-
-        ~Dx12ReadbackBuffer() override;
 
         [[nodiscard]] uint8_t* Map() override;
 
@@ -126,6 +119,8 @@ namespace Neon::RHI
             Win32::ComPtr<ID3D12Resource>      Texture,
             D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
+
+        ~Dx12Texture() override;
 
         [[nodiscard]] const Vector3DI& GetDimensions() const override;
 

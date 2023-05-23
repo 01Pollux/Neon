@@ -43,8 +43,10 @@ NEON_MAIN(Argc, Argv)
         return Engine.Run();
     };
 
-    // auto eng2 = std::async(func);
-    auto eng1 = std::async(func);
+    return func();
 
-    return eng1.get() /*+ eng2.get()*/;
+    // auto eng2 = std::async(func);
+    // auto eng1 = std::async(func);
+
+    // return eng1.get() /*+ eng2.get()*/;
 }

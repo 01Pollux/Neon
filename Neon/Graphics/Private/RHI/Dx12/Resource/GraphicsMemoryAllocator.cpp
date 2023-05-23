@@ -75,12 +75,13 @@ namespace Neon::RHI
         return m_Allocator.Get();
     }
 
-    GraphicsMemoryAllocator::Handle GraphicsMemoryAllocator::AllocateBuffer(
+    Dx12Buffer::Handle GraphicsMemoryAllocator::AllocateBuffer(
         GraphicsBufferType   Type,
         size_t               BufferSize,
         size_t               Alignement,
         D3D12_RESOURCE_FLAGS Flags)
     {
+        NEON_ASSERT(Alignement > 0);
         BufferSize = Math::AlignUp(BufferSize, Alignement);
 
         auto&           Allocator = m_BufferAllocators[Flags][static_cast<size_t>(Type)];
@@ -90,7 +91,7 @@ namespace Neon::RHI
         {
             if (auto Hndl = Iter->Allocator.Allocate(BufferSize, Alignement))
             {
-                return Handle{
+                return {
                     .Resource = Iter->Resource,
                     .Offset   = Hndl.Offset,
                     .Size     = Hndl.Size,
@@ -112,7 +113,7 @@ namespace Neon::RHI
         auto& Block         = Allocator.BufferPools.emplace_back(m_StateManager, GetMA(), Type, Flags, Allocator.SizeOfBuffer);
         auto [Offset, Size] = Block.Allocator.Allocate(BufferSize, Alignement);
 
-        return Handle{
+        return {
             .Resource = Block.Resource,
             .Offset   = Offset,
             .Size     = Size,
@@ -122,7 +123,7 @@ namespace Neon::RHI
     }
 
     void GraphicsMemoryAllocator::FreeBuffer(
-        const Handle& Data)
+        const Dx12Buffer::Handle& Data)
     {
         auto&           Allocator = m_BufferAllocators[Data.Flags][static_cast<size_t>(Data.Type)];
         std::lock_guard BufferLock(Allocator.PoolMutex);

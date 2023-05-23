@@ -105,5 +105,7 @@ namespace Neon::RHI
 
         Ptr<IRootSignature> m_RootSignature;
         Ptr<IPipelineState> m_PipelineState;
+
+        Ptr<IUploadBuffer> m_Buffer;
     };
 } // namespace Neon::RHI

@@ -22,7 +22,7 @@ namespace Neon::RHI
     struct BufferDesc
     {
         size_t         Size;
-        uint32_t       Alignment = 0;
+        uint32_t       Alignment = 1;
         MResourceFlags Flags;
     };
 

@@ -15,6 +15,10 @@
 
 #include <RHI/PipelineState.hpp>
 #include <RHI/RootSignature.hpp>
+#include <Private/RHI/Dx12/RootSignature.hpp>
+#include <Private/RHI/Dx12/PipelineState.hpp>
+
+#include <RHI/Resource/Views/Shader.hpp>
 
 namespace Neon::RHI
 {
@@ -34,6 +38,10 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
+        m_BudgetManager.IdleGPU();
+        m_Buffer        = nullptr;
+        m_PipelineState = nullptr;
+        m_RootSignature = nullptr;
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
     }
 
@@ -41,6 +49,10 @@ namespace Neon::RHI
 
     void Dx12Swapchain::PrepareFrame()
     {
+        struct VsInput
+        {
+            Vector2D Position;
+        };
         static bool test = false;
         {
             if (!test)
@@ -81,6 +93,29 @@ namespace Neon::RHI
                 VsShader->CreateInputLayout(Builder.InputLayout);
 
                 m_PipelineState = IPipelineState::Create(Builder);
+
+                m_Buffer.reset(IUploadBuffer::Create(
+                    this,
+                    { .Size = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6 }));
+
+                auto Vertex = m_Buffer->Map<VsInput>();
+
+                Vertex[0] = { Vector2D(-1.f, -1.f) };
+                Vertex[1] = { Vector2D(-1.f, 1.f) };
+                Vertex[2] = { Vector2D(1.f, -1.f) };
+                Vertex[3] = { Vector2D(1.f, 1.f) };
+
+                auto Input = m_Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
+
+                Input[0] = 0;
+                Input[1] = 1;
+                Input[2] = 2;
+                Input[3] = 2;
+                Input[4] = 1;
+                Input[5] = 3;
+
+                m_Buffer->Unmap();
+                m_Buffer->Unmap();
             }
         }
 
@@ -108,6 +143,46 @@ namespace Neon::RHI
         Context->ClearRtv(Rtv, Color);
         Context->SetRenderTargets(Rtv, 1);
 
+        auto Cmd = dynamic_cast<Dx12CommandList*>(Context)->Get();
+
+        Cmd->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(m_RootSignature.get())->Get());
+        Cmd->SetPipelineState(static_cast<Dx12PipelineState*>(m_PipelineState.get())->Get());
+
+        Views::Vertex Vtx;
+        Vtx.Append(m_Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);
+        D3D12_VERTEX_BUFFER_VIEW VtxView{
+            .BufferLocation = Vtx.GetViews()[0].Handle.Value,
+            .SizeInBytes    = Vtx.GetViews()[0].Size,
+            .StrideInBytes  = Vtx.GetViews()[0].Stride
+        };
+
+        Cmd->IASetVertexBuffers(0, 1, &VtxView);
+
+        Views::Index            Idx(m_Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
+        D3D12_INDEX_BUFFER_VIEW IdxView{
+            .BufferLocation = Idx.Get().Handle.Value,
+            .SizeInBytes    = Idx.Get().Size,
+            .Format         = DXGI_FORMAT_R16_UINT
+        };
+        Cmd->IASetIndexBuffer(&IdxView);
+
+        Cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        D3D12_VIEWPORT Viewport{
+            .Width    = 1280.f,
+            .Height   = 720.f,
+            .MaxDepth = 1.f
+        };
+        Cmd->RSSetViewports(1, &Viewport);
+
+        D3D12_RECT Scissor{
+            .right  = 1280,
+            .bottom = 720
+        };
+        Cmd->RSSetScissorRects(1, &Scissor);
+
+        Cmd->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
         StateManager->FlushBarriers(Context);
     }
@@ -121,6 +196,7 @@ namespace Neon::RHI
     void Dx12Swapchain::Resize(
         const Size2I& Size)
     {
+        // TODO: Resize swapchain
         m_BudgetManager.IdleGPU();
     }
 

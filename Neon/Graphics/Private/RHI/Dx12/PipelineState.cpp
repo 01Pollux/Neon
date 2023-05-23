@@ -263,6 +263,11 @@ namespace Neon::RHI
             IID_PPV_ARGS(&m_PipelineState)));
     }
 
+    ID3D12PipelineState* Dx12PipelineState::Get()
+    {
+        return m_PipelineState.Get();
+    }
+
     //
 
     void Dx12PipelineStateCache::Flush()
