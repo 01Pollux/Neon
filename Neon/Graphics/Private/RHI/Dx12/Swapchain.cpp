@@ -163,7 +163,7 @@ namespace Neon::RHI
             .Height = 720.f });
 
         Context->SetScissorRect(
-            RectF({ 1280.f, 720.f }));
+            RectF(Vector2D::Zero, { 1280.f, 720.f }));
 
         Context->Draw(DrawIndexArgs{
             .IndexCountPerInstance = 6 });
