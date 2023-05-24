@@ -35,6 +35,6 @@ namespace Neon::Module
 
     private:
         UPtr<Windowing::IWindowApp> m_Window;
-        int                         m_ExitCode;
+        int                         m_ExitCode = 0;
     };
 } // namespace Neon::Module
