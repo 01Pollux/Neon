@@ -877,4 +877,45 @@ namespace Neon::RHI
         }
         return Res;
     }
+
+    //
+
+    D3D_PRIMITIVE_TOPOLOGY CastPrimitiveTopology(
+        PrimitiveTopology Topology)
+    {
+
+        switch (Topology)
+        {
+        case PrimitiveTopology::PointList:
+            return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+        case PrimitiveTopology::LineList:
+            return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+        case PrimitiveTopology::LineStrip:
+            return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+        case PrimitiveTopology::TriangleList:
+            return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case PrimitiveTopology::TriangleStrip:
+            return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        case PrimitiveTopology::LineList_Adj:
+            return D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;
+        case PrimitiveTopology::LineStrip_Adj:
+            return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;
+        case PrimitiveTopology::TriangleList_Adj:
+            return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;
+        case PrimitiveTopology::TriangleStrip_Adj:
+            return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;
+        default:
+        {
+            if (Topology >= PrimitiveTopology::PatchList_1 &&
+                Topology <= PrimitiveTopology::PatchList_32)
+            {
+                return D3D_PRIMITIVE_TOPOLOGY(D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST + uint32_t(Topology) - uint32_t(PrimitiveTopology::PatchList_1));
+            }
+            else
+            {
+                std::unreachable();
+            }
+        }
+        }
+    }
 } // namespace Neon::RHI

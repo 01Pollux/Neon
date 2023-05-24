@@ -5,14 +5,14 @@
 namespace Neon
 {
     template<typename _Ty>
-    struct MRect
+    struct RectT
     {
         using value_type = typename _Ty::value_type;
 
         _Ty Position;
         _Ty Size;
 
-        constexpr MRect(
+        constexpr RectT(
             const _Ty& Position = {},
             const _Ty& Size     = {}) noexcept :
             Position(Position),
@@ -73,6 +73,6 @@ namespace Neon
         }
     };
 
-    using RectI = MRect<Vector2DI>;
-    using RectF = MRect<Vector2D>;
+    using RectI = RectT<Vector2DI>;
+    using RectF = RectT<Vector2D>;
 } // namespace Neon

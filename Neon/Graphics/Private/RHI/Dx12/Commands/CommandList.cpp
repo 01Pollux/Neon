@@ -7,7 +7,11 @@
 #include <Private/RHI/Dx12/RootSignature.hpp>
 #include <Private/RHI/Dx12/PipelineState.hpp>
 #include <Private/RHI/Dx12/Resource/Common.hpp>
+#include <RHI/Resource/Views/Shader.hpp>
+
 #include <Math/Colors.hpp>
+#include <Math/Rect.hpp>
+#include <Math/Viewport.hpp>
 
 #include <algorithm>
 
@@ -155,6 +159,54 @@ namespace Neon::RHI
 
     //
 
+    void Dx12CommonCommandList::SetConstants(
+        uint32_t    RootIndex,
+        const void* Constants,
+        size_t      NumConstants32Bit,
+        size_t      DestOffset)
+    {
+        m_CommandList->SetGraphicsRoot32BitConstants(
+            RootIndex,
+            uint32_t(NumConstants32Bit),
+            Constants,
+            uint32_t(DestOffset));
+    }
+
+    void Dx12CommonCommandList::SetResourceView(
+        ViewType Type,
+        uint32_t RootIndex,
+        IBuffer* Resource)
+    {
+        D3D12_GPU_VIRTUAL_ADDRESS Handle{ Resource->GetHandle().Value };
+        switch (Type)
+        {
+        case ViewType::Cbv:
+            m_CommandList->SetGraphicsRootConstantBufferView(
+                RootIndex,
+                Handle);
+            break;
+        case ViewType::Srv:
+            m_CommandList->SetGraphicsRootShaderResourceView(
+                RootIndex,
+                Handle);
+            break;
+        case ViewType::Uav:
+            m_CommandList->SetGraphicsRootUnorderedAccessView(
+                RootIndex,
+                Handle);
+            break;
+        }
+    }
+
+    void Dx12CommonCommandList::SetDescriptorTable(
+        UINT                RootIndex,
+        GpuDescriptorHandle Handle)
+    {
+        m_CommandList->SetGraphicsRootDescriptorTable(RootIndex, { Handle.Value });
+    }
+
+    //
+
     void Dx12GraphicsCommandList::SetRootSignature(
         IRootSignature* RootSig)
     {
@@ -210,6 +262,120 @@ namespace Neon::RHI
             Rtv.data(),
             TRUE,
             DepthStencil ? &Dsv : nullptr);
+    }
+
+    void Dx12GraphicsCommandList::SetScissorRect(
+        std::span<RectT<Vector2D>> Scissors)
+    {
+        std::vector<D3D12_RECT> Rects;
+        Rects.reserve(Scissors.size());
+
+        std::transform(
+            Scissors.begin(),
+            Scissors.end(),
+            std::back_inserter(Rects),
+            [](const RectT<Vector2D>& Rect) -> D3D12_RECT
+            {
+                return {
+                    .left   = LONG(Rect.Left()),
+                    .top    = LONG(Rect.Top()),
+                    .right  = LONG(Rect.Right()),
+                    .bottom = LONG(Rect.Bottom())
+                };
+            });
+
+        m_CommandList->RSSetScissorRects(UINT(Rects.size()), Rects.data());
+    }
+
+    void Dx12GraphicsCommandList::SetViewport(
+        std::span<ViewportF> Views)
+    {
+        std::vector<D3D12_VIEWPORT> Viewports;
+        Viewports.reserve(Views.size());
+
+        std::transform(
+            Views.begin(),
+            Views.end(),
+            std::back_inserter(Viewports),
+            [](const ViewportF& View) -> D3D12_VIEWPORT
+            {
+                return {
+                    .TopLeftX = View.TopLeftX,
+                    .TopLeftY = View.TopLeftY,
+                    .Width    = View.Width,
+                    .Height   = View.Height,
+                    .MinDepth = View.MinDepth,
+                    .MaxDepth = View.MaxDepth
+                };
+            });
+
+        m_CommandList->RSSetViewports(UINT(Viewports.size()), Viewports.data());
+    }
+
+    void Dx12GraphicsCommandList::SetPrimitiveTopology(
+        PrimitiveTopology Topology)
+    {
+        m_CommandList->IASetPrimitiveTopology(CastPrimitiveTopology(Topology));
+    }
+
+    void Dx12GraphicsCommandList::SetIndexBuffer(
+        const Views::Index& View)
+    {
+        D3D12_INDEX_BUFFER_VIEW IndexBuffer{
+            .BufferLocation = View.Get().Handle.Value,
+            .SizeInBytes    = View.Get().Size,
+            .Format         = DXGI_FORMAT_R16_UINT
+        };
+        m_CommandList->IASetIndexBuffer(&IndexBuffer);
+    }
+
+    void Dx12GraphicsCommandList::SetVertexBuffer(
+        size_t               StartSlot,
+        const Views::Vertex& Views)
+    {
+        std::vector<D3D12_VERTEX_BUFFER_VIEW> VertexBuffers;
+        VertexBuffers.reserve(Views.GetViews().size());
+
+        std::transform(
+            Views.GetViews().begin(),
+            Views.GetViews().end(),
+            std::back_inserter(VertexBuffers),
+            [](const Views::Vertex::View& View) -> D3D12_VERTEX_BUFFER_VIEW
+            {
+                return {
+                    .BufferLocation = View.Handle.Value,
+                    .SizeInBytes    = View.Size,
+                    .StrideInBytes  = View.Stride
+                };
+            });
+
+        m_CommandList->IASetVertexBuffers(
+            UINT(StartSlot),
+            UINT(VertexBuffers.size()),
+            VertexBuffers.data());
+    }
+
+    //
+
+    void Dx12GraphicsCommandList::Draw(
+        const DrawIndexArgs& Args)
+    {
+        m_CommandList->DrawIndexedInstanced(
+            Args.IndexCountPerInstance,
+            Args.InstanceCount,
+            Args.StartIndex,
+            Args.StartVertex,
+            Args.StartInstance);
+    }
+
+    void Dx12GraphicsCommandList::Draw(
+        const DrawArgs& Args)
+    {
+        m_CommandList->DrawInstanced(
+            Args.VertexCountPerInstance,
+            Args.InstanceCount,
+            Args.StartVertex,
+            Args.StartInstance);
     }
 
 } // namespace Neon::RHI

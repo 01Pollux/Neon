@@ -363,4 +363,51 @@ namespace Neon::RHI
         Incr,
         Decr
     };
+
+    //
+
+    enum class PrimitiveTopology : uint8_t
+    {
+        PointList,
+        LineList,
+        LineStrip,
+        TriangleList,
+        TriangleStrip,
+        LineList_Adj,
+        LineStrip_Adj,
+        TriangleList_Adj,
+        TriangleStrip_Adj,
+        PatchList_1,
+        PatchList_2,
+        PatchList_3,
+        PatchList_4,
+        PatchList_5,
+        PatchList_6,
+        PatchList_7,
+        PatchList_8,
+        PatchList_9,
+        PatchList_10,
+        PatchList_11,
+        PatchList_12,
+        PatchList_13,
+        PatchList_14,
+        PatchList_15,
+        PatchList_16,
+        PatchList_17,
+        PatchList_18,
+        PatchList_19,
+        PatchList_20,
+        PatchList_21,
+        PatchList_22,
+        PatchList_23,
+        PatchList_24,
+        PatchList_25,
+        PatchList_26,
+        PatchList_27,
+        PatchList_28,
+        PatchList_29,
+        PatchList_30,
+        PatchList_31,
+        PatchList_32
+    };
 } // namespace Neon::RHI

@@ -15,7 +15,6 @@
 
 #include <RHI/PipelineState.hpp>
 #include <RHI/RootSignature.hpp>
-
 #include <RHI/Resource/Views/Shader.hpp>
 
 namespace Neon::RHI
@@ -146,46 +145,28 @@ namespace Neon::RHI
         Context->SetRootSignature(m_RootSignature.get());
         Context->SetPipelineState(m_PipelineState.get());
 
-        auto Cmd = dynamic_cast<Dx12CommandList*>(Context)->Get();
-
         static float Time = 0.f;
         Time += 0.03f;
-        Cmd->SetGraphicsRoot32BitConstants(0, 1, &Time, 0);
+        Context->SetConstants(0, &Time, 1);
 
         Views::Vertex Vtx;
         Vtx.Append(m_Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);
-        D3D12_VERTEX_BUFFER_VIEW VtxView{
-            .BufferLocation = Vtx.GetViews()[0].Handle.Value,
-            .SizeInBytes    = Vtx.GetViews()[0].Size,
-            .StrideInBytes  = Vtx.GetViews()[0].Stride
-        };
+        Context->SetVertexBuffer(0, Vtx);
 
-        Cmd->IASetVertexBuffers(0, 1, &VtxView);
+        Views::Index Idx(m_Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
+        Context->SetIndexBuffer(Idx);
 
-        Views::Index            Idx(m_Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
-        D3D12_INDEX_BUFFER_VIEW IdxView{
-            .BufferLocation = Idx.Get().Handle.Value,
-            .SizeInBytes    = Idx.Get().Size,
-            .Format         = DXGI_FORMAT_R16_UINT
-        };
-        Cmd->IASetIndexBuffer(&IdxView);
+        Context->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
 
-        Cmd->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        Context->SetViewport(ViewportF{
+            .Width  = 1280.f,
+            .Height = 720.f });
 
-        D3D12_VIEWPORT Viewport{
-            .Width    = 1280.f,
-            .Height   = 720.f,
-            .MaxDepth = 1.f
-        };
-        Cmd->RSSetViewports(1, &Viewport);
+        Context->SetScissorRect(
+            RectF({ 1280.f, 720.f }));
 
-        D3D12_RECT Scissor{
-            .right  = 1280,
-            .bottom = 720
-        };
-        Cmd->RSSetScissorRects(1, &Scissor);
-
-        Cmd->DrawIndexedInstanced(6, 1, 0, 0, 0);
+        Context->Draw(DrawIndexArgs{
+            .IndexCountPerInstance = 6 });
 
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState_Common);
         StateManager->FlushBarriers(Context);

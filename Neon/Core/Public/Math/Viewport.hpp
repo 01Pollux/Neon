@@ -2,7 +2,7 @@
 
 namespace Neon
 {
-    struct MViewport
+    struct ViewportF
     {
         float TopLeftX = 0.f;
         float TopLeftY = 0.f;

@@ -63,6 +63,22 @@ namespace Neon::RHI
 
         void SetPipelineState(
             IPipelineState* State) override;
+
+    public:
+        void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0) override;
+
+        void SetResourceView(
+            ViewType Type,
+            uint32_t RootIndex,
+            IBuffer* Resource) override;
+
+        void SetDescriptorTable(
+            UINT                RootIndex,
+            GpuDescriptorHandle Handle) override;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
@@ -88,5 +104,29 @@ namespace Neon::RHI
             const CpuDescriptorHandle* Rtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) override;
+
+    public:
+        void SetScissorRect(
+            std::span<RectT<Vector2D>> Scissors) override;
+
+        void SetViewport(
+            std::span<ViewportF> Views) override;
+
+        void SetPrimitiveTopology(
+            PrimitiveTopology Topology) override;
+
+        void SetIndexBuffer(
+            const Views::Index& View) override;
+
+        void SetVertexBuffer(
+            size_t               StartSlot,
+            const Views::Vertex& Views) override;
+
+    public:
+        void Draw(
+            const DrawIndexArgs& Args) override;
+
+        void Draw(
+            const DrawArgs& Args) override;
     };
 } // namespace Neon::RHI

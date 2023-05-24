@@ -102,4 +102,12 @@ namespace Neon::RHI
     /// </summary>
     [[nodiscard]] D3D12_RESOURCE_FLAGS CastResourceFlags(
         const MResourceFlags& Flags);
+
+    //
+
+    /// <summary>
+    /// Convert Neon primitive topology to D3D12 primitive topology.
+    /// </summary>
+    [[nodiscard]] D3D_PRIMITIVE_TOPOLOGY CastPrimitiveTopology(
+        PrimitiveTopology Topology);
 } // namespace Neon::RHI

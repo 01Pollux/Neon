@@ -1,12 +1,11 @@
 #pragma once
 
 #include <RHI/Commands/Commands.hpp>
-
-namespace Neon
-{
-    class Color4;
-    class Vector3DI;
-} // namespace Neon
+#include <RHI/Resource/Common.hpp>
+#include <Math/Viewport.hpp>
+#include <Math/Colors.hpp>
+#include <Math/Rect.hpp>
+#include <array>
 
 namespace Neon::RHI
 {
@@ -24,6 +23,44 @@ namespace Neon::RHI
 
     struct SubresourceDesc;
     struct TextureCopyLocation;
+
+    namespace Views
+    {
+        class Index;
+        class Vertex;
+    } // namespace Views
+
+    //
+
+    struct DrawIndexArgs
+    {
+        // The location of the first index read by the GPU from the index buffer
+        uint32_t StartIndex = 0;
+        // A value added to each index before reading a vertex from the vertex buffer
+        int32_t StartVertex = 0;
+        // A value added to each index before reading per-instance data from a vertex buffer
+        uint32_t StartInstance = 0;
+
+        // Number of indices read from the index buffer for each instance
+        uint32_t IndexCountPerInstance = 0;
+        // Number of instances to draw
+        uint32_t InstanceCount = 1;
+    };
+
+    struct DrawArgs
+    {
+        // Index of the first vertex
+        int32_t StartVertex = 0;
+        // A value added to each index before reading per-instance data from a vertex buffer
+        uint32_t StartInstance = 0;
+
+        // Number of vertices to draw
+        uint32_t VertexCountPerInstance = 0;
+        // Number of instances to draw
+        uint32_t InstanceCount = 1;
+    };
+
+    //
 
     class ICommandList
     {
@@ -82,6 +119,13 @@ namespace Neon::RHI
     class ICommonCommandList : public virtual ICommandList
     {
     public:
+        enum class ViewType : uint8_t
+        {
+            Cbv,
+            Srv,
+            Uav
+        };
+
         /// <summary>
         /// Set root signature
         /// </summary>
@@ -93,6 +137,31 @@ namespace Neon::RHI
         /// </summary>
         virtual void SetPipelineState(
             IPipelineState* State) = 0;
+
+    public:
+        /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        virtual void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0) = 0;
+
+        /// <summary>
+        /// Set resource view in root signature
+        /// </summary>
+        virtual void SetResourceView(
+            ViewType Type,
+            uint32_t RootIndex,
+            IBuffer* Resource) = 0;
+
+        /// <summary>
+        /// Set descriptor table in root signature
+        /// </summary>
+        virtual void SetDescriptorTable(
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle) = 0;
     };
 
     class IGraphicsCommandList : public virtual ICommonCommandList
@@ -120,5 +189,70 @@ namespace Neon::RHI
             const CpuDescriptorHandle* Rtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) = 0;
+
+    public:
+        /// <summary>
+        /// Set scissor rects
+        /// </summary>
+        virtual void SetScissorRect(
+            std::span<RectT<Vector2D>> Scissors) = 0;
+
+        /// <summary>
+        /// Set scissor rect
+        /// </summary>
+        void SetScissorRect(
+            const RectT<Vector2D>& Scissor)
+        {
+            std::array<RectT<Vector2D>, 1> Scissors{ Scissor };
+            SetScissorRect(Scissors);
+        }
+
+        /// <summary>
+        /// Set viewports
+        /// </summary>
+        virtual void SetViewport(
+            std::span<ViewportF> Views) = 0;
+
+        /// <summary>
+        /// Set viewport
+        /// </summary>
+        void SetViewport(
+            const ViewportF& View)
+        {
+            std::array<ViewportF, 1> Views{ View };
+            SetViewport(Views);
+        }
+
+        /// <summary>
+        /// Set primitive topology
+        /// </summary>
+        virtual void SetPrimitiveTopology(
+            PrimitiveTopology Topology) = 0;
+
+        /// <summary>
+        /// Set index buffer view
+        /// </summary>
+        virtual void SetIndexBuffer(
+            const Views::Index& View) = 0;
+
+        /// <summary>
+        /// Set vertex buffer views
+        /// </summary>
+        virtual void SetVertexBuffer(
+            size_t               StartSlot,
+            const Views::Vertex& Views) = 0;
+
+    public:
+        /// <summary>
+        /// Draw indexed primitives
+        /// </summary>
+        virtual void Draw(
+            const DrawIndexArgs& Args) = 0;
+
+        /// <summary>
+        /// Draw non-indexed primitives
+        /// </summary>
+        virtual void Draw(
+            const DrawArgs& Args) = 0;
     };
 } // namespace Neon::RHI
