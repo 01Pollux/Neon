@@ -14,6 +14,30 @@ namespace Neon::RHI
         NEON_CLASS_NO_COPYMOVE(Dx12CommandList);
         ~Dx12CommandList() override;
 
+        void CopySubresources(
+            IGpuResource*              DstResource,
+            IGpuResource*              Intermediate,
+            size_t                     IntOffset,
+            uint32_t                   FirstSubresource,
+            std::span<SubresourceDesc> SubResources) override;
+
+        void CopyResources(
+            IGpuResource* DstResource,
+            IGpuResource* SrcResource) override;
+
+        void CopyBufferRegion(
+            IBuffer* DstBuffer,
+            size_t   DstOffset,
+            IBuffer* SrcBuffer,
+            size_t   SrcOffset,
+            size_t   NumBytes) override;
+
+        void CopyTextureRegion(
+            const TextureCopyLocation& Dst,
+            const Vector3DI&           DstPosition,
+            const TextureCopyLocation& Src,
+            const CopyBox*             SrcBox = nullptr) override;
+
     public:
         /// <summary>
         /// Attach D3D12 command list.
@@ -36,6 +60,9 @@ namespace Neon::RHI
     {
     public:
         using Dx12CommandList::Dx12CommandList;
+
+        void SetPipelineState(
+            IPipelineState* State) override;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
@@ -44,6 +71,9 @@ namespace Neon::RHI
     {
     public:
         using Dx12CommonCommandList::Dx12CommonCommandList;
+
+        void SetRootSignature(
+            IRootSignature* RootSig) override;
 
         void ClearRtv(
             const CpuDescriptorHandle& RtvHandle,

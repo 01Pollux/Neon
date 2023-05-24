@@ -15,8 +15,6 @@
 
 #include <RHI/PipelineState.hpp>
 #include <RHI/RootSignature.hpp>
-#include <Private/RHI/Dx12/RootSignature.hpp>
-#include <Private/RHI/Dx12/PipelineState.hpp>
 
 #include <RHI/Resource/Views/Shader.hpp>
 
@@ -145,15 +143,14 @@ namespace Neon::RHI
         Context->ClearRtv(Rtv, Color);
         Context->SetRenderTargets(Rtv, 1);
 
-        auto Cmd = dynamic_cast<Dx12CommandList*>(Context)->Get();
+        Context->SetRootSignature(m_RootSignature.get());
+        Context->SetPipelineState(m_PipelineState.get());
 
-        Cmd->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(m_RootSignature.get())->Get());
+        auto Cmd = dynamic_cast<Dx12CommandList*>(Context)->Get();
 
         static float Time = 0.f;
         Time += 0.03f;
         Cmd->SetGraphicsRoot32BitConstants(0, 1, &Time, 0);
-
-        Cmd->SetPipelineState(static_cast<Dx12PipelineState*>(m_PipelineState.get())->Get());
 
         Views::Vertex Vtx;
         Vtx.Append(m_Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);

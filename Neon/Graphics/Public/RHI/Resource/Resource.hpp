@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RHI/Resource/Common.hpp>
+#include <variant>
 
 namespace Neon
 {
@@ -10,6 +11,39 @@ namespace Neon
 namespace Neon::RHI
 {
     class ISwapchain;
+
+    //
+
+    struct ResourceFootprint
+    {
+        uint32_t Width;
+        uint32_t Height;
+        uint32_t Depth;
+        uint32_t RowPitch;
+
+        EResourceFormat Format;
+    };
+
+    struct SubresourceFootprint : public ResourceFootprint
+    {
+        size_t Offset;
+    };
+
+    struct SubresourceDesc
+    {
+        const void* Data;
+        size_t      RowPitch;
+        size_t      SlicePitch;
+    };
+
+    struct TextureCopyLocation
+    {
+        IGpuResource*                                Resource;
+        std::variant<uint32_t, SubresourceFootprint> Subresource;
+    };
+    ;
+
+    //
 
     class IGpuResource
     {
