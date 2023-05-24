@@ -79,7 +79,9 @@ namespace Neon::RHI
                 auto PsShader = Ptr<IShader>(IShader::Create(Desc));
 
                 m_RootSignature = IRootSignature::Create(
-                    RootSignatureBuilder().SetFlags(ERootSignatureBuilderFlags::AllowInputLayout));
+                    RootSignatureBuilder()
+                        .Add32BitConstants<float>(0, 0)
+                        .SetFlags(ERootSignatureBuilderFlags::AllowInputLayout));
 
                 PipelineStateBuilder<false> Builder{
                     .RootSignature     = m_RootSignature.get(),
@@ -146,6 +148,11 @@ namespace Neon::RHI
         auto Cmd = dynamic_cast<Dx12CommandList*>(Context)->Get();
 
         Cmd->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(m_RootSignature.get())->Get());
+
+        static float Time = 0.f;
+        Time += 0.03f;
+        Cmd->SetGraphicsRoot32BitConstants(0, 1, &Time, 0);
+
         Cmd->SetPipelineState(static_cast<Dx12PipelineState*>(m_PipelineState.get())->Get());
 
         Views::Vertex Vtx;
