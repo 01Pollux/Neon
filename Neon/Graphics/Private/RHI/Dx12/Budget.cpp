@@ -88,7 +88,11 @@ namespace Neon::RHI
             CommandList.reset(NEON_NEW Dx12GraphicsCommandList);
             break;
         case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+            CommandList.reset(NEON_NEW Dx12ComputeCommandList);
+            break;
         case D3D12_COMMAND_LIST_TYPE_COPY:
+            CommandList.reset(NEON_NEW Dx12CopyCommandList);
+            break;
         default:
             std::unreachable();
         }

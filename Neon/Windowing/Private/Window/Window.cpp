@@ -124,7 +124,7 @@ namespace Neon::Windowing
             FinalSize.Height() = Rect.bottom - Rect.top;
         }
 
-        m_Handle = CreateWindowExW(
+        CreateWindowExW(
             0,
             Impl::s_ClassName,
             Title.c_str(),
@@ -137,8 +137,6 @@ namespace Neon::Windowing
             nullptr,
             GetModuleHandle(nullptr),
             this);
-
-        SetSize(Size);
 
         if (Style.Test(EWindowStyle::Fullscreen))
         {

@@ -35,6 +35,9 @@ namespace Neon::Windowing
         {
             CREATESTRUCT* CreateInfo = std::bit_cast<CREATESTRUCT*>(lParam);
             SetWindowLongPtr(Handle, GWLP_USERDATA, std::bit_cast<LONG_PTR>(CreateInfo->lpCreateParams));
+
+            WindowApp* Window = std::bit_cast<WindowApp*>(CreateInfo->lpCreateParams);
+            Window->m_Handle  = Handle;
             break;
         }
         }
@@ -73,8 +76,9 @@ namespace Neon::Windowing
         {
         case WM_SIZE:
         {
-            Size2I Size = GetSize(); // TODO: Use wParam
-
+            UINT   Width  = LOWORD(lParam);
+            UINT   Height = HIWORD(lParam);
+            Size2I Size{ int(Width), int(Height) };
             if (wParam != SIZE_MINIMIZED &&
                 !m_WindowFlags.Test(EWindowFlags::Resizing) &&
                 m_WindowSize != Size)

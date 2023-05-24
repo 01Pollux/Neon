@@ -15,4 +15,23 @@
 			</CustomListItems>
 		</Expand>
 	</Type>
+
+	<!---->
+
+	<Type Name="Neon::MVector&lt;*&gt;">
+		<DisplayString Condition="$T2 == 1">{{{m_Data[0]}}}</DisplayString>
+		<DisplayString Condition="$T2 == 2">{{{m_Data[0]}, {m_Data[1]}}}</DisplayString>
+		<DisplayString Condition="$T2 == 3">{{{m_Data[0]}, {m_Data[1]}, {m_Data[2]}}}</DisplayString>
+		<DisplayString Condition="$T2 == 4">{{{m_Data[0]}, {m_Data[1]}, {m_Data[2]}, {m_Data[3]}}}</DisplayString>
+
+	</Type>
+
+	<Type Name="Neon::Size2I">
+		<DisplayString>{m_Data[0]}x{m_Data[1]}</DisplayString>
+	</Type>
+
+	<Type Name="Neon::Size2F">
+		<DisplayString>{m_Data[0]}x{m_Data[1]}</DisplayString>
+	</Type>
+
 </AutoVisualizer>

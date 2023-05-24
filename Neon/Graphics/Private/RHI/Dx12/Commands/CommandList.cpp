@@ -159,7 +159,15 @@ namespace Neon::RHI
 
     //
 
-    void Dx12CommonCommandList::SetConstants(
+    void Dx12GraphicsCommandList::SetRootSignature(
+        IRootSignature* RootSig)
+    {
+        m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig)->Get());
+    }
+
+    //
+
+    void Dx12GraphicsCommandList::SetConstants(
         uint32_t    RootIndex,
         const void* Constants,
         size_t      NumConstants32Bit,
@@ -172,7 +180,7 @@ namespace Neon::RHI
             uint32_t(DestOffset));
     }
 
-    void Dx12CommonCommandList::SetResourceView(
+    void Dx12GraphicsCommandList::SetResourceView(
         ViewType Type,
         uint32_t RootIndex,
         IBuffer* Resource)
@@ -198,7 +206,7 @@ namespace Neon::RHI
         }
     }
 
-    void Dx12CommonCommandList::SetDescriptorTable(
+    void Dx12GraphicsCommandList::SetDescriptorTable(
         UINT                RootIndex,
         GpuDescriptorHandle Handle)
     {
@@ -206,12 +214,6 @@ namespace Neon::RHI
     }
 
     //
-
-    void Dx12GraphicsCommandList::SetRootSignature(
-        IRootSignature* RootSig)
-    {
-        m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig)->Get());
-    }
 
     void Dx12GraphicsCommandList::ClearRtv(
         const CpuDescriptorHandle& RtvHandle,
@@ -378,4 +380,42 @@ namespace Neon::RHI
             Args.StartInstance);
     }
 
+    //
+
+    void Dx12ComputeCommandList::SetRootSignature(
+        IRootSignature* RootSig)
+    {
+    }
+
+    void Dx12ComputeCommandList::SetConstants(
+        uint32_t    RootIndex,
+        const void* Constants,
+        size_t      NumConstants32Bit,
+        size_t      DestOffset)
+    {
+    }
+
+    void Dx12ComputeCommandList::SetResourceView(
+        ViewType Type,
+        uint32_t RootIndex,
+        IBuffer* Resource)
+    {
+    }
+
+    void Dx12ComputeCommandList::SetDescriptorTable(
+        UINT                RootIndex,
+        GpuDescriptorHandle Handle)
+    {
+    }
+
+    void Dx12ComputeCommandList::Dispatch(
+        size_t GroupCountX,
+        size_t GroupCountY,
+        size_t GroupCountZ)
+    {
+        m_CommandList->Dispatch(
+            UINT(GroupCountX),
+            UINT(GroupCountY),
+            UINT(GroupCountZ));
+    }
 } // namespace Neon::RHI

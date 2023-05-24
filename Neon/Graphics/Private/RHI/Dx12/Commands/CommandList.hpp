@@ -63,27 +63,10 @@ namespace Neon::RHI
 
         void SetPipelineState(
             IPipelineState* State) override;
-
-    public:
-        void SetConstants(
-            uint32_t    RootIndex,
-            const void* Constants,
-            size_t      NumConstants32Bit,
-            size_t      DestOffset = 0) override;
-
-        void SetResourceView(
-            ViewType Type,
-            uint32_t RootIndex,
-            IBuffer* Resource) override;
-
-        void SetDescriptorTable(
-            UINT                RootIndex,
-            GpuDescriptorHandle Handle) override;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
                                           public Dx12CommonCommandList
-
     {
     public:
         using Dx12CommonCommandList::Dx12CommonCommandList;
@@ -104,6 +87,22 @@ namespace Neon::RHI
             const CpuDescriptorHandle* Rtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) override;
+
+    public:
+        void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0) override;
+
+        void SetResourceView(
+            ViewType Type,
+            uint32_t RootIndex,
+            IBuffer* Resource) override;
+
+        void SetDescriptorTable(
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle) override;
 
     public:
         void SetScissorRect(
@@ -128,5 +127,44 @@ namespace Neon::RHI
 
         void Draw(
             const DrawArgs& Args) override;
+    };
+
+    //
+
+    class Dx12ComputeCommandList final : public virtual IComputeCommandList,
+                                         public Dx12CommonCommandList
+    {
+    public:
+        void SetRootSignature(
+            IRootSignature* RootSig) override;
+
+    public:
+        void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0) override;
+
+        void SetResourceView(
+            ViewType Type,
+            uint32_t RootIndex,
+            IBuffer* Resource) override;
+
+        void SetDescriptorTable(
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle) override;
+
+    public:
+        void Dispatch(
+            size_t GroupCountX = 1,
+            size_t GroupCountY = 1,
+            size_t GroupCountZ = 1) override;
+    };
+
+    //
+
+    class Dx12CopyCommandList final : public virtual ICopyCommandList,
+                                      public Dx12CommandList
+    {
     };
 } // namespace Neon::RHI

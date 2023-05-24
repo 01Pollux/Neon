@@ -2,6 +2,7 @@
 
 #include <RHI/Commands/Commands.hpp>
 #include <RHI/Resource/Common.hpp>
+#include <Math/Common.hpp>
 #include <Math/Viewport.hpp>
 #include <Math/Colors.hpp>
 #include <Math/Rect.hpp>
@@ -164,6 +165,8 @@ namespace Neon::RHI
             GpuDescriptorHandle Handle) = 0;
     };
 
+    //
+
     class IGraphicsCommandList : public virtual ICommonCommandList
     {
     public:
@@ -254,5 +257,72 @@ namespace Neon::RHI
         /// </summary>
         virtual void Draw(
             const DrawArgs& Args) = 0;
+    };
+
+    //
+
+    class IComputeCommandList : public virtual ICommonCommandList
+    {
+    public:
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        virtual void Dispatch(
+            size_t GroupCountX = 1,
+            size_t GroupCountY = 1,
+            size_t GroupCountZ = 1) = 0;
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch1D(
+            size_t ThreadCountX,
+            size_t GroupSizeX = 64)
+        {
+            Dispatch(
+                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
+                1,
+                1);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch2D(
+            size_t ThreadCountX,
+            size_t ThreadCountY,
+            size_t GroupSizeX = 8,
+            size_t GroupSizeY = 8)
+        {
+            Dispatch(
+                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
+                Math::DivideByMultiple(ThreadCountY, GroupSizeY),
+                1);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch3D(
+            size_t ThreadCountX,
+            size_t ThreadCountY,
+            size_t ThreadCountZ,
+            size_t GroupSizeX,
+            size_t GroupSizeY,
+            size_t GroupSizeZ)
+        {
+
+            Dispatch(
+                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
+                Math::DivideByMultiple(ThreadCountY, GroupSizeY),
+                Math::DivideByMultiple(ThreadCountZ, GroupSizeZ));
+        }
+    };
+
+    //
+
+    class ICopyCommandList : public virtual ICommandList
+    {
+    public:
     };
 } // namespace Neon::RHI
