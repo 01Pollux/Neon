@@ -2,6 +2,7 @@
 
 #include <Config/Window.hpp>
 #include <Config/Resource.hpp>
+#include <Config/Graphics.hpp>
 
 namespace Neon::Config
 {
@@ -9,5 +10,6 @@ namespace Neon::Config
     {
         WindowConfig   Window;
         ResourceConfig Resource;
+        GraphicsConfig Graphics;
     };
 } // namespace Neon::Config

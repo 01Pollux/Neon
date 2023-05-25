@@ -5,11 +5,6 @@
 
 namespace Neon
 {
-    namespace RHI
-    {
-        class ISwapchain;
-    }
-
     namespace Asset
     {
         class IResourceManager;
@@ -31,7 +26,7 @@ namespace Neon
         DefaultGameEngine(DefaultGameEngine&&)             = delete;
         DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
 
-        virtual ~DefaultGameEngine();
+        virtual ~DefaultGameEngine() = default;
 
         /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.
@@ -45,12 +40,6 @@ namespace Neon
 
     private:
         /// <summary>
-        /// Create window application
-        /// </summary>
-        void CreateWindow(
-            const Config::WindowConfig& Config);
-
-        /// <summary>
         /// Load resource packs
         /// </summary>
         void LoadResourcePacks(
@@ -58,8 +47,6 @@ namespace Neon
 
     private:
         World m_World;
-
-        UPtr<RHI::ISwapchain> m_Swapchain;
     };
 } // namespace Neon
 

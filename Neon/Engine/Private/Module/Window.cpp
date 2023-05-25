@@ -1,23 +1,48 @@
 #include <EnginePCH.hpp>
 #include <Module/Window.hpp>
+#include <Module/Graphics.hpp>
 
 namespace Neon::Module
 {
     Window::Window(
-        Neon::World&                   World,
-        const String&                  Title,
-        const Size2I&                  Size,
-        const Windowing::MWindowStyle& Style,
-        bool                           StartInMiddle)
+        Neon::World&                World,
+        const Config::EngineConfig& Config)
     {
         World.ModuleScope<Window>();
 
-        m_Window.reset(Windowing::IWindowApp::Create(Title, Size, Style, StartInMiddle));
+        {
+            auto& WindowConfig = Config.Window;
+
+            Windowing::MWindowStyle Style;
+            if (WindowConfig.WithCloseButton)
+            {
+                Style.Set(Windowing::EWindowStyle::Close);
+            }
+            if (WindowConfig.CanResize)
+            {
+                Style.Set(Windowing::EWindowStyle::Resize);
+            }
+            if (WindowConfig.HasTitleBar)
+            {
+                Style.Set(Windowing::EWindowStyle::TitleBar);
+            }
+            if (WindowConfig.Windowed)
+            {
+                Style.Set(Windowing::EWindowStyle::Windowed);
+            }
+            if (WindowConfig.Fullscreen)
+            {
+                Style.Set(Windowing::EWindowStyle::Fullscreen);
+            }
+            m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
+        }
 
         World->system("Window::MessageLoop")
             .kind(flecs::PreFrame)
             .iter([this](flecs::iter& Iter)
                   { MessageLoop(Iter); });
+
+        World.Import<Graphics>(Config, this);
     }
 
     int Window::GetExitCode() const noexcept

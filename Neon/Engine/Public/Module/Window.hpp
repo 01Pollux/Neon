@@ -2,6 +2,7 @@
 
 #include <Window/Window.hpp>
 #include <World/World.hpp>
+#include <Config/Engine.hpp>
 
 namespace Neon::Module
 {
@@ -9,11 +10,8 @@ namespace Neon::Module
     {
     public:
         Window(
-            Neon::World&                   World,
-            const String&                  Title,
-            const Size2I&                  Size,
-            const Windowing::MWindowStyle& Style,
-            bool                           StartInMiddle);
+            Neon::World&                World,
+            const Config::EngineConfig& Config);
 
         /// <summary>
         /// Get exit code.
