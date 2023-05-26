@@ -11,6 +11,8 @@ namespace Neon::Module
         const Config::EngineConfig& Config,
         Window*                     WindowModule)
     {
+        World.ModuleScope<Graphics>();
+
         RHI::IRenderDevice::CreateGlobal();
 
         auto& GraphicsConfig = Config.Graphics;
@@ -32,6 +34,11 @@ namespace Neon::Module
             .kind(flecs::PostFrame)
             .iter([this](flecs::iter& Iter)
                   { m_Swapchain->Present(); });
+
+        m_OnWindowSizeChanged.Attach(
+            WindowModule->OnWindowSizeChanged(),
+            [this](const Size2I& Extent)
+            { m_Swapchain->Resize(Extent); });
     }
 
     Graphics::~Graphics()

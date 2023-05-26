@@ -4,6 +4,8 @@
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(

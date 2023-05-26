@@ -58,15 +58,24 @@ namespace Neon::Module
     void Window::MessageLoop(
         flecs::iter& Iter)
     {
+        namespace WinEvents = Windowing::Events;
+
         Windowing::Event Msg;
 
         while (m_Window->PeekEvent(&Msg))
         {
-            if (auto Close = std::get_if<Windowing::Events::Close>(&Msg))
-            {
-                m_ExitCode = Close->ExitCode;
-                Iter.world().quit();
-            }
+            std::visit(
+                VariantVisitor{
+                    [this, &Iter](const WinEvents::Close& CloseMsg)
+                    {
+                        m_ExitCode = CloseMsg.ExitCode;
+                        Iter.world().quit();
+                    },
+                    [this, &Iter](const WinEvents::SizeChanged& SizeMsg)
+                    {
+                        OnWindowSizeChanged().Broadcast(SizeMsg.NewSize);
+                    } },
+                Msg);
         }
     }
 } // namespace Neon::Module

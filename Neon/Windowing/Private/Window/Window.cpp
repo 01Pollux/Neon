@@ -343,6 +343,7 @@ namespace Neon::Windowing
         {
             m_PendingEvents.pop();
         }
+
         return true;
     }
 

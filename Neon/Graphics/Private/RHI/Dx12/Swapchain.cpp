@@ -27,7 +27,8 @@ namespace Neon::RHI
 
     Dx12Swapchain::Dx12Swapchain(
         const InitDesc& Desc) :
-        m_BudgetManager(this)
+        m_BudgetManager(this),
+        m_WindowApp(Desc.Window)
     {
         CreateSwapchain(Desc);
         ResizeBackbuffers(Desc.FramesInFlight);
@@ -131,13 +132,7 @@ namespace Neon::RHI
         StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
         StateManager->FlushBarriers(Context);
 
-        m_Time += 0.008f;
-        Color4 Color{
-            sin(2.f * m_Time + 1.f) / 2.f + .5f,
-            sin(3.f * m_Time + 2.f) / 2.f + .5f,
-            sin(5.f * m_Time + 3.f) / 2.f + .5f,
-            1.0f
-        };
+        Color4 Color = Colors::White;
 
         Context->ClearRtv(Rtv, Color);
         Context->SetRenderTargets(Rtv, 1);
@@ -183,6 +178,7 @@ namespace Neon::RHI
     {
         // TODO: Resize swapchain
         m_BudgetManager.IdleGPU();
+        ResizeBackbuffers(m_BackBuffers.size());
     }
 
     //

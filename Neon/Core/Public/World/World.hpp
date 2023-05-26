@@ -24,6 +24,14 @@ namespace Neon
         /// <summary>
         /// Get world
         /// </summary>
+        [[nodiscard]] auto Get() const noexcept
+        {
+            return m_World.get();
+        }
+
+        /// <summary>
+        /// Get world
+        /// </summary>
         [[nodiscard]] auto operator->() const noexcept
         {
             return m_World.get();

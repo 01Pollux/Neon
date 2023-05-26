@@ -4,6 +4,8 @@
 #include <RHI/Swapchain.hpp>
 #include <Config/Engine.hpp>
 
+#include <Module/Window.hpp>
+
 namespace Neon::Module
 {
     class Window;
@@ -27,5 +29,7 @@ namespace Neon::Module
 
     private:
         UPtr<RHI::ISwapchain> m_Swapchain;
+
+        Signals::SHOnWindowSizeChanged m_OnWindowSizeChanged;
     };
 } // namespace Neon::Module

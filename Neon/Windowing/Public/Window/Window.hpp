@@ -2,6 +2,7 @@
 
 #include <Window/Event.hpp>
 #include <Core/Bitmask.hpp>
+#include <Utils/Signal.hpp>
 
 namespace Neon::Windowing
 {

@@ -1,8 +1,11 @@
 #pragma once
 
+#include <Config/Engine.hpp>
 #include <Window/Window.hpp>
 #include <World/World.hpp>
-#include <Config/Engine.hpp>
+#include <Utils/Signal.hpp>
+
+NEON_SIGNAL_DECL(OnWindowSizeChanged, const Neon::Size2I& /*NewSize*/);
 
 namespace Neon::Module
 {
@@ -30,6 +33,9 @@ namespace Neon::Module
         /// </summary>
         void MessageLoop(
             flecs::iter& Iter);
+
+    public:
+        NEON_SIGNAL_INST(OnWindowSizeChanged);
 
     private:
         UPtr<Windowing::IWindowApp> m_Window;

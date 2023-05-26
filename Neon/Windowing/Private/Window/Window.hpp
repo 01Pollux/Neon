@@ -2,7 +2,6 @@
 
 #include <Window/Window.hpp>
 #include <Private/Window/WindowHeaders.hpp>
-
 #include <queue>
 
 namespace Neon::Windowing
