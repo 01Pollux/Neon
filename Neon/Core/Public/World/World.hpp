@@ -11,7 +11,8 @@ namespace Neon
         template<typename _Ty>
         struct ModuleWrapper
         {
-            ModuleWrapper(flecs::world&)
+            ModuleWrapper(
+                flecs::world& World)
             {
             }
             UPtr<_Ty> Module;
@@ -49,9 +50,11 @@ namespace Neon
         _Ty* Import(
             _Args&&... Args)
         {
-            auto Entity     = m_World->import <ModuleWrapper<_Ty>>();
-            auto Wrapper    = Entity.get_mut<ModuleWrapper<_Ty>>();
-            Wrapper->Module = std::make_unique<_Ty>(*this, std::forward<_Args>(Args)...);
+            flecs::entity Entity  = m_World->import <ModuleWrapper<_Ty>>();
+            flecs::entity Scope   = m_World->set_scope(Entity);
+            auto          Wrapper = Entity.get_mut<ModuleWrapper<_Ty>>();
+            Wrapper->Module       = std::make_unique<_Ty>(*this, std::forward<_Args>(Args)...);
+            m_World->set_scope(Scope);
             return Wrapper->Module.get();
         }
 

@@ -4,13 +4,17 @@
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
 
-#include <Log/Logger.hpp>
-
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
+        if (Config.EnableFlecsREST)
+        {
+            m_World->set<flecs::Rest>({});
+            m_World->import <flecs::monitor>();
+        }
+
         LoadResourcePacks(Config.Resource);
         m_World.Import<Module::Window>(Config);
     }

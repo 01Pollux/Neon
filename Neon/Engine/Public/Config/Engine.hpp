@@ -11,5 +11,6 @@ namespace Neon::Config
         WindowConfig   Window;
         ResourceConfig Resource;
         GraphicsConfig Graphics;
+        bool           EnableFlecsREST : 1 = true;
     };
 } // namespace Neon::Config

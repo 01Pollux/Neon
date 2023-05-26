@@ -35,10 +35,10 @@ namespace Neon::Module
             .iter([this](flecs::iter& Iter)
                   { m_Swapchain->Present(); });
 
-        m_OnWindowSizeChanged.Attach(
-            WindowModule->OnWindowSizeChanged(),
-            [this](const Size2I& Extent)
-            { m_Swapchain->Resize(Extent); });
+        // m_OnWindowSizeChanged.Attach(
+        //     WindowModule->OnWindowSizeChanged(),
+        //     [this](const Size2I& Extent)
+        //     { m_Swapchain->Resize(Extent); });
     }
 
     Graphics::~Graphics()
