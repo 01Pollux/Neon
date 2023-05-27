@@ -8,7 +8,13 @@ namespace Neon
     namespace Asset
     {
         class IResourceManager;
-    }
+    } // namespace Asset
+
+    namespace Module
+    {
+        class Window;
+        class ResourceManager;
+    } // namespace Module
 
     extern int Main(
         int      Argc,
@@ -26,17 +32,22 @@ namespace Neon
         DefaultGameEngine(DefaultGameEngine&&)             = delete;
         DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
 
-        virtual ~DefaultGameEngine() = default;
+        virtual ~DefaultGameEngine();
+
+        virtual void Initialize()
+        {
+        }
+        virtual void Shutdown()
+        {
+        }
+        virtual void Tick()
+        {
+        }
 
         /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.
         /// </summary>
         int Run();
-
-        /// <summary>
-        /// Get engine's current world.
-        /// </summary>
-        World& GetWorld();
 
     private:
         /// <summary>
@@ -46,7 +57,8 @@ namespace Neon
             const Config::ResourceConfig& Config);
 
     private:
-        World m_World;
+        UPtr<Module::ResourceManager> m_ResourceManager;
+        UPtr<Module::Window>          m_Window;
     };
 } // namespace Neon
 

@@ -212,6 +212,11 @@ namespace Neon::RHI
         return m_FrameIndex;
     }
 
+    void BudgetManager::ResetFrameIndex()
+    {
+        m_FrameIndex = 0;
+    }
+
     void BudgetManager::IdleGPU()
     {
         for (auto QueueType : {

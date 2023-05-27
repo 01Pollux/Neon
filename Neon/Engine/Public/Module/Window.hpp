@@ -2,19 +2,27 @@
 
 #include <Config/Engine.hpp>
 #include <Window/Window.hpp>
-#include <World/World.hpp>
 #include <Utils/Signal.hpp>
 
 NEON_SIGNAL_DECL(OnWindowSizeChanged, const Neon::Size2I& /*NewSize*/);
 
+namespace Neon
+{
+    class DefaultGameEngine;
+} // namespace Neon
+
 namespace Neon::Module
 {
+    class Graphics;
+
     class Window
     {
     public:
         Window(
-            Neon::World&                World,
+            DefaultGameEngine*          Engine,
             const Config::EngineConfig& Config);
+        NEON_CLASS_COPYMOVE(Window);
+        ~Window();
 
         /// <summary>
         /// Get exit code.
@@ -26,19 +34,23 @@ namespace Neon::Module
         /// </summary>
         [[nodiscard]] Windowing::IWindowApp* GetWindow() const noexcept;
 
-    private:
         /// <summary>
-        /// Called on ::PreFrame
-        /// Dispatch the pending window events
+        /// Get associated geraphics module.
         /// </summary>
-        void MessageLoop(
-            flecs::iter& Iter);
+        [[nodiscard]] Graphics* GetGraphics() const noexcept;
+
+        /// <summary>
+        /// Dispatch the pending window events
+        /// Run the window message loop.
+        /// </summary>
+        bool Run();
 
     public:
         NEON_SIGNAL_INST(OnWindowSizeChanged);
 
     private:
         UPtr<Windowing::IWindowApp> m_Window;
+        UPtr<Graphics>              m_Graphics;
         int                         m_ExitCode = 0;
     };
 } // namespace Neon::Module

@@ -3,43 +3,45 @@
 
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
+#include <Module/Graphics.hpp>
 
 namespace Neon
 {
     DefaultGameEngine::DefaultGameEngine(
         const Config::EngineConfig& Config)
     {
-        if (Config.EnableFlecsREST)
-        {
-            m_World->set<flecs::Rest>({});
-            m_World->import <flecs::monitor>();
-        }
-
         LoadResourcePacks(Config.Resource);
-        m_World.Import<Module::Window>(Config);
+        m_Window = std::make_unique<Module::Window>(this, Config);
+    }
+
+    DefaultGameEngine::~DefaultGameEngine()
+    {
     }
 
     int DefaultGameEngine::Run()
     {
-        while (!m_World->should_quit())
+        Initialize();
+        auto Graphics = m_Window->GetGraphics();
+        while (m_Window->Run())
         {
-            m_World->progress();
-        }
-        return m_World.GetModule<Module::Window>()->GetExitCode();
-    }
+            m_ResourceManager->Run();
+            Tick();
 
-    World& DefaultGameEngine::GetWorld()
-    {
-        return m_World;
+            Graphics->PreRender();
+            Graphics->Render();
+            Graphics->PostRender();
+        }
+        Shutdown();
+        return m_Window->GetExitCode();
     }
 
     void DefaultGameEngine::LoadResourcePacks(
         const Config::ResourceConfig& Config)
     {
-        auto Manager = m_World.Import<Module::ResourceManager>(Config.Manager)->Get();
+        m_ResourceManager = std::make_unique<Module::ResourceManager>(this, Config.Manager);
         for (auto& [Tag, Path] : Config.Packs)
         {
-            Manager->LoadPack(Tag, Path);
+            m_ResourceManager->Get()->LoadPack(Tag, Path);
         }
     }
 } // namespace Neon

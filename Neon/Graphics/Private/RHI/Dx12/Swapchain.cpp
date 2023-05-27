@@ -176,9 +176,10 @@ namespace Neon::RHI
     void Dx12Swapchain::Resize(
         const Size2I& Size)
     {
-        // TODO: Resize swapchain
         m_BudgetManager.IdleGPU();
         ResizeBackbuffers(m_BackBuffers.size());
+        m_BudgetManager.ResetFrameIndex();
+        m_BudgetManager.IdleGPU();
     }
 
     //

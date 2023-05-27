@@ -1,7 +1,11 @@
 #pragma once
 
 #include <Resource/Manager.hpp>
-#include <World/World.hpp>
+
+namespace Neon
+{
+    class DefaultGameEngine;
+} // namespace Neon
 
 namespace Neon::Module
 {
@@ -9,7 +13,7 @@ namespace Neon::Module
     {
     public:
         ResourceManager(
-            Neon::World&             World,
+            DefaultGameEngine*       Engine,
             Asset::IResourceManager* Manager);
 
         /// <summary>
@@ -17,13 +21,16 @@ namespace Neon::Module
         /// </summary>
         [[nodiscard]] Asset::IResourceManager* Get();
 
+        /// <summary>
+        /// Run the resource manager.
+        /// </summary>
+        void Run();
+
     private:
         /// <summary>
-        /// Called on ::OnLoad
         /// Flushes the pending asset packs.
         /// </summary>
-        void FlushPacks(
-            flecs::iter& Iter);
+        void FlushPacks();
 
     private:
         UPtr<Asset::IResourceManager> m_Manager;

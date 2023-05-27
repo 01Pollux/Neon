@@ -7,12 +7,10 @@
 namespace Neon::Module
 {
     Graphics::Graphics(
-        Neon::World&                World,
+        DefaultGameEngine*          Engine,
         const Config::EngineConfig& Config,
         Window*                     WindowModule)
     {
-        World.ModuleScope<Graphics>();
-
         RHI::IRenderDevice::CreateGlobal();
 
         auto& GraphicsConfig = Config.Graphics;
@@ -25,20 +23,10 @@ namespace Neon::Module
         };
         m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
 
-        World->system("Swapchain::PrepareFrame")
-            .kind(flecs::PreFrame)
-            .iter([this](flecs::iter& Iter)
-                  { m_Swapchain->PrepareFrame(); });
-
-        World->system("Swapchain::Present")
-            .kind(flecs::PostFrame)
-            .iter([this](flecs::iter& Iter)
-                  { m_Swapchain->Present(); });
-
-        // m_OnWindowSizeChanged.Attach(
-        //     WindowModule->OnWindowSizeChanged(),
-        //     [this](const Size2I& Extent)
-        //     { m_Swapchain->Resize(Extent); });
+        m_OnWindowSizeChanged.Attach(
+            WindowModule->OnWindowSizeChanged(),
+            [this](const Size2I& Extent)
+            { m_Swapchain->Resize(Extent); });
     }
 
     Graphics::~Graphics()
@@ -49,5 +37,19 @@ namespace Neon::Module
     RHI::ISwapchain* Graphics::GetSwapchain() const noexcept
     {
         return m_Swapchain.get();
+    }
+
+    void Graphics::PreRender()
+    {
+        m_Swapchain->PrepareFrame();
+    }
+
+    void Graphics::Render()
+    {
+    }
+
+    void Graphics::PostRender()
+    {
+        m_Swapchain->Present();
     }
 } // namespace Neon::Module

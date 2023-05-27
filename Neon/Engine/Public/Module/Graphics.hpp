@@ -1,10 +1,13 @@
 #pragma once
 
-#include <World/World.hpp>
-#include <RHI/Swapchain.hpp>
 #include <Config/Engine.hpp>
-
+#include <RHI/Swapchain.hpp>
 #include <Module/Window.hpp>
+
+namespace Neon
+{
+    class DefaultGameEngine;
+} // namespace Neon
 
 namespace Neon::Module
 {
@@ -14,7 +17,7 @@ namespace Neon::Module
     {
     public:
         Graphics(
-            Neon::World&                World,
+            DefaultGameEngine*          Engine,
             const Config::EngineConfig& Config,
             Window*                     WindowModule);
 
@@ -25,7 +28,22 @@ namespace Neon::Module
         /// <summary>
         /// Get the swapchain.
         /// </summary>
-        RHI::ISwapchain* GetSwapchain() const noexcept;
+        [[nodiscard]] RHI::ISwapchain* GetSwapchain() const noexcept;
+
+        /// <summary>
+        /// Prepare frame for rendering.
+        /// </summary>
+        void PreRender();
+
+        /// <summary>
+        /// Render frame.
+        /// </summary>
+        void Render();
+
+        /// <summary>
+        /// Present frame.
+        /// </summary>
+        void PostRender();
 
     private:
         UPtr<RHI::ISwapchain> m_Swapchain;

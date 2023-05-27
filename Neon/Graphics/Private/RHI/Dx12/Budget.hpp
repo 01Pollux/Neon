@@ -168,6 +168,11 @@ namespace Neon::RHI
         [[nodiscard]] uint32_t GetFrameIndex() const;
 
         /// <summary>
+        /// Reset frame index to 0
+        /// </summary>
+        void ResetFrameIndex();
+
+        /// <summary>
         /// Forces GPU to wait for all commands to finish.
         /// </summary>
         void IdleGPU();
