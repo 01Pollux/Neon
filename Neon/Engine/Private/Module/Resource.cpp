@@ -5,8 +5,8 @@
 namespace Neon::Module
 {
     ResourceManager::ResourceManager(
-        DefaultGameEngine*       Engine,
-        Asset::IResourceManager* Manager)
+        Runtime::DefaultGameEngine* Engine,
+        Asset::IResourceManager*    Manager)
     {
         m_Manager.reset(Manager);
     }

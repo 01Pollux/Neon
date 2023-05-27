@@ -2,10 +2,10 @@
 
 #include <Resource/Manager.hpp>
 
-namespace Neon
+namespace Neon::Runtime
 {
     class DefaultGameEngine;
-} // namespace Neon
+} // namespace Neon::Runtime
 
 namespace Neon::Module
 {
@@ -13,8 +13,8 @@ namespace Neon::Module
     {
     public:
         ResourceManager(
-            DefaultGameEngine*       Engine,
-            Asset::IResourceManager* Manager);
+            Runtime::DefaultGameEngine* Engine,
+            Asset::IResourceManager*    Manager);
 
         /// <summary>
         /// Get resource manager.

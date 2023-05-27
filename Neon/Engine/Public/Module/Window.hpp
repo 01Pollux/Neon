@@ -6,10 +6,10 @@
 
 NEON_SIGNAL_DECL(OnWindowSizeChanged, const Neon::Size2I& /*NewSize*/);
 
-namespace Neon
+namespace Neon::Runtime
 {
     class DefaultGameEngine;
-} // namespace Neon
+} // namespace Neon::Runtime
 
 namespace Neon::Module
 {
@@ -19,7 +19,7 @@ namespace Neon::Module
     {
     public:
         Window(
-            DefaultGameEngine*          Engine,
+            Runtime::DefaultGameEngine* Engine,
             const Config::EngineConfig& Config);
         NEON_CLASS_COPYMOVE(Window);
         ~Window();
@@ -50,7 +50,8 @@ namespace Neon::Module
 
     private:
         UPtr<Windowing::IWindowApp> m_Window;
-        UPtr<Graphics>              m_Graphics;
         int                         m_ExitCode = 0;
+
+        UPtr<Graphics> m_Graphics;
     };
 } // namespace Neon::Module

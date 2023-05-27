@@ -5,7 +5,7 @@
 namespace Neon::Module
 {
     Window::Window(
-        DefaultGameEngine*          Engine,
+        Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config)
     {
         auto& WindowConfig = Config.Window;
@@ -36,9 +36,7 @@ namespace Neon::Module
         m_Graphics = std::make_unique<Module::Graphics>(Engine, Config, this);
     }
 
-    Window::~Window()
-    {
-    }
+    Window::~Window() = default;
 
     int Window::GetExitCode() const noexcept
     {

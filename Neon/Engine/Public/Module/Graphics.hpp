@@ -4,10 +4,10 @@
 #include <RHI/Swapchain.hpp>
 #include <Module/Window.hpp>
 
-namespace Neon
+namespace Neon::Runtime
 {
     class DefaultGameEngine;
-} // namespace Neon
+} // namespace Neon::Runtime
 
 namespace Neon::Module
 {
@@ -17,7 +17,7 @@ namespace Neon::Module
     {
     public:
         Graphics(
-            DefaultGameEngine*          Engine,
+            Runtime::DefaultGameEngine* Engine,
             const Config::EngineConfig& Config,
             Window*                     WindowModule);
 
@@ -34,11 +34,6 @@ namespace Neon::Module
         /// Prepare frame for rendering.
         /// </summary>
         void PreRender();
-
-        /// <summary>
-        /// Render frame.
-        /// </summary>
-        void Render();
 
         /// <summary>
         /// Present frame.

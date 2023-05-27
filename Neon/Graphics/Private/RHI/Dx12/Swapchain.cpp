@@ -36,7 +36,6 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
-        m_BudgetManager.IdleGPU();
         m_Buffer        = nullptr;
         m_PipelineState = nullptr;
         m_RootSignature = nullptr;

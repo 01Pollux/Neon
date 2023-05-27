@@ -1,21 +1,16 @@
 #pragma once
 
-#include <World/World.hpp>
 #include <Config/Engine.hpp>
+#include <Runtime/GameLogic.hpp>
 
-namespace Neon
+namespace Neon::Module
 {
-    namespace Asset
-    {
-        class IResourceManager;
-    } // namespace Asset
+    class ResourceManager;
+    class Window;
+} // namespace Neon::Module
 
-    namespace Module
-    {
-        class Window;
-        class ResourceManager;
-    } // namespace Module
-
+namespace Neon::Runtime
+{
     extern int Main(
         int      Argc,
         wchar_t* Argv[]);
@@ -34,13 +29,17 @@ namespace Neon
 
         virtual ~DefaultGameEngine();
 
+        /// <summary>
+        /// Called when the engine is initialized.
+        /// </summary>
         virtual void Initialize()
         {
         }
+
+        /// <summary>
+        /// Called when the engine is shutdown.
+        /// </summary>
         virtual void Shutdown()
-        {
-        }
-        virtual void Tick()
         {
         }
 
@@ -59,8 +58,9 @@ namespace Neon
     private:
         UPtr<Module::ResourceManager> m_ResourceManager;
         UPtr<Module::Window>          m_Window;
+        GameLogic                     m_GameLogic;
     };
-} // namespace Neon
+} // namespace Neon::Runtime
 
 #if NEON_DIST
 
@@ -76,24 +76,24 @@ namespace Neon
         Neon::Logger::Shutdown();              \
         return Ret;                            \
     }                                          \
-    int Neon::Main(                            \
+    int Neon::Runtime::Main(                   \
         int      Argc,                         \
         wchar_t* Argv[])
 
 #else
 
-#define NEON_MAIN(Argc, Argv)             \
-    int main(                             \
-        int       argc,                   \
-        wchar_t** argv)                   \
-    {                                     \
-        Neon::Logger::Initialize();       \
-        int Ret = Neon::Main(argc, argv); \
-        Neon::Logger::Shutdown();         \
-        return Ret;                       \
-    }                                     \
-    int Neon::Main(                       \
-        int      Argc,                    \
+#define NEON_MAIN(Argc, Argv)                      \
+    int main(                                      \
+        int       argc,                            \
+        wchar_t** argv)                            \
+    {                                              \
+        Neon::Logger::Initialize();                \
+        int Ret = Neon::Runtime::Main(argc, argv); \
+        Neon::Logger::Shutdown();                  \
+        return Ret;                                \
+    }                                              \
+    int Neon::Runtime::Main(                       \
+        int      Argc,                             \
         wchar_t* Argv[])
 
 #endif

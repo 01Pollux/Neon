@@ -8,7 +8,7 @@
 
 using namespace Neon;
 
-class TestGameEngine : public DefaultGameEngine
+class TestGameEngine : public Runtime::DefaultGameEngine
 {
 public:
     TestGameEngine() :

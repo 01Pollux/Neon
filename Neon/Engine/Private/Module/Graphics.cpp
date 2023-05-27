@@ -7,7 +7,7 @@
 namespace Neon::Module
 {
     Graphics::Graphics(
-        DefaultGameEngine*          Engine,
+        Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config,
         Window*                     WindowModule)
     {
@@ -42,10 +42,6 @@ namespace Neon::Module
     void Graphics::PreRender()
     {
         m_Swapchain->PrepareFrame();
-    }
-
-    void Graphics::Render()
-    {
     }
 
     void Graphics::PostRender()

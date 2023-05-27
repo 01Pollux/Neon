@@ -5,10 +5,11 @@
 #include <Module/Resource.hpp>
 #include <Module/Graphics.hpp>
 
-namespace Neon
+namespace Neon::Runtime
 {
     DefaultGameEngine::DefaultGameEngine(
-        const Config::EngineConfig& Config)
+        const Config::EngineConfig& Config) :
+        m_GameLogic(this)
     {
         LoadResourcePacks(Config.Resource);
         m_Window = std::make_unique<Module::Window>(this, Config);
@@ -25,10 +26,10 @@ namespace Neon
         while (m_Window->Run())
         {
             m_ResourceManager->Run();
-            Tick();
+            m_GameLogic.Tick();
 
             Graphics->PreRender();
-            Graphics->Render();
+            m_GameLogic.Render();
             Graphics->PostRender();
         }
         Shutdown();
@@ -44,4 +45,4 @@ namespace Neon
             m_ResourceManager->Get()->LoadPack(Tag, Path);
         }
     }
-} // namespace Neon
+} // namespace Neon::Runtime
