@@ -155,7 +155,7 @@ namespace Neon::RHI
             uint32_t DescriptorSize) override;
 
         void Free(
-            const DescriptorHeapHandle& Data) override;
+            std::span<DescriptorHeapHandle> Handles) override;
 
         void FreeAll() override;
 
@@ -192,7 +192,7 @@ namespace Neon::RHI
             uint32_t DescriptorSize) override;
 
         void Free(
-            const DescriptorHeapHandle& Data) override;
+            std::span<DescriptorHeapHandle> Handles) override;
 
         void FreeAll() override;
 

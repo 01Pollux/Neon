@@ -1,6 +1,7 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Swapchain.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -137,6 +138,7 @@ namespace Neon::RHI
 
     BudgetManager::BudgetManager(
         ISwapchain* Swapchain) :
+        m_Swapchain(static_cast<Dx12Swapchain*>(Swapchain)),
         m_QueueManager(Swapchain),
         m_StaticDescriptorHeap{
             Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfCPUDescriptor_Resource, false),
@@ -182,6 +184,8 @@ namespace Neon::RHI
             auto& Info = *m_QueueManager.Get(QueueType);
             Info.Fence.WaitCPU(m_FenceValue);
         }
+        auto& Frame = m_FrameResources[m_FrameIndex];
+        Frame.Reset(m_Swapchain);
     }
 
     void BudgetManager::EndFrame()
@@ -236,6 +240,11 @@ namespace Neon::RHI
             auto& Info = *m_QueueManager.Get(QueueType);
             Info.Fence.WaitCPU(m_FenceValue);
         }
+
+        for (auto& Frame : m_FrameResources)
+        {
+            Frame.Reset(m_Swapchain);
+        }
     }
 
     //
@@ -247,8 +256,9 @@ namespace Neon::RHI
         std::vector<ICommandList*> Result;
         Result.reserve(Count);
 
-        auto&           Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
-        std::lock_guard Lock(Context.Mutex);
+        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+
+        std::scoped_lock Lock(Context.Mutex);
 
         auto& Frame = m_FrameResources[m_FrameIndex];
         for (size_t i = 0; i < Count; i++)
@@ -264,8 +274,9 @@ namespace Neon::RHI
     {
         NEON_ASSERT(!Commands.empty());
 
-        auto&           Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
-        std::lock_guard Lock(Context.Mutex);
+        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+
+        std::scoped_lock Lock(Context.Mutex);
 
         for (auto Command : Commands)
         {
@@ -279,8 +290,9 @@ namespace Neon::RHI
     {
         NEON_ASSERT(!Commands.empty());
 
-        auto&           Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
-        std::lock_guard Lock(Context.Mutex);
+        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+
+        std::scoped_lock Lock(Context.Mutex);
 
         auto& Frame = m_FrameResources[m_FrameIndex];
         for (auto Command : Commands)
@@ -298,4 +310,36 @@ namespace Neon::RHI
         return Dynamic ? &m_DynamicDescriptorHeap[Type] : &m_StaticDescriptorHeap[Type];
     }
 
+    void BudgetManager::SafeRelease(
+        const Ptr<IDescriptorHeap>& Heap)
+    {
+        std::scoped_lock Lock(m_StaleResourcesMutex[0]);
+        auto&            Frame = m_FrameResources[m_FrameIndex];
+        Frame.SafeRelease(Heap);
+    }
+
+    void BudgetManager::SafeRelease(
+        const Ptr<IDescriptorHeapAllocator>& Allocator,
+        const DescriptorHeapHandle&          Handle)
+    {
+        std::scoped_lock Lock(m_StaleResourcesMutex[1]);
+        auto&            Frame = m_FrameResources[m_FrameIndex];
+        Frame.SafeRelease(Allocator, Handle);
+    }
+
+    void BudgetManager::SafeRelease(
+        const Dx12Buffer::Handle& Handle)
+    {
+        std::scoped_lock Lock(m_StaleResourcesMutex[2]);
+        auto&            Frame = m_FrameResources[m_FrameIndex];
+        Frame.SafeRelease(Handle);
+    }
+
+    void BudgetManager::SafeRelease(
+        const Win32::ComPtr<ID3D12Resource>& Resource)
+    {
+        std::scoped_lock Lock(m_StaleResourcesMutex[3]);
+        auto&            Frame = m_FrameResources[m_FrameIndex];
+        Frame.SafeRelease(Resource);
+    }
 } // namespace Neon::RHI

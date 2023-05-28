@@ -2,7 +2,6 @@
 
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 #include <Private/RHI/Dx12/Commands/CommandList.hpp>
-#include <Private/RHI/Dx12/Resource/Descriptor.hpp>
 #include <Private/RHI/Dx12/Frame.hpp>
 #include <Private/RHI/Dx12/Fence.hpp>
 #include <Allocator/FreeList.hpp>
@@ -12,6 +11,7 @@ namespace Neon::RHI
 {
     class Dx12CommandList;
     class ISwapchain;
+    class Dx12Swapchain;
 
     class Dx12CommandQueueManager
     {
@@ -207,7 +207,33 @@ namespace Neon::RHI
             D3D12_DESCRIPTOR_HEAP_TYPE Type,
             bool                       Dynamic);
 
+        /// <summary>
+        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeap>& Heap);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeapAllocator>& Allocator,
+            const DescriptorHeapHandle&          Handle);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Dx12Buffer::Handle& Handle);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12Resource>& Resource);
+
     private:
+        Dx12Swapchain*          m_Swapchain;
         Dx12CommandQueueManager m_QueueManager;
 
         DescriptorHeapAllocators m_StaticDescriptorHeap;
@@ -218,5 +244,7 @@ namespace Neon::RHI
 
         std::vector<FrameResource> m_FrameResources;
         uint32_t                   m_FrameIndex = 0;
+
+        std::mutex m_StaleResourcesMutex[4];
     };
 } // namespace Neon::RHI

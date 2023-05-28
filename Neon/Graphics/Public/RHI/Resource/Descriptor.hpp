@@ -147,8 +147,7 @@ namespace Neon::RHI
         enum class AllocationType : uint8_t
         {
             Ring,
-            Buddy,
-            // give me more strategies
+            Buddy
         };
 
         [[nodiscard]] static IDescriptorHeapAllocator* Create(
@@ -164,10 +163,20 @@ namespace Neon::RHI
             uint32_t DescriptorSize) = 0;
 
         /// <summary>
-        /// Free current descriptor handle
+        /// Free current descriptor handles
         /// </summary>
         virtual void Free(
-            const DescriptorHeapHandle& Data) = 0;
+            std::span<DescriptorHeapHandle> Handles) = 0;
+
+        /// <summary>
+        /// Free current descriptor handle
+        /// </summary>
+        void Free(
+            const DescriptorHeapHandle& Data)
+        {
+            std::array Handles(Data);
+            Free(Handles);
+        }
 
         /// <summary>
         /// Free all active descriptors

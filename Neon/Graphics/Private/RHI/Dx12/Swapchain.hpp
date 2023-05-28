@@ -3,11 +3,9 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/Fence.hpp>
 
-#include <RHI/Resource/Views/RenderTarget.hpp>
-
-#include <Private/RHI/Dx12/Resource/Resource.hpp>
-#include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
 #include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
+#include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
+#include <RHI/Resource/Views/RenderTarget.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
 
 #include <random>
@@ -23,8 +21,6 @@ namespace Neon::RHI
 
     class Dx12Swapchain final : public ISwapchain
     {
-        static constexpr DXGI_FORMAT SwapchainFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-
     public:
         Dx12Swapchain(
             const InitDesc& Desc);
@@ -35,8 +31,11 @@ namespace Neon::RHI
 
         void Present() override;
 
+        EResourceFormat GetFormat() override;
+
         void Resize(
-            const Size2I& Size) override;
+            const Size2I&   Size,
+            EResourceFormat NewFormat) override;
 
         [[nodiscard]] ICommandQueue* GetQueue(
             CommandQueueType Type) override;
@@ -69,6 +68,31 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
+        /// <summary>
+        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeap>& Heap) override;
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeapAllocator>& Allocator,
+            const DescriptorHeapHandle&          Handle) override;
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Dx12Buffer::Handle& Handle);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12Resource>& Resource);
+
     public:
         /// <summary>
         /// Get memory allocator
@@ -79,31 +103,29 @@ namespace Neon::RHI
         /// <summary>
         /// Create the swapchain.
         /// </summary>
-        void
-        CreateSwapchain(
+        void CreateSwapchain(
             const InitDesc& Desc);
 
         /// <summary>
         /// Resize the swapchain.
         /// </summary>
         void ResizeBackbuffers(
-            size_t NewSize);
+            uint32_t NewSize);
 
     private:
-        Windowing::IWindowApp*  m_WindowApp;
-        GraphicsMemoryAllocator m_MemoryAllocator;
-
+        Windowing::IWindowApp*         m_WindowApp;
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
-        std::vector<Dx12Texture>       m_BackBuffers;
+        GraphicsMemoryAllocator        m_MemoryAllocator;
+        BudgetManager                  m_BudgetManager;
 
-        BudgetManager       m_BudgetManager;
-        Views::RenderTarget m_RenderTargets;
+        std::vector<Dx12Texture> m_BackBuffers;
+        Views::RenderTarget      m_RenderTargets;
+
+        EResourceFormat m_BackbufferFormat = EResourceFormat::Unknown;
 
         //
 
         Ptr<IRootSignature> m_RootSignature;
         Ptr<IPipelineState> m_PipelineState;
-
-        Ptr<IUploadBuffer> m_Buffer;
     };
 } // namespace Neon::RHI

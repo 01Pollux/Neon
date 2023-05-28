@@ -649,7 +649,7 @@ namespace Neon::RHI
     }
 
     void Dx12RingDescriptorHeapAllocator::Free(
-        const DescriptorHeapHandle& Data)
+        std::span<DescriptorHeapHandle>)
     {
     }
 
@@ -721,19 +721,24 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeapBuddyAllocator::Free(
-        const DescriptorHeapHandle& Data)
+        std::span<DescriptorHeapHandle> Handles)
     {
         std::lock_guard HeapLock(m_HeapsBlockMutex);
 
-        for (auto& Block : m_HeapBlocks)
+        for (auto& Data : Handles)
         {
-            if (Data.Heap == &Block.Heap)
+            bool Exists = false;
+            for (auto& Block : m_HeapBlocks)
             {
-                Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
-                return;
+                if (Data.Heap == &Block.Heap)
+                {
+                    Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
+                    Exists = true;
+                    break;
+                }
             }
+            NEON_ASSERT(Exists, "Tried to free a non-existant heap");
         }
-        NEON_ASSERT(false, "Tried to free a non-existant heap");
     }
 
     void Dx12DescriptorHeapBuddyAllocator::FreeAll()

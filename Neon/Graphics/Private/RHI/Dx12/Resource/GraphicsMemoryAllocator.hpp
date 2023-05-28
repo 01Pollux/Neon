@@ -38,8 +38,6 @@ namespace Neon::RHI
 
         struct BufferAllocator
         {
-            std::mutex PoolMutex;
-
             size_t                SizeOfBuffer = 65'536;
             std::list<BuddyBlock> BufferPools;
         };
@@ -67,8 +65,8 @@ namespace Neon::RHI
         /// <summary>
         /// Free current buffer handle
         /// </summary>
-        void FreeBuffer(
-            const Dx12Buffer::Handle& Data);
+        void FreeBuffers(
+            std::span<Dx12Buffer::Handle> Handles);
 
     public:
         /// <summary>
@@ -78,6 +76,7 @@ namespace Neon::RHI
 
     private:
         Dx12ResourceStateManager          m_StateManager;
+        std::mutex                        m_PoolMutex;
         Win32::ComPtr<D3D12MA::Allocator> m_Allocator;
         BufferAllocatorByFlags            m_BufferAllocators;
     };

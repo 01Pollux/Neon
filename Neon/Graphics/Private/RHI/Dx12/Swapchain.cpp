@@ -3,6 +3,7 @@
 
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
+#include <Private/RHI/Dx12/Resource/Common.hpp>
 
 #include <Math/Colors.hpp>
 #include <RHI/Commands/CommandsContext.hpp>
@@ -28,7 +29,8 @@ namespace Neon::RHI
     Dx12Swapchain::Dx12Swapchain(
         const InitDesc& Desc) :
         m_BudgetManager(this),
-        m_WindowApp(Desc.Window)
+        m_WindowApp(Desc.Window),
+        m_BackbufferFormat(Desc.BackbufferFormat)
     {
         CreateSwapchain(Desc);
         ResizeBackbuffers(Desc.FramesInFlight);
@@ -36,7 +38,6 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
-        m_Buffer        = nullptr;
         m_PipelineState = nullptr;
         m_RootSignature = nullptr;
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
@@ -50,7 +51,9 @@ namespace Neon::RHI
         {
             Vector2D Position;
         };
-        static bool test = false;
+
+        Ptr<IUploadBuffer> m_Buffer;
+        static bool        test = false;
         {
             if (!test)
             {
@@ -92,31 +95,35 @@ namespace Neon::RHI
                 VsShader->CreateInputLayout(Builder.InputLayout);
 
                 m_PipelineState = IPipelineState::Create(Builder);
-
-                m_Buffer.reset(IUploadBuffer::Create(
-                    this,
-                    { .Size = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6 }));
-
-                auto Vertex = m_Buffer->Map<VsInput>();
-
-                Vertex[0] = { Vector2D(-1.f, -1.f) };
-                Vertex[1] = { Vector2D(-1.f, 1.f) };
-                Vertex[2] = { Vector2D(1.f, -1.f) };
-                Vertex[3] = { Vector2D(1.f, 1.f) };
-
-                auto Input = m_Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
-
-                Input[0] = 0;
-                Input[1] = 1;
-                Input[2] = 2;
-                Input[3] = 2;
-                Input[4] = 1;
-                Input[5] = 3;
-
-                m_Buffer->Unmap();
-                m_Buffer->Unmap();
             }
         }
+
+        //
+
+        m_Buffer.reset(IUploadBuffer::Create(
+            this,
+            { .Size = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6 }));
+
+        auto Vertex = m_Buffer->Map<VsInput>();
+
+        Vertex[0] = { Vector2D(-1.f, -1.f) };
+        Vertex[1] = { Vector2D(-1.f, 1.f) };
+        Vertex[2] = { Vector2D(1.f, -1.f) };
+        Vertex[3] = { Vector2D(1.f, 1.f) };
+
+        auto Input = m_Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
+
+        Input[0] = 0;
+        Input[1] = 1;
+        Input[2] = 2;
+        Input[3] = 2;
+        Input[4] = 1;
+        Input[5] = 3;
+
+        m_Buffer->Unmap();
+        m_Buffer->Unmap();
+
+        //
 
         m_BudgetManager.NewFrame();
         uint32_t FrameIndex = m_BudgetManager.GetFrameIndex();
@@ -172,11 +179,30 @@ namespace Neon::RHI
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
-    void Dx12Swapchain::Resize(
-        const Size2I& Size)
+    EResourceFormat Dx12Swapchain::GetFormat()
     {
+        return m_BackbufferFormat;
+    }
+
+    void Dx12Swapchain::Resize(
+        const Size2I&   Size,
+        EResourceFormat NewFormat)
+    {
+        if (NewFormat != EResourceFormat::Unknown)
+        {
+            m_BackbufferFormat = NewFormat;
+        }
+
         m_BudgetManager.IdleGPU();
-        ResizeBackbuffers(m_BackBuffers.size());
+
+        ThrowIfFailed(m_Swapchain->ResizeBuffers(
+            uint32_t(m_BackBuffers.size()),
+            Size.Width(),
+            Size.Height(),
+            CastFormat(NewFormat),
+            0));
+
+        ResizeBackbuffers(uint32_t(m_BackBuffers.size()));
         m_BudgetManager.ResetFrameIndex();
         m_BudgetManager.IdleGPU();
     }
@@ -200,7 +226,7 @@ namespace Neon::RHI
             DXGI_SWAP_CHAIN_DESC1 SwapchainDesc{
                 .Width      = UINT(WindowSize.Width()),
                 .Height     = UINT(WindowSize.Height()),
-                .Format     = SwapchainFormat,
+                .Format     = CastFormat(m_BackbufferFormat),
                 .SampleDesc = {
                     .Count   = Desc.Sample.Count,
                     .Quality = Desc.Sample.Quality,
@@ -208,7 +234,7 @@ namespace Neon::RHI
                 .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount = Desc.FramesInFlight,
                 .SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-                .Flags       = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+                .Flags       = 0
             };
 
             DXGI_SWAP_CHAIN_FULLSCREEN_DESC FullscreenDesc{
@@ -241,7 +267,7 @@ namespace Neon::RHI
                         .Numerator   = Desc.RefreshRate.Numerator,
                         .Denominator = Desc.RefreshRate.Denominator,
                     },
-                    .Format = SwapchainFormat },
+                    .Format = CastFormat(m_BackbufferFormat) },
                 .SampleDesc = {
                     .Count   = Desc.Sample.Count,
                     .Quality = Desc.Sample.Quality,
@@ -266,15 +292,16 @@ namespace Neon::RHI
     }
 
     void Dx12Swapchain::ResizeBackbuffers(
-        size_t NewSize)
+        uint32_t NewSize)
     {
         m_BackBuffers.clear();
         m_BackBuffers.reserve(NewSize);
+        m_BudgetManager.ResizeFrames(NewSize);
         m_RenderTargets = Views::RenderTarget(
             NewSize,
             GetDescriptorHeapManager(DescriptorType::RenderTargetView, false));
 
-        for (size_t i = 0; i < NewSize; ++i)
+        for (uint32_t i = 0; i < NewSize; ++i)
         {
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
@@ -285,7 +312,5 @@ namespace Neon::RHI
                 nullptr,
                 i);
         }
-
-        m_BudgetManager.ResizeFrames(NewSize);
     }
 } // namespace Neon::RHI

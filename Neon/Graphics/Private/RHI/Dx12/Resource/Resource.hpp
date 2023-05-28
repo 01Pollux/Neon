@@ -42,6 +42,8 @@ namespace Neon::RHI
     class Dx12Buffer : public virtual IBuffer,
                        public Dx12GpuResource
     {
+        friend class FrameResource;
+
     public:
         struct Handle
         {
@@ -83,7 +85,7 @@ namespace Neon::RHI
         void Unmap() override;
 
     private:
-        uint8_t* m_MappedData;
+        uint8_t* m_MappedData = nullptr;
     };
 
     //
@@ -102,7 +104,7 @@ namespace Neon::RHI
         void Unmap() override;
 
     private:
-        uint8_t* m_MappedData;
+        uint8_t* m_MappedData = nullptr;
     };
 
     //

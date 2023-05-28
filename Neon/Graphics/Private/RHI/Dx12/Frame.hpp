@@ -1,10 +1,13 @@
 #pragma once
 
-#include <Private/RHI/Dx12/DirectXHeaders.hpp>
+#include <Private/RHI/Dx12/Resource/Descriptor.hpp>
+#include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Allocator/FreeList.hpp>
 
 namespace Neon::RHI
 {
+    class Dx12Swapchain;
+
     class FrameResource
     {
     public:
@@ -28,6 +31,37 @@ namespace Neon::RHI
         ID3D12CommandAllocator* RequestAllocator(
             D3D12_COMMAND_LIST_TYPE CommandType);
 
+        /// <summary>
+        /// Release all stale resources
+        /// </summary>
+        void Reset(
+            Dx12Swapchain* Swapchain);
+
+        /// <summary>
+        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeap>& Heap);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Ptr<IDescriptorHeapAllocator>& Allocator,
+            const DescriptorHeapHandle&          Handle);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Dx12Buffer::Handle& Handle);
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12Resource>& Resource);
+
     public:
         /// <summary>
         /// Convert index to command list type
@@ -43,5 +77,11 @@ namespace Neon::RHI
 
     private:
         Dx12CommandAllocatorPools m_AllocatorsPools;
+
+        std::map<Ptr<IDescriptorHeapAllocator>, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;
+
+        std::vector<Ptr<IDescriptorHeap>>          m_DescriptorHeaps;
+        std::vector<Dx12Buffer::Handle>            m_Buffers;
+        std::vector<Win32::ComPtr<ID3D12Resource>> m_Resources;
     };
 } // namespace Neon::RHI

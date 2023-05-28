@@ -43,8 +43,7 @@ namespace Neon::RHI
 
     Dx12Buffer::~Dx12Buffer()
     {
-        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
-        Allocator->FreeBuffer(m_Buffer);
+        static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Buffer);
     }
 
     size_t Dx12Buffer::GetSize() const
@@ -56,7 +55,6 @@ namespace Neon::RHI
     {
         return { m_Resource->GetGPUVirtualAddress() + m_Buffer.Offset };
     }
-
     //
 
     IUploadBuffer* IUploadBuffer::Create(
@@ -153,6 +151,7 @@ namespace Neon::RHI
         {
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StopTrakingResource(m_Resource.Get());
+            static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Resource.Get());
         }
     }
 

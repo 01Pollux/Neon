@@ -82,10 +82,11 @@ namespace Neon::RHI
         D3D12_RESOURCE_FLAGS Flags)
     {
         NEON_ASSERT(Alignement > 0);
+
+        std::scoped_lock BufferLock(m_PoolMutex);
         BufferSize = Math::AlignUp(BufferSize, Alignement);
 
-        auto&           Allocator = m_BufferAllocators[Flags][static_cast<size_t>(Type)];
-        std::lock_guard BufferLock(Allocator.PoolMutex);
+        auto& Allocator = m_BufferAllocators[Flags][static_cast<size_t>(Type)];
 
         for (auto Iter = Allocator.BufferPools.begin(); Iter != Allocator.BufferPools.end(); Iter++)
         {
@@ -122,21 +123,26 @@ namespace Neon::RHI
         };
     }
 
-    void GraphicsMemoryAllocator::FreeBuffer(
-        const Dx12Buffer::Handle& Data)
+    void GraphicsMemoryAllocator::FreeBuffers(
+        std::span<Dx12Buffer::Handle> Handles)
     {
-        auto&           Allocator = m_BufferAllocators[Data.Flags][static_cast<size_t>(Data.Type)];
-        std::lock_guard BufferLock(Allocator.PoolMutex);
+        std::scoped_lock BufferLock(m_PoolMutex);
 
-        for (auto& Block : Allocator.BufferPools)
+        for (auto& Data : Handles)
         {
-            if (Data.Resource == Block.Resource)
+            auto& Allocator = m_BufferAllocators[Data.Flags][static_cast<size_t>(Data.Type)];
+            bool  Exists    = false;
+            for (auto& Block : Allocator.BufferPools)
             {
-                Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
-                return;
+                if (Data.Resource == Block.Resource)
+                {
+                    Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
+                    Exists = true;
+                    break;
+                }
             }
+            NEON_ASSERT(Exists, "Tried to free a non-existant buffer");
         }
-        NEON_ASSERT(false, "Tried to free a non-existant buffer");
     }
 
     Dx12ResourceStateManager* RHI::GraphicsMemoryAllocator::GetStateManager()

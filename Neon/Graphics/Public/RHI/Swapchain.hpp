@@ -32,7 +32,9 @@ namespace Neon::RHI
                 uint16_t Count   = 1;
                 uint16_t Quality = 0;
             } Sample;
-            uint32_t FramesInFlight = 3;
+            uint32_t        FramesInFlight   = 3;
+            EResourceFormat BackbufferFormat = EResourceFormat::R8G8B8A8_UNorm;
+
             // TODO: Add more swapchain settings. such as format, vsync, etc.
         };
 
@@ -52,10 +54,16 @@ namespace Neon::RHI
         virtual void Present() = 0;
 
         /// <summary>
+        /// Get the swapchain's format (backbuffer format).
+        /// </summary>
+        [[nodiscard]] virtual EResourceFormat GetFormat() = 0;
+
+        /// <summary>
         /// Set swapchain's size.
         /// </summary>
         virtual void Resize(
-            const Size2I& Size) = 0;
+            const Size2I&   Size,
+            EResourceFormat NewFormat = EResourceFormat::Unknown) = 0;
 
         /// <summary>
         /// Get the swapchain's queue.
@@ -74,5 +82,18 @@ namespace Neon::RHI
         [[nodiscard]] virtual IDescriptorHeapAllocator* GetDescriptorHeapManager(
             DescriptorType Type,
             bool           Dynamic) = 0;
+
+        /// <summary>
+        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// </summary>
+        virtual void SafeRelease(
+            const Ptr<IDescriptorHeap>& Heap) = 0;
+
+        /// <summary>
+        /// Enqueue resource to be released at the end of the frame.
+        /// </summary>
+        virtual void SafeRelease(
+            const Ptr<IDescriptorHeapAllocator>& Allocator,
+            const DescriptorHeapHandle&          Handle) = 0;
     };
 } // namespace Neon::RHI

@@ -3,6 +3,7 @@
 #include <RHI/Commands/CommandList.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <RHI/Resource/Views/GenericView.hpp>
+#include <Private/RHI/Dx12/Resource/Descriptor.hpp>
 
 namespace Neon::RHI
 {
@@ -66,18 +67,22 @@ namespace Neon::RHI
             IPipelineState* State) override;
 
     public:
-        /// <summary>
-        /// Get resource heap view
-        /// </summary>
         [[nodiscard]] Views::Generic& GetResourceView() override;
 
-        /// <summary>
-        /// Get resource heap view
-        /// </summary>
         [[nodiscard]] Views::Generic& GetSamplerView() override;
 
     private:
-        Views::Generic m_ResourceView, m_SamplerView;
+        Views::Generic
+            m_ResourceView,
+            m_SamplerView;
+
+        Ptr<Dx12DescriptorHeapBuddyAllocator>
+            m_ResourceViewAllocator,
+            m_SamplerViewAllocator;
+
+        Dx12DescriptorHeap
+            *m_ResourceViewHeap = nullptr,
+            *m_SamplerHeap      = nullptr;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,

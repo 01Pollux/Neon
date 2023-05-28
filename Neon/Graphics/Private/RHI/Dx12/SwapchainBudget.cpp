@@ -30,7 +30,8 @@ namespace Neon::RHI
         return &m_MemoryAllocator;
     }
 
-    ICommandQueue* Dx12Swapchain::GetQueue(CommandQueueType Type)
+    ICommandQueue* Dx12Swapchain::GetQueue(
+        CommandQueueType Type)
     {
         return &m_BudgetManager.GetQueueManager()->Get(CastCommandQueueType(Type))->Queue;
     }
@@ -45,5 +46,30 @@ namespace Neon::RHI
         bool           Dynamic)
     {
         return m_BudgetManager.GetDescriptorHeapManager(CastDescriptorType(Type), Dynamic);
+    }
+
+    void Dx12Swapchain::SafeRelease(
+        const Ptr<IDescriptorHeap>& Heap)
+    {
+        m_BudgetManager.SafeRelease(Heap);
+    }
+
+    void Dx12Swapchain::SafeRelease(
+        const Ptr<IDescriptorHeapAllocator>& Allocator,
+        const DescriptorHeapHandle&          Handle)
+    {
+        m_BudgetManager.SafeRelease(Allocator, Handle);
+    }
+
+    void Dx12Swapchain::SafeRelease(
+        const Dx12Buffer::Handle& Handle)
+    {
+        m_BudgetManager.SafeRelease(Handle);
+    }
+
+    void Dx12Swapchain::SafeRelease(
+        const Win32::ComPtr<ID3D12Resource>& Resource)
+    {
+        m_BudgetManager.SafeRelease(Resource);
     }
 } // namespace Neon::RHI

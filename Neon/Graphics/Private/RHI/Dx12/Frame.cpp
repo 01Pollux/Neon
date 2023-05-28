@@ -1,6 +1,7 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Frame.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Swapchain.hpp>
 
 namespace Neon::RHI
 {
@@ -19,6 +20,48 @@ namespace Neon::RHI
         auto Allocator = m_AllocatorsPools[CommandType].Allocate(CommandType)->CommandAllocator.Get();
         ThrowIfFailed(Allocator->Reset());
         return Allocator;
+    }
+
+    void FrameResource::Reset(
+        Dx12Swapchain* Swapchain)
+    {
+        for (auto& [HeapAllocators, Handles] : m_DescriptorHeapHandles)
+        {
+            HeapAllocators->Free(Handles);
+        }
+
+        auto Allocator = Swapchain->GetAllocator();
+        Allocator->FreeBuffers(m_Buffers);
+
+        m_DescriptorHeaps.clear();
+        m_DescriptorHeapHandles.clear();
+        m_Buffers.clear();
+        m_Resources.clear();
+    }
+
+    void FrameResource::SafeRelease(
+        const Ptr<IDescriptorHeap>& Heap)
+    {
+        m_DescriptorHeaps.emplace_back(Heap);
+    }
+
+    void FrameResource::SafeRelease(
+        const Ptr<IDescriptorHeapAllocator>& Allocator,
+        const DescriptorHeapHandle&          Handle)
+    {
+        m_DescriptorHeapHandles[Allocator].emplace_back(Handle);
+    }
+
+    void FrameResource::SafeRelease(
+        const Dx12Buffer::Handle& Handle)
+    {
+        m_Buffers.emplace_back(Handle);
+    }
+
+    void FrameResource::SafeRelease(
+        const Win32::ComPtr<ID3D12Resource>& Resource)
+    {
+        m_Resources.emplace_back(Resource);
     }
 
     //
