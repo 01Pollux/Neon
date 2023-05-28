@@ -202,16 +202,41 @@ namespace Neon::RHI
             m_BackbufferFormat = NewFormat;
         }
 
+        uint32_t BackbufferCount = uint32_t(m_BackBuffers.size());
+        m_BackBuffers.clear();
+        m_BackBuffers.reserve(BackbufferCount);
+
+        auto Allocator = GetDescriptorHeapManager(DescriptorType::RenderTargetView, false);
+        if (m_RenderTargets)
+        {
+            Allocator->Free(m_RenderTargets.GetHandle());
+        }
+
         m_BudgetManager.IdleGPU();
 
         ThrowIfFailed(m_Swapchain->ResizeBuffers(
-            uint32_t(m_BackBuffers.size()),
+            0,
             Size.Width(),
             Size.Height(),
-            CastFormat(NewFormat),
+            CastFormat(m_BackbufferFormat),
             0));
 
-        ResizeBackbuffers(uint32_t(m_BackBuffers.size()));
+        m_RenderTargets = Views::RenderTarget(
+            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false),
+            BackbufferCount);
+
+        for (uint32_t i = 0; i < BackbufferCount; ++i)
+        {
+            Win32::ComPtr<ID3D12Resource> BackBuffer;
+            ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
+            auto& Buffer = m_BackBuffers.emplace_back(this, std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+
+            m_RenderTargets.Bind(
+                &Buffer,
+                nullptr,
+                i);
+        }
+
         m_BudgetManager.ResetFrameIndex();
         m_BudgetManager.IdleGPU();
     }
