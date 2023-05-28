@@ -189,6 +189,7 @@ namespace Neon::Renderer
         {
             try
             {
+                m_ResourceDescriptor.Release();
                 DestroyDescriptors();
             }
             catch (...)

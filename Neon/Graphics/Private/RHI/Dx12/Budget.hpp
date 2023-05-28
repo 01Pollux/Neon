@@ -65,6 +65,7 @@ namespace Neon::RHI
             std::unique_ptr<Dx12CommandList>         CommandList;
 
             CommandListInstance(
+                ISwapchain*             Swapchain,
                 ID3D12CommandAllocator* Allocator,
                 D3D12_COMMAND_LIST_TYPE CommandType);
         };
@@ -79,6 +80,7 @@ namespace Neon::RHI
         /// Request command list from pool
         /// </summary>
         ICommandList* Request(
+            ISwapchain*    Swapchain,
             FrameResource& Frame);
 
         /// <summary>
@@ -208,17 +210,11 @@ namespace Neon::RHI
             bool                       Dynamic);
 
         /// <summary>
-        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// Enqueue a descriptor handle to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Ptr<IDescriptorHeap>& Heap);
-
-        /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
-        /// </summary>
-        void SafeRelease(
-            const Ptr<IDescriptorHeapAllocator>& Allocator,
-            const DescriptorHeapHandle&          Handle);
+            IDescriptorHeapAllocator*   Allocator,
+            const DescriptorHeapHandle& Handle);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.
@@ -227,24 +223,30 @@ namespace Neon::RHI
             const Dx12Buffer::Handle& Handle);
 
         /// <summary>
+        /// Enqueue descriptor to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12DescriptorHeap>& Resource);
+
+        /// <summary>
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
             const Win32::ComPtr<ID3D12Resource>& Resource);
 
     private:
-        Dx12Swapchain*          m_Swapchain;
-        Dx12CommandQueueManager m_QueueManager;
-
-        DescriptorHeapAllocators m_StaticDescriptorHeap;
-        DescriptorHeapAllocators m_DynamicDescriptorHeap;
-
-        CommandContextPools m_ContextPool;
-        uint64_t            m_FenceValue = 0;
+        Dx12Swapchain* m_Swapchain;
 
         std::vector<FrameResource> m_FrameResources;
         uint32_t                   m_FrameIndex = 0;
 
-        std::mutex m_StaleResourcesMutex[4];
+        Dx12CommandQueueManager m_QueueManager;
+
+        CommandContextPools m_ContextPool;
+        uint64_t            m_FenceValue = 0;
+
+        std::mutex               m_StaleResourcesMutex[4];
+        DescriptorHeapAllocators m_StaticDescriptorHeap;
+        DescriptorHeapAllocators m_DynamicDescriptorHeap;
     };
 } // namespace Neon::RHI

@@ -133,13 +133,13 @@ namespace Neon::RHI
         /// Set root signature
         /// </summary>
         virtual void SetRootSignature(
-            IRootSignature* RootSig) = 0;
+            const Ptr<IRootSignature>& RootSig) = 0;
 
         /// <summary>
         /// Set pipeline state
         /// </summary>
         virtual void SetPipelineState(
-            IPipelineState* State) = 0;
+            const Ptr<IPipelineState>& State) = 0;
 
     public:
         /// <summary>
@@ -158,6 +158,15 @@ namespace Neon::RHI
             ViewType Type,
             uint32_t RootIndex,
             IBuffer* Resource) = 0;
+
+        /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        virtual void SetDynamicResourceView(
+            ViewType    Type,
+            uint32_t    RootIndex,
+            const void* Data,
+            size_t      Size) = 0;
 
         /// <summary>
         /// Set descriptor table in root signature

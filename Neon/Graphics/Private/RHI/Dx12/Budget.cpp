@@ -71,6 +71,7 @@ namespace Neon::RHI
     //
 
     Dx12CommandContextManager::CommandListInstance::CommandListInstance(
+        ISwapchain*             Swapchain,
         ID3D12CommandAllocator* Allocator,
         D3D12_COMMAND_LIST_TYPE CommandType)
     {
@@ -86,13 +87,13 @@ namespace Neon::RHI
         switch (CommandType)
         {
         case D3D12_COMMAND_LIST_TYPE_DIRECT:
-            CommandList.reset(NEON_NEW Dx12GraphicsCommandList);
+            CommandList.reset(NEON_NEW Dx12GraphicsCommandList(Swapchain));
             break;
         case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-            CommandList.reset(NEON_NEW Dx12ComputeCommandList);
+            CommandList.reset(NEON_NEW Dx12ComputeCommandList(Swapchain));
             break;
         case D3D12_COMMAND_LIST_TYPE_COPY:
-            CommandList.reset(NEON_NEW Dx12CopyCommandList);
+            CommandList.reset(NEON_NEW Dx12CopyCommandList(Swapchain));
             break;
         default:
             std::unreachable();
@@ -106,11 +107,12 @@ namespace Neon::RHI
     }
 
     ICommandList* Dx12CommandContextManager::Request(
+        ISwapchain*    Swapchain,
         FrameResource& Frame)
     {
         auto Allocator = Frame.RequestAllocator(m_Type);
 
-        auto Iter = m_CommandListsPool.Allocate(Allocator, m_Type);
+        auto Iter = m_CommandListsPool.Allocate(Swapchain, Allocator, m_Type);
         ThrowIfFailed(Iter->Dx12CmdList->Reset(Allocator, nullptr));
 
         Iter->CommandList->AttachCommandList(Iter->Dx12CmdList.Get());
@@ -141,16 +143,16 @@ namespace Neon::RHI
         m_Swapchain(static_cast<Dx12Swapchain*>(Swapchain)),
         m_QueueManager(Swapchain),
         m_StaticDescriptorHeap{
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfCPUDescriptor_Resource, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfCPUDescriptor_Samplers, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfCPUDescriptor_Rtv, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfCPUDescriptor_Dsv, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfCPUDescriptor_Resource, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfCPUDescriptor_Samplers, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfCPUDescriptor_Rtv, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfCPUDescriptor_Dsv, false),
         },
         m_DynamicDescriptorHeap{
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfGPUDescriptor_Resource, true),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfGPUDescriptor_Samplers, true),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfGPUDescriptor_Rtv, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfGPUDescriptor_Dsv, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfGPUDescriptor_Resource, true),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfGPUDescriptor_Samplers, true),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfGPUDescriptor_Rtv, false),
+            Dx12DescriptorHeapBuddyAllocator(Swapchain, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfGPUDescriptor_Dsv, false),
         },
         m_ContextPool{
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_DIRECT)),
@@ -263,7 +265,7 @@ namespace Neon::RHI
         auto& Frame = m_FrameResources[m_FrameIndex];
         for (size_t i = 0; i < Count; i++)
         {
-            Result.emplace_back(Context.Pool.Request(Frame));
+            Result.emplace_back(Context.Pool.Request(m_Swapchain, Frame));
         }
         return Result;
     }
@@ -311,18 +313,10 @@ namespace Neon::RHI
     }
 
     void BudgetManager::SafeRelease(
-        const Ptr<IDescriptorHeap>& Heap)
+        IDescriptorHeapAllocator*   Allocator,
+        const DescriptorHeapHandle& Handle)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[0]);
-        auto&            Frame = m_FrameResources[m_FrameIndex];
-        Frame.SafeRelease(Heap);
-    }
-
-    void BudgetManager::SafeRelease(
-        const Ptr<IDescriptorHeapAllocator>& Allocator,
-        const DescriptorHeapHandle&          Handle)
-    {
-        std::scoped_lock Lock(m_StaleResourcesMutex[1]);
         auto&            Frame = m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Allocator, Handle);
     }
@@ -330,9 +324,17 @@ namespace Neon::RHI
     void BudgetManager::SafeRelease(
         const Dx12Buffer::Handle& Handle)
     {
-        std::scoped_lock Lock(m_StaleResourcesMutex[2]);
+        std::scoped_lock Lock(m_StaleResourcesMutex[1]);
         auto&            Frame = m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Handle);
+    }
+
+    void BudgetManager::SafeRelease(
+        const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
+    {
+        std::scoped_lock Lock(m_StaleResourcesMutex[2]);
+        auto&            Frame = m_FrameResources[m_FrameIndex];
+        Frame.SafeRelease(Descriptor);
     }
 
     void BudgetManager::SafeRelease(

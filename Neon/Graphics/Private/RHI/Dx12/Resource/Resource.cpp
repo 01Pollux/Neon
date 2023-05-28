@@ -151,7 +151,7 @@ namespace Neon::RHI
         {
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StopTrakingResource(m_Resource.Get());
-            static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Resource.Get());
+            static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Resource);
         }
     }
 

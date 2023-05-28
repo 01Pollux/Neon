@@ -84,16 +84,10 @@ namespace Neon::RHI
             bool           Dynamic) = 0;
 
         /// <summary>
-        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// Enqueue a descriptor handle to be released at the end of the frame.
         /// </summary>
         virtual void SafeRelease(
-            const Ptr<IDescriptorHeap>& Heap) = 0;
-
-        /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
-        /// </summary>
-        virtual void SafeRelease(
-            const Ptr<IDescriptorHeapAllocator>& Allocator,
-            const DescriptorHeapHandle&          Handle) = 0;
+            IDescriptorHeapAllocator*   Allocator,
+            const DescriptorHeapHandle& Handle) = 0;
     };
 } // namespace Neon::RHI

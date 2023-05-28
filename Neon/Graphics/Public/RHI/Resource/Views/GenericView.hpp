@@ -10,44 +10,25 @@ namespace Neon::RHI::Views
     public:
         Generic() = default;
         Generic(
-            uint32_t                  Size,
-            IDescriptorHeapAllocator* Allocator) :
-            m_Allocator(Allocator),
+            IDescriptorHeapAllocator* Allocator,
+            uint32_t                  Size) :
             m_Handle(Allocator->Allocate(Size))
         {
         }
 
-        NEON_CLASS_NO_COPY(Generic);
-
         Generic(
-            Generic&& Other) noexcept :
-            m_Allocator(std::exchange(Other.m_Allocator, nullptr)),
-            m_Handle(Other.m_Handle)
+            const DescriptorHeapHandle& Handle) :
+            m_Handle(Handle)
         {
-        }
-
-        Generic& operator=(
-            Generic&& Other) noexcept
-        {
-            if (this != &Other)
-            {
-                m_Allocator = std::exchange(Other.m_Allocator, nullptr);
-                m_Handle    = Other.m_Handle;
-            }
-            return *this;
-        }
-
-        ~Generic()
-        {
-            if (m_Allocator)
-            {
-                m_Allocator->Free(m_Handle);
-                m_Allocator = nullptr;
-            }
         }
 
         constexpr bool operator==(
             const Generic& Other) const noexcept = default;
+
+        operator bool() const noexcept
+        {
+            return static_cast<bool>(m_Handle);
+        }
 
         /// <summary>
         /// Get the CPU descriptor handle.
@@ -68,14 +49,6 @@ namespace Neon::RHI::Views
         }
 
         /// <summary>
-        /// Get the descriptor heap allocator.
-        /// </summary>
-        IDescriptorHeapAllocator* GetAllocator() const noexcept
-        {
-            return m_Allocator;
-        }
-
-        /// <summary>
         /// Get the descriptor handle.
         /// </summary>
         const DescriptorHeapHandle& GetHandle() const noexcept
@@ -84,7 +57,6 @@ namespace Neon::RHI::Views
         }
 
     private:
-        IDescriptorHeapAllocator* m_Allocator = nullptr;
-        DescriptorHeapHandle      m_Handle;
+        DescriptorHeapHandle m_Handle;
     };
 } // namespace Neon::RHI::Views

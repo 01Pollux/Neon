@@ -49,14 +49,8 @@ namespace Neon::RHI
     }
 
     void Dx12Swapchain::SafeRelease(
-        const Ptr<IDescriptorHeap>& Heap)
-    {
-        m_BudgetManager.SafeRelease(Heap);
-    }
-
-    void Dx12Swapchain::SafeRelease(
-        const Ptr<IDescriptorHeapAllocator>& Allocator,
-        const DescriptorHeapHandle&          Handle)
+        IDescriptorHeapAllocator*   Allocator,
+        const DescriptorHeapHandle& Handle)
     {
         m_BudgetManager.SafeRelease(Allocator, Handle);
     }
@@ -65,6 +59,12 @@ namespace Neon::RHI
         const Dx12Buffer::Handle& Handle)
     {
         m_BudgetManager.SafeRelease(Handle);
+    }
+
+    void Dx12Swapchain::SafeRelease(
+        const Win32::ComPtr<ID3D12DescriptorHeap>& Resource)
+    {
+        m_BudgetManager.SafeRelease(Resource);
     }
 
     void Dx12Swapchain::SafeRelease(

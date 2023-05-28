@@ -68,24 +68,21 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
-        /// <summary>
-        /// Enqueue descriptor heap to be released at the end of the frame.
-        /// </summary>
         void SafeRelease(
-            const Ptr<IDescriptorHeap>& Heap) override;
+            IDescriptorHeapAllocator*   Allocator,
+            const DescriptorHeapHandle& Handle) override;
 
         /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
-        /// </summary>
-        void SafeRelease(
-            const Ptr<IDescriptorHeapAllocator>& Allocator,
-            const DescriptorHeapHandle&          Handle) override;
-
-        /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
+        /// Enqueue buffer to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
             const Dx12Buffer::Handle& Handle);
+
+        /// <summary>
+        /// Enqueue descriptor to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12DescriptorHeap>& Resource);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.

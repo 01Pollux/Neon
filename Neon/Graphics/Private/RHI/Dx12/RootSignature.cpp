@@ -188,6 +188,8 @@ namespace Neon::RHI
     //
 
     Dx12RootSignature::Dx12RootSignature(
+        uint32_t                                     ResourceCountInDescriptor,
+        uint32_t                                     SamplerCountInDescriptor,
         const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
         SHA256::Bytes&&                              Hash) :
         m_Hash(std::move(Hash))
@@ -211,6 +213,19 @@ namespace Neon::RHI
             SignatureBlob->GetBufferPointer(),
             SignatureBlob->GetBufferSize(),
             IID_PPV_ARGS(&m_RootSignature)));
+
+        m_ResourceCountInDescriptor = ResourceCountInDescriptor;
+        m_SamplerCountInDescriptor  = SamplerCountInDescriptor;
+    }
+
+    uint32_t Dx12RootSignature::GetResourceCountInDescriptor()
+    {
+        return m_ResourceCountInDescriptor;
+    }
+
+    uint32_t Dx12RootSignature::GetSamplerCountInDescriptor()
+    {
+        return m_SamplerCountInDescriptor;
     }
 
     ID3D12RootSignature* Dx12RootSignature::Get()
@@ -234,7 +249,9 @@ namespace Neon::RHI
     Ptr<IRootSignature> Dx12RootSignatureCache::Load(
         const RootSignatureBuilder& Builder)
     {
-        auto Result = Dx12RootSignatureCache::Build(Builder);
+        uint32_t ResourceCountInDescriptor;
+        uint32_t SamplerCountInDescriptor;
+        auto     Result = Dx12RootSignatureCache::Build(Builder, ResourceCountInDescriptor, SamplerCountInDescriptor);
 
         std::scoped_lock Lock(s_RootSignatureCacheMutex);
 
@@ -248,7 +265,7 @@ namespace Neon::RHI
                 Result.StaticSamplers.data(),
                 Result.Flags);
 
-            Cache = std::make_shared<Dx12RootSignature>(Desc, std::move(Result.Digest));
+            Cache = std::make_shared<Dx12RootSignature>(ResourceCountInDescriptor, SamplerCountInDescriptor, Desc, std::move(Result.Digest));
         }
 
         return Cache;
@@ -257,8 +274,13 @@ namespace Neon::RHI
     //
 
     auto Dx12RootSignatureCache::Build(
-        const RootSignatureBuilder& Builder) -> BuildResult
+        const RootSignatureBuilder& Builder,
+        uint32_t&                   ResourceCountInDescriptor,
+        uint32_t&                   SamplerCountInDescriptor) -> BuildResult
     {
+        ResourceCountInDescriptor = 0;
+        SamplerCountInDescriptor  = 0;
+
         BuildResult Result;
 
         SHA256 Hash;
@@ -274,7 +296,9 @@ namespace Neon::RHI
 
             std::visit(
                 VariantVisitor{
-                    [&Hash, &Result, Visibility](const RootParameter::DescriptorTable& Table)
+                    [&Hash, &Result, Visibility,
+                     &ResourceCountInDescriptor,
+                     &SamplerCountInDescriptor](const RootParameter::DescriptorTable& Table)
                     {
                         auto& Ranges = Result.RangesList.emplace_back();
 
@@ -283,6 +307,9 @@ namespace Neon::RHI
                         for (auto& Range : NRanges)
                         {
                             D3D12_DESCRIPTOR_RANGE_TYPE Type;
+
+                            auto& ViewCount = Range.Type != RootParameter::DescriptorType::Sampler ? ResourceCountInDescriptor : SamplerCountInDescriptor;
+                            ViewCount += Range.DescriptorCount;
 
                             switch (Range.Type)
                             {

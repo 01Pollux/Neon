@@ -38,6 +38,7 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
+        // It's fine if we don't release m_RenderTargets here, because will be released by m_BudgetManager's dtor.
         m_PipelineState = nullptr;
         m_RootSignature = nullptr;
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
@@ -143,8 +144,8 @@ namespace Neon::RHI
         Context->ClearRtv(Rtv, Color);
         Context->SetRenderTargets(Rtv, 1);
 
-        Context->SetRootSignature(m_RootSignature.get());
-        Context->SetPipelineState(m_PipelineState.get());
+        Context->SetRootSignature(m_RootSignature);
+        Context->SetPipelineState(m_PipelineState);
 
         static float Time = 0.f;
         Time += 0.03f;
@@ -297,9 +298,16 @@ namespace Neon::RHI
         m_BackBuffers.clear();
         m_BackBuffers.reserve(NewSize);
         m_BudgetManager.ResizeFrames(NewSize);
+
+        auto Allocator = GetDescriptorHeapManager(DescriptorType::RenderTargetView, false);
+        if (m_RenderTargets)
+        {
+            Allocator->Free(m_RenderTargets.GetHandle());
+        }
+
         m_RenderTargets = Views::RenderTarget(
-            NewSize,
-            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false));
+            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false),
+            NewSize);
 
         for (uint32_t i = 0; i < NewSize; ++i)
         {

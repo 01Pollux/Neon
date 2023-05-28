@@ -38,23 +38,23 @@ namespace Neon::RHI
             Dx12Swapchain* Swapchain);
 
         /// <summary>
-        /// Enqueue descriptor heap to be released at the end of the frame.
+        /// Enqueue a descriptor handle to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Ptr<IDescriptorHeap>& Heap);
+            IDescriptorHeapAllocator*   Allocator,
+            const DescriptorHeapHandle& Handle);
 
         /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
-        /// </summary>
-        void SafeRelease(
-            const Ptr<IDescriptorHeapAllocator>& Allocator,
-            const DescriptorHeapHandle&          Handle);
-
-        /// <summary>
-        /// Enqueue resource to be released at the end of the frame.
+        /// Enqueue buffer to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
             const Dx12Buffer::Handle& Handle);
+
+        /// <summary>
+        /// Enqueue descriptor to be released at the end of the frame.
+        /// </summary>
+        void SafeRelease(
+            const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.
@@ -78,10 +78,9 @@ namespace Neon::RHI
     private:
         Dx12CommandAllocatorPools m_AllocatorsPools;
 
-        std::map<Ptr<IDescriptorHeapAllocator>, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;
+        std::map<IDescriptorHeapAllocator*, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;
 
-        std::vector<Ptr<IDescriptorHeap>>          m_DescriptorHeaps;
-        std::vector<Dx12Buffer::Handle>            m_Buffers;
-        std::vector<Win32::ComPtr<ID3D12Resource>> m_Resources;
+        std::vector<Dx12Buffer::Handle>          m_Buffers;
+        std::vector<Win32::ComPtr<ID3D12Object>> m_Resources;
     };
 } // namespace Neon::RHI

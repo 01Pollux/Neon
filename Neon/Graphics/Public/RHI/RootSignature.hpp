@@ -306,5 +306,15 @@ namespace Neon::RHI
             const RootSignatureBuilder& Builder);
 
         virtual ~IRootSignature() = default;
+
+        /// <summary>
+        /// Get the number of resources in descriptor
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetResourceCountInDescriptor() = 0;
+
+        /// <summary>
+        /// Get the number of samplers in descriptor
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetSamplerCountInDescriptor() = 0;
     };
 } // namespace Neon::RHI

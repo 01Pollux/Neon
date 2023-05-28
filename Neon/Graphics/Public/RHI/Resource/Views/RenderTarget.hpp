@@ -7,13 +7,7 @@ namespace Neon::RHI::Views
     class RenderTarget : public Generic
     {
     public:
-        RenderTarget() = default;
-        RenderTarget(
-            uint32_t                  Size,
-            IDescriptorHeapAllocator* Allocator) :
-            Generic(Size, Allocator)
-        {
-        }
+        using Generic::Generic;
 
         /// <summary>
         /// Bind render target view to descriptor heap.

@@ -12,7 +12,8 @@ namespace Neon::RHI
     class Dx12CommandList : public virtual ICommandList
     {
     public:
-        Dx12CommandList() = default;
+        Dx12CommandList(
+            ISwapchain* Swapchain);
         NEON_CLASS_NO_COPYMOVE(Dx12CommandList);
         ~Dx12CommandList() override;
 
@@ -54,6 +55,7 @@ namespace Neon::RHI
 
     protected:
         ID3D12GraphicsCommandList* m_CommandList = nullptr;
+        Dx12Swapchain*             m_Swapchain   = nullptr;
     };
 
     class Dx12CommonCommandList : public virtual ICommonCommandList,
@@ -64,25 +66,41 @@ namespace Neon::RHI
         using Dx12CommandList::Dx12CommandList;
 
         void SetPipelineState(
-            IPipelineState* State) override;
+            const Ptr<IPipelineState>& State) override;
 
     public:
         [[nodiscard]] Views::Generic& GetResourceView() override;
 
         [[nodiscard]] Views::Generic& GetSamplerView() override;
 
-    private:
+    public:
+        void SetDynamicResourceView(
+            ViewType    Type,
+            uint32_t    RootIndex,
+            const void* Data,
+            size_t      Size) override;
+
+    protected:
+        /// <summary>
+        /// Reserve descriptor heaps for resource and sampler views.
+        /// </summary>
+        void ReserveDescriptorHeaps();
+
+        /// <summary>
+        /// Discard descriptor heaps for resource and sampler views.
+        /// </summary>
+        void DiscardDescriptorHeaps();
+
+    protected:
+        Ptr<IRootSignature> m_RootSignature;
+
         Views::Generic
             m_ResourceView,
             m_SamplerView;
 
-        Ptr<Dx12DescriptorHeapBuddyAllocator>
+        UPtr<Dx12DescriptorHeapBuddyAllocator>
             m_ResourceViewAllocator,
             m_SamplerViewAllocator;
-
-        Dx12DescriptorHeap
-            *m_ResourceViewHeap = nullptr,
-            *m_SamplerHeap      = nullptr;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
@@ -92,7 +110,7 @@ namespace Neon::RHI
         using Dx12CommonCommandList::Dx12CommonCommandList;
 
         void SetRootSignature(
-            IRootSignature* RootSig) override;
+            const Ptr<IRootSignature>& RootSig) override;
 
         void ClearRtv(
             const CpuDescriptorHandle& RtvHandle,
@@ -155,8 +173,10 @@ namespace Neon::RHI
                                          public Dx12CommonCommandList
     {
     public:
+        using Dx12CommonCommandList::Dx12CommonCommandList;
+
         void SetRootSignature(
-            IRootSignature* RootSig) override;
+            const Ptr<IRootSignature>& RootSig) override;
 
     public:
         void SetConstants(
@@ -186,5 +206,7 @@ namespace Neon::RHI
     class Dx12CopyCommandList final : public virtual ICopyCommandList,
                                       public Dx12CommandList
     {
+    public:
+        using Dx12CommandList::Dx12CommandList;
     };
 } // namespace Neon::RHI

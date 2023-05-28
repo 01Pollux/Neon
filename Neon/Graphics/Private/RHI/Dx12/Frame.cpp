@@ -33,21 +33,14 @@ namespace Neon::RHI
         auto Allocator = Swapchain->GetAllocator();
         Allocator->FreeBuffers(m_Buffers);
 
-        m_DescriptorHeaps.clear();
         m_DescriptorHeapHandles.clear();
         m_Buffers.clear();
         m_Resources.clear();
     }
 
     void FrameResource::SafeRelease(
-        const Ptr<IDescriptorHeap>& Heap)
-    {
-        m_DescriptorHeaps.emplace_back(Heap);
-    }
-
-    void FrameResource::SafeRelease(
-        const Ptr<IDescriptorHeapAllocator>& Allocator,
-        const DescriptorHeapHandle&          Handle)
+        IDescriptorHeapAllocator*   Allocator,
+        const DescriptorHeapHandle& Handle)
     {
         m_DescriptorHeapHandles[Allocator].emplace_back(Handle);
     }
@@ -56,6 +49,27 @@ namespace Neon::RHI
         const Dx12Buffer::Handle& Handle)
     {
         m_Buffers.emplace_back(Handle);
+    }
+
+    void FrameResource::SafeRelease(
+        const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
+    {
+        // First we check if the incoming descriptor exists in the to be deleted handles.
+        // If it does, no need to remove the handle, just remove the descriptor instead.
+        for (auto Iter = m_DescriptorHeapHandles.begin(); Iter != m_DescriptorHeapHandles.end(); Iter++)
+        {
+            auto Contains = std::ranges::find_if(
+                                Iter->second,
+                                [Descriptor](const DescriptorHeapHandle& Handle)
+                                { return static_cast<Dx12DescriptorHeap*>(Handle.Heap)->Get() == Descriptor.Get(); }) != Iter->second.end();
+
+            if (Contains)
+            {
+                m_DescriptorHeapHandles.erase(Iter);
+                break;
+            }
+        }
+        m_Resources.emplace_back(Descriptor);
     }
 
     void FrameResource::SafeRelease(

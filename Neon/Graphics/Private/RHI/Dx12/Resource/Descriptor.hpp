@@ -25,9 +25,15 @@ namespace Neon::RHI
     {
     public:
         Dx12DescriptorHeap(
+            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE Type,
             uint32_t                   MaxCount,
             bool                       ShaderVisible);
+
+        NEON_CLASS_NO_COPY(Dx12DescriptorHeap);
+        NEON_CLASS_MOVE(Dx12DescriptorHeap);
+
+        ~Dx12DescriptorHeap() override;
 
         /// <summary>
         /// Copy to descriptor
@@ -125,6 +131,7 @@ namespace Neon::RHI
         [[nodiscard]] D3D12_DESCRIPTOR_HEAP_TYPE GetType() const noexcept;
 
     protected:
+        ISwapchain*                         m_Swapchain;
         Win32::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 
         D3D12_CPU_DESCRIPTOR_HANDLE m_CpuHandle{};
@@ -138,6 +145,7 @@ namespace Neon::RHI
 
     struct HeapDescriptorAllocInfo
     {
+        ISwapchain*                Swapchain;
         uint32_t                   SizeOfHeap;
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType;
         bool                       ShaderVisible;
@@ -147,6 +155,7 @@ namespace Neon::RHI
     {
     public:
         Dx12RingDescriptorHeapAllocator(
+            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             uint32_t                   MaxCount,
             bool                       ShaderVisible);
@@ -163,8 +172,7 @@ namespace Neon::RHI
             uint32_t) override;
 
     private:
-        std::mutex m_DescriptorLock;
-
+        std::mutex         m_DescriptorLock;
         Dx12DescriptorHeap m_HeapDescriptor;
         uint32_t           m_CurrentDescriptorOffset = 0;
     };
@@ -184,6 +192,7 @@ namespace Neon::RHI
 
     public:
         Dx12DescriptorHeapBuddyAllocator(
+            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             uint32_t                   SizeOfHeap,
             bool                       ShaderVisible);
