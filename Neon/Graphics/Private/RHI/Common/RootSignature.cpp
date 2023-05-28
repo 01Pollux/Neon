@@ -105,44 +105,49 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddConstantBufferView(
-        uint32_t         ShaderRegister,
-        uint32_t         RegisterSpace,
-        uint32_t         Num32BitValues,
-        ShaderVisibility Visibility)
+        uint32_t             ShaderRegister,
+        uint32_t             RegisterSpace,
+        ShaderVisibility     Visibility,
+        MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
             RootParameter::Descriptor{
                 .ShaderRegister = ShaderRegister,
                 .RegisterSpace  = RegisterSpace,
-                .Type           = RootParameter::DescriptorType::ConstantBuffer },
+                .Type           = RootParameter::DescriptorType::ConstantBuffer,
+                .Flags          = Flags },
             Visibility);
         return *this;
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddShaderResourceView(
-        uint32_t         ShaderRegister,
-        uint32_t         RegisterSpace,
-        ShaderVisibility Visibility)
+        uint32_t             ShaderRegister,
+        uint32_t             RegisterSpace,
+        ShaderVisibility     Visibility,
+        MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
             RootParameter::Descriptor{
                 .ShaderRegister = ShaderRegister,
                 .RegisterSpace  = RegisterSpace,
-                .Type           = RootParameter::DescriptorType::ShaderResource },
+                .Type           = RootParameter::DescriptorType::ShaderResource,
+                .Flags          = Flags },
             Visibility);
         return *this;
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddUnorderedAccessView(
-        uint32_t         ShaderRegister,
-        uint32_t         RegisterSpace,
-        ShaderVisibility Visibility)
+        uint32_t             ShaderRegister,
+        uint32_t             RegisterSpace,
+        ShaderVisibility     Visibility,
+        MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
             RootParameter::Descriptor{
                 .ShaderRegister = ShaderRegister,
                 .RegisterSpace  = RegisterSpace,
-                .Type           = RootParameter::DescriptorType::UnorderedAccess },
+                .Type           = RootParameter::DescriptorType::UnorderedAccess,
+                .Flags          = Flags },
             Visibility);
         return *this;
     }
@@ -150,8 +155,8 @@ namespace Neon::RHI
     RootSignatureBuilder& RootSignatureBuilder::AddUnorderedAccessViewWithCounter(
         uint32_t                  ShaderRegister,
         uint32_t                  RegisterSpace,
-        MRootDescriptorTableFlags Flags,
-        ShaderVisibility          Visibility)
+        ShaderVisibility          Visibility,
+        MRootDescriptorTableFlags Flags)
     {
         RootDescriptorTable Table(1);
         Table.AddUavRange(ShaderRegister, RegisterSpace, 1, Flags);

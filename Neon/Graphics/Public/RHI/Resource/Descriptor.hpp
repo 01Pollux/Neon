@@ -19,13 +19,13 @@ namespace Neon::RHI
         struct CopyInfo
         {
             CpuDescriptorHandle Descriptor;
-            size_t              CopySize;
+            uint32_t            CopySize;
         };
 
     public:
         [[nodiscard]] static IDescriptorHeap* Create(
             DescriptorType Type,
-            size_t         MaxCount,
+            uint32_t       MaxCount,
             bool           ShaderVisible);
 
         virtual ~IDescriptorHeap() = default;
@@ -34,7 +34,7 @@ namespace Neon::RHI
         /// Copy to descriptor
         /// </summary>
         virtual void Copy(
-            size_t          DescriptorIndex,
+            uint32_t        DescriptorIndex,
             const CopyInfo& SrcDescriptors) = 0;
 
         /// <summary>
@@ -49,13 +49,13 @@ namespace Neon::RHI
         /// Get cpu handle of offset
         /// </summary>
         [[nodiscard]] virtual CpuDescriptorHandle GetCPUAddress(
-            size_t Offset = 0) = 0;
+            uint32_t Offset = 0) = 0;
 
         /// <summary>
         /// Get heap descriptor
         /// </summary>
         [[nodiscard]] virtual GpuDescriptorHandle GetGPUAddress(
-            size_t Offset = 0) = 0;
+            uint32_t Offset = 0) = 0;
 
         /// <summary>
         /// Check to see if the descriptor is in range
@@ -74,14 +74,14 @@ namespace Neon::RHI
         /// Create constant buffer view of target offset in current descriptor
         /// </summary>
         virtual void CreateConstantBufferView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             const CBVDesc& Desc) = 0;
 
         /// <summary>
         /// Create shader resource view of target offset in current descriptor
         /// </summary>
         virtual void CreateShaderResourceView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource = nullptr,
             const SRVDesc* Desc     = nullptr) = 0;
 
@@ -89,7 +89,7 @@ namespace Neon::RHI
         /// Create unordered access view of target offset in current descriptor
         /// </summary>
         virtual void CreateUnorderedAccessView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource      = nullptr,
             const UAVDesc* Desc          = nullptr,
             IGpuResource*  CounterBuffer = nullptr) = 0;
@@ -98,7 +98,7 @@ namespace Neon::RHI
         /// Create render target view of target offset in current descriptor
         /// </summary>
         virtual void CreateRenderTargetView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource = nullptr,
             const RTVDesc* Desc     = nullptr) = 0;
 
@@ -106,7 +106,7 @@ namespace Neon::RHI
         /// Create depth stencil view of target offset in current descriptor
         /// </summary>
         virtual void CreateDepthStencilView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource = nullptr,
             const DSVDesc* Desc     = nullptr) = 0;
 
@@ -114,7 +114,7 @@ namespace Neon::RHI
         /// Create sampler of target offset in current descriptor
         /// </summary>
         virtual void CreateSampler(
-            size_t             DescriptorIndex,
+            uint32_t           DescriptorIndex,
             const SamplerDesc& Desc) = 0;
     };
 
@@ -123,8 +123,8 @@ namespace Neon::RHI
     struct DescriptorHeapHandle
     {
         IDescriptorHeap* Heap   = nullptr;
-        size_t           Offset = std::numeric_limits<size_t>::max();
-        size_t           Size   = 0;
+        uint32_t         Offset = std::numeric_limits<uint32_t>::max();
+        uint32_t         Size   = 0;
 
         constexpr operator bool() const noexcept
         {
@@ -154,14 +154,14 @@ namespace Neon::RHI
         [[nodiscard]] static IDescriptorHeapAllocator* Create(
             AllocationType Type,
             DescriptorType DescType,
-            size_t         SizeOfHeap,
+            uint32_t       SizeOfHeap,
             bool           ShaderVisible);
 
         /// <summary>
         /// Allocate descriptor handle of size
         /// </summary>
         [[nodiscard]] virtual DescriptorHeapHandle Allocate(
-            size_t DescriptorSize) = 0;
+            uint32_t DescriptorSize) = 0;
 
         /// <summary>
         /// Free current descriptor handle
@@ -180,6 +180,6 @@ namespace Neon::RHI
         /// for buddy allocator, index is the level of heap
         /// </summary>
         [[nodiscard]] virtual IDescriptorHeap* GetHeap(
-            size_t Index = 0) = 0;
+            uint32_t Index = 0) = 0;
     };
 } // namespace Neon::RHI

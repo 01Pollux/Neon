@@ -159,6 +159,18 @@ namespace Neon::RHI
 
     //
 
+    Views::Generic& Dx12CommonCommandList::GetResourceView()
+    {
+        return m_ResourceView;
+    }
+
+    Views::Generic& Dx12CommonCommandList::GetSamplerView()
+    {
+        return m_SamplerView;
+    }
+
+    //
+
     void Dx12GraphicsCommandList::SetRootSignature(
         IRootSignature* RootSig)
     {

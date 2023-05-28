@@ -7,6 +7,14 @@
 
 namespace Neon::RHI
 {
+    static uint32_t LimitDescriptorHeapSize(
+        bool     Sampler,
+        uint32_t Count)
+    {
+        auto& Features = Dx12RenderDevice::Get()->GetFeatures();
+        return std::min<uint32_t>(Count, Features.MaxDescriptorHeapSize(Sampler));
+    }
+
     DescriptorType CastDescriptorType(
         D3D12_DESCRIPTOR_HEAP_TYPE Type)
     {
@@ -47,12 +55,12 @@ namespace Neon::RHI
 
     IDescriptorHeap* IDescriptorHeap::Create(
         DescriptorType Type,
-        size_t         MaxCount,
+        uint32_t       MaxCount,
         bool           ShaderVisible)
     {
         return NEON_NEW Dx12DescriptorHeap(
             CastDescriptorType(Type),
-            MaxCount,
+            LimitDescriptorHeapSize(Type == DescriptorType::Sampler, MaxCount),
             ShaderVisible);
     }
 
@@ -60,7 +68,7 @@ namespace Neon::RHI
 
     Dx12DescriptorHeap::Dx12DescriptorHeap(
         D3D12_DESCRIPTOR_HEAP_TYPE Type,
-        size_t                     MaxCount,
+        uint32_t                   MaxCount,
         bool                       ShaderVisible) :
         m_HeapSize(MaxCount),
         m_HeapType(Type)
@@ -85,7 +93,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::Copy(
-        size_t          DescriptorIndex,
+        uint32_t        DescriptorIndex,
         const CopyInfo& SrcDescriptors)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -118,7 +126,7 @@ namespace Neon::RHI
                  DesciptorTuple{ DxDescriptors.get(), DxDescriptorsSizes.get(), &DstDescriptors },
                  DesciptorTuple{ DxSrcDescriptors.get(), DxSrcDescriptorsSizes.get(), &SrcDescriptors } })
         {
-            for (size_t i = 0; i < Info->size(); i++)
+            for (uint32_t i = 0; i < Info->size(); i++)
             {
                 DxDesc[i] = { (*Info)[i].Descriptor.Value };
                 DxSize[i] = uint32_t((*Info)[i].CopySize);
@@ -136,7 +144,7 @@ namespace Neon::RHI
     }
 
     CpuDescriptorHandle Dx12DescriptorHeap::GetCPUAddress(
-        size_t Offset)
+        uint32_t Offset)
     {
         auto RenderDevice = Dx12RenderDevice::Get();
 
@@ -146,7 +154,7 @@ namespace Neon::RHI
     }
 
     GpuDescriptorHandle Dx12DescriptorHeap::GetGPUAddress(
-        size_t Offset)
+        uint32_t Offset)
     {
         auto RenderDevice = Dx12RenderDevice::Get();
 
@@ -170,7 +178,7 @@ namespace Neon::RHI
     //
 
     void Dx12DescriptorHeap::CreateConstantBufferView(
-        size_t         DescriptorIndex,
+        uint32_t       DescriptorIndex,
         const CBVDesc& Desc)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -182,7 +190,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::CreateShaderResourceView(
-        size_t         DescriptorIndex,
+        uint32_t       DescriptorIndex,
         IGpuResource*  Resource,
         const SRVDesc* Desc)
     {
@@ -311,7 +319,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::CreateUnorderedAccessView(
-        size_t         DescriptorIndex,
+        uint32_t       DescriptorIndex,
         IGpuResource*  Resource,
         const UAVDesc* Desc,
         IGpuResource*  CounterBuffer)
@@ -394,7 +402,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::CreateRenderTargetView(
-        size_t         DescriptorIndex,
+        uint32_t       DescriptorIndex,
         IGpuResource*  Resource,
         const RTVDesc* Desc)
     {
@@ -483,7 +491,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::CreateDepthStencilView(
-        size_t         DescriptorIndex,
+        uint32_t       DescriptorIndex,
         IGpuResource*  Resource,
         const DSVDesc* Desc)
     {
@@ -553,7 +561,7 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::CreateSampler(
-        size_t             DescriptorIndex,
+        uint32_t           DescriptorIndex,
         const SamplerDesc& Desc)
     {
         auto               Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -581,7 +589,7 @@ namespace Neon::RHI
         return m_DescriptorHeap.Get();
     }
 
-    size_t Dx12DescriptorHeap::GetSize() const noexcept
+    uint32_t Dx12DescriptorHeap::GetSize() const noexcept
     {
         return m_HeapSize;
     }
@@ -596,7 +604,7 @@ namespace Neon::RHI
     IDescriptorHeapAllocator* IDescriptorHeapAllocator::Create(
         AllocationType Type,
         DescriptorType DescType,
-        size_t         SizeOfHeap,
+        uint32_t       SizeOfHeap,
         bool           ShaderVisible)
     {
         switch (Type)
@@ -614,18 +622,18 @@ namespace Neon::RHI
 
     Dx12RingDescriptorHeapAllocator::Dx12RingDescriptorHeapAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
-        size_t                     MaxCount,
+        uint32_t                   MaxCount,
         bool                       ShaderVisible) :
         m_HeapDescriptor(DescriptorType, MaxCount, ShaderVisible)
     {
     }
 
     DescriptorHeapHandle Dx12RingDescriptorHeapAllocator::Allocate(
-        size_t DescriptorSize)
+        uint32_t DescriptorSize)
     {
         std::lock_guard DescLock(m_DescriptorLock);
 
-        size_t HeapOffset = m_CurrentDescriptorOffset;
+        uint32_t HeapOffset = m_CurrentDescriptorOffset;
         m_CurrentDescriptorOffset += DescriptorSize;
         if (m_CurrentDescriptorOffset >= m_HeapDescriptor.GetSize())
         {
@@ -650,7 +658,7 @@ namespace Neon::RHI
     }
 
     IDescriptorHeap* Dx12RingDescriptorHeapAllocator::GetHeap(
-        size_t)
+        uint32_t)
     {
         return &m_HeapDescriptor;
     }
@@ -666,14 +674,14 @@ namespace Neon::RHI
 
     Dx12DescriptorHeapBuddyAllocator::Dx12DescriptorHeapBuddyAllocator(
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
-        size_t                     SizeOfHeap,
+        uint32_t                   SizeOfHeap,
         bool                       ShaderVisible) :
         m_HeapBlockAllocInfo{ SizeOfHeap, DescriptorType, ShaderVisible }
     {
     }
 
     DescriptorHeapHandle Dx12DescriptorHeapBuddyAllocator::Allocate(
-        size_t DescriptorSize)
+        uint32_t DescriptorSize)
     {
         std::lock_guard HeapLock(m_HeapsBlockMutex);
 
@@ -684,8 +692,8 @@ namespace Neon::RHI
             {
                 return {
                     .Heap   = &Iter->Heap,
-                    .Offset = Hndl.Offset,
-                    .Size   = Hndl.Size
+                    .Offset = uint32_t(Hndl.Offset),
+                    .Size   = uint32_t(Hndl.Size)
                 };
             }
         }
@@ -700,14 +708,15 @@ namespace Neon::RHI
         {
             m_HeapBlockAllocInfo.SizeOfHeap *= 2;
         }
+        m_HeapBlockAllocInfo.SizeOfHeap = LimitDescriptorHeapSize(m_HeapBlockAllocInfo.DescriptorType == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, m_HeapBlockAllocInfo.SizeOfHeap);
 
         auto& Block = m_HeapBlocks.emplace_back(m_HeapBlockAllocInfo);
         auto  Hndl  = Block.Allocator.Allocate(DescriptorSize);
 
         return {
             .Heap   = &Block.Heap,
-            .Offset = Hndl.Offset,
-            .Size   = Hndl.Size
+            .Offset = uint32_t(Hndl.Offset),
+            .Size   = uint32_t(Hndl.Size)
         };
     }
 
@@ -738,7 +747,7 @@ namespace Neon::RHI
     }
 
     IDescriptorHeap* Dx12DescriptorHeapBuddyAllocator::GetHeap(
-        size_t Index)
+        uint32_t Index)
     {
         NEON_ASSERT(Index <= m_HeapBlocks.size());
         return &std::next(m_HeapBlocks.begin(), Index)->Heap;

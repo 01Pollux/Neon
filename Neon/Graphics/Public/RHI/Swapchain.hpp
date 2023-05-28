@@ -2,6 +2,7 @@
 
 #include <Math/Size2.hpp>
 #include <RHI/Commands/Commands.hpp>
+#include <RHI/Resource/Descriptor.hpp>
 
 namespace Neon::Windowing
 {
@@ -66,5 +67,12 @@ namespace Neon::RHI
         /// Get the resource state manager.
         /// </summary>
         [[nodiscard]] virtual IResourceStateManager* GetStateManager() = 0;
+
+        /// <summary>
+        /// Get descriptor heap manager.
+        /// </summary>
+        [[nodiscard]] virtual IDescriptorHeapAllocator* GetDescriptorHeapManager(
+            DescriptorType Type,
+            bool           Dynamic) = 0;
     };
 } // namespace Neon::RHI

@@ -26,27 +26,27 @@ namespace Neon::RHI
     public:
         Dx12DescriptorHeap(
             D3D12_DESCRIPTOR_HEAP_TYPE Type,
-            size_t                     MaxCount,
+            uint32_t                   MaxCount,
             bool                       ShaderVisible);
 
         /// <summary>
         /// Copy to descriptor
         /// </summary>
         void Copy(
-            size_t          DescriptorIndex,
+            uint32_t        DescriptorIndex,
             const CopyInfo& SrcDescriptors) override;
 
         /// <summary>
         /// Get cpu handle of offset
         /// </summary>
         [[nodiscard]] CpuDescriptorHandle GetCPUAddress(
-            size_t Offset = 0) override;
+            uint32_t Offset = 0) override;
 
         /// <summary>
         /// Get heap descriptor
         /// </summary>
         [[nodiscard]] GpuDescriptorHandle GetGPUAddress(
-            size_t Offset = 0) override;
+            uint32_t Offset = 0) override;
 
         /// <summary>
         /// Check to see if the descriptor is in range
@@ -65,14 +65,14 @@ namespace Neon::RHI
         /// Create constant buffer view of target offset in current descriptor
         /// </summary>
         void CreateConstantBufferView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             const CBVDesc& Desc) override;
 
         /// <summary>
         /// Create shader resource view of target offset in current descriptor
         /// </summary>
         void CreateShaderResourceView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource,
             const SRVDesc* Desc) override;
 
@@ -80,7 +80,7 @@ namespace Neon::RHI
         /// Create unordered access view of target offset in current descriptor
         /// </summary>
         void CreateUnorderedAccessView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource,
             const UAVDesc* Desc,
             IGpuResource*  CounterBuffer = nullptr) override;
@@ -89,7 +89,7 @@ namespace Neon::RHI
         /// Create render target view of target offset in current descriptor
         /// </summary>
         void CreateRenderTargetView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource,
             const RTVDesc* Desc) override;
 
@@ -97,7 +97,7 @@ namespace Neon::RHI
         /// Create depth stencil view of target offset in current descriptor
         /// </summary>
         void CreateDepthStencilView(
-            size_t         DescriptorIndex,
+            uint32_t       DescriptorIndex,
             IGpuResource*  Resource,
             const DSVDesc* Desc) override;
 
@@ -105,7 +105,7 @@ namespace Neon::RHI
         /// Create sampler of target offset in current descriptor
         /// </summary>
         void CreateSampler(
-            size_t             DescriptorIndex,
+            uint32_t           DescriptorIndex,
             const SamplerDesc& Desc) override;
 
     public:
@@ -117,7 +117,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get heap descriptor size
         /// </summary>
-        [[nodiscard]] size_t GetSize() const noexcept;
+        [[nodiscard]] uint32_t GetSize() const noexcept;
 
         /// <summary>
         /// Get heap descriptor type
@@ -130,7 +130,7 @@ namespace Neon::RHI
         D3D12_CPU_DESCRIPTOR_HANDLE m_CpuHandle{};
         D3D12_GPU_DESCRIPTOR_HANDLE m_GpuHandle{};
 
-        size_t                     m_HeapSize;
+        uint32_t                   m_HeapSize;
         D3D12_DESCRIPTOR_HEAP_TYPE m_HeapType;
     };
 
@@ -138,7 +138,7 @@ namespace Neon::RHI
 
     struct HeapDescriptorAllocInfo
     {
-        size_t                     SizeOfHeap;
+        uint32_t                   SizeOfHeap;
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType;
         bool                       ShaderVisible;
     };
@@ -148,11 +148,11 @@ namespace Neon::RHI
     public:
         Dx12RingDescriptorHeapAllocator(
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
-            size_t                     MaxCount,
+            uint32_t                   MaxCount,
             bool                       ShaderVisible);
 
         DescriptorHeapHandle Allocate(
-            size_t DescriptorSize) override;
+            uint32_t DescriptorSize) override;
 
         void Free(
             const DescriptorHeapHandle& Data) override;
@@ -160,13 +160,13 @@ namespace Neon::RHI
         void FreeAll() override;
 
         IDescriptorHeap* GetHeap(
-            size_t) override;
+            uint32_t) override;
 
     private:
         std::mutex m_DescriptorLock;
 
         Dx12DescriptorHeap m_HeapDescriptor;
-        size_t             m_CurrentDescriptorOffset = 0;
+        uint32_t           m_CurrentDescriptorOffset = 0;
     };
 
     //
@@ -185,11 +185,11 @@ namespace Neon::RHI
     public:
         Dx12DescriptorHeapBuddyAllocator(
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
-            size_t                     SizeOfHeap,
+            uint32_t                   SizeOfHeap,
             bool                       ShaderVisible);
 
         DescriptorHeapHandle Allocate(
-            size_t DescriptorSize) override;
+            uint32_t DescriptorSize) override;
 
         void Free(
             const DescriptorHeapHandle& Data) override;
@@ -197,7 +197,7 @@ namespace Neon::RHI
         void FreeAll() override;
 
         IDescriptorHeap* GetHeap(
-            size_t Index) override;
+            uint32_t Index) override;
 
     private:
         std::mutex              m_HeapsBlockMutex;

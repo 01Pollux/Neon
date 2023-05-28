@@ -325,6 +325,14 @@ namespace Neon::RHI
 
     //
 
+    using DescriptorViewDesc = std::variant<
+        SRVDesc,
+        RTVDesc,
+        DSVDesc,
+        CBVDesc>;
+
+    //
+
     struct SamplerDesc
     {
         ESamplerFilter Filter         = ESamplerFilter::Comparison_MinMagMipLinear;

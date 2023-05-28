@@ -10,7 +10,7 @@ namespace Neon::RHI::Views
     public:
         Generic() = default;
         Generic(
-            size_t                    Size,
+            uint32_t                  Size,
             IDescriptorHeapAllocator* Allocator) :
             m_Allocator(Allocator),
             m_Handle(Allocator->Allocate(Size))
@@ -42,6 +42,7 @@ namespace Neon::RHI::Views
             if (m_Allocator)
             {
                 m_Allocator->Free(m_Handle);
+                m_Allocator = nullptr;
             }
         }
 
@@ -52,7 +53,7 @@ namespace Neon::RHI::Views
         /// Get the CPU descriptor handle.
         /// </summary>
         [[nodiscard]] CpuDescriptorHandle GetCpuHandle(
-            size_t Offset = 0) const noexcept
+            uint32_t Offset = 0) const noexcept
         {
             return m_Handle.Heap->GetCPUAddress(m_Handle.Offset + Offset);
         }
@@ -61,7 +62,7 @@ namespace Neon::RHI::Views
         /// Get the GPU descriptor handle.
         /// </summary>
         [[nodiscard]] GpuDescriptorHandle GetGpuHandle(
-            size_t Offset = 0) const noexcept
+            uint32_t Offset = 0) const noexcept
         {
             return m_Handle.Heap->GetGPUAddress(m_Handle.Offset + Offset);
         }

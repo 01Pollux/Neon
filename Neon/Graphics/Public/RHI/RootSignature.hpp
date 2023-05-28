@@ -222,26 +222,28 @@ namespace Neon::RHI
         /// Add cbv root
         /// </summary>
         RootSignatureBuilder& AddConstantBufferView(
-            uint32_t         ShaderRegister,
-            uint32_t         RegisterSpace,
-            uint32_t         Num32BitValues,
-            ShaderVisibility Visibility = ShaderVisibility::All);
+            uint32_t             ShaderRegister,
+            uint32_t             RegisterSpace,
+            ShaderVisibility     Visibility = ShaderVisibility::All,
+            MRootDescriptorFlags Flags      = {});
 
         /// <summary>
         /// Add srv root
         /// </summary>
         RootSignatureBuilder& AddShaderResourceView(
-            uint32_t         ShaderRegister,
-            uint32_t         RegisterSpace,
-            ShaderVisibility Visibility = ShaderVisibility::All);
+            uint32_t             ShaderRegister,
+            uint32_t             RegisterSpace,
+            ShaderVisibility     Visibility = ShaderVisibility::All,
+            MRootDescriptorFlags Flags      = {});
 
         /// <summary>
         /// Add uav root
         /// </summary>
         RootSignatureBuilder& AddUnorderedAccessView(
-            uint32_t         ShaderRegister,
-            uint32_t         RegisterSpace,
-            ShaderVisibility Visibility = ShaderVisibility::All);
+            uint32_t             ShaderRegister,
+            uint32_t             RegisterSpace,
+            ShaderVisibility     Visibility = ShaderVisibility::All,
+            MRootDescriptorFlags Flags      = {});
 
         /// <summary>
         /// Add uav with counter root
@@ -249,8 +251,8 @@ namespace Neon::RHI
         RootSignatureBuilder& AddUnorderedAccessViewWithCounter(
             uint32_t                  ShaderRegister,
             uint32_t                  RegisterSpace,
-            MRootDescriptorTableFlags Flags      = {},
-            ShaderVisibility          Visibility = ShaderVisibility::All);
+            ShaderVisibility          Visibility = ShaderVisibility::All,
+            MRootDescriptorTableFlags Flags      = {});
 
         /// <summary>
         /// Add static sampler

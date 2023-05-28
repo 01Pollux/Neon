@@ -128,7 +128,7 @@ namespace Neon::RHI
         auto Rtv = m_RenderTargets.GetCpuHandle(FrameIndex);
 
         auto StateManager = GetStateManager();
-        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], BitMask_Or(EResourceState::RenderTarget));
+        StateManager->TransitionResource(&m_BackBuffers[FrameIndex], MResourceState::FromEnum(EResourceState::RenderTarget));
         StateManager->FlushBarriers(Context);
 
         Color4 Color = Colors::White;
@@ -272,7 +272,7 @@ namespace Neon::RHI
         m_BackBuffers.reserve(NewSize);
         m_RenderTargets = Views::RenderTarget(
             NewSize,
-            m_BudgetManager.GetDescriptorHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false));
+            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false));
 
         for (size_t i = 0; i < NewSize; ++i)
         {

@@ -39,4 +39,11 @@ namespace Neon::RHI
     {
         return m_MemoryAllocator.GetStateManager();
     }
+
+    IDescriptorHeapAllocator* Dx12Swapchain::GetDescriptorHeapManager(
+        DescriptorType Type,
+        bool           Dynamic)
+    {
+        return m_BudgetManager.GetDescriptorHeapManager(CastDescriptorType(Type), Dynamic);
+    }
 } // namespace Neon::RHI

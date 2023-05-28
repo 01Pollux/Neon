@@ -9,7 +9,7 @@ namespace Neon::RHI::Views
     public:
         RenderTarget() = default;
         RenderTarget(
-            size_t                    Size,
+            uint32_t                  Size,
             IDescriptorHeapAllocator* Allocator) :
             Generic(Size, Allocator)
         {
@@ -21,7 +21,7 @@ namespace Neon::RHI::Views
         void Bind(
             IGpuResource*  Resource = nullptr,
             const RTVDesc* Desc     = nullptr,
-            size_t         Index    = 0)
+            uint32_t       Index    = 0)
         {
             auto& Handle = GetHandle();
             Handle.Heap->CreateRenderTargetView(

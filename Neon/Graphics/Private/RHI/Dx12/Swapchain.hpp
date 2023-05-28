@@ -43,6 +43,10 @@ namespace Neon::RHI
 
         [[nodiscard]] IResourceStateManager* GetStateManager() override;
 
+        [[nodiscard]] IDescriptorHeapAllocator* GetDescriptorHeapManager(
+            DescriptorType Type,
+            bool           Dynamic) override;
+
     public:
         /// <summary>
         /// Allocate or reuse command lists

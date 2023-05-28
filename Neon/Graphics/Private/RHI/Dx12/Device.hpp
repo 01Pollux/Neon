@@ -14,7 +14,13 @@ namespace Neon::RHI
         /// <summary>
         /// Get root signature version.
         /// </summary>
-        D3D_ROOT_SIGNATURE_VERSION GetRootSignatureVersion() const;
+        [[nodiscard]] D3D_ROOT_SIGNATURE_VERSION GetRootSignatureVersion() const;
+
+        /// <summary>
+        /// Get max view descriptor heap size for sampler or non-sampler.
+        /// </summary>
+        [[nodiscard]] uint32_t MaxDescriptorHeapSize(
+            bool Sampler) const;
 
     private:
         void Initialize(
@@ -22,6 +28,7 @@ namespace Neon::RHI
 
     private:
         D3D_ROOT_SIGNATURE_VERSION m_RootSignatureVersion;
+        uint32_t                   m_DescriptorHeapSize[2];
     };
 
     class Dx12RenderDevice final : public IRenderDevice

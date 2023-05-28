@@ -8,6 +8,12 @@ namespace Neon::RHI
         return m_RootSignatureVersion;
     }
 
+    uint32_t Dx12DeviceFeatures::MaxDescriptorHeapSize(
+        bool Sampler) const
+    {
+        return m_DescriptorHeapSize[Sampler ? 1 : 0];
+    }
+
     void Dx12DeviceFeatures::Initialize(
         ID3D12Device* Device)
     {
@@ -15,5 +21,8 @@ namespace Neon::RHI
         ThrowIfFailed(FeatureSupport.Init(Device));
 
         m_RootSignatureVersion = FeatureSupport.HighestRootSignatureVersion();
+
+        m_DescriptorHeapSize[0] = FeatureSupport.MaxViewDescriptorHeapSize();
+        m_DescriptorHeapSize[1] = FeatureSupport.MaxSamplerDescriptorHeapSize();
     }
 } // namespace Neon::RHI
