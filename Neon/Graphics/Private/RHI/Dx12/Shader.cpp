@@ -2,6 +2,8 @@
 #include <Private/RHI/Dx12/Shader.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::RHI
 {
     IShader* IShader::Create(
@@ -25,6 +27,8 @@ namespace Neon::RHI
         m_ShaderData(std::move(ShaderData)),
         m_DataSize(DataSize)
     {
+        NEON_ASSERT(m_ShaderData != nullptr, "Shader data is null.");
+        NEON_ASSERT(DataSize, "Shader data size is zero.");
     }
 
     void Dx12Shader::CreateInputLayout(

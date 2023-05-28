@@ -48,6 +48,8 @@ namespace Neon::RHI
 
     void Dx12Swapchain::PrepareFrame()
     {
+        m_BudgetManager.NewFrame();
+
         struct VsInput
         {
             Vector2D Position;
@@ -82,6 +84,7 @@ namespace Neon::RHI
                 m_RootSignature = IRootSignature::Create(
                     RootSignatureBuilder()
                         .Add32BitConstants<float>(0, 0)
+                        .AddConstantBufferView(1, 0)
                         .SetFlags(ERootSignatureBuilderFlags::AllowInputLayout));
 
                 PipelineStateBuilder<false> Builder{
@@ -126,7 +129,6 @@ namespace Neon::RHI
 
         //
 
-        m_BudgetManager.NewFrame();
         uint32_t FrameIndex = m_BudgetManager.GetFrameIndex();
 
         TCommandContext<CommandQueueType::Graphics> CtxBatch(this);
@@ -166,6 +168,12 @@ namespace Neon::RHI
 
         Context->SetScissorRect(
             RectF(Vector2D::Zero, { 1280.f, 720.f }));
+
+        Context->SetDynamicResourceView(
+            RHI::ICommonCommandList::ViewType::Cbv,
+            1,
+            Colors::Green.data(),
+            sizeof(float) * 4);
 
         Context->Draw(DrawIndexArgs{
             .IndexCountPerInstance = 6 });

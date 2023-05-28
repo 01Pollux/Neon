@@ -368,7 +368,7 @@ namespace Neon::RHI
 
                         CD3DX12_ROOT_DESCRIPTOR1::Init(
                             Param.Descriptor,
-                            Descriptor.RegisterSpace,
+                            Descriptor.ShaderRegister,
                             Descriptor.RegisterSpace,
                             CastRootDescriptorFlags(Descriptor.Flags));
                     } },
