@@ -10,7 +10,6 @@ namespace Neon::RHI
     class ICommonCommandList;
 
     class IGpuResource;
-    class DescriptorViewDesc;
 } // namespace Neon::RHI
 
 namespace Neon::Renderer

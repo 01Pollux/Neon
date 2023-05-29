@@ -1,8 +1,9 @@
 #pragma once
 
-#include <RHI/Resource/Descriptor.hpp>
-#include <RHI/Resource/Views/GenericView.hpp>
 #include <RHI/RootSignature.hpp>
+#include <RHI/Resource/Descriptor.hpp>
+#include <RHI/Commands/CommandList.hpp>
+#include <RHI/Resource/Views/GenericView.hpp>
 #include <Core/String.hpp>
 #include <optional>
 #include <vector>
@@ -19,6 +20,8 @@ namespace Neon::RHI
 
 namespace Neon::Renderer
 {
+    class MaterialMetaDataBuilder;
+
     struct MaterialBinding
     {
         uint16_t Register = 0, Space = 0;
@@ -57,8 +60,8 @@ namespace Neon::Renderer
 
         struct RootEntry
         {
-            std::vector<GraphicsBufferPtr> Resources;
-            MaterialDataType               ViewType;
+            std::vector<GraphicsBufferPtr>    Resources;
+            RHI::ICommonCommandList::ViewType Type;
         };
 
         struct ConstantEntry
@@ -111,11 +114,16 @@ namespace Neon::Renderer
 
     private:
         /// <summary>
-        /// Helper function for copy op and constructor
+        /// Helper function for allocating descriptors
         /// </summary>
         void AllocateDescriptors(
             uint32_t ResourceCount,
             uint32_t SamplerCount);
+
+        /// <summary>
+        /// Helper function for destroying descriptors
+        /// </summary>
+        void DestroyDescriptors();
 
     public:
         /// <summary>
@@ -127,7 +135,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get root signature for material
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::IRootSignature> GetRootSignature() const;
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& GetRootSignature() const;
 
     public:
         /// <summary>

@@ -1,6 +1,13 @@
 #include <EnginePCH.hpp>
 #include <Renderer/Material/Builder.hpp>
+#include <RHI/Resource/Resource.hpp>
 #include <RHI/Swapchain.hpp>
+
+#include <RHI/Resource/Views/ConstantBuffer.hpp>
+#include <RHI/Resource/Views/ShaderResource.hpp>
+#include <RHI/Resource/Views/UnorderedAccess.hpp>
+
+#include <Log/Logger.hpp>
 
 namespace Neon::Renderer
 {
@@ -81,8 +88,8 @@ namespace Neon::Renderer
                 }
                 case MaterialDataType::ConstantBuffer:
                 {
-                    auto& Root    = ResourceData.Entry.emplace<RootEntry>();
-                    Root.ViewType = MaterialDataType::ConstantBuffer;
+                    auto& Root = ResourceData.Entry.emplace<RootEntry>();
+                    Root.Type  = RHI::ICommonCommandList::ViewType::Cbv;
                     Root.Resources.resize(Entry.m_ArraySize);
                     for (uint16_t i = 0; i < Entry.m_ArraySize; i++)
                     {
@@ -93,8 +100,8 @@ namespace Neon::Renderer
                 }
                 case MaterialDataType::Resource:
                 {
-                    auto& Root    = ResourceData.Entry.emplace<RootEntry>();
-                    Root.ViewType = MaterialDataType::Resource;
+                    auto& Root = ResourceData.Entry.emplace<RootEntry>();
+                    Root.Type  = RHI::ICommonCommandList::ViewType::Srv;
                     Root.Resources.resize(Entry.m_ArraySize);
                     for (uint16_t i = 0; i < Entry.m_ArraySize; i++)
                     {
@@ -105,8 +112,8 @@ namespace Neon::Renderer
                 }
                 case MaterialDataType::UavResource:
                 {
-                    auto& Root    = ResourceData.Entry.emplace<RootEntry>();
-                    Root.ViewType = MaterialDataType::UavResource;
+                    auto& Root = ResourceData.Entry.emplace<RootEntry>();
+                    Root.Type  = RHI::ICommonCommandList::ViewType::Uav;
                     Root.Resources.resize(Entry.m_ArraySize);
                     for (uint16_t i = 0; i < Entry.m_ArraySize; i++)
                     {
@@ -189,7 +196,6 @@ namespace Neon::Renderer
         {
             try
             {
-                m_ResourceDescriptor.Release();
                 DestroyDescriptors();
             }
             catch (...)
@@ -212,14 +218,30 @@ namespace Neon::Renderer
         if (ResourceCount)
         {
             m_ResourceDescriptor = RHI::Views::Generic(
-                ResourceCount,
-                m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, false));
+                m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, false),
+                ResourceCount);
         }
         if (SamplerCount)
         {
             m_SamplerDescriptor = RHI::Views::Generic(
-                ResourceCount,
-                m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, false));
+                m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, false),
+                ResourceCount);
+        }
+    }
+
+    void MaterialMetaData::DestroyDescriptors()
+    {
+        if (m_ResourceDescriptor)
+        {
+            auto Manager = m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, false);
+            Manager->Free(m_ResourceDescriptor.GetHandle());
+            m_ResourceDescriptor = {};
+        }
+        if (m_SamplerDescriptor)
+        {
+            auto Manager = m_SwapChain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, false);
+            Manager->Free(m_SamplerDescriptor.GetHandle());
+            m_SamplerDescriptor = {};
         }
     }
 
@@ -228,8 +250,16 @@ namespace Neon::Renderer
     void MaterialMetaData::Update(
         RHI::ICommonCommandList* Context)
     {
-        auto& ResourceHeap = Context.GetResourceHeap();
-        auto& SamplerHeap  = Context.GetSamplerHeap();
+        RHI::Views::Generic ResourceView, SamplerView;
+
+        if (m_ResourceDescriptor)
+        {
+            ResourceView = Context->GetResourceView();
+        }
+        if (m_SamplerDescriptor)
+        {
+            SamplerView = Context->GetSamplerView();
+        }
 
         for (auto& [Entry, RootIndex] : m_LayoutMap | std::views::values)
         {
@@ -238,7 +268,7 @@ namespace Neon::Renderer
             case EntryType::Constant:
             {
                 auto& Constant = std::get<ConstantEntry>(Entry);
-                Context.SetConstants(RootIndex, Constant.Data.data(), Constant.Data.size() / sizeof(int));
+                Context->SetConstants(RootIndex, Constant.Data.data(), Constant.Data.size() / sizeof(int));
                 break;
             }
 
@@ -247,7 +277,7 @@ namespace Neon::Renderer
                 auto& [Resource, ViewType] = std::get<RootEntry>(Entry);
                 for (uint32_t i = 0; i < uint32_t(Resource.size()); i++)
                 {
-                    Context.SetResourceView(ViewType, RootIndex + i, Resource[i]);
+                    Context->SetResourceView(ViewType, RootIndex + i, Resource[i].get());
                 }
                 break;
             }
@@ -256,17 +286,16 @@ namespace Neon::Renderer
             {
                 auto& Descriptor = std::get<DescriptorEntry>(Entry);
 
-                auto SrcDesc = m_ResourceDescriptor.Heap->GetCPUAddress(
-                    m_ResourceDescriptor.Offset + Descriptor.Offset);
-                auto DstDesc = ResourceHeap.Heap->GetGPUAddress(
-                    ResourceHeap.Offset + Descriptor.Offset);
+                auto SrcDesc = m_ResourceDescriptor.GetCpuHandle(Descriptor.Offset);
+                auto DstDesc = ResourceView.GetGpuHandle(Descriptor.Offset);
 
-                ResourceHeap.Heap->Copy(
-                    ResourceHeap.Offset + Descriptor.Offset,
+                auto& DstHandle = ResourceView.GetHandle();
+                DstHandle.Heap->Copy(
+                    DstHandle.Offset + Descriptor.Offset,
                     { .Descriptor = SrcDesc,
-                      .CopySize   = Descriptor.Descs.size() });
+                      .CopySize   = uint32_t(Descriptor.Descs.size()) });
 
-                Context.SetDescriptorTable(
+                Context->SetDescriptorTable(
                     RootIndex,
                     DstDesc);
                 break;
@@ -274,19 +303,18 @@ namespace Neon::Renderer
 
             case EntryType::Sampler:
             {
-                auto& Sampler = std::get<SamplerEntry>(Entry);
+                auto& Descriptor = std::get<DescriptorEntry>(Entry);
 
-                auto SrcDesc = m_SamplerDescriptor.Heap->GetCPUAddress(
-                    m_SamplerDescriptor.Offset + Sampler.Offset);
-                auto DstDesc = SamplerHeap.Heap->GetGPUAddress(
-                    SamplerHeap.Offset + Sampler.Offset);
+                auto SrcDesc = m_SamplerDescriptor.GetCpuHandle(Descriptor.Offset);
+                auto DstDesc = SamplerView.GetGpuHandle(Descriptor.Offset);
 
-                SamplerHeap.Heap->Copy(
-                    SamplerHeap.Offset + Sampler.Offset,
+                auto& DstHandle = ResourceView.GetHandle();
+                DstHandle.Heap->Copy(
+                    DstHandle.Offset + Descriptor.Offset,
                     { .Descriptor = SrcDesc,
-                      .CopySize   = Sampler.Descs.size() });
+                      .CopySize   = uint32_t(Descriptor.Descs.size()) });
 
-                Context.SetDescriptorTable(
+                Context->SetDescriptorTable(
                     RootIndex,
                     DstDesc);
                 break;
@@ -297,7 +325,7 @@ namespace Neon::Renderer
 
     //
 
-    const RHI::RootSignature& MaterialMetaData::GetRootSignature() const
+    const Ptr<RHI::IRootSignature>& MaterialMetaData::GetRootSignature() const
     {
         return m_RootSignature;
     }
@@ -378,14 +406,15 @@ namespace Neon::Renderer
         size_t          DataSize)
     {
         auto It = m_LayoutMap.find(Name);
-        NEON_ASSERT_MSG(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
+        NEON_ASSERT(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
 
         auto Entry = &It->second.Entry;
         if (auto Root = std::get_if<RootEntry>(Entry))
         {
-            auto Buffer = dynamic_cast<RHI::GraphicsUploadBuffer*>(Root->Resources[ArrayIndex].get());
-            NEON_ASSERT(Buffer);
-            Buffer->Write(ByteOffset, Data, DataSize);
+            // What if we want to set a constant for a default buffer? TODO
+            auto UploadBuffer = dynamic_cast<RHI::IUploadBuffer*>(Root->Resources[ArrayIndex].get());
+            NEON_ASSERT(UploadBuffer);
+            UploadBuffer->Write(ByteOffset, Data, DataSize);
         }
         else if (auto Constant = std::get_if<ConstantEntry>(Entry))
         {
@@ -409,12 +438,12 @@ namespace Neon::Renderer
         const std::optional<RHI::DescriptorViewDesc>& Desc)
     {
         auto It = m_LayoutMap.find(Name);
-        NEON_ASSERT_MSG(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
+        NEON_ASSERT(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
 
         auto Entry = &It->second.Entry;
         if (auto Root = std::get_if<RootEntry>(Entry))
         {
-            Root->Resources[ArrayIndex] = std::dynamic_pointer_cast<RHI::GraphicsBuffer>(Resource);
+            Root->Resources[ArrayIndex] = std::dynamic_pointer_cast<RHI::IBuffer>(Resource);
         }
         else if (auto Descriptor = std::get_if<DescriptorEntry>(Entry))
         {
@@ -428,36 +457,38 @@ namespace Neon::Renderer
             {
             case MaterialDataType::ConstantBuffer:
             {
-                using DescType = RHI::ConstantBufferViewDesc;
+                using DescType = RHI::CBVDesc;
                 auto& HeapDesc = std::get<DescType>(Descriptor->Descs[ArrayIndex]);
 
-                m_ResourceDescriptor.Heap->CreateConstantBufferView(
-                    m_ResourceDescriptor.Offset + Descriptor->Offset + ArrayIndex,
-                    dynamic_cast<RHI::GraphicsBuffer*>(Resource.get())->GetGpuAddress(),
-                    HeapDesc.ViewSize);
+                auto CbvView = static_cast<RHI::Views::ConstantBuffer&>(m_ResourceDescriptor);
+                CbvView.Bind(
+                    HeapDesc,
+                    uint32_t(Descriptor->Offset + ArrayIndex));
                 break;
             }
             case MaterialDataType::Resource:
             {
-                using DescType = RHI::ShaderResourceViewDesc;
-                auto& HeapDesc = std::get<DescType>(Descriptor->Descs[ArrayIndex]).HeapDesc;
+                using DescType = RHI::SRVDesc;
+                auto HeapDesc  = std::get_if<DescType>(&Descriptor->Descs[ArrayIndex]);
 
-                m_ResourceDescriptor.Heap->CreateShaderResourceView(
-                    m_ResourceDescriptor.Offset + Descriptor->Offset + ArrayIndex,
-                    Resource ? Resource->Get() : nullptr,
-                    HeapDesc.has_value() ? &*HeapDesc : nullptr);
+                auto SrvView = static_cast<RHI::Views::ShaderResource&>(m_ResourceDescriptor);
+                SrvView.Bind(
+                    Resource.get(),
+                    HeapDesc,
+                    uint32_t(Descriptor->Offset + ArrayIndex));
                 break;
             }
             case MaterialDataType::UavResource:
             {
-                using DescType = RHI::UnorderedAccessViewDesc;
-                auto& HeapDesc = std::get<DescType>(Descriptor->Descs[ArrayIndex]).HeapDesc;
+                using DescType = RHI::UAVDesc;
+                auto HeapDesc  = std::get_if<DescType>(&Descriptor->Descs[ArrayIndex]);
 
-                m_ResourceDescriptor.Heap->CreateUnorderedAccessView(
-                    m_ResourceDescriptor.Offset + Descriptor->Offset + ArrayIndex,
-                    Resource ? Resource->Get() : nullptr,
-                    HeapDesc.has_value() ? &*HeapDesc : nullptr,
-                    nullptr);
+                auto UavView = static_cast<RHI::Views::UnorderedAccess&>(m_ResourceDescriptor);
+                UavView.Bind(
+                    Resource.get(),
+                    HeapDesc,
+                    nullptr,
+                    uint32_t(Descriptor->Offset + ArrayIndex));
                 break;
             }
             default:
@@ -480,7 +511,7 @@ namespace Neon::Renderer
         size_t          DataSize) const
     {
         auto It = m_LayoutMap.find(Name);
-        NEON_ASSERT_MSG(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
+        NEON_ASSERT(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
 
         auto Entry = &It->second.Entry;
         if (auto Constant = std::get_if<ConstantEntry>(Entry))
@@ -504,7 +535,7 @@ namespace Neon::Renderer
         RHI::DescriptorViewDesc* Desc) const
     {
         auto It = m_LayoutMap.find(Name);
-        NEON_ASSERT_MSG(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
+        NEON_ASSERT(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
 
         auto Entry = &It->second.Entry;
         if (auto Root = std::get_if<RootEntry>(Entry))
@@ -527,37 +558,10 @@ namespace Neon::Renderer
     //
 
     auto MaterialMetaDataBuilder::Entry::SetShader(
-        ShaderVisibility Visibility)
+        RHI::ShaderVisibility Visibility)
         -> Entry&
     {
-        switch (Visibility)
-        {
-        case ShaderVisibility::All:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_ALL;
-            break;
-
-        case ShaderVisibility::Vertex:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_VERTEX;
-            break;
-
-        case ShaderVisibility::Domain:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_DOMAIN;
-            break;
-
-        case ShaderVisibility::Hull:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_HULL;
-            break;
-
-        case ShaderVisibility::Geometry:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_GEOMETRY;
-            break;
-
-        case ShaderVisibility::Pixel:
-            m_Visiblity = D3D12_SHADER_VISIBILITY_PIXEL;
-            break;
-        default:
-            std::unreachable();
-        }
+        m_Visiblity = Visibility;
         return *this;
     }
 

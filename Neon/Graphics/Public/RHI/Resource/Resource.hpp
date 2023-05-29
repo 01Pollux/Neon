@@ -116,6 +116,19 @@ namespace Neon::RHI
         {
             return std::bit_cast<_Ty*>(Map() + Offset);
         }
+
+        /// <summary>
+        /// Map and write data to the buffer, then unmap.
+        /// </summary>
+        void Write(
+            size_t      Offset,
+            const void* Data,
+            size_t      Size)
+        {
+            auto Mapped = Map<uint8_t>(Offset);
+            std::copy_n(static_cast<const uint8_t*>(Data), Size, Mapped);
+            Unmap();
+        }
     };
 
     //
