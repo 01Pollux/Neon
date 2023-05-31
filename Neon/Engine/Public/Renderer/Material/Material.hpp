@@ -5,10 +5,8 @@
 
 namespace Neon::RHI
 {
-    class IRootSignature;
     class IPipelineState;
     class ICommonCommandList;
-
     class IGpuResource;
 } // namespace Neon::RHI
 

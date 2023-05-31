@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RHI/Commands/Commands.hpp>
+#include <RHI/Commands/Common.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 
 namespace Neon::RHI

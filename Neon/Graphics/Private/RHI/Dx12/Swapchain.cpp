@@ -6,7 +6,7 @@
 #include <Private/RHI/Dx12/Resource/Common.hpp>
 
 #include <Math/Colors.hpp>
-#include <RHI/Commands/CommandsContext.hpp>
+#include <RHI/Commands/Context.hpp>
 
 #include <Window/Window.hpp>
 

@@ -1,6 +1,6 @@
 #include <GraphicsPCH.hpp>
-#include <RHI/Commands/CommandsContext.hpp>
-#include <RHI/Commands/CommandQueue.hpp>
+#include <RHI/Commands/Context.hpp>
+#include <RHI/Commands/Queue.hpp>
 #include <RHI/Swapchain.hpp>
 
 namespace Neon::RHI

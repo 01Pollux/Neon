@@ -5,6 +5,8 @@
 #include <Module/Resource.hpp>
 #include <Module/Graphics.hpp>
 
+#include <barrier>
+
 namespace Neon::Runtime
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -22,6 +24,7 @@ namespace Neon::Runtime
     int DefaultGameEngine::Run()
     {
         Initialize();
+
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {

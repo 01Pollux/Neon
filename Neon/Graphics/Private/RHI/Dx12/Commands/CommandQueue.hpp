@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RHI/Commands/CommandQueue.hpp>
+#include <RHI/Commands/Queue.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <mutex>
 

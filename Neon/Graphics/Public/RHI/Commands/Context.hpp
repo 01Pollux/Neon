@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <RHI/Commands/CommandList.hpp>
+#include <RHI/Commands/List.hpp>
 #include <list>
 
 namespace Neon::RHI
