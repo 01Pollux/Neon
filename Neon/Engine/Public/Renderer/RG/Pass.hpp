@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RHI/Commands/Common.hpp>
+#include <Renderer/RG/Common.hpp>
 
 namespace Neon::RHI
 {
@@ -18,6 +18,9 @@ namespace Neon::RG
         class MaterialResolver;
         class ResourceResolver;
         class PipelineResolver;
+
+        IRenderPass(
+            PassQueueType QueueType);
 
         virtual ~IRenderPass() = default;
 
@@ -51,5 +54,31 @@ namespace Neon::RG
         virtual void Dispatch(
             const GraphStorage&   Storage,
             RHI::ICommandContext& CommandContext) = 0;
+
+    public:
+        /// <summary>
+        /// Get queue type
+        /// </summary>
+        [[nodiscard]] PassQueueType GetQueueType() const noexcept;
+
+        /// <summary>
+        /// Get viewport for current pass
+        /// </summary>
+        [[nodiscard]] const Size2I& GetViewport() const;
+
+        /// <summary>
+        /// Set viewport for current pass
+        /// </summary>
+        void SetViewport(
+            const Size2I& Viewport);
+
+        /// <summary>
+        /// Set viewport to window's viewport for current pass
+        /// </summary>
+        void SetWindowViewport();
+
+    private:
+        Size2I        m_Viewport;
+        PassQueueType m_QueueType;
     };
 } // namespace Neon::RG

@@ -283,6 +283,141 @@ namespace Neon::RHI
 
     //
 
+    enum class ResourceType : uint8_t
+    {
+        Unknown,
+        Buffer,
+        Texture1D,
+        Texture2D,
+        Texture3D
+    };
+
+    enum class ResourceLayout : uint8_t
+    {
+        Unknown,
+        RowMajor,
+        StandardSwizzle64KB,
+        UndefinedSwizzle64KB,
+    };
+
+    struct ResourceDesc
+    {
+        size_t          Width         = 0;
+        size_t          Height        = 0;
+        uint32_t        Depth         = 0;
+        uint32_t        Alignment     = 0;
+        uint32_t        MipLevels     = 0;
+        uint32_t        SampleCount   = 1;
+        uint32_t        SampleQuality = 0;
+        MResourceFlags  Flags;
+        ResourceType    Type   = ResourceType::Unknown;
+        EResourceFormat Format = EResourceFormat::Unknown;
+        ResourceLayout  Layout = ResourceLayout::Unknown;
+
+        /// <summary>
+        /// Creates a buffer resource description.
+        /// </summary>
+        static ResourceDesc Buffer(
+            size_t               Size,
+            uint32_t             Alignment = 0,
+            const MResourceFlags Flags     = {})
+        {
+            return {
+                .Width     = Size,
+                .Alignment = Alignment,
+                .Flags     = Flags,
+                .Type      = ResourceType::Buffer,
+                .Layout    = ResourceLayout::RowMajor
+            };
+        }
+
+        /// <summary>
+        /// Creates a texture resource description.
+        /// </summary>
+        static ResourceDesc Tex1D(
+            EResourceFormat      Format,
+            size_t               Width,
+            uint32_t             ArraySize,
+            uint32_t             MipLevels,
+            uint32_t             SampleCount   = 1,
+            uint32_t             SampleQuality = 0,
+            const MResourceFlags Flags         = {},
+            ResourceLayout       Layout        = ResourceLayout::Unknown,
+            uint32_t             Alignment     = 0)
+        {
+            return {
+                .Width         = Width,
+                .Depth         = 1,
+                .Alignment     = Alignment,
+                .MipLevels     = MipLevels,
+                .SampleCount   = SampleCount,
+                .SampleQuality = SampleQuality,
+                .Flags         = Flags,
+                .Type          = ResourceType::Texture1D,
+                .Format        = Format,
+                .Layout        = Layout
+            };
+        }
+
+        /// <summary>
+        /// Creates a texture resource description.
+        /// </summary>
+        static ResourceDesc Tex2D(
+            EResourceFormat      Format,
+            size_t               Width,
+            size_t               Height,
+            uint32_t             ArraySize,
+            uint32_t             MipLevels,
+            uint32_t             SampleCount   = 1,
+            uint32_t             SampleQuality = 0,
+            const MResourceFlags Flags         = {},
+            ResourceLayout       Layout        = ResourceLayout::Unknown,
+            uint32_t             Alignment     = 0)
+        {
+            return {
+                .Width         = Width,
+                .Height        = Height,
+                .Depth         = 1,
+                .Alignment     = Alignment,
+                .MipLevels     = MipLevels,
+                .SampleCount   = SampleCount,
+                .SampleQuality = SampleQuality,
+                .Flags         = Flags,
+                .Type          = ResourceType::Texture2D,
+                .Format        = Format,
+                .Layout        = Layout
+            };
+        }
+
+        /// <summary>
+        /// Creates a texture resource description.
+        /// </summary>
+        static ResourceDesc Tex3D(
+            EResourceFormat      Format,
+            size_t               Width,
+            size_t               Height,
+            uint32_t             Depth,
+            uint32_t             MipLevels,
+            const MResourceFlags Flags     = {},
+            ResourceLayout       Layout    = ResourceLayout::Unknown,
+            uint32_t             Alignment = 0)
+        {
+            return {
+                .Width     = Width,
+                .Height    = Height,
+                .Depth     = Depth,
+                .Alignment = Alignment,
+                .MipLevels = MipLevels,
+                .Flags     = Flags,
+                .Type      = ResourceType::Texture3D,
+                .Format    = Format,
+                .Layout    = Layout
+            };
+        }
+    };
+
+    //
+
     enum class BlendTarget : uint8_t
     {
         Zero,
