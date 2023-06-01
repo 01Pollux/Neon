@@ -8,16 +8,6 @@ project "pakc"
 	common_dir_setup()
     common_add_pch("PakCPCH")
     common_neon()
-
-    links
-    {
-        "NeonCore",
-        "NeonGraphics"
-    }
-
-    includedirs
-    {
-        "%{CommonDir.Neon.Core}",
-        "%{CommonDir.Neon.Resource}",
-        "%{CommonDir.Neon.Graphics}"
-    }
+    
+    link_engine_library()
+    copy_engine_resources()
