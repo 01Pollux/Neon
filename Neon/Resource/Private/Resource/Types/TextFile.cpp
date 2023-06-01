@@ -9,11 +9,18 @@ namespace Neon::Asset
     {
     }
 
+    TextFileAsset::TextFileAsset(
+        StringU8 Text) :
+        m_Utf16Text(StringUtils::Transform<String>(Text)),
+        m_Utf8Text(std::move(Text))
+    {
+    }
+
     const StringU8& TextFileAsset::AsUtf8() const
     {
         if (!m_Utf8Text)
         {
-            m_Utf8Text = StringUtils::StringTransform<StringU8>(m_Utf16Text);
+            m_Utf8Text = StringUtils::Transform<StringU8>(m_Utf16Text);
         }
         return *m_Utf8Text;
     }
@@ -27,7 +34,7 @@ namespace Neon::Asset
         const StringU8& Text)
     {
         m_Utf8Text  = Text;
-        m_Utf16Text = StringUtils::StringTransform<String>(Text);
+        m_Utf16Text = StringUtils::Transform<String>(Text);
     }
 
     void TextFileAsset::SetText(

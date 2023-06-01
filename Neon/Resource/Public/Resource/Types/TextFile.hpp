@@ -13,6 +13,9 @@ namespace Neon::Asset
         TextFileAsset(
             String Text = L"");
 
+        TextFileAsset(
+            StringU8 Text);
+
         /// <summary>
         /// Load string as utf8
         /// </summary>

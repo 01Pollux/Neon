@@ -30,7 +30,7 @@ namespace Neon::RHI
 
             {
                 _com_error Error(Result);
-                Description = StringUtils::StringTransform<StringU8>(Error.ErrorMessage());
+                Description = StringUtils::Transform<StringU8>(Error.ErrorMessage());
             }
 
             NEON_ASSERT(SUCCEEDED(Result), StringUtils::Format(Message, uint32_t(Result), Description));

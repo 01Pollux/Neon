@@ -32,7 +32,7 @@ namespace Neon::Windowing
             {
                 NEON_TRACE_TAG(
                     "Window", "Registering Classname: {}",
-                    StringUtils::StringTransform<StringU8>(s_ClassName));
+                    StringUtils::Transform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
                 NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, TRUE) != 0);
@@ -57,7 +57,7 @@ namespace Neon::Windowing
             {
                 NEON_TRACE_TAG(
                     "Window", "Unregistering Classname: {}",
-                    StringUtils::StringTransform<StringU8>(s_ClassName));
+                    StringUtils::Transform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
                 NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
@@ -92,7 +92,7 @@ namespace Neon::Windowing
     {
         NEON_TRACE_TAG(
             "Window", "Creating Window '{}' -- Size: {}x{}",
-            StringUtils::StringTransform<StringU8>(Title),
+            StringUtils::Transform<StringU8>(Title),
             Size.Width(),
             Size.Height());
 

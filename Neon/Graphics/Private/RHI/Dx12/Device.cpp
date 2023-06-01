@@ -197,7 +197,7 @@ namespace Neon::RHI
         NEON_TRACE_TAG("Graphics", "Dedicated Video Memory: {} Gb", Desc.DedicatedVideoMemory / (1024.f * 1024.f * 1024.f));
         NEON_TRACE_TAG("Graphics", "Dedicated System Memory: {} Gb", Desc.DedicatedSystemMemory / (1024.f * 1024.f * 1024.f));
         NEON_TRACE_TAG("Graphics", "Shared System Memory: {} Gb", Desc.SharedSystemMemory / (1024.f * 1024.f * 1024.f));
-        NEON_TRACE_TAG("Graphics", "Description: {}", StringUtils::StringTransform<StringU8>(Desc.Description));
+        NEON_TRACE_TAG("Graphics", "Description: {}", StringUtils::Transform<StringU8>(Desc.Description));
 
         ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
     }

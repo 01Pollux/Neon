@@ -26,7 +26,7 @@ namespace Neon::Windowing
         {
             NEON_TRACE_TAG(
                 "Window", "Destroying Window: {}",
-                StringUtils::StringTransform<StringU8>(Window->GetTitle()));
+                StringUtils::Transform<StringU8>(Window->GetTitle()));
             PostQuitMessage(0);
             return 0;
         }

@@ -23,14 +23,14 @@ namespace Neon
 namespace Neon::StringUtils
 {
     template<typename _To, typename _From>
-    [[nodiscard]] constexpr _To StringTransform(const _From& Str) noexcept
+    [[nodiscard]] constexpr _To Transform(const _From& Str) noexcept
     {
         // same type
         if constexpr (std::is_same_v<_To, _From>)
             return Str;
         // from const _char* to _string_view
         else if constexpr (std::is_pointer_v<_From>)
-            return StringTransform<_To>(std::basic_string_view<std::remove_pointer_t<_From>>(Str));
+            return Transform<_To>(std::basic_string_view<std::remove_pointer_t<_From>>(Str));
         else
         {
             if (Str.empty())
@@ -54,7 +54,7 @@ namespace Neon::StringUtils
 
     // support for array of characters
     template<typename _To, typename _From, size_t _Size>
-    [[nodiscard]] constexpr _To StringTransform(const _From (&Str)[_Size]) noexcept
+    [[nodiscard]] constexpr _To Transform(const _From (&Str)[_Size]) noexcept
     {
         if constexpr (std::is_same_v<typename _To::value_type, _From>)
             return _To{ Str };
