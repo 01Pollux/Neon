@@ -3,7 +3,7 @@ include "neon-functions.lua"
 
 workspace "Neon"
     architecture "x64"
-    startproject "HelloWorld"
+    startproject "pakc"
 
     configurations
     {
@@ -70,8 +70,11 @@ workspace "Neon"
         include "Neon/Resource"
         include "Neon/Windowing"
         include "Neon/Graphics"
-        -- include "Neon/Rendering"
         include "Neon/Engine"
+    group ""
+
+    group "Neon/Tools"
+        include "Neon/Tools/pakc"
     group ""
 
     group "Samples"
