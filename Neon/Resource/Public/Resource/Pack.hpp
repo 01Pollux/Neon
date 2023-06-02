@@ -3,42 +3,16 @@
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
 
+#include <boost/pool/poolfwd.hpp>
 #include <Resource/Asset.hpp>
-#include <boost/variant.hpp>
-
-#include <queue>
-#include <boost/pool/pool_alloc.hpp>
 
 namespace Neon::Asset
 {
     class AssetResourceHandlers;
+    class PendingResourceOperator;
+
     class IAssetPack
     {
-    private:
-        struct ImportOperation
-        {
-            StringU8 Path;
-        };
-
-        struct ExportOperation
-        {
-            StringU8 Path;
-        };
-
-        struct LoadOperation
-        {
-            AssetHandle Handle;
-        };
-
-        struct SaveOperation
-        {
-            AssetHandle         Handle;
-            Ptr<IAssetResource> Resource;
-        };
-
-        using PendingOperations      = boost::variant<ImportOperation, ExportOperation, LoadOperation, SaveOperation>;
-        using PendingAssetOperations = std::vector<PendingOperations, boost::pool_allocator<PendingOperations>>;
-
     public:
         using AssetHandleList = std::vector<AssetHandle, boost::pool_allocator<AssetHandle>>;
 
@@ -50,7 +24,8 @@ namespace Neon::Asset
         };
 
         IAssetPack(
-            const AssetResourceHandlers& Handlers);
+            const AssetResourceHandlers& Handlers,
+            PendingResourceOperator&     PendingOperator);
 
         virtual ~IAssetPack() = default;
 
@@ -92,11 +67,6 @@ namespace Neon::Asset
 
     public:
         /// <summary>
-        /// Empty the pending asynchronous operations.
-        /// </summary>
-        void Flush();
-
-        /// <summary>
         /// Import asset pack file and overwrite current content of the pack asynchronously.
         /// </summary>
         void ImportAsync(
@@ -123,9 +93,7 @@ namespace Neon::Asset
 
     protected:
         const AssetResourceHandlers& m_Handlers;
-        mutable std::recursive_mutex m_AsyncMutex;
-
-    private:
-        PendingAssetOperations m_PendingOperations;
+        mutable std::mutex           m_PackMutex;
+        PendingResourceOperator&     m_PendingOperator;
     };
 } // namespace Neon::Asset

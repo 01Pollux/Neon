@@ -1,10 +1,7 @@
 #pragma once
 
-#include <Core/Neon.hpp>
-#include <Core/String.hpp>
-
-#include <Resource/Pack.hpp>
 #include <Resource/Handler.hpp>
+#include <Resource/Operator.hpp>
 
 namespace Neon::Asset
 {
@@ -13,9 +10,6 @@ namespace Neon::Asset
         using AssetPackMap = std::map<StringU8, UPtr<IAssetPack>>;
 
     public:
-        static constexpr const char* Global_RuntimePack = "_runtime.np";
-        static constexpr const char* Global_EditorPack  = "_editor.np";
-
         virtual ~IResourceManager() = default;
 
     public:
@@ -85,9 +79,9 @@ namespace Neon::Asset
         template<typename _Ty, typename... _Args>
             requires std::is_base_of_v<IAssetPack, _Ty>
         [[nodiscard]] UPtr<IAssetPack> InstantiatePack(
-            _Args&&... Args) const
+            _Args&&... Args)
         {
-            return UPtr<IAssetPack>{ std::make_unique<_Ty>(m_Handlers, std::forward<_Args>(Args)...) };
+            return UPtr<IAssetPack>{ std::make_unique<_Ty>(m_Handlers, m_PendingResourceOperator, std::forward<_Args>(Args)...) };
         }
 
     private:
@@ -98,7 +92,8 @@ namespace Neon::Asset
             const StringU8& Tag) const;
 
     private:
-        AssetResourceHandlers m_Handlers;
-        AssetPackMap          m_LoadedPacks;
+        AssetResourceHandlers   m_Handlers;
+        AssetPackMap            m_LoadedPacks;
+        PendingResourceOperator m_PendingResourceOperator;
     };
 } // namespace Neon::Asset

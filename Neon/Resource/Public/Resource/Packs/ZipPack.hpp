@@ -40,7 +40,8 @@ namespace Neon::Asset
 
     public:
         ZipAssetPack(
-            const AssetResourceHandlers& Handlers);
+            const AssetResourceHandlers& Handlers,
+            PendingResourceOperator&     PendingOperator);
 
         ~ZipAssetPack() override;
 
@@ -145,9 +146,8 @@ namespace Neon::Asset
         void Header_WriteBody();
 
     private:
-        mutable std::mutex m_PackMutex;
-        std::fstream       m_FileStream;
-        LoadedAssetsMap    m_LoadedAssets;
-        AssetInfoMap       m_AssetsInfo;
+        std::fstream    m_FileStream;
+        LoadedAssetsMap m_LoadedAssets;
+        AssetInfoMap    m_AssetsInfo;
     };
 } // namespace Neon::Asset

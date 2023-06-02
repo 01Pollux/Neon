@@ -28,7 +28,7 @@ int main(int Argc, char* Argv[])
     {
         Neon::Asset::RuntimeResourceManager Manager;
 
-        auto Pack = Manager.LoadPack("MyPack", "samples/hellopakc/text_test.np");
+        auto Pack = Manager.LoadPack("MyPack", "samples/basic/hello_world.np");
         for (auto& Asset : Pack->GetAssets())
         {
             auto Resource = std::dynamic_pointer_cast<Neon::Asset::TextFileAsset>(Pack->Load(Asset).lock());

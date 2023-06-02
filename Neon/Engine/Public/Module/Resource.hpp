@@ -21,17 +21,6 @@ namespace Neon::Module
         /// </summary>
         [[nodiscard]] Asset::IResourceManager* Get();
 
-        /// <summary>
-        /// Run the resource manager.
-        /// </summary>
-        void Run();
-
-    private:
-        /// <summary>
-        /// Flushes the pending asset packs.
-        /// </summary>
-        void FlushPacks();
-
     private:
         UPtr<Asset::IResourceManager> m_Manager;
     };

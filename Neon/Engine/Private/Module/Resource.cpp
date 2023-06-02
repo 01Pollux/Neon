@@ -15,21 +15,4 @@ namespace Neon::Module
     {
         return m_Manager.get();
     }
-
-    void ResourceManager::Run()
-    {
-        FlushPacks();
-    }
-
-    void ResourceManager::FlushPacks()
-    {
-        // Flush each pack in seperate threads
-        std::vector<std::future<void>> AsyncFlush;
-        for (auto& Pack : m_Manager->GetPacks() | std::views::values)
-        {
-            AsyncFlush.emplace_back(
-                std::async([&Pack]
-                           { Pack->Flush(); }));
-        }
-    }
 } // namespace Neon::Module

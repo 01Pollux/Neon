@@ -28,7 +28,6 @@ namespace Neon::Runtime
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {
-            m_ResourceManager->Run();
             m_GameLogic.Tick();
 
             Graphics->PreRender();

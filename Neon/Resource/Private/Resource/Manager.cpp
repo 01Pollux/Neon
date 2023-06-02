@@ -1,5 +1,6 @@
 #include <ResourcePCH.hpp>
 #include <Resource/Manager.hpp>
+#include <Resource/Pack.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -36,7 +37,7 @@ namespace Neon::Asset
         NEON_VALIDATE(Pack);
 
         NEON_INFO_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
-        Pack->Import(Path);
+        Pack->ImportAsync(Path);
 
         return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
     }

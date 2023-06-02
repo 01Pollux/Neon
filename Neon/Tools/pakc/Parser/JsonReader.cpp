@@ -128,7 +128,7 @@ namespace PakC
                 continue;
             }
 
-            auto ForceHandle = Element.find("ForceHandle");
+            auto ForceHandle = Element.find("Handle");
 
             Neon::Asset::AssetHandle Handle = {
                 ForceHandle != Element.end() && ForceHandle->value().is_string()
@@ -140,12 +140,6 @@ namespace PakC
         }
 
         Pack->ExportAsync(std::string(ExportPath->value().as_string()));
-
-        m_Threads.emplace_back(
-            [Pack]
-            {
-                Pack->Flush();
-            });
     }
 
     void JsonHandler::RegisterTypes()
