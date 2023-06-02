@@ -9,7 +9,7 @@
 namespace Neon::Asset
 {
     class AssetResourceHandlers;
-    class PendingResourceOperator;
+    class DeferredResourceOperator;
 
     class IAssetPack
     {
@@ -25,7 +25,7 @@ namespace Neon::Asset
 
         IAssetPack(
             const AssetResourceHandlers& Handlers,
-            PendingResourceOperator&     PendingOperator);
+            DeferredResourceOperator&    DefferedOperator);
 
         virtual ~IAssetPack() = default;
 
@@ -94,6 +94,6 @@ namespace Neon::Asset
     protected:
         const AssetResourceHandlers& m_Handlers;
         mutable std::mutex           m_PackMutex;
-        PendingResourceOperator&     m_PendingOperator;
+        DeferredResourceOperator&    m_DefferedOperator;
     };
 } // namespace Neon::Asset

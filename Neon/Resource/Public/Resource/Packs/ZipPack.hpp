@@ -41,7 +41,7 @@ namespace Neon::Asset
     public:
         ZipAssetPack(
             const AssetResourceHandlers& Handlers,
-            PendingResourceOperator&     PendingOperator);
+            DeferredResourceOperator&     DefferedOperator);
 
         ~ZipAssetPack() override;
 

@@ -17,10 +17,10 @@ namespace Neon::Asset
     class IAssetPack;
     class IAssetResource;
 
-    class PendingResourceOperator
+    class DeferredResourceOperator
     {
     public:
-        PendingResourceOperator();
+        DeferredResourceOperator();
 
         /// <summary>
         /// Aquire lock on resource thread.
@@ -28,7 +28,8 @@ namespace Neon::Asset
         /// if the caller is not the resource thread, it will wait until the resource thread is done with its current operation.
         /// </summary>
         template<typename _Mtx>
-        std::unique_lock<_Mtx> Lock(
+
+        [[nodiscard]] std::unique_lock<_Mtx> Lock(
             const IAssetPack* Pack,
             _Mtx&             Mutex) const
         {

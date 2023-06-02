@@ -23,8 +23,8 @@ namespace Neon::Asset
 {
     ZipAssetPack::ZipAssetPack(
         const AssetResourceHandlers& Handlers,
-        PendingResourceOperator&     PendingOperator) :
-        IAssetPack(Handlers, PendingOperator)
+        DeferredResourceOperator&     DefferedOperator) :
+        IAssetPack(Handlers, DefferedOperator)
     {
         m_FileStream = std::fstream(GetTempFileName(), std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
     }
@@ -41,7 +41,7 @@ namespace Neon::Asset
     void ZipAssetPack::Import(
         const StringU8& FilePath)
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         m_AssetsInfo.clear();
         m_LoadedAssets.clear();
@@ -65,7 +65,7 @@ namespace Neon::Asset
     void ZipAssetPack::Export(
         const StringU8& FilePath)
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         size_t FileSize = OffsetToBody();
         for (auto& [Handle, Info] : m_AssetsInfo)
@@ -91,7 +91,7 @@ namespace Neon::Asset
     Ref<IAssetResource> ZipAssetPack::Load(
         const AssetHandle& Handle)
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         auto& LoadedAsset = m_LoadedAssets[Handle];
 
@@ -122,7 +122,7 @@ namespace Neon::Asset
         const AssetHandle&         Handle,
         const Ptr<IAssetResource>& Resource)
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         for (auto& [LoaderId, Handler] : m_Handlers.Get())
         {
@@ -144,7 +144,7 @@ namespace Neon::Asset
     auto ZipAssetPack::ContainsResource(
         const AssetHandle& Handle) const -> ContainType
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
         if (m_LoadedAssets.contains(Handle))
         {
             return ContainType::Loaded;
@@ -156,7 +156,7 @@ namespace Neon::Asset
 
     auto ZipAssetPack::GetAssets() const -> AssetHandleList
     {
-        auto Lock = m_PendingOperator.Lock(this, m_PackMutex);
+        auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         AssetHandleList Assets;
         Assets.insert_range(Assets.begin(), m_AssetsInfo | std::views::keys);

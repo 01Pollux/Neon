@@ -81,7 +81,7 @@ namespace Neon::Asset
         [[nodiscard]] UPtr<IAssetPack> InstantiatePack(
             _Args&&... Args)
         {
-            return UPtr<IAssetPack>{ std::make_unique<_Ty>(m_Handlers, m_PendingResourceOperator, std::forward<_Args>(Args)...) };
+            return UPtr<IAssetPack>{ std::make_unique<_Ty>(m_Handlers, m_DeferredResourceOperator, std::forward<_Args>(Args)...) };
         }
 
     private:
@@ -94,6 +94,6 @@ namespace Neon::Asset
     private:
         AssetResourceHandlers   m_Handlers;
         AssetPackMap            m_LoadedPacks;
-        PendingResourceOperator m_PendingResourceOperator;
+        DeferredResourceOperator m_DeferredResourceOperator;
     };
 } // namespace Neon::Asset

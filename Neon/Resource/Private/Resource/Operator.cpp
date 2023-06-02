@@ -4,7 +4,7 @@
 
 namespace Neon::Asset
 {
-    PendingResourceOperator::PendingResourceOperator()
+    DeferredResourceOperator::DeferredResourceOperator()
     {
         m_ResourceThread = std::jthread(
             [this](std::stop_token StopToken)
@@ -51,7 +51,7 @@ namespace Neon::Asset
             });
     }
 
-    void PendingResourceOperator::ImportAsync(
+    void DeferredResourceOperator::ImportAsync(
         IAssetPack*     Pack,
         const StringU8& FilePath)
     {
@@ -62,7 +62,7 @@ namespace Neon::Asset
         m_LoaderCondition.notify_one();
     }
 
-    void PendingResourceOperator::ExportAsync(
+    void DeferredResourceOperator::ExportAsync(
         IAssetPack*     Pack,
         const StringU8& FilePath)
     {
@@ -73,7 +73,7 @@ namespace Neon::Asset
         m_LoaderCondition.notify_one();
     }
 
-    void PendingResourceOperator::LoadAsync(
+    void DeferredResourceOperator::LoadAsync(
         IAssetPack*        Pack,
         const AssetHandle& Handle)
     {
@@ -84,7 +84,7 @@ namespace Neon::Asset
         m_LoaderCondition.notify_one();
     }
 
-    void PendingResourceOperator::SaveAsync(
+    void DeferredResourceOperator::SaveAsync(
         IAssetPack*                Pack,
         const AssetHandle&         Handle,
         const Ptr<IAssetResource>& Resource)
