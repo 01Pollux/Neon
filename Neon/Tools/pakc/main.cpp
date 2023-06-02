@@ -25,16 +25,6 @@ int main(int Argc, char* Argv[])
             Handler.Parse(Argv[i]);
         }
     }
-    {
-        Neon::Asset::RuntimeResourceManager Manager;
-
-        auto Pack = Manager.LoadPack("MyPack", "samples/basic/hello_world.np");
-        for (auto& Asset : Pack->GetAssets())
-        {
-            auto Resource = std::dynamic_pointer_cast<Neon::Asset::TextFileAsset>(Pack->Load(Asset).lock());
-            NEON_INFO("Asset: {} -- Text: {}", boost::uuids::to_string(Asset), Resource->AsUtf8());
-        }
-    }
 
     Neon::Logger::Shutdown();
     return 0;
