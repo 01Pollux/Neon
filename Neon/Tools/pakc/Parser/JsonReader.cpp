@@ -1,11 +1,14 @@
 #include <PakCPCH.hpp>
 #include <Parser/JsonReader.hpp>
-#include <boost/uuid/string_generator.hpp>
 #include <fstream>
+
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <Resource/Packs/ZipPack.hpp>
 #include <Parser/Manager.hpp>
 
+#include <Parser/Handlers/Logger.hpp>
 #include <Parser/Handlers/TextFile.hpp>
 #include <Parser/Handlers/Shader.hpp>
 
@@ -17,6 +20,8 @@ namespace PakC
         m_ResourceManager(std::make_unique<CustomResourceManager>())
     {
         RegisterTypes();
+
+        m_ResourceManager->TryLoadPack("Logger", "logger.np");
     }
 
     JsonHandler::~JsonHandler()
@@ -106,6 +111,14 @@ namespace PakC
                 continue;
             }
 
+            auto ForceHandle = Element.find("Handle");
+
+            Neon::Asset::AssetHandle Handle = {
+                ForceHandle != Element.end() && ForceHandle->value().is_string()
+                    ? boost::uuids::string_generator()(std::string(ForceHandle->value().as_string()))
+                    : boost::uuids::random_generator_mt19937()()
+            };
+
             auto Tag = Element.find("Tag");
             if (Tag != Element.end() && Tag->value().is_string())
             {
@@ -113,7 +126,7 @@ namespace PakC
             }
             else
             {
-                NEON_INFO("Loading: {}", Count);
+                NEON_INFO("Loading: {} -- Handle: {}", Count, boost::uuids::to_string(Handle));
             }
 
             auto TypeHandler = m_AssetResources.find(std::string(Type->value().as_string()));
@@ -137,14 +150,6 @@ namespace PakC
                 continue;
             }
 
-            auto ForceHandle = Element.find("Handle");
-
-            Neon::Asset::AssetHandle Handle = {
-                ForceHandle != Element.end() && ForceHandle->value().is_string()
-                    ? boost::uuids::string_generator()(std::string(ForceHandle->value().as_string()))
-                    : boost::uuids::random_generator_mt19937()()
-            };
-
             Pack->SaveAsync(Handle, Asset);
         }
 
@@ -153,6 +158,7 @@ namespace PakC
 
     void JsonHandler::RegisterTypes()
     {
+        m_AssetResources["LoggerAsset"]   = &Handler::LoadLoggerResource;
         m_AssetResources["TextFileAsset"] = &Handler::LoadTextResource;
         m_AssetResources["ShaderAsset"]   = &Handler::LoadShaderResource;
     }

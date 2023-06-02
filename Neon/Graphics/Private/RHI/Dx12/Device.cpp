@@ -150,7 +150,7 @@ namespace Neon::RHI
         }
         catch (...)
         {
-            NEON_WARNING_TAG("Renderer", "Couldn't find a PIX gpu debugger");
+            NEON_WARNING_TAG("Graphics", "Couldn't find a PIX gpu debugger");
         }
 
         if (hFind != INVALID_HANDLE_VALUE)
@@ -160,7 +160,7 @@ namespace Neon::RHI
 
         if (NewestVersionFound.empty())
         {
-            NEON_WARNING_TAG("Renderer", "Couldn't find a PIX gpu debugger");
+            NEON_WARNING_TAG("Graphics", "Couldn't find a PIX gpu debugger");
             return;
         }
 
@@ -168,7 +168,7 @@ namespace Neon::RHI
         pixSearchPath += NewestVersionFound + STR("\\WinPixGpuCapturer.dll");
         if (!LoadLibraryW(pixSearchPath.c_str()))
         {
-            NEON_WARNING_TAG("Renderer", "Couldn't find a PIX gpu debugger");
+            NEON_WARNING_TAG("Graphics", "Couldn't find a PIX gpu debugger");
         }
 #endif
     }

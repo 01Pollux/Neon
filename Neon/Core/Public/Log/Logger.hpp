@@ -10,7 +10,9 @@ namespace Neon::Logger
         Info,
         Warning,
         Error,
-        Fatal
+        Fatal,
+
+        Count
     };
 
     /// <summary>

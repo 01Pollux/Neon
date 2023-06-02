@@ -59,6 +59,13 @@ namespace Neon::Asset
         /// <summary>
         /// Load pack file
         /// </summary>
+        IAssetPack* TryLoadPack(
+            const StringU8& Tag,
+            const StringU8& Path);
+
+        /// <summary>
+        /// Load pack file
+        /// </summary>
         IAssetPack* LoadPack(
             const StringU8& Tag,
             const StringU8& Path);
@@ -92,8 +99,8 @@ namespace Neon::Asset
             const StringU8& Tag) const;
 
     private:
-        AssetResourceHandlers   m_Handlers;
-        AssetPackMap            m_LoadedPacks;
+        AssetResourceHandlers    m_Handlers;
+        AssetPackMap             m_LoadedPacks;
         DeferredResourceOperator m_DeferredResourceOperator;
     };
 } // namespace Neon::Asset

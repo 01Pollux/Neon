@@ -7,6 +7,7 @@
 
 namespace PakC::Handler
 {
+    using namespace Neon;
     AssetResourcePtr LoadTextResource(
         const boost::json::object& Object)
     {
@@ -20,13 +21,13 @@ namespace PakC::Handler
             }
             std::wstringstream Stream;
             Stream << File.rdbuf();
-            return std::make_shared<Neon::Asset::TextFileAsset>(Stream.str());
+            return std::make_shared<Asset::TextFileAsset>(Stream.str());
         }
         else
         {
             if (auto Content = Object.find("Content"); Content != Object.end() && Content->value().is_string())
             {
-                return std::make_shared<Neon::Asset::TextFileAsset>(std::string(Content->value().as_string()));
+                return std::make_shared<Asset::TextFileAsset>(std::string(Content->value().as_string()));
             }
         }
         throw std::runtime_error("No file or content specified for text file.");

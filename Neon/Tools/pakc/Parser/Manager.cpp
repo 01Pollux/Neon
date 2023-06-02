@@ -3,6 +3,7 @@
 
 #include <Resource/Packs/ZipPack.hpp>
 
+#include <Resource/Types/Logger.hpp>
 #include <Resource/Types/TextFile.hpp>
 #include <Resource/Types/Shader.hpp>
 
@@ -12,6 +13,7 @@ namespace PakC
 
     CustomResourceManager::CustomResourceManager()
     {
+        AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
         AddHandler<ShaderAsset::Handler>();
     }

@@ -13,9 +13,6 @@
 int main(int Argc, char* Argv[])
 {
     Neon::Logger::Initialize();
-    Neon::Logger::SetLogTag("", Neon::Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("Resource", Neon::Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("ShaderCompiler", Neon::Logger::LogSeverity::Info);
 
     if (Argc <= 1)
     {

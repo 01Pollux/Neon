@@ -27,19 +27,33 @@ namespace Neon::Asset
         return Iter->second.get();
     }
 
-    IAssetPack* IResourceManager::LoadPack(
+    IAssetPack* IResourceManager::TryLoadPack(
         const StringU8& Tag,
         const StringU8& Path)
     {
         PackIsUnique(Tag);
 
         UPtr<IAssetPack> Pack = OpenPack(Path);
+        if (Pack)
+        {
+            NEON_INFO_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
+            Pack->ImportAsync(Path);
+
+            return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    IAssetPack* IResourceManager::LoadPack(
+        const StringU8& Tag,
+        const StringU8& Path)
+    {
+        auto Pack = TryLoadPack(Tag, Path);
         NEON_VALIDATE(Pack);
-
-        NEON_INFO_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
-        Pack->ImportAsync(Path);
-
-        return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
+        return Pack;
     }
 
     void IResourceManager::UnloadPack(
