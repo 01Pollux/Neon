@@ -4,6 +4,7 @@
 #include <Resource/Packs/ZipPack.hpp>
 
 #include <Resource/Types/TextFile.hpp>
+#include <Resource/Types/Shader.hpp>
 
 namespace PakC
 {
@@ -12,6 +13,7 @@ namespace PakC
     CustomResourceManager::CustomResourceManager()
     {
         AddHandler<TextFileAsset::Handler>();
+        AddHandler<ShaderAsset::Handler>();
     }
 
     Neon::UPtr<IAssetPack> CustomResourceManager::OpenPack(

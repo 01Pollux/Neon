@@ -4,12 +4,14 @@
 #include <Resource/Packs/ZipPack.hpp>
 
 #include <Resource/Types/TextFile.hpp>
+#include <Resource/Types/Shader.hpp>
 
 namespace Neon::Asset
 {
     RuntimeResourceManager::RuntimeResourceManager()
     {
         AddHandler<TextFileAsset::Handler>();
+        AddHandler<ShaderAsset::Handler>();
     }
 
     UPtr<IAssetPack> RuntimeResourceManager::OpenPack(

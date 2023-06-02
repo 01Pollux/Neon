@@ -28,8 +28,6 @@ namespace Neon::RHI
     {
         // Enable for debug build
         Debug,
-        // Enable for no optimizations during shader compilation
-        SkipOptimization,
 
         _Last_Enum
     };
@@ -53,7 +51,6 @@ namespace Neon::RHI
     struct ShaderCompileDesc
     {
         std::vector<std::pair<String, String>> Defines;
-        std::map<String, String>               IncludeFiles;
 
         ShaderProfile Profile = ShaderProfile::SP_6_5;
         ShaderStage   Stage;

@@ -60,6 +60,7 @@ function link_engine_library()
     {
         "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Neon.Graphics}",
         "%{CommonDir.Neon.Resource}",
         "%{CommonDir.Neon.Engine}"
     }

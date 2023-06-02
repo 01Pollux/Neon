@@ -14,16 +14,13 @@ namespace PakC::Handler
         {
             std::string    Path(FileName->value().as_string());
             std::wifstream File(Path);
-            if (File)
+            if (!File)
             {
-                std::wstringstream Stream;
-                Stream << File.rdbuf();
-                return std::make_shared<Neon::Asset::TextFileAsset>(Stream.str());
+                throw std::runtime_error("Failed to open text file.");
             }
-            else
-            {
-                NEON_WARNING("File '{}' doesn't exists", Path);
-            }
+            std::wstringstream Stream;
+            Stream << File.rdbuf();
+            return std::make_shared<Neon::Asset::TextFileAsset>(Stream.str());
         }
         else
         {
@@ -32,6 +29,6 @@ namespace PakC::Handler
                 return std::make_shared<Neon::Asset::TextFileAsset>(std::string(Content->value().as_string()));
             }
         }
-        return nullptr;
+        throw std::runtime_error("No file or content specified for text file.");
     }
 } // namespace PakC::Handler

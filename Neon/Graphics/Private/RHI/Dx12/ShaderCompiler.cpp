@@ -3,8 +3,6 @@
 #include <Private/RHI/Dx12/ShaderCompiler.hpp>
 #include <RHI/Resource/MappedBuffer.hpp>
 
-#include <execution>
-
 #include <Log/Logger.hpp>
 
 namespace Neon::RHI
@@ -16,91 +14,6 @@ namespace Neon::RHI
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_Compiler)));
         ThrowIfFailed(m_Utils->CreateDefaultIncludeHandler(&m_DefaultIncludeHandler));
     }
-
-    class IncludeHandler : public IDxcIncludeHandler
-    {
-    public:
-        IncludeHandler(
-            const std::map<String, String>& IncludeFiles,
-            IDxcUtils*                      Utils) :
-            m_Utils(Utils),
-            m_IncludeFiles(IncludeFiles)
-        {
-        }
-
-        HRESULT STDMETHODCALLTYPE QueryInterface(
-            REFIID riid,
-            void** ppvObject) override
-        {
-            if (ppvObject == nullptr)
-            {
-                return E_POINTER;
-            }
-
-            if (riid == IID_IUnknown)
-            {
-                *ppvObject = static_cast<IUnknown*>(this);
-                AddRef();
-                return S_OK;
-            }
-
-            if (riid == __uuidof(IDxcIncludeHandler))
-            {
-                *ppvObject = static_cast<IDxcIncludeHandler*>(this);
-                AddRef();
-                return S_OK;
-            }
-
-            return E_NOINTERFACE;
-        }
-
-        ULONG STDMETHODCALLTYPE AddRef() override
-        {
-            return ++m_RefCount;
-        }
-
-        ULONG STDMETHODCALLTYPE Release() override
-        {
-            ULONG Result = --m_RefCount;
-            if (Result == 0)
-            {
-                delete this;
-            }
-            return Result;
-        }
-
-        HRESULT STDMETHODCALLTYPE LoadSource(
-            LPCWSTR    FileName,
-            IDxcBlob** OutIncludeSource) override
-        {
-            if (OutIncludeSource == nullptr)
-            {
-                return E_POINTER;
-            }
-
-            auto FileIter = m_IncludeFiles.find(FileName);
-            if (FileIter == m_IncludeFiles.end())
-            {
-                return E_FAIL;
-            }
-
-            Win32::ComPtr<IDxcBlobEncoding> IncludeSource;
-            ThrowIfFailed(m_Utils->CreateBlobFromPinned(
-                FileIter->second.c_str(),
-                uint32_t(FileIter->second.size()),
-                DXC_CP_ACP,
-                &IncludeSource));
-
-            *OutIncludeSource = IncludeSource.Detach();
-            return S_OK;
-        }
-
-    private:
-        std::atomic<ULONG> m_RefCount = 0;
-        IDxcUtils*         m_Utils;
-
-        const std::map<String, String>& m_IncludeFiles;
-    };
 
     class ReflectionBlob : public IDxcBlob
     {
@@ -196,16 +109,7 @@ namespace Neon::RHI
             Options.emplace_back(STR("-Qstrip_debug"));
         }
 
-#if !NEON_DIST
-        if (Desc.Flags.Test(EShaderCompileFlags::SkipOptimization))
-        {
-            Options.emplace_back(DXC_ARG_SKIP_OPTIMIZATIONS);
-        }
-        else
-#endif
-        {
-            Options.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
-        }
+        Options.emplace_back(DXC_ARG_OPTIMIZATION_LEVEL3);
 
         Options.emplace_back(DXC_ARG_ALL_RESOURCES_BOUND);
         Options.emplace_back(STR("-HV 2021"));
@@ -238,16 +142,12 @@ namespace Neon::RHI
         };
 
         Win32::ComPtr<IDxcResult> Result;
-        {
-            Win32::ComPtr<IncludeHandler> Handler(NEON_NEW IncludeHandler(Desc.IncludeFiles, m_Utils.Get()));
-
-            ThrowIfFailed(m_Compiler->Compile(
-                &Buffer,
-                Options.data(),
-                uint32_t(Options.size()),
-                Handler.Get(),
-                IID_PPV_ARGS(&Result)));
-        }
+        ThrowIfFailed(m_Compiler->Compile(
+            &Buffer,
+            Options.data(),
+            uint32_t(Options.size()),
+            nullptr,
+            IID_PPV_ARGS(&Result)));
 
         Win32::ComPtr<IDxcBlobUtf8> Error;
         if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
@@ -426,6 +326,12 @@ namespace Neon::RHI
 
         switch (Profile)
         {
+        case ShaderProfile::SP_5_0:
+            Model += STR("_5_0");
+            break;
+        case ShaderProfile::SP_5_1:
+            Model += STR("_6_0");
+            break;
         case ShaderProfile::SP_6_0:
             Model += STR("_6_0");
             break;

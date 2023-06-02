@@ -5,7 +5,9 @@
 
 #include <Resource/Packs/ZipPack.hpp>
 #include <Parser/Manager.hpp>
+
 #include <Parser/Handlers/TextFile.hpp>
+#include <Parser/Handlers/Shader.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -121,10 +123,17 @@ namespace PakC
                 continue;
             }
 
-            auto Asset = TypeHandler->second(Element);
-            if (!Asset)
+            AssetResourcePtr Asset;
+            try
             {
-                NEON_ERROR("Failed to load asset");
+                if (!(Asset = TypeHandler->second(Element)))
+                {
+                    throw std::runtime_error("null asset returned.");
+                }
+            }
+            catch (const std::exception& Exception)
+            {
+                NEON_ERROR("Failed to load asset: {}", Exception.what());
                 continue;
             }
 
@@ -145,5 +154,6 @@ namespace PakC
     void JsonHandler::RegisterTypes()
     {
         m_AssetResources["TextFileAsset"] = &Handler::LoadTextResource;
+        m_AssetResources["ShaderAsset"]   = &Handler::LoadShaderResource;
     }
 } // namespace PakC
