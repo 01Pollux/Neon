@@ -18,12 +18,6 @@ namespace Neon::Asset
             const Ptr<IAssetResource>& Resource) = 0;
 
         /// <summary>
-        /// Get resource size for saving.
-        /// </summary>
-        virtual size_t QuerySize(
-            const Ptr<IAssetResource>& Resource) = 0;
-
-        /// <summary>
         /// Load data from bytes.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetResource> Load(
@@ -35,8 +29,7 @@ namespace Neon::Asset
         /// </summary>
         [[nodiscard]] virtual void Save(
             const Ptr<IAssetResource>& Resource,
-            IO::BinaryStreamWriter     Stream,
-            size_t                     DataSize) = 0;
+            IO::BinaryStreamWriter     Stream) = 0;
     };
 
     class AssetResourceHandlers

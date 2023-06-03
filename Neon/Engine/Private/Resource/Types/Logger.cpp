@@ -26,22 +26,9 @@ namespace Neon::Asset
         return dynamic_cast<LoggerAsset*>(Resource.get());
     }
 
-    size_t LoggerAsset::Handler::QuerySize(
-        const Ptr<IAssetResource>& Resource)
-    {
-        size_t DataSize = IO::BinaryStream::Size<uint8_t>();
-        auto&  Tags     = static_cast<LoggerAsset*>(Resource.get())->GetTags();
-        for (auto& Tag : Tags | std::views::keys)
-        {
-            DataSize += IO::BinaryStream::Size(Tag);
-            DataSize += IO::BinaryStream::Size<Logger::LogSeverity>();
-        }
-        return DataSize;
-    }
-
     Ptr<IAssetResource> LoggerAsset::Handler::Load(
         IO::BinaryStreamReader Stream,
-        size_t                 DataSize)
+        size_t)
     {
         auto    Asset(std::make_shared<LoggerAsset>());
         uint8_t Severity;
@@ -57,8 +44,7 @@ namespace Neon::Asset
 
     void LoggerAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        IO::BinaryStreamWriter     Stream,
-        size_t                     DataSize)
+        IO::BinaryStreamWriter     Stream)
     {
         auto& Tags = static_cast<LoggerAsset*>(Resource.get())->GetTags();
         Stream.Write(uint8_t(Tags.size()));

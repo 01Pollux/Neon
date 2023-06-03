@@ -52,24 +52,16 @@ namespace Neon::Asset
         return dynamic_cast<TextFileAsset*>(Resource.get());
     }
 
-    size_t TextFileAsset::Handler::QuerySize(
-        const Ptr<IAssetResource>& Resource)
-    {
-        auto TextFile = static_cast<TextFileAsset*>(Resource.get());
-        return IO::BinaryStream::Size(TextFile->AsUtf16().size());
-    }
-
     Ptr<IAssetResource> TextFileAsset::Handler::Load(
         IO::BinaryStreamReader Stream,
-        size_t                 DataSize)
+        size_t)
     {
         return std::make_shared<TextFileAsset>(Stream.Read<String>());
     }
 
     void TextFileAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        IO::BinaryStreamWriter     Stream,
-        size_t                     DataSize)
+        IO::BinaryStreamWriter     Stream)
     {
         auto TextFile = static_cast<TextFileAsset*>(Resource.get());
         Stream.Write(TextFile->AsUtf16());

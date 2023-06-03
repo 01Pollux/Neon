@@ -7,8 +7,8 @@ namespace Neon::Logger
     enum class LogSeverity : uint8_t
     {
         Disabled,
-        Trace,
         Info,
+        Trace,
         Warning,
         Error,
         Fatal,
@@ -105,8 +105,13 @@ namespace Neon::Logger
 
 #ifndef NEON_DIST
 
+#ifdef NEON_DEBUG
 #define NEON_TRACE_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
-#define NEON_INFO_TAG(Tag, ...)  Neon::Logger::LogTag(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
+#else
+#define NEON_TRACE_TAG(Tag, ...)
+#endif
+
+#define NEON_INFO_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
 
 #define NEON_TRACE(...) Neon::Logger::Log(Neon::Logger::LogSeverity::Trace, __VA_ARGS__)
 #define NEON_INFO(...)  Neon::Logger::Log(Neon::Logger::LogSeverity::Info, __VA_ARGS__)

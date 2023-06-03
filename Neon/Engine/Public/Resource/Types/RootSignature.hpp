@@ -34,17 +34,13 @@ namespace Neon::Asset
             bool CanCastTo(
                 const Ptr<IAssetResource>& Resource) override;
 
-            size_t QuerySize(
-                const Ptr<IAssetResource>& Resource) override;
-
             Ptr<IAssetResource> Load(
                 IO::BinaryStreamReader Stream,
                 size_t                 DataSize) override;
 
             void Save(
                 const Ptr<IAssetResource>& Resource,
-                IO::BinaryStreamWriter     Stream,
-                size_t                     DataSize) override;
+                IO::BinaryStreamWriter     Stream) override;
         };
 
     private:

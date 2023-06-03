@@ -95,7 +95,7 @@ namespace Neon::Asset
             return LoadedAsset;
         }
 
-        NEON_INFO_TAG("Resource", "Loading asset: {}", Handle.ToString());
+        NEON_TRACE_TAG("Resource", "Loading asset: {}", Handle.ToString());
 
         StringU8 ErrorText;
         auto     Asset = LoadAsset(m_Handlers, Handle, ErrorText);
@@ -126,7 +126,6 @@ namespace Neon::Asset
                 {
                     auto& Info    = m_AssetsInfo[Handle];
                     Info.LoaderId = LoaderId;
-                    Info.Size     = Handler->QuerySize(Resource);
                 }
                 return;
             }
@@ -316,6 +315,7 @@ namespace Neon::Asset
         NEON_VALIDATE(Sha256.Digest() == HeaderInfo.Hash, "Invalid pack checksum");
 
         Header_ReadBody();
+        NEON_TRACE_TAG("Resource", "------------------------------------------------------");
         return true;
     }
 
@@ -325,10 +325,15 @@ namespace Neon::Asset
         m_File.seekg(0);
         HeaderInfo.Read(m_File);
 
+        NEON_TRACE_TAG("Resource", "Reading header");
+        NEON_TRACE_TAG("Resource", "Header Version: {}", HeaderInfo.Version);
+        NEON_TRACE_TAG("Resource", "Number of resources: {}", HeaderInfo.NumberOfResources);
+        NEON_TRACE_TAG("Resource", "Signature: {:X}", HeaderInfo.Signature);
+
         if (HeaderInfo.Signature != AssetPackHeader::DefaultSignature ||
             HeaderInfo.NumberOfResources == 0)
         {
-            NEON_INFO_TAG("Resource", "Invalid header's information");
+            NEON_TRACE_TAG("Resource", "Invalid header's information");
             return false;
         }
 
@@ -341,20 +346,28 @@ namespace Neon::Asset
     {
         m_File.seekg(sizeof(AssetPackHeader));
         AssetPackSection Section;
+
+        NEON_TRACE_TAG("Resource", "Reading sections");
         for (uint16_t i = 0; i < HeaderInfo.NumberOfResources; i++)
         {
             Section.Read(m_File);
-            if (Section.Signature != AssetPackSection::DefaultSignature ||
-                !Section.PackInfo.Size)
+
+            NEON_TRACE_TAG("Resource", "Section: {}", Section.Handle.ToString());
+            NEON_TRACE_TAG("Resource", "Signature: {:X}", Section.Signature);
+            NEON_TRACE_TAG("Resource", "Loader: {:X}", Section.PackInfo.LoaderId);
+            NEON_TRACE_TAG("Resource", "Offset: {}", Section.PackInfo.Offset);
+            NEON_TRACE_TAG("Resource", "Size: {}", Section.PackInfo.Size);
+
+            if (Section.Signature != AssetPackSection::DefaultSignature)
             {
-                NEON_INFO_TAG("Resource", "Invalid resource signature");
+                NEON_WARNING_TAG("Resource", "Invalid resource signature");
                 return false;
             }
 
             auto [InfoIter, Inserted] = m_AssetsInfo.emplace(Section.Handle, Section.PackInfo);
             if (!Inserted)
             {
-                NEON_INFO_TAG("Resource", "Duplicate resource '{}'", Section.Handle.ToString());
+                NEON_WARNING_TAG("Resource", "Duplicate resource '{}'", Section.Handle.ToString());
                 return false;
             }
 
@@ -388,6 +401,7 @@ namespace Neon::Asset
         Header_WriteBody();
         Header_WriteSections(Header);
         Header_WriteHeader(Header);
+        NEON_TRACE_TAG("Resource", "------------------------------------------------------");
     }
 
     void ZipAssetPack::Header_WriteHeader(
@@ -402,6 +416,11 @@ namespace Neon::Asset
             .Hash              = Header.Digest(),
         };
 
+        NEON_TRACE_TAG("Resource", "Writing Header");
+        NEON_TRACE_TAG("Resource", "Header Version: {}", HeaderInfo.Version);
+        NEON_TRACE_TAG("Resource", "Number of resources: {}", HeaderInfo.NumberOfResources);
+        NEON_TRACE_TAG("Resource", "Signature: {:X}", HeaderInfo.Signature);
+
         HeaderInfo.Write(m_File);
     }
 
@@ -410,12 +429,20 @@ namespace Neon::Asset
     {
         m_File.seekp(sizeof(AssetPackHeader));
         AssetPackSection Section;
+
+        NEON_TRACE_TAG("Resource", "Writing Sections");
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             Section.PackInfo = Info;
             Section.Handle   = Handle;
             Section.Write(m_File);
             Header.Append(std::bit_cast<const uint8_t*>(&Info), sizeof(Info));
+
+            NEON_TRACE_TAG("Resource", "Writing Section: {}", Section.Handle.ToString());
+            NEON_TRACE_TAG("Resource", "Signature: {:X}", Section.Signature);
+            NEON_TRACE_TAG("Resource", "Loader: {:X}", Section.PackInfo.LoaderId);
+            NEON_TRACE_TAG("Resource", "Offset: {}", Section.PackInfo.Offset);
+            NEON_TRACE_TAG("Resource", "Size: {}", Section.PackInfo.Size);
         }
     }
 
@@ -430,14 +457,14 @@ namespace Neon::Asset
 
             auto DataPos = m_File.tellp();
             Info.Offset  = DataPos;
-            Handler->Save(Resource, m_File, Info.Size);
+            Handler->Save(Resource, m_File);
 
-            auto RestorePos = m_File.tellp();
+            Info.Size = m_File.tellp() - DataPos;
             m_File.seekp(DataPos);
 
             // Process the hash
             Sha256.Reset();
-            Sha256.Append(m_File, RestorePos - DataPos);
+            Sha256.Append(m_File, Info.Size);
             Info.Hash = Sha256.Digest();
         }
     }

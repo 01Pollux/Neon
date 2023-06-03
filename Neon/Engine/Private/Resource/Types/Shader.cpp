@@ -29,13 +29,6 @@ namespace Neon::Asset
         return dynamic_cast<ShaderAsset*>(Resource.get());
     }
 
-    size_t ShaderAsset::Handler::QuerySize(
-        const Ptr<IAssetResource>& Resource)
-    {
-        auto& Shader = static_cast<ShaderAsset*>(Resource.get())->GetShader();
-        return Shader ? Shader->GetByteCode().Size : 0;
-    }
-
     Ptr<IAssetResource> ShaderAsset::Handler::Load(
         IO::BinaryStreamReader Stream,
         size_t                 DataSize)
@@ -48,11 +41,13 @@ namespace Neon::Asset
 
     void ShaderAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        IO::BinaryStreamWriter     Stream,
-        size_t                     DataSize)
+        IO::BinaryStreamWriter     Stream)
     {
-        auto& Shader   = static_cast<ShaderAsset*>(Resource.get())->GetShader();
-        auto  ByteCode = Shader->GetByteCode();
-        Stream.WriteBytes(ByteCode.Data, DataSize);
+        auto& Shader = static_cast<ShaderAsset*>(Resource.get())->GetShader();
+        if (Shader)
+        {
+            auto ByteCode = Shader->GetByteCode();
+            Stream.WriteBytes(ByteCode.Data, ByteCode.Size);
+        }
     }
 } // namespace Neon::Asset

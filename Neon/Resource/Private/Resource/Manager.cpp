@@ -36,7 +36,7 @@ namespace Neon::Asset
         UPtr<IAssetPack> Pack = OpenPack(Path);
         if (Pack)
         {
-            NEON_INFO_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
+            NEON_TRACE_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
             Pack->ImportAsync(Path);
 
             return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
