@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Resource/Handle.hpp>
+#include <IO/BinaryFile.hpp>
 #include <map>
 
 namespace Neon::Asset
@@ -26,15 +27,15 @@ namespace Neon::Asset
         /// Load data from bytes.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetResource> Load(
-            std::istream& Stream,
-            size_t        DataSize) = 0;
+            IO::BinaryStreamReader Stream,
+            size_t                 DataSize) = 0;
 
         /// <summary>
         /// Save data to bytes.
         /// </summary>
         [[nodiscard]] virtual void Save(
             const Ptr<IAssetResource>& Resource,
-            std::ostream&              Stream,
+            IO::BinaryStreamWriter     Stream,
             size_t                     DataSize) = 0;
     };
 

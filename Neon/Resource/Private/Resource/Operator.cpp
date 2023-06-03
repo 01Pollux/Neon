@@ -2,6 +2,8 @@
 #include <Resource/Operator.hpp>
 #include <Resource/Pack.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Asset
 {
     DeferredResourceOperator::DeferredResourceOperator()
@@ -20,29 +22,36 @@ namespace Neon::Asset
 
                     for (auto& [Pack, Operations] : m_PendingPacksOperations)
                     {
-                        VariantVisitor Visitor{
-                            [Pack](const ImportOperation& Op)
-                            {
-                                Pack->Import(Op.Path);
-                            },
-                            [Pack](const ExportOperation& Op)
-                            {
-                                Pack->Export(Op.Path);
-                            },
-                            [Pack](const LoadOperation& Op)
-                            {
-                                Pack->Load(Op.Handle);
-                            },
-                            [Pack](const SaveOperation& Op)
-                            {
-                                Pack->Save(Op.Handle, Op.Resource);
-                            },
-                        };
-                        for (auto& Op : Operations)
+                        try
                         {
-                            boost::apply_visitor(
-                                Visitor,
-                                Op);
+                            VariantVisitor Visitor{
+                                [Pack](const ImportOperation& Op)
+                                {
+                                    Pack->Import(Op.Path);
+                                },
+                                [Pack](const ExportOperation& Op)
+                                {
+                                    Pack->Export(Op.Path);
+                                },
+                                [Pack](const LoadOperation& Op)
+                                {
+                                    Pack->Load(Op.Handle);
+                                },
+                                [Pack](const SaveOperation& Op)
+                                {
+                                    Pack->Save(Op.Handle, Op.Resource);
+                                },
+                            };
+                            for (auto& Op : Operations)
+                            {
+                                boost::apply_visitor(
+                                    Visitor,
+                                    Op);
+                            }
+                        }
+                        catch (const std::exception& Exception)
+                        {
+                            NEON_ERROR_TAG("Resource", "Exception in resource thread: {}", Exception.what());
                         }
                     }
                     m_PendingPacksOperations.clear();

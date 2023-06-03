@@ -20,6 +20,9 @@ namespace PakC::Handler
                 Logger::LogSeverity Severity;
                 switch (StringUtils::Hash(std::string(SeverityName.as_string())))
                 {
+                case StringUtils::Hash("Disabled"):
+                    Severity = Logger::LogSeverity::Disabled;
+                    break;
                 case StringUtils::Hash("Info"):
                     Severity = Logger::LogSeverity::Info;
                     break;
@@ -33,7 +36,8 @@ namespace PakC::Handler
                     Severity = Logger::LogSeverity::Fatal;
                     break;
                 default:
-                    continue;
+                    Severity = Logger::LogSeverity::Disabled;
+                    break;
                 }
                 Asset->SetLogTag(Tag, Severity);
             }

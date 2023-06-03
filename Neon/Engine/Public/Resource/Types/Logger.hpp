@@ -13,6 +13,11 @@ namespace Neon::Asset
 
     public:
         /// <summary>
+        /// Set log tags globally.
+        /// </summary>
+        void SetGlobal();
+
+        /// <summary>
         /// Set the log tag to the specified severity.
         /// </summary>
         void SetLogTag(
@@ -38,12 +43,12 @@ namespace Neon::Asset
                 const Ptr<IAssetResource>& Resource) override;
 
             Ptr<IAssetResource> Load(
-                std::istream& Stream,
-                size_t        DataSize) override;
+                IO::BinaryStreamReader Stream,
+                size_t                 DataSize) override;
 
             void Save(
                 const Ptr<IAssetResource>& Resource,
-                std::ostream&              Stream,
+                IO::BinaryStreamWriter     Stream,
                 size_t                     DataSize) override;
         };
 

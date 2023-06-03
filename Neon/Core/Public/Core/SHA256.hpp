@@ -5,6 +5,7 @@
 #include <string>
 #include <array>
 #include <memory>
+#include <IO/BinaryFile.hpp>
 
 namespace Neon
 {
@@ -22,8 +23,8 @@ namespace Neon
         void Reset();
 
         void Append(
-            std::istream& Stream,
-            size_t        Size);
+            IO::BinaryStreamReader Stream,
+            size_t                 Size);
 
         void Append(
             const uint8_t* Data,
@@ -33,7 +34,7 @@ namespace Neon
             const std::string& Data);
 
         template<typename _Ty>
-            requires std::is_fundamental_v<_Ty>
+            requires std::is_standard_layout_v<_Ty>
         void Append(
             _Ty Data)
         {

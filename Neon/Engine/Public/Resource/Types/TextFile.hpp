@@ -49,12 +49,12 @@ namespace Neon::Asset
                 const Ptr<IAssetResource>& Resource) override;
 
             Ptr<IAssetResource> Load(
-                std::istream& Stream,
-                size_t        DataSize) override;
+                IO::BinaryStreamReader Stream,
+                size_t                 DataSize) override;
 
             void Save(
                 const Ptr<IAssetResource>& Resource,
-                std::ostream&              Stream,
+                IO::BinaryStreamWriter     Stream,
                 size_t                     DataSize) override;
         };
 

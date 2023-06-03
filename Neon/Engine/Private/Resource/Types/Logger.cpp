@@ -3,6 +3,14 @@
 
 namespace Neon::Asset
 {
+    void LoggerAsset::SetGlobal()
+    {
+        for (auto& [Tag, Severity] : m_LogSeverityMap)
+        {
+            Logger::SetLogTag(Tag, Severity);
+        }
+    }
+
     void LoggerAsset::SetLogTag(
         const StringU8&     Tag,
         Logger::LogSeverity Severity)
@@ -21,26 +29,27 @@ namespace Neon::Asset
     size_t LoggerAsset::Handler::QuerySize(
         const Ptr<IAssetResource>& Resource)
     {
-        size_t DataSize = 0;
+        size_t DataSize = IO::BinaryStream::Size<uint8_t>();
         auto&  Tags     = static_cast<LoggerAsset*>(Resource.get())->GetTags();
         for (auto& Tag : Tags | std::views::keys)
         {
-            DataSize += Tag.size() + 1;
-            DataSize += sizeof(Logger::LogSeverity);
+            DataSize += IO::BinaryStream::Size(Tag);
+            DataSize += IO::BinaryStream::Size<Logger::LogSeverity>();
         }
         return DataSize;
     }
 
     Ptr<IAssetResource> LoggerAsset::Handler::Load(
-        std::istream& Stream,
-        size_t        DataSize)
+        IO::BinaryStreamReader Stream,
+        size_t                 DataSize)
     {
-        auto   Asset(std::make_shared<LoggerAsset>());
-        size_t Severity;
-        for (size_t i = 0; i < DataSize; i++)
+        auto    Asset(std::make_shared<LoggerAsset>());
+        uint8_t Severity;
+        uint8_t Count = Stream.Read<uint8_t>();
+        for (uint8_t i = 0; i < Count; i++)
         {
-            StringU8 Tag;
-            Stream >> Tag >> Severity;
+            auto Tag = Stream.Read<StringU8>();
+            Stream.Read(Severity);
             Asset->m_LogSeverityMap[std::move(Tag)] = static_cast<Logger::LogSeverity>(Severity);
         }
         return Asset;
@@ -48,13 +57,15 @@ namespace Neon::Asset
 
     void LoggerAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        std::ostream&              Stream,
+        IO::BinaryStreamWriter     Stream,
         size_t                     DataSize)
     {
         auto& Tags = static_cast<LoggerAsset*>(Resource.get())->GetTags();
+        Stream.Write(uint8_t(Tags.size()));
         for (auto& [Tag, Severity] : Tags)
         {
-            Stream << Tag << uint8_t(Severity);
+            Stream.Write(Tag);
+            Stream.Write(Severity);
         }
     }
 } // namespace Neon::Asset

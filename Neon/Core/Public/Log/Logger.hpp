@@ -6,6 +6,7 @@ namespace Neon::Logger
 {
     enum class LogSeverity : uint8_t
     {
+        Disabled,
         Trace,
         Info,
         Warning,

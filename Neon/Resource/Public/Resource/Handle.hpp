@@ -1,15 +1,35 @@
 #pragma once
 
+#include <string>
 #include <boost/uuid/uuid.hpp>
-#include <boost/uuid/random_generator.hpp>
 
 namespace Neon::Asset
 {
     struct AssetHandle : boost::uuids::uuid
     {
-        [[nodiscard]] static AssetHandle Random()
-        {
-            return { boost::uuids::random_generator_pure()() };
-        }
+        /// <summary>
+        /// Generate asset handle from string
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::string ToString() const;
+
+        /// <summary>
+        /// Generate asset handle from string
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] std::wstring ToWideString() const;
+
+        /// <summary>
+        /// Generate asset handle from string
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] static AssetHandle FromString(
+            const std::string& Id);
+
+        /// <summary>
+        /// Generate random asset handle
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] static AssetHandle Random();
     };
 } // namespace Neon::Asset

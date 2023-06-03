@@ -48,6 +48,18 @@ namespace Neon::Asset
             const AssetHandle& Handle) = 0;
 
         /// <summary>
+        /// Load asset from pack file.
+        /// </summary>
+        template<typename _Ty>
+            requires std::derived_from<_Ty, IAssetResource>
+        [[nodiscard]] Ptr<_Ty> Load(
+            const AssetHandle& Handle)
+        {
+            auto Resource = Load(Handle);
+            return std::dynamic_pointer_cast<_Ty>(Resource.lock());
+        }
+
+        /// <summary>
         /// Save asset to pack file.
         /// </summary>
         virtual void Save(

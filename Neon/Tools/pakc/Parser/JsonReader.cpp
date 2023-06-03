@@ -2,10 +2,8 @@
 #include <Parser/JsonReader.hpp>
 #include <fstream>
 
-#include <boost/uuid/string_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
 #include <Resource/Packs/ZipPack.hpp>
+#include <Resource/Types/Logger.hpp>
 #include <Parser/Manager.hpp>
 
 #include <Parser/Handlers/Logger.hpp>
@@ -16,12 +14,21 @@
 
 namespace PakC
 {
+    using namespace Neon;
+
     JsonHandler::JsonHandler() :
         m_ResourceManager(std::make_unique<CustomResourceManager>())
     {
         RegisterTypes();
 
-        m_ResourceManager->TryLoadPack("Logger", "logger.np");
+        if (auto LoggerPack = m_ResourceManager->TryLoadPack("Logger", "logger.np"))
+        {
+            auto Asset = LoggerPack->Load<Asset::LoggerAsset>(Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190"));
+            if (Asset)
+            {
+                Asset->SetGlobal();
+            }
+        }
     }
 
     JsonHandler::~JsonHandler()
@@ -113,11 +120,10 @@ namespace PakC
 
             auto ForceHandle = Element.find("Handle");
 
-            Neon::Asset::AssetHandle Handle = {
+            Neon::Asset::AssetHandle Handle =
                 ForceHandle != Element.end() && ForceHandle->value().is_string()
-                    ? boost::uuids::string_generator()(std::string(ForceHandle->value().as_string()))
-                    : boost::uuids::random_generator_mt19937()()
-            };
+                    ? Asset::AssetHandle::FromString(std::string(ForceHandle->value().as_string()))
+                    : Asset::AssetHandle::Random();
 
             auto Tag = Element.find("Tag");
             if (Tag != Element.end() && Tag->value().is_string())
@@ -126,7 +132,7 @@ namespace PakC
             }
             else
             {
-                NEON_INFO("Loading: {} -- Handle: {}", Count, boost::uuids::to_string(Handle));
+                NEON_INFO("Loading: {} -- Handle: {}", Count, Handle.ToString());
             }
 
             auto TypeHandler = m_AssetResources.find(std::string(Type->value().as_string()));

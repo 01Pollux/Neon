@@ -37,22 +37,22 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> ShaderAsset::Handler::Load(
-        std::istream& Stream,
-        size_t        DataSize)
+        IO::BinaryStreamReader Stream,
+        size_t                 DataSize)
     {
         auto Data(std::make_unique<uint8_t[]>(DataSize));
-        Stream.read(std::bit_cast<char*>(Data.get()), DataSize);
+        Stream.ReadBytes(Data.get(), DataSize);
         return std::make_shared<ShaderAsset>(
             Ptr<RHI::IShader>(RHI::IShader::Create({ Data.get(), DataSize })));
     }
 
     void ShaderAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        std::ostream&              Stream,
+        IO::BinaryStreamWriter     Stream,
         size_t                     DataSize)
     {
         auto& Shader   = static_cast<ShaderAsset*>(Resource.get())->GetShader();
         auto  ByteCode = Shader->GetByteCode();
-        Stream.write(std::bit_cast<char*>(ByteCode.Data), DataSize);
+        Stream.WriteBytes(ByteCode.Data, DataSize);
     }
 } // namespace Neon::Asset

@@ -4,7 +4,7 @@
 #include <Core/String.hpp>
 #include <Core/SHA256.hpp>
 
-#include <fstream>
+#include <IO/BinaryFile.hpp>
 #include <boost/functional/hash.hpp>
 
 namespace Neon::Asset
@@ -41,7 +41,7 @@ namespace Neon::Asset
     public:
         ZipAssetPack(
             const AssetResourceHandlers& Handlers,
-            DeferredResourceOperator&     DefferedOperator);
+            DeferredResourceOperator&    DefferedOperator);
 
         ~ZipAssetPack() override;
 
@@ -146,7 +146,7 @@ namespace Neon::Asset
         void Header_WriteBody();
 
     private:
-        std::fstream    m_FileStream;
+        std::fstream    m_File;
         LoadedAssetsMap m_LoadedAssets;
         AssetInfoMap    m_AssetsInfo;
     };

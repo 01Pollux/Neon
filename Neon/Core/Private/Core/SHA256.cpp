@@ -37,19 +37,17 @@ namespace Neon
     }
 
     void SHA256::Append(
-        std::istream& Stream,
-        size_t        Size)
+        IO::BinaryStreamReader Stream,
+        size_t                 Size)
     {
         m_DataSize += Size;
 
-        char c;
         // Flush out remaining chunks
         if (m_ChunkSize)
         {
             for (; m_ChunkSize < m_LastChunk.size() && Size > 0; Size--, m_ChunkSize++)
             {
-                Stream >> c;
-                m_LastChunk[m_ChunkSize] = static_cast<uint8_t>(c);
+                Stream.Read(m_LastChunk[m_ChunkSize]);
             }
 
             // If we processed every byte in stream, but there is room left in temp buffer
@@ -63,12 +61,12 @@ namespace Neon
         // Process in granularity
         while (Size >= 64)
         {
-            Stream.read(std::bit_cast<char*>(m_LastChunk.data()), m_LastChunk.size());
+            Stream.ReadBytes(std::bit_cast<char*>(m_LastChunk.data()), m_LastChunk.size());
             ProcessChunk(m_LastChunk.data());
             Size -= 64;
         }
 
-        Stream.read(std::bit_cast<char*>(m_LastChunk.data() + m_ChunkSize), Size);
+        Stream.ReadBytes(std::bit_cast<char*>(m_LastChunk.data() + m_ChunkSize), Size);
         m_ChunkSize += uint8_t(Size);
     }
 
