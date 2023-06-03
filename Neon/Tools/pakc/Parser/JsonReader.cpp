@@ -9,6 +9,8 @@
 #include <Parser/Handlers/Logger.hpp>
 #include <Parser/Handlers/TextFile.hpp>
 #include <Parser/Handlers/Shader.hpp>
+#include <Parser/Handlers/RootSignature.hpp>
+#include <Parser/Handlers/PipelineState.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -164,8 +166,10 @@ namespace PakC
 
     void JsonHandler::RegisterTypes()
     {
-        m_AssetResources["LoggerAsset"]   = &Handler::LoadLoggerResource;
-        m_AssetResources["TextFileAsset"] = &Handler::LoadTextResource;
-        m_AssetResources["ShaderAsset"]   = &Handler::LoadShaderResource;
+        m_AssetResources["LoggerAsset"]        = &Handler::LoadLoggerResource;
+        m_AssetResources["TextFileAsset"]      = &Handler::LoadTextResource;
+        m_AssetResources["ShaderAsset"]        = &Handler::LoadShaderResource;
+        m_AssetResources["RootSignatureAsset"] = &Handler::LoadRootSignatureResource;
+        m_AssetResources["PipelineStateAsset"] = &Handler::LoadPipelineStateResource;
     }
 } // namespace PakC

@@ -10,7 +10,7 @@ namespace Neon::Asset
     {
     }
 
-    const Ptr<RHI::IShader>& ShaderAsset::GetShader()
+    const Ptr<RHI::IShader>& ShaderAsset::GetShader() const
     {
         return m_Shader;
     }

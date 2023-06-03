@@ -5,27 +5,27 @@
 
 namespace Neon::RHI
 {
-    class IShader;
+    class IRootSignature;
 }
 
 namespace Neon::Asset
 {
-    class ShaderAsset : public IAssetResource
+    class RootSignatureAsset : public IAssetResource
     {
     public:
-        ShaderAsset(
-            const Ptr<RHI::IShader>& Shader = nullptr);
+        RootSignatureAsset(
+            const Ptr<RHI::IRootSignature>& RootSignature = nullptr);
 
         /// <summary>
-        /// Get shader currently loaded in this asset.
+        /// Get current root signature loaded in this asset.
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::IShader>& GetShader() const;
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& GetRootSignature() const;
 
         /// <summary>
-        /// Set shader currently loaded in this asset.
+        /// Set root signature to this asset.
         /// </summary>
-        [[nodiscard]] void SetShader(
-            const Ptr<RHI::IShader>& Shader);
+        [[nodiscard]] void SetRootSignature(
+            const Ptr<RHI::IRootSignature>& Shader);
 
     public:
         class Handler : public IAssetResourceHandler
@@ -48,6 +48,6 @@ namespace Neon::Asset
         };
 
     private:
-        Ptr<RHI::IShader> m_Shader;
+        Ptr<RHI::IRootSignature> m_RootSignature;
     };
 } // namespace Neon::Asset
