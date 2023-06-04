@@ -3,6 +3,11 @@
 #include <Core/Neon.hpp>
 #include <bitset>
 
+namespace boost::serialization
+{
+    class access;
+} // namespace boost::serialization
+
 namespace Neon
 {
     template<typename _ETy>
@@ -272,6 +277,13 @@ namespace Neon
         {
             return {};
         }
+
+    private:
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t  Version);
 
     private:
         bitset_type m_Bitset;

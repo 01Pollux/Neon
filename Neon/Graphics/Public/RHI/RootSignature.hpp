@@ -5,6 +5,11 @@
 #include <vector>
 #include <variant>
 
+namespace boost::serialization
+{
+    class access;
+} // namespace boost::serialization
+
 namespace Neon::RHI
 {
     enum class ERootDescriptorTableFlags : uint8_t
@@ -118,6 +123,13 @@ namespace Neon::RHI
         }
 
     private:
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t  Version);
+
+    private:
         std::vector<RootDescriptorTableParam> m_DescriptorRanges;
     };
 
@@ -163,6 +175,13 @@ namespace Neon::RHI
         {
             return m_Visibility;
         }
+
+    private:
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t  Version);
 
     private:
         Variant          m_Parameter;
@@ -294,6 +313,13 @@ namespace Neon::RHI
         }
 
     private:
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t  Version);
+
+    private:
         std::vector<RootParameter>     m_Parameters;
         std::vector<StaticSamplerDesc> m_StaticSamplers;
         MRootSignatureBuilderFlags     m_Flags;
@@ -316,5 +342,17 @@ namespace Neon::RHI
         /// Get the number of samplers in descriptor
         /// </summary>
         [[nodiscard]] virtual uint32_t GetSamplerCountInDescriptor() = 0;
+
+    public:
+        /// <summary>
+        /// Get the builder of root signature
+        /// </summary>
+        [[nodiscard]] const RootSignatureBuilder& GetBuilder() const noexcept
+        {
+            return m_Builder;
+        }
+
+    private:
+        RootSignatureBuilder m_Builder;
     };
 } // namespace Neon::RHI

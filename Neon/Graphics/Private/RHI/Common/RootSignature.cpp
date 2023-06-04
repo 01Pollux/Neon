@@ -1,6 +1,28 @@
 #include <GraphicsPCH.hpp>
 #include <RHI/RootSignature.hpp>
 
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
+
+namespace boost::serialization
+{
+    template<typename _Archive>
+    void serialize(
+        _Archive&                            Archive,
+        Neon::RHI::RootDescriptorTableParam& Param,
+        uint32_t)
+    {
+        Archive& Param.ShaderRegister;
+        Archive& Param.RegisterSpace;
+        Archive& Param.DescriptorCount;
+        Archive& Param.Flags;
+
+        auto     Type = std::to_underlying(Param.Type);
+        Archive& Type;
+        Param.Type = static_cast<Neon::RHI::DescriptorTableParam>(Type);
+    }
+} // namespace boost::serialization
+
 namespace Neon::RHI
 {
     RootDescriptorTable::RootDescriptorTable(
@@ -69,6 +91,14 @@ namespace Neon::RHI
         return *this;
     }
 
+    template<typename _Archive>
+    void RootDescriptorTable::serialize(
+        _Archive& Archive,
+        uint32_t  Version)
+    {
+        Archive& m_DescriptorRanges;
+    }
+
     //
 
     RootParameter::RootParameter(
@@ -77,6 +107,17 @@ namespace Neon::RHI
         m_Parameter(std::move(Param)),
         m_Visibility(Visibility)
     {
+    }
+
+    template<typename _Archive>
+    void RootParameter::serialize(
+        _Archive& Archive,
+        uint32_t  Version)
+    {
+        Archive& m_Parameter;
+        auto     Visibility = std::to_underlying(m_Visibility);
+        Archive& Visibility;
+        m_Visibility = static_cast<ShaderVisibility>(Visibility);
     }
 
     //
@@ -176,5 +217,15 @@ namespace Neon::RHI
     {
         m_Flags.Set(Flag, Value);
         return *this;
+    }
+
+    template<typename _Archive>
+    void RootSignatureBuilder::serialize(
+        _Archive& Archive,
+        uint32_t  Version)
+    {
+        Archive& m_Parameters;
+        Archive& m_StaticSamplers;
+        Archive& m_Flags;
     }
 } // namespace Neon::RHI
