@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Resource/Types/Shader.hpp>
 #include <RHI/Shader.hpp>
+#include <IO/Archive.hpp>
 
 namespace Neon::Asset
 {
@@ -30,24 +31,24 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> ShaderAsset::Handler::Load(
-        IO::BinaryStreamReader Stream,
-        size_t                 DataSize)
+        IO::InArchive& Archive,
+        size_t         DataSize)
     {
         auto Data(std::make_unique<uint8_t[]>(DataSize));
-        Stream.ReadBytes(Data.get(), DataSize);
+        Archive.load_binary(Data.get(), DataSize);
         return std::make_shared<ShaderAsset>(
             Ptr<RHI::IShader>(RHI::IShader::Create({ Data.get(), DataSize })));
     }
 
     void ShaderAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        IO::BinaryStreamWriter     Stream)
+        IO::OutArchive&            Archive)
     {
         auto& Shader = static_cast<ShaderAsset*>(Resource.get())->GetShader();
         if (Shader)
         {
             auto ByteCode = Shader->GetByteCode();
-            Stream.WriteBytes(ByteCode.Data, ByteCode.Size);
+            Archive.save_binary(ByteCode.Data, ByteCode.Size);
         }
     }
 } // namespace Neon::Asset

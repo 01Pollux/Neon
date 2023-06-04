@@ -35,12 +35,12 @@ namespace Neon::Asset
                 const Ptr<IAssetResource>& Resource) override;
 
             Ptr<IAssetResource> Load(
-                IO::BinaryStreamReader Stream,
-                size_t                 DataSize) override;
+                IO::InArchive& Archive,
+                size_t         DataSize) override;
 
             void Save(
                 const Ptr<IAssetResource>& Resource,
-                IO::BinaryStreamWriter     Stream) override;
+                IO::OutArchive&            Archive) override;
         };
 
     private:

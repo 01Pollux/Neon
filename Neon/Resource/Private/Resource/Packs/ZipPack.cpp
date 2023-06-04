@@ -2,6 +2,7 @@
 #include <Resource/Packs/ZipPack.hpp>
 #include <Resource/Handler.hpp>
 #include <Resource/Operator.hpp>
+#include <IO/Archive.hpp>
 
 #include <future>
 #include <filesystem>
@@ -178,7 +179,8 @@ namespace Neon::Asset
             return nullptr;
         }
 
-        return Handler->Load(m_File, Info.Size);
+        IO::InArchive Archive(m_File);
+        return Handler->Load(Archive, Info.Size);
     }
 
     //
@@ -457,7 +459,9 @@ namespace Neon::Asset
 
             auto DataPos = m_File.tellp();
             Info.Offset  = DataPos;
-            Handler->Save(Resource, m_File);
+
+            IO::OutArchive Archive(m_File);
+            Handler->Save(Resource, Archive);
 
             Info.Size = m_File.tellp() - DataPos;
             m_File.seekp(DataPos);

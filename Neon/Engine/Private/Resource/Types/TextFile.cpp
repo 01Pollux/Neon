@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Resource/Types/TextFile.hpp>
+#include <IO/Archive.hpp>
 
 namespace Neon::Asset
 {
@@ -53,17 +54,19 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> TextFileAsset::Handler::Load(
-        IO::BinaryStreamReader Stream,
+        IO::InArchive& Archive,
         size_t)
     {
-        return std::make_shared<TextFileAsset>(Stream.Read<String>());
+        String Text;
+        Archive >> Text;
+        return std::make_shared<TextFileAsset>(std::move(Text));
     }
 
     void TextFileAsset::Handler::Save(
         const Ptr<IAssetResource>& Resource,
-        IO::BinaryStreamWriter     Stream)
+        IO::OutArchive&            Archive)
     {
         auto TextFile = static_cast<TextFileAsset*>(Resource.get());
-        Stream.Write(TextFile->AsUtf16());
+        Archive << TextFile->AsUtf16();
     }
 } // namespace Neon::Asset
