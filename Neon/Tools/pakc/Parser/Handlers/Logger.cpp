@@ -23,6 +23,9 @@ namespace PakC::Handler
                 case StringUtils::Hash("Disabled"):
                     Severity = Logger::LogSeverity::Disabled;
                     break;
+                case StringUtils::Hash("Trace"):
+                    Severity = Logger::LogSeverity::Trace;
+                    break;
                 case StringUtils::Hash("Info"):
                     Severity = Logger::LogSeverity::Info;
                     break;
