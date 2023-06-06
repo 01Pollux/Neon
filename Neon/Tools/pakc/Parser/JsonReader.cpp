@@ -14,6 +14,8 @@
 
 #include <Log/Logger.hpp>
 
+#include <Resource/Types/RootSignature.hpp>
+
 namespace PakC
 {
     using namespace Neon;
@@ -30,6 +32,12 @@ namespace PakC
             {
                 Asset->SetGlobal();
             }
+        }
+
+        if (auto TestPack = m_ResourceManager->TryLoadPack("Test", "samples/graphics/graphics.np"))
+        {
+            auto Asset = TestPack->Load<Asset::RootSignatureAsset>(Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380192"));
+            Asset->GetRootSignature();
         }
     }
 

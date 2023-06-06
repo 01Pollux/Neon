@@ -6,10 +6,6 @@
 
 #include <Log/Logger.hpp>
 
-#include <Resource/Runtime/Manager.hpp>
-#include <Resource/Types/TextFile.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
 int main(int Argc, char* Argv[])
 {
     Neon::Logger::Initialize();

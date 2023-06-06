@@ -5,7 +5,7 @@ git clone --recursive https://github.com/boostorg/boost.git
 Push-Location -Path .\boost -StackName "BoostTempPath"
 
 .\bootstrap.bat
-.\b2 runtime-link=static threading=multi -s BZIP2_SOURCE=..\..\Deps\Externals\bzip2 -s ZLIB_SOURCE=..\..\Deps\Externals\zlib
+.\b2 address-sanitizer=norecover undefined-sanitizer=on runtime-link=static threading=multi -s BZIP2_SOURCE=..\..\Deps\Externals\bzip2 -s ZLIB_SOURCE=..\..\Deps\Externals\zlib
 
 Pop-Location -StackName "BoostTempPath"
 Pop-Location -StackName "TempPath"

@@ -188,10 +188,12 @@ namespace Neon::RHI
     //
 
     Dx12RootSignature::Dx12RootSignature(
+        RootSignatureBuilder                         Builder,
         uint32_t                                     ResourceCountInDescriptor,
         uint32_t                                     SamplerCountInDescriptor,
         const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
         SHA256::Bytes&&                              Hash) :
+        IRootSignature(std::move(Builder)),
         m_Hash(std::move(Hash))
     {
         Win32::ComPtr<ID3DBlob> SignatureBlob;
@@ -265,7 +267,7 @@ namespace Neon::RHI
                 Result.StaticSamplers.data(),
                 Result.Flags);
 
-            Cache = std::make_shared<Dx12RootSignature>(ResourceCountInDescriptor, SamplerCountInDescriptor, Desc, std::move(Result.Digest));
+            Cache = std::make_shared<Dx12RootSignature>(Builder, ResourceCountInDescriptor, SamplerCountInDescriptor, Desc, std::move(Result.Digest));
         }
 
         return Cache;

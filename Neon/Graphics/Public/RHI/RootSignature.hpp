@@ -387,6 +387,12 @@ namespace Neon::RHI
         [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);
 
+        IRootSignature(
+            RootSignatureBuilder Builder) :
+            m_Builder(std::move(Builder))
+        {
+        }
+
         virtual ~IRootSignature() = default;
 
         /// <summary>

@@ -51,6 +51,7 @@ namespace Neon::RHI
     {
     public:
         Dx12RootSignature(
+            RootSignatureBuilder                         Builder,
             uint32_t                                     ResourceCountInDescriptor,
             uint32_t                                     SamplerCountInDescriptor,
             const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
