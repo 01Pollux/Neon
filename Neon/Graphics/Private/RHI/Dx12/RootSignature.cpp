@@ -294,7 +294,7 @@ namespace Neon::RHI
         {
             auto Visibility = CastShaderVisibility(Param.GetVisibility());
 
-            std::visit(
+            boost::apply_visitor(
                 VariantVisitor{
                     [&Hash, &Result, Visibility,
                      &ResourceCountInDescriptor,

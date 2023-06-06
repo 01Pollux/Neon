@@ -30,7 +30,7 @@ namespace PakC::Handler
         }
 
         Desc.SourceCode = FileBuffer;
-        Desc.EntryPoint = StringUtils::Transform<String>(Object.at("EntryPoint").as_string());
+        Desc.EntryPoint = StringUtils::Transform<String>(Object.at("Entry Point").as_string());
 
         switch (StringUtils::Hash(std::string(Object.at("Stage").as_string())))
         {
@@ -58,12 +58,13 @@ namespace PakC::Handler
                            std::views::split('.') |
                            std::views::take(2) |
                            std::views::transform([](auto&& Range)
-                                                 { return StringU8(Range.begin(), Range.end()); });
+                                                 { return StringU8(Range.begin(), Range.end()); }) |
+                           std::ranges::to<std::vector<StringU8>>();
 
         auto ProfileIter = ProfileView.begin();
 
-        uint8_t Major = std::stoi(*ProfileIter++);
-        uint8_t Minor = std::stoi(*ProfileIter);
+        uint8_t Major = std::stoi(ProfileIter[0]);
+        uint8_t Minor = std::stoi(ProfileIter[1]);
 
         switch (Major)
         {

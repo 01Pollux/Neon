@@ -803,25 +803,25 @@ namespace Neon::RHI
     //
 
     D3D12_COMPARISON_FUNC CastComparisonFunc(
-        ESamplerCmp CmpFunc)
+        ECompareFunc CmpFunc)
     {
         switch (CmpFunc)
         {
-        case ESamplerCmp::Never:
+        case ECompareFunc::Never:
             return D3D12_COMPARISON_FUNC_NEVER;
-        case ESamplerCmp::Less:
+        case ECompareFunc::Less:
             return D3D12_COMPARISON_FUNC_LESS;
-        case ESamplerCmp::Equal:
+        case ECompareFunc::Equal:
             return D3D12_COMPARISON_FUNC_EQUAL;
-        case ESamplerCmp::LessEqual:
+        case ECompareFunc::LessEqual:
             return D3D12_COMPARISON_FUNC_LESS_EQUAL;
-        case ESamplerCmp::Greater:
+        case ECompareFunc::Greater:
             return D3D12_COMPARISON_FUNC_GREATER;
-        case ESamplerCmp::NotEqual:
+        case ECompareFunc::NotEqual:
             return D3D12_COMPARISON_FUNC_NOT_EQUAL;
-        case ESamplerCmp::GreaterEqual:
+        case ECompareFunc::GreaterEqual:
             return D3D12_COMPARISON_FUNC_GREATER_EQUAL;
-        case ESamplerCmp::Always:
+        case ECompareFunc::Always:
             return D3D12_COMPARISON_FUNC_ALWAYS;
         default:
             std::unreachable();

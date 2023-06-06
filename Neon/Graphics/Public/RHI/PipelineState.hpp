@@ -59,9 +59,9 @@ namespace Neon::RHI
 
         struct DepthStencilState
         {
-            bool             DepthEnable      = true;
-            EDepthStencilCmp DepthCmpFunc     = EDepthStencilCmp::Less;
-            bool             DepthWriteEnable = true;
+            bool         DepthEnable      = true;
+            ECompareFunc DepthCmpFunc     = ECompareFunc::Less;
+            bool         DepthWriteEnable = true;
 
             bool    StencilEnable    = false;
             uint8_t StencilReadMask  = 0xFF;
@@ -69,10 +69,10 @@ namespace Neon::RHI
 
             struct
             {
-                EStencilOp       FailOp      = EStencilOp::Keep;
-                EStencilOp       DepthFailOp = EStencilOp::Keep;
-                EStencilOp       PassOp      = EStencilOp::Keep;
-                EDepthStencilCmp CmpOp       = EDepthStencilCmp::Always;
+                EStencilOp   FailOp      = EStencilOp::Keep;
+                EStencilOp   DepthFailOp = EStencilOp::Keep;
+                EStencilOp   PassOp      = EStencilOp::Keep;
+                ECompareFunc CmpOp       = ECompareFunc::Always;
             } StencilFrontFace, StencilBackFace;
         };
 

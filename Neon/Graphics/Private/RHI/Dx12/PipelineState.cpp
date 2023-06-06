@@ -445,15 +445,15 @@ namespace Neon::RHI
                                         std::views::split('#') |
                                         std::views::take(2) |
                                         std::views::transform([](auto&& Range)
-                                                              { return StringU8View(Range.begin(), Range.end()); });
+                                                              { return StringU8View(Range.begin(), Range.end()); }) |
+                                        std::ranges::to<std::vector<StringU8View>>();
 
-                    auto NameIter  = SemanticView.begin();
-                    auto IndexIter = std::next(NameIter);
+                    auto& NameIter = SemanticView[0];
 
                     auto& Dst        = Result.InputElements.emplace_back();
-                    Dst.SemanticName = (*NameIter).data();
+                    Dst.SemanticName = NameIter.data();
                     Dst.SemanticIndex =
-                        IndexIter != SemanticView.end() ? std::strtoul((*IndexIter).data(), nullptr, 10) : 0;
+                        SemanticView.size() > 1 ? std::strtoul(SemanticView[1].data(), nullptr, 10) : 0;
                     Dst.Format               = CastInputFormat(Element.GetType());
                     Dst.InputSlot            = 0;
                     Dst.AlignedByteOffset    = D3D12_APPEND_ALIGNED_ELEMENT;

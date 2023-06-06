@@ -81,7 +81,7 @@ namespace Neon::RHI
     /// Convert Neon sampler comparison function to D3D12 comparison function.
     /// </summary>
     [[nodiscard]] D3D12_COMPARISON_FUNC CastComparisonFunc(
-        ESamplerCmp CmpFunc);
+        ECompareFunc CmpFunc);
 
     /// <summary>
     /// Convert D3D12 comparison function to Neon sampler comparison function.

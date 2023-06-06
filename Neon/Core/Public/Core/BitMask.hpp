@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <bitset>
+#include <boost/serialization/bitset.hpp>
 
 namespace boost::serialization
 {
@@ -283,7 +283,10 @@ namespace Neon
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version);
+            uint32_t  Version)
+        {
+            Archive& m_Bitset;
+        }
 
     private:
         bitset_type m_Bitset;

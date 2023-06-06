@@ -7,10 +7,6 @@
 #include <future>
 #include <filesystem>
 
-#include <boost/pool/pool.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/string_generator.hpp>
-
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filtering_stream.hpp>

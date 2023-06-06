@@ -6,6 +6,7 @@
 #include <Resource/Types/Logger.hpp>
 #include <Resource/Types/TextFile.hpp>
 #include <Resource/Types/Shader.hpp>
+#include <Resource/Types/RootSignature.hpp>
 
 namespace PakC
 {
@@ -16,6 +17,7 @@ namespace PakC
         AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
         AddHandler<ShaderAsset::Handler>();
+        AddHandler<RootSignatureAsset::Handler>();
     }
 
     Neon::UPtr<IAssetPack> CustomResourceManager::OpenPack(

@@ -6,6 +6,7 @@
 #include <Resource/Types/Logger.hpp>
 #include <Resource/Types/TextFile.hpp>
 #include <Resource/Types/Shader.hpp>
+#include <Resource/Types/RootSignature.hpp>
 
 namespace Neon::Asset
 {
@@ -14,6 +15,7 @@ namespace Neon::Asset
         AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
         AddHandler<ShaderAsset::Handler>();
+        AddHandler<RootSignatureAsset::Handler>();
     }
 
     UPtr<IAssetPack> RuntimeResourceManager::OpenPack(

@@ -5,10 +5,8 @@
 #include <vector>
 #include <variant>
 
-namespace boost::serialization
-{
-    class access;
-} // namespace boost::serialization
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/variant.hpp>
 
 namespace Neon::RHI
 {
@@ -68,6 +66,21 @@ namespace Neon::RHI
         uint32_t                  DescriptorCount;
         MRootDescriptorTableFlags Flags;
         DescriptorTableParam      Type;
+
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t)
+        {
+            Archive& ShaderRegister;
+            Archive& RegisterSpace;
+            Archive& DescriptorCount;
+            Archive& Flags;
+
+            auto     DType = std::to_underlying(Type);
+            Archive& DType;
+            Type = static_cast<Neon::RHI::DescriptorTableParam>(DType);
+        }
     };
 
     class RootDescriptorTable
@@ -127,7 +140,10 @@ namespace Neon::RHI
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version);
+            uint32_t  Version)
+        {
+            Archive& m_DescriptorRanges;
+        }
 
     private:
         std::vector<RootDescriptorTableParam> m_DescriptorRanges;
@@ -143,6 +159,18 @@ namespace Neon::RHI
             uint32_t ShaderRegister;
             uint32_t Num32BitValues;
             uint32_t RegisterSpace;
+
+        private:
+            friend class boost::serialization::access;
+            template<typename _Archive>
+            void serialize(
+                _Archive& Archive,
+                uint32_t  Version)
+            {
+                Archive& ShaderRegister;
+                Archive& Num32BitValues;
+                Archive& RegisterSpace;
+            }
         };
 
         using DescriptorType = DescriptorTableParam;
@@ -152,9 +180,26 @@ namespace Neon::RHI
             uint32_t             RegisterSpace;
             DescriptorType       Type;
             MRootDescriptorFlags Flags;
+
+        private:
+            friend class boost::serialization::access;
+            template<typename _Archive>
+            void serialize(
+                _Archive& Archive,
+                uint32_t  Version)
+            {
+                Archive& ShaderRegister;
+                Archive& RegisterSpace;
+                auto     DType = std::to_underlying(Type);
+                Archive& DType;
+                Type = static_cast<DescriptorType>(DType);
+                Archive& Flags;
+            }
         };
 
-        using Variant = std::variant<DescriptorTable, Constants, Descriptor>;
+        using Variant = boost::variant<DescriptorTable, Constants, Descriptor>;
+
+        RootParameter() = default;
 
         RootParameter(
             Variant          Param,
@@ -181,7 +226,13 @@ namespace Neon::RHI
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version);
+            uint32_t  Version)
+        {
+            Archive& m_Parameter;
+            auto     Visibility = std::to_underlying(m_Visibility);
+            Archive& Visibility;
+            m_Visibility = static_cast<ShaderVisibility>(Visibility);
+        }
 
     private:
         Variant          m_Parameter;
@@ -317,7 +368,12 @@ namespace Neon::RHI
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version);
+            uint32_t  Version)
+        {
+            Archive& m_Parameters;
+            Archive& m_StaticSamplers;
+            Archive& m_Flags;
+        }
 
     private:
         std::vector<RootParameter>     m_Parameters;

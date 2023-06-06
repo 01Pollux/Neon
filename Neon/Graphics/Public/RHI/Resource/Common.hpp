@@ -253,7 +253,7 @@ namespace Neon::RHI
         MirrorOnce
     };
 
-    enum class ESamplerCmp : uint8_t
+    enum class ECompareFunc : uint8_t
     {
         Never,
         Less,
@@ -484,8 +484,6 @@ namespace Neon::RHI
     };
 
     //
-
-    using EDepthStencilCmp = ESamplerCmp;
 
     enum class EStencilOp : uint8_t
     {

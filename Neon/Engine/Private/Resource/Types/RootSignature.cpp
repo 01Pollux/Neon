@@ -2,12 +2,12 @@
 #include <Resource/Types/RootSignature.hpp>
 #include <RHI/RootSignature.hpp>
 
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
 #include <IO/Archive.hpp>
 
 namespace boost::serialization
 {
-
     template<class _Archive>
     void serialize(
         _Archive&                     Archive,

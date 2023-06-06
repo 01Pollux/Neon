@@ -336,15 +336,15 @@ namespace Neon::RHI
 
     struct SamplerDesc
     {
-        ESamplerFilter Filter         = ESamplerFilter::Comparison_MinMagMipLinear;
-        ESamplerMode   AddressU       = ESamplerMode::Wrap;
-        ESamplerMode   AddressV       = ESamplerMode::Wrap;
-        ESamplerMode   AddressW       = ESamplerMode::Wrap;
-        float          MipLODBias     = 0.f;
-        uint32_t       MaxAnisotropy  = 1;
-        ESamplerCmp    ComparisonFunc = ESamplerCmp::Less;
-        float          BorderColor[4] = { 1.f, 0.f, 1.f, 1.f };
-        float          MinLOD         = -16.f;
-        float          MaxLOD         = 15.99f;
+        ESamplerFilter       Filter         = ESamplerFilter::Comparison_MinMagMipLinear;
+        ESamplerMode         AddressU       = ESamplerMode::Wrap;
+        ESamplerMode         AddressV       = ESamplerMode::Wrap;
+        ESamplerMode         AddressW       = ESamplerMode::Wrap;
+        float                MipLODBias     = 0.f;
+        uint32_t             MaxAnisotropy  = 1;
+        ECompareFunc         ComparisonFunc = ECompareFunc::Less;
+        std::array<float, 4> BorderColor    = { 1.f, 0.f, 1.f, 1.f };
+        float                MinLOD         = -16.f;
+        float                MaxLOD         = 15.99f;
     };
 } // namespace Neon::RHI
