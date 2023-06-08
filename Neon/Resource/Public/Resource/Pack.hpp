@@ -5,6 +5,8 @@
 
 #include <boost/pool/poolfwd.hpp>
 #include <Resource/Asset.hpp>
+#include <set>
+#include <type_traits>
 
 namespace Neon::Asset
 {
@@ -14,7 +16,8 @@ namespace Neon::Asset
     class IAssetPack
     {
     public:
-        using AssetHandleList = std::vector<AssetHandle, boost::pool_allocator<AssetHandle>>;
+        using AssetHandleList    = std::vector<AssetHandle, boost::pool_allocator<AssetHandle>>;
+        using AssetDependencyMap = std::map<AssetHandle, std::set<AssetHandle>>;
 
         enum class ContainType : uint8_t
         {
@@ -103,9 +106,54 @@ namespace Neon::Asset
             const AssetHandle&         Handle,
             const Ptr<IAssetResource>& Resource);
 
+    public:
+        /// <summary>
+        /// Add dependency to the asset.
+        /// </summary>
+        void AddDependency(
+            const AssetHandle& Resource,
+            const AssetHandle& DependsOn);
+
+        /// <summary>
+        /// Remove dependency from the asset.
+        /// </summary>
+        void RemoveDependency(
+            const AssetHandle& Resource,
+            const AssetHandle& DependsOn);
+
+    protected:
+        template<std::invocable _FTy, bool _Lock = false>
+        void IterateDepencies(
+            const AssetHandle& Resource,
+            _FTy&&             Func)
+        {
+            if constexpr (_Lock)
+            {
+                std::scoped_lock Lock(m_PackMutex);
+                if (auto Iter = m_Dependencies.find(Resource); Iter != m_Dependencies.end())
+                {
+                    for (const auto& Dependency : Iter->second)
+                    {
+                        Func(Dependency);
+                    }
+                }
+            }
+            else
+            {
+                if (auto Iter = m_Dependencies.find(Resource); Iter != m_Dependencies.end())
+                {
+                    for (const auto& Dependency : Iter->second)
+                    {
+                        Func(Dependency);
+                    }
+                }
+            }
+        }
+
     protected:
         const AssetResourceHandlers& m_Handlers;
         mutable std::mutex           m_PackMutex;
         DeferredResourceOperator&    m_DefferedOperator;
+        AssetDependencyMap           m_Dependencies;
     };
 } // namespace Neon::Asset

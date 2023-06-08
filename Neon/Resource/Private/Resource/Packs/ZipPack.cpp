@@ -241,22 +241,86 @@ namespace Neon::Asset
         SHA256::Bytes Hash;
         uint8_t       Version = LatestVersion;
 
+        struct DependencyList
+        {
+            static size_t GetSize(
+                const IAssetPack::AssetDependencyMap& DependencyMap)
+            {
+                size_t Size = sizeof(uint16_t);
+                for (auto& [Resource, Sets] : DependencyMap)
+                {
+                    Size += sizeof(uint16_t);
+                    Size += sizeof(AssetHandle);
+                    Size += Resource.size() * sizeof(AssetHandle);
+                }
+                return Size;
+            }
+
+            static void Read(
+                IO::BinaryStreamReader          Stream,
+                IAssetPack::AssetDependencyMap& DependencyMap)
+            {
+                auto NumberOfDependencies = Stream.Read<uint16_t>();
+                for (uint16_t i = 0; i < NumberOfDependencies; ++i)
+                {
+                    auto& Resource = DependencyMap[Stream.Read<AssetHandle>()];
+                    auto  Size     = Stream.Read<uint16_t>();
+                    for (uint16_t j = 0; j < Size; ++j)
+                    {
+                        Resource.insert(Stream.Read<AssetHandle>());
+                    }
+                }
+            }
+
+            static void Write(
+                IO::BinaryStreamWriter                Stream,
+                const IAssetPack::AssetDependencyMap& DependencyMap)
+            {
+                Stream.Write(uint16_t(DependencyMap.size()));
+                for (auto& [Resource, Sets] : DependencyMap)
+                {
+                    Stream.Write(Resource);
+                    Stream.Write(uint16_t(Sets.size()));
+                    for (auto& Set : Sets)
+                    {
+                        Stream.Write(Set);
+                    }
+                }
+            }
+        };
+
         void Read(
-            IO::BinaryStreamReader Stream)
+            IO::BinaryStreamReader          Stream,
+            IAssetPack::AssetDependencyMap& DependencyMap)
         {
             Stream.Read(Signature);
             Stream.Read(NumberOfResources);
             Stream.ReadBytes(Hash.data(), Hash.size());
             Stream.Read(Version);
+            DependencyList::Read(Stream, DependencyMap);
         }
 
         void Write(
-            IO::BinaryStreamWriter Stream) const
+            IO::BinaryStreamWriter          Stream,
+            IAssetPack::AssetDependencyMap& DependencyMap) const
         {
             Stream.Write(Signature);
             Stream.Write(NumberOfResources);
             Stream.WriteBytes(Hash.data(), Hash.size());
             Stream.Write(Version);
+            DependencyList::Write(Stream, DependencyMap);
+        }
+
+    public:
+        static constexpr size_t GetOffset() noexcept
+        {
+            return 0;
+        }
+
+        static size_t GetSize(
+            const IAssetPack::AssetDependencyMap& DependencyMap) noexcept
+        {
+            return sizeof(AssetPackHeader) + DependencyList::GetSize(DependencyMap);
         }
     };
 
@@ -289,11 +353,24 @@ namespace Neon::Asset
             Stream.Write(PackInfo.Offset);
             Stream.Write(PackInfo.Size);
         }
+
+    public:
+        static size_t GetOffset(
+            const IAssetPack::AssetDependencyMap& DependencyMap) noexcept
+        {
+            return AssetPackHeader::GetSize(DependencyMap);
+        }
+
+        static constexpr size_t GetSize(
+            size_t NumberOfAssets) noexcept
+        {
+            return NumberOfAssets * sizeof(AssetPackSection);
+        }
     };
 
     size_t ZipAssetPack::OffsetToBody() const
     {
-        return sizeof(AssetPackHeader) + m_AssetsInfo.size() * sizeof(AssetPackSection);
+        return AssetPackHeader::GetSize(m_Dependencies) + AssetPackSection::GetSize(m_AssetsInfo.size());
     }
     //
 
@@ -320,12 +397,13 @@ namespace Neon::Asset
     bool ZipAssetPack::Header_ReadHeader(
         AssetPackHeader& HeaderInfo)
     {
-        m_File.seekg(0);
-        HeaderInfo.Read(m_File);
+        m_File.seekg(AssetPackHeader::GetOffset());
+        HeaderInfo.Read(m_File, m_Dependencies);
 
         NEON_TRACE_TAG("Resource", "Reading header");
         NEON_TRACE_TAG("Resource", "Header Version: {}", HeaderInfo.Version);
         NEON_TRACE_TAG("Resource", "Number of resources: {}", HeaderInfo.NumberOfResources);
+        NEON_TRACE_TAG("Resource", "Number of dependencyMap: {}", m_Dependencies.size());
         NEON_TRACE_TAG("Resource", "Signature: {:X}", HeaderInfo.Signature);
 
         if (HeaderInfo.Signature != AssetPackHeader::DefaultSignature ||
@@ -342,7 +420,7 @@ namespace Neon::Asset
         SHA256&                Header,
         const AssetPackHeader& HeaderInfo)
     {
-        m_File.seekg(sizeof(AssetPackHeader));
+        m_File.seekg(AssetPackSection::GetOffset(m_Dependencies));
         AssetPackSection Section;
 
         NEON_TRACE_TAG("Resource", "Reading sections");
@@ -405,7 +483,7 @@ namespace Neon::Asset
     void ZipAssetPack::Header_WriteHeader(
         SHA256& Header)
     {
-        m_File.seekp(0);
+        m_File.seekp(AssetPackHeader::GetOffset());
         Header.Append(AssetPackHeader::DefaultSignature);
         Header.Append(m_AssetsInfo.size());
 
@@ -419,13 +497,13 @@ namespace Neon::Asset
         NEON_TRACE_TAG("Resource", "Number of resources: {}", HeaderInfo.NumberOfResources);
         NEON_TRACE_TAG("Resource", "Signature: {:X}", HeaderInfo.Signature);
 
-        HeaderInfo.Write(m_File);
+        HeaderInfo.Write(m_File, m_Dependencies);
     }
 
     void ZipAssetPack::Header_WriteSections(
         SHA256& Header)
     {
-        m_File.seekp(sizeof(AssetPackHeader));
+        m_File.seekp(AssetPackSection::GetOffset(m_Dependencies));
         AssetPackSection Section;
 
         NEON_TRACE_TAG("Resource", "Writing Sections");
