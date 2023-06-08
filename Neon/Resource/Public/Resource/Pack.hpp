@@ -122,30 +122,16 @@ namespace Neon::Asset
             const AssetHandle& DependsOn);
 
     protected:
-        template<std::invocable _FTy, bool _Lock = false>
+        template<std::invocable<const AssetHandle&> _FTy>
         void IterateDepencies(
             const AssetHandle& Resource,
             _FTy&&             Func)
         {
-            if constexpr (_Lock)
+            if (auto Iter = m_Dependencies.find(Resource); Iter != m_Dependencies.end())
             {
-                std::scoped_lock Lock(m_PackMutex);
-                if (auto Iter = m_Dependencies.find(Resource); Iter != m_Dependencies.end())
+                for (const auto& Dependency : Iter->second)
                 {
-                    for (const auto& Dependency : Iter->second)
-                    {
-                        Func(Dependency);
-                    }
-                }
-            }
-            else
-            {
-                if (auto Iter = m_Dependencies.find(Resource); Iter != m_Dependencies.end())
-                {
-                    for (const auto& Dependency : Iter->second)
-                    {
-                        Func(Dependency);
-                    }
+                    Func(Dependency);
                 }
             }
         }

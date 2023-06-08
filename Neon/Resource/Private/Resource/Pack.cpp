@@ -27,6 +27,12 @@ namespace Neon::Asset
     void IAssetPack::LoadAsync(
         const AssetHandle& Handle)
     {
+        IterateDepencies(
+            Handle,
+            [this](const AssetHandle& Dependency)
+            {
+                LoadAsync(Dependency);
+            });
         m_DefferedOperator.LoadAsync(this, Handle);
     }
 

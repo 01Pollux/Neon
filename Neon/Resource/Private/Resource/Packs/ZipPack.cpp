@@ -82,6 +82,13 @@ namespace Neon::Asset
     Ref<IAssetResource> ZipAssetPack::Load(
         const AssetHandle& Handle)
     {
+        IterateDepencies(
+            Handle,
+            [this](const AssetHandle& Dependency)
+            {
+                Load(Dependency);
+            });
+
         auto Lock = m_DefferedOperator.Lock(this, m_PackMutex);
 
         auto& LoadedAsset = m_LoadedAssets[Handle];
