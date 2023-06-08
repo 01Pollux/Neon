@@ -79,6 +79,15 @@ namespace Neon::Asset
             const AssetHandle&         Handle,
             const Ptr<IAssetResource>& Resource);
 
+        /// <summary>
+        /// Add or remove dependency between two assets asynchronously.
+        /// </summary>
+        void DependencyChangeAsync(
+            IAssetPack*        Pack,
+            const AssetHandle& Resource,
+            const AssetHandle& DependsOn,
+            bool               Add);
+
     private:
         struct ImportOperation
         {
@@ -101,7 +110,14 @@ namespace Neon::Asset
             Ptr<IAssetResource> Resource;
         };
 
-        using PendingOperations      = boost::variant<ImportOperation, ExportOperation, LoadOperation, SaveOperation>;
+        struct DependencyChangeOperation
+        {
+            AssetHandle Resource;
+            AssetHandle DependsOn;
+            bool        Add;
+        };
+
+        using PendingOperations      = boost::variant<ImportOperation, ExportOperation, LoadOperation, SaveOperation, DependencyChangeOperation>;
         using PendingAssetOperations = std::vector<PendingOperations, boost::pool_allocator<PendingOperations>>;
         using PendingPacksOperations = std::map<IAssetPack*, PendingAssetOperations>;
 

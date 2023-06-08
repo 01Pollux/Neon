@@ -15,6 +15,8 @@ namespace Neon::Asset
 
     class IAssetPack
     {
+        friend class DeferredResourceOperator;
+
     public:
         using AssetHandleList    = std::vector<AssetHandle, boost::pool_allocator<AssetHandle>>;
         using AssetDependencyMap = std::map<AssetHandle, std::set<AssetHandle>>;

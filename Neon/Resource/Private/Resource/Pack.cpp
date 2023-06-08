@@ -49,24 +49,13 @@ namespace Neon::Asset
         const AssetHandle& Resource,
         const AssetHandle& DependsOn)
     {
-        std::scoped_lock Lock(m_PackMutex);
-        m_Dependencies[Resource].emplace(DependsOn);
+        m_DefferedOperator.DependencyChangeAsync(this, Resource, DependsOn, true);
     }
 
     void IAssetPack::RemoveDependency(
         const AssetHandle& Resource,
         const AssetHandle& DependsOn)
     {
-        std::scoped_lock Lock(m_PackMutex);
-
-        auto Iter = m_Dependencies.find(Resource);
-        if (Iter != m_Dependencies.end())
-        {
-            Iter->second.erase(DependsOn);
-            if (Iter->second.empty())
-            {
-                m_Dependencies.erase(Iter);
-            }
-        }
+        m_DefferedOperator.DependencyChangeAsync(this, Resource, DependsOn, false);
     }
 } // namespace Neon::Asset

@@ -50,12 +50,12 @@ namespace Neon::IO
         {
         }
 
-        [[nodiscard]] auto Get() const noexcept
+        [[nodiscard]] auto& Get() const noexcept
         {
             return (*m_Stream);
         }
 
-        [[nodiscard]] auto Get() noexcept
+        [[nodiscard]] auto& Get() noexcept
         {
             return (*m_Stream);
         }
@@ -156,35 +156,34 @@ namespace Neon::IO
             m_Stream(&Stream)
         {
         }
-
-        [[nodiscard]] auto Get() const noexcept
+        [[nodiscard]] auto& Get() const noexcept
         {
-            return (*m_Stream)->Get();
+            return (*m_Stream);
         }
 
-        [[nodiscard]] auto Get() noexcept
+        [[nodiscard]] auto& Get() noexcept
         {
-            return (*m_Stream)->Get();
+            return (*m_Stream);
         }
 
         [[nodiscard]] auto operator->() const noexcept
         {
-            return Get().operator->();
+            return m_Stream;
         }
 
         [[nodiscard]] auto operator->() noexcept
         {
-            return Get().operator->();
+            return m_Stream;
         }
 
         [[nodiscard]] auto& operator*() const noexcept
         {
-            return Get().operator*();
+            return Get();
         }
 
         [[nodiscard]] auto& operator*() noexcept
         {
-            return Get().operator*();
+            return Get();
         }
 
         explicit operator bool() const noexcept

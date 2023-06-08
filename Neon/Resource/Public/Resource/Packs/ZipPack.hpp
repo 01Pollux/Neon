@@ -132,18 +132,21 @@ namespace Neon::Asset
         /// Write header information to the header.
         /// </summary>
         void Header_WriteHeader(
-            SHA256& Header);
+            std::fstream& FinalFile,
+            SHA256&       Header);
 
         /// <summary>
         /// Write sections to the header.
         /// </summary>
         void Header_WriteSections(
-            SHA256& Header);
+            std::fstream& FinalFile,
+            SHA256&       Header);
 
         /// <summary>
         /// Write body to the header.
         /// </summary>
-        void Header_WriteBody();
+        void Header_WriteBody(
+            std::fstream& FinalFile);
 
     private:
         std::fstream    m_File;

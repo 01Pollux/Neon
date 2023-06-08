@@ -6,6 +6,7 @@
 
 #include <future>
 #include <filesystem>
+#include <ranges>
 
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/device/file.hpp>
@@ -42,6 +43,7 @@ namespace Neon::Asset
 
         m_AssetsInfo.clear();
         m_LoadedAssets.clear();
+        m_Dependencies.clear();
 
         try
         {
@@ -480,17 +482,29 @@ namespace Neon::Asset
 
     void ZipAssetPack::WriteFile()
     {
+        auto         FilePath = GetTempFileName() + "_tmp";
+        std::fstream FinalFile(FilePath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+
         SHA256 Header;
-        Header_WriteBody();
-        Header_WriteSections(Header);
-        Header_WriteHeader(Header);
+        Header_WriteBody(FinalFile);
+        Header_WriteSections(FinalFile, Header);
+        Header_WriteHeader(FinalFile, Header);
+
         NEON_TRACE_TAG("Resource", "------------------------------------------------------");
+
+        m_File.seekp(0);
+        FinalFile.seekg(0);
+        m_File << FinalFile.rdbuf();
+        FinalFile.close();
+
+        std::filesystem::remove(FilePath);
     }
 
     void ZipAssetPack::Header_WriteHeader(
-        SHA256& Header)
+        std::fstream& FinalFile,
+        SHA256&       Header)
     {
-        m_File.seekp(AssetPackHeader::GetOffset());
+        FinalFile.seekp(AssetPackHeader::GetOffset());
         Header.Append(AssetPackHeader::DefaultSignature);
         Header.Append(m_AssetsInfo.size());
 
@@ -504,13 +518,14 @@ namespace Neon::Asset
         NEON_TRACE_TAG("Resource", "Number of resources: {}", HeaderInfo.NumberOfResources);
         NEON_TRACE_TAG("Resource", "Signature: {:X}", HeaderInfo.Signature);
 
-        HeaderInfo.Write(m_File, m_Dependencies);
+        HeaderInfo.Write(FinalFile, m_Dependencies);
     }
 
     void ZipAssetPack::Header_WriteSections(
-        SHA256& Header)
+        std::fstream& FinalFile,
+        SHA256&       Header)
     {
-        m_File.seekp(AssetPackSection::GetOffset(m_Dependencies));
+        FinalFile.seekp(AssetPackSection::GetOffset(m_Dependencies));
         AssetPackSection Section;
 
         NEON_TRACE_TAG("Resource", "Writing Sections");
@@ -518,7 +533,7 @@ namespace Neon::Asset
         {
             Section.PackInfo = Info;
             Section.Handle   = Handle;
-            Section.Write(m_File);
+            Section.Write(FinalFile);
             Header.Append(std::bit_cast<const uint8_t*>(&Info), sizeof(Info));
 
             NEON_TRACE_TAG("Resource", "Writing Section: {}", Section.Handle.ToString());
@@ -529,28 +544,45 @@ namespace Neon::Asset
         }
     }
 
-    void ZipAssetPack::Header_WriteBody()
+    void ZipAssetPack::Header_WriteBody(
+        std::fstream& FinalFile)
     {
-        m_File.seekp(OffsetToBody());
+        FinalFile.seekp(OffsetToBody());
         SHA256 Sha256;
         for (auto& [Handle, Info] : m_AssetsInfo)
         {
             auto  Handler  = m_Handlers.Get(Info.LoaderId);
             auto& Resource = m_LoadedAssets[Handle];
 
-            auto DataPos = m_File.tellp();
-            Info.Offset  = DataPos;
+            // If the data was loaded, write it to the file
+            if (Resource)
+            {
+                auto DataPos = FinalFile.tellp();
+                Info.Offset  = DataPos;
 
-            IO::OutArchive Archive(m_File);
-            Handler->Save(Resource, Archive);
+                IO::OutArchive Archive(FinalFile);
+                Handler->Save(Resource, Archive);
 
-            Info.Size = m_File.tellp() - DataPos;
-            m_File.seekp(DataPos);
+                Info.Size = FinalFile.tellp() - DataPos;
+                FinalFile.seekp(DataPos);
 
-            // Process the hash
-            Sha256.Reset();
-            Sha256.Append(m_File, Info.Size);
-            Info.Hash = Sha256.Digest();
+                // Process the hash
+                Sha256.Reset();
+                Sha256.Append(FinalFile, Info.Size);
+                Info.Hash = Sha256.Digest();
+            }
+            else
+            {
+                m_File.seekg(Info.Offset);
+
+                IO::BinaryStreamWriter Stream(FinalFile);
+                IO::BinaryStreamReader Reader(m_File);
+
+                std::copy_n(
+                    std::istreambuf_iterator(Reader.Get()),
+                    Info.Size,
+                    std::ostreambuf_iterator<char>(Stream.Get()));
+            }
         }
     }
 } // namespace Neon::Asset

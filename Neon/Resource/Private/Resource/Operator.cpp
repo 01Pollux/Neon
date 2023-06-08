@@ -41,6 +41,25 @@ namespace Neon::Asset
                                 {
                                     Pack->Save(Op.Handle, Op.Resource);
                                 },
+                                [Pack](const DependencyChangeOperation& Op)
+                                {
+                                    if (Op.Add)
+                                    {
+                                        Pack->m_Dependencies[Op.Resource].emplace(Op.DependsOn);
+                                    }
+                                    else
+                                    {
+                                        auto Iter = Pack->m_Dependencies.find(Op.Resource);
+                                        if (Iter != Pack->m_Dependencies.end())
+                                        {
+                                            Iter->second.erase(Op.DependsOn);
+                                            if (Iter->second.empty())
+                                            {
+                                                Pack->m_Dependencies.erase(Iter);
+                                            }
+                                        }
+                                    }
+                                }
                             };
                             for (auto& Op : Operations)
                             {
@@ -101,6 +120,19 @@ namespace Neon::Asset
         {
             std::scoped_lock LoaderLock(m_LoaderMutex);
             m_PendingPacksOperations[Pack].emplace_back(SaveOperation{ Handle, Resource });
+        }
+        m_LoaderCondition.notify_one();
+    }
+
+    void DeferredResourceOperator::DependencyChangeAsync(
+        IAssetPack*        Pack,
+        const AssetHandle& Resource,
+        const AssetHandle& DependsOn,
+        bool               Add)
+    {
+        {
+            std::scoped_lock LoaderLock(m_LoaderMutex);
+            m_PendingPacksOperations[Pack].emplace_back(DependencyChangeOperation{ Resource, DependsOn, Add });
         }
         m_LoaderCondition.notify_one();
     }
