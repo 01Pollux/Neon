@@ -75,17 +75,32 @@ function select_launch_kind()
     filter {}
 end
 
+function link_boost_inc()
+    filter "configurations:Dist"
+        includedirs
+        {
+            "%{CommonDir.Deps.Inc}/boost_def"
+        }
+    filter {}
+    filter "configurations:not Dist"
+        includedirs
+        {
+            "%{CommonDir.Deps.Inc}/boost_san"
+        }
+    filter {}
+end
+
 function link_boost_lib(lib_name)
     filter "configurations:Dist"
         links
         {
-            "boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
+            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
         }
     filter {}
     filter "configurations:not Dist"
         links
         {
-            "boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
+            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
         }
     filter {}
 end
@@ -129,7 +144,7 @@ function common_neon()
     link_boost_lib("wserialization")
     link_boost_lib("zlib")
     
-    filter {}
+    link_boost_inc()
 
     links
     {
