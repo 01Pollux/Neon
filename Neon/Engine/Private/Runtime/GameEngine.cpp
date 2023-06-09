@@ -5,8 +5,6 @@
 #include <Module/Resource.hpp>
 #include <Module/Graphics.hpp>
 
-#include <barrier>
-
 namespace Neon::Runtime
 {
     DefaultGameEngine::DefaultGameEngine(
@@ -44,7 +42,7 @@ namespace Neon::Runtime
         m_ResourceManager = std::make_unique<Module::ResourceManager>(this, Config.Manager);
         for (auto& [Tag, Path] : Config.Packs)
         {
-            m_ResourceManager->Get()->LoadPack(Tag, Path);
+            m_ResourceManager->Get()->TryLoadPack(Tag, Path);
         }
     }
 } // namespace Neon::Runtime

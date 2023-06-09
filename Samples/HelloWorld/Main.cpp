@@ -32,11 +32,6 @@ private:
 
 NEON_MAIN(Argc, Argv)
 {
-    Logger::SetLogTag("", Logger::LogSeverity::Trace);
-    Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
-    Logger::SetLogTag("Window", Logger::LogSeverity::Trace);
-    Logger::SetLogTag("Graphics", Logger::LogSeverity::Trace);
-
     auto func = []
     {
         TestGameEngine Engine;

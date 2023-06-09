@@ -1,0 +1,17 @@
+{
+  "Export Path": "samples/logger/logger.np",
+  "Type": "ZipAsset",
+  "Assets": [
+    {
+      "Type": "LoggerAsset",
+      "Handle": "d0b50bba-f800-4c18-a595-fd5c4b380190",
+      "Tags": {
+        "": "Trace",
+        "Window": "Trace",
+        "Resource": "Trace",
+        "Shader": "Trace",
+        "Graphics": "Trace"
+      }
+    }
+  ]
+}
