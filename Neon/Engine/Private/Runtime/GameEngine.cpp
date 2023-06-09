@@ -22,7 +22,6 @@ namespace Neon::Runtime
     int DefaultGameEngine::Run()
     {
         Initialize();
-
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {

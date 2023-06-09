@@ -7,6 +7,15 @@ namespace Neon::RHI
 {
     class IGpuResource;
 
+    enum class GraphicsBufferType : uint8_t
+    {
+        Default,
+        Upload,
+        Readback,
+
+        Count
+    };
+
     struct CpuDescriptorHandle
     {
         uint64_t Value;

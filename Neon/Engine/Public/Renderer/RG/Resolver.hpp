@@ -1,8 +1,24 @@
 #pragma once
 
 #include <Renderer/RG/Pass.hpp>
-#include <Resource/Handle.hpp>
-#include <Renderer/Material/Material.hpp>
+#include <RHI/Resource/Common.hpp>
+
+namespace Neon
+{
+    namespace Asset
+    {
+        struct AssetHandle;
+    } // namespace Asset
+    namespace RHI
+    {
+        class IShader;
+        class ShaderCompileDesc;
+    } // namespace RHI
+    namespace Renderer
+    {
+        class Material;
+    } // namespace Renderer
+} // namespace Neon
 
 namespace Neon::RG
 {
@@ -10,21 +26,43 @@ namespace Neon::RG
     {
     public:
         /// <summary>
+        /// Compile a shader from a compile description.
+        /// </summary>
+        void Load(
+            RHI::ShaderCompileDesc& Desc);
+
+        /// <summary>
+        /// Load a shader from a compile description.
+        /// </summary>
+        void Load(
+            Ptr<RHI::IShader>& Shader);
+
+        /// <summary>
         /// Load a shader from an asset.
         /// </summary>
         void Load(
             const Asset::AssetHandle& ShaderAsset);
     };
 
+    //
+
     class IRenderPass::MaterialResolver
     {
     public:
+        /// <summary>
+        /// Load a material.
+        /// </summary>
+        void Load(
+            const Renderer::Material& Material);
+
         /// <summary>
         /// Load a material from an asset.
         /// </summary>
         void Load(
             const Asset::AssetHandle& MaterialAsset);
     };
+
+    //
 
     class IRenderPass::ResourceResolver
     {
@@ -43,7 +81,7 @@ namespace Neon::RG
         void CreateTexture(
             const ResourceId&   Id,
             const ResourceDesc& Desc,
-            ResourceFlags       Flags);
+            MResourceFlags      Flags);
 
         /// <summary>
         /// Write resource view

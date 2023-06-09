@@ -7,16 +7,6 @@
 
 namespace Neon::RHI
 {
-
-    enum class GraphicsBufferType : uint8_t
-    {
-        Default,
-        Upload,
-        Readback,
-
-        Count
-    };
-
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
