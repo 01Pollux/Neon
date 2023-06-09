@@ -54,6 +54,7 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> TextFileAsset::Handler::Load(
+        IAssetPack*,
         IO::InArchive& Archive,
         size_t)
     {
@@ -63,6 +64,7 @@ namespace Neon::Asset
     }
 
     void TextFileAsset::Handler::Save(
+        IAssetPack*,
         const Ptr<IAssetResource>& Resource,
         IO::OutArchive&            Archive)
     {

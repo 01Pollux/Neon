@@ -8,6 +8,7 @@
 namespace Neon::Asset
 {
     class IAssetResource;
+    class IAssetPack;
     class IAssetResourceHandler
     {
     public:
@@ -21,6 +22,7 @@ namespace Neon::Asset
         /// Load data from bytes.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAssetResource> Load(
+            IAssetPack*    Pack,
             IO::InArchive& Archive,
             size_t         DataSize) = 0;
 
@@ -28,6 +30,7 @@ namespace Neon::Asset
         /// Save data to bytes.
         /// </summary>
         [[nodiscard]] virtual void Save(
+            IAssetPack*                Pack,
             const Ptr<IAssetResource>& Resource,
             IO::OutArchive&            Archive) = 0;
     };

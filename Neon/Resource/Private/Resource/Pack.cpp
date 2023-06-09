@@ -2,6 +2,8 @@
 #include <Resource/Pack.hpp>
 #include <Resource/Operator.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Asset
 {
     IAssetPack::IAssetPack(
@@ -49,6 +51,7 @@ namespace Neon::Asset
         const AssetHandle& Resource,
         const AssetHandle& DependsOn)
     {
+        NEON_ASSERT(Resource != DependsOn, "Cannot add self dependency");
         m_DefferedOperator.DependencyChangeAsync(this, Resource, DependsOn, true);
     }
 
@@ -56,6 +59,13 @@ namespace Neon::Asset
         const AssetHandle& Resource,
         const AssetHandle& DependsOn)
     {
+        NEON_ASSERT(Resource != DependsOn, "Cannot remove self dependency");
         m_DefferedOperator.DependencyChangeAsync(this, Resource, DependsOn, false);
+    }
+
+    void IAssetPack::RemoveAllDependencies(
+        const AssetHandle& Resource)
+    {
+        m_DefferedOperator.DependencyChangeAsync(this, Resource, Resource, false);
     }
 } // namespace Neon::Asset

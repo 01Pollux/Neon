@@ -30,6 +30,7 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> LoggerAsset::Handler::Load(
+        IAssetPack*,
         IO::InArchive& Archive,
         size_t)
     {
@@ -39,6 +40,7 @@ namespace Neon::Asset
     }
 
     void LoggerAsset::Handler::Save(
+        IAssetPack*,
         const Ptr<IAssetResource>& Resource,
         IO::OutArchive&            Archive)
     {

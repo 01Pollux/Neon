@@ -123,6 +123,12 @@ namespace Neon::Asset
             const AssetHandle& Resource,
             const AssetHandle& DependsOn);
 
+        /// <summary>
+        /// Remove all dependencies from the asset.
+        /// </summary>
+        void RemoveAllDependencies(
+            const AssetHandle& Resource);
+
     protected:
         template<std::invocable<const AssetHandle&> _FTy>
         void IterateDepencies(

@@ -31,6 +31,7 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> ShaderAsset::Handler::Load(
+        IAssetPack*,
         IO::InArchive& Archive,
         size_t         DataSize)
     {
@@ -41,6 +42,7 @@ namespace Neon::Asset
     }
 
     void ShaderAsset::Handler::Save(
+        IAssetPack*,
         const Ptr<IAssetResource>& Resource,
         IO::OutArchive&            Archive)
     {

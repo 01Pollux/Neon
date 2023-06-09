@@ -49,13 +49,20 @@ namespace Neon::Asset
                                     }
                                     else
                                     {
-                                        auto Iter = Pack->m_Dependencies.find(Op.Resource);
-                                        if (Iter != Pack->m_Dependencies.end())
+                                        if (Op.Resource == Op.DependsOn)
                                         {
-                                            Iter->second.erase(Op.DependsOn);
-                                            if (Iter->second.empty())
+                                            Pack->m_Dependencies.erase(Op.Resource);
+                                        }
+                                        else
+                                        {
+                                            auto Iter = Pack->m_Dependencies.find(Op.Resource);
+                                            if (Iter != Pack->m_Dependencies.end())
                                             {
-                                                Pack->m_Dependencies.erase(Iter);
+                                                Iter->second.erase(Op.DependsOn);
+                                                if (Iter->second.empty())
+                                                {
+                                                    Pack->m_Dependencies.erase(Iter);
+                                                }
                                             }
                                         }
                                     }

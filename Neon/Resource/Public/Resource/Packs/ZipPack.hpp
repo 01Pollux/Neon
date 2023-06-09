@@ -5,6 +5,7 @@
 #include <Core/SHA256.hpp>
 
 #include <IO/BinaryFile.hpp>
+#include <expected>
 #include <boost/functional/hash.hpp>
 
 namespace Neon::Asset
@@ -65,10 +66,12 @@ namespace Neon::Asset
         AssetHandleList GetAssets() const override;
 
     private:
-        Ptr<IAssetResource> LoadAsset(
+        /// <summary>
+        /// Load asset from the pack or returns error.
+        /// </summary>
+        std::expected<Ptr<IAssetResource>, const char*> LoadAsset(
             const AssetResourceHandlers& Handlers,
-            const AssetHandle&           Handle,
-            StringU8&                    ErrorText);
+            const AssetHandle&           Handle);
 
     private:
         /// <summary>

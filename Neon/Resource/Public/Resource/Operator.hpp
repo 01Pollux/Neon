@@ -28,7 +28,6 @@ namespace Neon::Asset
         /// if the caller is not the resource thread, it will wait until the resource thread is done with its current operation.
         /// </summary>
         template<typename _Mtx>
-
         [[nodiscard]] std::unique_lock<_Mtx> Lock(
             const IAssetPack* Pack,
             _Mtx&             Mutex) const

@@ -62,8 +62,9 @@ namespace Neon::Asset
     }
 
     Ptr<IAssetResource> RootSignatureAsset::Handler::Load(
+        IAssetPack*,
         IO::InArchive& Archive,
-        size_t         DataSize)
+        size_t)
     {
         RHI::RootSignatureBuilder RootSig;
         Archive >> RootSig;
@@ -71,6 +72,7 @@ namespace Neon::Asset
     }
 
     void RootSignatureAsset::Handler::Save(
+        IAssetPack*,
         const Ptr<IAssetResource>& Resource,
         IO::OutArchive&            Archive)
     {

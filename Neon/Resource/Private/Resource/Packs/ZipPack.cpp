@@ -96,26 +96,21 @@ namespace Neon::Asset
         auto& LoadedAsset = m_LoadedAssets[Handle];
 
         // Resource already loaded
-        if (LoadedAsset)
+        if (!LoadedAsset)
         {
-            return LoadedAsset;
+            NEON_TRACE_TAG("Resource", "Loading asset: {}", Handle.ToString());
+
+            if (auto Asset = LoadAsset(m_Handlers, Handle))
+            {
+                LoadedAsset = *Asset;
+            }
+            else
+            {
+                NEON_WARNING_TAG("Resource", Asset.error(), Handle.ToString());
+            }
         }
 
-        NEON_TRACE_TAG("Resource", "Loading asset: {}", Handle.ToString());
-
-        StringU8 ErrorText;
-        auto     Asset = LoadAsset(m_Handlers, Handle, ErrorText);
-
-        if (!ErrorText.empty())
-        {
-            NEON_WARNING_TAG("Resource", ErrorText, Handle.ToString());
-        }
-        else
-        {
-            LoadedAsset = Asset;
-        }
-
-        return Asset;
+        return LoadedAsset;
     }
 
     void ZipAssetPack::Save(
@@ -162,16 +157,14 @@ namespace Neon::Asset
         return Assets;
     }
 
-    Ptr<IAssetResource> ZipAssetPack::LoadAsset(
+    std::expected<Ptr<IAssetResource>, const char*> ZipAssetPack::LoadAsset(
         const AssetResourceHandlers& Handlers,
-        const AssetHandle&           Handle,
-        StringU8&                    ErrorText)
+        const AssetHandle&           Handle)
     {
         auto Iter = m_AssetsInfo.find(Handle);
         if (Iter == m_AssetsInfo.end())
         {
-            ErrorText = "Tried loading asset '{}' that doesn't exists";
-            return nullptr;
+            return std::unexpected("Tried loading asset '{}' that doesn't exists");
         }
 
         auto& Info = Iter->second;
@@ -180,12 +173,11 @@ namespace Neon::Asset
         auto Handler = Handlers.Get(Info.LoaderId);
         if (!Handler)
         {
-            ErrorText = "Tried loading asset '{}' with handler that doesn't exists";
-            return nullptr;
+            return std::unexpected("Tried loading asset '{}' with handler that doesn't exists");
         }
 
         IO::InArchive Archive(m_File);
-        return Handler->Load(Archive, Info.Size);
+        return Handler->Load(this, Archive, Info.Size);
     }
 
     //
@@ -561,7 +553,7 @@ namespace Neon::Asset
                 Info.Offset  = DataPos;
 
                 IO::OutArchive Archive(FinalFile);
-                Handler->Save(Resource, Archive);
+                Handler->Save(this, Resource, Archive);
 
                 Info.Size = FinalFile.tellp() - DataPos;
                 FinalFile.seekp(DataPos);
