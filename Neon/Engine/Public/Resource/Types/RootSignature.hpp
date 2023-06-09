@@ -25,7 +25,7 @@ namespace Neon::Asset
         /// Set root signature to this asset.
         /// </summary>
         [[nodiscard]] void SetRootSignature(
-            const Ptr<RHI::IRootSignature>& Shader);
+            const Ptr<RHI::IRootSignature>& RootSignature);
 
     public:
         class Handler : public IAssetResourceHandler

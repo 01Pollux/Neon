@@ -35,7 +35,6 @@ namespace boost::serialization
 
 namespace Neon::Asset
 {
-
     RootSignatureAsset::RootSignatureAsset(
         const Ptr<RHI::IRootSignature>& RootSignature) :
         m_RootSignature(RootSignature)
