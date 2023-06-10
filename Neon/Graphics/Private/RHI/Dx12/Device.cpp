@@ -1,6 +1,7 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/RootSignature.hpp>
+#include <Private/RHI/Dx12/PipelineState.hpp>
 
 #include <ShlObj_core.h>
 #include <dxgidebug.h>
@@ -67,6 +68,7 @@ namespace Neon::RHI
     Dx12RenderDevice::~Dx12RenderDevice()
     {
         Dx12RootSignatureCache::Flush();
+        Dx12PipelineStateCache::Flush();
         NEON_INFO_TAG("Graphics", "Destroying DirectX 12 Render Device");
     }
 
