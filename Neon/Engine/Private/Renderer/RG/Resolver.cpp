@@ -226,7 +226,7 @@ namespace Neon::RG
         RHI::MResourceState   State,
         RHI::MResourceFlags   Flags)
     {
-        auto& ResourceHandle = m_Storage.GetResource(ViewId.GetResource());
+        auto& ResourceHandle = m_Storage.GetResourceMut(ViewId.GetResource());
         auto& ResourceDesc   = ResourceHandle.GetDesc();
 
         ResourceDesc.Flags |= Flags;

@@ -50,7 +50,7 @@ namespace Neon::RG
 
     //
 
-    ResourceHandle& GraphStorage::GetResource(
+    ResourceHandle& GraphStorage::GetResourceMut(
         const ResourceId& Id)
     {
         auto Iter = m_Resources.find(Id);

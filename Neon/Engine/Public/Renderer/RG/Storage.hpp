@@ -50,7 +50,7 @@ namespace Neon::RG
         /// <summary>
         /// Get resource from id
         /// </summary>
-        [[nodiscard]] ResourceHandle& GetResource(
+        [[nodiscard]] ResourceHandle& GetResourceMut(
             const ResourceId& Id);
 
         /// <summary>
