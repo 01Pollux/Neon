@@ -112,7 +112,7 @@ namespace Neon::IO
             }
             else
             {
-                ReadBytes(&Value, sizeof(_Ty));
+                ReadBytes(std::addressof(Value), sizeof(_Ty));
             }
         }
 
@@ -217,7 +217,7 @@ namespace Neon::IO
             }
             else
             {
-                WriteBytes(&Value, sizeof(_Ty));
+                WriteBytes(std::addressof(Value), sizeof(_Ty));
             }
         }
 

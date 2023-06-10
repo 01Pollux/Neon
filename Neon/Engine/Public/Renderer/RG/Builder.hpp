@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Renderer/RG/Graph.hpp>
 #include <Renderer/RG/Resolver.hpp>
 #include <vector>
 #include <future>
@@ -8,7 +7,7 @@
 
 namespace Neon::RG
 {
-    class RenderGraph::Builder
+    class RenderGraphBuilder
     {
         friend class RenderGraphContext;
 
@@ -24,7 +23,7 @@ namespace Neon::RG
                 GraphStorage& Storage);
         };
 
-        using BuildersListType  = std::list<BuilderInfo>;
+        using BuildersListType  = std::vector<BuilderInfo>;
         using AdjacencyListType = std::vector<std::vector<size_t>>;
 
     public:
@@ -51,10 +50,29 @@ namespace Neon::RG
 
     private:
         /// <summary>
+        /// Build root signatures from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchRootSignatureJobs(
+            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::future<void>>;
+
+        /// <summary>
+        /// Build shaders from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchShaderJobs(
+            const std::shared_ptr<BuildersListType>& Builders) const -> std::vector<std::future<void>>;
+
+        /// <summary>
+        /// Build pipeline states from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchPipelineJobs(
+            const std::shared_ptr<BuildersListType>& Builders) -> std::jthread;
+
+    private:
+        /// <summary>
         /// Build passes from builders
         /// </summary>
-        [[nodiscard]] std::vector<RenderGraph::DepdencyLevel> BuildPasses(
-            const std::shared_ptr<BuildersListType>& Builders);
+        [[nodiscard]] auto BuildPasses(
+            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<RenderGraphDepdencyLevel>;
 
         /// <summary>
         /// Build adjacency lists for passes dependencies
@@ -70,8 +88,8 @@ namespace Neon::RG
         /// <summary>
         /// Calculate resources lifetime for each pass
         /// </summary>
-        [[nodiscard]] std::vector<std::set<ResourceId>> CalculateResourcesLifetime(
-            BuildersListType& Builders) const;
+        [[nodiscard]] auto CalculateResourcesLifetime(
+            BuildersListType& Builders) const -> std::vector<std::set<ResourceId>>;
 
         /// <summary>
         /// Depth first search for topological sort
@@ -84,12 +102,12 @@ namespace Neon::RG
         /// <summary>
         /// Build dependency levels
         /// </summary>
-        [[nodiscard]] std::vector<RenderGraph::DepdencyLevel> BuildDependencyLevels(
+        [[nodiscard]] auto BuildDependencyLevels(
             BuildersListType&                  Builders,
-            std::vector<std::set<ResourceId>>& ResourceToDestroy);
+            std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<RenderGraphDepdencyLevel>;
 
     private:
-        explicit Builder(
+        explicit RenderGraphBuilder(
             RenderGraph& Context);
 
     private:

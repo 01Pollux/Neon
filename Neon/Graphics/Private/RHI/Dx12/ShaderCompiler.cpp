@@ -1,7 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <Private/RHI/Dx12/ShaderCompiler.hpp>
-#include <RHI/Resource/MappedBuffer.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -197,10 +196,10 @@ namespace Neon::RHI
     }
 
     void Dx12ShaderCompiler::ReflectLayout(
-        const void*         ShaderCode,
-        size_t              ByteLength,
-        MBuffer::RawLayout& Layout,
-        bool                IsOutput)
+        const void*        ShaderCode,
+        size_t             ByteLength,
+        ShaderInputLayout& Layout,
+        bool               IsOutput)
     {
         Win32::ComPtr<IDxcContainerReflection> Reflection;
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
@@ -222,7 +221,7 @@ namespace Neon::RHI
 
     void Dx12ShaderCompiler::ReflectLayout(
         ID3D12ShaderReflection* ShaderReflection,
-        MBuffer::RawLayout&     Layout,
+        ShaderInputLayout&      Layout,
         bool                    IsOutput)
     {
         D3D12_SHADER_DESC ShaderDesc;
@@ -239,7 +238,7 @@ namespace Neon::RHI
             else
                 ShaderReflection->GetInputParameterDesc(i, &SigParam);
 
-            MBuffer::Type Type;
+            EResourceFormat Format;
 
             auto SelectFrom = [](D3D_REGISTER_COMPONENT_TYPE Type, auto UIntType, auto IntType, auto FloatType)
             {
@@ -259,35 +258,35 @@ namespace Neon::RHI
 
             if (SigParam.Mask & (1 << 3))
             {
-                Type = SelectFrom(
+                Format = SelectFrom(
                     SigParam.ComponentType,
-                    MBuffer::Type::UInt4,
-                    MBuffer::Type::Int4,
-                    MBuffer::Type::Float4);
+                    EResourceFormat::R32G32B32A32_UInt,
+                    EResourceFormat::R32G32B32A32_SInt,
+                    EResourceFormat::R32G32B32A32_Float);
             }
             else if (SigParam.Mask & (1 << 2))
             {
-                Type = SelectFrom(
+                Format = SelectFrom(
                     SigParam.ComponentType,
-                    MBuffer::Type::UInt3,
-                    MBuffer::Type::Int3,
-                    MBuffer::Type::Float3);
+                    EResourceFormat::R32G32B32_UInt,
+                    EResourceFormat::R32G32B32_SInt,
+                    EResourceFormat::R32G32B32_Float);
             }
             else if (SigParam.Mask & (1 << 1))
             {
-                Type = SelectFrom(
+                Format = SelectFrom(
                     SigParam.ComponentType,
-                    MBuffer::Type::UInt2,
-                    MBuffer::Type::Int2,
-                    MBuffer::Type::Float2);
+                    EResourceFormat::R32G32_UInt,
+                    EResourceFormat::R32G32_SInt,
+                    EResourceFormat::R32G32_Float);
             }
             else
             {
-                Type = SelectFrom(
+                Format = SelectFrom(
                     SigParam.ComponentType,
-                    MBuffer::Type::UInt,
-                    MBuffer::Type::Int,
-                    MBuffer::Type::Float);
+                    EResourceFormat::R32_UInt,
+                    EResourceFormat::R32_SInt,
+                    EResourceFormat::R32_Float);
             }
 
             StringU8 Name = SigParam.SemanticName;
@@ -295,7 +294,7 @@ namespace Neon::RHI
             {
                 Name += "#" + std::to_string(SigParam.SemanticIndex);
             }
-            Layout.Append(Type, std::move(Name));
+            Layout.emplace_back(std::move(Name), Format);
         }
     }
 

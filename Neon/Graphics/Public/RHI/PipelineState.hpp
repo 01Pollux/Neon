@@ -2,7 +2,6 @@
 
 #include <Core/Neon.hpp>
 #include <RHI/Resource/Common.hpp>
-#include <RHI/Resource/MappedBuffer.hpp>
 #include <variant>
 #include <span>
 
@@ -107,7 +106,7 @@ namespace Neon::RHI
 
         DepthStencilState DepthStencilState;
 
-        MBuffer::RawLayout InputLayout;
+        ShaderInputLayout InputLayout;
 
         StripCutType StripCut = StripCutType::None;
 

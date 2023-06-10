@@ -38,7 +38,7 @@ namespace Neon
         void Append(
             _Ty Data)
         {
-            Append(std::bit_cast<uint8_t*>(&Data), sizeof(_Ty));
+            Append(std::bit_cast<uint8_t*>(std::addressof(Data)), sizeof(_Ty));
         }
 
         [[nodiscard]] Bytes Digest();

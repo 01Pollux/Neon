@@ -25,10 +25,10 @@ namespace Neon::RHI
         /// Reflect shader layout from shader bytecode
         /// </summary>
         void ReflectLayout(
-            const void*         ShaderCode,
-            size_t              ByteLength,
-            MBuffer::RawLayout& Layout,
-            bool                IsOutput);
+            const void*        ShaderCode,
+            size_t             ByteLength,
+            ShaderInputLayout& Layout,
+            bool               IsOutput);
 
     private:
         /// <summary>
@@ -36,7 +36,7 @@ namespace Neon::RHI
         /// </summary>
         void ReflectLayout(
             ID3D12ShaderReflection* ShaderReflection,
-            MBuffer::RawLayout&     Layout,
+            ShaderInputLayout&      Layout,
             bool                    IsOutput);
 
     private:

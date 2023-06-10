@@ -27,6 +27,8 @@ namespace Neon::RG
 
     class IRenderPass::ShaderResolver
     {
+        friend class RenderGraphBuilder;
+
     public:
         /// <summary>
         /// Compile a shader from a compile description.
@@ -63,6 +65,8 @@ namespace Neon::RG
 
     class IRenderPass::RootSignatureResolver
     {
+        friend class RenderGraphBuilder;
+
     public:
         /// <summary>
         /// Load a root signature.
@@ -99,6 +103,8 @@ namespace Neon::RG
 
     class IRenderPass::PipelineStateResolver
     {
+        friend class RenderGraphBuilder;
+
     public:
         /// <summary>
         /// Load a pipeline state.
@@ -135,6 +141,8 @@ namespace Neon::RG
 
     class IRenderPass::MaterialResolver
     {
+        friend class RenderGraphBuilder;
+
     public:
         /// <summary>
         /// Load a material.
@@ -163,6 +171,8 @@ namespace Neon::RG
 
     class IRenderPass::ResourceResolver
     {
+        friend class RenderGraphBuilder;
+
     public:
         ResourceResolver(
             GraphStorage& Storage);

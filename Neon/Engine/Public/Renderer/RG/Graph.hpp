@@ -5,21 +5,22 @@
 
 namespace Neon::RG
 {
+    class RenderGraphBuilder;
+    class RenderGraphDepdencyLevel;
+
     class RenderGraph
     {
-        class DepdencyLevel;
-        using DepdencyLevelList = std::vector<DepdencyLevel>;
+        friend class RenderGraphBuilder;
+        using DepdencyLevelList = std::vector<RenderGraphDepdencyLevel>;
 
     public:
-        class Builder;
-
         RenderGraph(
             RHI::ISwapchain* Swapchain);
 
         /// <summary>
         /// Reset resource graph for recording
         /// </summary>
-        [[nodiscard]] Builder Reset();
+        [[nodiscard]] RenderGraphBuilder Reset();
 
         /// <summary>
         /// Get the storage of the graph
@@ -41,73 +42,73 @@ namespace Neon::RG
         /// Build levels and imported resources
         /// </summary>
         void Build(
-            std::vector<DepdencyLevel>&& Levels);
+            DepdencyLevelList&& Levels);
 
     private:
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
-        std::future<void> m_PipelineCreators;
+        std::jthread      m_PipelineCreators;
     };
 
     //
 
-    class RenderGraph::DepdencyLevel
+    class RenderGraphDepdencyLevel
     {
     public:
-        DepdencyLevel(
+        RenderGraphDepdencyLevel(
             RenderGraph& Context);
 
-        DepdencyLevel(const DepdencyLevel&)            = delete;
-        DepdencyLevel(DepdencyLevel&&)                 = default;
-        DepdencyLevel& operator=(const DepdencyLevel&) = delete;
-        DepdencyLevel& operator=(DepdencyLevel&&)      = default;
-        ~DepdencyLevel()                               = default;
+        RenderGraphDepdencyLevel(const RenderGraphDepdencyLevel&)            = delete;
+        RenderGraphDepdencyLevel(RenderGraphDepdencyLevel&&)                 = default;
+        RenderGraphDepdencyLevel& operator=(const RenderGraphDepdencyLevel&) = delete;
+        RenderGraphDepdencyLevel& operator=(RenderGraphDepdencyLevel&&)      = default;
+        ~RenderGraphDepdencyLevel()                                          = default;
 
         /// <summary>
         /// Append render pass
         /// </summary>
         void AddPass(
-            IRenderPass::UPtr                               Pass,
-            std::vector<ResourceViewId>                     RenderTargets,
-            std::optional<ResourceViewId>                   DepthStencil,
-            std::set<ResourceId>                            ResourceToCreate,
-            std::set<ResourceId>                            ResourceToDestroy,
-            std::map<ResourceViewId, D3D12_RESOURCE_STATES> States);
+            UPtr<IRenderPass>                             Pass,
+            std::vector<ResourceViewId>                   RenderTargets,
+            std::optional<ResourceViewId>                 DepthStencil,
+            std::set<ResourceId>                          ResourceToCreate,
+            std::set<ResourceId>                          ResourceToDestroy,
+            std::map<ResourceViewId, RHI::MResourceState> States);
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void Execute(
-            RHI::IDisplayBuffers* Display);
+            RHI::ISwapchain* Swapchain);
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
         void ExecuteBarriers(
-            RHI::IDisplayBuffers* Display);
+            RHI::ISwapchain* Swapchain);
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            RHI::IDisplayBuffers* Display) const;
+            RHI::ISwapchain* Swapchain) const;
 
     private:
         struct RenderPassInfo
         {
-            IRenderPass::UPtr             Pass;
+            UPtr<IRenderPass>             Pass;
             std::vector<ResourceViewId>   RenderTargets;
             std::optional<ResourceViewId> DepthStencil;
         };
 
-        RenderGraphContext& m_Context;
+        RenderGraph& m_Context;
 
         std::vector<RenderPassInfo> m_Passes;
 
         std::set<ResourceId> m_ResourcesToCreate;
         std::set<ResourceId> m_ResourcesToDestroy;
 
-        std::map<ResourceViewId, D3D12_RESOURCE_STATES> m_States;
+        std::map<ResourceViewId, RHI::MResourceState> m_States;
     };
 } // namespace Neon::RG

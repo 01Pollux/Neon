@@ -3,15 +3,11 @@
 #include <Core/Neon.hpp>
 #include <Core/BitMask.hpp>
 #include <Core/String.hpp>
+#include <RHI/Resource/Common.hpp>
 #include <vector>
 
 namespace Neon::RHI
 {
-    namespace MBuffer
-    {
-        class RawLayout;
-    }
-
     enum class ShaderStage : uint8_t
     {
         Compute,
@@ -82,13 +78,13 @@ namespace Neon::RHI
         /// Create input layout to graphics / rawlayout
         /// </summary>
         virtual void CreateInputLayout(
-            MBuffer::RawLayout& Layout) = 0;
+            ShaderInputLayout& Layout) = 0;
 
         /// <summary>
         /// Create output layout rawlayout
         /// </summary>
         virtual void CreateOuputLayout(
-            MBuffer::RawLayout& Layout) = 0;
+            ShaderInputLayout& Layout) = 0;
 
         /// <summary>
         /// Get shader bytecode

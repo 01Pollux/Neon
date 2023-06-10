@@ -263,6 +263,8 @@ namespace Neon::RHI
         SamplerFeedback_MipRegionUsed_Opaque,
     };
 
+    using ShaderInputLayout = std::vector<std::pair<std::string, EResourceFormat>>;
+
     //
 
     enum class ESamplerFilter : uint8_t

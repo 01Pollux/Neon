@@ -192,43 +192,6 @@ namespace Neon::RHI
         }
     }
 
-    /// <summary>
-    /// Cast a mapped buffer type to a DXGI format.
-    /// </summary>
-    DXGI_FORMAT CastInputFormat(
-        MBuffer::Type Type)
-    {
-        switch (Type)
-        {
-        case MBuffer::Type::Float:
-            return DXGI_FORMAT_R32_FLOAT;
-        case MBuffer::Type::Float2:
-            return DXGI_FORMAT_R32G32_FLOAT;
-        case MBuffer::Type::Float3:
-            return DXGI_FORMAT_R32G32B32_FLOAT;
-        case MBuffer::Type::Float4:
-            return DXGI_FORMAT_R32G32B32A32_FLOAT;
-        case MBuffer::Type::Int:
-            return DXGI_FORMAT_R32_SINT;
-        case MBuffer::Type::Int2:
-            return DXGI_FORMAT_R32G32_SINT;
-        case MBuffer::Type::Int3:
-            return DXGI_FORMAT_R32G32B32_SINT;
-        case MBuffer::Type::Int4:
-            return DXGI_FORMAT_R32G32B32A32_SINT;
-        case MBuffer::Type::UInt:
-            return DXGI_FORMAT_R32_UINT;
-        case MBuffer::Type::UInt2:
-            return DXGI_FORMAT_R32G32_UINT;
-        case MBuffer::Type::UInt3:
-            return DXGI_FORMAT_R32G32B32_UINT;
-        case MBuffer::Type::UInt4:
-            return DXGI_FORMAT_R32G32B32A32_UINT;
-        default:
-            std::unreachable();
-        }
-    }
-
     //
 
     Ptr<IPipelineState> IPipelineState::Create(
@@ -436,32 +399,30 @@ namespace Neon::RHI
         // Input layout
         {
             auto& InputLayout = Result.Desc.InputLayout;
-            auto  View        = Builder.InputLayout.GetView();
-            if (auto Struct = View.AsStruct())
+            for (auto& [Name, Element] : Builder.InputLayout)
             {
-                for (auto& [Name, Element] : Struct->NestedElements)
-                {
-                    auto SemanticView = Name |
-                                        std::views::split('#') |
-                                        std::views::take(2) |
-                                        std::views::transform([](auto&& Range)
-                                                              { return StringU8View(Range.begin(), Range.end()); }) |
-                                        std::ranges::to<std::vector<StringU8View>>();
+                auto SemanticView = Name |
+                                    std::views::split('#') |
+                                    std::views::take(2) |
+                                    std::views::transform([](auto&& Range)
+                                                          { return StringU8View(Range.begin(), Range.end()); }) |
+                                    std::ranges::to<std::vector<StringU8View>>();
 
-                    auto& NameIter = SemanticView[0];
+                auto& NameIter = SemanticView[0];
 
-                    auto& Dst        = Result.InputElements.emplace_back();
-                    Dst.SemanticName = NameIter.data();
-                    Dst.SemanticIndex =
-                        SemanticView.size() > 1 ? std::strtoul(SemanticView[1].data(), nullptr, 10) : 0;
-                    Dst.Format               = CastInputFormat(Element.GetType());
-                    Dst.InputSlot            = 0;
-                    Dst.AlignedByteOffset    = D3D12_APPEND_ALIGNED_ELEMENT;
-                    Dst.InputSlotClass       = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-                    Dst.InstanceDataStepRate = 0;
-                }
+                auto& Dst        = Result.InputElements.emplace_back();
+                Dst.SemanticName = NameIter.data();
+                Dst.SemanticIndex =
+                    SemanticView.size() > 1 ? std::strtoul(SemanticView[1].data(), nullptr, 10) : 0;
+                Dst.Format               = CastFormat(Element);
+                Dst.InputSlot            = 0;
+                Dst.AlignedByteOffset    = D3D12_APPEND_ALIGNED_ELEMENT;
+                Dst.InputSlotClass       = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+                Dst.InstanceDataStepRate = 0;
+
+                Hash.Append(Name);
+                Hash.Append(Element);
             }
-            View.GetHashCode(Hash);
 
             InputLayout.pInputElementDescs = Result.InputElements.data();
             InputLayout.NumElements        = UINT(Result.InputElements.size());

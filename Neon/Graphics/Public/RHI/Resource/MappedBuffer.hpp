@@ -214,6 +214,10 @@ namespace Neon::RHI::MBuffer
         RawLayout(
             size_t Alignement = 1u);
 
+        NEON_CLASS_NO_COPY(RawLayout);
+        NEON_CLASS_MOVE(RawLayout);
+        ~RawLayout() = default;
+
         [[nodiscard]] ElementView GetView() noexcept
         {
             return ElementView(&m_Element);

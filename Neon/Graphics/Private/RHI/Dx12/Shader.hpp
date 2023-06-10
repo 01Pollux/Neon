@@ -15,13 +15,13 @@ namespace Neon::RHI
         /// Create input layout to graphics / rawlayout
         /// </summary>
         void CreateInputLayout(
-            MBuffer::RawLayout& Layout) override;
+            ShaderInputLayout& Layout) override;
 
         /// <summary>
         /// Create output layout rawlayout
         /// </summary>
         void CreateOuputLayout(
-            MBuffer::RawLayout& Layout) override;
+            ShaderInputLayout& Layout) override;
 
         /// <summary>
         /// Get shader bytecode

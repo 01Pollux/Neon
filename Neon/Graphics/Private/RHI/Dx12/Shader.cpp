@@ -32,7 +32,7 @@ namespace Neon::RHI
     }
 
     void Dx12Shader::CreateInputLayout(
-        MBuffer::RawLayout& Layout)
+        ShaderInputLayout& Layout)
     {
         auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
         ShaderCompiler->ReflectLayout(
@@ -40,8 +40,11 @@ namespace Neon::RHI
     }
 
     void Dx12Shader::CreateOuputLayout(
-        MBuffer::RawLayout& Layout)
+        ShaderInputLayout& Layout)
     {
+        auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
+        ShaderCompiler->ReflectLayout(
+            m_ShaderData.get(), m_DataSize, Layout, true);
     }
 
     auto Dx12Shader::GetByteCode() -> ByteCode
