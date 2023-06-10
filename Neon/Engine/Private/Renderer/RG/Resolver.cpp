@@ -54,17 +54,17 @@ namespace Neon::RG
     //
 
     void IRenderPass::PipelineStateResolver::Load(
-        const ResourceId&                      Id,
-        const RHI::PipelineStateBuilder<true>& Builder)
+        const ResourceId&               Id,
+        RHI::PipelineStateBuilder<true> Builder)
     {
-        NEON_ASSERT(m_PipelinesToLoad.emplace(Id, Builder).second, "Pipeline already exists");
+        NEON_ASSERT(m_PipelinesToLoad.emplace(Id, std::move(Builder)).second, "Pipeline already exists");
     }
 
     void IRenderPass::PipelineStateResolver::Load(
-        const ResourceId&                       Id,
-        const RHI::PipelineStateBuilder<false>& Builder)
+        const ResourceId&                Id,
+        RHI::PipelineStateBuilder<false> Builder)
     {
-        NEON_ASSERT(m_PipelinesToLoad.emplace(Id, Builder).second, "Pipeline already exists");
+        NEON_ASSERT(m_PipelinesToLoad.emplace(Id, std::move(Builder)).second, "Pipeline already exists");
     }
 
     void IRenderPass::PipelineStateResolver::Load(

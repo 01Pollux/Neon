@@ -2,8 +2,8 @@
 
 #include <Renderer/RG/Pass.hpp>
 
-#include <RHI/Resource/Common.hpp>
-#include <RHI/Resource/View.hpp>
+#include <Resource/Handle.hpp>
+#include <Renderer/Material/Material.hpp>
 
 #include <RHI/Shader.hpp>
 #include <RHI/RootSignature.hpp>
@@ -11,10 +11,6 @@
 
 namespace Neon
 {
-    namespace Asset
-    {
-        struct AssetHandle;
-    } // namespace Asset
     namespace Renderer
     {
         class Material;
@@ -108,15 +104,15 @@ namespace Neon::RG
         /// Load a pipeline state.
         /// </summary>
         void Load(
-            const ResourceId&                      Id,
-            const RHI::PipelineStateBuilder<true>& Builder);
+            const ResourceId&               Id,
+            RHI::PipelineStateBuilder<true> Builder);
 
         /// <summary>
         /// Load a pipeline state.
         /// </summary>
         void Load(
-            const ResourceId&                       Id,
-            const RHI::PipelineStateBuilder<false>& Builder);
+            const ResourceId&                Id,
+            RHI::PipelineStateBuilder<false> Builder);
 
         /// <summary>
         /// Load a pipeline state.

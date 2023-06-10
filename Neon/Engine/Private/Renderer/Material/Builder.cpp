@@ -465,25 +465,25 @@ namespace Neon::Renderer
             }
             case MaterialDataType::Resource:
             {
-                using DescType = RHI::SRVDesc;
+                using DescType = std::optional<RHI::SRVDesc>;
                 auto HeapDesc  = std::get_if<DescType>(&Descriptor->Descs[ArrayIndex]);
 
                 auto SrvView = static_cast<RHI::Views::ShaderResource&>(m_ResourceDescriptor);
                 SrvView.Bind(
                     Resource.get(),
-                    HeapDesc,
+                    HeapDesc->has_value() ? &HeapDesc->value() : nullptr,
                     uint32_t(Descriptor->Offset + ArrayIndex));
                 break;
             }
             case MaterialDataType::UavResource:
             {
-                using DescType = RHI::UAVDesc;
+                using DescType = std::optional<RHI::UAVDesc>;
                 auto HeapDesc  = std::get_if<DescType>(&Descriptor->Descs[ArrayIndex]);
 
                 auto UavView = static_cast<RHI::Views::UnorderedAccess&>(m_ResourceDescriptor);
                 UavView.Bind(
                     Resource.get(),
-                    HeapDesc,
+                    HeapDesc->has_value() ? &HeapDesc->value() : nullptr,
                     nullptr,
                     uint32_t(Descriptor->Offset + ArrayIndex));
                 break;

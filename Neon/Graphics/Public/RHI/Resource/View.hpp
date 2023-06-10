@@ -326,6 +326,7 @@ namespace Neon::RHI
     //
 
     using DescriptorViewDesc = std::variant<
+        std::monostate,
         CBVDesc,
         std::optional<SRVDesc>,
         std::optional<UAVDesc>,

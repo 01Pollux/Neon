@@ -73,7 +73,7 @@ namespace Neon::Renderer
             const Ptr<RHI::IGpuResource>& Resource,
             size_t                        ArrayIndex = 0)
         {
-            m_Layout.SetResource(Name, ArrayIndex, Resource, std::nullopt);
+            m_Layout.SetResource(Name, ArrayIndex, Resource, std::monostate{});
         }
 
     public:

@@ -298,6 +298,10 @@ namespace Neon::RG
             // TODO: batch allocations
             std::visit(
                 VariantVisitor{
+                    [](const std::monostate&)
+                    {
+                        NEON_ASSERT(false, "Invalid view type");
+                    },
                     [&ViewDescHandle, this](const RHI::CBVDesc& Desc)
                     {
                         auto View = RHI::Views::ConstantBuffer(
