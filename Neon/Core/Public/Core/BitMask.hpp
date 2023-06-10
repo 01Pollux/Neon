@@ -21,6 +21,8 @@ namespace Neon
         using bitset_reference = bitset_type::reference;
 
     public:
+        constexpr bool operator==(const Bitmask&) const noexcept = default;
+
         static constexpr Bitmask FromEnum(
             _ETy Val) noexcept
         {
@@ -29,8 +31,6 @@ namespace Neon
             return mask;
         }
 
-        constexpr Bitmask() = default;
-
         constexpr Bitmask(
             const Bitmask& Other) :
             m_Bitset(Other.m_Bitset)
@@ -38,7 +38,7 @@ namespace Neon
         }
 
         constexpr Bitmask(
-            uint64_t Val) noexcept :
+            uint64_t Val = 0) noexcept :
             m_Bitset(Val)
         {
         }
@@ -189,15 +189,15 @@ namespace Neon
 
         [[nodiscard]] auto operator~() const noexcept
         {
-            return ebitset(m_Bitset.operator~());
+            return m_Bitset(m_Bitset.operator~());
         }
         [[nodiscard]] auto operator<<(type Pos) const noexcept
         {
-            return ebitset(m_Bitset.operator<<(static_cast<size_t>(Pos)));
+            return m_Bitset(m_Bitset.operator<<(static_cast<size_t>(Pos)));
         }
         [[nodiscard]] auto operator>>(type Pos) const noexcept
         {
-            return ebitset(m_Bitset.operator>>(static_cast<size_t>(Pos)));
+            return m_Bitset(m_Bitset.operator>>(static_cast<size_t>(Pos)));
         }
         [[nodiscard]] bool operator==(type Pos) const noexcept
         {

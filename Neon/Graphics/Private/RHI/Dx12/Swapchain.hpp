@@ -31,6 +31,8 @@ namespace Neon::RHI
 
         void Present() override;
 
+        Windowing::IWindowApp* GetWindow() override;
+
         EResourceFormat GetFormat() override;
 
         void Resize(

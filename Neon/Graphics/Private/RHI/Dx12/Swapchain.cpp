@@ -194,6 +194,11 @@ namespace Neon::RHI
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
+    Windowing::IWindowApp* Dx12Swapchain::GetWindow()
+    {
+        return m_WindowApp;
+    }
+
     EResourceFormat Dx12Swapchain::GetFormat()
     {
         return m_BackbufferFormat;

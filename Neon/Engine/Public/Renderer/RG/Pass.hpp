@@ -15,8 +15,8 @@ namespace Neon::RG
     {
     public:
         class ShaderResolver;
-        class RootSignature;
-        class PipelineResolver;
+        class RootSignatureResolver;
+        class PipelineStateResolver;
         class MaterialResolver;
         class ResourceResolver;
 
@@ -26,10 +26,10 @@ namespace Neon::RG
         virtual ~IRenderPass() = default;
 
         /// <summary>
-        /// Called when the render pass wants to resolve the dependencies of resources.
+        /// Called when the render pass wans to load shaders.
         /// </summary>
-        virtual void ResolveResources(
-            ResourceResolver& Resolver)
+        virtual void ResolveShaders(
+            ShaderResolver& Resolver)
         {
         }
 
@@ -37,7 +37,7 @@ namespace Neon::RG
         /// Called when the render pass wans to load shaders.
         /// </summary>
         virtual void ResolveShaders(
-            ShaderResolver& Resolver)
+            RootSignatureResolver& Resolver)
         {
         }
 
@@ -53,7 +53,15 @@ namespace Neon::RG
         /// Called when the render pass wants to create pipelines.
         /// </summary>
         virtual void ResolvePipelines(
-            PipelineResolver& Resolver)
+            PipelineStateResolver& Resolver)
+        {
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to resolve the dependencies of resources.
+        /// </summary>
+        virtual void ResolveResources(
+            ResourceResolver& Resolver)
         {
         }
 

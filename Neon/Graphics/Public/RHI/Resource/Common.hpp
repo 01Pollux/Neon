@@ -2,10 +2,62 @@
 
 #include <cstdint>
 #include <Core/BitMask.hpp>
+#include <Math/Colors.hpp>
+#include <optional>
+#include <variant>
 
 namespace Neon::RHI
 {
+    class IPipelineState;
+    class IRootSignature;
     class IGpuResource;
+    class IDescriptorHeap;
+
+/// <summary>
+/// Rename a root signature.
+/// </summary>
+#if !NEON_DIST
+    void RenameObject(IRootSignature* Object, const wchar_t* Name);
+#else
+    void RenameObject(IRootSignature*, const wchar_t*)
+    {
+    }
+#endif
+
+/// <summary>
+/// Rename a root signature.
+/// </summary>
+#if !NEON_DIST
+    void RenameObject(IPipelineState* PipelienState, const wchar_t* Name);
+#else
+    void RenameObject(IPipelineState*, const wchar_t*)
+    {
+    }
+#endif
+
+/// <summary>
+/// Rename a GPU resource.
+/// </summary>
+#if !NEON_DIST
+    void RenameObject(IGpuResource* Object, const wchar_t* Name);
+#else
+    void RenameObject(IGpuResource*, const wchar_t*)
+    {
+    }
+#endif
+
+/// <summary>
+/// Rename a GPU resource.
+/// </summary>
+#if !NEON_DIST
+    void RenameObject(IDescriptorHeap* Heap, const wchar_t* Name);
+#else
+    void RenameObject(IDescriptorHeap*, const wchar_t*)
+    {
+    }
+#endif
+
+    //
 
     enum class GraphicsBufferType : uint8_t
     {
@@ -309,19 +361,38 @@ namespace Neon::RHI
         UndefinedSwizzle64KB,
     };
 
+    struct ClearOperation
+    {
+        struct DepthStencil
+        {
+            float   Depth;
+            uint8_t Stencil;
+        };
+
+        RHI::EResourceFormat               Format;
+        std::variant<Color4, DepthStencil> Value;
+
+        constexpr auto operator<=>(const ClearOperation&) const noexcept = default;
+    };
+
+    using ClearOperationOpt = std::optional<ClearOperation>;
+
     struct ResourceDesc
     {
-        size_t          Width         = 0;
-        size_t          Height        = 0;
-        uint32_t        Depth         = 0;
-        uint32_t        Alignment     = 0;
-        uint32_t        MipLevels     = 0;
-        uint32_t        SampleCount   = 1;
-        uint32_t        SampleQuality = 0;
-        MResourceFlags  Flags;
-        ResourceType    Type   = ResourceType::Unknown;
-        EResourceFormat Format = EResourceFormat::Unknown;
-        ResourceLayout  Layout = ResourceLayout::Unknown;
+        constexpr bool operator==(const ResourceDesc&) const noexcept = default;
+
+        size_t            Width         = 0;
+        size_t            Height        = 0;
+        uint32_t          Depth         = 0;
+        uint32_t          Alignment     = 0;
+        uint32_t          MipLevels     = 0;
+        uint32_t          SampleCount   = 1;
+        uint32_t          SampleQuality = 0;
+        MResourceFlags    Flags;
+        ResourceType      Type   = ResourceType::Unknown;
+        EResourceFormat   Format = EResourceFormat::Unknown;
+        ResourceLayout    Layout = ResourceLayout::Unknown;
+        ClearOperationOpt ClearValue;
 
         /// <summary>
         /// Creates a buffer resource description.
@@ -423,6 +494,40 @@ namespace Neon::RHI
                 .Layout    = Layout
             };
         }
+
+    public:
+        /// <summary>
+        /// Set clear value for render target view
+        /// </summary>
+        void SetClearValue(
+            RHI::EResourceFormat Format,
+            const Color4&        Color);
+
+        /// <summary>
+        /// Set clear value for depth stencil view
+        /// </summary>
+        void SetClearValue(
+            RHI::EResourceFormat Format,
+            float                Depth,
+            uint8_t              Stencil);
+
+        /// <summary>
+        /// Set clear value for render target view
+        /// </summary>
+        void SetClearValue(
+            const Color4& Color);
+
+        /// <summary>
+        /// Set clear value for depth stencil view
+        /// </summary>
+        void SetClearValue(
+            float   Depth,
+            uint8_t Stencil);
+
+        /// <summary>
+        /// Unset clear value
+        /// </summary>
+        void UnsetClearValue();
     };
 
     //

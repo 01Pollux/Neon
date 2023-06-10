@@ -4,26 +4,24 @@
 
 namespace Neon::RHI::Views
 {
-    class UnorderedAccess : public Generic
+    class DepthStencil : public Generic
     {
     public:
         using Generic::Generic;
 
         /// <summary>
-        /// Bind unordered access view to descriptor heap.
+        /// Bind render target view to descriptor heap.
         /// </summary>
         void Bind(
             IGpuResource*  Resource = nullptr,
-            const UAVDesc* Desc     = nullptr,
-            IGpuResource*  Counter  = nullptr,
+            const DSVDesc* Desc     = nullptr,
             uint32_t       Index    = 0)
         {
             auto& Handle = GetHandle();
-            Handle.Heap->CreateUnorderedAccessView(
+            Handle.Heap->CreateDepthStencilView(
                 Handle.Offset + Index,
                 Resource,
-                Desc,
-                Counter);
+                Desc);
         }
     };
 } // namespace Neon::RHI::Views

@@ -115,6 +115,14 @@ namespace Neon::RHI
 
     //
 
+    [[nodiscard]] ITexture* ITexture::Create(
+        ISwapchain*         Swapchain,
+        const ResourceDesc& Desc)
+    {
+        // TODO:
+        return nullptr;
+    }
+
     Dx12Texture::Dx12Texture(
         ISwapchain* Swapchain) :
         Dx12GpuResource(Swapchain)

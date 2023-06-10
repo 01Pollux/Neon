@@ -152,10 +152,10 @@ namespace Neon::Renderer
         /// Set resource and view in the root signature
         /// </summary>
         void SetResource(
-            const StringU8&                               Name,
-            size_t                                        ArrayIndex,
-            const GraphicsResourcePtr&                    Resource,
-            const std::optional<RHI::DescriptorViewDesc>& Desc);
+            const StringU8&                Name,
+            size_t                         ArrayIndex,
+            const GraphicsResourcePtr&     Resource,
+            const RHI::DescriptorViewDesc& Desc);
 
     public:
         /// <summary>
@@ -192,10 +192,10 @@ namespace Neon::Renderer
         /// Set resource in the root signature
         /// </summary>
         void SetResource_Internal(
-            const StringU8&                               Name,
-            size_t                                        ArrayIndex,
-            const GraphicsResourcePtr&                    Resource,
-            const std::optional<RHI::DescriptorViewDesc>& Desc);
+            const StringU8&                Name,
+            size_t                         ArrayIndex,
+            const GraphicsResourcePtr&     Resource,
+            const RHI::DescriptorViewDesc& Desc);
 
     private:
         /// <summary>

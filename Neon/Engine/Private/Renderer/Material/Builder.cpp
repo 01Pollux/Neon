@@ -349,10 +349,10 @@ namespace Neon::Renderer
     //
 
     void MaterialMetaData::SetResource(
-        const StringU8&                               Name,
-        size_t                                        ArrayIndex,
-        const GraphicsResourcePtr&                    Resource,
-        const std::optional<RHI::DescriptorViewDesc>& Desc)
+        const StringU8&                Name,
+        size_t                         ArrayIndex,
+        const GraphicsResourcePtr&     Resource,
+        const RHI::DescriptorViewDesc& Desc)
     {
         auto FinalName = &Name;
         if (auto It = m_IndirectResources.find(Name); It != m_IndirectResources.end())
@@ -432,10 +432,10 @@ namespace Neon::Renderer
     //
 
     void MaterialMetaData::SetResource_Internal(
-        const StringU8&                               Name,
-        size_t                                        ArrayIndex,
-        const GraphicsResourcePtr&                    Resource,
-        const std::optional<RHI::DescriptorViewDesc>& Desc)
+        const StringU8&                Name,
+        size_t                         ArrayIndex,
+        const GraphicsResourcePtr&     Resource,
+        const RHI::DescriptorViewDesc& Desc)
     {
         auto It = m_LayoutMap.find(Name);
         NEON_ASSERT(It != m_LayoutMap.end(), "Entry in Layout map doesn't exists");
@@ -448,10 +448,7 @@ namespace Neon::Renderer
         else if (auto Descriptor = std::get_if<DescriptorEntry>(Entry))
         {
             Descriptor->Resources[ArrayIndex] = Resource;
-            if (Desc)
-            {
-                Descriptor->Descs[ArrayIndex] = *Desc;
-            }
+            Descriptor->Descs[ArrayIndex]     = Desc;
 
             switch (Descriptor->Type)
             {

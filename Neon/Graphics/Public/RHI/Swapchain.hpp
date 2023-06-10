@@ -54,6 +54,11 @@ namespace Neon::RHI
         virtual void Present() = 0;
 
         /// <summary>
+        /// Get the swapchain's window.
+        /// </summary>
+        [[nodiscard]] virtual Windowing::IWindowApp* GetWindow() = 0;
+
+        /// <summary>
         /// Get the swapchain's format (backbuffer format).
         /// </summary>
         [[nodiscard]] virtual EResourceFormat GetFormat() = 0;

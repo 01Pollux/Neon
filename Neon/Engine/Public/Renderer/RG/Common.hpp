@@ -1,10 +1,11 @@
 #pragma once
 
-#include <RHI/Resource/Common.hpp>
+#include <RHI/Resource/Views/GenericView.hpp>
+#include <RHI/Resource/Resource.hpp>
+
 #include <Math/Size2.hpp>
 #include <Core/String.hpp>
 #include <Math/Colors.hpp>
-#include <optional>
 
 namespace Neon::RG
 {
@@ -75,25 +76,10 @@ namespace Neon::RG
         /// Texture will have a window width's and height
         /// </summary>
         WindowSizeDependent,
+
+        _Last_Enum,
     };
     using MResourceFlags = Bitmask<EResourceFlags>;
-
-    //
-
-    struct ClearOperation
-    {
-        RHI::EResourceFormat Format;
-        union {
-            Color4 Color;
-            struct
-            {
-                float   Depth;
-                uint8_t Stencil;
-            } DepthStencil;
-        };
-    };
-
-    using ClearOperationOpt = std::optional<ClearOperation>;
 
     //
 
@@ -186,49 +172,102 @@ namespace Neon::RG
 
     //
 
-    struct ResourceDesc : RHI::ResourceDesc
+    class ResourceHandle
     {
     public:
-        /// <summary>
-        /// Set clear value for render target view
-        /// </summary>
-        void SetClearValue(
-            RHI::EResourceFormat Format,
-            const Color4&        Color);
+        using ViewDesc            = std::pair<RHI::Views::Generic, RHI::DescriptorViewDesc>;
+        using ResourceViewMapType = std::map<size_t, ViewDesc>;
+
+        ResourceHandle(
+            const ResourceId&             Id,
+            const Ptr<RHI::ITexture>&     Texture,
+            const RHI::ClearOperationOpt& ClearValue = std::nullopt);
+
+        ResourceHandle(
+            const ResourceId&        Id,
+            const Ptr<RHI::IBuffer>& Buffer,
+            RHI::GraphicsBufferType  BufferType);
+
+        ResourceHandle(
+            const ResourceId&        Id,
+            const RHI::ResourceDesc& Desc,
+            MResourceFlags           Flags,
+            RHI::GraphicsBufferType  BufferType = RHI::GraphicsBufferType::Count);
 
         /// <summary>
-        /// Set clear value for depth stencil view
+        /// Get resource id
         /// </summary>
-        void SetClearValue(
-            RHI::EResourceFormat Format,
-            float                Depth,
-            uint8_t              Stencil);
+        [[nodiscard]] const ResourceId& GetId() const noexcept;
 
         /// <summary>
-        /// Set clear value for render target view
+        /// Get resource views
         /// </summary>
-        void SetClearValue(
-            const Color4& Color);
+        [[nodiscard]] ResourceViewMapType& GetViews() noexcept;
 
         /// <summary>
-        /// Set clear value for depth stencil view
+        /// Get resource views
         /// </summary>
-        void SetClearValue(
-            float   Depth,
-            uint8_t Stencil);
+        [[nodiscard]] const ResourceViewMapType& GetViews() const noexcept;
 
         /// <summary>
-        /// Set clear value for depth stencil view
+        /// Get resource desc
         /// </summary>
-        void SetClearValue(
-            const ClearOperationOpt& Op);
+        [[nodiscard]] RHI::ResourceDesc& GetDesc() noexcept;
 
         /// <summary>
-        /// Unset clear value
+        /// Get resource desc
         /// </summary>
-        void UnsetClearValue();
+        [[nodiscard]] const RHI::ResourceDesc& GetDesc() const noexcept;
 
-    public:
-        ClearOperationOpt ClearValue = std::nullopt;
+        /// <summary>
+        /// Get the underlying resource
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IGpuResource>& Get() const noexcept;
+
+        /// <summary>
+        /// Set the underlying resource
+        /// </summary>
+        [[nodiscard]] void Set(
+            const Ptr<RHI::IGpuResource>& Resource) noexcept;
+
+        /// <summary>
+        /// Get the underlying resource
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::ITexture>& AsTexture() const noexcept;
+
+        /// <summary>
+        /// Get the underlying resource
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IBuffer>& AsBuffer() const noexcept;
+
+        /// <summary>
+        /// Get buffer type if the resource is a buffer
+        /// </summary>
+        [[nodiscard]] RHI::GraphicsBufferType GetBufferType() const noexcept;
+
+        /// <summary>
+        /// check if texture is window sized
+        /// </summary>
+        [[nodiscard]] bool IsWindowSizedTexture() const noexcept;
+
+        /// <summary>
+        /// check if resource is imported
+        /// </summary>
+        [[nodiscard]] bool IsImported() const noexcept;
+
+        /// <summary>
+        /// check if resource is shader visible
+        /// </summary>
+        [[nodiscard]] bool IsShaderVIsible() const noexcept;
+
+    private:
+        Ptr<RHI::IGpuResource> m_Resource;
+        ResourceViewMapType    m_ViewMap;
+
+        ResourceId        m_Id;
+        RHI::ResourceDesc m_Desc;
+        MResourceFlags    m_Flags;
+
+        RHI::GraphicsBufferType m_BufferType : 2;
     };
 } // namespace Neon::RG

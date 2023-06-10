@@ -164,6 +164,13 @@ namespace Neon::RHI
         using IGpuResource::IGpuResource;
 
         /// <summary>
+        /// Creates a texture.
+        /// </summary>
+        [[nodiscard]] static ITexture* Create(
+            ISwapchain*         Swapchain,
+            const ResourceDesc& Desc);
+
+        /// <summary>
         /// Returns the dimensions of the texture.
         /// </summary>
         [[nodiscard]] virtual const Vector3DI& GetDimensions() const = 0;
