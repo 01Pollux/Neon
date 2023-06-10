@@ -38,10 +38,16 @@ namespace Neon::RHI
 
     Dx12Swapchain::~Dx12Swapchain()
     {
-        // It's fine if we don't release m_RenderTargets here, because will be released by m_BudgetManager's dtor.
         m_PipelineState = nullptr;
         m_RootSignature = nullptr;
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
+
+        auto Allocator = m_BudgetManager.GetDescriptorHeapManager(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, false);
+        if (m_RenderTargets)
+        {
+            Allocator->Free(m_RenderTargets.GetHandle());
+        }
+        m_BudgetManager.IdleGPU();
     }
 
     //

@@ -19,6 +19,10 @@ namespace Neon::RHI
     {
         auto Allocator = m_AllocatorsPools[CommandType].Allocate(CommandType)->CommandAllocator.Get();
         ThrowIfFailed(Allocator->Reset());
+
+        Allocator->AddRef();
+        auto p = Allocator->Release();
+
         return Allocator;
     }
 
@@ -36,6 +40,11 @@ namespace Neon::RHI
         m_DescriptorHeapHandles.clear();
         m_Buffers.clear();
         m_Resources.clear();
+
+        for (auto& Allocator : m_AllocatorsPools)
+        {
+            Allocator.ClearActives();
+        }
     }
 
     void FrameResource::SafeRelease(

@@ -164,7 +164,6 @@ namespace Neon::RHI
 
     BudgetManager::~BudgetManager()
     {
-        IdleGPU();
     }
 
     //

@@ -11,7 +11,6 @@ namespace Neon::Module
         const Config::EngineConfig& Config,
         Window*                     WindowModule)
     {
-        RHI::IRenderDevice::CreateGlobal();
 
         auto& GraphicsConfig = Config.Graphics;
 
@@ -27,11 +26,6 @@ namespace Neon::Module
             WindowModule->OnWindowSizeChanged(),
             [this](const Size2I& Extent)
             { m_Swapchain->Resize(Extent); });
-    }
-
-    Graphics::~Graphics()
-    {
-        RHI::IRenderDevice::DestroyGlobal();
     }
 
     RHI::ISwapchain* Graphics::GetSwapchain() const noexcept

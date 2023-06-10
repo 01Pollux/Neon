@@ -107,24 +107,6 @@ namespace Neon::RHI
 
     class BudgetManager
     {
-    private:
-        struct CommandAllocatorInstance
-        {
-            Win32::ComPtr<ID3D12CommandAllocator> CommandAllocator;
-
-            CommandAllocatorInstance(
-                D3D12_COMMAND_LIST_TYPE CommandType);
-        };
-
-        struct CommandListInstance
-        {
-            Win32::ComPtr<ID3D12GraphicsCommandList> CommandList;
-
-            CommandListInstance(
-                ID3D12CommandAllocator* Allocator,
-                D3D12_COMMAND_LIST_TYPE CommandType);
-        };
-
     public:
         struct CommandContextPool
         {

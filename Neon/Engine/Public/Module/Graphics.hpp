@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Config/Engine.hpp>
-#include <RHI/Swapchain.hpp>
 #include <Module/Window.hpp>
+
+#include <RHI/Device.hpp>
+#include <RHI/Swapchain.hpp>
 
 namespace Neon::Runtime
 {
@@ -21,10 +23,6 @@ namespace Neon::Module
             const Config::EngineConfig& Config,
             Window*                     WindowModule);
 
-        NEON_CLASS_NO_COPYMOVE(Graphics);
-
-        ~Graphics();
-
         /// <summary>
         /// Get the swapchain.
         /// </summary>
@@ -41,6 +39,8 @@ namespace Neon::Module
         void PostRender();
 
     private:
+        RHI::IRenderDevice::Instance m_RenderDevice;
+
         UPtr<RHI::ISwapchain> m_Swapchain;
 
         Signals::SHOnWindowSizeChanged m_OnWindowSizeChanged;

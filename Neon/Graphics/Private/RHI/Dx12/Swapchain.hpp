@@ -112,8 +112,8 @@ namespace Neon::RHI
     private:
         Windowing::IWindowApp*         m_WindowApp;
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
-        GraphicsMemoryAllocator        m_MemoryAllocator;
         BudgetManager                  m_BudgetManager;
+        GraphicsMemoryAllocator        m_MemoryAllocator;
 
         std::vector<Dx12Texture> m_BackBuffers;
         Views::RenderTarget      m_RenderTargets;

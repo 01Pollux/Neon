@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Neon.hpp>
+
 namespace Neon::RHI
 {
     class IRenderDevice
@@ -14,5 +16,18 @@ namespace Neon::RHI
         /// Gets the global render device.
         /// </summary>
         [[nodiscard]] static IRenderDevice* Get();
+
+        struct Instance
+        {
+            Instance()
+            {
+                CreateGlobal();
+            }
+            NEON_CLASS_NO_COPYMOVE(Instance);
+            ~Instance()
+            {
+                DestroyGlobal();
+            }
+        };
     };
 } // namespace Neon::RHI
