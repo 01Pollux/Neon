@@ -15,9 +15,10 @@ namespace Neon::RG
     {
     public:
         class ShaderResolver;
+        class RootSignature;
+        class PipelineResolver;
         class MaterialResolver;
         class ResourceResolver;
-        class PipelineResolver;
 
         IRenderPass(
             PassQueueType QueueType);
@@ -28,32 +29,42 @@ namespace Neon::RG
         /// Called when the render pass wants to resolve the dependencies of resources.
         /// </summary>
         virtual void ResolveResources(
-            ResourceResolver& Resolver) = 0;
+            ResourceResolver& Resolver)
+        {
+        }
 
         /// <summary>
         /// Called when the render pass wans to load shaders.
         /// </summary>
         virtual void ResolveShaders(
-            ShaderResolver& Resolver) = 0;
+            ShaderResolver& Resolver)
+        {
+        }
 
         /// <summary>
         /// Called when the render pass wants to load materials.
         /// </summary>
         virtual void ResolveMaterials(
-            MaterialResolver& Resolver) = 0;
+            MaterialResolver& Resolver)
+        {
+        }
 
         /// <summary>
         /// Called when the render pass wants to create pipelines.
         /// </summary>
         virtual void ResolvePipelines(
-            PipelineResolver& Resolver) = 0;
+            PipelineResolver& Resolver)
+        {
+        }
 
         /// <summary>
         /// Called when the render pass wants to dispatch.
         /// </summary>
         virtual void Dispatch(
             const GraphStorage&   Storage,
-            RHI::ICommandContext& CommandContext) = 0;
+            RHI::ICommandContext& CommandContext)
+        {
+        }
 
     public:
         /// <summary>

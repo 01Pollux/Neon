@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Renderer/RG/Pass.hpp>
+
 #include <RHI/Resource/Common.hpp>
+#include <RHI/Resource/View.hpp>
 
 namespace Neon
 {
@@ -13,6 +15,13 @@ namespace Neon
     {
         class IShader;
         class ShaderCompileDesc;
+
+        class RootSignatureBuilder;
+        class IRootSignature;
+
+        template<bool>
+        struct PipelineStateBuilder;
+        class IPipelineState;
     } // namespace RHI
     namespace Renderer
     {
@@ -29,19 +38,67 @@ namespace Neon::RG
         /// Compile a shader from a compile description.
         /// </summary>
         void Load(
-            RHI::ShaderCompileDesc& Desc);
+            const RHI::ShaderCompileDesc& Desc);
 
         /// <summary>
         /// Load a shader from a compile description.
         /// </summary>
         void Load(
-            Ptr<RHI::IShader>& Shader);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Load a shader from an asset.
         /// </summary>
         void Load(
             const Asset::AssetHandle& ShaderAsset);
+    };
+
+    //
+
+    class IRenderPass::RootSignature
+    {
+    public:
+        /// <summary>
+        /// Load a root signature.
+        /// </summary>
+        void Load(
+            const RHI::RootSignatureBuilder& Builder);
+
+        /// <summary>
+        /// Load a root signature.
+        /// </summary>
+        void Load(
+            const Ptr<RHI::IRootSignature>& RootSignature);
+
+        /// <summary>
+        /// Load a root signature from an asset.
+        /// </summary>
+        void Load(
+            const Asset::AssetHandle& RootSigAsset);
+    };
+
+    //
+
+    class IRenderPass::PipelineResolver
+    {
+    public:
+        /// <summary>
+        /// Load a pipeline state.
+        /// </summary>
+        void Load(
+            const RHI::PipelineStateBuilder<true>& Builder);
+
+        /// <summary>
+        /// Load a pipeline state.
+        /// </summary>
+        void Load(
+            const RHI::PipelineStateBuilder<false>& Builder);
+
+        /// <summary>
+        /// Load a pipeline state.
+        /// </summary>
+        void Load(
+            const Ptr<RHI::IPipelineState>& PipelineState);
     };
 
     //
@@ -87,8 +144,8 @@ namespace Neon::RG
         /// Write resource view
         /// </summary>
         void WriteResource(
-            const ResourceViewId&   ViewId,
-            const ResourceViewDesc& Desc);
+            const ResourceViewId&          ViewId,
+            const RHI::DescriptorViewDesc& Desc);
 
         /// <summary>
         /// Write resource in copy operation
@@ -100,9 +157,9 @@ namespace Neon::RG
         /// Read resource view
         /// </summary>
         void ReadResource(
-            const ResourceViewId&   ViewId,
-            ResourceReadAccess      ReadAccess,
-            const ResourceViewDesc& Desc);
+            const ResourceViewId&          ViewId,
+            ResourceReadAccess             ReadAccess,
+            const RHI::DescriptorViewDesc& Desc);
 
         /// <summary>
         /// Read resource in copy operation

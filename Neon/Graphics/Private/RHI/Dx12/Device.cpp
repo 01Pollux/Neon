@@ -67,8 +67,8 @@ namespace Neon::RHI
 
     Dx12RenderDevice::~Dx12RenderDevice()
     {
-        Dx12RootSignatureCache::Flush();
         Dx12PipelineStateCache::Flush();
+        Dx12RootSignatureCache::Flush();
         NEON_INFO_TAG("Graphics", "Destroying DirectX 12 Render Device");
     }
 
