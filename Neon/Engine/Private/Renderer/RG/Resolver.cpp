@@ -116,17 +116,52 @@ namespace Neon::RG
         m_ResourcesCreated.emplace(Id);
     }
 
-    // TODO
-
     void IRenderPass::ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)
     {
+        auto& Id = ViewId.GetResource();
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesWritten.emplace(Id);
+
+        RHI::EResourceState State{};
+        RHI::EResourceFlags Flags{};
+
+        std::visit(
+            VariantVisitor{
+                [&State, &Flags](const std::optional<RHI::UAVDesc>&)
+                {
+                    State = RHI::EResourceState::UnorderedAccess;
+                    Flags = RHI::EResourceFlags::AllowUnorderedAccess;
+                },
+                [&State, &Flags](const std::optional<RHI::RTVDesc>&)
+                {
+                    State = RHI::EResourceState::RenderTarget;
+                    Flags = RHI::EResourceFlags::AllowRenderTarget;
+                },
+                [&State, &Flags](const std::optional<RHI::DSVDesc>&)
+                {
+                    State = RHI::EResourceState::DepthWrite;
+                    Flags = RHI::EResourceFlags::AllowDepthStencil;
+                },
+                [](const auto&)
+                {
+                    NEON_ASSERT(false, "Invalid descriptor view type to write to");
+                } },
+            Desc);
+
+        SetResourceState(ViewId, RHI::MResourceState::FromEnum(State), RHI::MResourceFlags::FromEnum(Flags));
+        m_Storage.DeclareResourceView(ViewId, Desc);
     }
 
     void IRenderPass::ResourceResolver::WriteDstResource(
         const ResourceViewId& ViewId)
     {
+        auto& Id = ViewId.GetResource();
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesWritten.emplace(Id);
+
+        SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest), {});
     }
 
     void IRenderPass::ResourceResolver::ReadResource(
@@ -134,10 +169,67 @@ namespace Neon::RG
         ResourceReadAccess             ReadAccess,
         const RHI::DescriptorViewDesc& Desc)
     {
+        auto& Id = ViewId.GetResource();
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesRead.emplace(Id);
+
+        RHI::MResourceState State{};
+        RHI::MResourceFlags Flags{};
+
+        std::visit(
+            VariantVisitor{
+                [&State, &Flags](const std::optional<RHI::CBVDesc>&)
+                {
+                    State = RHI::MResourceState::FromEnum(RHI::EResourceState::ConstantBuffer);
+                },
+                [&State, &Flags](const std::optional<RHI::SRVDesc>&) {},
+                [&State, &Flags](const std::optional<RHI::UAVDesc>&)
+                {
+                    State = RHI::MResourceState::FromEnum(RHI::EResourceState::UnorderedAccess);
+                    Flags = RHI::MResourceFlags::FromEnum(RHI::EResourceFlags::AllowUnorderedAccess);
+                },
+                [](const auto&)
+                {
+                    NEON_ASSERT(false, "Invalid descriptor view type to read from");
+                } },
+            Desc);
+
+        switch (ReadAccess)
+        {
+        case ResourceReadAccess::PixelShader:
+            State.Set(RHI::EResourceState::PixelShaderResource);
+            break;
+        case ResourceReadAccess::NonPixelShader:
+            State.Set(RHI::EResourceState::NonPixelShaderResource);
+            break;
+        case ResourceReadAccess::Any:
+            State |= RHI::MResourceState_AllShaderResource;
+            break;
+        }
+
+        SetResourceState(ViewId, State, Flags);
+        m_Storage.DeclareResourceView(ViewId, Desc);
     }
 
     void IRenderPass::ResourceResolver::ReadSrcResource(
         const ResourceViewId& ViewId)
     {
+        auto& Id = ViewId.GetResource();
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesRead.emplace(Id);
+
+        SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
+    }
+
+    void IRenderPass::ResourceResolver::SetResourceState(
+        const ResourceViewId& ViewId,
+        RHI::MResourceState   State,
+        RHI::MResourceFlags   Flags)
+    {
+        auto& ResourceHandle = m_Storage.GetResource(ViewId.GetResource());
+        auto& ResourceDesc   = ResourceHandle.GetDesc();
+
+        ResourceDesc.Flags |= Flags;
+        m_ResourceStates[ViewId] |= State;
     }
 } // namespace Neon::RG

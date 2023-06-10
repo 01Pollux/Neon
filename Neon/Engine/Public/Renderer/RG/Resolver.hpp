@@ -211,6 +211,15 @@ namespace Neon::RG
             const ResourceViewId& ViewId);
 
     private:
+        /// <summary>
+        /// Initialize resource to the default state
+        /// </summary>
+        void SetResourceState(
+            const ResourceViewId& ViewId,
+            RHI::MResourceState   State,
+            RHI::MResourceFlags   Flags);
+
+    private:
         GraphStorage& m_Storage;
 
         std::vector<ResourceViewId>   m_RenderTargets;
