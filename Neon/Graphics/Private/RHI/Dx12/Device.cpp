@@ -1,7 +1,11 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+
 #include <Private/RHI/Dx12/RootSignature.hpp>
 #include <Private/RHI/Dx12/PipelineState.hpp>
+
+#include <Private/RHI/Dx12/Resource/Resource.hpp>
+#include <Private/RHI/Dx12/Resource/Descriptor.hpp>
 
 #include <ShlObj_core.h>
 #include <dxgidebug.h>
@@ -50,6 +54,30 @@ namespace Neon::RHI
     {
         return s_Device.get();
     }
+
+    //
+
+#if !NEON_DIST
+    void RenameObject(IRootSignature* Object, const wchar_t* Name)
+    {
+        RenameObject(static_cast<Dx12RootSignature*>(Object)->Get(), Name);
+    }
+
+    void RenameObject(IPipelineState* Object, const wchar_t* Name)
+    {
+        RenameObject(static_cast<Dx12PipelineState*>(Object)->Get(), Name);
+    }
+
+    void RenameObject(IGpuResource* Object, const wchar_t* Name)
+    {
+        RenameObject(dynamic_cast<Dx12GpuResource*>(Object)->GetResource(), Name);
+    }
+
+    void RenameObject(IDescriptorHeap* Object, const wchar_t* Name)
+    {
+        RenameObject(dynamic_cast<Dx12DescriptorHeap*>(Object)->Get(), Name);
+    }
+#endif
 
     //
 

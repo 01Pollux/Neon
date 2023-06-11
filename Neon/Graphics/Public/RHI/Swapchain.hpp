@@ -64,6 +64,16 @@ namespace Neon::RHI
         [[nodiscard]] virtual EResourceFormat GetFormat() = 0;
 
         /// <summary>
+        /// Get the swapchain's backbuffer.
+        /// </summary>
+        [[nodiscard]] virtual IGpuResource* GetBackBuffer() = 0;
+
+        /// <summary>
+        /// Get the swapchain's backbuffer view.
+        /// </summary>
+        [[nodiscard]] virtual CpuDescriptorHandle GetBackBufferView() = 0;
+
+        /// <summary>
         /// Set swapchain's size.
         /// </summary>
         virtual void Resize(

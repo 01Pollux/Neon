@@ -11,6 +11,12 @@ namespace Neon::RHI
     {
     }
 
+    ResourceDesc Dx12GpuResource::GetDesc() const
+    {
+        std::unreachable();
+        return ResourceDesc();
+    }
+
     ID3D12Resource* Dx12GpuResource::GetResource() const
     {
         return m_Resource.Get();
@@ -172,4 +178,5 @@ namespace Neon::RHI
     {
         return m_MipLevels;
     }
+
 } // namespace Neon::RHI

@@ -8,17 +8,8 @@
 #include <RHI/Resource/Views/RenderTarget.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
 
-#include <random>
-
 namespace Neon::RHI
 {
-    // TODO : remove
-
-    class IRootSignature;
-    class IPipelineState;
-
-    //
-
     class Dx12Swapchain final : public ISwapchain
     {
     public:
@@ -34,6 +25,10 @@ namespace Neon::RHI
         Windowing::IWindowApp* GetWindow() override;
 
         EResourceFormat GetFormat() override;
+
+        IGpuResource* GetBackBuffer() override;
+
+        CpuDescriptorHandle GetBackBufferView() override;
 
         void Resize(
             const Size2I&   Size,
@@ -121,10 +116,5 @@ namespace Neon::RHI
         Views::RenderTarget      m_RenderTargets;
 
         EResourceFormat m_BackbufferFormat = EResourceFormat::Unknown;
-
-        //
-
-        Ptr<IRootSignature> m_RootSignature;
-        Ptr<IPipelineState> m_PipelineState;
     };
 } // namespace Neon::RHI

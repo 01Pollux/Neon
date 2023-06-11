@@ -7,6 +7,8 @@
 
 namespace Neon::RG
 {
+    class RenderGraphDepdencyLevel;
+
     class RenderGraphBuilder
     {
         friend class RenderGraph;

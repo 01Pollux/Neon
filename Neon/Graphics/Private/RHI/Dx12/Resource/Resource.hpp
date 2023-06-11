@@ -14,6 +14,11 @@ namespace Neon::RHI
             ISwapchain* Swapchain);
 
         /// <summary>
+        /// Get desc of the resource.
+        /// </summary>
+        [[nodiscard]] ResourceDesc GetDesc() const override;
+
+        /// <summary>
         /// Get the underlying D3D12 resource.
         /// </summary>
         [[nodiscard]] ID3D12Resource* GetResource() const;
@@ -114,9 +119,9 @@ namespace Neon::RHI
 
         ~Dx12Texture() override;
 
-        [[nodiscard]] const Vector3DI& GetDimensions() const override;
+        const Vector3DI& GetDimensions() const override;
 
-        [[nodiscard]] uint16_t GetMipLevels() const override;
+        uint16_t GetMipLevels() const override;
 
     protected:
         Vector3DI m_Dimensions;

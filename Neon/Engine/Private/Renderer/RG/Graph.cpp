@@ -1,6 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/Graph.hpp>
-#include <Renderer/RG/Builder.hpp>
+#include <Renderer/RG/RG.hpp>
 
 #include <Window/Window.hpp>
 #include <RHI/Resource/State.hpp>
@@ -130,12 +129,14 @@ namespace Neon::RG
     void RenderGraphDepdencyLevel::ExecutePasses(
         RHI::ISwapchain* Swapchain) const
     {
-        std::vector<std::jthread> PassesToExecute;
-        PassesToExecute.reserve(m_Passes.size());
+        std::mutex RenderMutex, ComputeMutex, CopyMutex;
 
         RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext(Swapchain);
         RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext(Swapchain);
         RHI::TCommandContext<RHI::CommandQueueType::Copy>     CopyContext(Swapchain);
+
+        std::vector<std::jthread> PassesToExecute;
+        PassesToExecute.reserve(m_Passes.size());
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
@@ -144,11 +145,18 @@ namespace Neon::RG
                 {
                     auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
 
+                    RHI::ICommandList* CommandList;
+
                     switch (RenderPass->GetQueueType())
                     {
                     case PassQueueType::Direct:
                     {
-                        auto CommandList = RenderContext.Append();
+                        RHI::IGraphicsCommandList* RenderCommandList;
+                        {
+                            std::scoped_lock Lock(RenderMutex);
+                            RenderCommandList = RenderContext.Append();
+                            CommandList       = RenderCommandList;
+                        }
 
                         std::vector<RHI::CpuDescriptorHandle> RtvHandles;
 
@@ -169,9 +177,10 @@ namespace Neon::RG
                             {
                                 if (ViewDesc->ForceColor || Desc.ClearValue)
                                 {
-                                    CommandList->ClearRtv(RtcHandle, ViewDesc->ForceColor.value_or(
-                                                                         std::get<Color4>(Desc.ClearValue->Value)));
+                                    RenderCommandList->ClearRtv(RtcHandle, ViewDesc->ForceColor.value_or(
+                                                                               std::get<Color4>(Desc.ClearValue->Value)));
                                 }
+                                else
                                 {
                                     NEON_WARNING("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
                                 }
@@ -219,44 +228,51 @@ namespace Neon::RG
                                 Depth   = ClearValue.Depth;
                                 Stencil = ClearValue.Stencil;
                             }
-                            CommandList->ClearDsv(DsvHandle, Depth, Stencil);
+                            RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
                             DsvHandlePtr = &DsvHandle;
                         }
 
-                        CommandList->SetRenderTargets(
+                        RenderCommandList->SetRenderTargets(
                             RtvHandles.data(),
                             RtvHandles.size(),
                             DsvHandlePtr);
 
-                        if (!RenderPass->OverrideViewport(Storage, CommandList))
+                        if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
                         {
                             auto Size = Swapchain->GetWindow()->GetSize();
 
-                            CommandList->SetViewport(
+                            RenderCommandList->SetViewport(
                                 ViewportF{
                                     .Width    = float(Size.Width()),
                                     .Height   = float(Size.Height()),
                                     .MaxDepth = 1.f,
                                 });
-                            CommandList->SetScissorRect(RectF(Vector2D::Zero, Size));
+                            RenderCommandList->SetScissorRect(RectF(Vector2D::Zero, Size));
                         }
 
-                        RenderPass->Dispatch(Storage, CommandList);
                         break;
                     }
 
                     case PassQueueType::Compute:
                     {
-                        RenderPass->Dispatch(Storage, ComputeContext.Append());
+                        {
+                            std::scoped_lock Lock(RenderMutex);
+                            CommandList = CopyContext.Append();
+                        }
                         break;
                     }
 
                     case PassQueueType::Copy:
                     {
-                        RenderPass->Dispatch(Storage, CopyContext.Append());
+                        {
+                            std::scoped_lock Lock(RenderMutex);
+                            CommandList = CopyContext.Append();
+                        }
                         break;
                     }
                     }
+
+                    RenderPass->Dispatch(Storage, CommandList);
                 },
                 i);
         }

@@ -202,12 +202,12 @@ namespace Neon::RG
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::ITexture>& AsTexture() const noexcept;
+        [[nodiscard]] Ptr<RHI::ITexture> AsTexture() const noexcept;
 
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::IBuffer>& AsBuffer() const noexcept;
+        [[nodiscard]] Ptr<RHI::IBuffer> AsBuffer() const noexcept;
 
         /// <summary>
         /// Get buffer type if the resource is a buffer
@@ -223,11 +223,6 @@ namespace Neon::RG
         /// check if resource is imported
         /// </summary>
         [[nodiscard]] bool IsImported() const noexcept;
-
-        /// <summary>
-        /// check if resource is shader visible
-        /// </summary>
-        [[nodiscard]] bool IsShaderVIsible() const noexcept;
 
     private:
         Ptr<RHI::IGpuResource> m_Resource;

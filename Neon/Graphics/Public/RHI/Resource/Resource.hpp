@@ -49,6 +49,11 @@ namespace Neon::RHI
     {
     public:
         virtual ~IGpuResource() = default;
+
+        /// <summary>
+        /// Get desc of the resource.
+        /// </summary>
+        [[nodiscard]] virtual ResourceDesc GetDesc() const = 0;
     };
 
     //

@@ -22,7 +22,10 @@ namespace Neon::RG
         class ResourceResolver;
 
         IRenderPass(
-            PassQueueType QueueType);
+            PassQueueType QueueType) :
+            m_QueueType(QueueType)
+        {
+        }
 
         virtual ~IRenderPass() = default;
 
@@ -89,7 +92,10 @@ namespace Neon::RG
         /// <summary>
         /// Get queue type
         /// </summary>
-        [[nodiscard]] PassQueueType GetQueueType() const noexcept;
+        [[nodiscard]] PassQueueType GetQueueType() const noexcept
+        {
+            return m_QueueType;
+        }
 
     private:
         PassQueueType m_QueueType;
