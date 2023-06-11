@@ -6,6 +6,8 @@
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 
+#include <Renderer/RG/RG.hpp>
+
 namespace Neon::Runtime
 {
     class DefaultGameEngine;
@@ -42,6 +44,7 @@ namespace Neon::Module
         RHI::IRenderDevice::Instance m_RenderDevice;
 
         UPtr<RHI::ISwapchain> m_Swapchain;
+        UPtr<RG::RenderGraph> m_RenderGraph;
 
         Signals::SHOnWindowSizeChanged m_OnWindowSizeChanged;
     };

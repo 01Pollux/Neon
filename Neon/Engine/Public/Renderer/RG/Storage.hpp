@@ -104,9 +104,9 @@ namespace Neon::RG
         /// Declare buffer to be created later when dispatching passes
         /// </summary>
         void DeclareBuffer(
-            const ResourceId&        Id,
-            const RHI::ResourceDesc& Desc,
-            RHI::GraphicsBufferType  BufferType);
+            const ResourceId&       Id,
+            const RHI::BufferDesc&  Desc,
+            RHI::GraphicsBufferType BufferType);
 
         /// <summary>
         /// Declare texture to be created later when dispatching passes

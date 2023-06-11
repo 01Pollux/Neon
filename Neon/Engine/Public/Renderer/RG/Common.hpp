@@ -210,6 +210,16 @@ namespace Neon::RG
         [[nodiscard]] Ptr<RHI::IBuffer> AsBuffer() const noexcept;
 
         /// <summary>
+        /// Get the underlying resource
+        /// </summary>
+        [[nodiscard]] Ptr<RHI::IUploadBuffer> AsUploadBuffer() const noexcept;
+
+        /// <summary>
+        /// Get the underlying resource
+        /// </summary>
+        [[nodiscard]] Ptr<RHI::IReadbackBuffer> AsReadbackBuffer() const noexcept;
+
+        /// <summary>
         /// Get buffer type if the resource is a buffer
         /// </summary>
         [[nodiscard]] RHI::GraphicsBufferType GetBufferType() const noexcept;

@@ -201,9 +201,9 @@ namespace Neon::RG
         /// Create buffer
         /// </summary>
         void CreateBuffer(
-            const ResourceId&        Id,
-            const RHI::ResourceDesc& Desc,
-            RHI::GraphicsBufferType  BufferType);
+            const ResourceId&       Id,
+            const RHI::BufferDesc&  Desc,
+            RHI::GraphicsBufferType BufferType);
 
         /// <summary>
         /// Create texture
@@ -239,6 +239,11 @@ namespace Neon::RG
         /// </summary>
         void ReadSrcResource(
             const ResourceViewId& ViewId);
+
+        /// <summary>
+        /// Get swapchain's format
+        /// </summary>
+        [[nodiscard]] RHI::EResourceFormat GetSwapchainFormat() const;
 
     private:
         /// <summary>

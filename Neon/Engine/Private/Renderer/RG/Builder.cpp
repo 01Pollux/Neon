@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
+#include <Renderer/RG/Passes/Backbuffer.hpp>
 
 #include <execution>
 
@@ -11,12 +12,12 @@ namespace Neon::RG
         RenderGraph& Context) :
         m_Context(Context)
     {
-        // AppendPass<InitializeBackbufferPass>();
+        AppendPass<InitializeBackbufferPass>();
     }
 
     void RenderGraphBuilder::Build()
     {
-        // AppendPass<FinalizeBackbufferPass>();
+        AppendPass<FinalizeBackbufferPass>();
 
         BuildersListType Builders;
 

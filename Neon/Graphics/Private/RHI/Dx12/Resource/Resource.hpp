@@ -14,11 +14,6 @@ namespace Neon::RHI
             ISwapchain* Swapchain);
 
         /// <summary>
-        /// Get desc of the resource.
-        /// </summary>
-        [[nodiscard]] ResourceDesc GetDesc() const override;
-
-        /// <summary>
         /// Get the underlying D3D12 resource.
         /// </summary>
         [[nodiscard]] ID3D12Resource* GetResource() const;
@@ -56,12 +51,15 @@ namespace Neon::RHI
 
         ~Dx12Buffer() override;
 
-        [[nodiscard]] size_t GetSize() const override;
+        ResourceDesc GetDesc() const override;
+
+        size_t GetSize() const override;
 
         GpuResourceHandle GetHandle() const override;
 
     protected:
-        Handle m_Buffer;
+        Handle   m_Buffer;
+        uint32_t m_Alignement;
     };
 
     //
@@ -75,7 +73,7 @@ namespace Neon::RHI
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
 
-        [[nodiscard]] uint8_t* Map() override;
+        uint8_t* Map() override;
 
         void Unmap() override;
 
@@ -94,7 +92,7 @@ namespace Neon::RHI
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
 
-        [[nodiscard]] uint8_t* Map() override;
+        uint8_t* Map() override;
 
         void Unmap() override;
 
@@ -109,7 +107,8 @@ namespace Neon::RHI
     {
     public:
         Dx12Texture(
-            ISwapchain* Swapchain);
+            ISwapchain*              Swapchain,
+            const RHI::ResourceDesc& Desc);
 
         Dx12Texture(
             ISwapchain*                        Swapchain,
@@ -119,6 +118,8 @@ namespace Neon::RHI
 
         ~Dx12Texture() override;
 
+        ResourceDesc GetDesc() const override;
+
         const Vector3DI& GetDimensions() const override;
 
         uint16_t GetMipLevels() const override;
@@ -126,5 +127,7 @@ namespace Neon::RHI
     protected:
         Vector3DI m_Dimensions;
         uint16_t  m_MipLevels = 0;
+
+        ClearOperationOpt m_ClearValue;
     };
 } // namespace Neon::RHI

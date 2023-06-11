@@ -3,6 +3,8 @@
 #include <Renderer/RG/Resolver.hpp>
 #include <Renderer/RG/Storage.hpp>
 
+#include <RHI/Swapchain.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::RG
@@ -111,9 +113,9 @@ namespace Neon::RG
     }
 
     void IRenderPass::ResourceResolver::CreateBuffer(
-        const ResourceId&        Id,
-        const RHI::ResourceDesc& Desc,
-        RHI::GraphicsBufferType  BufferType)
+        const ResourceId&       Id,
+        const RHI::BufferDesc&  Desc,
+        RHI::GraphicsBufferType BufferType)
     {
         m_Storage.DeclareBuffer(Id, Desc, BufferType);
         m_ResourcesCreated.emplace(Id);
@@ -231,6 +233,11 @@ namespace Neon::RG
         m_ResourcesRead.emplace(Id);
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
+    }
+
+    RHI::EResourceFormat IRenderPass::ResourceResolver::GetSwapchainFormat() const
+    {
+        return m_Storage.GetSwapchain()->GetFormat();
     }
 
     void IRenderPass::ResourceResolver::SetResourceState(

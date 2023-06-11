@@ -384,10 +384,10 @@ namespace Neon::RHI
         constexpr bool operator==(const ResourceDesc&) const noexcept = default;
 
         size_t            Width         = 0;
-        size_t            Height        = 0;
-        uint32_t          Depth         = 0;
+        uint32_t          Height        = 0;
+        uint16_t          Depth         = 0;
+        uint16_t          MipLevels     = 0;
         uint32_t          Alignment     = 0;
-        uint32_t          MipLevels     = 0;
         uint32_t          SampleCount   = 1;
         uint32_t          SampleQuality = 0;
         MResourceFlags    Flags;
@@ -419,8 +419,8 @@ namespace Neon::RHI
         static ResourceDesc Tex1D(
             EResourceFormat      Format,
             size_t               Width,
-            uint32_t             ArraySize,
-            uint32_t             MipLevels,
+            uint16_t             ArraySize,
+            uint16_t             MipLevels,
             uint32_t             SampleCount   = 1,
             uint32_t             SampleQuality = 0,
             const MResourceFlags Flags         = {},
@@ -430,8 +430,8 @@ namespace Neon::RHI
             return {
                 .Width         = Width,
                 .Depth         = 1,
-                .Alignment     = Alignment,
                 .MipLevels     = MipLevels,
+                .Alignment     = Alignment,
                 .SampleCount   = SampleCount,
                 .SampleQuality = SampleQuality,
                 .Flags         = Flags,
@@ -447,9 +447,9 @@ namespace Neon::RHI
         static ResourceDesc Tex2D(
             EResourceFormat      Format,
             size_t               Width,
-            size_t               Height,
-            uint32_t             ArraySize,
-            uint32_t             MipLevels,
+            uint32_t             Height,
+            uint16_t             ArraySize,
+            uint16_t             MipLevels,
             uint32_t             SampleCount   = 1,
             uint32_t             SampleQuality = 0,
             const MResourceFlags Flags         = {},
@@ -460,8 +460,8 @@ namespace Neon::RHI
                 .Width         = Width,
                 .Height        = Height,
                 .Depth         = 1,
-                .Alignment     = Alignment,
                 .MipLevels     = MipLevels,
+                .Alignment     = Alignment,
                 .SampleCount   = SampleCount,
                 .SampleQuality = SampleQuality,
                 .Flags         = Flags,
@@ -477,9 +477,9 @@ namespace Neon::RHI
         static ResourceDesc Tex3D(
             EResourceFormat      Format,
             size_t               Width,
-            size_t               Height,
-            uint32_t             Depth,
-            uint32_t             MipLevels,
+            uint32_t             Height,
+            uint16_t             Depth,
+            uint16_t             MipLevels,
             const MResourceFlags Flags     = {},
             ResourceLayout       Layout    = ResourceLayout::Unknown,
             uint32_t             Alignment = 0)
@@ -488,8 +488,8 @@ namespace Neon::RHI
                 .Width     = Width,
                 .Height    = Height,
                 .Depth     = Depth,
-                .Alignment = Alignment,
                 .MipLevels = MipLevels,
+                .Alignment = Alignment,
                 .Flags     = Flags,
                 .Type      = ResourceType::Texture3D,
                 .Format    = Format,

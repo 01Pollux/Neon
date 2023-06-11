@@ -13,6 +13,13 @@
 
 namespace Neon::RG
 {
+    struct VsInput
+    {
+        Vector2D Position;
+    };
+
+    static constexpr size_t BufferSize = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6;
+
     class TestPass : public IRenderPass
     {
     public:
@@ -21,9 +28,6 @@ namespace Neon::RG
         {
         }
 
-        /// <summary>
-        /// Called when the render pass wans to load shaders.
-        /// </summary>
         void ResolveShaders(
             ShaderResolver& Resolver) override
         {
@@ -51,9 +55,6 @@ namespace Neon::RG
                 Desc);
         }
 
-        /// <summary>
-        /// Called when the render pass wans to load shaders.
-        /// </summary>
         void ResolveRootSignature(
             RootSignatureResolver& Resolver) override
         {
@@ -65,9 +66,6 @@ namespace Neon::RG
                     .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
         }
 
-        /// <summary>
-        /// Called when the render pass wants to create pipelines.
-        /// </summary>
         void ResolvePipelines(
             PipelineStateResolver& Resolver) override
         {
@@ -91,35 +89,20 @@ namespace Neon::RG
                 Builder);
         }
 
-        /// <summary>
-        /// Called when the render pass wants to load materials.
-        /// </summary>
         void ResolveMaterials(
             MaterialResolver& Resolver) override
         {
         }
 
-        /// <summary>
-        /// Called when the render pass wants to resolve the dependencies of resources.
-        /// </summary>
         void ResolveResources(
             ResourceResolver& Resolver)
         {
+            Resolver.CreateBuffer(
+                RG::ResourceId(STR("Test.Buffer")),
+                RHI::BufferDesc{ .Size = BufferSize },
+                RHI::GraphicsBufferType::Upload);
         }
 
-        /// <summary>
-        /// Called to check if the pass should implements its own viewports
-        /// </summary>
-        bool OverrideViewport(
-            const GraphStorage&        Storage,
-            RHI::IGraphicsCommandList* CommandList) override
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to dispatch.
-        /// </summary>
         void Dispatch(
             const GraphStorage& Storage,
             RHI::ICommandList*  CommandList) override
@@ -136,24 +119,16 @@ namespace Neon::RG
 
             //
 
-            struct VsInput
-            {
-                Vector2D Position;
-            };
+            auto Buffer = Storage.GetResource(RG::ResourceId(STR("Test.Buffer"))).AsUploadBuffer();
 
-            Ptr<RHI::IUploadBuffer> m_Buffer;
-            m_Buffer.reset(RHI::IUploadBuffer::Create(
-                Storage.GetSwapchain(),
-                { .Size = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6 }));
-
-            auto Vertex = m_Buffer->Map<VsInput>();
+            auto Vertex = Buffer->Map<VsInput>();
 
             Vertex[0] = { Vector2D(-1.f, -1.f) };
             Vertex[1] = { Vector2D(-1.f, 1.f) };
             Vertex[2] = { Vector2D(1.f, -1.f) };
             Vertex[3] = { Vector2D(1.f, 1.f) };
 
-            auto Input = m_Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
+            auto Input = Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
 
             Input[0] = 0;
             Input[1] = 1;
@@ -162,8 +137,8 @@ namespace Neon::RG
             Input[4] = 1;
             Input[5] = 3;
 
-            m_Buffer->Unmap();
-            m_Buffer->Unmap();
+            Buffer->Unmap();
+            Buffer->Unmap();
 
             //
 
@@ -184,10 +159,10 @@ namespace Neon::RG
             RenderCommandList->SetConstants(0, &Time, 1);
 
             RHI::Views::Vertex Vtx;
-            Vtx.Append(m_Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);
+            Vtx.Append(Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);
             RenderCommandList->SetVertexBuffer(0, Vtx);
 
-            RHI::Views::Index Idx(m_Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
+            RHI::Views::Index Idx(Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
             RenderCommandList->SetIndexBuffer(Idx);
 
             RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
@@ -235,6 +210,14 @@ namespace Neon::Module
             WindowModule->OnWindowSizeChanged(),
             [this](const Size2I& Extent)
             { m_Swapchain->Resize(Extent); });
+
+        //
+
+        m_RenderGraph = std::make_unique<RG::RenderGraph>(m_Swapchain.get());
+
+        auto Builder = m_RenderGraph->Reset();
+        Builder.AppendPass<RG::TestPass>();
+        Builder.Build();
     }
 
     RHI::ISwapchain* Graphics::GetSwapchain() const noexcept
@@ -246,13 +229,7 @@ namespace Neon::Module
     {
         m_Swapchain->PrepareFrame();
 
-        RG::RenderGraph Graph(m_Swapchain.get());
-
-        auto Builder = Graph.Reset();
-        Builder.AppendPass<RG::TestPass>();
-        Builder.Build();
-
-        Graph.Run();
+        m_RenderGraph->Run();
     }
 
     void Graphics::PostRender()

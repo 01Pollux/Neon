@@ -85,6 +85,16 @@ namespace Neon::RG
         return std::dynamic_pointer_cast<RHI::IBuffer>(Get());
     }
 
+    Ptr<RHI::IUploadBuffer> ResourceHandle::AsUploadBuffer() const noexcept
+    {
+        return std::dynamic_pointer_cast<RHI::IUploadBuffer>(Get());
+    }
+
+    Ptr<RHI::IReadbackBuffer> ResourceHandle::AsReadbackBuffer() const noexcept
+    {
+        return std::dynamic_pointer_cast<RHI::IReadbackBuffer>(Get());
+    }
+
     RHI::GraphicsBufferType ResourceHandle::GetBufferType() const noexcept
     {
         return m_BufferType;

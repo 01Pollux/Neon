@@ -137,12 +137,11 @@ namespace Neon::RG
     //
 
     void GraphStorage::DeclareBuffer(
-        const ResourceId&        Id,
-        const RHI::ResourceDesc& Desc,
-        RHI::GraphicsBufferType  Type)
+        const ResourceId&       Id,
+        const RHI::BufferDesc&  Desc,
+        RHI::GraphicsBufferType Type)
     {
-        NEON_ASSERT(Desc.Type == RHI::ResourceType::Buffer);
-        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, Desc, {}, Type));
+        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, RHI::ResourceDesc::Buffer(Desc.Size, Desc.Alignment, Desc.Flags), {}, Type));
         NEON_ASSERT(HandleIter.second, "Resource already exists");
     }
 
@@ -174,14 +173,9 @@ namespace Neon::RG
         const RHI::ClearOperationOpt& ClearValue)
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
-        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second;
-        RHI::RenameObject(Handle.Get().get(), Id.GetName());
+        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second.Get();
+        RHI::RenameObject(Handle.get(), Id.GetName());
 
-        // TODO: do we need to set clear value here?
-        if (ClearValue)
-        {
-            Handle.GetDesc().ClearValue = ClearValue;
-        }
         m_ImportedResources.emplace(Id);
     }
 
@@ -286,12 +280,10 @@ namespace Neon::RG
             }
 
             Handle.Set(Res);
+            Desc = Res->GetDesc();
         }
 
-        // TODO: remove this
-        // auto D3dResource                        = Handle.Get()->Get();
-        // static_cast<D3D12_RESOURCE_DESC&>(Desc) = D3dResource->GetDesc();
-        // RHI::RenameObject(D3dResource, Handle.GetId().GetName());
+        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
     }
 
     void GraphStorage::FreeResource(
