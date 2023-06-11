@@ -16,7 +16,7 @@ namespace Neon::RG
         Desc.SetClearValue(Colors::Fuchsia);
 
         Resolver.CreateTexture(
-            RG::ResourceId(STR("FinalTexture")),
+            RG::ResourceId(STR("FinalImage")),
             Desc,
             MResourceFlags::FromEnum(EResourceFlags::WindowSizeDependent));
     }
@@ -26,7 +26,7 @@ namespace Neon::RG
     void FinalizeBackbufferPass::ResolveResources(
         ResourceResolver& Resolver)
     {
-        Resolver.ReadSrcResource(RG::ResourceViewId(STR("FinalTexture"), STR("CopyToBackbuffer")));
+        Resolver.ReadSrcResource(RG::ResourceViewId(STR("FinalImage"), STR("CopyToBackbuffer")));
     }
 
     void FinalizeBackbufferPass::Dispatch(
@@ -38,8 +38,8 @@ namespace Neon::RG
         auto Swapchain    = Storage.GetSwapchain();
         auto StateManager = Swapchain->GetStateManager();
 
-        auto Backbuffer   = Swapchain->GetBackBuffer();
-        auto FinalTexture = Storage.GetResource(RG::ResourceId(STR("FinalTexture"))).AsTexture();
+        auto Backbuffer = Swapchain->GetBackBuffer();
+        auto FinalImage = Storage.GetResource(RG::ResourceId(STR("FinalImage"))).AsTexture();
 
         //
 
@@ -48,12 +48,12 @@ namespace Neon::RG
             RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest));
 
         StateManager->TransitionResource(
-            FinalTexture.get(),
+            FinalImage.get(),
             RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
 
         StateManager->FlushBarriers(CommandList);
 
-        RenderCommandList->CopyResources(Backbuffer, FinalTexture.get());
+        RenderCommandList->CopyResources(Backbuffer, FinalImage.get());
 
         StateManager->TransitionResource(
             Backbuffer,

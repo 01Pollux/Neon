@@ -62,14 +62,14 @@ namespace Neon::RHI
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            TCommandContext<CommandQueueType::Graphics> CtxBach(Swapchain);
+            TCommandContext<CommandQueueType::Graphics> CtxBatch(Swapchain);
 
-            auto CommandList = CtxBach.Append();
+            auto CommandList = CtxBatch.Append();
 
             auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
             Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
 
-            return CtxBach;
+            return CtxBatch;
         }
         return {};
     }

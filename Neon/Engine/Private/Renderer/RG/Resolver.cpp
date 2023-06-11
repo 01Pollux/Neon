@@ -148,15 +148,19 @@ namespace Neon::RG
                     State = RHI::EResourceState::UnorderedAccess;
                     Flags = RHI::EResourceFlags::AllowUnorderedAccess;
                 },
-                [&State, &Flags](const std::optional<RHI::RTVDesc>&)
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::RTVDesc>&)
                 {
                     State = RHI::EResourceState::RenderTarget;
                     Flags = RHI::EResourceFlags::AllowRenderTarget;
+
+                    m_RenderTargets.emplace_back(ViewId);
                 },
-                [&State, &Flags](const std::optional<RHI::DSVDesc>&)
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
                 {
                     State = RHI::EResourceState::DepthWrite;
                     Flags = RHI::EResourceFlags::AllowDepthStencil;
+
+                    m_DepthStencil = ViewId;
                 },
                 [](const auto&)
                 {

@@ -101,6 +101,17 @@ namespace Neon::RG
                 RG::ResourceId(STR("Test.Buffer")),
                 RHI::BufferDesc{ .Size = BufferSize },
                 RHI::GraphicsBufferType::Upload);
+
+            Resolver.WriteResource(
+                RG::ResourceViewId(STR("FinalImage"), STR("Draw")),
+                std::optional<RHI::RTVDesc>()
+                /*RHI::RTVDesc{
+                    .View       = RHI::RTVDesc::Texture2D{},
+                    .ForceColor = Colors::Red,
+                    .ClearType  = RHI::ERTClearType::Color,
+                    .Format     = Resolver.GetSwapchainFormat(),
+                }*/
+            );
         }
 
         void Dispatch(
@@ -142,17 +153,7 @@ namespace Neon::RG
 
             //
 
-            auto Rtv          = Storage.GetSwapchain()->GetBackBufferView();
-            auto Backbuffer   = Storage.GetSwapchain()->GetBackBuffer();
-            auto StateManager = Storage.GetSwapchain()->GetStateManager();
-
-            StateManager->TransitionResource(Backbuffer, RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
-            StateManager->FlushBarriers(CommandList);
-
             Color4 Color = Colors::White;
-
-            RenderCommandList->ClearRtv(Rtv, Color);
-            RenderCommandList->SetRenderTargets(Rtv, 1);
 
             static float Time = 0.f;
             Time += 0.03f;
@@ -182,9 +183,6 @@ namespace Neon::RG
 
             RenderCommandList->Draw(RHI::DrawIndexArgs{
                 .IndexCountPerInstance = 6 });
-
-            StateManager->TransitionResource(Backbuffer, RHI::MResourceState_Common);
-            StateManager->FlushBarriers(CommandList);
         }
     };
 } // namespace Neon::RG
