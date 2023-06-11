@@ -51,8 +51,8 @@ namespace Neon::RHI
         ShaderProfile Profile = ShaderProfile::SP_6_5;
         ShaderStage   Stage;
 
-        StringU8View SourceCode;
-        String       EntryPoint;
+        StringU8 SourceCode;
+        String   EntryPoint;
 
         MShaderCompileFlags Flags;
     };

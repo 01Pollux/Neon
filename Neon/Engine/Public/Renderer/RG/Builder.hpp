@@ -49,17 +49,17 @@ namespace Neon::RG
         }
 
     private:
-        /// <summary>
+        /*/// <summary>
         /// Build root signatures from builders
         /// </summary>
         [[nodiscard]] auto LaunchRootSignatureJobs(
-            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::future<void>>;
+            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::jthread>;
 
         /// <summary>
         /// Build shaders from builders
         /// </summary>
         [[nodiscard]] auto LaunchShaderJobs(
-            const std::shared_ptr<BuildersListType>& Builders) const -> std::vector<std::future<void>>;
+            const std::shared_ptr<BuildersListType>& Builders) const -> std::future<LoadedShaderResult>;
 
         /// <summary>
         /// Build pipeline states from builders
@@ -67,12 +67,35 @@ namespace Neon::RG
         [[nodiscard]] auto LaunchPipelineJobs(
             const std::shared_ptr<BuildersListType>& Builders) -> std::jthread;
 
+        /// <summary>
+        /// Create a copy of render passes
+        /// </summary>
+        [[nodiscard]] auto CopyRenderPasses() const -> std::vector<IRenderPass*>;*/
+
+        /// <summary>
+        /// Build root signatures from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchRootSignatureJobs(
+            BuildersListType& Builders) -> void;
+
+        /// <summary>
+        /// Build shaders from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchShaderJobs(
+            BuildersListType& Builders) const -> void;
+
+        /// <summary>
+        /// Build pipeline states from builders
+        /// </summary>
+        [[nodiscard]] auto LaunchPipelineJobs(
+            BuildersListType& Builders) -> void;
+
     private:
         /// <summary>
         /// Build passes from builders
         /// </summary>
         [[nodiscard]] auto BuildPasses(
-            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<RenderGraphDepdencyLevel>;
+            BuildersListType& Builders) -> std::vector<RenderGraphDepdencyLevel>;
 
         /// <summary>
         /// Build adjacency lists for passes dependencies

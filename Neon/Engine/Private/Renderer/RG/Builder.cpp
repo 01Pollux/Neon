@@ -5,6 +5,8 @@
 
 #include <execution>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::RG
 {
     RenderGraphBuilder::RenderGraphBuilder(
@@ -18,36 +20,117 @@ namespace Neon::RG
     {
         // AppendPass<FinalizeBackbufferPass>();
 
-        auto Builders = std::make_shared<BuildersListType>();
+        BuildersListType Builders;
 
-        Builders->reserve(m_Passes.size());
+        Builders.reserve(m_Passes.size());
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
-            Builders->emplace_back(m_Context.GetStorage());
+            Builders.emplace_back(m_Context.GetStorage());
         }
 
-        m_Context.m_PipelineCreators = LaunchPipelineJobs(Builders);
+        LaunchPipelineJobs(Builders);
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
-            auto& Builder = (*Builders)[i];
+            auto& Builder = Builders[i];
             m_Passes[i]->ResolveResources(Builder.Resources);
         }
         m_Context.Build(BuildPasses(Builders));
     }
 
-    //
-
+//
+#if 0
     auto RenderGraphBuilder::LaunchRootSignatureJobs(
-        const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::future<void>>
+        const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::jthread>
     {
-        return std::vector<std::future<void>>();
+        std::vector<std::jthread> Jobs;
+        Jobs.reserve(m_Passes.size());
+
+        for (size_t i = 0; i < m_Passes.size(); i++)
+        {
+            auto& Builder = (*Builders)[i];
+            m_Passes[i]->ResolveRootSignature(Builder.RootSignatures);
+        }
+
+        for (size_t i = 0; i < Builders->size(); i++)
+        {
+            auto& Builder = (*Builders)[i];
+            for (auto& [Id, Desc] : Builder.RootSignatures.m_RootSignaturesToLoad)
+            {
+                auto RootSignatureJob =
+                    [Desc     = std::move(Desc),
+                     &Storage = m_Context.GetStorage(),
+                     Id,
+                     Builders]()
+                {
+                    std::visit(
+                        VariantVisitor{
+                            [&Storage, &Id](const RHI::RootSignatureBuilder& RootSig)
+                            {
+                                Storage.ImportRootSignature(Id, RHI::IRootSignature::Create(RootSig));
+                            },
+                            [&Storage, &Id](const Ptr<RHI::IRootSignature>& RootSig)
+                            {
+                                Storage.ImportRootSignature(Id, RootSig);
+                            },
+                            [&Storage, &Id](const Asset::AssetHandle& RootSig)
+                            {
+                                // TODO: Implement asset loading
+                                NEON_ASSERT(false);
+                            },
+                        },
+                        Desc);
+                };
+
+                Jobs.emplace_back(std::move(RootSignatureJob));
+            }
+        }
+        return Jobs;
     }
 
     auto RenderGraphBuilder::LaunchShaderJobs(
-        const std::shared_ptr<BuildersListType>& Builders) const -> std::vector<std::future<void>>
+        const std::shared_ptr<BuildersListType>& Builders) const -> std::future<LoadedShaderResult>
     {
-        return std::vector<std::future<void>>();
+        std::async(
+            [PassesCopy = CopyRenderPasses(),
+             Builders]()
+            {
+                LoadedShaderResult LoadedShaders;
+
+                std::vector<std::jthread> Jobs;
+                Jobs.reserve(PassesCopy.size());
+
+                for (size_t i = 0; i < PassesCopy.size(); i++)
+                {
+                    Jobs.emplace_back(
+                        [](IRenderPass* Pass, BuilderInfo& Builder)
+                        {
+                            Pass->ResolveShaders(Builder.Shaders);
+                            std::for_each(
+                                std::execution::par_unseq,
+                                Builder.Shaders.m_ShadersToLoad.begin(),
+                                Builder.Shaders.m_ShadersToLoad.end(),
+                                [](auto& ShaderInfo)
+                                {
+                                    auto& [Id, Desc] = ShaderInfo;
+                                    std::visit(
+                                        VariantVisitor{
+                                            [](const RHI::ShaderCompileDesc& Desc)
+                                            {
+                                                auto Shader = Ptr<RHI::IShader>(
+                                                    RHI::IShader::Create(ShaderInfo.Desc));
+                                            },
+                                            [](const UPtr<RHI::IShader>& Shader) {
+                                            },
+                                            [](const Asset::AssetHandle& Shader)
+                                            {
+                                                NEON_ASSERT(false);
+                                            } },
+                                        Desc);
+                                });
+                        });
+                }
+            });
     }
 
     auto RenderGraphBuilder::LaunchPipelineJobs(
@@ -57,69 +140,124 @@ namespace Neon::RG
         auto RootSignaturesJobs = LaunchRootSignatureJobs(Builders);
         auto ShaderJobs         = LaunchShaderJobs(Builders);
 
-        std::vector<IRenderPass*> PassesCopy(m_Passes.size());
-        std::ranges::transform(m_Passes, PassesCopy.begin(), [](auto& Pass)
-                               { return Pass.get(); });
-
-        auto PipelineJobDispatcher =
-            [PassesCopy         = std::move(PassesCopy),
+        auto PipelineJobsDispatcher =
+            [PassesCopy         = CopyRenderPasses(),
              RootSignaturesJobs = std::move(RootSignaturesJobs),
              ShaderJobs         = std::move(ShaderJobs),
              &Storage           = m_Context.GetStorage(),
              Builders]() mutable
         {
             // wait for root signature and shader jobs to finish
+            auto LoadedShaders = ShaderJobs.get();
             RootSignaturesJobs.clear();
-            ShaderJobs.clear();
 
+            std::vector<std::jthread> PipelineJobs;
             // Launch pipeline state jobs for each pipeline state builder
             for (size_t i = 0; i < Builders->size(); i++)
             {
-                auto& Builder = (*Builders)[i];
-                PassesCopy[i]->ResolvePipelines(Builder.PipelineStates);
-            }
+                PipelineJobs.emplace_back(
+                    [&Storage,
+                     &Builders,
+                     &PassesCopy,
+                     i]()
+                    {
+                        auto& Builder = (*Builders)[i];
+                        PassesCopy[i]->ResolvePipelines(Builder.PipelineStates);
 
-            std::for_each(
-                std::execution::par_unseq,
-                Builders->begin(),
-                Builders->end(),
-                [&Storage](BuilderInfo& Builder)
-                {
-                    std::for_each(
-                        std::execution::par_unseq,
-                        Builder.PipelineStates.m_PipelinesToLoad.begin(),
-                        Builder.PipelineStates.m_PipelinesToLoad.end(),
-                        [&Storage](auto& Iter)
-                        {
-                            auto& [Id, Desc] = Iter;
-                            std::visit(
-                                VariantVisitor{
-                                    [&Id, &Storage](const auto& Builder)
-                                    {
-                                        Storage.ImportPipelineState(Id, RHI::IPipelineState::Create(Builder));
+                        std::for_each(
+                            std::execution::par_unseq,
+                            Builder.PipelineStates.m_PipelinesToLoad.begin(),
+                            Builder.PipelineStates.m_PipelinesToLoad.end(),
+                            [&Storage](auto& Iter)
+                            {
+                                auto& [Id, Desc] = Iter;
+                                std::visit(
+                                    VariantVisitor{
+                                        [&Id, &Storage](const auto& Builder)
+                                        {
+                                            Storage.ImportPipelineState(Id, RHI::IPipelineState::Create(Builder));
+                                        },
+                                        [&Id, &Storage](const Ptr<RHI::IPipelineState>& PipelineState)
+                                        {
+                                            Storage.ImportPipelineState(Id, PipelineState);
+                                        },
                                     },
-                                    [&Id, &Storage](const Ptr<RHI::IPipelineState>& PipelineState)
-                                    {
-                                        Storage.ImportPipelineState(Id, PipelineState);
-                                    },
-                                },
-                                Desc);
-                        });
-                });
+                                    Desc);
+                            });
+                    });
+            }
         };
 
-        return std::jthread(std::move(PipelineJobDispatcher));
+        return std::jthread(std::move(PipelineJobsDispatcher));
     }
 
+    auto RenderGraphBuilder::CopyRenderPasses() const -> std::vector<IRenderPass*>
+    {
+        // Copy passes to vector of raw pointers
+        std::vector<IRenderPass*> PassesCopy(m_Passes.size());
+        std::ranges::transform(m_Passes, PassesCopy.begin(), [](auto& Pass)
+                               { return Pass.get(); });
+        return PassesCopy;
+    }
+#endif
     //
 
-    auto RenderGraphBuilder::BuildPasses(
-        const std::shared_ptr<BuildersListType>& Builders) -> std::vector<RenderGraphDepdencyLevel>
+    auto RenderGraphBuilder::LaunchRootSignatureJobs(
+        BuildersListType& Builders) -> void
     {
-        BuildAdjacencyLists(*Builders);
+        for (size_t i = 0; i < Builders.size(); i++)
+        {
+            auto& Builder = Builders[i];
+            m_Passes[i]->ResolveRootSignature(Builder.RootSignatures);
+        }
+    }
+
+    auto RenderGraphBuilder::LaunchShaderJobs(
+        BuildersListType& Builders) const -> void
+    {
+        for (size_t i = 0; i < Builders.size(); i++)
+        {
+            auto& Builder = Builders[i];
+            m_Passes[i]->ResolveShaders(Builder.Shaders);
+        }
+    }
+
+    auto RenderGraphBuilder::LaunchPipelineJobs(
+        BuildersListType& Builders) -> void
+    {
+        for (size_t i = 0; i < Builders.size(); i++)
+        {
+            auto& Builder = Builders[i];
+            m_Passes[i]->ResolvePipelines(Builder.PipelineStates);
+        }
+
+        for (auto& Builder : Builders)
+        {
+            for (auto& [Id, Desc] : Builder.PipelineStates.m_PipelinesToLoad)
+            {
+                std::visit(
+                    VariantVisitor{
+                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
+                        {
+                            Storage.ImportPipelineState(Id, RHI::IPipelineState::Create(Builder));
+                        },
+                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IPipelineState>& PipelineState)
+                        {
+                            Storage.ImportPipelineState(Id, PipelineState);
+                        },
+                    },
+                    Desc);
+            }
+        }
+    }
+
+    auto RenderGraphBuilder::BuildPasses(
+        BuildersListType& Builders) -> std::vector<RenderGraphDepdencyLevel>
+    {
+        BuildAdjacencyLists(Builders);
         TopologicalSort();
-        auto ResourcesToDestroy = CalculateResourcesLifetime(*Builders);
-        return BuildDependencyLevels(*Builders, ResourcesToDestroy);
+        auto ResourcesToDestroy = CalculateResourcesLifetime(Builders);
+        return BuildDependencyLevels(Builders, ResourcesToDestroy);
     }
 
     //

@@ -36,7 +36,7 @@ namespace Neon::RG
         /// <summary>
         /// Called when the render pass wans to load shaders.
         /// </summary>
-        virtual void ResolveShaders(
+        virtual void ResolveRootSignature(
             RootSignatureResolver& Resolver)
         {
         }

@@ -106,14 +106,28 @@ namespace Neon::RG
     const Ptr<RHI::IRootSignature>& GraphStorage::GetRootSignature(
         const ResourceId& Id) const
     {
+        std::shared_lock Lock(m_RootSignaturesMutex);
+
         auto Iter = m_RootSignatures.find(Id);
         NEON_ASSERT(Iter != m_RootSignatures.end(), "Root signature doesn't exists");
+        return Iter->second;
+    }
+
+    const Ptr<RHI::IShader>& GraphStorage::GetShader(
+        const ResourceId& Id) const
+    {
+        std::shared_lock Lock(m_ShadersMutex);
+
+        auto Iter = m_Shaders.find(Id);
+        NEON_ASSERT(Iter != m_Shaders.end(), "Shader doesn't exists");
         return Iter->second;
     }
 
     const Ptr<RHI::IPipelineState>& GraphStorage::GetPipelineState(
         const ResourceId& Id) const
     {
+        std::shared_lock Lock(m_PipelineStatesMutex);
+
         auto Iter = m_PipelineStates.find(Id);
         NEON_ASSERT(Iter != m_PipelineStates.end(), "Pipeline state doesn't exists");
         return Iter->second;
@@ -187,16 +201,24 @@ namespace Neon::RG
         const ResourceId&               Id,
         const Ptr<RHI::IRootSignature>& RootSignature)
     {
-        std::lock_guard Lock(m_PipelineMutex);
+        std::unique_lock Lock(m_RootSignaturesMutex);
         m_RootSignatures.emplace(Id, RootSignature);
         RHI::RenameObject(RootSignature.get(), Id.GetName());
+    }
+
+    void GraphStorage::ImportShader(
+        const ResourceId&        Id,
+        const Ptr<RHI::IShader>& Shader)
+    {
+        std::unique_lock Lock(m_ShadersMutex);
+        m_Shaders.emplace(Id, Shader);
     }
 
     void GraphStorage::ImportPipelineState(
         const ResourceId&               Id,
         const Ptr<RHI::IPipelineState>& PipelineState)
     {
-        std::lock_guard Lock(m_PipelineMutex);
+        std::unique_lock Lock(m_PipelineStatesMutex);
         m_PipelineStates.emplace(Id, PipelineState);
         RHI::RenameObject(PipelineState.get(), Id.GetName());
     }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Renderer/RG/Storage.hpp>
-#include <future>
 
 namespace Neon::RG
 {
@@ -47,7 +46,6 @@ namespace Neon::RG
     private:
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
-        std::jthread      m_PipelineCreators;
     };
 
     //

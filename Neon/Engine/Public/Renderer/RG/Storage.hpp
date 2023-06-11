@@ -2,12 +2,14 @@
 
 #include <Renderer/RG/Common.hpp>
 #include <deque>
+#include <shared_mutex>
 #include <set>
 #include <map>
 
 namespace Neon::RHI
 {
     class ISwapchain;
+    class IShader;
     class IRootSignature;
     class IPipelineState;
 } // namespace Neon::RHI
@@ -18,9 +20,10 @@ namespace Neon::RG
     {
         friend class RenderGraphContext;
 
-        using ResourceMapType      = std::map<ResourceId, ResourceHandle>;
-        using RootSignatureMapType = std::map<ResourceId, Ptr<RHI::IRootSignature>>;
-        using PipelineStateMapType = std::map<ResourceId, Ptr<RHI::IPipelineState>>;
+        using ResourceMapType       = std::map<ResourceId, ResourceHandle>;
+        using RootSignaturesMapType = std::map<ResourceId, Ptr<RHI::IRootSignature>>;
+        using ShadersMapType        = std::map<ResourceId, Ptr<RHI::IShader>>;
+        using PipelineStatesMapType = std::map<ResourceId, Ptr<RHI::IPipelineState>>;
 
         using InactiveResourceListType = std::deque<ResourceHandle>;
 
@@ -80,6 +83,14 @@ namespace Neon::RG
             const ResourceId& Id) const;
 
         /// <summary>
+        /// Get shader
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        [[nodiscard]] const Ptr<RHI::IShader>& GetShader(
+            const ResourceId& Id) const;
+
+        /// <summary>
         /// Get pipeline state
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IPipelineState>& GetPipelineState(
@@ -136,6 +147,13 @@ namespace Neon::RG
             const Ptr<RHI::IRootSignature>& RootSignature);
 
         /// <summary>
+        /// Import shader
+        /// </summary>
+        void ImportShader(
+            const ResourceId&        Id,
+            const Ptr<RHI::IShader>& Shader);
+
+        /// <summary>
         /// Import pipeline state
         /// </summary>
         void ImportPipelineState(
@@ -173,9 +191,13 @@ namespace Neon::RG
         ResourceMapType      m_Resources;
         std::set<ResourceId> m_ImportedResources;
 
-        std::mutex           m_PipelineMutex;
-        RootSignatureMapType m_RootSignatures;
-        PipelineStateMapType m_PipelineStates;
+        mutable std::shared_mutex m_PipelineStatesMutex,
+            m_RootSignaturesMutex,
+            m_ShadersMutex;
+
+        RootSignaturesMapType m_RootSignatures;
+        ShadersMapType        m_Shaders;
+        PipelineStatesMapType m_PipelineStates;
 
         InactiveResourceListType m_InactiveResources;
     };
