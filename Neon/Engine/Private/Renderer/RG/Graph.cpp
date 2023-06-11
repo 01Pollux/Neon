@@ -159,25 +159,26 @@ namespace Neon::RG
                         }
 
                         std::vector<RHI::CpuDescriptorHandle> RtvHandles;
+                        RtvHandles.reserve(RenderTargets.size());
 
                         RHI::CpuDescriptorHandle  DsvHandle;
                         RHI::CpuDescriptorHandle* DsvHandlePtr = nullptr;
 
                         for (auto& RtvViewId : RenderTargets)
                         {
-                            RHI::CpuDescriptorHandle RtcHandle;
+                            RHI::CpuDescriptorHandle RtvHandle;
 
                             auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
-                            auto& ViewDesc = std::get<std::optional<RHI::RTVDesc>>(Storage.GetResourceView(RtvViewId, &RtcHandle));
+                            auto& ViewDesc = std::get<std::optional<RHI::RTVDesc>>(Storage.GetResourceView(RtvViewId, &RtvHandle));
 
                             auto& Desc = Handle.GetDesc();
-                            RtvHandles.emplace_back(RtcHandle);
+                            RtvHandles.emplace_back(RtvHandle);
 
                             if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
                             {
                                 if (ViewDesc->ForceColor || Desc.ClearValue)
                                 {
-                                    RenderCommandList->ClearRtv(RtcHandle, ViewDesc->ForceColor.value_or(
+                                    RenderCommandList->ClearRtv(RtvHandle, ViewDesc->ForceColor.value_or(
                                                                                std::get<Color4>(Desc.ClearValue->Value)));
                                 }
                                 else

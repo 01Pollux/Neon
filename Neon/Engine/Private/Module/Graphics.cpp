@@ -104,14 +104,11 @@ namespace Neon::RG
 
             Resolver.WriteResource(
                 RG::ResourceViewId(STR("FinalImage"), STR("Draw")),
-                std::optional<RHI::RTVDesc>()
-                /*RHI::RTVDesc{
-                    .View       = RHI::RTVDesc::Texture2D{},
-                    .ForceColor = Colors::Red,
-                    .ClearType  = RHI::ERTClearType::Color,
-                    .Format     = Resolver.GetSwapchainFormat(),
-                }*/
-            );
+                RHI::RTVDesc{
+                    .View      = RHI::RTVDesc::Texture2D{},
+                    .ClearType = RHI::ERTClearType::Color,
+                    .Format    = Resolver.GetSwapchainFormat(),
+                });
         }
 
         void Dispatch(
@@ -167,13 +164,6 @@ namespace Neon::RG
             RenderCommandList->SetIndexBuffer(Idx);
 
             RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
-
-            RenderCommandList->SetViewport(ViewportF{
-                .Width  = 1280.f,
-                .Height = 720.f });
-
-            RenderCommandList->SetScissorRect(
-                RectF(Vector2D::Zero, { 1280.f, 720.f }));
 
             RenderCommandList->SetDynamicResourceView(
                 RHI::ICommonCommandList::ViewType::Cbv,
