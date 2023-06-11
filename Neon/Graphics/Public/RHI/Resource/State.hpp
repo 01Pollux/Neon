@@ -1,4 +1,5 @@
-#include <GraphicsPCH.hpp>
+#pragma once
+
 #include <RHI/Resource/Resource.hpp>
 #include <RHI/Commands/Context.hpp>
 
@@ -32,13 +33,13 @@ namespace Neon::RHI
         /// <summary>
         /// Flush all the pending barriers into newly created command list.
         /// </summary>
-        [[nodiscard]] virtual CommandContext FlushBarriers(
+        virtual CommandContext FlushBarriers(
             ISwapchain* Swapchain) = 0;
 
         /// <summary>
         /// Flush all the pending barriers into the given command list.
         /// </summary>
-        [[nodiscard]] virtual void FlushBarriers(
+        virtual void FlushBarriers(
             ICommandList* CommandList) = 0;
 
         /// <summary>

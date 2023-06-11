@@ -4,6 +4,7 @@
 
 namespace Neon::RG
 {
+    class IRenderPass;
     class RenderGraphBuilder;
     class RenderGraphDepdencyLevel;
 
@@ -24,12 +25,12 @@ namespace Neon::RG
         /// <summary>
         /// Get the storage of the graph
         /// </summary>
-        [[nodiscard]] GraphStorage& GetStorage();
+        [[nodiscard]] GraphStorage& GetStorage() noexcept;
 
         /// <summary>
         /// Get the storage of the graph
         /// </summary>
-        [[nodiscard]] const GraphStorage& GetStorage() const;
+        [[nodiscard]] const GraphStorage& GetStorage() const noexcept;
 
         /// <summary>
         /// Run the graph

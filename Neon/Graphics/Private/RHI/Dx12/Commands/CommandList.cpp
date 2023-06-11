@@ -317,6 +317,23 @@ namespace Neon::RHI
         m_CommandList->ClearRenderTargetView({ RtvHandle.Value }, Color.data(), 0, nullptr);
     }
 
+    void Dx12GraphicsCommandList::ClearDsv(
+        const CpuDescriptorHandle& RtvHandle,
+        std::optional<float>       Depth,
+        std::optional<uint8_t>     Stencil)
+    {
+        D3D12_CLEAR_FLAGS ClearFlags = {};
+        if (Depth)
+        {
+            ClearFlags |= D3D12_CLEAR_FLAG_DEPTH;
+        }
+        if (Stencil)
+        {
+            ClearFlags |= D3D12_CLEAR_FLAG_STENCIL;
+        }
+        m_CommandList->ClearDepthStencilView({ RtvHandle.Value }, ClearFlags, Depth.value_or(1.0f), Stencil.value_or(0), 0, nullptr);
+    }
+
     void Dx12GraphicsCommandList::SetRenderTargets(
         const CpuDescriptorHandle& ContiguousRtvs,
         size_t                     RenderTargetCount,

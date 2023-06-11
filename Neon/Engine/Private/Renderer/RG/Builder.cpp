@@ -210,6 +210,24 @@ namespace Neon::RG
             auto& Builder = Builders[i];
             m_Passes[i]->ResolveRootSignature(Builder.RootSignatures);
         }
+        for (auto& Builder : Builders)
+        {
+            for (auto& [Id, Desc] : Builder.RootSignatures.m_RootSignaturesToLoad)
+            {
+                std::visit(
+                    VariantVisitor{
+                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
+                        {
+                            Storage.ImportRootSignature(Id, RHI::IRootSignature::Create(Builder));
+                        },
+                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IRootSignature>& RootSig)
+                        {
+                            Storage.ImportRootSignature(Id, RootSig);
+                        },
+                        [&Id, &Storage = m_Context.GetStorage()](const Asset::AssetHandle& RootSig) {} },
+                    Desc);
+            }
+        }
     }
 
     auto RenderGraphBuilder::LaunchShaderJobs(
@@ -219,6 +237,24 @@ namespace Neon::RG
         {
             auto& Builder = Builders[i];
             m_Passes[i]->ResolveShaders(Builder.Shaders);
+        }
+        for (auto& Builder : Builders)
+        {
+            for (auto& [Id, Desc] : Builder.Shaders.m_ShadersToLoad)
+            {
+                std::visit(
+                    VariantVisitor{
+                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
+                        {
+                            Storage.ImportShader(Id, Ptr<RHI::IShader>(RHI::IShader::Create(Builder)));
+                        },
+                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IShader>& Shader)
+                        {
+                            Storage.ImportShader(Id, Shader);
+                        },
+                        [&Id, &Storage = m_Context.GetStorage()](const Asset::AssetHandle& Shader) {} },
+                    Desc);
+            }
         }
     }
 

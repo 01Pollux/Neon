@@ -18,7 +18,8 @@ namespace Neon::RG
 {
     class GraphStorage
     {
-        friend class RenderGraphContext;
+        friend class RenderGraph;
+        friend class RenderGraphDepdencyLevel;
 
         using ResourceMapType       = std::map<ResourceId, ResourceHandle>;
         using RootSignaturesMapType = std::map<ResourceId, Ptr<RHI::IRootSignature>>;

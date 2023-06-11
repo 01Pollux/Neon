@@ -9,37 +9,6 @@
 
 namespace Neon::RG
 {
-    enum class ClearType : uint8_t
-    {
-        /// <summary>
-        /// Don't clear render target view
-        /// </summary>
-        RTV_Ignore,
-        /// <summary>
-        /// Clear render target view with the specified color
-        /// </summary>
-        RTV_Color,
-
-        /// <summary>
-        /// Don't clear the depth and stencil view
-        /// </summary>
-        DSV_Ignore,
-        /// <summary>
-        /// Clear the depth view only
-        /// </summary>
-        DSV_Depth,
-        /// <summary>
-        /// Clear the stencil view only
-        /// </summary>
-        DSV_Stencil,
-        /// <summary>
-        /// Clear both depth and stencil view
-        /// </summary>
-        DSV_DepthStencil,
-    };
-
-    //
-
     enum class ResourceReadAccess : uint8_t
     {
         PixelShader,

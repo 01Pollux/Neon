@@ -34,12 +34,7 @@ namespace Neon::RHI
 
     CommandContext::~CommandContext()
     {
-        if (!m_CommandLists.empty())
-        {
-            auto Queue = m_Swapchain->GetQueue(m_Type);
-            Queue->Upload(m_CommandLists);
-            Queue->FreeCommandLists(m_Type, m_CommandLists);
-        }
+        Upload();
     }
 
     size_t CommandContext::Append(
@@ -63,12 +58,18 @@ namespace Neon::RHI
         return m_CommandLists[Index];
     }
 
-    void CommandContext::Upload()
+    void CommandContext::Upload(
+        bool Clear)
     {
         if (!m_CommandLists.empty())
         {
             auto Queue = m_Swapchain->GetQueue(m_Type);
             Queue->Upload(m_CommandLists);
+            if (Clear)
+            {
+                Queue->FreeCommandLists(m_Type, m_CommandLists);
+                m_CommandLists.clear();
+            }
         }
     }
 

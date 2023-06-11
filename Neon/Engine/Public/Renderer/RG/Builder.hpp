@@ -9,7 +9,7 @@ namespace Neon::RG
 {
     class RenderGraphBuilder
     {
-        friend class RenderGraphContext;
+        friend class RenderGraph;
 
         struct BuilderInfo
         {

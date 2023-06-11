@@ -116,6 +116,11 @@ namespace Neon::RHI
             const CpuDescriptorHandle& RtvHandle,
             const Color4&              Color) override;
 
+        void ClearDsv(
+            const CpuDescriptorHandle& RtvHandle,
+            std::optional<float>       Depth,
+            std::optional<uint8_t>     Stencil) override;
+
         void SetRenderTargets(
             const CpuDescriptorHandle& ContiguousRtvs,
             size_t                     RenderTargetCount = 0,

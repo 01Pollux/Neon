@@ -204,6 +204,14 @@ namespace Neon::RHI
             const Color4&              Color) = 0;
 
         /// <summary>
+        /// Clear depth stencil view
+        /// </summary>
+        virtual void ClearDsv(
+            const CpuDescriptorHandle& RtvHandle,
+            std::optional<float>       Depth   = std::nullopt,
+            std::optional<uint8_t>     Stencil = std::nullopt) = 0;
+
+        /// <summary>
         /// Bind rtv/dsv to pipeline
         /// </summary>
         virtual void SetRenderTargets(

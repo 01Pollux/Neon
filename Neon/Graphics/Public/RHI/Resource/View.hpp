@@ -206,6 +206,19 @@ namespace Neon::RHI
 
     //
 
+    enum class ERTClearType : uint8_t
+    {
+        /// <summary>
+        /// Don't clear render target view
+        /// </summary>
+        Ignore,
+
+        /// <summary>
+        /// Clear render target view with the specified color if it was set, otherwise clear with the created clear color
+        /// </summary>
+        Color
+    };
+
     struct RTVDesc
     {
         struct Buffer
@@ -266,11 +279,39 @@ namespace Neon::RHI
 
         //
 
+        ViewVariant View;
+
+        // optional clear color, only used to hold information about the clear color for the user
+        std::optional<Color4> ForceColor;
+        ERTClearType          ClearType = ERTClearType::Ignore;
+
         EResourceFormat Format = EResourceFormat::Unknown;
-        ViewVariant     View;
     };
 
     //
+
+    enum class EDSClearType : uint8_t
+    {
+        /// <summary>
+        /// Don't clear the depth and stencil view
+        /// </summary>
+        Ignore,
+
+        /// <summary>
+        /// Clear the depth view only with the specified depth if it was set, otherwise clear with the created clear depth
+        /// </summary>
+        Depth,
+
+        /// <summary>
+        /// Clear the stencil view only with the specified stencil if it was set, otherwise clear with the created clear stencil
+        /// </summary>
+        Stencil,
+
+        /// <summary>
+        /// Clear both depth and stencil view with the specified depth and stencil if they were set, otherwise clear with the created clear depth and stencil
+        /// </summary>
+        DepthStencil,
+    };
 
     struct DSVDesc
     {
@@ -319,8 +360,13 @@ namespace Neon::RHI
         EResourceFormat Format = EResourceFormat::Unknown;
         ViewVariant     View;
 
-        bool OnlyDepth   : 1;
-        bool OnlyStencil : 1;
+        bool ReadOnlyDepth   : 1;
+        bool ReadOnlyStencil : 1;
+
+        // optional clear color, only used to hold information about the clear color for the user
+        std::optional<float>   ForceDepth;
+        std::optional<uint8_t> ForceStencil;
+        EDSClearType           ClearType = EDSClearType::Ignore;
     };
 
     //

@@ -13,20 +13,4 @@ namespace Neon::RG
     {
         return m_QueueType;
     }
-
-    const Size2I& IRenderPass::GetViewport() const
-    {
-        return m_Viewport;
-    }
-
-    void IRenderPass::SetViewport(
-        const Size2I& Viewport)
-    {
-        m_Viewport = Viewport;
-    }
-
-    void IRenderPass::SetWindowViewport()
-    {
-        m_Viewport = {};
-    }
 } // namespace Neon::RG

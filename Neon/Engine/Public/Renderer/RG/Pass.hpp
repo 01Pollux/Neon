@@ -4,8 +4,9 @@
 
 namespace Neon::RHI
 {
-    class ICommandContext;
-}
+    class ICommandList;
+    class IGraphicsCommandList;
+} // namespace Neon::RHI
 
 namespace Neon::RG
 {
@@ -66,11 +67,21 @@ namespace Neon::RG
         }
 
         /// <summary>
+        /// Called to check if the pass should implements its own viewports
+        /// </summary>
+        virtual bool OverrideViewport(
+            const GraphStorage&        Storage,
+            RHI::IGraphicsCommandList* CommandList)
+        {
+            return false;
+        }
+
+        /// <summary>
         /// Called when the render pass wants to dispatch.
         /// </summary>
         virtual void Dispatch(
-            const GraphStorage&   Storage,
-            RHI::ICommandContext& CommandContext)
+            const GraphStorage& Storage,
+            RHI::ICommandList*  CommandList)
         {
         }
 
@@ -80,24 +91,7 @@ namespace Neon::RG
         /// </summary>
         [[nodiscard]] PassQueueType GetQueueType() const noexcept;
 
-        /// <summary>
-        /// Get viewport for current pass
-        /// </summary>
-        [[nodiscard]] const Size2I& GetViewport() const;
-
-        /// <summary>
-        /// Set viewport for current pass
-        /// </summary>
-        void SetViewport(
-            const Size2I& Viewport);
-
-        /// <summary>
-        /// Set viewport to window's viewport for current pass
-        /// </summary>
-        void SetWindowViewport();
-
     private:
-        Size2I        m_Viewport;
         PassQueueType m_QueueType;
     };
 } // namespace Neon::RG

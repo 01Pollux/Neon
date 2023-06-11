@@ -26,6 +26,7 @@ namespace Neon::RG
         FlushResources();
         m_Resources.clear();
         m_RootSignatures.clear();
+        m_Shaders.clear();
         m_PipelineStates.clear();
     }
 

@@ -46,7 +46,8 @@ namespace Neon::RHI
         /// <summary>
         /// Submit list of command lists to the GPU.
         /// </summary>
-        void Upload();
+        void Upload(
+            bool Clear = true);
 
         /// <summary>
         /// Reset the command lists.
@@ -64,9 +65,17 @@ namespace Neon::RHI
     class TCommandContext : public CommandContext
     {
     public:
+        // clang-format off
         using CommandListType = std::conditional_t<
             _Type == CommandQueueType::Graphics, IGraphicsCommandList,
-            nullptr_t>;
+              std::conditional_t<
+                  _Type == CommandQueueType::Compute, IComputeCommandList,
+              std::conditional_t<
+                  _Type == CommandQueueType::Copy, ICopyCommandList,
+                  nullptr_t>
+            >
+        >;
+        // clang-format on
 
         TCommandContext() = default;
 

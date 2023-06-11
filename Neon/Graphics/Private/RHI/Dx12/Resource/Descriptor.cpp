@@ -565,6 +565,14 @@ namespace Neon::RHI
                     } },
                 Desc->View);
 
+            if (Desc->ReadOnlyDepth)
+            {
+                Dx12Desc.Flags |= D3D12_DSV_FLAG_READ_ONLY_DEPTH;
+            }
+            if (Desc->ReadOnlyStencil)
+            {
+                Dx12Desc.Flags |= D3D12_DSV_FLAG_READ_ONLY_STENCIL;
+            }
             Dx12Desc.Format = CastFormat(Desc->Format);
         }
 
