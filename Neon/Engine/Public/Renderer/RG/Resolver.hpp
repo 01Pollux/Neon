@@ -106,6 +106,12 @@ namespace Neon::RG
         friend class RenderGraphBuilder;
 
     public:
+        PipelineStateResolver(
+            GraphStorage& Storage) :
+            m_Storage(Storage)
+        {
+        }
+
         /// <summary>
         /// Load a pipeline state.
         /// </summary>
@@ -127,7 +133,21 @@ namespace Neon::RG
             const ResourceId&               Id,
             const Ptr<RHI::IPipelineState>& PipelineState);
 
+        /// <summary>
+        /// Get root signature.
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& GetRootSignature(
+            const ResourceId& Id);
+
+        /// <summary>
+        /// Get shader.
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IShader>& GetShader(
+            const ResourceId& Id);
+
     private:
+        GraphStorage& m_Storage;
+
         std::map<
             ResourceId,
             std::variant<

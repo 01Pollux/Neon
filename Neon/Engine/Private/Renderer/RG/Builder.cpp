@@ -259,6 +259,9 @@ namespace Neon::RG
     auto RenderGraphBuilder::LaunchPipelineJobs(
         BuildersListType& Builders) -> void
     {
+        LaunchShaderJobs(Builders);
+        LaunchRootSignatureJobs(Builders);
+
         for (size_t i = 0; i < Builders.size(); i++)
         {
             auto& Builder = Builders[i];
@@ -449,7 +452,8 @@ namespace Neon::RG
 
     RenderGraphBuilder::BuilderInfo::BuilderInfo(
         GraphStorage& Storage) :
-        Resources(Storage)
+        Resources(Storage),
+        PipelineStates(Storage)
     {
     }
 } // namespace Neon::RG

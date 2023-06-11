@@ -24,69 +24,9 @@ namespace Neon::RG
         /// <summary>
         /// Called when the render pass wans to load shaders.
         /// </summary>
-        virtual void ResolveShaders(
-            ShaderResolver& Resolver)
+        void ResolveShaders(
+            ShaderResolver& Resolver) override
         {
-        }
-
-        /// <summary>
-        /// Called when the render pass wans to load shaders.
-        /// </summary>
-        virtual void ResolveRootSignature(
-            RootSignatureResolver& Resolver)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to load materials.
-        /// </summary>
-        virtual void ResolveMaterials(
-            MaterialResolver& Resolver)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to create pipelines.
-        /// </summary>
-        virtual void ResolvePipelines(
-            PipelineStateResolver& Resolver)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to resolve the dependencies of resources.
-        /// </summary>
-        virtual void ResolveResources(
-            ResourceResolver& Resolver)
-        {
-        }
-
-        /// <summary>
-        /// Called to check if the pass should implements its own viewports
-        /// </summary>
-        virtual bool OverrideViewport(
-            const GraphStorage&        Storage,
-            RHI::IGraphicsCommandList* CommandList)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to dispatch.
-        /// </summary>
-        virtual void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList)
-        {
-            auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
-
-            //
-
-            struct VsInput
-            {
-                Vector2D Position;
-            };
-
             std::stringstream Stream;
             std::ifstream     File(L"D:\\Dev\\Shader.hlsl");
 
@@ -99,31 +39,107 @@ namespace Neon::RG
                 .EntryPoint = STR("VSMain")
             };
 
-            auto VsShader = Ptr<RHI::IShader>(RHI::IShader::Create(Desc));
+            Resolver.Load(
+                RG::ResourceId(STR("Test.VS")),
+                Desc);
 
             Desc.Stage      = RHI::ShaderStage::Pixel;
             Desc.EntryPoint = STR("PSMain");
 
-            auto PsShader = Ptr<RHI::IShader>(RHI::IShader::Create(Desc));
+            Resolver.Load(
+                RG::ResourceId(STR("Test.PS")),
+                Desc);
+        }
 
-            auto m_RootSignature = RHI::IRootSignature::Create(
+        /// <summary>
+        /// Called when the render pass wans to load shaders.
+        /// </summary>
+        void ResolveRootSignature(
+            RootSignatureResolver& Resolver) override
+        {
+            Resolver.Load(
+                RG::ResourceId(STR("Test.RS")),
                 RHI::RootSignatureBuilder()
                     .Add32BitConstants<float>(0, 0)
                     .AddConstantBufferView(1, 0)
                     .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to create pipelines.
+        /// </summary>
+        void ResolvePipelines(
+            PipelineStateResolver& Resolver) override
+        {
+            auto& RootSig = Resolver.GetRootSignature(RG::ResourceId(STR("Test.RS")));
+            auto& VS      = Resolver.GetShader(RG::ResourceId(STR("Test.VS")));
+            auto& PS      = Resolver.GetShader(RG::ResourceId(STR("Test.PS")));
 
             RHI::PipelineStateBuilder<false> Builder{
-                .RootSignature     = m_RootSignature.get(),
-                .VertexShader      = VsShader.get(),
-                .PixelShader       = PsShader.get(),
+                .RootSignature     = RootSig.get(),
+                .VertexShader      = VS.get(),
+                .PixelShader       = PS.get(),
                 .DepthStencilState = { .DepthEnable = false },
                 .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
                 .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
             };
 
-            VsShader->CreateInputLayout(Builder.InputLayout);
+            VS->CreateInputLayout(Builder.InputLayout);
 
-            auto m_PipelineState = RHI::IPipelineState::Create(Builder);
+            Resolver.Load(
+                RG::ResourceId(STR("Test.Pipeline")),
+                Builder);
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to load materials.
+        /// </summary>
+        void ResolveMaterials(
+            MaterialResolver& Resolver) override
+        {
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to resolve the dependencies of resources.
+        /// </summary>
+        void ResolveResources(
+            ResourceResolver& Resolver)
+        {
+        }
+
+        /// <summary>
+        /// Called to check if the pass should implements its own viewports
+        /// </summary>
+        bool OverrideViewport(
+            const GraphStorage&        Storage,
+            RHI::IGraphicsCommandList* CommandList) override
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to dispatch.
+        /// </summary>
+        void Dispatch(
+            const GraphStorage& Storage,
+            RHI::ICommandList*  CommandList) override
+        {
+            auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
+
+            //
+
+            auto& RootSignature = Storage.GetRootSignature(RG::ResourceId(STR("Test.RS")));
+            auto& PipelineState = Storage.GetPipelineState(RG::ResourceId(STR("Test.Pipeline")));
+
+            RenderCommandList->SetRootSignature(RootSignature);
+            RenderCommandList->SetPipelineState(PipelineState);
+
+            //
+
+            struct VsInput
+            {
+                Vector2D Position;
+            };
 
             Ptr<RHI::IUploadBuffer> m_Buffer;
             m_Buffer.reset(RHI::IUploadBuffer::Create(
@@ -162,9 +178,6 @@ namespace Neon::RG
 
             RenderCommandList->ClearRtv(Rtv, Color);
             RenderCommandList->SetRenderTargets(Rtv, 1);
-
-            RenderCommandList->SetRootSignature(m_RootSignature);
-            RenderCommandList->SetPipelineState(m_PipelineState);
 
             static float Time = 0.f;
             Time += 0.03f;
@@ -236,7 +249,7 @@ namespace Neon::Module
         RG::RenderGraph Graph(m_Swapchain.get());
 
         auto Builder = Graph.Reset();
-        Builder.AppendPass(UPtr<RG::IRenderPass>(NEON_NEW Neon::RG::TestPass));
+        Builder.AppendPass<RG::TestPass>();
         Builder.Build();
 
         Graph.Run();

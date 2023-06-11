@@ -74,6 +74,18 @@ namespace Neon::RG
         NEON_ASSERT(m_PipelinesToLoad.emplace(Id, PipelineState).second, "Pipeline already exists");
     }
 
+    const Ptr<RHI::IRootSignature>& IRenderPass::PipelineStateResolver::GetRootSignature(
+        const ResourceId& Id)
+    {
+        return m_Storage.GetRootSignature(Id);
+    }
+
+    const Ptr<RHI::IShader>& IRenderPass::PipelineStateResolver::GetShader(
+        const ResourceId& Id)
+    {
+        return m_Storage.GetShader(Id);
+    }
+
     //
 
     void IRenderPass::MaterialResolver::Load(

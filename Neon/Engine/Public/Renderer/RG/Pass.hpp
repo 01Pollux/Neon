@@ -46,18 +46,18 @@ namespace Neon::RG
         }
 
         /// <summary>
-        /// Called when the render pass wants to load materials.
-        /// </summary>
-        virtual void ResolveMaterials(
-            MaterialResolver& Resolver)
-        {
-        }
-
-        /// <summary>
         /// Called when the render pass wants to create pipelines.
         /// </summary>
         virtual void ResolvePipelines(
             PipelineStateResolver& Resolver)
+        {
+        }
+
+        /// <summary>
+        /// Called when the render pass wants to load materials.
+        /// </summary>
+        virtual void ResolveMaterials(
+            MaterialResolver& Resolver)
         {
         }
 
