@@ -17,7 +17,7 @@ namespace Neon::RHI
     ID3D12CommandAllocator* FrameResource::RequestAllocator(
         D3D12_COMMAND_LIST_TYPE CommandType)
     {
-        auto Allocator = m_AllocatorsPools[CommandType].Allocate(CommandType)->CommandAllocator.Get();
+        auto Allocator = m_AllocatorsPools[GetCommandListIndex(CommandType)].Allocate(CommandType)->CommandAllocator.Get();
         ThrowIfFailed(Allocator->Reset());
 
         Allocator->AddRef();

@@ -140,6 +140,11 @@ namespace Neon::RG
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
+            if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown)
+            {
+                continue;
+            }
+
             PassesToExecute.emplace_back(
                 [&, &Storage = m_Context.GetStorage()](size_t PassIndex)
                 {

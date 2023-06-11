@@ -8,7 +8,7 @@ namespace Neon::RG
     {
     public:
         InitializeBackbufferPass() :
-            IRenderPass(PassQueueType::Direct)
+            IRenderPass(PassQueueType::Unknown)
         {
         }
 
