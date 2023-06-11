@@ -25,21 +25,6 @@ namespace PakC
         m_ResourceManager(std::make_unique<CustomResourceManager>())
     {
         RegisterTypes();
-
-        if (auto LoggerPack = m_ResourceManager->TryLoadPack("Logger", "logger.np"))
-        {
-            auto Asset = LoggerPack->Load<Asset::LoggerAsset>(Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190"));
-            if (Asset)
-            {
-                Asset->SetGlobal();
-            }
-        }
-
-        // if (auto TestPack = m_ResourceManager->TryLoadPack("Test", "samples/graphics/graphics.np"))
-        {
-            // auto Asset = TestPack->Load<Asset::RootSignatureAsset>(Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380192"));
-            //  Asset->GetRootSignature();
-        }
     }
 
     JsonHandler::~JsonHandler()

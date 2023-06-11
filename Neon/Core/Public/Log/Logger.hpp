@@ -61,6 +61,7 @@ namespace Neon::Logger
     {
         LogMessage(Severity, Tag, StringUtils::Format(Message, std::forward<_Args>(Args)...));
     }
+
     /// <summary>
     /// Log a message to the log file or console.
     /// </summary>

@@ -29,6 +29,11 @@ workspace "Neon"
         defines "NEON_DEBUG"
         runtime "Debug"
         symbols "On"
+        editAndContinue "On"
+        sanitize
+        {
+            "Address"
+        }
     filter {}
 
     filter "configurations:Release"
@@ -36,8 +41,11 @@ workspace "Neon"
         runtime "Debug"
         symbols "On"
         optimize "On"
-		defines "DEBUG"
-		defines "_DEBUG"
+        editAndContinue "Off"
+        sanitize
+        {
+            "Address"
+        }
     filter {}
 
     filter "configurations:Dist"
@@ -45,6 +53,7 @@ workspace "Neon"
         runtime "Release"
         optimize "On"
         symbols "Off"
+        editAndContinue "Off"
     filter {}
     
 

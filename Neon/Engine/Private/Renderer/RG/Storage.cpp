@@ -294,7 +294,6 @@ namespace Neon::RG
 
     void GraphStorage::FlushResources()
     {
-        // TODO: handle resource discard
         m_InactiveResources.clear();
     }
 

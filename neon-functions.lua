@@ -33,13 +33,6 @@ function common_dir_setup()
 
     debugdir "$(targetdir)"
     
-    filter "configurations:not Dist"
-        sanitize
-        {
-            "Address"
-        }
-    filter {}
-
     disablewarnings
     {
         "4250"

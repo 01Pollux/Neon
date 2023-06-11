@@ -223,6 +223,11 @@ namespace Neon::Asset
     {
         ResetReadWrite();
 
+        if (!std::filesystem::exists(FilePath))
+        {
+            std::filesystem::create_directories(std::filesystem::path(FilePath).parent_path());
+        }
+
         bio::filtering_ostream Filter;
         Filter.push(bio::gzip_compressor());
         Filter.push(bio::file_sink(FilePath, std::ios::out | std::ios::trunc | std::ios::binary));

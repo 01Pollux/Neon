@@ -5,6 +5,7 @@
 #include <Renderer/RG/RG.hpp>
 
 #include <fstream>
+#include <Math/Matrix.hpp>
 
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
@@ -15,10 +16,11 @@ namespace Neon::RG
 {
     struct VsInput
     {
-        Vector2D Position;
+        Vector4D Position;
+        Vector4D Color;
     };
 
-    static constexpr size_t BufferSize = sizeof(VsInput) * 4 + sizeof(uint16_t) * 6;
+    static constexpr size_t BufferSize = sizeof(VsInput) * 4;
 
     class TestPass : public IRenderPass
     {
@@ -62,6 +64,7 @@ namespace Neon::RG
                 RG::ResourceId(STR("Test.RS")),
                 RHI::RootSignatureBuilder()
                     .Add32BitConstants<float>(0, 0)
+                    .Add32BitConstants<Matrix4x4>(0, 1)
                     .AddConstantBufferView(1, 0)
                     .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
         }
@@ -77,6 +80,7 @@ namespace Neon::RG
                 .RootSignature     = RootSig.get(),
                 .VertexShader      = VS.get(),
                 .PixelShader       = PS.get(),
+                .RasterizerState   = { .CullMode = RHI::CullMode::None },
                 .DepthStencilState = { .DepthEnable = false },
                 .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
                 .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
@@ -128,24 +132,12 @@ namespace Neon::RG
             //
 
             auto Buffer = Storage.GetResource(RG::ResourceId(STR("Test.Buffer"))).AsUploadBuffer();
-
             auto Vertex = Buffer->Map<VsInput>();
 
-            Vertex[0] = { Vector2D(-1.f, -1.f) };
-            Vertex[1] = { Vector2D(-1.f, 1.f) };
-            Vertex[2] = { Vector2D(1.f, -1.f) };
-            Vertex[3] = { Vector2D(1.f, 1.f) };
+            Vertex[0] = { { +0.00f, +0.50f, 0.0f, 1.0 }, { 1.0f, 0.0f, 0.0f, 1.0f } }; // top
+            Vertex[1] = { { +0.40f, -0.25f, 0.0f, 1.0 }, { 0.0f, 0.0f, 1.0f, 1.0f } }; // right
+            Vertex[2] = { { -0.40f, -0.25f, 0.0f, 1.0 }, { 0.0f, 1.0f, 0.0f, 1.0f } }; // left
 
-            auto Input = Buffer->Map<uint16_t>(sizeof(VsInput) * 4);
-
-            Input[0] = 0;
-            Input[1] = 1;
-            Input[2] = 2;
-            Input[3] = 2;
-            Input[4] = 1;
-            Input[5] = 3;
-
-            Buffer->Unmap();
             Buffer->Unmap();
 
             //
@@ -156,23 +148,43 @@ namespace Neon::RG
             Time += 0.03f;
             RenderCommandList->SetConstants(0, &Time, 1);
 
-            RHI::Views::Vertex Vtx;
-            Vtx.Append(Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 4);
-            RenderCommandList->SetVertexBuffer(0, Vtx);
+            //
 
-            RHI::Views::Index Idx(Buffer.get(), sizeof(VsInput) * 4, sizeof(uint16_t) * 6);
-            RenderCommandList->SetIndexBuffer(Idx);
+            auto Size = Storage.GetSwapchain()->GetWindow()->GetSize();
+
+            auto View = Matrix4x4::LookAt(
+                Vector3D(0, 0, -1),
+                Vector3D::Zero,
+                Vector3D::Up);
+
+            auto Proj = Matrix4x4::PerspectiveFov(
+                DegreesToRadians(65.f),
+                float(Size.Width()) / Size.Height(),
+                0.1f,
+                100.f);
+
+            auto World = Matrix4x4::RotationZ(Time);
+
+            auto WVP = (World * View * Proj);
+            // auto WVP = Matrix4x4::Identity;
+            RenderCommandList->SetConstants(1, &WVP, sizeof(WVP) / 4);
+
+            //
+
+            RHI::Views::Vertex Vtx;
+            Vtx.Append(Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 3);
+            RenderCommandList->SetVertexBuffer(0, Vtx);
 
             RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
             RenderCommandList->SetDynamicResourceView(
                 RHI::ICommonCommandList::ViewType::Cbv,
-                1,
+                2,
                 Colors::Green.data(),
                 sizeof(float) * 4);
 
-            RenderCommandList->Draw(RHI::DrawIndexArgs{
-                .IndexCountPerInstance = 6 });
+            RenderCommandList->Draw(RHI::DrawArgs{
+                .VertexCountPerInstance = 3 });
         }
     };
 } // namespace Neon::RG

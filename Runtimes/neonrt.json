@@ -1,5 +1,5 @@
 {
-  "Export Path": "samples/logger/logger.np",
+  "Export Path": "neonrt.np",
   "Type": "ZipAsset",
   "Assets": [
     {
@@ -9,7 +9,7 @@
         "": "Trace",
         "Window": "Trace",
         "Resource": "Trace",
-        "Shader": "Trace",
+        "ShaderCompiler": "Trace",
         "Graphics": "Trace"
       }
     }

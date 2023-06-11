@@ -273,16 +273,16 @@ namespace Neon
 
     template<typename _Ty, typename... _Rest>
     MVector(_Ty, _Rest...) -> MVector<typename std::_Enforce_same<_Ty, _Rest...>::type, 1 + sizeof...(_Rest)>;
+
+    template<typename _Ty>
+    [[nodiscard]] constexpr _Ty DegreesToRadians(_Ty Deg) noexcept
+    {
+        return Deg * (static_cast<float>(std::numbers::pi) / 180.f);
+    }
+
+    template<typename _Ty>
+    [[nodiscard]] constexpr _Ty RadiansToDegrees(_Ty Rad) noexcept
+    {
+        return Rad * (180.f / static_cast<float>(std::numbers::pi));
+    }
 } // namespace Neon
-
-template<typename _Ty>
-[[nodiscard]] constexpr _Ty DegreesToRadians(_Ty Deg) noexcept
-{
-    return Deg * (static_cast<float>(std::numbers::pi) / 180.f);
-}
-
-template<typename _Ty>
-[[nodiscard]] constexpr _Ty RadiansToDegrees(_Ty Rad) noexcept
-{
-    return Rad * (180.f / static_cast<float>(std::numbers::pi));
-}
