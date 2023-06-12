@@ -93,11 +93,6 @@ namespace Neon::RG
                 Builder);
         }
 
-        void ResolveMaterials(
-            MaterialResolver& Resolver) override
-        {
-        }
-
         void ResolveResources(
             ResourceResolver& Resolver)
         {

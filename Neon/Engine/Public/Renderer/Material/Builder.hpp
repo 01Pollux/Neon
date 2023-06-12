@@ -321,6 +321,15 @@ namespace Neon::Renderer
             MaterialDataType Type,
             size_t           ArraySize = 1);
 
+        /// <summary>
+        /// Build material meta data from builder
+        /// </summary>
+        [[nodiscard]] MaterialMetaData Build(
+            RHI::ISwapchain* SwapChain) const
+        {
+            return MaterialMetaData(*this, SwapChain);
+        }
+
     private:
         std::list<Entry> m_Entries;
     };

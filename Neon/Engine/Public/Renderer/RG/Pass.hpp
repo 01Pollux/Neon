@@ -18,7 +18,6 @@ namespace Neon::RG
         class ShaderResolver;
         class RootSignatureResolver;
         class PipelineStateResolver;
-        class MaterialResolver;
         class ResourceResolver;
 
         IRenderPass(
@@ -50,14 +49,6 @@ namespace Neon::RG
         /// </summary>
         virtual void ResolvePipelines(
             PipelineStateResolver& Resolver)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to load materials.
-        /// </summary>
-        virtual void ResolveMaterials(
-            MaterialResolver& Resolver)
         {
         }
 

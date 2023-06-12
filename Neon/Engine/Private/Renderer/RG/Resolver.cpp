@@ -90,22 +90,6 @@ namespace Neon::RG
 
     //
 
-    void IRenderPass::MaterialResolver::Load(
-        const ResourceId&         Id,
-        const Renderer::Material& Material)
-    {
-        NEON_ASSERT(m_MaterialsToLoad.emplace(Id, Material).second, "Material already exists");
-    }
-
-    void IRenderPass::MaterialResolver::Load(
-        const ResourceId&         Id,
-        const Asset::AssetHandle& MaterialAsset)
-    {
-        NEON_ASSERT(m_MaterialsToLoad.emplace(Id, MaterialAsset).second, "Material already exists");
-    }
-
-    //
-
     IRenderPass::ResourceResolver::ResourceResolver(
         GraphStorage& Storage) :
         m_Storage(Storage)

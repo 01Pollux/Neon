@@ -22,8 +22,8 @@ namespace Neon::RG
         friend class RenderGraphDepdencyLevel;
 
         using ResourceMapType       = std::map<ResourceId, ResourceHandle>;
-        using RootSignaturesMapType = std::map<ResourceId, Ptr<RHI::IRootSignature>>;
         using ShadersMapType        = std::map<ResourceId, Ptr<RHI::IShader>>;
+        using RootSignaturesMapType = std::map<ResourceId, Ptr<RHI::IRootSignature>>;
         using PipelineStatesMapType = std::map<ResourceId, Ptr<RHI::IPipelineState>>;
 
         using InactiveResourceListType = std::deque<ResourceHandle>;
@@ -141,18 +141,18 @@ namespace Neon::RG
 
     public:
         /// <summary>
-        /// Import root signature
-        /// </summary>
-        void ImportRootSignature(
-            const ResourceId&               Id,
-            const Ptr<RHI::IRootSignature>& RootSignature);
-
-        /// <summary>
         /// Import shader
         /// </summary>
         void ImportShader(
             const ResourceId&        Id,
             const Ptr<RHI::IShader>& Shader);
+
+        /// <summary>
+        /// Import root signature
+        /// </summary>
+        void ImportRootSignature(
+            const ResourceId&               Id,
+            const Ptr<RHI::IRootSignature>& RootSignature);
 
         /// <summary>
         /// Import pipeline state
@@ -187,18 +187,39 @@ namespace Neon::RG
             ResourceHandle& Handle);
 
     private:
+        template<typename _Ty>
+        class CachedRenderResource
+        {
+        public:
+            [[nodiscard]] std::pair<const _Ty*, std::shared_lock<std::shared_mutex>> Read() const
+            {
+                return { &m_Resource, std::shared_lock(m_Mutex) };
+            }
+
+            [[nodiscard]] std::pair<_Ty*, std::unique_lock<std::shared_mutex>> Write()
+            {
+                return { &m_Resource, std::unique_lock(m_Mutex) };
+            }
+
+            void Clear()
+            {
+                m_Resource.clear();
+            }
+
+        private:
+            _Ty m_Resource;
+
+            mutable std::shared_mutex m_Mutex;
+        };
+
         RHI::ISwapchain* m_Swapchain;
 
         ResourceMapType      m_Resources;
         std::set<ResourceId> m_ImportedResources;
 
-        mutable std::shared_mutex m_PipelineStatesMutex,
-            m_RootSignaturesMutex,
-            m_ShadersMutex;
-
-        RootSignaturesMapType m_RootSignatures;
-        ShadersMapType        m_Shaders;
-        PipelineStatesMapType m_PipelineStates;
+        CachedRenderResource<RootSignaturesMapType> m_RootSignatures;
+        CachedRenderResource<ShadersMapType>        m_Shaders;
+        CachedRenderResource<PipelineStatesMapType> m_PipelineStates;
 
         InactiveResourceListType m_InactiveResources;
     };

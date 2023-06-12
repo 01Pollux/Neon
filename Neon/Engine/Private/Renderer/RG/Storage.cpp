@@ -25,9 +25,9 @@ namespace Neon::RG
     {
         FlushResources();
         m_Resources.clear();
-        m_RootSignatures.clear();
-        m_Shaders.clear();
-        m_PipelineStates.clear();
+        m_Shaders.Clear();
+        m_RootSignatures.Clear();
+        m_PipelineStates.Clear();
     }
 
     bool GraphStorage::ContainsResource(
@@ -104,33 +104,33 @@ namespace Neon::RG
 
     //
 
-    const Ptr<RHI::IRootSignature>& GraphStorage::GetRootSignature(
-        const ResourceId& Id) const
-    {
-        std::shared_lock Lock(m_RootSignaturesMutex);
-
-        auto Iter = m_RootSignatures.find(Id);
-        NEON_ASSERT(Iter != m_RootSignatures.end(), "Root signature doesn't exists");
-        return Iter->second;
-    }
-
     const Ptr<RHI::IShader>& GraphStorage::GetShader(
         const ResourceId& Id) const
     {
-        std::shared_lock Lock(m_ShadersMutex);
+        auto [Resource, Lock] = m_Shaders.Read();
 
-        auto Iter = m_Shaders.find(Id);
-        NEON_ASSERT(Iter != m_Shaders.end(), "Shader doesn't exists");
+        auto Iter = Resource->find(Id);
+        NEON_ASSERT(Iter != Resource->end(), "Shader doesn't exists");
+        return Iter->second;
+    }
+
+    const Ptr<RHI::IRootSignature>& GraphStorage::GetRootSignature(
+        const ResourceId& Id) const
+    {
+        auto [Resource, Lock] = m_RootSignatures.Read();
+
+        auto Iter = Resource->find(Id);
+        NEON_ASSERT(Iter != Resource->end(), "Root signature doesn't exists");
         return Iter->second;
     }
 
     const Ptr<RHI::IPipelineState>& GraphStorage::GetPipelineState(
         const ResourceId& Id) const
     {
-        std::shared_lock Lock(m_PipelineStatesMutex);
+        auto [Resource, Lock] = m_PipelineStates.Read();
 
-        auto Iter = m_PipelineStates.find(Id);
-        NEON_ASSERT(Iter != m_PipelineStates.end(), "Pipeline state doesn't exists");
+        auto Iter = Resource->find(Id);
+        NEON_ASSERT(Iter != Resource->end(), "Pipeline state doesn't exists");
         return Iter->second;
     }
 
@@ -192,29 +192,33 @@ namespace Neon::RG
 
     //
 
-    void GraphStorage::ImportRootSignature(
-        const ResourceId&               Id,
-        const Ptr<RHI::IRootSignature>& RootSignature)
-    {
-        std::unique_lock Lock(m_RootSignaturesMutex);
-        m_RootSignatures.emplace(Id, RootSignature);
-        RHI::RenameObject(RootSignature.get(), Id.GetName());
-    }
-
     void GraphStorage::ImportShader(
         const ResourceId&        Id,
         const Ptr<RHI::IShader>& Shader)
     {
-        std::unique_lock Lock(m_ShadersMutex);
-        m_Shaders.emplace(Id, Shader);
+        auto [Resource, Lock] = m_Shaders.Write();
+        Resource->emplace(Id, Shader);
+    }
+
+    void GraphStorage::ImportRootSignature(
+        const ResourceId&               Id,
+        const Ptr<RHI::IRootSignature>& RootSignature)
+    {
+        {
+            auto [Resource, Lock] = m_RootSignatures.Write();
+            Resource->emplace(Id, RootSignature);
+        }
+        RHI::RenameObject(RootSignature.get(), Id.GetName());
     }
 
     void GraphStorage::ImportPipelineState(
         const ResourceId&               Id,
         const Ptr<RHI::IPipelineState>& PipelineState)
     {
-        std::unique_lock Lock(m_PipelineStatesMutex);
-        m_PipelineStates.emplace(Id, PipelineState);
+        {
+            auto [Resource, Lock] = m_PipelineStates.Write();
+            Resource->emplace(Id, PipelineState);
+        }
         RHI::RenameObject(PipelineState.get(), Id.GetName());
     }
 

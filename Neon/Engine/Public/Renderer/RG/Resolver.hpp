@@ -159,36 +159,6 @@ namespace Neon::RG
 
     //
 
-    class IRenderPass::MaterialResolver
-    {
-        friend class RenderGraphBuilder;
-
-    public:
-        /// <summary>
-        /// Load a material.
-        /// </summary>
-        void Load(
-            const ResourceId&         Id,
-            const Renderer::Material& Material);
-
-        /// <summary>
-        /// Load a material from an asset.
-        /// </summary>
-        void Load(
-            const ResourceId&         Id,
-            const Asset::AssetHandle& MaterialAsset);
-
-    private:
-        std::map<
-            ResourceId,
-            std::variant<
-                Renderer::Material,
-                Asset::AssetHandle>>
-            m_MaterialsToLoad;
-    };
-
-    //
-
     class IRenderPass::ResourceResolver
     {
         friend class RenderGraphBuilder;

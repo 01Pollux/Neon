@@ -18,7 +18,6 @@ namespace Neon::RG
             IRenderPass::ShaderResolver        Shaders;
             IRenderPass::RootSignatureResolver RootSignatures;
             IRenderPass::PipelineStateResolver PipelineStates;
-            IRenderPass::MaterialResolver      Material;
             IRenderPass::ResourceResolver      Resources;
 
             BuilderInfo(
@@ -51,29 +50,6 @@ namespace Neon::RG
         }
 
     private:
-        /*/// <summary>
-        /// Build root signatures from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchRootSignatureJobs(
-            const std::shared_ptr<BuildersListType>& Builders) -> std::vector<std::jthread>;
-
-        /// <summary>
-        /// Build shaders from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchShaderJobs(
-            const std::shared_ptr<BuildersListType>& Builders) const -> std::future<LoadedShaderResult>;
-
-        /// <summary>
-        /// Build pipeline states from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchPipelineJobs(
-            const std::shared_ptr<BuildersListType>& Builders) -> std::jthread;
-
-        /// <summary>
-        /// Create a copy of render passes
-        /// </summary>
-        [[nodiscard]] auto CopyRenderPasses() const -> std::vector<IRenderPass*>;*/
-
         /// <summary>
         /// Build root signatures from builders
         /// </summary>
