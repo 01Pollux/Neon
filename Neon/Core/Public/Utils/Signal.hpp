@@ -19,10 +19,11 @@ namespace Neon::Utils
         /// <summary>
         /// Add a listener to the delegate list
         /// </summary>
+        template<std::invocable<_Args...> _FnTy>
         [[nodiscard]] uint64_t Listen(
-            std::function<void(_Args...)>&& Listener)
+            _FnTy&& Listener)
         {
-            return m_Listeners.emplace_back(std::move(Listener), m_NextHandle++).second;
+            return m_Listeners.emplace_back(std::forward<_FnTy>(Listener), m_NextHandle++).second;
         }
 
         /// <summary>
@@ -60,11 +61,12 @@ namespace Neon::Utils
     {
     public:
         SignalHandle() = default;
+        template<std::invocable<_Args...> _FnTy>
         SignalHandle(
-            Signal<_Args...>&                         Sig,
-            typename Signal<_Args...>::DelegateType&& Delegate) :
+            Signal<_Args...>& Sig,
+            _FnTy&&           Delegate) :
             m_Signal(&Sig),
-            m_Id(m_Signal->Listen(std::move(Delegate)))
+            m_Id(m_Signal->Listen(std::forward<_FnTy>(Delegate)))
         {
         }
 
@@ -84,6 +86,7 @@ namespace Neon::Utils
         {
             if (this != &Other)
             {
+                Drop();
                 m_Signal = std::exchange(Other.m_Signal, nullptr);
                 m_Id     = std::exchange(Other.m_Id, uint64_t(~0));
             }
@@ -92,27 +95,24 @@ namespace Neon::Utils
 
         ~SignalHandle()
         {
-            if (m_Signal)
-            {
-                m_Signal->Drop(m_Id);
-                m_Signal = nullptr;
-            }
+            Drop();
         }
 
         /// <summary>
         /// Attach the listener to the signal delegate list
         /// </summary>
+        template<std::invocable<_Args...> _FnTy>
         void Attach(
-            Signal<_Args...>&                         Sig,
-            typename Signal<_Args...>::DelegateType&& Delegate)
+            Signal<_Args...>& Sig,
+            _FnTy&&           Delegate)
         {
             Drop();
             m_Signal = &Sig;
-            m_Id     = m_Signal->Listen(std::move(Delegate));
+            m_Id     = m_Signal->Listen(std::forward<_FnTy>(Delegate));
         }
 
         /// <summary>
-        /// Release the ownership of the handle
+        /// Release the ownership of the handle without dropping the callback
         /// </summary>
         void Release()
         {
