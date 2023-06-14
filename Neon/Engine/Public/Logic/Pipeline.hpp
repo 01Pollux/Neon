@@ -18,25 +18,35 @@ namespace Neon
         /// Pipeline won't executed in parallel
         /// </summary>
         DontParallelize,
+
+        _Last_Enum
     };
     using MPipelineFlags = Bitmask<EPipelineFlags>;
+
+    class PipelineBuilder;
 
     class Pipeline
     {
     public:
-        Pipeline();
+        Pipeline(
+            PipelineBuilder Builder);
 
         /// <summary>
-        /// Dispatch the phases.
+        /// Begin the execution of the phases.
         /// </summary>
-        void Dispatch();
+        void BeginPhases();
+
+        /// <summary>
+        /// End the execution of the phases.
+        /// </summary>
+        void EndPhases();
 
         /// <summary>
         /// Set the number of threads to use for parallelization
         /// </summary>
         /// <param name="ThreadCount"></param>
         void SetThreadCount(
-            uint16_t ThreadCount);
+            uint32_t ThreadCount);
 
     public:
         /// <summary>
@@ -44,14 +54,14 @@ namespace Neon
         /// </summary>
         void SetPhaseEnable(
             const StringU8& PhaseName,
-            bool            State);
+            bool            Enabled);
 
         /// <summary>
         /// Enable or disable parallelization for a phase in the pipeline
         /// </summary>
         void SetPhaseParallelize(
             const StringU8& PhaseName,
-            bool            State);
+            bool            Parallelize);
 
     public:
         /// <summary>
@@ -90,16 +100,18 @@ namespace Neon
         }
 
     private:
-        struct Phase
+        struct PipelinePhase
         {
-            Utils::Signal<void()> Signal;
+            Utils::Signal<> Signal;
+            MPipelineFlags  Flags;
         };
-        using PhaseMap       = std::map<StringU8, Phase>;
-        using PhaseLevelList = std::vector<std::vector<PhaseMap::iterator>>;
+        using PhaseMap       = std::map<StringU8, PipelinePhase>;
+        using PhaseLevelList = std::vector<std::vector<PipelinePhase*>>;
 
     private:
         PhaseMap       m_Phases;
         PhaseLevelList m_Levels;
+        std::jthread   m_ExecutionThread;
         uint32_t       m_ThreadCount;
     };
 } // namespace Neon

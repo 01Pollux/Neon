@@ -43,7 +43,7 @@ namespace Neon::Utils
         /// Invoke the listeners with the given arguments
         /// </summary>
         void Broadcast(
-            _Args... Args)
+            _Args&&... Args)
         {
             for (const auto& Listener : m_Listeners)
             {

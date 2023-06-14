@@ -30,8 +30,36 @@ private:
     }
 };
 
+#include <Logic/PipelineBuilder.hpp>
+#include <Logic/Pipeline.hpp>
+
 NEON_MAIN(Argc, Argv)
 {
+    Neon::PipelineBuilder Builder;
+
+    auto A = Builder.NewPhase("A");
+    auto B = Builder.NewPhase("B");
+    auto C = Builder.NewPhase("C");
+    auto D = Builder.NewPhase("D");
+
+    C.DependsOn(A);
+    C.DependsOn(D);
+    B.DependsOn(C);
+
+    Neon::Pipeline Pipeline(std::move(Builder));
+
+    Pipeline.Attach("A", []
+                    { printf("A\n"); });
+    Pipeline.Attach("B", []
+                    { printf("B\n"); });
+    Pipeline.Attach("C", []
+                    { printf("C\n"); });
+    Pipeline.Attach("D", []
+                    { printf("D\n"); });
+
+    Pipeline.BeginPhases();
+    Pipeline.EndPhases();
+
     auto func = []
     {
         TestGameEngine Engine;

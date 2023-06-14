@@ -13,11 +13,13 @@ namespace Neon
         struct PipelinePhase
         {
             StringU8                    Name;
-            std::vector<PipelinePhase*> Dependencies;
-            size_t                      DependenciesCount;
+            std::vector<PipelinePhase*> DependentNodes;
+            size_t                      DependenciesCount = 0;
         };
 
         using PhasesMapType = std::map<StringU8, PipelinePhase>;
+
+        friend class Pipeline;
 
     public:
         class PhaseRef;
@@ -25,13 +27,13 @@ namespace Neon
         /// <summary>
         /// Append a new phase to the pipeline.
         /// </summary>
-        PhaseRef& NewPhase(
-            StringU8 PhaseName);
+        PhaseRef NewPhase(
+            const StringU8& PhaseName);
 
         /// <summary>
         /// Get a phase by name.
         /// </summary>
-        PhaseRef& GetPhase(
+        PhaseRef GetPhase(
             const StringU8& PhaseName);
 
     private:
@@ -43,14 +45,20 @@ namespace Neon
         friend class PipelineBuilder;
 
     public:
+        /// <summary>
+        /// Add a dependency to the phase.
+        /// </summary>
+        void DependsOn(
+            PhaseRef& Phase);
+
     protected:
         PhaseRef(
-            const PhasesMapType::iterator& Iter) :
+            PipelinePhase& Iter) :
             m_Phase(Iter)
         {
         }
 
     private:
-        PhasesMapType::iterator m_Phase;
+        PipelinePhase& m_Phase;
     };
 } // namespace Neon
