@@ -1,15 +1,15 @@
 #include <EnginePCH.hpp>
-#include <Logic/Pipeline.hpp>
-#include <Logic/PipelineBuilder.hpp>
+#include <Runtime/Pipeline.hpp>
+#include <Runtime/PipelineBuilder.hpp>
 #include <queue>
 
-namespace Neon
+namespace Neon::Runtime
 {
-    Pipeline::Pipeline(
-        PipelineBuilder Builder) :
-        m_ThreadCount(std::thread::hardware_concurrency() / 3)
+    EnginePipeline::EnginePipeline(
+        EnginePipelineBuilder Builder) :
+        m_ThreadCount(std::thread::hardware_concurrency() / 2)
     {
-        std::queue<PipelineBuilder::PipelinePhase*> CurrentLevel;
+        std::queue<EnginePipelineBuilder::PipelinePhase*> CurrentLevel;
 
         auto& Phases = m_Levels.emplace_back();
         for (auto& [PhaseName, Phase] : Builder.m_Phases)
@@ -50,7 +50,7 @@ namespace Neon
         }
     }
 
-    void Pipeline::BeginPhases()
+    void EnginePipeline::BeginPhases()
     {
         auto RunLevels = [this]()
         {
@@ -93,7 +93,7 @@ namespace Neon
             }
         };
 
-        if (!m_ThreadCount)
+        if (m_ThreadCount)
         {
             m_ExecutionThread = std::jthread(RunLevels);
         }
@@ -109,19 +109,19 @@ namespace Neon
         }
     }
 
-    void Pipeline::EndPhases()
+    void EnginePipeline::EndPhases()
     {
         if (m_ExecutionThread.joinable())
             m_ExecutionThread.join();
     }
 
-    void Pipeline::SetThreadCount(
+    void EnginePipeline::SetThreadCount(
         uint32_t ThreadCount)
     {
         m_ThreadCount = ThreadCount;
     }
 
-    void Pipeline::SetPhaseEnable(
+    void EnginePipeline::SetPhaseEnable(
         const StringU8& PhaseName,
         bool            Enabled)
     {
@@ -129,11 +129,11 @@ namespace Neon
         Phase.Flags.Set(EPipelineFlags::Disabled, !Enabled);
     }
 
-    void Pipeline::SetPhaseParallelize(
+    void EnginePipeline::SetPhaseParallelize(
         const StringU8& PhaseName,
         bool            Parallelize)
     {
         auto& Phase = m_Phases.find(PhaseName)->second;
         Phase.Flags.Set(EPipelineFlags::DontParallelize, !Parallelize);
     }
-} // namespace Neon
+} // namespace Neon::Runtime

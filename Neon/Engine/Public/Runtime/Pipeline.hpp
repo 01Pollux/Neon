@@ -1,11 +1,10 @@
 #pragma once
 
 #include <Utils/Signal.hpp>
-#include <Core/String.hpp>
 #include <Core/BitMask.hpp>
-#include <map>
+#include <Runtime/PipelineBuilder.hpp>
 
-namespace Neon
+namespace Neon::Runtime
 {
     enum class EPipelineFlags : uint8_t
     {
@@ -25,11 +24,11 @@ namespace Neon
 
     class PipelineBuilder;
 
-    class Pipeline
+    class EnginePipeline
     {
     public:
-        Pipeline(
-            PipelineBuilder Builder);
+        EnginePipeline(
+            EnginePipelineBuilder Builder);
 
         /// <summary>
         /// Begin the execution of the phases.
@@ -115,4 +114,4 @@ namespace Neon
         std::mutex     m_ExecuteMutex;
         uint32_t       m_ThreadCount;
     };
-} // namespace Neon
+} // namespace Neon::Runtime

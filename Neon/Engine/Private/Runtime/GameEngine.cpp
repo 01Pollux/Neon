@@ -4,12 +4,12 @@
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
 #include <Module/Graphics.hpp>
+#include <Runtime/Pipeline.hpp>
 
 namespace Neon::Runtime
 {
     DefaultGameEngine::DefaultGameEngine(
-        const Config::EngineConfig& Config) :
-        m_GameLogic(this)
+        const Config::EngineConfig& Config)
     {
         LoadResourcePacks(Config.Resource);
         m_Window = std::make_unique<Module::Window>(this, Config);
@@ -25,14 +25,22 @@ namespace Neon::Runtime
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {
-            m_GameLogic.Tick();
-
             Graphics->PreRender();
-            m_GameLogic.Render();
             Graphics->PostRender();
         }
         Shutdown();
         return m_Window->GetExitCode();
+    }
+
+    EnginePipeline& DefaultGameEngine::GetPipeline()
+    {
+        return *m_Pipeline;
+    }
+
+    void DefaultGameEngine::SetPipeline(
+        UPtr<EnginePipeline> Pipeline)
+    {
+        m_Pipeline = std::move(Pipeline);
     }
 
     void DefaultGameEngine::LoadResourcePacks(

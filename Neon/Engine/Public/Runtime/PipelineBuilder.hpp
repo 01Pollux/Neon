@@ -4,11 +4,11 @@
 #include <vector>
 #include <map>
 
-namespace Neon
+namespace Neon::Runtime
 {
-    class Pipeline;
+    class EnginePipeline;
 
-    class PipelineBuilder
+    class EnginePipelineBuilder
     {
         struct PipelinePhase
         {
@@ -19,7 +19,7 @@ namespace Neon
 
         using PhasesMapType = std::map<StringU8, PipelinePhase>;
 
-        friend class Pipeline;
+        friend class EnginePipeline;
 
     public:
         class PhaseRef;
@@ -40,9 +40,9 @@ namespace Neon
         PhasesMapType m_Phases;
     };
 
-    class PipelineBuilder::PhaseRef
+    class EnginePipelineBuilder::PhaseRef
     {
-        friend class PipelineBuilder;
+        friend class EnginePipelineBuilder;
 
     public:
         /// <summary>
@@ -61,4 +61,4 @@ namespace Neon
     private:
         PipelinePhase& m_Phase;
     };
-} // namespace Neon
+} // namespace Neon::Runtime

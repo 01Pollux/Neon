@@ -1,11 +1,11 @@
 #include <EnginePCH.hpp>
-#include <Logic/PipelineBuilder.hpp>
+#include <Runtime/PipelineBuilder.hpp>
 
 #include <Log/Logger.hpp>
 
-namespace Neon
+namespace Neon::Runtime
 {
-    auto PipelineBuilder::NewPhase(
+    auto EnginePipelineBuilder::NewPhase(
         const StringU8& PhaseName) -> PhaseRef
     {
         auto [Iter, Success] = m_Phases.emplace(PhaseName, PipelinePhase{ .Name = PhaseName });
@@ -13,7 +13,7 @@ namespace Neon
         return PhaseRef(Iter->second);
     }
 
-    auto PipelineBuilder::GetPhase(
+    auto EnginePipelineBuilder::GetPhase(
         const StringU8& PhaseName) -> PhaseRef
     {
         auto Iter = m_Phases.find(PhaseName);
@@ -21,7 +21,7 @@ namespace Neon
         return PhaseRef(Iter->second);
     }
 
-    void PipelineBuilder::PhaseRef::DependsOn(
+    void EnginePipelineBuilder::PhaseRef::DependsOn(
         PhaseRef& Phase)
     {
         // Detect circular dependencies
@@ -38,4 +38,4 @@ namespace Neon
         Phase.m_Phase.DependentNodes.emplace_back(&m_Phase);
         this->m_Phase.DependenciesCount++;
     }
-} // namespace Neon
+} // namespace Neon::Runtime

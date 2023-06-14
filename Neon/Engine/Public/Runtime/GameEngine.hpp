@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Config/Engine.hpp>
-#include <Runtime/GameLogic.hpp>
 
 namespace Neon::Module
 {
@@ -14,6 +13,8 @@ namespace Neon::Runtime
     extern int Main(
         int      Argc,
         wchar_t* Argv[]);
+
+    class EnginePipeline;
 
     class DefaultGameEngine
     {
@@ -48,6 +49,17 @@ namespace Neon::Runtime
         /// </summary>
         int Run();
 
+        /// <summary>
+        /// Get the game pipeline
+        /// </summary>
+        EnginePipeline& GetPipeline();
+
+        /// <summary>
+        /// Get the game pipeline
+        /// </summary>
+        void SetPipeline(
+            UPtr<EnginePipeline> Pipeline);
+
     private:
         /// <summary>
         /// Load resource packs
@@ -58,7 +70,7 @@ namespace Neon::Runtime
     private:
         UPtr<Module::ResourceManager> m_ResourceManager;
         UPtr<Module::Window>          m_Window;
-        GameLogic                     m_GameLogic;
+        UPtr<EnginePipeline>          m_Pipeline;
     };
 } // namespace Neon::Runtime
 
