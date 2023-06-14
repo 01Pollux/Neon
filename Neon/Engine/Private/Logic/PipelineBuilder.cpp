@@ -24,6 +24,17 @@ namespace Neon
     void PipelineBuilder::PhaseRef::DependsOn(
         PhaseRef& Phase)
     {
+        // Detect circular dependencies
+        auto PendingPhases = m_Phase.DependentNodes;
+        while (!PendingPhases.empty())
+        {
+            auto CheckPhase = PendingPhases.back();
+            PendingPhases.pop_back();
+            NEON_ASSERT(CheckPhase != &Phase.m_Phase, "Circular dependency detected between phases '{}' and '{}'", m_Phase.Name, Phase.m_Phase.Name);
+
+            PendingPhases.insert_range(PendingPhases.end(), CheckPhase->DependentNodes);
+        }
+
         Phase.m_Phase.DependentNodes.emplace_back(&m_Phase);
         this->m_Phase.DependenciesCount++;
     }

@@ -7,7 +7,7 @@ namespace Neon
 {
     Pipeline::Pipeline(
         PipelineBuilder Builder) :
-        m_ThreadCount(std::thread::hardware_concurrency() / 2)
+        m_ThreadCount(std::thread::hardware_concurrency() / 3)
     {
         std::queue<PipelineBuilder::PipelinePhase*> CurrentLevel;
 
@@ -52,30 +52,67 @@ namespace Neon
 
     void Pipeline::BeginPhases()
     {
-        m_ExecutionThread = std::jthread(
-            [this]()
+        auto RunLevels = [this]()
+        {
+            auto ThreadCount = m_ThreadCount;
+            for (auto& Phases : m_Levels)
             {
-                for (auto& Phases : m_Levels)
+                std::vector<std::jthread> WaitingPhases;
+                for (PipelinePhase* Phase : Phases)
                 {
-                    std::vector<std::jthread> WaitingPhases;
-                    for (PipelinePhase* Phase : Phases)
+                    if (!Phase->Flags.Test(EPipelineFlags::Disabled))
                     {
-                        if (Phase->Flags.Test(EPipelineFlags::DontParallelize))
+                        bool Parallelize = !Phase->Flags.Test(EPipelineFlags::DontParallelize);
+
+                        std::unique_lock Lock(m_ExecuteMutex, std::defer_lock);
+                        if (Parallelize)
+                        {
+                            Lock.lock();
+                            Parallelize = ThreadCount > 0;
+                        }
+
+                        if (Parallelize)
+                        {
+                            Lock.unlock();
                             Phase->Signal.Broadcast();
+                        }
                         else
                         {
+                            m_ThreadCount--;
+                            Lock.unlock();
                             WaitingPhases.emplace_back(
-                                [Phase]()
-                                { Phase->Signal.Broadcast(); });
+                                [Phase, this]
+                                {
+                                    Phase->Signal.Broadcast();
+                                    std::unique_lock Lock(m_ExecuteMutex);
+                                    m_ThreadCount++;
+                                });
                         }
                     }
                 }
-            });
+            }
+        };
+
+        if (!m_ThreadCount)
+        {
+            m_ExecutionThread = std::jthread(RunLevels);
+        }
+        else
+        {
+            for (auto& Phases : m_Levels)
+            {
+                for (PipelinePhase* Phase : Phases)
+                {
+                    Phase->Signal.Broadcast();
+                }
+            }
+        }
     }
 
     void Pipeline::EndPhases()
     {
-        m_ExecutionThread.join();
+        if (m_ExecutionThread.joinable())
+            m_ExecutionThread.join();
     }
 
     void Pipeline::SetThreadCount(

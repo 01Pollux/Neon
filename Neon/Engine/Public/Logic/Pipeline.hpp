@@ -112,6 +112,7 @@ namespace Neon
         PhaseMap       m_Phases;
         PhaseLevelList m_Levels;
         std::jthread   m_ExecutionThread;
+        std::mutex     m_ExecuteMutex;
         uint32_t       m_ThreadCount;
     };
 } // namespace Neon

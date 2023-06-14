@@ -39,15 +39,35 @@ NEON_MAIN(Argc, Argv)
 
     auto A = Builder.NewPhase("A");
     auto B = Builder.NewPhase("B");
-    auto C = Builder.NewPhase("C");
     auto D = Builder.NewPhase("D");
+    auto E = Builder.NewPhase("E");
+    auto C = Builder.NewPhase("C");
+    auto K = Builder.NewPhase("K");
+    auto F = Builder.NewPhase("F");
+    auto L = Builder.NewPhase("L");
+    auto J = Builder.NewPhase("J");
+    auto M = Builder.NewPhase("M");
+    auto N = Builder.NewPhase("N");
+    auto Z = Builder.NewPhase("Z");
+    auto O = Builder.NewPhase("O");
 
     C.DependsOn(A);
-    C.DependsOn(D);
-    B.DependsOn(C);
+    C.DependsOn(B);
+    F.DependsOn(D);
+    F.DependsOn(E);
+    J.DependsOn(K);
+    J.DependsOn(C);
+    J.DependsOn(F);
+    M.DependsOn(L);
+    M.DependsOn(J);
+    N.DependsOn(M);
+    Z.DependsOn(N);
+    Z.DependsOn(O);
 
     Neon::Pipeline Pipeline(std::move(Builder));
+    Pipeline.SetThreadCount(1);
 
+    // for each phase, call Pipeline.Attach() with callback to printf name
     Pipeline.Attach("A", []
                     { printf("A\n"); });
     Pipeline.Attach("B", []
@@ -56,6 +76,24 @@ NEON_MAIN(Argc, Argv)
                     { printf("C\n"); });
     Pipeline.Attach("D", []
                     { printf("D\n"); });
+    Pipeline.Attach("E", []
+                    { printf("E\n"); });
+    Pipeline.Attach("F", []
+                    { printf("F\n"); });
+    Pipeline.Attach("J", []
+                    { printf("J\n"); });
+    Pipeline.Attach("K", []
+                    { printf("K\n"); });
+    Pipeline.Attach("L", []
+                    { printf("L\n"); });
+    Pipeline.Attach("M", []
+                    { printf("M\n"); });
+    Pipeline.Attach("N", []
+                    { printf("N\n"); });
+    Pipeline.Attach("O", []
+                    { printf("O\n"); });
+    Pipeline.Attach("Z", []
+                    { printf("Z\n"); });
 
     Pipeline.BeginPhases();
     Pipeline.EndPhases();
