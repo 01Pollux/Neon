@@ -1,20 +1,25 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Pipeline.hpp>
 #include <Runtime/PipelineBuilder.hpp>
+
 #include <queue>
+#include <execution>
+#include <iostream>
+
+#include <Log/Logger.hpp>
 
 namespace Neon::Runtime
 {
     EnginePipeline::EnginePipeline(
-        EnginePipelineBuilder Builder) :
-        m_ThreadCount(std::thread::hardware_concurrency() / 2)
+        EnginePipelineBuilder Builder)
     {
         std::queue<EnginePipelineBuilder::PipelinePhase*> CurrentLevel;
 
         auto& Phases = m_Levels.emplace_back();
         for (auto& [PhaseName, Phase] : Builder.m_Phases)
         {
-            auto Iter = &m_Phases.emplace(PhaseName, PipelinePhase{}).first->second;
+            NEON_ASSERT(!m_Phases.contains(PhaseName));
+            auto Iter = &m_Phases[PhaseName];
             if (!Phase.DependenciesCount)
             {
                 if (!Phase.DependentNodes.empty())
@@ -50,52 +55,56 @@ namespace Neon::Runtime
         }
     }
 
-    void EnginePipeline::BeginPhases()
+    void EnginePipeline::Dispatch()
     {
-        auto RunLevels = [this]()
+        if (m_ThreadPool.GetThreadsCount())
         {
-            auto ThreadCount = m_ThreadCount;
             for (auto& Phases : m_Levels)
             {
-                std::vector<std::jthread> WaitingPhases;
-                for (PipelinePhase* Phase : Phases)
+                for (size_t i = 0; i < Phases.size(); i++)
                 {
+                    auto Phase = Phases[i];
                     if (!Phase->Flags.Test(EPipelineFlags::Disabled))
                     {
-                        bool Parallelize = !Phase->Flags.Test(EPipelineFlags::DontParallelize);
-
-                        std::unique_lock Lock(m_ExecuteMutex, std::defer_lock);
-                        if (Parallelize)
+                        if (Phase->Flags.Test(EPipelineFlags::DontParallelize))
                         {
-                            Lock.lock();
-                            Parallelize = ThreadCount > 0;
-                        }
-
-                        if (Parallelize)
-                        {
-                            Lock.unlock();
-                            Phase->Signal.Broadcast();
+                            m_NonAsyncPhases.emplace_back(Phase);
                         }
                         else
                         {
-                            m_ThreadCount--;
-                            Lock.unlock();
-                            WaitingPhases.emplace_back(
-                                [Phase, this]
-                                {
-                                    Phase->Signal.Broadcast();
-                                    std::unique_lock Lock(m_ExecuteMutex);
-                                    m_ThreadCount++;
-                                });
+                            // Run the last task on the main thread
+                            if (i == Phases.size() && m_NonAsyncPhases.empty())
+                            {
+                                std::scoped_lock Lock(Phase->Mutex);
+                                Phase->Signal.Broadcast();
+                            }
+                            else
+                            {
+                                m_AsyncPhases.emplace_back(m_ThreadPool.Enqueue(
+                                    [this, Phase]
+                                    {
+                                        std::scoped_lock Lock(Phase->Mutex);
+                                        Phase->Signal.Broadcast();
+                                    }));
+                            }
                         }
                     }
                 }
-            }
-        };
+                for (auto Phase : m_NonAsyncPhases)
+                {
+                    std::scoped_lock Lock(Phase->Mutex);
+                    Phase->Signal.Broadcast();
+                }
+                m_NonAsyncPhases.clear();
 
-        if (m_ThreadCount)
-        {
-            m_ExecutionThread = std::jthread(RunLevels);
+                std::for_each(
+                    std::execution::par_unseq,
+                    m_AsyncPhases.begin(),
+                    m_AsyncPhases.end(),
+                    [](auto& Future)
+                    { Future.wait(); });
+                m_AsyncPhases.clear();
+            }
         }
         else
         {
@@ -109,16 +118,10 @@ namespace Neon::Runtime
         }
     }
 
-    void EnginePipeline::EndPhases()
-    {
-        if (m_ExecutionThread.joinable())
-            m_ExecutionThread.join();
-    }
-
     void EnginePipeline::SetThreadCount(
-        uint32_t ThreadCount)
+        size_t ThreadCount)
     {
-        m_ThreadCount = ThreadCount;
+        m_ThreadPool.Resize(ThreadCount);
     }
 
     void EnginePipeline::SetPhaseEnable(

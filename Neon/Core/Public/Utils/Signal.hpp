@@ -2,7 +2,6 @@
 
 #include <list>
 #include <functional>
-#include <boost/pool/pool.hpp>
 
 namespace Neon::Utils
 {
@@ -13,7 +12,7 @@ namespace Neon::Utils
         using DelegateType = std::function<void(_Args...)>;
 
         using CallbackDelegateData = std::pair<DelegateType, uint64_t>;
-        using CallbackDelegateList = std::list<CallbackDelegateData /*, boost::fast_pool_allocator<CallbackDelegateData>*/>;
+        using CallbackDelegateList = std::list<CallbackDelegateData>;
 
     public:
         /// <summary>
@@ -49,6 +48,14 @@ namespace Neon::Utils
             {
                 Listener.first(std::forward<_Args>(Args)...);
             }
+        }
+
+        /// <summary>
+        /// Get the number of listeners
+        /// </summary>
+        [[nodiscard]] size_t GetListenerCount() const noexcept
+        {
+            return m_Listeners.size();
         }
 
     private:

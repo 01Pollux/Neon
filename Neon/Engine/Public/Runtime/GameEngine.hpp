@@ -67,10 +67,16 @@ namespace Neon::Runtime
         void LoadResourcePacks(
             const Config::ResourceConfig& Config);
 
+        /// <summary>
+        /// Begin the engine pipeline
+        /// </summary>
+        void DispatchLoaderPipeline();
+
     private:
         UPtr<Module::ResourceManager> m_ResourceManager;
         UPtr<Module::Window>          m_Window;
-        UPtr<EnginePipeline>          m_Pipeline;
+
+        UPtr<EnginePipeline> m_Pipeline;
     };
 } // namespace Neon::Runtime
 

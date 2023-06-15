@@ -4,6 +4,7 @@
 #include <Module/Window.hpp>
 #include <Module/Resource.hpp>
 #include <Module/Graphics.hpp>
+
 #include <Runtime/Pipeline.hpp>
 
 namespace Neon::Runtime
@@ -13,6 +14,7 @@ namespace Neon::Runtime
     {
         LoadResourcePacks(Config.Resource);
         m_Window = std::make_unique<Module::Window>(this, Config);
+        DispatchLoaderPipeline();
     }
 
     DefaultGameEngine::~DefaultGameEngine()
@@ -25,8 +27,7 @@ namespace Neon::Runtime
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {
-            Graphics->PreRender();
-            Graphics->PostRender();
+            m_Pipeline->Dispatch();
         }
         Shutdown();
         return m_Window->GetExitCode();
@@ -51,5 +52,78 @@ namespace Neon::Runtime
         {
             m_ResourceManager->Get()->TryLoadPack(Tag, Path);
         }
+    }
+
+    void DefaultGameEngine::DispatchLoaderPipeline()
+    {
+        EnginePipelineBuilder Builder;
+
+        auto PreRender    = Builder.NewPhase("PreRender");
+        auto SplashScreen = Builder.NewPhase("Render");
+        auto PostRender   = Builder.NewPhase("PostRender");
+
+        auto RHICompiler    = Builder.NewPhase("RHICompiler");
+        auto ResourceLoader = Builder.NewPhase("ResourceLoader");
+
+        //
+
+        SplashScreen.DependsOn(PreRender);
+        PostRender.DependsOn(SplashScreen);
+
+        //
+
+        SetPipeline(std::make_unique<EnginePipeline>(std::move(Builder)));
+        m_Pipeline->SetThreadCount(4);
+
+        m_Pipeline->Attach(
+            "PreRender",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+                Graphics->PreRender();
+            });
+
+        m_Pipeline->Attach(
+            "Render",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+            });
+
+        m_Pipeline->Attach(
+            "Render",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+            });
+
+        m_Pipeline->Attach(
+            "Render",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+            });
+
+        m_Pipeline->Attach(
+            "RHICompiler",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+            });
+
+        m_Pipeline->Attach(
+            "ResourceLoader",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+            });
+
+        m_Pipeline->Attach(
+            "PostRender",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+                Graphics->PostRender();
+            });
     }
 } // namespace Neon::Runtime

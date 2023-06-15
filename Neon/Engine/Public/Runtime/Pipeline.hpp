@@ -3,6 +3,7 @@
 #include <Utils/Signal.hpp>
 #include <Core/BitMask.hpp>
 #include <Runtime/PipelineBuilder.hpp>
+#include <Asio/ThreadPool.hpp>
 
 namespace Neon::Runtime
 {
@@ -22,8 +23,6 @@ namespace Neon::Runtime
     };
     using MPipelineFlags = Bitmask<EPipelineFlags>;
 
-    class PipelineBuilder;
-
     class EnginePipeline
     {
     public:
@@ -31,21 +30,15 @@ namespace Neon::Runtime
             EnginePipelineBuilder Builder);
 
         /// <summary>
-        /// Begin the execution of the phases.
+        /// Execute the phases in the pipeline
         /// </summary>
-        void BeginPhases();
+        void Dispatch();
 
         /// <summary>
-        /// End the execution of the phases.
+        /// Enable or disable parallelization for the pipeline
         /// </summary>
-        void EndPhases();
-
-        /// <summary>
-        /// Set the number of threads to use for parallelization
-        /// </summary>
-        /// <param name="ThreadCount"></param>
         void SetThreadCount(
-            uint32_t ThreadCount);
+            size_t ThreadCount);
 
     public:
         /// <summary>
@@ -72,6 +65,8 @@ namespace Neon::Runtime
             _FnTy&&         Callback)
         {
             auto& Phase = m_Phases.find(PhaseName)->second;
+
+            std::scoped_lock Lock(Phase.Mutex);
             return Utils::SignalHandle(Phase, std::forward<_FnTy>(Callback));
         }
 
@@ -84,6 +79,8 @@ namespace Neon::Runtime
             _FnTy&&         Callback)
         {
             auto& Phase = m_Phases.find(PhaseName)->second;
+
+            std::scoped_lock Lock(Phase.Mutex);
             return Phase.Signal.Listen(std::forward<_FnTy>(Callback));
         }
 
@@ -95,6 +92,8 @@ namespace Neon::Runtime
             uint64_t        Id)
         {
             auto& Phase = m_Phases.find(PhaseName)->second;
+
+            std::scoped_lock Lock(Phase.Mutex);
             return Phase.Signal.Drop(Id);
         }
 
@@ -102,6 +101,7 @@ namespace Neon::Runtime
         struct PipelinePhase
         {
             Utils::Signal<> Signal;
+            std::mutex      Mutex;
             MPipelineFlags  Flags;
         };
         using PhaseMap       = std::map<StringU8, PipelinePhase>;
@@ -110,8 +110,11 @@ namespace Neon::Runtime
     private:
         PhaseMap       m_Phases;
         PhaseLevelList m_Levels;
-        std::jthread   m_ExecutionThread;
-        std::mutex     m_ExecuteMutex;
-        uint32_t       m_ThreadCount;
+
+        Asio::ThreadPool<>                          m_ThreadPool;
+        std::vector<Asio::ThreadPool<>::FutureType> m_AsyncPhases;
+        std::vector<PipelinePhase*>                 m_NonAsyncPhases;
+
+        bool m_Async = true;
     };
 } // namespace Neon::Runtime
