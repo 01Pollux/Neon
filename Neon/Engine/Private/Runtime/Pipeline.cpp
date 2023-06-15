@@ -3,9 +3,6 @@
 #include <Runtime/PipelineBuilder.hpp>
 
 #include <queue>
-#include <execution>
-#include <iostream>
-
 #include <Log/Logger.hpp>
 
 namespace Neon::Runtime
@@ -18,7 +15,6 @@ namespace Neon::Runtime
         auto& Phases = m_Levels.emplace_back();
         for (auto& [PhaseName, Phase] : Builder.m_Phases)
         {
-            NEON_ASSERT(!m_Phases.contains(PhaseName));
             auto Iter = &m_Phases[PhaseName];
             if (!Phase.DependenciesCount)
             {
@@ -27,6 +23,11 @@ namespace Neon::Runtime
                     CurrentLevel.push(&Phase);
                 }
                 Phases.emplace_back(Iter);
+            }
+            for (auto& Child : Phase.DependentNodes)
+            {
+                auto ChildPhase = &m_Phases[Child->Name];
+                ChildPhase->Parents.emplace_back(Iter);
             }
         }
 
@@ -55,7 +56,7 @@ namespace Neon::Runtime
         }
     }
 
-    void EnginePipeline::Dispatch()
+    void EnginePipeline::BeginDispatch()
     {
         if (m_ThreadPool.GetThreadsCount())
         {
@@ -72,21 +73,16 @@ namespace Neon::Runtime
                         }
                         else
                         {
-                            // Run the last task on the main thread
-                            if (i == Phases.size() && m_NonAsyncPhases.empty())
-                            {
-                                std::scoped_lock Lock(Phase->Mutex);
-                                Phase->Signal.Broadcast();
-                            }
-                            else
-                            {
-                                m_AsyncPhases.emplace_back(m_ThreadPool.Enqueue(
-                                    [this, Phase]
+                            Phase->Async = m_ThreadPool.Enqueue(
+                                [this, Phase]
+                                {
+                                    for (auto Parent : Phase->Parents)
                                     {
-                                        std::scoped_lock Lock(Phase->Mutex);
-                                        Phase->Signal.Broadcast();
-                                    }));
-                            }
+                                        Parent->Async.wait();
+                                    }
+                                    std::scoped_lock Lock(Phase->Mutex);
+                                    Phase->Signal.Broadcast();
+                                });
                         }
                     }
                 }
@@ -96,14 +92,6 @@ namespace Neon::Runtime
                     Phase->Signal.Broadcast();
                 }
                 m_NonAsyncPhases.clear();
-
-                std::for_each(
-                    std::execution::par_unseq,
-                    m_AsyncPhases.begin(),
-                    m_AsyncPhases.end(),
-                    [](auto& Future)
-                    { Future.wait(); });
-                m_AsyncPhases.clear();
             }
         }
         else
@@ -114,6 +102,18 @@ namespace Neon::Runtime
                 {
                     Phase->Signal.Broadcast();
                 }
+            }
+        }
+    }
+
+    void EnginePipeline::EndDispatch()
+    {
+        for (auto& Phases : m_Levels)
+        {
+            for (PipelinePhase* Phase : Phases)
+            {
+                if (Phase->Async.valid())
+                    Phase->Async.wait();
             }
         }
     }

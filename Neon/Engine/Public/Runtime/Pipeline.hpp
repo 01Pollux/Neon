@@ -32,7 +32,12 @@ namespace Neon::Runtime
         /// <summary>
         /// Execute the phases in the pipeline
         /// </summary>
-        void Dispatch();
+        void BeginDispatch();
+
+        /// <summary>
+        /// Execute the phases in the pipeline
+        /// </summary>
+        void EndDispatch();
 
         /// <summary>
         /// Enable or disable parallelization for the pipeline
@@ -98,23 +103,27 @@ namespace Neon::Runtime
         }
 
     private:
+        struct PipelinePhase;
+
+        using PhaseMapType        = std::map<StringU8, PipelinePhase>;
+        using ParentPhaseListType = std::vector<PipelinePhase*>;
+        using PhaseLevelListType  = std::vector<std::vector<PipelinePhase*>>;
+        using AsyncExecutionType  = Asio::ThreadPool<>::FutureType;
+
         struct PipelinePhase
         {
-            Utils::Signal<> Signal;
-            std::mutex      Mutex;
-            MPipelineFlags  Flags;
+            ParentPhaseListType Parents;
+            Utils::Signal<>     Signal;
+            std::mutex          Mutex;
+            AsyncExecutionType  Async;
+            MPipelineFlags      Flags;
         };
-        using PhaseMap       = std::map<StringU8, PipelinePhase>;
-        using PhaseLevelList = std::vector<std::vector<PipelinePhase*>>;
 
     private:
-        PhaseMap       m_Phases;
-        PhaseLevelList m_Levels;
+        PhaseMapType       m_Phases;
+        PhaseLevelListType m_Levels;
 
-        Asio::ThreadPool<>                          m_ThreadPool;
-        std::vector<Asio::ThreadPool<>::FutureType> m_AsyncPhases;
-        std::vector<PipelinePhase*>                 m_NonAsyncPhases;
-
-        bool m_Async = true;
+        Asio::ThreadPool<>          m_ThreadPool;
+        std::vector<PipelinePhase*> m_NonAsyncPhases;
     };
 } // namespace Neon::Runtime

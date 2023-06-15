@@ -27,7 +27,8 @@ namespace Neon::Runtime
         auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {
-            m_Pipeline->Dispatch();
+            m_Pipeline->BeginDispatch();
+            m_Pipeline->EndDispatch();
         }
         Shutdown();
         return m_Window->GetExitCode();
