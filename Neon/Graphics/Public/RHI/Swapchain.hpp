@@ -115,9 +115,8 @@ namespace Neon::RHI
             _FnTy&& Task,
             _Args&&... Args)
         {
-            return EnqueueRequestCopy(std::bind(
+            return EnqueueRequestCopy(std::bind_back(
                 std::forward<_FnTy>(Task),
-                std::placeholders::_1,
                 std::forward<_Args>(Args)...));
         }
 

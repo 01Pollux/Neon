@@ -9,6 +9,8 @@
 
 //
 
+#include <RHI/Resource/Views/ShaderResource.hpp>
+
 #include <fstream>
 #include <Math/Matrix.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
@@ -41,6 +43,29 @@ namespace Neon::Runtime::Phases
 
         auto Builder = RenderGraph->Reset();
 
+        Ptr<RHI::ITexture> Texture;
+
+        std::vector<uint8_t> Data(256 * 256 * 4);
+        // initialize with pink color (255, 0, 255, 255)
+        for (size_t i = 0; i < Data.size(); i += 4)
+        {
+            Data[i + 0] = 255;
+            Data[i + 1] = 0;
+            Data[i + 2] = 0;
+            Data[i + 3] = 255;
+        }
+
+        RHI::SubresourceDesc Subresources{
+            .Data       = Data.data(),
+            .RowPitch   = 256 * 4,
+            .SlicePitch = Subresources.RowPitch * 256
+        };
+
+        Texture.reset(RHI::ITexture::Create(
+            Graphics->GetSwapchain(),
+            RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8G8B8A8_UNorm, 256, 256, 1, 1),
+            { &Subresources, 1 }));
+
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
             .SetShaderResolver(
                 [](auto& Resolver)
@@ -71,12 +96,23 @@ namespace Neon::Runtime::Phases
             .SetRootSignatureResolver(
                 [](auto& Resolver)
                 {
+                    RHI::StaticSamplerDesc Sampler;
+
+                    Sampler.Filter         = RHI::ESamplerFilter::MinMagMipPoint;
+                    Sampler.RegisterSpace  = 0;
+                    Sampler.ShaderRegister = 0;
+                    Sampler.Visibility     = RHI::ShaderVisibility::Pixel;
+
                     Resolver.Load(
                         RG::ResourceId(STR("Test.RS")),
                         RHI::RootSignatureBuilder()
                             .Add32BitConstants<float>(0, 0)
                             .Add32BitConstants<Matrix4x4>(0, 1)
                             .AddConstantBufferView(1, 0)
+                            .AddDescriptorTable(
+                                RHI::RootDescriptorTable()
+                                    .AddSrvRange(0, 0, 1))
+                            .AddSampler(Sampler)
                             .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
                 })
             .SetPipelineStateResolver(
@@ -119,9 +155,11 @@ namespace Neon::Runtime::Phases
                         });
                 })
             .SetDispatcher(
-                [](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList)
+                [Texture](const auto& Storage, auto CommandList)
                 {
                     auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
+
+                    Texture->WaitForCopy();
 
                     //
 
@@ -184,6 +222,14 @@ namespace Neon::Runtime::Phases
                         2,
                         Colors::Green.data(),
                         sizeof(float) * 4);
+
+                    auto ResourceView = RenderCommandList->GetResourceView();
+                    auto Srv          = static_cast<RHI::Views::ShaderResource&>(ResourceView);
+                    Srv.Bind(Texture.get());
+
+                    RenderCommandList->SetDescriptorTable(
+                        3,
+                        ResourceView.GetGpuHandle());
 
                     RenderCommandList->Draw(RHI::DrawArgs{
                         .VertexCountPerInstance = 3 });

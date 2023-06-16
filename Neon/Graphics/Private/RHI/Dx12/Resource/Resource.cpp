@@ -276,35 +276,33 @@ namespace Neon::RHI
         auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
         Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
 
-        if (Subresources.empty())
+        if (!Subresources.empty())
         {
-            return;
+            auto SubresourcesCopy =
+                Subresources |
+                std::ranges::to<std::vector<SubresourceDesc>>();
+
+            m_PendingCopy = Swapchain->RequestCopy(
+                [Swapchain](
+                    ICopyCommandList* CommandList,
+                    Dx12Texture*      Texture,
+                    auto              Subreources)
+                {
+                    Dx12UploadBuffer Buffer{
+                        Swapchain,
+                        { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
+                    };
+
+                    CommandList->CopySubresources(
+                        Texture,
+                        static_cast<IGpuResource*>(&Buffer),
+                        0,
+                        0,
+                        Subreources);
+                },
+                this,
+                std::move(SubresourcesCopy));
         }
-
-        auto SubresourcesCopy =
-            Subresources |
-            std::ranges::to<std::vector<SubresourceDesc>>();
-
-        m_PendingCopy = Swapchain->RequestCopy(
-            [Swapchain](
-                ICopyCommandList* CommandList,
-                Dx12Texture*      Texture,
-                auto              Subreources)
-            {
-                Dx12UploadBuffer Buffer{
-                    Swapchain,
-                    { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
-                };
-
-                CommandList->CopySubresources(
-                    Texture,
-                    static_cast<IGpuResource*>(&Buffer),
-                    0,
-                    0,
-                    Subreources);
-            },
-            this,
-            std::move(SubresourcesCopy));
     }
 
     Dx12Texture::Dx12Texture(
@@ -333,10 +331,7 @@ namespace Neon::RHI
 
     Dx12Texture::~Dx12Texture()
     {
-        if (m_PendingCopy.valid())
-        {
-            m_PendingCopy.wait();
-        }
+        WaitForCopy();
 
         if (m_Resource)
         {
@@ -422,6 +417,14 @@ namespace Neon::RHI
         return MipIndex +
                ArrayIndex * m_MipLevels +
                PlaneIndex * m_Dimensions.z() * m_MipLevels;
+    }
+
+    void Dx12Texture::WaitForCopy()
+    {
+        if (m_PendingCopy.valid())
+        {
+            m_PendingCopy.wait();
+        }
     }
 
     size_t Dx12Texture::GetTextureCopySize(

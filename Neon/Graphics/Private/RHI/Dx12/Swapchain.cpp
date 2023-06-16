@@ -37,7 +37,7 @@ namespace Neon::RHI
         {
             Allocator->Free(m_RenderTargets.GetHandle());
         }
-        m_BudgetManager.IdleGPU();
+        m_BudgetManager.Shutdown();
     }
 
     //

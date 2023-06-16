@@ -145,6 +145,8 @@ namespace Neon::RHI
             uint32_t ArrayIndex,
             uint32_t MipIndex) const override;
 
+        void WaitForCopy() override;
+
     private:
         /// <summary>
         /// Get the size of the texture in bytes to copy.

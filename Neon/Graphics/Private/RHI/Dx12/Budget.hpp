@@ -143,6 +143,11 @@ namespace Neon::RHI
         std::future<void> EnqueueCopy(
             std::function<void(ICopyCommandList*)> Task);
 
+        /// <summary>
+        /// Wait for all tasks to finish and shutdown
+        /// </summary>
+        void Shutdown();
+
     private:
         /// <summary>
         /// Create copy queue
@@ -218,6 +223,11 @@ namespace Neon::RHI
         /// Forces GPU to wait for all commands to finish.
         /// </summary>
         void IdleGPU();
+
+        /// <summary>
+        /// Shutdown budget manager and wait for GPU to finish.
+        /// </summary>
+        void Shutdown();
 
     public:
         /// <summary>

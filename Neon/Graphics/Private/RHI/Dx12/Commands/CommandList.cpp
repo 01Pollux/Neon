@@ -17,6 +17,9 @@
 
 namespace Neon::RHI
 {
+    static constexpr uint32_t SizeOfResourceDescriptorHeap = 8192;
+    static constexpr uint32_t SizeOfSamplerDescriptorHeap  = 8;
+
     Dx12CommandList::Dx12CommandList(
         ISwapchain* Swapchain) :
         m_Swapchain(static_cast<Dx12Swapchain*>(Swapchain))
@@ -157,6 +160,18 @@ namespace Neon::RHI
 
     //
 
+    Dx12CommonCommandList::Dx12CommonCommandList(
+        ISwapchain* Swapchain) :
+        Dx12CommandList(Swapchain)
+    {
+        m_ResourceViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
+            Swapchain,
+            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfResourceDescriptorHeap, true);
+        m_SamplerViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
+            Swapchain,
+            D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfSamplerDescriptorHeap, true);
+    }
+
     void Dx12CommonCommandList::SetPipelineState(
         const Ptr<IPipelineState>& State)
     {
@@ -206,6 +221,8 @@ namespace Neon::RHI
 
     void Dx12CommonCommandList::ReserveDescriptorHeaps()
     {
+        uint32_t HeapsCount = 0;
+
         std::array<ID3D12DescriptorHeap*, 2> OldHeaps{}, NewHeaps{};
 
         auto& ResourceView = m_ResourceView.GetHandle();
@@ -219,20 +236,20 @@ namespace Neon::RHI
             m_ResourceView = Views::Generic(
                 m_ResourceViewAllocator.get(),
                 Count);
+            NewHeaps[HeapsCount++] = static_cast<Dx12DescriptorHeap*>(m_ResourceView.GetHandle().Heap)->Get();
         }
         if (uint32_t Count = m_RootSignature->GetSamplerCountInDescriptor())
         {
             m_SamplerView = Views::Generic(
                 m_SamplerViewAllocator.get(),
                 Count);
+            NewHeaps[HeapsCount++] = static_cast<Dx12DescriptorHeap*>(m_SamplerView.GetHandle().Heap)->Get();
         }
 
-        NewHeaps[0] = ResourceView.Heap ? static_cast<Dx12DescriptorHeap*>(ResourceView.Heap)->Get() : nullptr;
-        NewHeaps[1] = SamplerView.Heap ? static_cast<Dx12DescriptorHeap*>(SamplerView.Heap)->Get() : nullptr;
-
+        // Detect any heap change
         if (OldHeaps != NewHeaps)
         {
-            m_CommandList->SetDescriptorHeaps(2, NewHeaps.data());
+            m_CommandList->SetDescriptorHeaps(HeapsCount, NewHeaps.data());
         }
     }
 

@@ -210,5 +210,10 @@ namespace Neon::RHI
             uint32_t PlaneIndex,
             uint32_t ArrayIndex,
             uint32_t MipIndex) const = 0;
+
+        /// <summary>
+        /// Wait for copy to complete.
+        /// </summary>
+        virtual void WaitForCopy() = 0;
     };
 } // namespace Neon::RHI

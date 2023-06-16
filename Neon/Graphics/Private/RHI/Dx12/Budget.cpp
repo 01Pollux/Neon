@@ -244,6 +244,12 @@ namespace Neon::RHI
         }
     }
 
+    void BudgetManager::Shutdown()
+    {
+        m_CopyContext.Shutdown();
+        IdleGPU();
+    }
+
     //
 
     std::vector<ICommandList*> BudgetManager::AllocateCommandLists(

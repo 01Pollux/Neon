@@ -95,6 +95,12 @@ namespace Neon::RHI
         return Future;
     }
 
+    void CopyContextManager::Shutdown()
+    {
+        m_TaskWaiter.notify_all();
+        m_Threads = {};
+    }
+
     Win32::ComPtr<ID3D12CommandQueue> CopyContextManager::CreateCopyQueue()
     {
         Win32::ComPtr<ID3D12CommandQueue> Result;

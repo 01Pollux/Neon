@@ -63,7 +63,8 @@ namespace Neon::RHI
 
     {
     public:
-        using Dx12CommandList::Dx12CommandList;
+        Dx12CommonCommandList(
+            ISwapchain* Swapchain);
 
         void SetPipelineState(
             const Ptr<IPipelineState>& State) override;

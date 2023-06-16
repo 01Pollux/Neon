@@ -5,6 +5,8 @@
 
 namespace Neon::RG
 {
+    class GraphStorage;
+
     class LambdaPass : public IRenderPass
     {
     public:
@@ -64,60 +66,95 @@ namespace Neon::RG
         /// <summary>
         /// Set the shader resolver for the pass.
         /// </summary>
-        template<std::invocable<ShaderResolver&> _FnTy>
+        template<typename _FnTy, typename... _Args>
         LambdaPass& SetShaderResolver(
-            _FnTy&& Resolver)
+            _FnTy&& Resolver,
+            _Args&&... Args)
         {
-            m_ShaderResolver = std::move(Resolver);
+            m_ShaderResolver = [Callback = std::bind_back(
+                                    std::forward<_FnTy>(Resolver),
+                                    std::forward<_Args>(Args)...)](
+                                   auto& Resolver)
+            {
+                std::invoke(Callback, Resolver);
+            };
             return *this;
         }
 
         /// <summary>
         /// Set the root signature resolver for the pass.
         /// </summary>
-        template<std::invocable<RootSignatureResolver&> _FnTy>
+        template<typename _FnTy, typename... _Args>
         LambdaPass& SetRootSignatureResolver(
-            _FnTy&& Resolver)
+            _FnTy&& Resolver,
+            _Args&&... Args)
         {
-            m_RootSignatureResolver = std::move(Resolver);
+            m_RootSignatureResolver = [Callback = std::bind_back(
+                                           std::forward<_FnTy>(Resolver),
+                                           std::forward<_Args>(Args)...)](
+                                          auto& Resolver)
+            {
+                std::invoke(Callback, Resolver);
+            };
             return *this;
         }
 
         /// <summary>
         /// Set the pipeline state resolver for the pass.
         /// </summary>
-        template<std::invocable<PipelineStateResolver&> _FnTy>
+        template<typename _FnTy, typename... _Args>
         LambdaPass& SetPipelineStateResolver(
-            _FnTy&& Resolver)
+            _FnTy&& Resolver,
+            _Args&&... Args)
         {
-            m_PipelineStateResolver = std::move(Resolver);
+
+            m_PipelineStateResolver = [Callback = std::bind_back(
+                                           std::forward<_FnTy>(Resolver),
+                                           std::forward<_Args>(Args)...)](
+                                          auto& Resolver)
+            {
+                std::invoke(Callback, Resolver);
+            };
             return *this;
         }
 
         /// <summary>
         /// Set the resource resolver for the pass.
         /// </summary>
-        template<std::invocable<ResourceResolver&> _FnTy>
+        template<typename _FnTy, typename... _Args>
         LambdaPass& SetResourceResolver(
-            _FnTy&& Resolver)
+            _FnTy&& Resolver,
+            _Args&&... Args)
         {
-            m_ResourceResolver = std::move(Resolver);
+            m_ResourceResolver = [Callback = std::bind_back(
+                                      std::forward<_FnTy>(Resolver),
+                                      std::forward<_Args>(Args)...)](
+                                     auto& Resolver)
+            {
+                std::invoke(Callback, Resolver);
+            };
             return *this;
         }
 
         /// <summary>
         /// Set the dispatcher for the pass.
         /// </summary>
-        template<std::invocable<const GraphStorage&, RHI::ICommandList*> _FnTy>
+        template<typename _FnTy, typename... _Args>
         LambdaPass& SetDispatcher(
-            _FnTy&& Dispatcher)
+            _FnTy&& Resolver,
+            _Args&&... Args)
         {
-            m_Dispatcher = std::move(Dispatcher);
+            std::function<void(const GraphStorage&, RHI::ICommandList*)> Func = std::bind(std::forward<_FnTy>(Resolver),
+                                                                                          std::placeholders::_1,
+                                                                                          std::placeholders::_2,
+                                                                                          std::forward<_Args>(Args)...);
+            m_Dispatcher                                                      = Func;
             return *this;
         }
 
     private:
-        std::function<void(ShaderResolver&)>        m_ShaderResolver;
+        std::function<void(ShaderResolver&)>
+                                                    m_ShaderResolver;
         std::function<void(RootSignatureResolver&)> m_RootSignatureResolver;
         std::function<void(PipelineStateResolver&)> m_PipelineStateResolver;
         std::function<void(ResourceResolver&)>      m_ResourceResolver;
