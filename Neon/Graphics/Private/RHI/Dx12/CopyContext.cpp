@@ -24,7 +24,8 @@ namespace Neon::RHI
 
     CopyContextManager::CopyContextManager(
         ISwapchain* Swapchain) :
-        m_CopyQueue(CreateCopyQueue())
+        m_CopyQueue(Swapchain, CommandQueueType::Copy),
+        m_CopyFence(0)
     {
         for (size_t i = 0; i < m_Threads.size(); i++)
         {
@@ -53,7 +54,8 @@ namespace Neon::RHI
                         {
                             for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
                             {
-                                m_Queue.front()(&CopyCommandList);
+                                auto& [Task, Promise] = m_Queue.front();
+                                Task(&CopyCommandList);
                                 m_Queue.pop();
                             }
                         }
@@ -71,7 +73,8 @@ namespace Neon::RHI
                         ID3D12CommandList* CommandLists[]{ Context.CommandList.Get() };
 
                         ThrowIfFailed(Context.CommandList->Close());
-                        m_CopyQueue->ExecuteCommandLists(1, CommandLists);
+                        m_CopyQueue.Get()->ExecuteCommandLists(1, CommandLists);
+                        m_CopyFence.SignalGPU(&m_CopyQueue, m_CopyId);
 
                         Lock.unlock();
                     }
@@ -80,40 +83,30 @@ namespace Neon::RHI
         }
     }
 
-    std::future<void> CopyContextManager::EnqueueCopy(
+    void CopyContextManager::WaitForCopy(
+        Dx12CommandQueue* Queue,
+        uint64_t          CopyId)
+    {
+        m_CopyFence.WaitGPU(Queue, CopyId);
+    }
+
+    uint64_t CopyContextManager::EnqueueCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
-        PackagedTaskType PackagedTask(Task);
-        auto             Future = PackagedTask.get_future();
-
+        uint64_t CopyId;
         {
             std::scoped_lock Lock(m_QueueMutex);
-            m_Queue.emplace(std::move(PackagedTask));
+            CopyId = m_CopyId + m_Queue.size();
+            m_Queue.emplace(PackagedTaskType(Task));
         }
 
         m_TaskWaiter.notify_one();
-        return Future;
+        return CopyId;
     }
 
     void CopyContextManager::Shutdown()
     {
         m_TaskWaiter.notify_all();
         m_Threads = {};
-    }
-
-    Win32::ComPtr<ID3D12CommandQueue> CopyContextManager::CreateCopyQueue()
-    {
-        Win32::ComPtr<ID3D12CommandQueue> Result;
-
-        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
-
-        D3D12_COMMAND_QUEUE_DESC Desc{
-            .Type = D3D12_COMMAND_LIST_TYPE_COPY
-        };
-        ThrowIfFailed(Dx12Device->CreateCommandQueue(
-            &Desc,
-            IID_PPV_ARGS(&Result)));
-
-        return Result;
     }
 } // namespace Neon::RHI

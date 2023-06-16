@@ -71,13 +71,7 @@ namespace Neon::RG
             _FnTy&& Resolver,
             _Args&&... Args)
         {
-            m_ShaderResolver = [Callback = std::bind_back(
-                                    std::forward<_FnTy>(Resolver),
-                                    std::forward<_Args>(Args)...)](
-                                   auto& Resolver)
-            {
-                std::invoke(Callback, Resolver);
-            };
+            m_ShaderResolver = std ::bind_back(std::forward<_FnTy>(Resolver), std::forward<_Args>(Args)...);
             return *this;
         }
 
@@ -89,13 +83,7 @@ namespace Neon::RG
             _FnTy&& Resolver,
             _Args&&... Args)
         {
-            m_RootSignatureResolver = [Callback = std::bind_back(
-                                           std::forward<_FnTy>(Resolver),
-                                           std::forward<_Args>(Args)...)](
-                                          auto& Resolver)
-            {
-                std::invoke(Callback, Resolver);
-            };
+            m_RootSignatureResolver = std::bind_back(std::forward<_FnTy>(Resolver), std::forward<_Args>(Args)...);
             return *this;
         }
 
@@ -107,14 +95,7 @@ namespace Neon::RG
             _FnTy&& Resolver,
             _Args&&... Args)
         {
-
-            m_PipelineStateResolver = [Callback = std::bind_back(
-                                           std::forward<_FnTy>(Resolver),
-                                           std::forward<_Args>(Args)...)](
-                                          auto& Resolver)
-            {
-                std::invoke(Callback, Resolver);
-            };
+            m_PipelineStateResolver = std::bind_back(std::forward<_FnTy>(Resolver), std::forward<_Args>(Args)...);
             return *this;
         }
 
@@ -126,13 +107,7 @@ namespace Neon::RG
             _FnTy&& Resolver,
             _Args&&... Args)
         {
-            m_ResourceResolver = [Callback = std::bind_back(
-                                      std::forward<_FnTy>(Resolver),
-                                      std::forward<_Args>(Args)...)](
-                                     auto& Resolver)
-            {
-                std::invoke(Callback, Resolver);
-            };
+            m_ResourceResolver = std::bind_back(std::forward<_FnTy>(Resolver), std::forward<_Args>(Args)...);
             return *this;
         }
 
@@ -144,11 +119,7 @@ namespace Neon::RG
             _FnTy&& Resolver,
             _Args&&... Args)
         {
-            std::function<void(const GraphStorage&, RHI::ICommandList*)> Func = std::bind(std::forward<_FnTy>(Resolver),
-                                                                                          std::placeholders::_1,
-                                                                                          std::placeholders::_2,
-                                                                                          std::forward<_Args>(Args)...);
-            m_Dispatcher                                                      = Func;
+            m_Dispatcher = std::bind_back(std::forward<_FnTy>(Resolver), std::forward<_Args>(Args)...);
             return *this;
         }
 

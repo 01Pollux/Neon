@@ -46,7 +46,6 @@ namespace Neon::Runtime::Phases
         Ptr<RHI::ITexture> Texture;
 
         std::vector<uint8_t> Data(256 * 256 * 4);
-        // initialize with pink color (255, 0, 255, 255)
         for (size_t i = 0; i < Data.size(); i += 4)
         {
             Data[i + 0] = 255;
@@ -61,10 +60,13 @@ namespace Neon::Runtime::Phases
             .SlicePitch = Subresources.RowPitch * 256
         };
 
+        uint64_t CopyId;
+
         Texture.reset(RHI::ITexture::Create(
             Graphics->GetSwapchain(),
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8G8B8A8_UNorm, 256, 256, 1, 1),
-            { &Subresources, 1 }));
+            { &Subresources, 1 },
+            CopyId));
 
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
             .SetShaderResolver(
@@ -155,11 +157,17 @@ namespace Neon::Runtime::Phases
                         });
                 })
             .SetDispatcher(
-                [Texture](const auto& Storage, auto CommandList)
+                [Texture, CopyId = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList)
                 {
                     auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
-                    Texture->WaitForCopy();
+                    if (CopyId)
+                    {
+                        auto GraphicsQueue = Storage.GetSwapchain()->GetQueue(RHI::CommandQueueType::Graphics);
+                        Storage.GetSwapchain()->WaitForCopy(
+                            GraphicsQueue,
+                            *CopyId);
+                    }
 
                     //
 

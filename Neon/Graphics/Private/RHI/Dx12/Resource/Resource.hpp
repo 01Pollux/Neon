@@ -119,7 +119,8 @@ namespace Neon::RHI
         Dx12Texture(
             ISwapchain*                      Swapchain,
             const RHI::ResourceDesc&         Desc,
-            std::span<const SubresourceDesc> Subresources);
+            std::span<const SubresourceDesc> Subresources,
+            uint64_t*                        CopyId);
 
         Dx12Texture(
             ISwapchain*                        Swapchain,
@@ -145,8 +146,6 @@ namespace Neon::RHI
             uint32_t ArrayIndex,
             uint32_t MipIndex) const override;
 
-        void WaitForCopy() override;
-
     private:
         /// <summary>
         /// Get the size of the texture in bytes to copy.
@@ -155,8 +154,6 @@ namespace Neon::RHI
             uint32_t SubresourcesCount);
 
     protected:
-        std::future<void> m_PendingCopy;
-
         Vector3DI m_Dimensions;
         uint16_t  m_MipLevels = 0;
 

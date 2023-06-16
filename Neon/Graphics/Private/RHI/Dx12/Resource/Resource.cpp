@@ -158,17 +158,26 @@ namespace Neon::RHI
     //
 
     ITexture* ITexture::Create(
+        ISwapchain*         Swapchain,
+        const ResourceDesc& Desc)
+    {
+        return NEON_NEW Dx12Texture(Swapchain, Desc, {}, nullptr);
+    }
+
+    ITexture* ITexture::Create(
         ISwapchain*                      Swapchain,
         const ResourceDesc&              Desc,
-        std::span<const SubresourceDesc> Subresources)
+        std::span<const SubresourceDesc> Subresources,
+        uint64_t&                        CopyId)
     {
-        return NEON_NEW Dx12Texture(Swapchain, Desc, Subresources);
+        return NEON_NEW Dx12Texture(Swapchain, Desc, Subresources, &CopyId);
     }
 
     Dx12Texture::Dx12Texture(
         ISwapchain*                      Swapchain,
         const RHI::ResourceDesc&         Desc,
-        std::span<const SubresourceDesc> Subresources) :
+        std::span<const SubresourceDesc> Subresources,
+        uint64_t*                        CopyId) :
         Dx12GpuResource(Swapchain)
     {
         D3D12_RESOURCE_DESC Dx12Desc{
@@ -282,7 +291,7 @@ namespace Neon::RHI
                 Subresources |
                 std::ranges::to<std::vector<SubresourceDesc>>();
 
-            m_PendingCopy = Swapchain->RequestCopy(
+            *CopyId = Swapchain->RequestCopy(
                 [Swapchain](
                     ICopyCommandList* CommandList,
                     Dx12Texture*      Texture,
@@ -331,8 +340,6 @@ namespace Neon::RHI
 
     Dx12Texture::~Dx12Texture()
     {
-        WaitForCopy();
-
         if (m_Resource)
         {
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
@@ -417,14 +424,6 @@ namespace Neon::RHI
         return MipIndex +
                ArrayIndex * m_MipLevels +
                PlaneIndex * m_Dimensions.z() * m_MipLevels;
-    }
-
-    void Dx12Texture::WaitForCopy()
-    {
-        if (m_PendingCopy.valid())
-        {
-            m_PendingCopy.wait();
-        }
     }
 
     size_t Dx12Texture::GetTextureCopySize(

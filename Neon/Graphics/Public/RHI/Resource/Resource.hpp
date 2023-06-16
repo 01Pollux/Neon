@@ -184,9 +184,17 @@ namespace Neon::RHI
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
+            ISwapchain*         Swapchain,
+            const ResourceDesc& Desc);
+
+        /// <summary>
+        /// Creates a texture.
+        /// </summary>
+        [[nodiscard]] static ITexture* Create(
             ISwapchain*                      Swapchain,
             const ResourceDesc&              Desc,
-            std::span<const SubresourceDesc> Subresources = {});
+            std::span<const SubresourceDesc> Subresources,
+            uint64_t&                        CopyId);
 
         /// <summary>
         /// Returns the dimensions of the texture.
@@ -210,10 +218,5 @@ namespace Neon::RHI
             uint32_t PlaneIndex,
             uint32_t ArrayIndex,
             uint32_t MipIndex) const = 0;
-
-        /// <summary>
-        /// Wait for copy to complete.
-        /// </summary>
-        virtual void WaitForCopy() = 0;
     };
 } // namespace Neon::RHI

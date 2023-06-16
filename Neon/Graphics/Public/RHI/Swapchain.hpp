@@ -111,7 +111,7 @@ namespace Neon::RHI
         /// Enqueue a copy command list to be executed.
         /// </summary>
         template<typename _FnTy, typename... _Args>
-        std::future<void> RequestCopy(
+        uint64_t RequestCopy(
             _FnTy&& Task,
             _Args&&... Args)
         {
@@ -120,11 +120,18 @@ namespace Neon::RHI
                 std::forward<_Args>(Args)...));
         }
 
+        /// <summary>
+        /// Wait for a copy command list to be executed.
+        /// </summary>
+        virtual void WaitForCopy(
+            ICommandQueue* Queue,
+            uint64_t       FenceValue) = 0;
+
     protected:
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        virtual std::future<void> EnqueueRequestCopy(
+        virtual uint64_t EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) = 0;
     };
 } // namespace Neon::RHI

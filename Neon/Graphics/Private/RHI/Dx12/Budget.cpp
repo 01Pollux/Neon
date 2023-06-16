@@ -347,7 +347,14 @@ namespace Neon::RHI
         Frame.SafeRelease(Resource);
     }
 
-    std::future<void> BudgetManager::RequestCopy(
+    void BudgetManager::WaitForCopy(
+        Dx12CommandQueue* Queue,
+        uint64_t          FenceValue)
+    {
+        m_CopyContext.WaitForCopy(Queue, FenceValue);
+    }
+
+    uint64_t BudgetManager::RequestCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
         return m_CopyContext.EnqueueCopy(Task);

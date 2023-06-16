@@ -9,6 +9,7 @@
 #include <mutex>
 #include <queue>
 #include <future>
+#include <latch>
 
 namespace Neon::RHI
 {
@@ -118,8 +119,15 @@ namespace Neon::RHI
 
     class CopyContextManager
     {
+        using PromiseType = std::promise<uint64_t>;
+        using FutureType  = std::future<uint64_t>;
+
         using PackagedTaskType = std::packaged_task<void(ICopyCommandList*)>;
-        using FutureType       = std::future<void>;
+        struct PackagedTaskResult
+        {
+            PackagedTaskType Task;
+            PromiseType      Promise;
+        };
 
     private:
         static constexpr uint32_t CommandContextCount   = 2;
@@ -140,7 +148,14 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue task to copy queue
         /// </summary>
-        std::future<void> EnqueueCopy(
+        void WaitForCopy(
+            Dx12CommandQueue* Queue,
+            uint64_t          CopyId);
+
+        /// <summary>
+        /// Enqueue a copy command list to be executed.
+        /// </summary>
+        uint64_t EnqueueCopy(
             std::function<void(ICopyCommandList*)> Task);
 
         /// <summary>
@@ -149,21 +164,16 @@ namespace Neon::RHI
         void Shutdown();
 
     private:
-        /// <summary>
-        /// Create copy queue
-        /// </summary>
-        /// <returns></returns>
-        [[nodiscard]] static Win32::ComPtr<ID3D12CommandQueue> CreateCopyQueue();
-
-    private:
-        Win32::ComPtr<ID3D12CommandQueue> m_CopyQueue;
+        Dx12CommandQueue m_CopyQueue;
+        Dx12Fence        m_CopyFence;
 
         std::array<CommandContext, CommandContextCount> m_CommandContexts;
         std::array<std::jthread, CommandContextCount>   m_Threads;
 
-        std::mutex                   m_QueueMutex;
-        std::queue<PackagedTaskType> m_Queue;
-        std::condition_variable_any  m_TaskWaiter;
+        uint64_t                       m_CopyId = 0;
+        std::mutex                     m_QueueMutex;
+        std::queue<PackagedTaskResult> m_Queue;
+        std::condition_variable_any    m_TaskWaiter;
     };
 
     //
@@ -285,9 +295,16 @@ namespace Neon::RHI
             const Win32::ComPtr<ID3D12Resource>& Resource);
 
         /// <summary>
+        /// Wait for a copy command list to be executed.
+        /// </summary>
+        void WaitForCopy(
+            Dx12CommandQueue* Queue,
+            uint64_t          FenceValue);
+
+        /// <summary>
         /// Enqueue a copy command executed.
         /// </summary>
-        std::future<void> RequestCopy(
+        uint64_t RequestCopy(
             std::function<void(ICopyCommandList*)> Task);
 
     private:

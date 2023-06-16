@@ -73,7 +73,14 @@ namespace Neon::RHI
         m_BudgetManager.SafeRelease(Resource);
     }
 
-    std::future<void> Dx12Swapchain::EnqueueRequestCopy(
+    void Dx12Swapchain::WaitForCopy(
+        ICommandQueue* Queue,
+        uint64_t       FenceValue)
+    {
+        m_BudgetManager.WaitForCopy(static_cast<Dx12CommandQueue*>(Queue), FenceValue);
+    }
+
+    uint64_t Dx12Swapchain::EnqueueRequestCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
         return m_BudgetManager.RequestCopy(std::move(Task));

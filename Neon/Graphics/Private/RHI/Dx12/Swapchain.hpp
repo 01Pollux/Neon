@@ -87,7 +87,17 @@ namespace Neon::RHI
         void SafeRelease(
             const Win32::ComPtr<ID3D12Resource>& Resource);
 
-        std::future<void> EnqueueRequestCopy(
+        /// <summary>
+        /// Wait for a copy command list to be executed.
+        /// </summary>
+        void WaitForCopy(
+            ICommandQueue* Queue,
+            uint64_t       FenceValue);
+
+        /// <summary>
+        /// Enqueue a copy command list to be executed.
+        /// </summary>
+        uint64_t EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) override;
 
     public:
