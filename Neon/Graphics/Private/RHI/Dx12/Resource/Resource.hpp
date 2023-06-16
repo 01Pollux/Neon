@@ -2,8 +2,8 @@
 
 #include <RHI/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
-
 #include <Math/Vector.hpp>
+#include <future>
 
 namespace Neon::RHI
 {
@@ -12,6 +12,15 @@ namespace Neon::RHI
     public:
         Dx12GpuResource(
             ISwapchain* Swapchain);
+
+        void QueryFootprint(
+            uint32_t              FirstSubresource,
+            uint32_t              SubresourceCount,
+            size_t                Offset,
+            SubresourceFootprint* OutFootprint,
+            uint32_t*             NumRows,
+            size_t*               RowSizeInBytes,
+            size_t*               TotalBytes) const;
 
         /// <summary>
         /// Get the underlying D3D12 resource.
@@ -49,6 +58,9 @@ namespace Neon::RHI
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
 
+        NEON_CLASS_NO_COPY(Dx12Buffer);
+        NEON_CLASS_MOVE(Dx12Buffer);
+
         ~Dx12Buffer() override;
 
         ResourceDesc GetDesc() const override;
@@ -69,9 +81,8 @@ namespace Neon::RHI
     {
     public:
         Dx12UploadBuffer(
-            ISwapchain*        Swapchain,
-            const BufferDesc&  Desc,
-            GraphicsBufferType Type);
+            ISwapchain*       Swapchain,
+            const BufferDesc& Desc);
 
         uint8_t* Map() override;
 
@@ -88,9 +99,8 @@ namespace Neon::RHI
     {
     public:
         Dx12ReadbackBuffer(
-            ISwapchain*        Swapchain,
-            const BufferDesc&  Desc,
-            GraphicsBufferType Type);
+            ISwapchain*       Swapchain,
+            const BufferDesc& Desc);
 
         uint8_t* Map() override;
 
@@ -107,14 +117,18 @@ namespace Neon::RHI
     {
     public:
         Dx12Texture(
-            ISwapchain*              Swapchain,
-            const RHI::ResourceDesc& Desc);
+            ISwapchain*                      Swapchain,
+            const RHI::ResourceDesc&         Desc,
+            std::span<const SubresourceDesc> Subresources);
 
         Dx12Texture(
             ISwapchain*                        Swapchain,
             Win32::ComPtr<ID3D12Resource>      Texture,
             D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
+
+        NEON_CLASS_NO_COPY(Dx12Texture);
+        NEON_CLASS_MOVE(Dx12Texture);
 
         ~Dx12Texture() override;
 
@@ -124,7 +138,23 @@ namespace Neon::RHI
 
         uint16_t GetMipLevels() const override;
 
+        uint32_t GetSubResourceCount() const override;
+
+        uint32_t GetSubresourceIndex(
+            uint32_t PlaneIndex,
+            uint32_t ArrayIndex,
+            uint32_t MipIndex) const override;
+
+    private:
+        /// <summary>
+        /// Get the size of the texture in bytes to copy.
+        /// </summary>
+        [[nodiscard]] size_t GetTextureCopySize(
+            uint32_t SubresourcesCount);
+
     protected:
+        std::future<void> m_PendingCopy;
+
         Vector3DI m_Dimensions;
         uint16_t  m_MipLevels = 0;
 

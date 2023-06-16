@@ -18,11 +18,11 @@ namespace Neon::RHI
         ~Dx12CommandList() override;
 
         void CopySubresources(
-            IGpuResource*              DstResource,
-            IGpuResource*              Intermediate,
-            size_t                     IntOffset,
-            uint32_t                   FirstSubresource,
-            std::span<SubresourceDesc> SubResources) override;
+            IGpuResource*                    DstResource,
+            IGpuResource*                    Intermediate,
+            size_t                           IntOffset,
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> SubResources) override;
 
         void CopyResources(
             IGpuResource* DstResource,

@@ -87,7 +87,7 @@ namespace Neon::RHI
         void SafeRelease(
             const Win32::ComPtr<ID3D12Resource>& Resource);
 
-        void RequestCopy(
+        std::future<void> EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) override;
 
     public:

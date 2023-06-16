@@ -3,6 +3,7 @@
 #include <Math/Size2.hpp>
 #include <RHI/Commands/Common.hpp>
 #include <RHI/Resource/Descriptor.hpp>
+#include <future>
 
 namespace Neon::Windowing
 {
@@ -109,7 +110,22 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        virtual void RequestCopy(
+        template<typename _FnTy, typename... _Args>
+        std::future<void> RequestCopy(
+            _FnTy&& Task,
+            _Args&&... Args)
+        {
+            return EnqueueRequestCopy(std::bind(
+                std::forward<_FnTy>(Task),
+                std::placeholders::_1,
+                std::forward<_Args>(Args)...));
+        }
+
+    protected:
+        /// <summary>
+        /// Enqueue a copy command list to be executed.
+        /// </summary>
+        virtual std::future<void> EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) = 0;
     };
 } // namespace Neon::RHI

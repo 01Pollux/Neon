@@ -341,9 +341,9 @@ namespace Neon::RHI
         Frame.SafeRelease(Resource);
     }
 
-    void BudgetManager::RequestCopy(
+    std::future<void> BudgetManager::RequestCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
-        m_CopyContext.EnqueueCopy(Task);
+        return m_CopyContext.EnqueueCopy(Task);
     }
 } // namespace Neon::RHI

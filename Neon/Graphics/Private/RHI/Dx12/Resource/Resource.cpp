@@ -2,6 +2,7 @@
 #include <Private/RHI/Dx12/Resource/Common.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -11,6 +12,41 @@ namespace Neon::RHI
         ISwapchain* Swapchain) :
         m_OwningSwapchain(Swapchain)
     {
+    }
+
+    void Dx12GpuResource::QueryFootprint(
+        uint32_t              FirstSubresource,
+        uint32_t              SubresourceCount,
+        size_t                Offset,
+        SubresourceFootprint* OutFootprint,
+        uint32_t*             NumRows,
+        size_t*               RowSizeInBytes,
+        size_t*               TotalBytes) const
+    {
+        auto Desc = m_Resource->GetDesc();
+
+        D3D12_PLACED_SUBRESOURCE_FOOTPRINT Footprint;
+
+        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+        Dx12Device->GetCopyableFootprints(
+            &Desc,
+            FirstSubresource,
+            SubresourceCount,
+            Offset,
+            OutFootprint ? &Footprint : nullptr,
+            NumRows,
+            RowSizeInBytes,
+            TotalBytes);
+
+        if (OutFootprint)
+        {
+            OutFootprint->Offset   = Footprint.Offset;
+            OutFootprint->Format   = CastFormat(Footprint.Footprint.Format);
+            OutFootprint->Width    = Footprint.Footprint.Width;
+            OutFootprint->Height   = Footprint.Footprint.Height;
+            OutFootprint->Depth    = Footprint.Footprint.Depth;
+            OutFootprint->RowPitch = Footprint.Footprint.RowPitch;
+        }
     }
 
     ID3D12Resource* Dx12GpuResource::GetResource() const
@@ -69,14 +105,13 @@ namespace Neon::RHI
         ISwapchain*       Swapchain,
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12UploadBuffer(Swapchain, Desc, GraphicsBufferType::Upload);
+        return NEON_NEW Dx12UploadBuffer(Swapchain, Desc);
     }
 
     Dx12UploadBuffer::Dx12UploadBuffer(
-        ISwapchain*        Swapchain,
-        const BufferDesc&  Desc,
-        GraphicsBufferType Type) :
-        Dx12Buffer(Swapchain, Desc, Type)
+        ISwapchain*       Swapchain,
+        const BufferDesc& Desc) :
+        Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Upload)
     {
     }
 
@@ -98,14 +133,13 @@ namespace Neon::RHI
         ISwapchain*       Swapchain,
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12ReadbackBuffer(Swapchain, Desc, GraphicsBufferType::Readback);
+        return NEON_NEW Dx12ReadbackBuffer(Swapchain, Desc);
     }
 
     Dx12ReadbackBuffer::Dx12ReadbackBuffer(
-        ISwapchain*        Swapchain,
-        const BufferDesc&  Desc,
-        GraphicsBufferType Type) :
-        Dx12Buffer(Swapchain, Desc, Type)
+        ISwapchain*       Swapchain,
+        const BufferDesc& Desc) :
+        Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Readback)
     {
     }
 
@@ -123,16 +157,18 @@ namespace Neon::RHI
 
     //
 
-    [[nodiscard]] ITexture* ITexture::Create(
-        ISwapchain*         Swapchain,
-        const ResourceDesc& Desc)
+    ITexture* ITexture::Create(
+        ISwapchain*                      Swapchain,
+        const ResourceDesc&              Desc,
+        std::span<const SubresourceDesc> Subresources)
     {
-        return NEON_NEW Dx12Texture(Swapchain, Desc);
+        return NEON_NEW Dx12Texture(Swapchain, Desc, Subresources);
     }
 
     Dx12Texture::Dx12Texture(
-        ISwapchain*              Swapchain,
-        const RHI::ResourceDesc& Desc) :
+        ISwapchain*                      Swapchain,
+        const RHI::ResourceDesc&         Desc,
+        std::span<const SubresourceDesc> Subresources) :
         Dx12GpuResource(Swapchain)
     {
         D3D12_RESOURCE_DESC Dx12Desc{
@@ -207,11 +243,13 @@ namespace Neon::RHI
             m_ClearValue = Desc.ClearValue;
         }
 
+        auto InitialState = Subresources.empty() ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_COPY_DEST;
+
         auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator()->GetMA();
         ThrowIfFailed(Allocator->CreateResource(
             &AllocDesc,
             &Dx12Desc,
-            D3D12_RESOURCE_STATE_COMMON,
+            InitialState,
             ClearValuePtr,
             &m_Allocation,
             IID_PPV_ARGS(&m_Resource)));
@@ -236,7 +274,37 @@ namespace Neon::RHI
         m_MipLevels  = Desc.MipLevels;
 
         auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
-        Dx12StateManager->StartTrakingResource(m_Resource.Get(), D3D12_RESOURCE_STATE_COMMON);
+        Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
+
+        if (Subresources.empty())
+        {
+            return;
+        }
+
+        auto SubresourcesCopy =
+            Subresources |
+            std::ranges::to<std::vector<SubresourceDesc>>();
+
+        m_PendingCopy = Swapchain->RequestCopy(
+            [Swapchain](
+                ICopyCommandList* CommandList,
+                Dx12Texture*      Texture,
+                auto              Subreources)
+            {
+                Dx12UploadBuffer Buffer{
+                    Swapchain,
+                    { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
+                };
+
+                CommandList->CopySubresources(
+                    Texture,
+                    static_cast<IGpuResource*>(&Buffer),
+                    0,
+                    0,
+                    Subreources);
+            },
+            this,
+            std::move(SubresourcesCopy));
     }
 
     Dx12Texture::Dx12Texture(
@@ -265,6 +333,11 @@ namespace Neon::RHI
 
     Dx12Texture::~Dx12Texture()
     {
+        if (m_PendingCopy.valid())
+        {
+            m_PendingCopy.wait();
+        }
+
         if (m_Resource)
         {
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
@@ -336,4 +409,38 @@ namespace Neon::RHI
         return m_MipLevels;
     }
 
+    uint32_t Dx12Texture::GetSubResourceCount() const
+    {
+        return uint32_t(m_MipLevels) * m_Dimensions.z();
+    }
+
+    uint32_t Dx12Texture::GetSubresourceIndex(
+        uint32_t PlaneIndex,
+        uint32_t ArrayIndex,
+        uint32_t MipIndex) const
+    {
+        return MipIndex +
+               ArrayIndex * m_MipLevels +
+               PlaneIndex * m_Dimensions.z() * m_MipLevels;
+    }
+
+    size_t Dx12Texture::GetTextureCopySize(
+        uint32_t SubresourcesCount)
+    {
+        size_t TotalBytes;
+        auto   Desc = m_Resource->GetDesc();
+
+        auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+        Dx12Device->GetCopyableFootprints(
+            &Desc,
+            0,
+            SubresourcesCount,
+            0,
+            nullptr,
+            nullptr,
+            nullptr,
+            &TotalBytes);
+
+        return TotalBytes;
+    }
 } // namespace Neon::RHI

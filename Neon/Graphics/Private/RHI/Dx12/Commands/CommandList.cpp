@@ -28,11 +28,11 @@ namespace Neon::RHI
     }
 
     void Dx12CommandList::CopySubresources(
-        IGpuResource*              DstResource,
-        IGpuResource*              Intermediate,
-        size_t                     IntOffset,
-        uint32_t                   FirstSubresource,
-        std::span<SubresourceDesc> SubResources)
+        IGpuResource*                    DstResource,
+        IGpuResource*                    Intermediate,
+        size_t                           IntOffset,
+        uint32_t                         FirstSubresource,
+        std::span<const SubresourceDesc> SubResources)
     {
         std::vector<D3D12_SUBRESOURCE_DATA> Dx12Subresources;
         Dx12Subresources.reserve(SubResources.size());

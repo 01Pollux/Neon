@@ -2,6 +2,7 @@
 
 #include <RHI/Resource/Common.hpp>
 #include <variant>
+#include <span>
 
 namespace Neon
 {
@@ -41,7 +42,6 @@ namespace Neon::RHI
         IGpuResource*                                Resource;
         std::variant<uint32_t, SubresourceFootprint> Subresource;
     };
-    ;
 
     //
 
@@ -54,6 +54,18 @@ namespace Neon::RHI
         /// Get desc of the resource.
         /// </summary>
         [[nodiscard]] virtual ResourceDesc GetDesc() const = 0;
+
+        /// <summary>
+        /// Query the footprint of the resource.
+        /// </summary>
+        virtual void QueryFootprint(
+            uint32_t              FirstSubresource,
+            uint32_t              SubresourceCount,
+            size_t                Offset,
+            SubresourceFootprint* OutFootprint,
+            uint32_t*             NumRows,
+            size_t*               RowSizeInBytes,
+            size_t*               TotalBytes) const = 0;
     };
 
     //
@@ -172,8 +184,9 @@ namespace Neon::RHI
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            ISwapchain*         Swapchain,
-            const ResourceDesc& Desc);
+            ISwapchain*                      Swapchain,
+            const ResourceDesc&              Desc,
+            std::span<const SubresourceDesc> Subresources = {});
 
         /// <summary>
         /// Returns the dimensions of the texture.
@@ -184,5 +197,18 @@ namespace Neon::RHI
         /// Returns the number of mip levels in the texture.
         /// </summary>
         [[nodiscard]] virtual uint16_t GetMipLevels() const = 0;
+
+        /// <summary>
+        /// Get number of subresources in texture
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetSubResourceCount() const = 0;
+
+        /// <summary>
+        /// Get subresource index from plane, array and mip index
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetSubresourceIndex(
+            uint32_t PlaneIndex,
+            uint32_t ArrayIndex,
+            uint32_t MipIndex) const = 0;
     };
 } // namespace Neon::RHI

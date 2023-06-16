@@ -277,7 +277,7 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command executed.
         /// </summary>
-        void RequestCopy(
+        std::future<void> RequestCopy(
             std::function<void(ICopyCommandList*)> Task);
 
     private:

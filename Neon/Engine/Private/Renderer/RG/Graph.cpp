@@ -267,15 +267,6 @@ namespace Neon::RG
                         }
                         break;
                     }
-
-                    case PassQueueType::Copy:
-                    {
-                        {
-                            std::scoped_lock Lock(RenderMutex);
-                            CommandList = CopyContext.Append();
-                        }
-                        break;
-                    }
                     }
 
                     RenderPass->Dispatch(Storage, CommandList);

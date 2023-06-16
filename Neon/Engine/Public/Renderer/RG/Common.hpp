@@ -28,8 +28,7 @@ namespace Neon::RG
     {
         Unknown,
         Direct,
-        Compute,
-        Copy
+        Compute
     };
 
     //

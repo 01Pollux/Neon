@@ -74,11 +74,11 @@ namespace Neon::RHI
         /// Copy subresources into the buffer
         /// </summary>
         virtual void CopySubresources(
-            IGpuResource*              DstResource,
-            IGpuResource*              Intermediate,
-            size_t                     IntOffset,
-            uint32_t                   FirstSubresource,
-            std::span<SubresourceDesc> SubResources) = 0;
+            IGpuResource*                    DstResource,
+            IGpuResource*                    Intermediate,
+            size_t                           IntOffset,
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> SubResources) = 0;
 
         /// <summary>
         /// Copy Resource into the buffer
