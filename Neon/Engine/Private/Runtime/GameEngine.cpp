@@ -6,6 +6,7 @@
 #include <Module/Graphics.hpp>
 
 #include <Runtime/Pipeline.hpp>
+#include <Runtime/Phases/SplashScreen.hpp>
 
 namespace Neon::Runtime
 {
@@ -68,6 +69,10 @@ namespace Neon::Runtime
 
         //
 
+        // Phases::SplashScreen::Build(Builder);
+
+        //
+
         SplashScreen.DependsOn(PreRender);
         PostRender.DependsOn(SplashScreen);
 
@@ -84,40 +89,13 @@ namespace Neon::Runtime
                 Graphics->PreRender();
             });
 
-        m_Pipeline->Attach(
-            "Render",
-            [this]
-            {
-                auto Graphics = m_Window->GetGraphics();
-            });
-
-        m_Pipeline->Attach(
-            "Render",
-            [this]
-            {
-                auto Graphics = m_Window->GetGraphics();
-            });
-
-        m_Pipeline->Attach(
-            "Render",
-            [this]
-            {
-                auto Graphics = m_Window->GetGraphics();
-            });
-
-        m_Pipeline->Attach(
-            "RHICompiler",
-            [this]
-            {
-                auto Graphics = m_Window->GetGraphics();
-            });
-
-        m_Pipeline->Attach(
-            "ResourceLoader",
-            [this]
-            {
-                auto Graphics = m_Window->GetGraphics();
-            });
+        // m_Pipeline->Attach(
+        //     "Render",
+        //     [this]
+        //     {
+        //         auto Graphics = m_Window->GetGraphics();
+        //         Graphics->Render();
+        //     });
 
         m_Pipeline->Attach(
             "PostRender",
@@ -126,5 +104,7 @@ namespace Neon::Runtime
                 auto Graphics = m_Window->GetGraphics();
                 Graphics->PostRender();
             });
+
+        // Phases::SplashScreen::Bind(this);
     }
 } // namespace Neon::Runtime

@@ -209,21 +209,25 @@ namespace Neon::Module
         //
 
         m_RenderGraph = std::make_unique<RG::RenderGraph>(m_Swapchain.get());
-
-        auto Builder = m_RenderGraph->Reset();
-        Builder.AppendPass<RG::TestPass>();
-        Builder.Build();
     }
 
-    RHI::ISwapchain* Graphics::GetSwapchain() const noexcept
+    RHI::ISwapchain* Graphics::GetSwapchain() noexcept
     {
         return m_Swapchain.get();
+    }
+
+    RG::RenderGraph* Graphics::GetRenderGraph() noexcept
+    {
+        return m_RenderGraph.get();
     }
 
     void Graphics::PreRender()
     {
         m_Swapchain->PrepareFrame();
+    }
 
+    void Graphics::Render()
+    {
         m_RenderGraph->Run();
     }
 

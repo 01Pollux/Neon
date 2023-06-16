@@ -28,12 +28,22 @@ namespace Neon::Module
         /// <summary>
         /// Get the swapchain.
         /// </summary>
-        [[nodiscard]] RHI::ISwapchain* GetSwapchain() const noexcept;
+        [[nodiscard]] RHI::ISwapchain* GetSwapchain() noexcept;
+
+        /// <summary>
+        /// Get the render graph.
+        /// </summary>
+        [[nodiscard]] RG::RenderGraph* GetRenderGraph() noexcept;
 
         /// <summary>
         /// Prepare frame for rendering.
         /// </summary>
         void PreRender();
+
+        /// <summary>
+        /// Render frame.
+        /// </summary>
+        void Render();
 
         /// <summary>
         /// Present frame.

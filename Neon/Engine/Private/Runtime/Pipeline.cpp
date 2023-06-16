@@ -67,6 +67,16 @@ namespace Neon::Runtime
                     auto Phase = Phases[i];
                     if (!Phase->Flags.Test(EPipelineFlags::Disabled))
                     {
+                        size_t ListenerCount;
+                        {
+                            std::scoped_lock Lock(Phase->Mutex);
+                            ListenerCount = Phase->Signal.GetListenerCount();
+                        }
+                        if (!ListenerCount)
+                        {
+                            continue;
+                        }
+
                         if (Phase->Flags.Test(EPipelineFlags::DontParallelize))
                         {
                             m_NonAsyncPhases.emplace_back(Phase);
@@ -78,7 +88,8 @@ namespace Neon::Runtime
                                 {
                                     for (auto Parent : Phase->Parents)
                                     {
-                                        Parent->Async.wait();
+                                        if (Parent->Async.valid())
+                                            Parent->Async.wait();
                                     }
                                     std::scoped_lock Lock(Phase->Mutex);
                                     Phase->Signal.Broadcast();

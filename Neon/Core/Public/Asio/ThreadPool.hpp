@@ -51,7 +51,19 @@ namespace Neon::Asio
                             m_Queue.pop();
 
                             Lock.unlock();
+
+#if NEON_DEBUG
+                            try
+                            {
+                                std::invoke(Task);
+                            }
+                            catch (...)
+                            {
+                                std::terminate();
+                            }
+#else
                             std::invoke(Task);
+#endif
                         }
                     });
             }
