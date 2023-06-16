@@ -103,7 +103,7 @@ namespace Neon::RG
         for (size_t i = 0; i < Builders.size(); i++)
         {
             auto& Builder = Builders[i];
-            m_Passes[i]->ResolvePipelines(Builder.PipelineStates);
+            m_Passes[i]->ResolvePipelineStates(Builder.PipelineStates);
         }
 
         for (auto& Builder : Builders)

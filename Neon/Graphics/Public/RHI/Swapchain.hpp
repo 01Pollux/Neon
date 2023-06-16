@@ -15,6 +15,7 @@ namespace Neon::RHI
     class IResourceStateManager;
     class ICommandQueue;
     class IFence;
+    class ICopyCommandList;
 
     class ISwapchain
     {
@@ -104,5 +105,11 @@ namespace Neon::RHI
         virtual void SafeRelease(
             IDescriptorHeapAllocator*   Allocator,
             const DescriptorHeapHandle& Handle) = 0;
+
+        /// <summary>
+        /// Enqueue a copy command list to be executed.
+        /// </summary>
+        virtual void RequestCopy(
+            std::function<void(ICopyCommandList*)> Task) = 0;
     };
 } // namespace Neon::RHI

@@ -47,7 +47,7 @@ namespace Neon::RG
         /// <summary>
         /// Called when the render pass wants to create pipelines.
         /// </summary>
-        virtual void ResolvePipelines(
+        virtual void ResolvePipelineStates(
             PipelineStateResolver& Resolver)
         {
         }

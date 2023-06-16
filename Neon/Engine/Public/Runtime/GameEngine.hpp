@@ -6,6 +6,7 @@ namespace Neon::Module
 {
     class ResourceManager;
     class Window;
+    class Graphics;
 } // namespace Neon::Module
 
 namespace Neon::Runtime
@@ -48,6 +49,17 @@ namespace Neon::Runtime
         /// Run the engine and return when the engine is closed or an error occurs.
         /// </summary>
         int Run();
+
+    public:
+        /// <summary>
+        /// Get window associated with the engine
+        /// </summary>
+        Module::Window* GetWindowModule() noexcept;
+
+        /// <summary>
+        /// Get window associated with the engine
+        /// </summary>
+        Module::Graphics* GetGraphicsModule() noexcept;
 
         /// <summary>
         /// Get the game pipeline

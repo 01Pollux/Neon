@@ -25,7 +25,6 @@ namespace Neon::Runtime
     int DefaultGameEngine::Run()
     {
         Initialize();
-        auto Graphics = m_Window->GetGraphics();
         while (m_Window->Run())
         {
             m_Pipeline->BeginDispatch();
@@ -33,6 +32,16 @@ namespace Neon::Runtime
         }
         Shutdown();
         return m_Window->GetExitCode();
+    }
+
+    Module::Window* DefaultGameEngine::GetWindowModule() noexcept
+    {
+        return m_Window.get();
+    }
+
+    Module::Graphics* DefaultGameEngine::GetGraphicsModule() noexcept
+    {
+        return m_Window->GetGraphics();
     }
 
     EnginePipeline& DefaultGameEngine::GetPipeline()
@@ -89,13 +98,13 @@ namespace Neon::Runtime
                 Graphics->PreRender();
             });
 
-        // m_Pipeline->Attach(
-        //     "Render",
-        //     [this]
-        //     {
-        //         auto Graphics = m_Window->GetGraphics();
-        //         Graphics->Render();
-        //     });
+        m_Pipeline->Attach(
+            "Render",
+            [this]
+            {
+                auto Graphics = m_Window->GetGraphics();
+                Graphics->Render();
+            });
 
         m_Pipeline->Attach(
             "PostRender",
@@ -105,6 +114,6 @@ namespace Neon::Runtime
                 Graphics->PostRender();
             });
 
-        // Phases::SplashScreen::Bind(this);
+        Phases::SplashScreen::Bind(this);
     }
 } // namespace Neon::Runtime

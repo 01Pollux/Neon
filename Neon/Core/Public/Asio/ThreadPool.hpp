@@ -18,11 +18,13 @@ namespace Neon::Asio
         using PackagedTaskType   = std::packaged_task<FunctionReturnType()>;
         using FutureType         = std::future<FunctionReturnType>;
 
-        ThreadPool(
-            size_t ThreadsCount = std::thread::hardware_concurrency())
+        explicit ThreadPool(
+            size_t ThreadsCount)
         {
             Resize(ThreadsCount);
         }
+
+        ThreadPool() = default;
 
         /// <summary>
         /// Resizes the thread pool.
@@ -36,12 +38,12 @@ namespace Neon::Asio
             for (size_t i = OldSize; i < m_Threads.size(); i++)
             {
                 m_Threads[i] = std::jthread(
-                    [this](std::stop_token Stop)
+                    [this](std::stop_token Token)
                     {
-                        while (!Stop.stop_requested())
+                        while (!Token.stop_requested())
                         {
                             std::unique_lock Lock(m_QueueMutex);
-                            if (!m_TaskWaiter.wait(Lock, Stop, [this]
+                            if (!m_TaskWaiter.wait(Lock, Token, [this]
                                                    { return !m_Queue.empty(); }))
                             {
                                 break;
@@ -51,7 +53,6 @@ namespace Neon::Asio
                             m_Queue.pop();
 
                             Lock.unlock();
-
 #if NEON_DEBUG
                             try
                             {

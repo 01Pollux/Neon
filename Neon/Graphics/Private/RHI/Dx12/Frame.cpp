@@ -19,10 +19,6 @@ namespace Neon::RHI
     {
         auto Allocator = m_AllocatorsPools[GetCommandListIndex(CommandType)].Allocate(CommandType)->CommandAllocator.Get();
         ThrowIfFailed(Allocator->Reset());
-
-        Allocator->AddRef();
-        auto p = Allocator->Release();
-
         return Allocator;
     }
 
@@ -98,10 +94,9 @@ namespace Neon::RHI
             return D3D12_COMMAND_LIST_TYPE_DIRECT;
         case 1:
             return D3D12_COMMAND_LIST_TYPE_COMPUTE;
-        case 2:
-            return D3D12_COMMAND_LIST_TYPE_COPY;
+        default:
+            std::unreachable();
         }
-        return D3D12_COMMAND_LIST_TYPE(-1);
     }
 
     size_t FrameResource::GetCommandListIndex(
@@ -113,9 +108,8 @@ namespace Neon::RHI
             return 0;
         case D3D12_COMMAND_LIST_TYPE_COMPUTE:
             return 1;
-        case D3D12_COMMAND_LIST_TYPE_COPY:
-            return 2;
+        default:
+            std::unreachable();
         }
-        return size_t(-1);
     }
 } // namespace Neon::RHI

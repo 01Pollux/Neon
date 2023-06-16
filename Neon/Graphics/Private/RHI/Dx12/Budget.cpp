@@ -32,8 +32,7 @@ namespace Neon::RHI
     Dx12CommandQueueManager::Dx12CommandQueueManager(
         ISwapchain* Swapchain) :
         m_Graphics(Swapchain, CommandQueueType::Graphics),
-        m_Compute(Swapchain, CommandQueueType::Compute),
-        m_Copy(Swapchain, CommandQueueType::Copy)
+        m_Compute(Swapchain, CommandQueueType::Compute)
     {
     }
 
@@ -47,11 +46,6 @@ namespace Neon::RHI
         return &m_Compute;
     }
 
-    auto Dx12CommandQueueManager::GetCopy() -> QueueAndFence*
-    {
-        return &m_Copy;
-    }
-
     auto Dx12CommandQueueManager::Get(
         D3D12_COMMAND_LIST_TYPE CommandType) -> QueueAndFence*
     {
@@ -61,8 +55,6 @@ namespace Neon::RHI
             return &m_Graphics;
         case D3D12_COMMAND_LIST_TYPE_COMPUTE:
             return &m_Compute;
-        case D3D12_COMMAND_LIST_TYPE_COPY:
-            return &m_Copy;
         default:
             std::unreachable();
         }
@@ -107,11 +99,9 @@ namespace Neon::RHI
     }
 
     ICommandList* Dx12CommandContextManager::Request(
-        ISwapchain*    Swapchain,
-        FrameResource& Frame)
+        ISwapchain*             Swapchain,
+        ID3D12CommandAllocator* Allocator)
     {
-        auto Allocator = Frame.RequestAllocator(m_Type);
-
         auto Iter = m_CommandListsPool.Allocate(Swapchain, Allocator, m_Type);
         ThrowIfFailed(Iter->Dx12CmdList->Reset(Allocator, nullptr));
 
@@ -121,19 +111,33 @@ namespace Neon::RHI
         return Iter->CommandList.get();
     }
 
+    ICommandList* Dx12CommandContextManager::Request(
+        ISwapchain*    Swapchain,
+        FrameResource& Frame)
+    {
+        return Request(Swapchain, Frame.RequestAllocator(m_Type));
+    }
+
     void Dx12CommandContextManager::Free(
         ICommandList* CommandList)
     {
-        m_CommandListsPool.Free(m_ToPoolMap[CommandList]);
-        m_ToPoolMap.erase(CommandList);
+        auto Iter = m_ToPoolMap.find(CommandList);
+        m_CommandListsPool.Free(Iter->second);
+        m_ToPoolMap.erase(Iter);
+    }
+
+    void Dx12CommandContextManager::Reset(
+        ID3D12CommandAllocator* Allocator,
+        ICommandList*           CommandList)
+    {
+        ThrowIfFailed(m_ToPoolMap[CommandList]->Dx12CmdList->Reset(Allocator, nullptr));
     }
 
     void Dx12CommandContextManager::Reset(
         FrameResource& Frame,
         ICommandList*  CommandList)
     {
-        auto Allocator = Frame.RequestAllocator(m_Type);
-        ThrowIfFailed(m_ToPoolMap[CommandList]->Dx12CmdList->Reset(Allocator, nullptr));
+        return Reset(Frame.RequestAllocator(m_Type), CommandList);
     }
 
     //
@@ -157,12 +161,8 @@ namespace Neon::RHI
         m_ContextPool{
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_DIRECT)),
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_COMPUTE)),
-            CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_COPY)),
-        }
-    {
-    }
-
-    BudgetManager::~BudgetManager()
+        },
+        m_CopyContext(Swapchain)
     {
     }
 
@@ -179,8 +179,7 @@ namespace Neon::RHI
     {
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                 D3D12_COMMAND_LIST_TYPE_COPY })
+                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
         {
             auto& Info = *m_QueueManager.Get(QueueType);
             Info.Fence.WaitCPU(m_FenceValue);
@@ -194,8 +193,7 @@ namespace Neon::RHI
         ++m_FenceValue;
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                 D3D12_COMMAND_LIST_TYPE_COPY })
+                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
         {
             auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
             Fence.SignalGPU(&Queue, m_FenceValue);
@@ -226,8 +224,7 @@ namespace Neon::RHI
     {
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                 D3D12_COMMAND_LIST_TYPE_COPY })
+             })
         {
             auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
             Fence.SignalGPU(&Queue, m_FenceValue);
@@ -235,8 +232,7 @@ namespace Neon::RHI
 
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE,
-                 D3D12_COMMAND_LIST_TYPE_COPY })
+                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
         {
             auto& Info = *m_QueueManager.Get(QueueType);
             Info.Fence.WaitCPU(m_FenceValue);
@@ -254,14 +250,15 @@ namespace Neon::RHI
         D3D12_COMMAND_LIST_TYPE Type,
         size_t                  Count)
     {
+        NEON_ASSERT(Type != D3D12_COMMAND_LIST_TYPE_COPY);
+
         std::vector<ICommandList*> Result;
         Result.reserve(Count);
 
         auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+        auto& Frame   = m_FrameResources[m_FrameIndex];
 
         std::scoped_lock Lock(Context.Mutex);
-
-        auto& Frame = m_FrameResources[m_FrameIndex];
         for (size_t i = 0; i < Count; i++)
         {
             Result.emplace_back(Context.Pool.Request(m_Swapchain, Frame));
@@ -273,12 +270,12 @@ namespace Neon::RHI
         D3D12_COMMAND_LIST_TYPE  Type,
         std::span<ICommandList*> Commands)
     {
+        NEON_ASSERT(Type != D3D12_COMMAND_LIST_TYPE_COPY);
         NEON_ASSERT(!Commands.empty());
 
         auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
 
         std::scoped_lock Lock(Context.Mutex);
-
         for (auto Command : Commands)
         {
             Context.Pool.Free(Command);
@@ -342,5 +339,11 @@ namespace Neon::RHI
         std::scoped_lock Lock(m_StaleResourcesMutex[3]);
         auto&            Frame = m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Resource);
+    }
+
+    void BudgetManager::RequestCopy(
+        std::function<void(ICopyCommandList*)> Task)
+    {
+        m_CopyContext.EnqueueCopy(Task);
     }
 } // namespace Neon::RHI

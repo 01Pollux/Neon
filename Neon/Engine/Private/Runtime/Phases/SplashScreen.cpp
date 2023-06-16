@@ -1,7 +1,11 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Phases/SplashScreen.hpp>
+
 #include <Runtime/Pipeline.hpp>
 #include <Runtime/GameEngine.hpp>
+
+#include <Module/Graphics.hpp>
+#include <Renderer/RG/Passes/Lambda.hpp>
 
 namespace Neon::Runtime::Phases
 {
@@ -10,23 +14,24 @@ namespace Neon::Runtime::Phases
     void SplashScreen::Build(
         EnginePipelineBuilder& Builder)
     {
-        auto RenderPhase       = Builder.GetPhase("Render");
-        auto SplashScreenPhase = Builder.NewPhase(SplashScreenTag);
-
-        SplashScreenPhase.DependsOn(RenderPhase);
-
         //
     }
 
     void SplashScreen::Bind(
         DefaultGameEngine* Engine)
     {
-
         auto& Pipeline = Engine->GetPipeline();
-        Pipeline.Attach(
-            SplashScreenTag,
-            [] {
 
-            });
+        auto Graphics    = Engine->GetGraphicsModule();
+        auto RenderGraph = Graphics->GetRenderGraph();
+
+        auto Builder = RenderGraph->Reset();
+
+        Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
+            .SetDispatcher(
+                [](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) {
+                });
+
+        Builder.Build();
     }
 } // namespace Neon::Runtime::Phases

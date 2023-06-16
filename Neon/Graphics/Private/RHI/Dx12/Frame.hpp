@@ -11,9 +11,6 @@ namespace Neon::RHI
     class FrameResource
     {
     public:
-        static constexpr size_t NumCommandContextTypes = 3;
-
-    private:
         struct CommandAllocatorInstance
         {
             Win32::ComPtr<ID3D12CommandAllocator> CommandAllocator;
@@ -22,7 +19,7 @@ namespace Neon::RHI
                 D3D12_COMMAND_LIST_TYPE CommandType);
         };
         using Dx12CommandAllocatorPool  = Allocator::FreeList<CommandAllocatorInstance>;
-        using Dx12CommandAllocatorPools = std::array<Dx12CommandAllocatorPool, NumCommandContextTypes>;
+        using Dx12CommandAllocatorPools = std::array<Dx12CommandAllocatorPool, 2>;
 
     public:
         /// <summary>

@@ -72,4 +72,10 @@ namespace Neon::RHI
     {
         m_BudgetManager.SafeRelease(Resource);
     }
+
+    void Dx12Swapchain::RequestCopy(
+        std::function<void(ICopyCommandList*)> Task)
+    {
+        m_BudgetManager.RequestCopy(std::move(Task));
+    }
 } // namespace Neon::RHI

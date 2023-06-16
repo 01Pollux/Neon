@@ -5,7 +5,10 @@
 #include <Private/RHI/Dx12/Frame.hpp>
 #include <Private/RHI/Dx12/Fence.hpp>
 #include <Allocator/FreeList.hpp>
+#include <condition_variable>
 #include <mutex>
+#include <queue>
+#include <future>
 
 namespace Neon::RHI
 {
@@ -40,11 +43,6 @@ namespace Neon::RHI
         [[nodiscard]] QueueAndFence* GetCompute();
 
         /// <summary>
-        /// Get graphics copy queue
-        /// </summary>
-        [[nodiscard]] QueueAndFence* GetCopy();
-
-        /// <summary>
         /// Get queue of type
         /// </summary>
         [[nodiscard]] QueueAndFence* Get(
@@ -53,7 +51,6 @@ namespace Neon::RHI
     private:
         QueueAndFence m_Graphics;
         QueueAndFence m_Compute;
-        QueueAndFence m_Copy;
     };
 
     class Dx12CommandContextManager
@@ -80,6 +77,13 @@ namespace Neon::RHI
         /// Request command list from pool
         /// </summary>
         ICommandList* Request(
+            ISwapchain*             Swapchain,
+            ID3D12CommandAllocator* Allocator);
+
+        /// <summary>
+        /// Request command list from pool
+        /// </summary>
+        ICommandList* Request(
             ISwapchain*    Swapchain,
             FrameResource& Frame);
 
@@ -88,6 +92,13 @@ namespace Neon::RHI
         /// </summary>
         void Free(
             ICommandList* CommandList);
+
+        /// <summary>
+        /// Reset command list with new command allocator
+        /// </summary>
+        void Reset(
+            ID3D12CommandAllocator* Allocator,
+            ICommandList*           CommandList);
 
         /// <summary>
         /// Reset command list with new command allocator
@@ -105,6 +116,53 @@ namespace Neon::RHI
 
     //
 
+    class CopyContextManager
+    {
+        using PackagedTaskType = std::packaged_task<void(ICopyCommandList*)>;
+        using FutureType       = std::future<void>;
+
+    private:
+        static constexpr uint32_t CommandContextCount   = 2;
+        static constexpr uint32_t CommandsToHandleCount = 16;
+
+        struct CommandContext
+        {
+            Win32::ComPtr<ID3D12CommandAllocator>    CommandAllocator;
+            Win32::ComPtr<ID3D12GraphicsCommandList> CommandList;
+
+            CommandContext();
+        };
+
+    public:
+        CopyContextManager(
+            ISwapchain* Swapchain);
+
+        /// <summary>
+        /// Enqueue task to copy queue
+        /// </summary>
+        std::future<void> EnqueueCopy(
+            std::function<void(ICopyCommandList*)> Task);
+
+    private:
+        /// <summary>
+        /// Create copy queue
+        /// </summary>
+        /// <returns></returns>
+        [[nodiscard]] static Win32::ComPtr<ID3D12CommandQueue> CreateCopyQueue();
+
+    private:
+        Win32::ComPtr<ID3D12CommandQueue> m_CopyQueue;
+
+        std::array<CommandContext, CommandContextCount> m_CommandContexts;
+        std::array<std::jthread, CommandContextCount>   m_Threads;
+
+        std::mutex                   m_QueueMutex;
+        std::queue<PackagedTaskType> m_Queue;
+        std::condition_variable_any  m_TaskWaiter;
+    };
+
+    //
+
     class BudgetManager
     {
     public:
@@ -113,7 +171,7 @@ namespace Neon::RHI
             Dx12CommandContextManager Pool;
             std::mutex                Mutex;
         };
-        using CommandContextPools = std::array<CommandContextPool, FrameResource::NumCommandContextTypes>;
+        using CommandContextPools = std::array<CommandContextPool, 2>;
 
         using DescriptorHeapAllocators = std::array<Dx12DescriptorHeapBuddyAllocator, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES>;
 
@@ -121,7 +179,7 @@ namespace Neon::RHI
         BudgetManager(
             ISwapchain* Swapchain);
         NEON_CLASS_NO_COPYMOVE(BudgetManager);
-        ~BudgetManager();
+        ~BudgetManager() = default;
 
         /// <summary>
         /// Get command queue manager
@@ -216,6 +274,12 @@ namespace Neon::RHI
         void SafeRelease(
             const Win32::ComPtr<ID3D12Resource>& Resource);
 
+        /// <summary>
+        /// Enqueue a copy command executed.
+        /// </summary>
+        void RequestCopy(
+            std::function<void(ICopyCommandList*)> Task);
+
     private:
         Dx12Swapchain* m_Swapchain;
 
@@ -230,5 +294,7 @@ namespace Neon::RHI
         std::mutex               m_StaleResourcesMutex[4];
         DescriptorHeapAllocators m_StaticDescriptorHeap;
         DescriptorHeapAllocators m_DynamicDescriptorHeap;
+
+        CopyContextManager m_CopyContext;
     };
 } // namespace Neon::RHI
