@@ -64,7 +64,7 @@ namespace Neon::RG
         /// <summary>
         /// Set the shader resolver for the pass.
         /// </summary>
-        template<std::invocable<const ShaderResolver&> _FnTy>
+        template<std::invocable<ShaderResolver&> _FnTy>
         LambdaPass& SetShaderResolver(
             _FnTy&& Resolver)
         {
@@ -75,7 +75,7 @@ namespace Neon::RG
         /// <summary>
         /// Set the root signature resolver for the pass.
         /// </summary>
-        template<std::invocable<const RootSignatureResolver&> _FnTy>
+        template<std::invocable<RootSignatureResolver&> _FnTy>
         LambdaPass& SetRootSignatureResolver(
             _FnTy&& Resolver)
         {
@@ -86,7 +86,7 @@ namespace Neon::RG
         /// <summary>
         /// Set the pipeline state resolver for the pass.
         /// </summary>
-        template<std::invocable<const PipelineStateResolver&> _FnTy>
+        template<std::invocable<PipelineStateResolver&> _FnTy>
         LambdaPass& SetPipelineStateResolver(
             _FnTy&& Resolver)
         {
@@ -97,11 +97,12 @@ namespace Neon::RG
         /// <summary>
         /// Set the resource resolver for the pass.
         /// </summary>
-        template<std::invocable<const ResourceResolver&> _FnTy>
+        template<std::invocable<ResourceResolver&> _FnTy>
         LambdaPass& SetResourceResolver(
             _FnTy&& Resolver)
         {
             m_ResourceResolver = std::move(Resolver);
+            return *this;
         }
 
         /// <summary>
@@ -116,10 +117,10 @@ namespace Neon::RG
         }
 
     private:
-        std::function<void(const ShaderResolver&)>        m_ShaderResolver;
-        std::function<void(const RootSignatureResolver&)> m_RootSignatureResolver;
-        std::function<void(const PipelineStateResolver&)> m_PipelineStateResolver;
-        std::function<void(const ResourceResolver&)>      m_ResourceResolver;
+        std::function<void(ShaderResolver&)>        m_ShaderResolver;
+        std::function<void(RootSignatureResolver&)> m_RootSignatureResolver;
+        std::function<void(PipelineStateResolver&)> m_PipelineStateResolver;
+        std::function<void(ResourceResolver&)>      m_ResourceResolver;
 
         std::function<void(const GraphStorage&, RHI::ICommandList*)> m_Dispatcher;
     };
