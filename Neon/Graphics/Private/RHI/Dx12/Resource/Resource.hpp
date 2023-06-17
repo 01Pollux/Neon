@@ -128,6 +128,13 @@ namespace Neon::RHI
             D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
 
+        Dx12Texture(
+            ISwapchain*                        Swapchain,
+            Win32::ComPtr<ID3D12Resource>      Texture,
+            Win32::ComPtr<D3D12MA::Allocation> Allocation,
+            std::span<const SubresourceDesc>   Subresources,
+            uint64_t&                          CopyId);
+
         NEON_CLASS_NO_COPY(Dx12Texture);
         NEON_CLASS_MOVE(Dx12Texture);
 
@@ -152,6 +159,13 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] size_t GetTextureCopySize(
             uint32_t SubresourcesCount);
+
+        /// <summary>
+        /// Copy the subresources to the texture.
+        /// </summary>
+        void CopyFrom(
+            std::span<const SubresourceDesc> Subresources,
+            uint64_t&                        CopyId);
 
     protected:
         Vector3DI m_Dimensions;

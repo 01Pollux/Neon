@@ -175,6 +175,18 @@ namespace Neon::RHI
 
     //
 
+    struct TextureRawImage
+    {
+        enum class Format : uint8_t
+        {
+            Dds,
+            Png,
+        };
+        const uint8_t* Data;
+        size_t         Size;
+        Format         Type;
+    };
+
     class ITexture : public virtual IGpuResource
     {
     public:
@@ -195,6 +207,15 @@ namespace Neon::RHI
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
             uint64_t&                        CopyId);
+
+        /// <summary>
+        /// Creates a texture.
+        /// </summary>
+        [[nodiscard]] static ITexture* Create(
+            ISwapchain*            Swapchain,
+            const ResourceDesc&    Desc,
+            const TextureRawImage& ImageData,
+            uint64_t&              CopyId);
 
         /// <summary>
         /// Returns the dimensions of the texture.

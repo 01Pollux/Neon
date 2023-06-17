@@ -137,7 +137,6 @@ namespace Neon::RG
 
         RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext(Swapchain);
         RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext(Swapchain);
-        RHI::TCommandContext<RHI::CommandQueueType::Copy>     CopyContext(Swapchain);
 
         std::vector<std::future<void>> Futures;
         Futures.reserve(m_Passes.size());
@@ -267,7 +266,7 @@ namespace Neon::RG
                     {
                         {
                             std::scoped_lock Lock(RenderMutex);
-                            CommandList = CopyContext.Append();
+                            CommandList = ComputeContext.Append();
                         }
                         break;
                     }

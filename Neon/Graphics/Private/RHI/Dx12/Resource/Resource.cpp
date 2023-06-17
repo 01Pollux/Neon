@@ -3,6 +3,7 @@
 #include <Private/RHI/Dx12/Resource/State.hpp>
 #include <Private/RHI/Dx12/Swapchain.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Resource/TextureLoader.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -173,6 +174,38 @@ namespace Neon::RHI
         return NEON_NEW Dx12Texture(Swapchain, Desc, Subresources, &CopyId);
     }
 
+    ITexture* ITexture::Create(
+        ISwapchain*            Swapchain,
+        const ResourceDesc&    Desc,
+        const TextureRawImage& ImageData,
+        uint64_t&              CopyId)
+    {
+        using TextureLoadFuncType    = decltype(&TextureLoader::LoadDDS);
+        TextureLoadFuncType LoadFunc = nullptr;
+
+        switch (ImageData.Type)
+        {
+        case TextureRawImage::Format::Dds:
+        {
+            LoadFunc = &TextureLoader::LoadDDS;
+            break;
+        }
+        case TextureRawImage::Format::Png:
+        {
+            LoadFunc = &TextureLoader::LoadWIC;
+            break;
+        }
+
+        default:
+            NEON_ASSERT(false, "Tried to load an unsupported image format");
+            std::unreachable();
+        }
+
+        auto Image = LoadFunc(static_cast<Dx12Swapchain*>(Swapchain), ImageData.Data, ImageData.Size);
+        CopyId     = Image.GetUploadId();
+        return Image.Release();
+    }
+
     Dx12Texture::Dx12Texture(
         ISwapchain*                      Swapchain,
         const RHI::ResourceDesc&         Desc,
@@ -287,30 +320,7 @@ namespace Neon::RHI
 
         if (!Subresources.empty())
         {
-            auto SubresourcesCopy =
-                Subresources |
-                std::ranges::to<std::vector<SubresourceDesc>>();
-
-            *CopyId = Swapchain->RequestCopy(
-                [Swapchain](
-                    ICopyCommandList* CommandList,
-                    Dx12Texture*      Texture,
-                    auto              Subreources)
-                {
-                    Dx12UploadBuffer Buffer{
-                        Swapchain,
-                        { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
-                    };
-
-                    CommandList->CopySubresources(
-                        Texture,
-                        static_cast<IGpuResource*>(&Buffer),
-                        0,
-                        0,
-                        Subreources);
-                },
-                this,
-                std::move(SubresourcesCopy));
+            CopyFrom(Subresources, *CopyId);
         }
     }
 
@@ -336,6 +346,17 @@ namespace Neon::RHI
             auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
             Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
         }
+    }
+
+    Dx12Texture::Dx12Texture(
+        ISwapchain*                        Swapchain,
+        Win32::ComPtr<ID3D12Resource>      Texture,
+        Win32::ComPtr<D3D12MA::Allocation> Allocation,
+        std::span<const SubresourceDesc>   Subresources,
+        uint64_t&                          CopyId) :
+        Dx12Texture{ Swapchain, std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
+    {
+        CopyFrom(Subresources, CopyId);
     }
 
     Dx12Texture::~Dx12Texture()
@@ -444,5 +465,35 @@ namespace Neon::RHI
             &TotalBytes);
 
         return TotalBytes;
+    }
+
+    void Dx12Texture::CopyFrom(
+        std::span<const SubresourceDesc> Subresources,
+        uint64_t&                        CopyId)
+    {
+        auto SubresourcesCopy =
+            Subresources |
+            std::ranges::to<std::vector<SubresourceDesc>>();
+
+        CopyId = m_OwningSwapchain->RequestCopy(
+            [](
+                ICopyCommandList* CommandList,
+                Dx12Texture*      Texture,
+                auto              Subreources)
+            {
+                Dx12UploadBuffer Buffer{
+                    Texture->m_OwningSwapchain,
+                    { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
+                };
+
+                CommandList->CopySubresources(
+                    Texture,
+                    static_cast<IGpuResource*>(&Buffer),
+                    0,
+                    0,
+                    Subreources);
+            },
+            this,
+            std::move(SubresourcesCopy));
     }
 } // namespace Neon::RHI
