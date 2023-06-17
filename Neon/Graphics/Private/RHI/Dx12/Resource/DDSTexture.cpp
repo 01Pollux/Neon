@@ -621,7 +621,7 @@ namespace Neon::RHI
         std::vector<SubresourceDesc>       TextureDataToUpload;
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 
-        DDS::LoadDDSTextureFromMemoryEx(
+        ThrowIfFailed(DDS::LoadDDSTextureFromMemoryEx(
             Swapchain->GetAllocator()->GetMA(),
             Data,
             DataSize,
@@ -629,7 +629,7 @@ namespace Neon::RHI
             D3D12_RESOURCE_FLAG_NONE,
             &Texture,
             &Allocation,
-            TextureDataToUpload);
+            TextureDataToUpload));
 
         return TextureLoader(Swapchain, Texture.Get(), Allocation.Get(), TextureDataToUpload);
     }

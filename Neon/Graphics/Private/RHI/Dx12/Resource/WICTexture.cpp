@@ -467,7 +467,7 @@ namespace Neon::RHI
         std::vector<SubresourceDesc>       TextureDataToUpload;
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 
-        WIC::LoadAndDecodeWICTextureFromMemoryEx(
+        ThrowIfFailed(WIC::LoadAndDecodeWICTextureFromMemoryEx(
             Swapchain->GetAllocator()->GetMA(),
             Data,
             DataSize,
@@ -476,7 +476,7 @@ namespace Neon::RHI
             &Texture,
             &Allocation,
             TextureDecodedData,
-            TextureDataToUpload);
+            TextureDataToUpload));
 
         return TextureLoader(Swapchain, Texture.Get(), Allocation.Get(), TextureDataToUpload);
     }

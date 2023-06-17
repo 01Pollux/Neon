@@ -10,6 +10,7 @@
 //
 
 #include <RHI/Resource/Views/ShaderResource.hpp>
+#include <RHI/Resource/State.hpp>
 
 #include <fstream>
 #include <Math/Matrix.hpp>
@@ -62,11 +63,26 @@ namespace Neon::Runtime::Phases
 
         uint64_t CopyId;
 
-        Texture.reset(RHI::ITexture::Create(
-            Graphics->GetSwapchain(),
-            RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8G8B8A8_UNorm, 256, 256, 1, 1),
-            { &Subresources, 1 },
-            CopyId));
+        std::ifstream        File(R"(D:\Dev\100058422_p0.jpg)", std::ios::ate | std::ios::binary);
+        std::vector<uint8_t> Data2(File.tellg(), 0);
+        File.seekg(0);
+        File.read(reinterpret_cast<char*>(Data2.data()), Data2.size());
+        File.close();
+
+        Texture.reset(
+            RHI::ITexture::Create(
+                Graphics->GetSwapchain(),
+                RHI::TextureRawImage{
+                    .Data = Data2.data(),
+                    .Size = Data2.size(),
+                    .Type = RHI::TextureRawImage::Format::Png },
+                CopyId));
+
+        // Texture.reset(RHI::ITexture::Create(
+        //     Graphics->GetSwapchain(),
+        //     RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8G8B8A8_UNorm, 256, 256, 1, 1),
+        //     { &Subresources, 1 },
+        //     CopyId));
 
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
             .SetShaderResolver(
@@ -83,6 +99,7 @@ namespace Neon::Runtime::Phases
                         .SourceCode = Text,
                         .EntryPoint = STR("VSMain")
                     };
+                    Desc.Flags.Set(RHI::EShaderCompileFlags::Debug);
 
                     Resolver.Load(
                         RG::ResourceId(STR("Test.VS")),
@@ -157,17 +174,23 @@ namespace Neon::Runtime::Phases
                         });
                 })
             .SetDispatcher(
-                [Texture, CopyId = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList)
+                [Texture, CopyId = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) mutable
                 {
                     auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
+                    auto Swapchain         = Storage.GetSwapchain();
 
                     if (CopyId)
                     {
-                        auto GraphicsQueue = Storage.GetSwapchain()->GetQueue(RHI::CommandQueueType::Graphics);
-                        Storage.GetSwapchain()->WaitForCopy(
+                        auto GraphicsQueue = Swapchain->GetQueue(RHI::CommandQueueType::Graphics);
+                        Swapchain->WaitForCopy(
                             GraphicsQueue,
                             *CopyId);
+                        CopyId = {};
                     }
+
+                    Swapchain->GetStateManager()->TransitionResource(
+                        Texture.get(),
+                        RHI::MResourceState::FromEnum(RHI::EResourceState::PixelShaderResource));
 
                     //
 

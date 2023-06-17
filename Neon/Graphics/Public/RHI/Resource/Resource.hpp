@@ -213,7 +213,6 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static ITexture* Create(
             ISwapchain*            Swapchain,
-            const ResourceDesc&    Desc,
             const TextureRawImage& ImageData,
             uint64_t&              CopyId);
 

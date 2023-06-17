@@ -176,7 +176,6 @@ namespace Neon::RHI
 
     ITexture* ITexture::Create(
         ISwapchain*            Swapchain,
-        const ResourceDesc&    Desc,
         const TextureRawImage& ImageData,
         uint64_t&              CopyId)
     {
@@ -471,19 +470,37 @@ namespace Neon::RHI
         std::span<const SubresourceDesc> Subresources,
         uint64_t&                        CopyId)
     {
-        auto SubresourcesCopy =
-            Subresources |
-            std::ranges::to<std::vector<SubresourceDesc>>();
+        struct SubresourceDescGuard
+        {
+            std::vector<SubresourceDesc>            Subresources;
+            std::vector<std::unique_ptr<uint8_t[]>> Datas;
+
+            SubresourceDescGuard() = default;
+            NEON_CLASS_NO_COPY(SubresourceDescGuard);
+            NEON_CLASS_MOVE(SubresourceDescGuard);
+            ~SubresourceDescGuard() = default;
+        };
+
+        auto Guard = std::make_shared<SubresourceDescGuard>();
+
+        Guard->Subresources = Subresources |
+                              std::ranges::to<std::vector<SubresourceDesc>>();
+        Guard->Datas.reserve(Subresources.size());
+        for (auto& Subresource : Guard->Subresources)
+        {
+            size_t Size    = Subresource.SlicePitch;
+            auto   NewData = Guard->Datas.emplace_back(std::make_unique<uint8_t[]>(Size)).get();
+            std::copy_n(std::bit_cast<uint8_t*>(Subresource.Data), Size, std::bit_cast<uint8_t*>(NewData));
+            Subresource.Data = NewData;
+        }
 
         CopyId = m_OwningSwapchain->RequestCopy(
-            [](
-                ICopyCommandList* CommandList,
-                Dx12Texture*      Texture,
-                auto              Subreources)
+            [SubreourcesGuard = std::move(Guard)](ICopyCommandList* CommandList,
+                                                  Dx12Texture*      Texture)
             {
                 Dx12UploadBuffer Buffer{
                     Texture->m_OwningSwapchain,
-                    { .Size = Texture->GetTextureCopySize(uint32_t(Subreources.size())) }
+                    { .Size = Texture->GetTextureCopySize(uint32_t(SubreourcesGuard->Subresources.size())) }
                 };
 
                 CommandList->CopySubresources(
@@ -491,9 +508,8 @@ namespace Neon::RHI
                     static_cast<IGpuResource*>(&Buffer),
                     0,
                     0,
-                    Subreources);
+                    SubreourcesGuard->Subresources);
             },
-            this,
-            std::move(SubresourcesCopy));
+            this);
     }
 } // namespace Neon::RHI
