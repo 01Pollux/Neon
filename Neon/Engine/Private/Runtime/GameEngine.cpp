@@ -34,6 +34,11 @@ namespace Neon::Runtime
         return m_Window->GetExitCode();
     }
 
+    Asset::IResourceManager* DefaultGameEngine::GetResourceManager() noexcept
+    {
+        return m_ResourceManager->Get();
+    }
+
     Module::Window* DefaultGameEngine::GetWindowModule() noexcept
     {
         return m_Window.get();

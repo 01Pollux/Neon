@@ -27,7 +27,7 @@ namespace PakC::Handler
     {
         auto Path = std::filesystem::path(StringU8(Object.at("Path").as_string()));
 
-        std::ifstream File(Path, std::ios::binary | std::ios::end);
+        std::ifstream File(Path, std::ios::binary | std::ios::ate);
         if (!File)
         {
             throw std::runtime_error("Failed to open texture file.");

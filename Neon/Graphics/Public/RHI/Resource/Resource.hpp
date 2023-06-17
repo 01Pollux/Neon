@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RHI/Resource/Common.hpp>
+#include <RHI/Commands/Common.hpp>
 #include <variant>
 #include <span>
 
@@ -12,6 +13,7 @@ namespace Neon
 namespace Neon::RHI
 {
     class ISwapchain;
+    class ICommandQueue;
 
     //
 
@@ -54,6 +56,11 @@ namespace Neon::RHI
         /// Get desc of the resource.
         /// </summary>
         [[nodiscard]] virtual ResourceDesc GetDesc() const = 0;
+
+        /// <summary>
+        /// Get the swapchain that the resource belongs to.
+        /// </summary>
+        [[nodiscard]] virtual ISwapchain* GetSwapchain() const = 0;
 
         /// <summary>
         /// Query the footprint of the resource.
@@ -245,5 +252,82 @@ namespace Neon::RHI
             uint32_t PlaneIndex,
             uint32_t ArrayIndex,
             uint32_t MipIndex) const = 0;
+    };
+
+    class PendingResource
+    {
+    public:
+        PendingResource(
+            ISwapchain*                      Swapchain,
+            const ResourceDesc&              Desc,
+            std::span<const SubresourceDesc> Subresources)
+        {
+            uint64_t CopyId = 0;
+            m_Resource      = UPtr<ITexture>(ITexture::Create(
+                Swapchain,
+                Desc,
+                Subresources,
+                CopyId));
+            m_CopyId        = CopyId;
+        }
+
+        PendingResource(
+            ISwapchain*            Swapchain,
+            const TextureRawImage& ImageData)
+        {
+            uint64_t CopyId = 0;
+            m_Resource      = UPtr<ITexture>(ITexture::Create(
+                Swapchain,
+                ImageData,
+                CopyId));
+            m_CopyId        = CopyId;
+        }
+
+        PendingResource(
+            Ptr<IGpuResource>       Texture,
+            std::optional<uint64_t> CopyId) :
+            m_Resource(std::move(Texture)),
+            m_CopyId(CopyId)
+        {
+        }
+
+        /// <summary>
+        /// Returns the texture once it has been created.
+        /// </summary>
+        [[nodiscard]] IGpuResource* Access(
+            ICommandQueue* Queue) const;
+
+        /// <summary>
+        /// Returns the texture once it has been created.
+        /// </summary>
+        [[nodiscard]] IGpuResource* Access(
+            RHI::CommandQueueType QueueType) const;
+
+        /// <summary>
+        /// Returns the texture once it has been created.
+        /// </summary>
+        template<typename _Ty>
+            requires std::derived_from<_Ty, IGpuResource>
+        [[nodiscard]] ITexture* Access(
+            ICommandQueue* Queue) const
+        {
+            return dynamic_cast<_Ty*>(Access(Queue));
+        }
+
+        /// <summary>
+        /// Returns the texture once it has been created.
+        /// </summary>
+        template<typename _Ty>
+            requires std::derived_from<_Ty, IGpuResource>
+        [[nodiscard]] IGpuResource* Access(
+            RHI::CommandQueueType QueueType) const
+        {
+            return dynamic_cast<_Ty*>(Access(QueueType));
+        }
+
+    private:
+        Ptr<IGpuResource> m_Resource;
+
+        mutable std::optional<uint64_t> m_CopyId;
     };
 } // namespace Neon::RHI

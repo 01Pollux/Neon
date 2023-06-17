@@ -52,6 +52,11 @@ namespace Neon::Runtime
 
     public:
         /// <summary>
+        /// Get resource manager associated with the engine
+        /// </summary>
+        Asset::IResourceManager* GetResourceManager() noexcept;
+
+        /// <summary>
         /// Get window associated with the engine
         /// </summary>
         Module::Window* GetWindowModule() noexcept;

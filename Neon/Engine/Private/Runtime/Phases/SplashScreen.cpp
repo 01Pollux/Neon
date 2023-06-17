@@ -9,6 +9,10 @@
 
 //
 
+#include <Resource/Pack.hpp>
+#include <Resource/Manager.hpp>
+#include <Resource/Types/Texture.hpp>
+
 #include <RHI/Resource/Views/ShaderResource.hpp>
 #include <RHI/Resource/State.hpp>
 
@@ -44,8 +48,6 @@ namespace Neon::Runtime::Phases
 
         auto Builder = RenderGraph->Reset();
 
-        Ptr<RHI::ITexture> Texture;
-
         std::vector<uint8_t> Data(256 * 256 * 4);
         for (size_t i = 0; i < Data.size(); i += 4)
         {
@@ -63,20 +65,12 @@ namespace Neon::Runtime::Phases
 
         uint64_t CopyId;
 
-        std::ifstream        File(R"(D:\Dev\100058422_p0.jpg)", std::ios::ate | std::ios::binary);
-        std::vector<uint8_t> Data2(File.tellg(), 0);
-        File.seekg(0);
-        File.read(reinterpret_cast<char*>(Data2.data()), Data2.size());
-        File.close();
+        auto Pack = Engine->GetResourceManager()->GetPack("__neon")->Load<Asset::TextureAsset>(
+            Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380191"));
 
-        Texture.reset(
-            RHI::ITexture::Create(
-                Graphics->GetSwapchain(),
-                RHI::TextureRawImage{
-                    .Data = Data2.data(),
-                    .Size = Data2.size(),
-                    .Type = RHI::TextureRawImage::Format::Png },
-                CopyId));
+        RHI::PendingResource LoadedTexture(
+            Graphics->GetSwapchain(),
+            Pack->GetImageInfo());
 
         // Texture.reset(RHI::ITexture::Create(
         //     Graphics->GetSwapchain(),
@@ -174,22 +168,16 @@ namespace Neon::Runtime::Phases
                         });
                 })
             .SetDispatcher(
-                [Texture, CopyId = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) mutable
+                [LoadedTexture = std::move(LoadedTexture),
+                 CopyId        = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) mutable
                 {
                     auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
                     auto Swapchain         = Storage.GetSwapchain();
 
-                    if (CopyId)
-                    {
-                        auto GraphicsQueue = Swapchain->GetQueue(RHI::CommandQueueType::Graphics);
-                        Swapchain->WaitForCopy(
-                            GraphicsQueue,
-                            *CopyId);
-                        CopyId = {};
-                    }
+                    auto Texture = LoadedTexture.Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
 
                     Swapchain->GetStateManager()->TransitionResource(
-                        Texture.get(),
+                        Texture,
                         RHI::MResourceState::FromEnum(RHI::EResourceState::PixelShaderResource));
 
                     //
@@ -256,7 +244,7 @@ namespace Neon::Runtime::Phases
 
                     auto ResourceView = RenderCommandList->GetResourceView();
                     auto Srv          = static_cast<RHI::Views::ShaderResource&>(ResourceView);
-                    Srv.Bind(Texture.get());
+                    Srv.Bind(Texture);
 
                     RenderCommandList->SetDescriptorTable(
                         3,

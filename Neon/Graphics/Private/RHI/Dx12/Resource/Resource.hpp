@@ -13,6 +13,8 @@ namespace Neon::RHI
         Dx12GpuResource(
             ISwapchain* Swapchain);
 
+        ISwapchain* GetSwapchain() const override;
+
         void QueryFootprint(
             uint32_t              FirstSubresource,
             uint32_t              SubresourceCount,
