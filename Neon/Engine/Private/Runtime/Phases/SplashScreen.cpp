@@ -48,12 +48,14 @@ namespace Neon::Runtime::Phases
 
         float CurFacePercentage = 0.f;
 
-        auto Pack = Engine->GetResourceManager()->GetPack("__neon")->Load<Asset::TextureAsset>(
+        auto Pack = Engine->QueryInterface<Asset::IResourceManager>()->GetPack("__neon");
+
+        auto Asset = Pack->Load<Asset::TextureAsset>(
             Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380191"));
 
         RHI::PendingResource LoadedTexture(
             Graphics->GetSwapchain(),
-            Pack->GetImageInfo());
+            Asset->GetImageInfo());
 
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
             .SetShaderResolver(

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Config/Engine.hpp>
+#include <Runtime/Interface.hpp>
 
 namespace Neon::Module
 {
@@ -17,7 +18,7 @@ namespace Neon::Runtime
 
     class EnginePipeline;
 
-    class DefaultGameEngine
+    class DefaultGameEngine : public InterfaceContainer
     {
     public:
         DefaultGameEngine(
@@ -34,9 +35,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Called when the engine is initialized.
         /// </summary>
-        virtual void Initialize()
-        {
-        }
+        virtual void Initialize();
 
         /// <summary>
         /// Called when the engine is shutdown.
@@ -51,11 +50,6 @@ namespace Neon::Runtime
         int Run();
 
     public:
-        /// <summary>
-        /// Get resource manager associated with the engine
-        /// </summary>
-        Asset::IResourceManager* GetResourceManager() noexcept;
-
         /// <summary>
         /// Get window associated with the engine
         /// </summary>
@@ -79,19 +73,12 @@ namespace Neon::Runtime
 
     private:
         /// <summary>
-        /// Load resource packs
-        /// </summary>
-        void LoadResourcePacks(
-            const Config::ResourceConfig& Config);
-
-        /// <summary>
         /// Begin the engine pipeline
         /// </summary>
         void DispatchLoaderPipeline();
 
     private:
-        UPtr<Module::ResourceManager> m_ResourceManager;
-        UPtr<Module::Window>          m_Window;
+        UPtr<Module::Window> m_Window;
 
         UPtr<EnginePipeline> m_Pipeline;
     };
