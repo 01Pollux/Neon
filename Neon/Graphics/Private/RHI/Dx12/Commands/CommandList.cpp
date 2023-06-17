@@ -180,7 +180,7 @@ namespace Neon::RHI
 
     //
 
-    Views::Generic& Dx12CommonCommandList::GetResourceView()
+    const Views::Generic& Dx12CommonCommandList::GetResourceView()
     {
         if (!m_ResourceView)
         {
@@ -189,7 +189,7 @@ namespace Neon::RHI
         return m_ResourceView;
     }
 
-    Views::Generic& Dx12CommonCommandList::GetSamplerView()
+    const Views::Generic& Dx12CommonCommandList::GetSamplerView()
     {
         if (!m_SamplerView)
         {

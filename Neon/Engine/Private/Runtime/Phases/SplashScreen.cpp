@@ -41,29 +41,12 @@ namespace Neon::Runtime::Phases
     void SplashScreen::Bind(
         DefaultGameEngine* Engine)
     {
-        auto& Pipeline = Engine->GetPipeline();
-
         auto Graphics    = Engine->GetGraphicsModule();
         auto RenderGraph = Graphics->GetRenderGraph();
 
         auto Builder = RenderGraph->Reset();
 
-        std::vector<uint8_t> Data(256 * 256 * 4);
-        for (size_t i = 0; i < Data.size(); i += 4)
-        {
-            Data[i + 0] = 255;
-            Data[i + 1] = 0;
-            Data[i + 2] = 0;
-            Data[i + 3] = 255;
-        }
-
-        RHI::SubresourceDesc Subresources{
-            .Data       = Data.data(),
-            .RowPitch   = 256 * 4,
-            .SlicePitch = Subresources.RowPitch * 256
-        };
-
-        uint64_t CopyId;
+        float CurFacePercentage = 0.f;
 
         auto Pack = Engine->GetResourceManager()->GetPack("__neon")->Load<Asset::TextureAsset>(
             Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380191"));
@@ -71,12 +54,6 @@ namespace Neon::Runtime::Phases
         RHI::PendingResource LoadedTexture(
             Graphics->GetSwapchain(),
             Pack->GetImageInfo());
-
-        // Texture.reset(RHI::ITexture::Create(
-        //     Graphics->GetSwapchain(),
-        //     RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8G8B8A8_UNorm, 256, 256, 1, 1),
-        //     { &Subresources, 1 },
-        //     CopyId));
 
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)
             .SetShaderResolver(
@@ -120,8 +97,6 @@ namespace Neon::Runtime::Phases
                         RG::ResourceId(STR("Test.RS")),
                         RHI::RootSignatureBuilder()
                             .Add32BitConstants<float>(0, 0)
-                            .Add32BitConstants<Matrix4x4>(0, 1)
-                            .AddConstantBufferView(1, 0)
                             .AddDescriptorTable(
                                 RHI::RootDescriptorTable()
                                     .AddSrvRange(0, 0, 1))
@@ -143,6 +118,10 @@ namespace Neon::Runtime::Phases
                         .DepthStencilState = { .DepthEnable = false },
                         .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
                         .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+                    };
+
+                    Builder.BlendState.RenderTargets[0] = {
+                        .BlendEnable = true
                     };
 
                     VS->CreateInputLayout(Builder.InputLayout);
@@ -169,7 +148,7 @@ namespace Neon::Runtime::Phases
                 })
             .SetDispatcher(
                 [LoadedTexture = std::move(LoadedTexture),
-                 CopyId        = std::optional{ CopyId }](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) mutable
+                 CurFacePercentage](const RG::GraphStorage& Storage, RHI::ICommandList* CommandList) mutable
                 {
                     auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
                     auto Swapchain         = Storage.GetSwapchain();
@@ -201,32 +180,14 @@ namespace Neon::Runtime::Phases
 
                     //
 
-                    Color4 Color = Colors::White;
+                    RenderCommandList->SetConstants(0, &CurFacePercentage, 0);
 
-                    static float Time = 0.f;
-                    Time += 0.03f;
-                    RenderCommandList->SetConstants(0, &Time, 1);
+                    auto ResourceView = RHI::Views::ShaderResource(RenderCommandList->GetResourceView());
+                    ResourceView.Bind(Texture);
 
-                    //
-
-                    auto Size = Storage.GetSwapchain()->GetWindow()->GetSize();
-
-                    auto View = Matrix4x4::LookAt(
-                        Vector3D(0, 0, -1),
-                        Vector3D::Zero,
-                        Vector3D::Up);
-
-                    auto Proj = Matrix4x4::PerspectiveFov(
-                        DegreesToRadians(65.f),
-                        float(Size.Width()) / Size.Height(),
-                        0.1f,
-                        100.f);
-
-                    auto World = Matrix4x4::RotationZ(Time);
-
-                    auto WVP = (World * View * Proj);
-                    // auto WVP = Matrix4x4::Identity;
-                    RenderCommandList->SetConstants(1, &WVP, sizeof(WVP) / 4);
+                    RenderCommandList->SetDescriptorTable(
+                        1,
+                        ResourceView.GetGpuHandle());
 
                     //
 
@@ -236,22 +197,11 @@ namespace Neon::Runtime::Phases
 
                     RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
-                    RenderCommandList->SetDynamicResourceView(
-                        RHI::ICommonCommandList::ViewType::Cbv,
-                        2,
-                        Colors::Green.data(),
-                        sizeof(float) * 4);
-
-                    auto ResourceView = RenderCommandList->GetResourceView();
-                    auto Srv          = static_cast<RHI::Views::ShaderResource&>(ResourceView);
-                    Srv.Bind(Texture);
-
-                    RenderCommandList->SetDescriptorTable(
-                        3,
-                        ResourceView.GetGpuHandle());
-
                     RenderCommandList->Draw(RHI::DrawArgs{
                         .VertexCountPerInstance = 3 });
+
+                    // TODO: delta time
+                    CurFacePercentage += 0.01f;
                 });
 
         Builder.Build();

@@ -9,6 +9,12 @@ namespace Neon::RHI::Views
     public:
         using Generic::Generic;
 
+        ShaderResource(
+            const Generic& Other) :
+            Generic(Other)
+        {
+        }
+
         /// <summary>
         /// Bind shader resource view to descriptor heap.
         /// </summary>

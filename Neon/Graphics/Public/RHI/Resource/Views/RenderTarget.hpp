@@ -9,6 +9,12 @@ namespace Neon::RHI::Views
     public:
         using Generic::Generic;
 
+        RenderTarget(
+            const Generic& Other) :
+            Generic(Other)
+        {
+        }
+
         /// <summary>
         /// Bind render target view to descriptor heap.
         /// </summary>

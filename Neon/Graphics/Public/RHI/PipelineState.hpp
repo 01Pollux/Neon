@@ -36,9 +36,10 @@ namespace Neon::RHI
 
         struct BlendState
         {
-            bool         AlphaToCoverageEnable  = false;
-            bool         IndependentBlendEnable = false;
-            RenderTarget RenderTargets[8];
+            bool AlphaToCoverageEnable  = false;
+            bool IndependentBlendEnable = false;
+
+            std::array<RenderTarget, 8> RenderTargets;
         };
 
         struct RasterizerState

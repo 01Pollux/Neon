@@ -181,14 +181,14 @@ namespace Neon::RHI
         /// Heap view is used to bind resources to pipeline through descriptor heap
         /// They are volatile and GetResourceView should be called every time after calling each Dispatch or Draw
         /// </summary>
-        [[nodiscard]] virtual Views::Generic& GetResourceView() = 0;
+        [[nodiscard]] virtual const Views::Generic& GetResourceView() = 0;
 
         /// <summary>
         /// Get resource heap view
         /// Heap view is used to bind resources to pipeline through descriptor heap
         /// They are volatile and GetSamplerView should be called every time after calling each Dispatch or Draw
         /// </summary>
-        [[nodiscard]] virtual Views::Generic& GetSamplerView() = 0;
+        [[nodiscard]] virtual const Views::Generic& GetSamplerView() = 0;
     };
 
     //

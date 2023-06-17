@@ -9,6 +9,12 @@ namespace Neon::RHI::Views
     public:
         using Generic::Generic;
 
+        UnorderedAccess(
+            const Generic& Other) :
+            Generic(Other)
+        {
+        }
+
         /// <summary>
         /// Bind unordered access view to descriptor heap.
         /// </summary>

@@ -9,6 +9,12 @@ namespace Neon::RHI::Views
     public:
         using Generic::Generic;
 
+        ConstantBuffer(
+            const Generic& Other) :
+            Generic(Other)
+        {
+        }
+
         /// <summary>
         /// Bind constant buffer view to descriptor heap.
         /// </summary>

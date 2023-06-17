@@ -70,9 +70,9 @@ namespace Neon::RHI
             const Ptr<IPipelineState>& State) override;
 
     public:
-        [[nodiscard]] Views::Generic& GetResourceView() override;
+        [[nodiscard]] const Views::Generic& GetResourceView() override;
 
-        [[nodiscard]] Views::Generic& GetSamplerView() override;
+        [[nodiscard]] const Views::Generic& GetSamplerView() override;
 
     public:
         void SetDynamicResourceView(
