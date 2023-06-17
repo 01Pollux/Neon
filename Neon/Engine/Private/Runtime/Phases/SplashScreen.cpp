@@ -25,6 +25,7 @@ namespace Neon::Runtime::Phases
     struct VsInput
     {
         Vector4D Position;
+        Vector2D TexCoord;
     };
 
     static constexpr size_t BufferSize = sizeof(VsInput) * 6;
@@ -176,13 +177,13 @@ namespace Neon::Runtime::Phases
                     auto Buffer = Storage.GetResource(RG::ResourceId(STR("Test.Buffer"))).AsUploadBuffer();
                     auto Vertex = Buffer->Map<VsInput>();
 
-                    Vertex[0] = { { -0.40f, -0.40f, 0.0f, 1.0 } };
-                    Vertex[1] = { { -0.40f, +0.40f, 0.0f, 1.0 } };
-                    Vertex[2] = { { +0.40f, -0.40f, 0.0f, 1.0 } };
+                    Vertex[0] = { { -0.40f, -0.40f, 0.0f, 1.0 }, { 0.f, 1.0f } };
+                    Vertex[1] = { { -0.40f, +0.40f, 0.0f, 1.0 }, { 0.f, 0.0f } };
+                    Vertex[2] = { { +0.40f, -0.40f, 0.0f, 1.0 }, { 1.f, 1.0f } };
 
-                    Vertex[3] = { { -0.40f, +0.40f, 0.0f, 1.0 } };
-                    Vertex[4] = { { +0.40f, +0.40f, 0.0f, 1.0 } };
-                    Vertex[5] = { { +0.40f, -0.40f, 0.0f, 1.0 } };
+                    Vertex[3] = { { -0.40f, +0.40f, 0.0f, 1.0 }, { 0.f, 0.0f } };
+                    Vertex[4] = { { +0.40f, +0.40f, 0.0f, 1.0 }, { 1.f, 0.0f } };
+                    Vertex[5] = { { +0.40f, -0.40f, 0.0f, 1.0 }, { 1.f, 1.0f } };
 
                     Buffer->Unmap();
 
