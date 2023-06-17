@@ -2,11 +2,7 @@
 
 #include <Resource/Asset.hpp>
 #include <Resource/Handler.hpp>
-
-namespace Neon::RHI
-{
-    class ITexture;
-}
+#include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Asset
 {
@@ -16,18 +12,20 @@ namespace Neon::Asset
 
     public:
         TextureAsset(
-            const Ptr<RHI::ITexture>& Texture = nullptr);
+            const RHI::TextureRawImage& ImageInfo = {},
+            bool                        Owning    = false);
 
         /// <summary>
-        /// Get loaded texture resource.
+        /// Get texture image info.
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::ITexture>& GetTexture() const;
+        [[nodiscard]] const RHI::TextureRawImage& GetImageInfo() const;
 
         /// <summary>
-        /// Set texture resource.
+        /// Set texture image info.
         /// </summary>
-        void SetTexture(
-            const Ptr<RHI::ITexture>& Texture);
+        void SetImageInfo(
+            const RHI::TextureRawImage& ImageInfo,
+            bool                        Owning = false);
 
     public:
         class Handler : public IAssetResourceHandler
@@ -48,6 +46,7 @@ namespace Neon::Asset
         };
 
     private:
-        Ptr<RHI::ITexture> m_Texture;
+        RHI::TextureRawImage       m_ImageInfo;
+        std::unique_ptr<uint8_t[]> m_ImageData;
     };
 } // namespace Neon::Asset

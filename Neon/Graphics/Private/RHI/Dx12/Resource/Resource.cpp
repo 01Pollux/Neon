@@ -179,6 +179,11 @@ namespace Neon::RHI
         const TextureRawImage& ImageData,
         uint64_t&              CopyId)
     {
+        if (!ImageData.Data)
+        {
+            return nullptr;
+        }
+
         using TextureLoadFuncType    = decltype(&TextureLoader::LoadDDS);
         TextureLoadFuncType LoadFunc = nullptr;
 
@@ -189,7 +194,12 @@ namespace Neon::RHI
             LoadFunc = &TextureLoader::LoadDDS;
             break;
         }
+        case TextureRawImage::Format::Bmp:
+        case TextureRawImage::Format::Ico:
         case TextureRawImage::Format::Png:
+        case TextureRawImage::Format::Jpeg:
+        case TextureRawImage::Format::Jxr:
+        case TextureRawImage::Format::Tiff:
         {
             LoadFunc = &TextureLoader::LoadWIC;
             break;

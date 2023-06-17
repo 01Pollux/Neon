@@ -12,6 +12,12 @@
         "ShaderCompiler": "Trace",
         "Graphics": "Trace"
       }
+    },
+    {
+      "Type": "TextureAsset",
+      "Handle": "d0b50bba-f800-4c18-a595-fd5c4b380191",
+      "Path": "D:/Dev/100058422_p0.jpg",
+      "Format": "JPG"
     }
   ]
 }

@@ -10,6 +10,7 @@
 #include <Parser/Handlers/TextFile.hpp>
 #include <Parser/Handlers/Shader.hpp>
 #include <Parser/Handlers/RootSignature.hpp>
+#include <Parser/Handlers/Texture.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -164,5 +165,6 @@ namespace PakC
         m_AssetResources["TextFileAsset"]      = &Handler::LoadTextResource;
         m_AssetResources["ShaderAsset"]        = &Handler::LoadShaderResource;
         m_AssetResources["RootSignatureAsset"] = &Handler::LoadRootSignatureResource;
+        m_AssetResources["TextureAsset"]       = &Handler::LoadTextureResource;
     }
 } // namespace PakC

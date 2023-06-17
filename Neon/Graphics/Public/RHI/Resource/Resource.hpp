@@ -179,12 +179,19 @@ namespace Neon::RHI
     {
         enum class Format : uint8_t
         {
+            None,
             Dds,
+            Ico,
+            Bmp,
             Png,
+            Jpeg,
+            Jxr,
+            Tiff,
+            // TODO: Gif
         };
-        const uint8_t* Data;
-        size_t         Size;
-        Format         Type;
+        uint8_t* Data = nullptr;
+        size_t   Size = 0;
+        Format   Type = Format::None;
     };
 
     class ITexture : public virtual IGpuResource

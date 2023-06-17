@@ -223,9 +223,12 @@ namespace Neon::Asset
     {
         ResetReadWrite();
 
-        if (!std::filesystem::exists(FilePath))
+        // create directory of the FilePath if it doesnt exists
+        std::filesystem::path Path(FilePath);
+        if (auto ParentPath = Path.parent_path(); !ParentPath.empty())
         {
-            std::filesystem::create_directories(std::filesystem::path(FilePath).parent_path());
+            if (!std::filesystem::exists(ParentPath))
+                std::filesystem::create_directories(ParentPath);
         }
 
         bio::filtering_ostream Filter;
