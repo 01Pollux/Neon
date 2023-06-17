@@ -4,6 +4,7 @@
 #include <Window/Window.hpp>
 #include <RHI/Resource/State.hpp>
 #include <RHI/Swapchain.hpp>
+#include <execution>
 
 #include <Log/Logger.hpp>
 
@@ -11,7 +12,8 @@ namespace Neon::RG
 {
     RenderGraph::RenderGraph(
         RHI::ISwapchain* Swapchain) :
-        m_Storage(Swapchain)
+        m_Storage(Swapchain),
+        m_ThreadPool(4)
     {
     }
 
@@ -41,7 +43,7 @@ namespace Neon::RG
 
         for (auto& Level : m_Levels)
         {
-            Level.Execute(m_Storage.m_Swapchain);
+            Level.Execute(m_ThreadPool, m_Storage.m_Swapchain);
         }
 
         auto StateManager = m_Storage.m_Swapchain->GetStateManager();
@@ -85,7 +87,8 @@ namespace Neon::RG
     }
 
     void RenderGraphDepdencyLevel::Execute(
-        RHI::ISwapchain* Swapchain)
+        Asio::ThreadPool<>& ThreadPool,
+        RHI::ISwapchain*    Swapchain)
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -97,7 +100,7 @@ namespace Neon::RG
         }
 
         ExecuteBarriers(Swapchain);
-        ExecutePasses(Swapchain);
+        ExecutePasses(ThreadPool, Swapchain);
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -127,7 +130,8 @@ namespace Neon::RG
     //
 
     void RenderGraphDepdencyLevel::ExecutePasses(
-        RHI::ISwapchain* Swapchain) const
+        Asio::ThreadPool<>& ThreadPool,
+        RHI::ISwapchain*    Swapchain) const
     {
         std::mutex RenderMutex, ComputeMutex, CopyMutex;
 
@@ -135,8 +139,8 @@ namespace Neon::RG
         RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext(Swapchain);
         RHI::TCommandContext<RHI::CommandQueueType::Copy>     CopyContext(Swapchain);
 
-        std::vector<std::jthread> PassesToExecute;
-        PassesToExecute.reserve(m_Passes.size());
+        std::vector<std::future<void>> Futures;
+        Futures.reserve(m_Passes.size());
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
@@ -145,7 +149,7 @@ namespace Neon::RG
                 continue;
             }
 
-            PassesToExecute.emplace_back(
+            auto Task = ThreadPool.Enqueue(
                 [&, &Storage = m_Context.GetStorage()](size_t PassIndex)
                 {
                     auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
@@ -269,9 +273,18 @@ namespace Neon::RG
                     }
                     }
 
-                    RenderPass->Dispatch(Storage, CommandList);
-                },
+                    RenderPass->Dispatch(Storage, CommandList); },
                 i);
+            Futures.emplace_back(std::move(Task));
         }
+
+        std::for_each(
+            std::execution::par_unseq,
+            Futures.begin(),
+            Futures.end(),
+            [](auto& Future)
+            {
+                Future.wait();
+            });
     }
 } // namespace Neon::RG

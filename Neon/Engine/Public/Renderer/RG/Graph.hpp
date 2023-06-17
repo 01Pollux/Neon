@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RG/Storage.hpp>
+#include <Asio/ThreadPool.hpp>
 
 namespace Neon::RG
 {
@@ -45,8 +46,9 @@ namespace Neon::RG
             DepdencyLevelList&& Levels);
 
     private:
-        GraphStorage      m_Storage;
-        DepdencyLevelList m_Levels;
+        GraphStorage       m_Storage;
+        DepdencyLevelList  m_Levels;
+        Asio::ThreadPool<> m_ThreadPool;
     };
 
     //
@@ -78,7 +80,8 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            RHI::ISwapchain* Swapchain);
+            Asio::ThreadPool<>& ThreadPool,
+            RHI::ISwapchain*    Swapchain);
 
     private:
         /// <summary>
@@ -91,7 +94,8 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            RHI::ISwapchain* Swapchain) const;
+            Asio::ThreadPool<>& ThreadPool,
+            RHI::ISwapchain*    Swapchain) const;
 
     private:
         struct RenderPassInfo

@@ -73,7 +73,7 @@ namespace Neon::Asio
         /// <summary>
         /// Enqueues a task.
         /// </summary>
-        template<std::invocable _Fn, typename... _Args>
+        template<typename _Fn, typename... _Args>
         FutureType Enqueue(
             _Fn&& Function,
             _Args&&... Args)
