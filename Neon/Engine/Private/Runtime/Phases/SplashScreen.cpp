@@ -25,10 +25,9 @@ namespace Neon::Runtime::Phases
     struct VsInput
     {
         Vector4D Position;
-        Vector4D Color;
     };
 
-    static constexpr size_t BufferSize = sizeof(VsInput) * 4;
+    static constexpr size_t BufferSize = sizeof(VsInput) * 6;
 
     static constexpr const char* SplashScreenTag = "SplashScreen";
 
@@ -120,9 +119,14 @@ namespace Neon::Runtime::Phases
                         .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
                     };
 
-                    Builder.BlendState.RenderTargets[0] = {
-                        .BlendEnable = true
-                    };
+                    // configure transparency
+                    Builder.BlendState.RenderTargets[0].BlendEnable = true;
+                    Builder.BlendState.RenderTargets[0].Src         = RHI::BlendTarget::SrcAlpha;
+                    Builder.BlendState.RenderTargets[0].Dest        = RHI::BlendTarget::InvSrcAlpha;
+                    Builder.BlendState.RenderTargets[0].OpSrc       = RHI::BlendOp::Add;
+                    Builder.BlendState.RenderTargets[0].SrcAlpha    = RHI::BlendTarget::One;
+                    Builder.BlendState.RenderTargets[0].DestAlpha   = RHI::BlendTarget::Zero;
+                    Builder.BlendState.RenderTargets[0].OpAlpha     = RHI::BlendOp::Add;
 
                     VS->CreateInputLayout(Builder.InputLayout);
 
@@ -172,15 +176,19 @@ namespace Neon::Runtime::Phases
                     auto Buffer = Storage.GetResource(RG::ResourceId(STR("Test.Buffer"))).AsUploadBuffer();
                     auto Vertex = Buffer->Map<VsInput>();
 
-                    Vertex[0] = { { +0.00f, +0.50f, 0.0f, 1.0 }, { 1.0f, 0.0f, 0.0f, 1.0f } }; // top
-                    Vertex[1] = { { +0.40f, -0.25f, 0.0f, 1.0 }, { 0.0f, 0.0f, 1.0f, 1.0f } }; // right
-                    Vertex[2] = { { -0.40f, -0.25f, 0.0f, 1.0 }, { 0.0f, 1.0f, 0.0f, 1.0f } }; // left
+                    Vertex[0] = { { -0.40f, -0.40f, 0.0f, 1.0 } };
+                    Vertex[1] = { { -0.40f, +0.40f, 0.0f, 1.0 } };
+                    Vertex[2] = { { +0.40f, -0.40f, 0.0f, 1.0 } };
+
+                    Vertex[3] = { { -0.40f, +0.40f, 0.0f, 1.0 } };
+                    Vertex[4] = { { +0.40f, +0.40f, 0.0f, 1.0 } };
+                    Vertex[5] = { { +0.40f, -0.40f, 0.0f, 1.0 } };
 
                     Buffer->Unmap();
 
                     //
 
-                    RenderCommandList->SetConstants(0, &CurFacePercentage, 0);
+                    RenderCommandList->SetConstants(0, &CurFacePercentage, 1);
 
                     auto ResourceView = RHI::Views::ShaderResource(RenderCommandList->GetResourceView());
                     ResourceView.Bind(Texture);
@@ -192,16 +200,16 @@ namespace Neon::Runtime::Phases
                     //
 
                     RHI::Views::Vertex Vtx;
-                    Vtx.Append(Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 3);
+                    Vtx.Append(Buffer.get(), 0, sizeof(VsInput), sizeof(VsInput) * 6);
                     RenderCommandList->SetVertexBuffer(0, Vtx);
 
                     RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
                     RenderCommandList->Draw(RHI::DrawArgs{
-                        .VertexCountPerInstance = 3 });
+                        .VertexCountPerInstance = 6 });
 
                     // TODO: delta time
-                    CurFacePercentage += 0.01f;
+                    CurFacePercentage += 0.03f;
                 });
 
         Builder.Build();
