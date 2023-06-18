@@ -36,7 +36,7 @@ namespace Neon::Runtime
         RegisterInterface<EnginetWindow>(this, Config);
         RegisterInterface<EngineRenderer>(this, Config);
 
-        RegisterSplashScreenPipeline();
+        // RegisterSplashScreenPipeline();
         RegisterRuntimePipeline();
     }
 
