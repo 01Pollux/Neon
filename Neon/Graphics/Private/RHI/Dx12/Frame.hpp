@@ -57,7 +57,8 @@ namespace Neon::RHI
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12Resource>& Resource);
+            const Win32::ComPtr<ID3D12Resource>&      Resource,
+            const Win32::ComPtr<D3D12MA::Allocation>& Allocation);
 
     public:
         /// <summary>
@@ -77,7 +78,8 @@ namespace Neon::RHI
 
         std::map<IDescriptorHeapAllocator*, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;
 
-        std::vector<Dx12Buffer::Handle>          m_Buffers;
-        std::vector<Win32::ComPtr<ID3D12Object>> m_Resources;
+        std::vector<Dx12Buffer::Handle>                 m_Buffers;
+        std::vector<Win32::ComPtr<ID3D12Object>>        m_Resources;
+        std::vector<Win32::ComPtr<D3D12MA::Allocation>> m_Allocation;
     };
 } // namespace Neon::RHI

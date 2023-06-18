@@ -5,77 +5,74 @@
 #include <Resource/Types/Logger.hpp>
 #include <Resource/Pack.hpp>
 
-#include <Module/Window.hpp>
-#include <Module/Graphics.hpp>
+#include <Runtime/Window.hpp>
+#include <Runtime/Renderer.hpp>
 
 #include <Runtime/Pipeline.hpp>
 #include <Runtime/Phases/SplashScreen.hpp>
 
 namespace Neon::Runtime
 {
-    DefaultGameEngine::DefaultGameEngine(
-        const Config::EngineConfig& Config)
-    {
-        m_Window = std::make_unique<Module::Window>(this, Config);
-    }
-
     DefaultGameEngine::~DefaultGameEngine()
     {
     }
 
-    void DefaultGameEngine::Initialize()
+    void DefaultGameEngine::Initialize(
+        const Config::EngineConfig& Config)
     {
         auto ResourceManager = RegisterInterface<Asset::IResourceManager, Asset::RuntimeResourceManager>();
-
-        //
 
         const auto LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
 
         auto Pack = ResourceManager->LoadPack("__neon", "neonrt.np");
-
         // Set global logger settings
+        if (auto Logger = Pack->Load<Asset::LoggerAsset>(LoggerAssetUid))
         {
-            auto Logger = Pack->Load<Asset::LoggerAsset>(LoggerAssetUid);
             Logger->SetGlobal();
         }
 
-        DispatchLoaderPipeline();
+        //
+
+        LoadPacks(Config);
+
+        //
+
+        RegisterInterface<EnginetWindow>(this, Config);
+        RegisterInterface<EngineRenderer>(this, Config);
+
+        RegisterSplashScreenPipeline();
     }
 
     int DefaultGameEngine::Run()
     {
-        Initialize();
-        while (m_Window->Run())
+        auto Window = QueryInterface<EnginetWindow>();
+        while (Window->Run())
         {
-            m_Pipeline->BeginDispatch();
-            m_Pipeline->EndDispatch();
+            auto Pipeline = QueryInterface<EnginePipeline>();
+
+            if (Pipeline)
+            {
+                Pipeline->BeginDispatch();
+                Pipeline->EndDispatch();
+            }
         }
         Shutdown();
-        return m_Window->GetExitCode();
+        return Window->GetExitCode();
     }
 
-    Module::Window* DefaultGameEngine::GetWindowModule() noexcept
+    void DefaultGameEngine::LoadPacks(
+        const Config::EngineConfig& Config)
     {
-        return m_Window.get();
+        if (auto ResourceManager = QueryInterface<Asset::IResourceManager>())
+        {
+            for (auto& [PackName, Path] : Config.Resource.Packs)
+            {
+                ResourceManager->LoadPack(PackName, Path);
+            }
+        }
     }
 
-    Module::Graphics* DefaultGameEngine::GetGraphicsModule() noexcept
-    {
-        return m_Window->GetGraphics();
-    }
-
-    EnginePipeline& DefaultGameEngine::GetPipeline()
-    {
-        return *m_Pipeline;
-    }
-
-    void DefaultGameEngine::SetPipeline(
-        UPtr<EnginePipeline> Pipeline)
-    {
-        m_Pipeline = std::move(Pipeline);
-    }
-
-    void DefaultGameEngine::DispatchLoaderPipeline()
+    void DefaultGameEngine::RegisterSplashScreenPipeline()
     {
         EnginePipelineBuilder Builder;
 
@@ -86,42 +83,35 @@ namespace Neon::Runtime
         auto RHICompiler    = Builder.NewPhase("RHICompiler");
         auto ResourceLoader = Builder.NewPhase("ResourceLoader");
 
-        //
-
-        // Phases::SplashScreen::Build(Builder);
-
-        //
-
         SplashScreen.DependsOn(PreRender);
         PostRender.DependsOn(SplashScreen);
 
         //
 
-        SetPipeline(std::make_unique<EnginePipeline>(std::move(Builder)));
-        m_Pipeline->SetThreadCount(4);
+        auto Pipeline = RegisterInterface<EnginePipeline>(std::move(Builder));
+        auto Renderer = QueryInterface<EngineRenderer>();
 
-        m_Pipeline->Attach(
+        Pipeline->SetThreadCount(4);
+
+        Pipeline->Attach(
             "PreRender",
-            [this]
+            [this, Renderer]
             {
-                auto Graphics = m_Window->GetGraphics();
-                Graphics->PreRender();
+                Renderer->PreRender();
             });
 
-        m_Pipeline->Attach(
+        Pipeline->Attach(
             "Render",
-            [this]
+            [this, Renderer]
             {
-                auto Graphics = m_Window->GetGraphics();
-                Graphics->Render();
+                Renderer->Render();
             });
 
-        m_Pipeline->Attach(
+        Pipeline->Attach(
             "PostRender",
-            [this]
+            [this, Renderer]
             {
-                auto Graphics = m_Window->GetGraphics();
-                Graphics->PostRender();
+                Renderer->PostRender();
             });
 
         Phases::SplashScreen::Bind(this);

@@ -1,5 +1,4 @@
 #include <Runtime/GameEngine.hpp>
-#include <Module/Resource.hpp>
 #include <Resource/Runtime/Manager.hpp>
 
 #include <Log/Logger.hpp>
@@ -10,11 +9,10 @@ class TestGameEngine : public Runtime::DefaultGameEngine
 {
 public:
     TestGameEngine() :
-        DefaultGameEngine(GetConfig())
+        DefaultGameEngine()
     {
     }
 
-private:
     [[nodiscard]] static Config::EngineConfig GetConfig()
     {
         Config::EngineConfig Config;
@@ -23,7 +21,6 @@ private:
         Config.Window.Windowed   = true;
         Config.Window.Fullscreen = false;
 
-        Config.Resource.Manager = NEON_NEW Asset::RuntimeResourceManager;
         return Config;
     }
 };
@@ -33,6 +30,7 @@ NEON_MAIN(Argc, Argv)
     auto func = []
     {
         TestGameEngine Engine;
+        Engine.Initialize(TestGameEngine::GetConfig());
         return Engine.Run();
     };
 

@@ -2,7 +2,7 @@
 
 #include <Config/Window.hpp>
 #include <Config/Resource.hpp>
-#include <Config/Graphics.hpp>
+#include <Config/Renderer.hpp>
 
 namespace Neon::Config
 {
@@ -10,7 +10,7 @@ namespace Neon::Config
     {
         WindowConfig   Window;
         ResourceConfig Resource;
-        GraphicsConfig Graphics;
+        RendererConfig Renderer;
         bool           EnableFlecsREST : 1 = true;
     };
 } // namespace Neon::Config

@@ -68,9 +68,10 @@ namespace Neon::RHI
     }
 
     void Dx12Swapchain::SafeRelease(
-        const Win32::ComPtr<ID3D12Resource>& Resource)
+        const Win32::ComPtr<ID3D12Resource>&      Resource,
+        const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
     {
-        m_BudgetManager.SafeRelease(Resource);
+        m_BudgetManager.SafeRelease(Resource, Allocation);
     }
 
     void Dx12Swapchain::WaitForCopy(

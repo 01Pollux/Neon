@@ -292,7 +292,8 @@ namespace Neon::RHI
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12Resource>& Resource);
+            const Win32::ComPtr<ID3D12Resource>&      Resource,
+            const Win32::ComPtr<D3D12MA::Allocation>& Allocation);
 
         /// <summary>
         /// Wait for a copy command list to be executed.

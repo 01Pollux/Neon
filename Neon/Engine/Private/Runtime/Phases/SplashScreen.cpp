@@ -3,8 +3,8 @@
 
 #include <Runtime/Pipeline.hpp>
 #include <Runtime/GameEngine.hpp>
+#include <Runtime/Renderer.hpp>
 
-#include <Module/Graphics.hpp>
 #include <Renderer/RG/Passes/Lambda.hpp>
 
 //
@@ -41,8 +41,8 @@ namespace Neon::Runtime::Phases
     void SplashScreen::Bind(
         DefaultGameEngine* Engine)
     {
-        auto Graphics    = Engine->GetGraphicsModule();
-        auto RenderGraph = Graphics->GetRenderGraph();
+        auto Renderer    = Engine->QueryInterface<EngineRenderer>();
+        auto RenderGraph = Renderer->GetRenderGraph();
 
         auto Builder = RenderGraph->Reset();
 
@@ -54,7 +54,7 @@ namespace Neon::Runtime::Phases
             Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380191"));
 
         RHI::PendingResource LoadedTexture(
-            Graphics->GetSwapchain(),
+            Renderer->GetSwapchain(),
             Asset->GetImageInfo());
 
         Builder.AppendPass<RG::LambdaPass>(RG::PassQueueType::Direct)

@@ -3,13 +3,6 @@
 #include <Config/Engine.hpp>
 #include <Runtime/Interface.hpp>
 
-namespace Neon::Module
-{
-    class ResourceManager;
-    class Window;
-    class Graphics;
-} // namespace Neon::Module
-
 namespace Neon::Runtime
 {
     extern int Main(
@@ -21,8 +14,7 @@ namespace Neon::Runtime
     class DefaultGameEngine : public InterfaceContainer
     {
     public:
-        DefaultGameEngine(
-            const Config::EngineConfig& Config = {});
+        DefaultGameEngine() = default;
 
         DefaultGameEngine(const DefaultGameEngine&)            = delete;
         DefaultGameEngine& operator=(const DefaultGameEngine&) = delete;
@@ -35,7 +27,8 @@ namespace Neon::Runtime
         /// <summary>
         /// Called when the engine is initialized.
         /// </summary>
-        virtual void Initialize();
+        virtual void Initialize(
+            const Config::EngineConfig& Config);
 
         /// <summary>
         /// Called when the engine is shutdown.
@@ -49,38 +42,17 @@ namespace Neon::Runtime
         /// </summary>
         int Run();
 
-    public:
+    protected:
         /// <summary>
-        /// Get window associated with the engine
+        /// Load packs from config.
         /// </summary>
-        Module::Window* GetWindowModule() noexcept;
-
-        /// <summary>
-        /// Get window associated with the engine
-        /// </summary>
-        Module::Graphics* GetGraphicsModule() noexcept;
+        void LoadPacks(
+            const Config::EngineConfig& Config);
 
         /// <summary>
-        /// Get the game pipeline
+        /// Register splash screen pipeline
         /// </summary>
-        EnginePipeline& GetPipeline();
-
-        /// <summary>
-        /// Get the game pipeline
-        /// </summary>
-        void SetPipeline(
-            UPtr<EnginePipeline> Pipeline);
-
-    private:
-        /// <summary>
-        /// Begin the engine pipeline
-        /// </summary>
-        void DispatchLoaderPipeline();
-
-    private:
-        UPtr<Module::Window> m_Window;
-
-        UPtr<EnginePipeline> m_Pipeline;
+        void RegisterSplashScreenPipeline();
     };
 } // namespace Neon::Runtime
 

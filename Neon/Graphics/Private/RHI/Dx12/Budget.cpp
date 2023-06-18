@@ -340,11 +340,12 @@ namespace Neon::RHI
     }
 
     void BudgetManager::SafeRelease(
-        const Win32::ComPtr<ID3D12Resource>& Resource)
+        const Win32::ComPtr<ID3D12Resource>&      Resource,
+        const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[3]);
         auto&            Frame = m_FrameResources[m_FrameIndex];
-        Frame.SafeRelease(Resource);
+        Frame.SafeRelease(Resource, Allocation);
     }
 
     void BudgetManager::WaitForCopy(

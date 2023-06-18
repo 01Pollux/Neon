@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Config/Engine.hpp>
-#include <Module/Window.hpp>
+#include <Runtime/Window.hpp>
 
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
@@ -11,19 +11,14 @@
 namespace Neon::Runtime
 {
     class DefaultGameEngine;
-} // namespace Neon::Runtime
-
-namespace Neon::Module
-{
     class Window;
 
-    class Graphics
+    class EngineRenderer
     {
     public:
-        Graphics(
+        EngineRenderer(
             Runtime::DefaultGameEngine* Engine,
-            const Config::EngineConfig& Config,
-            Window*                     WindowModule);
+            const Config::EngineConfig& Config);
 
         /// <summary>
         /// Get the swapchain.
@@ -53,9 +48,10 @@ namespace Neon::Module
     private:
         RHI::IRenderDevice::Instance m_RenderDevice;
 
+        Ptr<EnginetWindow>    m_Window;
         UPtr<RHI::ISwapchain> m_Swapchain;
         UPtr<RG::RenderGraph> m_RenderGraph;
 
         Signals::SHOnWindowSizeChanged m_OnWindowSizeChanged;
     };
-} // namespace Neon::Module
+} // namespace Neon::Runtime

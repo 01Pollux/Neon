@@ -35,7 +35,7 @@ namespace Neon::Runtime
         Ptr<_Ty> RegisterInterface(
             _Args&&... Args)
         {
-            return RegisterInterfaceOnce<_Ty, _Ty, _Args...>(std::forward<_Args>(Args)...);
+            return RegisterInterface<_Ty, _Ty, _Args...>(std::forward<_Args>(Args)...);
         }
 
         /// <summary>
@@ -76,6 +76,18 @@ namespace Neon::Runtime
         [[nodiscard]] bool ContainsInterface()
         {
             return m_Interfaces.contains(std::type_index(typeid(_Interface)));
+        }
+
+        /// <summary>
+        /// Requires interface to be present
+        /// </summary>
+        template<typename _Interface>
+        [[nodiscard]] void RequireInterface()
+        {
+            if (!ContainsInterface<_Interface>())
+            {
+                throw std::runtime_error("Interface doesn't exists");
+            }
         }
 
         /// <summary>

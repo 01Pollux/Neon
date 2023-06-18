@@ -5,7 +5,7 @@
 
 namespace Neon::Config
 {
-    struct GraphicsConfig
+    struct RendererConfig
     {
         struct
         {

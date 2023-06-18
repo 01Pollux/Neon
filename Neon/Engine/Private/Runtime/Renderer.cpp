@@ -1,19 +1,21 @@
 #include <EnginePCH.hpp>
-#include <Module/Graphics.hpp>
-#include <Module/Window.hpp>
+#include <Runtime/Renderer.hpp>
+#include <Runtime/GameEngine.hpp>
+#include <Runtime/Window.hpp>
 #include <Renderer/RG/RG.hpp>
 
-namespace Neon::Module
+namespace Neon::Runtime
 {
-    Graphics::Graphics(
+    EngineRenderer::EngineRenderer(
         Runtime::DefaultGameEngine* Engine,
-        const Config::EngineConfig& Config,
-        Window*                     WindowModule)
+        const Config::EngineConfig& Config)
     {
-        auto& GraphicsConfig = Config.Graphics;
+        m_Window = Engine->QueryInterface<EnginetWindow>();
+
+        auto& GraphicsConfig = Config.Renderer;
 
         RHI::ISwapchain::InitDesc Desc{
-            .Window         = WindowModule->GetWindow(),
+            .Window         = m_Window->GetWindow(),
             .RefreshRate    = { GraphicsConfig.RefreshRate.Numerator, GraphicsConfig.RefreshRate.Denominator },
             .Sample         = { GraphicsConfig.Sample.Count, GraphicsConfig.Sample.Quality },
             .FramesInFlight = GraphicsConfig.FramesInFlight,
@@ -21,7 +23,7 @@ namespace Neon::Module
         m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
 
         m_OnWindowSizeChanged.Attach(
-            WindowModule->OnWindowSizeChanged(),
+            m_Window->OnWindowSizeChanged(),
             [this](const Size2I& Extent)
             { m_Swapchain->Resize(Extent); });
 
@@ -30,28 +32,28 @@ namespace Neon::Module
         m_RenderGraph = std::make_unique<RG::RenderGraph>(m_Swapchain.get());
     }
 
-    RHI::ISwapchain* Graphics::GetSwapchain() noexcept
+    RHI::ISwapchain* EngineRenderer::GetSwapchain() noexcept
     {
         return m_Swapchain.get();
     }
 
-    RG::RenderGraph* Graphics::GetRenderGraph() noexcept
+    RG::RenderGraph* EngineRenderer::GetRenderGraph() noexcept
     {
         return m_RenderGraph.get();
     }
 
-    void Graphics::PreRender()
+    void EngineRenderer::PreRender()
     {
         m_Swapchain->PrepareFrame();
     }
 
-    void Graphics::Render()
+    void EngineRenderer::Render()
     {
         m_RenderGraph->Run();
     }
 
-    void Graphics::PostRender()
+    void EngineRenderer::PostRender()
     {
         m_Swapchain->Present();
     }
-} // namespace Neon::Module
+} // namespace Neon::Runtime

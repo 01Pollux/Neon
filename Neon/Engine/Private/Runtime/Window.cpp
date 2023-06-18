@@ -1,10 +1,10 @@
 #include <EnginePCH.hpp>
-#include <Module/Window.hpp>
-#include <Module/Graphics.hpp>
+#include <Runtime/Window.hpp>
+#include <Runtime/GameEngine.hpp>
 
-namespace Neon::Module
+namespace Neon::Runtime
 {
-    Window::Window(
+    EnginetWindow::EnginetWindow(
         Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config)
     {
@@ -31,29 +31,21 @@ namespace Neon::Module
         {
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
-        m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
 
-        m_Graphics = std::make_unique<Module::Graphics>(Engine, Config, this);
+        m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
     }
 
-    Window::~Window() = default;
-
-    int Window::GetExitCode() const noexcept
+    int EnginetWindow::GetExitCode() const noexcept
     {
         return m_ExitCode;
     }
 
-    Windowing::IWindowApp* Window::GetWindow() const noexcept
+    Windowing::IWindowApp* EnginetWindow::GetWindow() const noexcept
     {
         return m_Window.get();
     }
 
-    Graphics* Window::GetGraphics() const noexcept
-    {
-        return m_Graphics.get();
-    }
-
-    bool Window::Run()
+    bool EnginetWindow::Run()
     {
         namespace WinEvents = Windowing::Events;
 
@@ -77,4 +69,4 @@ namespace Neon::Module
         }
         return keepRunning;
     }
-} // namespace Neon::Module
+} // namespace Neon::Runtime

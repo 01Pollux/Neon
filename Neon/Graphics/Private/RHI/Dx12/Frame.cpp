@@ -36,6 +36,7 @@ namespace Neon::RHI
         m_DescriptorHeapHandles.clear();
         m_Buffers.clear();
         m_Resources.clear();
+        m_Allocation.clear();
 
         for (auto& Allocator : m_AllocatorsPools)
         {
@@ -78,9 +79,12 @@ namespace Neon::RHI
     }
 
     void FrameResource::SafeRelease(
-        const Win32::ComPtr<ID3D12Resource>& Resource)
+        const Win32::ComPtr<ID3D12Resource>&      Resource,
+        const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         m_Resources.emplace_back(Resource);
+        if (Allocation)
+            m_Allocation.emplace_back(Allocation);
     }
 
     //
