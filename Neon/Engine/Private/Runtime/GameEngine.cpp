@@ -76,41 +76,20 @@ namespace Neon::Runtime
     {
         EnginePipelineBuilder Builder;
 
-        auto PreRender    = Builder.NewPhase("PreRender");
-        auto SplashScreen = Builder.NewPhase("Render");
-        auto PostRender   = Builder.NewPhase("PostRender");
-
-        auto RHICompiler    = Builder.NewPhase("RHICompiler");
+        auto Render         = Builder.NewPhase("Render");
         auto ResourceLoader = Builder.NewPhase("ResourceLoader");
-
-        SplashScreen.DependsOn(PreRender);
-        PostRender.DependsOn(SplashScreen);
 
         //
 
-        auto Pipeline = RegisterInterface<EnginePipeline>(std::move(Builder));
+        auto Pipeline = RegisterInterface<EnginePipeline>(std::move(Builder), 2);
         auto Renderer = QueryInterface<EngineRenderer>();
-
-        Pipeline->SetThreadCount(4);
-
-        Pipeline->Attach(
-            "PreRender",
-            [this, Renderer]
-            {
-                Renderer->PreRender();
-            });
 
         Pipeline->Attach(
             "Render",
             [this, Renderer]
             {
+                Renderer->PreRender();
                 Renderer->Render();
-            });
-
-        Pipeline->Attach(
-            "PostRender",
-            [this, Renderer]
-            {
                 Renderer->PostRender();
             });
 

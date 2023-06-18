@@ -8,7 +8,9 @@
 namespace Neon::Runtime
 {
     EnginePipeline::EnginePipeline(
-        EnginePipelineBuilder Builder)
+        EnginePipelineBuilder Builder,
+        uint32_t              ThreadCount) :
+        m_ThreadPool(ThreadCount)
     {
         std::queue<EnginePipelineBuilder::PipelinePhase*> CurrentLevel;
 
