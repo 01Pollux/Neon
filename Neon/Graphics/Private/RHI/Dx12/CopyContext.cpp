@@ -66,7 +66,8 @@ namespace Neon::RHI
 #else
                         for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
                         {
-                            m_Queue.front()(&CopyCommandList);
+                            auto& [Task, Promise] = m_Queue.front();
+                            Task(&CopyCommandList);
                             m_Queue.pop();
                         }
 #endif

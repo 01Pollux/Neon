@@ -11,6 +11,5 @@ namespace Neon::Config
         WindowConfig   Window;
         ResourceConfig Resource;
         RendererConfig Renderer;
-        bool           EnableFlecsREST : 1 = true;
     };
 } // namespace Neon::Config

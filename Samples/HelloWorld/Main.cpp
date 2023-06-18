@@ -1,7 +1,4 @@
-#include <Runtime/GameEngine.hpp>
-#include <Resource/Runtime/Manager.hpp>
-
-#include <Log/Logger.hpp>
+#include <Runtime/EntryPoint.hpp>
 
 using namespace Neon;
 
@@ -12,32 +9,15 @@ public:
         DefaultGameEngine()
     {
     }
-
-    [[nodiscard]] static Config::EngineConfig GetConfig()
-    {
-        Config::EngineConfig Config;
-
-        Config.Window.Title      = STR("Test Engine");
-        Config.Window.Windowed   = true;
-        Config.Window.Fullscreen = false;
-
-        return Config;
-    }
 };
 
 NEON_MAIN(Argc, Argv)
 {
-    auto func = []
-    {
-        TestGameEngine Engine;
-        Engine.Initialize(TestGameEngine::GetConfig());
-        return Engine.Run();
+    Config::EngineConfig Config{
+        .Window = {
+            .Title      = STR("Test Engine"),
+            .Windowed   = true,
+            .Fullscreen = false }
     };
-
-    return func();
-
-    // auto eng2 = std::async(func);
-    // auto eng1 = std::async(func);
-
-    // return eng1.get() /*+ eng2.get()*/;
+    return RunEngine<TestGameEngine>(Config);
 }
