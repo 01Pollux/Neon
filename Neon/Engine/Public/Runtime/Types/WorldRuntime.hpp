@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Runtime/Runtime.hpp>
+#include <Scene/Scene.hpp>
 
 namespace Neon::Runtime
 {
@@ -9,5 +10,7 @@ namespace Neon::Runtime
     public:
         EngineWorldRuntime(
             DefaultGameEngine* Engine);
+
+        Scene::GameScene m_Scene;
     };
 } // namespace Neon::Runtime

@@ -33,6 +33,17 @@ namespace Neon::Runtime
         auto Pipeline = Engine->OverwriteInterface<EnginePipeline>(std::move(Builder), 2);
         auto Renderer = Engine->QueryInterface<EngineRenderer>();
 
+        //
+
+        Pipeline->Attach(
+            "Update",
+            [this]
+            {
+                m_Scene->progress();
+            });
+
+        //
+
         Pipeline->Attach(
             "PreRender",
             [this, Renderer]
@@ -53,5 +64,7 @@ namespace Neon::Runtime
             {
                 Renderer->PostRender();
             });
+
+        m_Scene.Test();
     }
 } // namespace Neon::Runtime

@@ -7,6 +7,8 @@ class TestGameEngine : public Runtime::DefaultGameEngine
 public:
 };
 
+#include <flecs/flecs.h>
+
 NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
