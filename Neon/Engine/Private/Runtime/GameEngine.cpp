@@ -13,10 +13,6 @@
 
 namespace Neon::Runtime
 {
-    DefaultGameEngine::~DefaultGameEngine()
-    {
-    }
-
     void DefaultGameEngine::Initialize(
         const Config::EngineConfig& Config)
     {
@@ -41,6 +37,7 @@ namespace Neon::Runtime
         RegisterInterface<EngineRenderer>(this, Config);
 
         RegisterSplashScreenPipeline();
+        RegisterRuntimePipeline();
     }
 
     int DefaultGameEngine::Run()
@@ -94,5 +91,52 @@ namespace Neon::Runtime
             });
 
         Phases::SplashScreen::Bind(this);
+    }
+
+    void DefaultGameEngine::RegisterRuntimePipeline()
+    {
+        EnginePipelineBuilder Builder;
+
+        auto PreUpdate  = Builder.NewPhase("PreUpdate");
+        auto Update     = Builder.NewPhase("Update");
+        auto PostUpdate = Builder.NewPhase("PostUpdate");
+
+        auto PreRender  = Builder.NewPhase("PreRender");
+        auto Render     = Builder.NewPhase("Render");
+        auto PostRender = Builder.NewPhase("PostRender");
+
+        //
+
+        Update.DependsOn(PreUpdate);
+        PostUpdate.DependsOn(Update);
+
+        PreRender.DependsOn(PostUpdate);
+        Render.DependsOn(PreRender);
+
+        //
+
+        auto Pipeline = OverwriteInterface<EnginePipeline>(std::move(Builder), 2);
+        auto Renderer = QueryInterface<EngineRenderer>();
+
+        Pipeline->Attach(
+            "PreRender",
+            [this, Renderer]
+            {
+                Renderer->PreRender();
+            });
+
+        Pipeline->Attach(
+            "Render",
+            [this, Renderer]
+            {
+                Renderer->Render();
+            });
+
+        Pipeline->Attach(
+            "PostRender",
+            [this, Renderer]
+            {
+                Renderer->PostRender();
+            });
     }
 } // namespace Neon::Runtime

@@ -10,13 +10,10 @@ namespace Neon::Runtime
     public:
         DefaultGameEngine() = default;
 
-        DefaultGameEngine(const DefaultGameEngine&)            = delete;
-        DefaultGameEngine& operator=(const DefaultGameEngine&) = delete;
+        NEON_CLASS_NO_COPY(DefaultGameEngine);
+        NEON_CLASS_MOVE(DefaultGameEngine);
 
-        DefaultGameEngine(DefaultGameEngine&&)             = delete;
-        DefaultGameEngine&& operator=(DefaultGameEngine&&) = delete;
-
-        virtual ~DefaultGameEngine();
+        virtual ~DefaultGameEngine() = default;
 
         /// <summary>
         /// Called when the engine is initialized.
@@ -44,8 +41,13 @@ namespace Neon::Runtime
             const Config::EngineConfig& Config);
 
         /// <summary>
-        /// Register splash screen pipeline
+        /// Register splash screen pipeline (loading screen)
         /// </summary>
         void RegisterSplashScreenPipeline();
+
+        /// <summary>
+        /// Register runtime pipeline (main game loop)
+        /// </summary>
+        void RegisterRuntimePipeline();
     };
 } // namespace Neon::Runtime

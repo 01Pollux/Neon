@@ -5,10 +5,6 @@ using namespace Neon;
 class TestGameEngine : public Runtime::DefaultGameEngine
 {
 public:
-    TestGameEngine() :
-        DefaultGameEngine()
-    {
-    }
 };
 
 NEON_MAIN(Argc, Argv)

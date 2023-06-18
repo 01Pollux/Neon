@@ -46,7 +46,9 @@ namespace Neon::Runtime
             _Args&&... Args)
         {
             std::type_index TypeId(typeid(_Interface));
-            return m_Interfaces[TypeId] = std::make_shared<_Ty>(std::forward<_Args>(Args)...);
+            Ptr<_Interface> Interface = std::make_shared<_Ty>(std::forward<_Args>(Args)...);
+            m_Interfaces[TypeId]      = Interface;
+            return Interface;
         }
 
         /// <summary>
