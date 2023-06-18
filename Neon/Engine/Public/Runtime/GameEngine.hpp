@@ -39,15 +39,5 @@ namespace Neon::Runtime
         /// </summary>
         void LoadPacks(
             const Config::EngineConfig& Config);
-
-        /// <summary>
-        /// Register splash screen pipeline (loading screen)
-        /// </summary>
-        void RegisterSplashScreenPipeline();
-
-        /// <summary>
-        /// Register runtime pipeline (main game loop)
-        /// </summary>
-        void RegisterRuntimePipeline();
     };
 } // namespace Neon::Runtime

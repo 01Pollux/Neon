@@ -7,9 +7,10 @@
 
 #include <Runtime/Window.hpp>
 #include <Runtime/Renderer.hpp>
-
 #include <Runtime/Pipeline.hpp>
-#include <Runtime/Phases/SplashScreen.hpp>
+
+// #include <Runtime/Types/LoadingScene.hpp>
+#include <Runtime/Types/WorldRuntime.hpp>
 
 namespace Neon::Runtime
 {
@@ -36,8 +37,8 @@ namespace Neon::Runtime
         RegisterInterface<EnginetWindow>(this, Config);
         RegisterInterface<EngineRenderer>(this, Config);
 
-        // RegisterSplashScreenPipeline();
-        RegisterRuntimePipeline();
+        // RegisterInterface<EngineRuntime, LoadingScreenRuntime>(this);
+        RegisterInterface<EngineRuntime, EngineWorldRuntime>(this);
     }
 
     int DefaultGameEngine::Run()
@@ -45,9 +46,7 @@ namespace Neon::Runtime
         auto Window = QueryInterface<EnginetWindow>();
         while (Window->Run())
         {
-            auto Pipeline = QueryInterface<EnginePipeline>();
-
-            if (Pipeline)
+            if (auto Pipeline = QueryInterface<EnginePipeline>())
             {
                 Pipeline->BeginDispatch();
                 Pipeline->EndDispatch();
@@ -67,76 +66,5 @@ namespace Neon::Runtime
                 ResourceManager->LoadPack(PackName, Path);
             }
         }
-    }
-
-    void DefaultGameEngine::RegisterSplashScreenPipeline()
-    {
-        EnginePipelineBuilder Builder;
-
-        auto Render         = Builder.NewPhase("Render");
-        auto ResourceLoader = Builder.NewPhase("ResourceLoader");
-
-        //
-
-        auto Pipeline = RegisterInterface<EnginePipeline>(std::move(Builder), 2);
-        auto Renderer = QueryInterface<EngineRenderer>();
-
-        Pipeline->Attach(
-            "Render",
-            [this, Renderer]
-            {
-                Renderer->PreRender();
-                Renderer->Render();
-                Renderer->PostRender();
-            });
-
-        Phases::SplashScreen::Bind(this);
-    }
-
-    void DefaultGameEngine::RegisterRuntimePipeline()
-    {
-        EnginePipelineBuilder Builder;
-
-        auto PreUpdate  = Builder.NewPhase("PreUpdate");
-        auto Update     = Builder.NewPhase("Update");
-        auto PostUpdate = Builder.NewPhase("PostUpdate");
-
-        auto PreRender  = Builder.NewPhase("PreRender");
-        auto Render     = Builder.NewPhase("Render");
-        auto PostRender = Builder.NewPhase("PostRender");
-
-        //
-
-        Update.DependsOn(PreUpdate);
-        PostUpdate.DependsOn(Update);
-
-        PreRender.DependsOn(PostUpdate);
-        Render.DependsOn(PreRender);
-
-        //
-
-        auto Pipeline = OverwriteInterface<EnginePipeline>(std::move(Builder), 2);
-        auto Renderer = QueryInterface<EngineRenderer>();
-
-        Pipeline->Attach(
-            "PreRender",
-            [this, Renderer]
-            {
-                Renderer->PreRender();
-            });
-
-        Pipeline->Attach(
-            "Render",
-            [this, Renderer]
-            {
-                Renderer->Render();
-            });
-
-        Pipeline->Attach(
-            "PostRender",
-            [this, Renderer]
-            {
-                Renderer->PostRender();
-            });
     }
 } // namespace Neon::Runtime

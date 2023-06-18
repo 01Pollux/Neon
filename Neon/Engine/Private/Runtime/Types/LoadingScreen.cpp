@@ -1,9 +1,11 @@
 #include <EnginePCH.hpp>
-#include <Runtime/Phases/SplashScreen.hpp>
+#include <Runtime/Types/LoadingScene.hpp>
 
-#include <Runtime/Pipeline.hpp>
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Renderer.hpp>
+#include <Runtime/Pipeline.hpp>
+
+//
 
 #include <Renderer/RG/Passes/Lambda.hpp>
 
@@ -20,25 +22,45 @@
 #include <Math/Matrix.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
 
-namespace Neon::Runtime::Phases
+//
+
+namespace Neon::Runtime
 {
+    LoadingScreenRuntime::LoadingScreenRuntime(
+        DefaultGameEngine* Engine)
+    {
+        EnginePipelineBuilder Builder;
+
+        auto Render         = Builder.NewPhase("Render");
+        auto ResourceLoader = Builder.NewPhase("ResourceLoader");
+
+        //
+
+        auto Pipeline = Engine->RegisterInterface<EnginePipeline>(std::move(Builder), 2);
+        auto Renderer = Engine->QueryInterface<EngineRenderer>();
+
+        Pipeline->Attach(
+            "Render",
+            [this, Renderer]
+            {
+                Renderer->PreRender();
+                Renderer->Render();
+                Renderer->PostRender();
+            });
+
+        SetupRendergraph(Engine);
+    }
+
     struct VsInput
     {
         Vector4D Position;
         Vector2D TexCoord;
     };
 
-    static constexpr size_t BufferSize = sizeof(VsInput) * 6;
-
+    static constexpr size_t      BufferSize      = sizeof(VsInput) * 6;
     static constexpr const char* SplashScreenTag = "SplashScreen";
 
-    void SplashScreen::Build(
-        EnginePipelineBuilder& Builder)
-    {
-        //
-    }
-
-    void SplashScreen::Bind(
+    void LoadingScreenRuntime::SetupRendergraph(
         DefaultGameEngine* Engine)
     {
         auto Renderer    = Engine->QueryInterface<EngineRenderer>();
@@ -217,4 +239,4 @@ namespace Neon::Runtime::Phases
 
         Builder.Build();
     }
-} // namespace Neon::Runtime::Phases
+} // namespace Neon::Runtime

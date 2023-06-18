@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Scene/Scene.hpp>
 
+#include <Scene/Component/Sprite.hpp>
+
 namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
@@ -24,8 +26,9 @@ namespace Neon::Scene
     void GameScene::Test()
     {
         Actor Entity = m_World->entity("Spike");
-        Entity.set<Sprite>(
 
-        );
+        Component::Sprite Sprite;
+        Sprite.ModulationColor = Colors::BlueViolet;
+        Entity.set<Component::Sprite>(Sprite);
     }
 } // namespace Neon::Scene
