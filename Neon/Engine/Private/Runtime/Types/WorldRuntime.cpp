@@ -66,5 +66,25 @@ namespace Neon::Runtime
             });
 
         m_Scene.Test();
+        SetupRenderPasses(Renderer.get());
+    }
+
+    Scene::GameScene& EngineWorldRuntime::GetScene()
+    {
+        return m_Scene;
+    }
+
+    const Scene::GameScene& EngineWorldRuntime::GetScene() const
+    {
+        return m_Scene;
+    }
+
+    void EngineWorldRuntime::SetupRenderPasses(
+        EngineRenderer* Renderer)
+    {
+        auto RenderGraph = Renderer->GetRenderGraph();
+        auto Builder     = RenderGraph->Reset();
+
+        Builder.Build();
     }
 } // namespace Neon::Runtime

@@ -6,19 +6,11 @@ namespace Neon::Scene::Component
 {
     struct Sprite : CanvasItem
     {
-        static void Register(
-            flecs::world& World)
-        {
-            CanvasItem::Register(World);
-        }
+        NEON_EXPORT_COMPONENT();
     };
 
     struct Sprite2 : CanvasItem
     {
-        static void Register(
-            flecs::world& World)
-        {
-            CanvasItem::Register(World);
-        }
+        NEON_EXPORT_COMPONENT();
     };
 } // namespace Neon::Scene::Component

@@ -2,11 +2,11 @@
 
 #include <flecs/flecs.h>
 
-namespace Neon::Scene::Imports
+namespace Neon::Scene::Exports
 {
     /// <summary>
     /// Register all components for flecs.
     /// </summary>
-    void Import(
+    void RegisterComponents(
         flecs::world& World);
-} // namespace Neon::Scene::Imports
+} // namespace Neon::Scene::Exports
