@@ -26,3 +26,6 @@
 [submodule "Deps/Externals/DirectX-Headers"]
 	path = Deps/Externals/DirectX-Headers
 	url = https://github.com/01Pollux/DirectX-Headers
+[submodule "Deps/Externals/glm"]
+	path = Deps/Externals/glm
+	url = https://github.com/01Pollux/glm
