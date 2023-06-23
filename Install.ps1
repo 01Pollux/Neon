@@ -1,53 +1,46 @@
-Function Get-DepSrcPath
-{
+Function Get-DepSrcPath {
     Param([string]$LibName)
     return ".\Deps\Externals\" + $LibName;
 }
 
-Function Get-DepLibPath
-{
+Function Get-DepLibPath {
     Param([string]$LibName)
     return ".\Deps\Libs\" + $LibName;
 }
 
-Function Get-DepIncPath
-{
+Function Get-DepIncPath {
     Param([string]$LibName)
     return ".\Deps\Public\" + $LibName;
 }
 
-Function Copy-IncludePathAbs
-{
+Function Copy-IncludePathAbs {
     Param
     (
-        [Parameter(Mandatory=$true)][string]$SrcPath,
-        [Parameter(Mandatory=$true)][string]$DstPath
+        [Parameter(Mandatory = $true)][string]$SrcPath,
+        [Parameter(Mandatory = $true)][string]$DstPath
     )
     New-Item -ItemType File -Path $DstPath -Force | Out-Null
     Copy-Item -Recurse $SrcPath $DstPath -Force -ErrorVariable CapturedErrors -ErrorAction SilentlyContinue
     $CapturedErrors | foreach-object { if ($_ -notmatch "already exists") { write-error $_ } }
 }
 
-Function Copy-IncludePath
-{
+Function Copy-IncludePath {
     Param
     (
-        [Parameter(Mandatory=$true)][string]$SrcPath,
-        [Parameter(Mandatory=$true)][string]$DstPath,
+        [Parameter(Mandatory = $true)][string]$SrcPath,
+        [Parameter(Mandatory = $true)][string]$DstPath,
         [switch]$Recurse
     )
     Copy-Item -Recurse:$Recurse $(Get-DepSrcPath($SrcPath)) $(Get-DepIncPath($DstPath)) -ErrorVariable CapturedErrors -ErrorAction SilentlyContinue
     $CapturedErrors | foreach-object { if ($_ -notmatch "already exists") { write-error $_ } }
 }
 
-Function Remove-Directory
-{
+Function Remove-Directory {
     Param([string]$Path)
     Remove-Item $Path -Force -Recurse -ErrorAction SilentlyContinue
 }
 
-Function Make-Directory
-{
+Function Make-Directory {
     Param([string]$Path)
     New-Item -ItemType Directory $Path -Force -ErrorVariable CapturedErrors -ErrorAction SilentlyContinue | Out-Null
     $CapturedErrors | foreach-object { if ($_ -notmatch "already exists") { write-error $_ } }
@@ -168,3 +161,9 @@ Copy-IncludePath "DirectX-Headers\include\dxguids\*.h" "DX"
 Copy-IncludePath "DirectX-Headers\include\wsl\stubs" "DX" -Recurse
 Copy-IncludePath "DirectX-Headers\include\wsl\winadapter.h" "DX"
 Copy-IncludePath "DirectX-Headers\include\wsl\wrladapter.h" "DX"
+
+#
+# GLM
+#
+Remove-Directory $(Get-DepIncPath("glm"))
+Copy-Item -Recurse $(Get-DepSrcPath("glm\glm")) $(Get-DepIncPath("glm"))
