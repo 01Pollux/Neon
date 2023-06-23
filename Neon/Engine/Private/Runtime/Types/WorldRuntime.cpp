@@ -83,8 +83,8 @@ namespace Neon::Runtime
         Sprite.set<Scene::Component::Sprite>({});
 
         // auto Trs = Sprite.get_mut<Scene::Component::Transform>();
-        // Trs->Local.SetPosition(Vector3D::Forward * 5.f);
-        // Trs->World.SetPosition(Vector3D::Forward * 5.f);
+        // Trs->Local.SetPosition(Vector3::Forward * 5.f);
+        // Trs->World.SetPosition(Vector3::Forward * 5.f);
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()

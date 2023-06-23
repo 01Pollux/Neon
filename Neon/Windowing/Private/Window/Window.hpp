@@ -46,10 +46,10 @@ namespace Neon::Windowing
 
         [[nodiscard]] Size2I GetScreenCaps() const override;
 
-        [[nodiscard]] Vector2DI GetPosition() const override;
+        [[nodiscard]] Vector2I GetPosition() const override;
 
         void SetPosition(
-            const Vector2DI& Position) override;
+            const Vector2I& Position) override;
 
         [[nodiscard]] Size2I GetSize() const override;
 
@@ -58,7 +58,7 @@ namespace Neon::Windowing
 
         void SetIcon(
             const void*      IconData,
-            const Vector2DI& Size) override;
+            const Vector2I& Size) override;
 
         void SetVisible(
             bool Show) override;

@@ -4,33 +4,56 @@
 
 namespace Neon
 {
-    class Size2I final : public Vector2DI
+    template<typename _Ty>
+    concept Size2Type = std::disjunction_v<
+        std::is_same<_Ty, Vector2>,
+        std::is_same<_Ty, Vector2I>,
+        std::is_same<_Ty, Vector2U>>;
+
+    template<Size2Type _Ty>
+    struct Size2T : _Ty
     {
     public:
-        using Vector2DI::Vector2DI;
-        Size2I(
-            int Width,
-            int Height) :
-            Vector2DI(Width, Height)
+        using _Ty::_Ty;
+
+        using value_type = typename _Ty::value_type;
+
+        /// <summary>
+        /// Get the width of the vector.
+        /// </summary>
+        [[nodiscard]] value_type Width() const
         {
+            return this->x;
         }
 
-        MVECTOR_IMPL_ACCESSOR(0, Width);
-        MVECTOR_IMPL_ACCESSOR(1, Height);
-    };
-
-    class Size2F final : public Vector2D
-    {
-    public:
-        using Vector2D::Vector2D;
-        Size2F(
-            float Width,
-            float Height) :
-            Vector2D(Width, Height)
+        /// <summary>
+        /// Set the width of the vector.
+        /// </summary>
+        [[nodiscard]] void Width(
+            value_type Val)
         {
+            this->x = Val;
         }
 
-        MVECTOR_IMPL_ACCESSOR(0, Width);
-        MVECTOR_IMPL_ACCESSOR(1, Height);
+        /// <summary>
+        /// Get the height of the vector.
+        /// </summary>
+        [[nodiscard]] value_type Height() const
+        {
+            return this->y;
+        }
+
+        /// <summary>
+        /// Set the height of the vector.
+        /// </summary>
+        [[nodiscard]] void Height(
+            value_type Val)
+        {
+            this->y = Val;
+        }
     };
+
+    using Size2  = Size2T<Vector2>;
+    using Size2I = Size2T<Vector2I>;
+    using Size2U = Size2T<Vector2U>;
 } // namespace Neon

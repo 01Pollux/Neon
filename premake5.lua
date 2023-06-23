@@ -23,6 +23,7 @@ workspace "Neon"
 		systemversion "latest"
 		defines "_WIN32"
 		defines "WIN32"
+        defines "NEON_PLATFORM_WINDOWS"
     filter {}
             
     filter "configurations:Debug"

@@ -17,4 +17,10 @@
 #include <numbers>
 #include <random>
 
+#if defined(NEON_PLATFORM_WINDOWS)
 #include <Private/Window/WindowHeaders.hpp>
+#endif
+
+#include <Math/Vector.hpp>
+#include <Math/Matrix.hpp>
+#include <Math/Colors.hpp>

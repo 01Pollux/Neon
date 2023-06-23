@@ -37,7 +37,7 @@ namespace Neon::RHI
 
         void CopyTextureRegion(
             const TextureCopyLocation& Dst,
-            const Vector3DI&           DstPosition,
+            const Vector3I&           DstPosition,
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) override;
 
@@ -150,7 +150,7 @@ namespace Neon::RHI
 
     public:
         void SetScissorRect(
-            std::span<RectT<Vector2D>> Scissors) override;
+            std::span<RectT<Vector2>> Scissors) override;
 
         void SetViewport(
             std::span<ViewportF> Views) override;

@@ -285,10 +285,10 @@ namespace Neon::RHI
                 VariantVisitor{
                     [ClearValuePtr](const Color4& Color)
                     {
-                        ClearValuePtr->Color[0] = Color.r();
-                        ClearValuePtr->Color[1] = Color.g();
-                        ClearValuePtr->Color[2] = Color.b();
-                        ClearValuePtr->Color[3] = Color.a();
+                        ClearValuePtr->Color[0] = Color.r;
+                        ClearValuePtr->Color[1] = Color.g;
+                        ClearValuePtr->Color[2] = Color.b;
+                        ClearValuePtr->Color[3] = Color.a;
                     },
                     [ClearValuePtr](ClearOperation::DepthStencil DS)
                     {
@@ -436,7 +436,7 @@ namespace Neon::RHI
         return Desc;
     }
 
-    const Vector3DI& Dx12Texture::GetDimensions() const
+    const Vector3I& Dx12Texture::GetDimensions() const
     {
         return m_Dimensions;
     }
@@ -448,7 +448,7 @@ namespace Neon::RHI
 
     uint32_t Dx12Texture::GetSubResourceCount() const
     {
-        return uint32_t(m_MipLevels) * m_Dimensions.z();
+        return uint32_t(m_MipLevels) * m_Dimensions.z;
     }
 
     uint32_t Dx12Texture::GetSubresourceIndex(
@@ -458,7 +458,7 @@ namespace Neon::RHI
     {
         return MipIndex +
                ArrayIndex * m_MipLevels +
-               PlaneIndex * m_Dimensions.z() * m_MipLevels;
+               PlaneIndex * m_Dimensions.z * m_MipLevels;
     }
 
     size_t Dx12Texture::GetTextureCopySize(

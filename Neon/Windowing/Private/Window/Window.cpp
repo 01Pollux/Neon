@@ -120,8 +120,8 @@ namespace Neon::Windowing
         {
             RECT Rect = { 0, 0, FinalSize.Width(), FinalSize.Height() };
             AdjustWindowRect(&Rect, WinStyle, false);
-            FinalSize.Width()  = Rect.right - Rect.left;
-            FinalSize.Height() = Rect.bottom - Rect.top;
+            FinalSize.Width(Rect.right - Rect.left);
+            FinalSize.Height(Rect.bottom - Rect.top);
         }
 
         CreateWindowExW(
@@ -220,7 +220,7 @@ namespace Neon::Windowing
         return Size;
     }
 
-    Vector2DI WindowApp::GetPosition() const
+    Vector2I WindowApp::GetPosition() const
     {
         RECT Rect;
         GetClientRect(m_Handle, &Rect);
@@ -228,9 +228,9 @@ namespace Neon::Windowing
     }
 
     void WindowApp::SetPosition(
-        const Vector2DI& Position)
+        const Vector2I& Position)
     {
-        SetWindowPos(m_Handle, nullptr, Position.x(), Position.y(), 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(m_Handle, nullptr, Position.x, Position.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 
     Size2I WindowApp::GetSize() const
@@ -253,8 +253,8 @@ namespace Neon::Windowing
     }
 
     void WindowApp::SetIcon(
-        const void*      IconData,
-        const Vector2DI& Size)
+        const void*     IconData,
+        const Vector2I& Size)
     {
         if (m_Icon)
             DestroyIcon(m_Icon);
@@ -268,8 +268,8 @@ namespace Neon::Windowing
         // Create the icon from the pixel array
         m_Icon = CreateIcon(
             GetModuleHandleW(nullptr),
-            Size.x(),
-            Size.y(),
+            Size.x,
+            Size.y,
             1,
             32,
             nullptr,

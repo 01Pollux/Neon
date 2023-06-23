@@ -14,6 +14,7 @@
 #include <Math/Viewport.hpp>
 
 #include <algorithm>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Neon::RHI
 {
@@ -88,7 +89,7 @@ namespace Neon::RHI
 
     void Dx12CommandList::CopyTextureRegion(
         const TextureCopyLocation& Dst,
-        const Vector3DI&           DstPosition,
+        const Vector3I&            DstPosition,
         const TextureCopyLocation& Src,
         const CopyBox*             SrcBox)
     {
@@ -140,9 +141,9 @@ namespace Neon::RHI
 
         m_CommandList->CopyTextureRegion(
             &Dx12Dst,
-            DstPosition.x(),
-            DstPosition.y(),
-            DstPosition.z(),
+            DstPosition.x,
+            DstPosition.y,
+            DstPosition.z,
             &Dx12Src,
             SrcBox ? &Box : nullptr);
     }
@@ -331,7 +332,7 @@ namespace Neon::RHI
         const CpuDescriptorHandle& RtvHandle,
         const Color4&              Color)
     {
-        m_CommandList->ClearRenderTargetView({ RtvHandle.Value }, Color.data(), 0, nullptr);
+        m_CommandList->ClearRenderTargetView({ RtvHandle.Value }, glm::value_ptr(Color), 0, nullptr);
     }
 
     void Dx12GraphicsCommandList::ClearDsv(
@@ -396,7 +397,7 @@ namespace Neon::RHI
     }
 
     void Dx12GraphicsCommandList::SetScissorRect(
-        std::span<RectT<Vector2D>> Scissors)
+        std::span<RectT<Vector2>> Scissors)
     {
         std::vector<D3D12_RECT> Rects;
         Rects.reserve(Scissors.size());
@@ -405,7 +406,7 @@ namespace Neon::RHI
             Scissors.begin(),
             Scissors.end(),
             std::back_inserter(Rects),
-            [](const RectT<Vector2D>& Rect) -> D3D12_RECT
+            [](const RectT<Vector2>& Rect) -> D3D12_RECT
             {
                 return {
                     .left   = LONG(Rect.Left()),

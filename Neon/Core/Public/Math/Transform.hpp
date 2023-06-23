@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Math/Vector.hpp>
 #include <Math/Matrix.hpp>
 
 namespace Neon
@@ -8,8 +9,8 @@ namespace Neon
     {
     public:
         TransformMatrix(
-            const Matrix3x3& Basis    = Matrix3x3::Identity,
-            const Vector3D&  Position = Vector3D::Zero) :
+            const Matrix3x3& Basis    = Mat::Identity<Matrix3x3>,
+            const Vector3&   Position = Vec::Zero<Vector3>) :
             m_Basis(Basis),
             m_Position(Position)
         {
@@ -23,7 +24,7 @@ namespace Neon
         /// <summary>
         /// Get position of transform
         /// </summary>
-        [[nodiscard]] const Vector3D& GetPosition() const noexcept;
+        [[nodiscard]] const Vector3& GetPosition() const noexcept;
 
         /// <summary>
         /// Set basis of transform
@@ -35,7 +36,7 @@ namespace Neon
         /// Set position of transform
         /// </summary>
         void SetPosition(
-            const Vector3D& Position) noexcept;
+            const Vector3& Position) noexcept;
 
         /// <summary>
         /// Convert transform to matrix
@@ -50,6 +51,6 @@ namespace Neon
 
     private:
         Matrix3x3 m_Basis;
-        Vector3D  m_Position;
+        Vector3   m_Position;
     };
 } // namespace Neon

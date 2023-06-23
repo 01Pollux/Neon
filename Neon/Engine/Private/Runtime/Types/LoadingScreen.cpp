@@ -53,8 +53,8 @@ namespace Neon::Runtime
 
     struct VsInput
     {
-        Vector4D Position;
-        Vector2D TexCoord;
+        Vector4 Position;
+        Vector2 TexCoord;
     };
 
     static constexpr size_t BufferSize = sizeof(VsInput) * 6;

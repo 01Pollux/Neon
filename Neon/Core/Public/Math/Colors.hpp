@@ -4,85 +4,11 @@
 
 namespace Neon
 {
-    class Color4 final : public Vector4D
-    {
-    public:
-        using Vector4D::Vector4D;
+    using Color3 = Vector3;
+    using Color4 = Vector4;
 
-        MVECTOR_IMPL_ACCESSOR(0, r);
-        MVECTOR_IMPL_ACCESSOR(1, g);
-        MVECTOR_IMPL_ACCESSOR(2, b);
-        MVECTOR_IMPL_ACCESSOR(3, a);
-    };
-
-    class Color3 final : public Vector3D
-    {
-    public:
-        using Vector3D::Vector3D;
-
-        MVECTOR_IMPL_ACCESSOR(0, r);
-        MVECTOR_IMPL_ACCESSOR(1, g);
-        MVECTOR_IMPL_ACCESSOR(2, b);
-    };
-
-    class Color4U8 final : public Neon::MVector<uint8_t, 4>
-    {
-    public:
-        using MVector::MVector;
-
-        MVECTOR_IMPL_ACCESSOR(0, r);
-        MVECTOR_IMPL_ACCESSOR(1, g);
-        MVECTOR_IMPL_ACCESSOR(2, b);
-        MVECTOR_IMPL_ACCESSOR(3, a);
-
-        [[nodiscard]] static Color4U8 ToU8(Color4 Color)
-        {
-            Color *= 255;
-            return Color4U8{
-                static_cast<uint8_t>(Color.r()),
-                static_cast<uint8_t>(Color.g()),
-                static_cast<uint8_t>(Color.b()),
-                static_cast<uint8_t>(Color.a())
-            };
-        }
-        [[nodiscard]] static Color4 FromU8(const Color4U8& Color)
-        {
-            return Color4{
-                Color.r() / 255.f,
-                Color.g() / 255.f,
-                Color.b() / 255.f,
-                Color.a() / 255.f
-            };
-        }
-    };
-
-    class Color3U8 final : public Neon::MVector<uint8_t, 3>
-    {
-    public:
-        using MVector::MVector;
-
-        MVECTOR_IMPL_ACCESSOR(0, r);
-        MVECTOR_IMPL_ACCESSOR(1, g);
-        MVECTOR_IMPL_ACCESSOR(2, b);
-
-        [[nodiscard]] static Color3U8 ToU8(Color4 Color)
-        {
-            Color *= 255;
-            return Color4U8{
-                static_cast<uint8_t>(Color.r()),
-                static_cast<uint8_t>(Color.g()),
-                static_cast<uint8_t>(Color.b())
-            };
-        }
-        [[nodiscard]] static Color4 FromU8(const Color4U8& Color)
-        {
-            return Color4{
-                Color.r() / 255.f,
-                Color.g() / 255.f,
-                Color.b() / 255.f
-            };
-        }
-    };
+    using Color3U8 = glm::u8vec3;
+    using Color4U8 = glm::u8vec4;
 
     namespace Colors
     {

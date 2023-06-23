@@ -2,6 +2,8 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 
+#include <glm/gtc/type_ptr.hpp>
+
 //
 
 #include <RHI/Resource/Views/Shader.hpp>
@@ -27,9 +29,9 @@ namespace Neon::RG
 {
     struct VSInput
     {
-        Vector4D Position;
-        Color4   Color = Colors::Red;
-        Vector2D TexCoord;
+        Vector4 Position;
+        Color4  Color = Colors::Red;
+        Vector2 TexCoord;
     };
 
     using namespace Scene;
@@ -177,17 +179,17 @@ namespace Neon::RG
                 const Component::Transform& Transform,
                 const Component::Sprite&    Sprite) mutable
         {
-            auto World = Vector4D(Transform.World.GetPosition());
-            World.w()  = 1.f;
+            // cast glm::vec3 to glm::vec4 and set w to 1 for matrix multiplication
+            auto World = Vector4(Transform.World.GetPosition(), 1.0f);
 
             //
 
             auto Vertex = VertexBuffer->Map<VSInput>(DrawIndex * sizeof(VSInput));
 
-            Vertex[0].Position = World + Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * +0.5f);
-            Vertex[1].Position = World + Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * +0.5f);
-            Vertex[2].Position = World + Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * -0.5f);
-            Vertex[3].Position = World + Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * -0.5f);
+            Vertex[0].Position = World + Vector4(Vector2(Sprite.Scale.x * -0.5f, Sprite.Scale.y * +0.5f), 0.f, 0.f);
+            Vertex[1].Position = World + Vector4(Vector2(Sprite.Scale.x * +0.5f, Sprite.Scale.y * +0.5f), 0.f, 0.f);
+            Vertex[2].Position = World + Vector4(Vector2(Sprite.Scale.x * +0.5f, Sprite.Scale.y * -0.5f), 0.f, 0.f);
+            Vertex[3].Position = World + Vector4(Vector2(Sprite.Scale.x * -0.5f, Sprite.Scale.y * -0.5f), 0.f, 0.f);
 
             Vertex[0].TexCoord = Sprite.TextureRect.TopLeft();
             Vertex[1].TexCoord = Sprite.TextureRect.TopRight();

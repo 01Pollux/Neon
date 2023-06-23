@@ -80,13 +80,13 @@ namespace Neon::Windowing
         /// <summary>
         /// Get window position
         /// </summary>
-        [[nodiscard]] virtual Vector2DI GetPosition() const = 0;
+        [[nodiscard]] virtual Vector2I GetPosition() const = 0;
 
         /// <summary>
         /// Set window position
         /// </summary>
         virtual void SetPosition(
-            const Vector2DI& Position) = 0;
+            const Vector2I& Position) = 0;
 
         /// <summary>
         /// Get window size
@@ -103,8 +103,8 @@ namespace Neon::Windowing
         /// Set window icon
         /// </summary>
         virtual void SetIcon(
-            const void*      IconData,
-            const Vector2DI& Size) = 0;
+            const void*     IconData,
+            const Vector2I& Size) = 0;
 
         /// <summary>
         /// Set window visbility

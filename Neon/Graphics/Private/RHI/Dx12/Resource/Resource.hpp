@@ -144,7 +144,7 @@ namespace Neon::RHI
 
         ResourceDesc GetDesc() const override;
 
-        const Vector3DI& GetDimensions() const override;
+        const Vector3I& GetDimensions() const override;
 
         uint16_t GetMipLevels() const override;
 
@@ -170,7 +170,7 @@ namespace Neon::RHI
             uint64_t&                        CopyId);
 
     protected:
-        Vector3DI m_Dimensions;
+        Vector3I m_Dimensions;
         uint16_t  m_MipLevels = 0;
 
         ClearOperationOpt m_ClearValue;

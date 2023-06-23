@@ -112,7 +112,7 @@ namespace Neon::RHI
         /// </summary>
         virtual void CopyTextureRegion(
             const TextureCopyLocation& Dst,
-            const Vector3DI&           DstPosition,
+            const Vector3I&            DstPosition,
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) = 0;
     };
@@ -232,15 +232,15 @@ namespace Neon::RHI
         /// Set scissor rects
         /// </summary>
         virtual void SetScissorRect(
-            std::span<RectT<Vector2D>> Scissors) = 0;
+            std::span<RectT<Vector2>> Scissors) = 0;
 
         /// <summary>
         /// Set scissor rect
         /// </summary>
         void SetScissorRect(
-            const RectT<Vector2D>& Scissor)
+            const RectT<Vector2>& Scissor)
         {
-            std::array<RectT<Vector2D>, 1> Scissors{ Scissor };
+            std::array<RectT<Vector2>, 1> Scissors{ Scissor };
             SetScissorRect(Scissors);
         }
 

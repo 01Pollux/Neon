@@ -256,7 +256,7 @@ namespace Neon::RG
                                     .Height   = float(Size.Height()),
                                     .MaxDepth = 1.f,
                                 });
-                            RenderCommandList->SetScissorRect(RectF(Vector2D::Zero, Size));
+                            RenderCommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
                         }
 
                         break;

@@ -16,3 +16,7 @@
 #include <chrono>
 #include <numbers>
 #include <random>
+
+#include <Math/Vector.hpp>
+#include <Math/Matrix.hpp>
+#include <Math/Colors.hpp>

@@ -1,14 +1,10 @@
 #pragma once
 
+#include <Math/Vector.hpp>
 #include <RHI/Resource/Common.hpp>
 #include <RHI/Commands/Common.hpp>
 #include <variant>
 #include <span>
-
-namespace Neon
-{
-    class Vector3DI;
-}
 
 namespace Neon::RHI
 {
@@ -233,7 +229,7 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the dimensions of the texture.
         /// </summary>
-        [[nodiscard]] virtual const Vector3DI& GetDimensions() const = 0;
+        [[nodiscard]] virtual const Vector3I& GetDimensions() const = 0;
 
         /// <summary>
         /// Returns the number of mip levels in the texture.

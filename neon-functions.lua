@@ -100,6 +100,7 @@ end
 
 function common_neon()
     defines "flecs_STATIC"
+    defines "GLM_FORCE_LEFT_HANDED"
 
     libdirs "%{CommonDir.Deps.Libs}"
     

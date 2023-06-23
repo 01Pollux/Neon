@@ -8,7 +8,7 @@ namespace Neon
         return m_Basis;
     }
 
-    const Vector3D& TransformMatrix::GetPosition() const noexcept
+    const Vector3& TransformMatrix::GetPosition() const noexcept
     {
         return m_Position;
     }
@@ -20,16 +20,14 @@ namespace Neon
     }
 
     void TransformMatrix::SetPosition(
-        const Vector3D& Position) noexcept
+        const Vector3& Position) noexcept
     {
         m_Position = Position;
     }
 
     Matrix4x4 TransformMatrix::ToMat4x4() const noexcept
     {
-        Matrix4x4 Mat = m_Basis;
-        Mat.SetPosition(m_Position);
-        return Mat;
+        return glm::translate(Matrix4x4(m_Basis), m_Position);
     }
 
     TransformMatrix TransformMatrix::operator*(
