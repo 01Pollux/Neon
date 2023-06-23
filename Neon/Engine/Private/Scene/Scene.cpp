@@ -36,12 +36,9 @@ namespace Neon::Scene
     {
         Actor Entity = m_World->entity("Spike");
         m_World->component<Component::Sprite>().is_a<Component::CanvasItem>();
-        m_World->component<Component::Sprite2>().is_a<Component::CanvasItem>();
 
-        Component::Sprite  Sprite;
-        Component::Sprite2 Sprite2;
+        Component::Sprite Sprite;
         Sprite.ModulationColor = Colors::BlueViolet;
         Entity.set<Component::Sprite>(Sprite);
-        Entity.set<Component::Sprite2>(Sprite2);
     }
 } // namespace Neon::Scene

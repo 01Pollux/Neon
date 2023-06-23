@@ -5,8 +5,8 @@ namespace flecs
     struct world;
 }
 
-#define NEON_EXPORT_COMPONENT(ClassName) \
-    static void Register(                \
+#define NEON_EXPORT_COMPONENT() \
+    static void Register(       \
         flecs::world& World);
 
 #define NEON_IMPLEMENT_COMPONENT(ClassName) \

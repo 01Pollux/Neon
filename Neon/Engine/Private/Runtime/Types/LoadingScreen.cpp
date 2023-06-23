@@ -57,8 +57,7 @@ namespace Neon::Runtime
         Vector2D TexCoord;
     };
 
-    static constexpr size_t      BufferSize      = sizeof(VsInput) * 6;
-    static constexpr const char* SplashScreenTag = "SplashScreen";
+    static constexpr size_t BufferSize = sizeof(VsInput) * 6;
 
     void LoadingScreenRuntime::SetupRendergraph(
         DefaultGameEngine* Engine)

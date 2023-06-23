@@ -8,9 +8,4 @@ namespace Neon::Scene::Component
     {
         NEON_EXPORT_COMPONENT();
     };
-
-    struct Sprite2 : CanvasItem
-    {
-        NEON_EXPORT_COMPONENT();
-    };
 } // namespace Neon::Scene::Component

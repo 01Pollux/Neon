@@ -5,6 +5,12 @@
 #include <Runtime/Renderer.hpp>
 #include <Runtime/Pipeline.hpp>
 
+//
+
+#include <Renderer/RG/Passes/ScenePass.hpp>
+
+//
+
 namespace Neon::Runtime
 {
     EngineWorldRuntime::EngineWorldRuntime(
@@ -65,8 +71,9 @@ namespace Neon::Runtime
                 Renderer->PostRender();
             });
 
-        m_Scene.Test();
         SetupRenderPasses(Renderer.get());
+
+        m_Scene.Test();
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()
@@ -84,6 +91,8 @@ namespace Neon::Runtime
     {
         auto RenderGraph = Renderer->GetRenderGraph();
         auto Builder     = RenderGraph->Reset();
+
+        Builder.AppendPass<RG::ScenePass>(m_Scene);
 
         Builder.Build();
     }

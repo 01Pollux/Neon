@@ -4,6 +4,7 @@
 #include <Math/Colors.hpp>
 #include <Math/Rect.hpp>
 #include <Math/Matrix.hpp>
+#include <Math/Transform.hpp>
 
 namespace Neon::Scene::Exports
 {
@@ -67,5 +68,11 @@ namespace Neon::Scene::Exports
         World.component<RectF>("Neon::RectF")
             .member<Vector2D>("Position")
             .member<Vector2D>("Size");
+
+        //
+
+        World.component<TransformMatrix>("Neon::Transform")
+            .member<Matrix3x3>("Basis")
+            .member<Vector3D>("Origin");
     }
 } // namespace Neon::Scene::Exports
