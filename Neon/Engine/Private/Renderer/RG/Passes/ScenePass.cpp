@@ -2,9 +2,19 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 
+//
+
+#include <RHI/Resource/Views/Shader.hpp>
+
+//
+
 #include <Scene/Scene.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
+
+//
+
+#include <fstream>
 
 //
 
@@ -18,6 +28,7 @@ namespace Neon::RG
     struct VSInput
     {
         Vector4D Position;
+        Color4   Color = Colors::Red;
         Vector2D TexCoord;
     };
 
@@ -37,21 +48,89 @@ namespace Neon::RG
     void ScenePass::ResolveShaders(
         ShaderResolver& Resolver)
     {
+        std::stringstream Stream;
+        std::ifstream     File(L"D:\\Dev\\Sprite.hlsl");
+
+        Stream << File.rdbuf();
+        auto Text = Stream.str();
+
+        RHI::ShaderCompileDesc Desc{
+            .Stage      = RHI::ShaderStage::Vertex,
+            .SourceCode = Text,
+            .EntryPoint = STR("VSMain")
+        };
+        Desc.Flags.Set(RHI::EShaderCompileFlags::Debug);
+
+        Resolver.Load(
+            RG::ResourceId(STR("Sprite.VS")),
+            Desc);
+
+        Desc.Stage      = RHI::ShaderStage::Pixel;
+        Desc.EntryPoint = STR("PSMain");
+
+        Resolver.Load(
+            RG::ResourceId(STR("Sprite.PS")),
+            Desc);
     }
 
     void ScenePass::ResolveRootSignature(
         RootSignatureResolver& Resolver)
     {
+        RHI::StaticSamplerDesc Sampler;
+
+        Sampler.Filter         = RHI::ESamplerFilter::MinMagMipPoint;
+        Sampler.RegisterSpace  = 0;
+        Sampler.ShaderRegister = 0;
+        Sampler.Visibility     = RHI::ShaderVisibility::Pixel;
+
+        Resolver.Load(
+            RG::ResourceId(STR("Sprite.RS")),
+            RHI::RootSignatureBuilder()
+                .AddDescriptorTable(
+                    RHI::RootDescriptorTable()
+                        .AddSrvRange(0, 0, 1))
+                .AddSampler(Sampler)
+                .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
     }
 
     void ScenePass::ResolvePipelineStates(
         PipelineStateResolver& Resolver)
     {
+        auto& RootSig = Resolver.GetRootSignature(RG::ResourceId(STR("Sprite.RS")));
+
+        auto& VS = Resolver.GetShader(RG::ResourceId(STR("Sprite.VS")));
+        auto& PS = Resolver.GetShader(RG::ResourceId(STR("Sprite.PS")));
+
+        RHI::PipelineStateBuilder<false> Builder{
+            .RootSignature   = RootSig.get(),
+            .VertexShader    = VS.get(),
+            .PixelShader     = PS.get(),
+            .RasterizerState = { .CullMode = RHI::CullMode::None },
+            .DepthStencilState{ .DepthEnable = false },
+            .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
+            .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+        };
+
+        VS->CreateInputLayout(Builder.InputLayout);
+
+        Resolver.Load(
+            RG::ResourceId(STR("Sprite.Pipeline")),
+            Builder);
     }
 
     void ScenePass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        Resolver.WriteResource(
+            RG::ResourceViewId(STR("FinalImage"), STR("ScenePass")),
+            RHI::RTVDesc{
+                .View      = RHI::RTVDesc::Texture2D{},
+                .ClearType = RHI::ERTClearType::Color,
+                .Format    = Resolver.GetSwapchainFormat(),
+            });
+
+        //
+
         Resolver.CreateBuffer(
             RG::ResourceId(STR("SpriteVertexBuffer")),
             RHI::BufferDesc{
@@ -69,7 +148,22 @@ namespace Neon::RG
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
+        if (!m_SpriteQuery.is_true())
+        {
+            return;
+        }
+
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
+
+        //
+
+        auto& Pipeline      = Storage.GetPipelineState(RG::ResourceId(STR("Sprite.Pipeline")));
+        auto& RootSignature = Storage.GetRootSignature(RG::ResourceId(STR("Sprite.RS")));
+
+        RenderCommandList->SetRootSignature(RootSignature);
+        RenderCommandList->SetPipelineState(Pipeline);
+
+        //
 
         //
 
@@ -83,25 +177,31 @@ namespace Neon::RG
                 const Component::Transform& Transform,
                 const Component::Sprite&    Sprite) mutable
         {
-            auto World = Transform.World.ToMat4x4();
+            auto World = Vector4D(Transform.World.GetPosition());
+            World.w()  = 1.f;
 
             //
 
             auto Vertex = VertexBuffer->Map<VSInput>(DrawIndex * sizeof(VSInput));
 
-            Vertex[0].Position = World.DoTransform(Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * +0.5f));
-            Vertex[1].Position = World.DoTransform(Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * +0.5f));
-            Vertex[2].Position = World.DoTransform(Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * -0.5f));
-            Vertex[3].Position = World.DoTransform(Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * -0.5f));
+            Vertex[0].Position = World + Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * +0.5f);
+            Vertex[1].Position = World + Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * +0.5f);
+            Vertex[2].Position = World + Vector2D(Sprite.Scale.x() * +0.5f, Sprite.Scale.y() * -0.5f);
+            Vertex[3].Position = World + Vector2D(Sprite.Scale.x() * -0.5f, Sprite.Scale.y() * -0.5f);
 
             Vertex[0].TexCoord = Sprite.TextureRect.TopLeft();
             Vertex[1].TexCoord = Sprite.TextureRect.TopRight();
             Vertex[2].TexCoord = Sprite.TextureRect.BottomRight();
             Vertex[3].TexCoord = Sprite.TextureRect.BottomLeft();
 
+            Vertex[0].Color = Sprite.ModulationColor;
+            Vertex[1].Color = Sprite.ModulationColor;
+            Vertex[2].Color = Sprite.ModulationColor;
+            Vertex[3].Color = Sprite.ModulationColor;
+
             //
 
-            auto Index = IndexBuffer->Map<uint32_t>(DrawIndex * sizeof(uint16_t));
+            auto Index = IndexBuffer->Map<uint16_t>(DrawIndex * sizeof(uint16_t));
 
             Index[0] = 0;
             Index[1] = 1;
@@ -124,6 +224,18 @@ namespace Neon::RG
         if (m_SpriteQuery.is_true())
         {
             m_SpriteQuery.each(DrawToBuffer);
+
+            RHI::Views::Vertex Vtx;
+            Vtx.Append(VertexBuffer.get(), 0, sizeof(VSInput), sizeof(VSInput) * 4);
+            RenderCommandList->SetVertexBuffer(0, Vtx);
+
+            RHI::Views::Index Idx(IndexBuffer.get(), 0, sizeof(uint16_t) * 6);
+            RenderCommandList->SetIndexBuffer(Idx);
+
+            RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
+
+            RenderCommandList->Draw(RHI::DrawIndexArgs{
+                .IndexCountPerInstance = 6 });
         }
     }
 } // namespace Neon::RG

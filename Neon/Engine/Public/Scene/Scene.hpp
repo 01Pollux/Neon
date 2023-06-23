@@ -35,8 +35,6 @@ namespace Neon::Scene
             return m_World.get();
         }
 
-        void Test();
-
     private:
         std::unique_ptr<flecs::world> m_World;
     };

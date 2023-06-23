@@ -11,6 +11,9 @@
 
 //
 
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Sprite.hpp>
+
 namespace Neon::Runtime
 {
     EngineWorldRuntime::EngineWorldRuntime(
@@ -73,7 +76,15 @@ namespace Neon::Runtime
 
         SetupRenderPasses(Renderer.get());
 
-        m_Scene.Test();
+        //
+
+        auto Sprite = m_Scene->entity("Sprite");
+        Sprite.set<Scene::Component::Transform>({});
+        Sprite.set<Scene::Component::Sprite>({});
+
+        // auto Trs = Sprite.get_mut<Scene::Component::Transform>();
+        // Trs->Local.SetPosition(Vector3D::Forward * 5.f);
+        // Trs->World.SetPosition(Vector3D::Forward * 5.f);
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()

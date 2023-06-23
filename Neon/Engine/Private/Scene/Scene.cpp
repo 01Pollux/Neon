@@ -2,8 +2,6 @@
 #include <Scene/Scene.hpp>
 #include <Scene/Exports/Export.hpp>
 
-#include <Scene/Component/Sprite.hpp>
-
 namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
@@ -30,15 +28,5 @@ namespace Neon::Scene
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_World.reset();
         }
-    }
-
-    void GameScene::Test()
-    {
-        Actor Entity = m_World->entity("Spike");
-        m_World->component<Component::Sprite>().is_a<Component::CanvasItem>();
-
-        Component::Sprite Sprite;
-        Sprite.ModulationColor = Colors::BlueViolet;
-        Entity.set<Component::Sprite>(Sprite);
     }
 } // namespace Neon::Scene
