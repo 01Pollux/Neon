@@ -136,20 +136,6 @@ Foreach {
 }
 
 #
-# DirectX Compiler
-#
-Remove-Directory $(Get-DepIncPath("DxC"))
-Make-Directory $(Get-DepIncPath("DxC"))
-
-Remove-Directory $(Get-DepLibPath("DxC"))
-Make-Directory $(Get-DepLibPath("DxC"))
-
-Write-Output "Copying DxC files..."
-Copy-Item "Vendors\DxC\inc\*.h" $(Get-DepIncPath("DxC"))
-Copy-Item "Vendors\DxC\bin"  $(Get-DepLibPath("DxC\bin")) -Force -Recurse
-Copy-Item "Vendors\DxC\lib"  $(Get-DepLibPath("DxC\lib")) -Force -Recurse
-
-#
 # DirectX
 #
 Remove-Directory $(Get-DepIncPath("DX"))
