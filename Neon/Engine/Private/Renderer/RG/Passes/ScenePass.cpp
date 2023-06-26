@@ -179,7 +179,6 @@ namespace Neon::RG
                 const Component::Transform& Transform,
                 const Component::Sprite&    Sprite) mutable
         {
-            // cast glm::vec3 to glm::vec4 and set w to 1 for matrix multiplication
             auto World = Vector4(Transform.World.GetPosition(), 1.0f);
 
             //
@@ -222,6 +221,25 @@ namespace Neon::RG
         };
 
         //
+
+        /*
+
+        m_SpriteBatcher->Begin();
+
+        m_SpriteQuery->each(
+            [this](const Component::Transform& Transform, const Component::Sprite& Sprite)
+            {
+                m_SpriteBatcher->Draw(
+                    QuadCommand{
+                        .Position = Transform.World.GetPosition(),
+                        .Texture  = Sprite.Texture,
+                        .Rect     = Sprite.TextureRect,
+                        .Color    = Sprite.ModulationColor,
+                        .Scale    = Sprite.Scale,
+                        .Rotation = Sprite.Rotation });
+            });
+
+        */
 
         if (m_SpriteQuery.is_true())
         {
