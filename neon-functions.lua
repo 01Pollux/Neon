@@ -12,6 +12,8 @@ function move_to_targetdir(from_dir, folder, name)
 end
 
 function copy_engine_resources()
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
+    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
     postbuildcommands
     {
         'if not exist "$(targetdir)D3D12" mkdir "$(targetdir)D3D12"'

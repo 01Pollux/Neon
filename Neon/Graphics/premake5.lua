@@ -18,5 +18,5 @@ project "NeonGraphics"
 
     links
     {
-        "%{CommonDir.Deps.Libs}/ShaderConductor/ShaderConductor.lib"
+        "%{CommonDir.Deps.Libs}/DxC/lib/x64/dxcompiler.lib"
     }
