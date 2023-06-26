@@ -4,6 +4,7 @@ New-Item .\tmp -Type Directory | Out-Null
 
 .\Scripts\Boost.ps1
 .\Scripts\Directx.ps1
+.\Scripts\ShaderConductor.ps1
 
 Write-Output "Clearing temporary files..."
 Remove-Item -Force -Recurse tmp | Out-Null
