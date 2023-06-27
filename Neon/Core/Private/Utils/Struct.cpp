@@ -5,9 +5,6 @@
 
 namespace Neon::Structured
 {
-    static std::map<SHA256::Bytes, std::unique_ptr<CookedLayout>> s_CachedLayouts;
-    std::mutex                                                    s_CachedLayoutsMutex;
-
     RawLayout::Element::Element(Type Type)
     {
         switch (Type)
@@ -206,30 +203,10 @@ namespace Neon::Structured
         m_Alignement = Alignement;
     }
 
-    const CookedLayout* RawLayout::Cook(
+    CookedLayout RawLayout::Cook(
         bool GPULayout) const noexcept
     {
-        if (m_Element.AsStruct()->NestedElements.empty())
-        {
-            return nullptr;
-        }
-
-        auto Hash = GetHashCode(GPULayout);
-
-        const CookedLayout* Layout = nullptr;
-
-        {
-            std::scoped_lock Lock(s_CachedLayoutsMutex);
-
-            auto Iter = s_CachedLayouts.find(Hash);
-            if (Iter == s_CachedLayouts.end())
-            {
-                Iter = s_CachedLayouts.emplace(Hash, std::make_unique<CookedLayout>(GPULayout, GetAlignement(), m_Element)).first;
-            }
-            Layout = Iter->second.get();
-        }
-
-        return Layout;
+        return CookedLayout(GPULayout, GetAlignement(), m_Element);
     }
 
     SHA256::Bytes RawLayout::GetHashCode(
@@ -474,24 +451,5 @@ namespace Neon::Structured
         size_t      ArrayIndex) const noexcept
     {
         return CBufferView(static_cast<const uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex);
-    }
-
-    //
-
-    Buffer::Buffer(
-        const CookedLayout* Layout,
-        size_t              SizeAlignement) :
-        m_Layout(Layout),
-        m_Buffer(std::make_unique<uint8_t[]>(Impl::Align(m_Layout->GetSize(), SizeAlignement)))
-    {
-    }
-
-    Buffer::Buffer(
-        const RawLayout& Layout,
-        size_t           SizeAlignement) :
-        Buffer(
-            Layout.Cook(true),
-            SizeAlignement)
-    {
     }
 } // namespace Neon::Structured

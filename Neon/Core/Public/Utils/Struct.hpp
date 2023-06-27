@@ -263,7 +263,7 @@ namespace Neon::Structured
         /// <summary>
         /// Cook layout into compressed version of mapped offsets
         /// </summary>
-        [[nodiscard]] const CookedLayout* Cook(
+        [[nodiscard]] CookedLayout Cook(
             bool GPULayout) const noexcept;
 
         /// <summary>
@@ -367,6 +367,8 @@ namespace Neon::Structured
         private:
             const Element* m_Element;
         };
+
+        CookedLayout() = default;
 
         CookedLayout(
             bool                      GPULayout,
@@ -601,59 +603,5 @@ namespace Neon::Structured
         CookedLayout::ElementView m_View;
         size_t                    m_ArrayOffset;
         const uint8_t*            m_Data;
-    };
-
-    //
-
-    class Buffer
-    {
-    public:
-        Buffer() = default;
-
-        explicit Buffer(
-            const CookedLayout* Layout,
-            size_t              SizeAlignement = 1);
-
-        explicit Buffer(
-            const RawLayout& Layout,
-            size_t           SizeAlignement = 1);
-
-        /// <summary>
-        /// Get element in struct layout
-        /// </summary>
-        [[nodiscard]] BufferView operator[](
-            const std::string& Name)
-        {
-            return m_Layout->Access(m_Buffer.get())[Name];
-        }
-
-        /// <summary>
-        /// Get element in struct layout
-        /// </summary>
-        [[nodiscard]] CBufferView operator[](
-            const std::string& Name) const
-        {
-            return m_Layout->Access(m_Buffer.get())[Name];
-        }
-
-        /// <summary>
-        /// Get GPU buffer
-        /// </summary>
-        [[nodiscard]] uint8_t* GetBuffer() const noexcept
-        {
-            return m_Buffer.get();
-        }
-
-        /// <summary>
-        /// Get cooked layout for buffer
-        /// </summary>
-        [[nodiscard]] const CookedLayout* GetLayout() const noexcept
-        {
-            return m_Layout;
-        }
-
-    private:
-        const CookedLayout*        m_Layout = nullptr;
-        std::unique_ptr<uint8_t[]> m_Buffer;
     };
 } // namespace Neon::Structured
