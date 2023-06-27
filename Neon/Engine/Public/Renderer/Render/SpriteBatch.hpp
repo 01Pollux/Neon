@@ -25,6 +25,8 @@ namespace Neon::Renderer
             RectF              TexCoord = RectF(Vec::Zero<Vector2>, Vec::One<Vector2>);
         };
 
+        SpriteBatch();
+
         /// <summary>
         /// Enqueues a quad to be drawn.
         /// </summary>
@@ -34,5 +36,6 @@ namespace Neon::Renderer
     private:
         UPtr<RHI::IUploadBuffer> m_VertexBuffers;
         UPtr<RHI::IUploadBuffer> m_IndexBuffer;
+        size_t                   m_DrawCount = 0;
     };
 } // namespace Neon::Renderer
