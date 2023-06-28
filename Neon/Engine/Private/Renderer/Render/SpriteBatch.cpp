@@ -166,7 +166,9 @@ namespace Neon::Renderer
             .VertexShader   = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadVertexShader)->GetShader().get(),
             .PixelShader    = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadPixelShader)->GetShader().get(),
             .Rasterizer     = { .CullMode = RHI::CullMode::None },
-            .UseVertexInput = true
+            .UseVertexInput = true,
+            .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
+            .RTFormats      = { RHI::EResourceFormat::R8G8B8A8_UNorm }
         };
 
         return {

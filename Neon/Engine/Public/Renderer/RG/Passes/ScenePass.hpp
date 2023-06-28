@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RG/Pass.hpp>
+#include <Renderer/Render/SpriteBatch.hpp>
 
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
@@ -31,6 +32,8 @@ namespace Neon::RG
             RHI::ICommandList*  CommandList) override;
 
     private:
+        UPtr<Renderer::SpriteBatch> m_SpriteBatch;
+
         Scene::GameScene& m_Scene;
 
         flecs::query<

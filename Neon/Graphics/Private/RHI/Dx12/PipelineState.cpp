@@ -398,17 +398,17 @@ namespace Neon::RHI
 
         // Input layout
         {
-            auto Input = &Builder.Input;
-
-            ShaderInputLayout VtxInput;
-            if (Builder.UseVertexInput)
+            if (!Builder.UseVertexInput)
             {
-                Builder.VertexShader->CreateInputLayout(VtxInput);
-                Input = &VtxInput;
+                Result.InputLayout = Builder.Input;
+            }
+            else
+            {
+                Builder.VertexShader->CreateInputLayout(Result.InputLayout);
             }
 
             auto& InputLayout = Result.Desc.InputLayout;
-            for (auto& [Name, Element] : *Input)
+            for (auto& [Name, Element] : Result.InputLayout)
             {
                 auto SemanticView = Name |
                                     std::views::split('#') |

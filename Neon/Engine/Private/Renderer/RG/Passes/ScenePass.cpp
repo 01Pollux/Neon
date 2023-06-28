@@ -97,16 +97,15 @@ namespace Neon::RG
         auto& PS = Resolver.GetShader(RG::ResourceId(STR("Sprite.PS")));
 
         RHI::PipelineStateBuilderG Builder{
-            .RootSignature = RootSig.get(),
-            .VertexShader  = VS.get(),
-            .PixelShader   = PS.get(),
-            .Rasterizer    = { .CullMode = RHI::CullMode::None },
-            .DepthStencil  = { .DepthEnable = false },
-            .Topology      = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
-            .RTFormats     = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+            .RootSignature  = RootSig.get(),
+            .VertexShader   = VS.get(),
+            .PixelShader    = PS.get(),
+            .Rasterizer     = { .CullMode = RHI::CullMode::None },
+            .DepthStencil   = { .DepthEnable = false },
+            .UseVertexInput = true,
+            .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
+            .RTFormats      = { RHI::EResourceFormat::R8G8B8A8_UNorm },
         };
-
-        VS->CreateInputLayout(Builder.Input);
 
         Resolver.Load(
             RG::ResourceId(STR("Sprite.Pipeline")),
@@ -136,6 +135,16 @@ namespace Neon::RG
             return;
         }
 
+        if (!m_SpriteBatch)
+        {
+            m_SpriteBatch = std::make_unique<Renderer::SpriteBatch>(
+                Renderer::SpriteBatch::CompiledPipelineState{
+                    .QuadPipelineState = Storage.GetPipelineState(RG::ResourceId(STR("Sprite.Pipeline"))),
+                    .QuadRootSignature = Storage.GetRootSignature(RG::ResourceId(STR("Sprite.RS"))),
+                },
+                Storage.GetSwapchain());
+        }
+
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
         //
@@ -161,6 +170,7 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
+
             // m_SpriteQuery.each(DrawToBuffer);
         }
     }

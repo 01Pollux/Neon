@@ -49,6 +49,7 @@ namespace Neon::RHI
             SHA256::Bytes                         Digest;
             D3D12_GRAPHICS_PIPELINE_STATE_DESC    Desc{};
             std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
+            ShaderInputLayout                     InputLayout;
 
             GraphicsBuildResult() = default;
             NEON_CLASS_NO_COPY(GraphicsBuildResult);
