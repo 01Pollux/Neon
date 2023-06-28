@@ -81,6 +81,14 @@ namespace Neon::Windowing
             bool   Block) override;
 
     public:
+        /// <summary>
+        /// Window thread function that creates the window and processes messages.
+        /// </summary>
+        void WindowThread();
+
+        /// <summary>
+        /// Window procedure that handles all messages sent to the window.
+        /// </summary>
         static LRESULT WndProc(
             HWND   Handle,
             UINT   Message,
@@ -126,5 +134,7 @@ namespace Neon::Windowing
         std::queue<Event> m_PendingEvents;
         MWindowFlags      m_WindowFlags;
         MWindowStyle      m_WindowStyle;
+
+        std::jthread m_WindowThread;
     };
 } // namespace Neon::Windowing

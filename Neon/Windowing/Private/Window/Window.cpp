@@ -87,6 +87,7 @@ namespace Neon::Windowing
         const Size2I&       Size,
         const MWindowStyle& Style,
         bool                StartInMiddle) :
+        m_WindowThread(&WindowApp::WindowThread, this),
         m_WindowSize(Size),
         m_WindowStyle(Style)
     {

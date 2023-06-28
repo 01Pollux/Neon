@@ -7,6 +7,10 @@
 
 namespace Neon::Windowing
 {
+    void WindowApp::WindowThread()
+    {
+    }
+
     LRESULT WindowApp::WndProc(
         HWND   Handle,
         UINT   Message,
