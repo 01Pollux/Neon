@@ -2,7 +2,9 @@
 
 #include <Window/Window.hpp>
 #include <Private/Window/WindowHeaders.hpp>
+#include <Asio/QueueTask.hpp>
 #include <queue>
+#include <latch>
 
 namespace Neon::Windowing
 {
@@ -18,6 +20,8 @@ namespace Neon::Windowing
 
     class WindowApp final : public IWindowApp
     {
+        static constexpr UINT WM_USER_TASK_PENDING = WM_USER + 0x7b15;
+
     public:
         WindowApp(
             const String&       Title,
@@ -33,59 +37,72 @@ namespace Neon::Windowing
 
         void Close() override;
 
-        String GetTitle() const override;
+        bool IsRunning() const override;
 
-        /// <summary>
-        /// Set window title
-        /// </summary>
-        void SetTitle(
+        std::future<String> GetTitle() const override;
+
+        std::future<void> SetTitle(
             const String& Title) override;
 
-        [[nodiscard]] MWindowStyle GetStyle() const override;
+        [[nodiscard]] std::future<MWindowStyle> GetStyle() const override;
 
-        void SetStyle(
+        std::future<void> SetStyle(
             const MWindowStyle& Style) override;
 
-        [[nodiscard]] Size2I GetScreenCaps() const override;
+        [[nodiscard]] std::future<Size2I> GetScreenCaps() const override;
 
-        [[nodiscard]] Vector2I GetPosition() const override;
+        [[nodiscard]] std::future<Vector2I> GetPosition() const override;
 
-        void SetPosition(
+        std::future<void> SetPosition(
             const Vector2I& Position) override;
 
-        [[nodiscard]] Size2I GetSize() const override;
+        [[nodiscard]] std::future<Size2I> GetSize() const override;
 
-        void SetSize(
+        std::future<void> SetSize(
             const Size2I& Size) override;
 
-        bool IsMinimized() const;
+        std::future<bool> IsMinimized() const override;
 
-        bool IsMaximized() const;
+        std::future<bool> IsMaximized() const override;
 
-        bool IsVisible() const;
+        std::future<bool> IsVisible() const override;
 
-        void SetIcon(
+        std::future<void> SetIcon(
             const void*     IconData,
             const Vector2I& Size) override;
 
-        void SetVisible(
+        std::future<void> SetVisible(
             bool Show) override;
 
-        void RequestFocus() override;
+        std::future<void> RequestFocus() override;
 
-        [[nodiscard]] bool HasFocus() const override;
+        [[nodiscard]] std::future<bool> HasFocus() const override;
 
-        [[nodiscard]] bool PeekEvent(
-            Event* Msg,
-            bool   Erase,
-            bool   Block) override;
+        bool PeekEvent(
+            Event& Message) override;
 
-    public:
+    private:
+        template<typename _FnTy, typename... _Args>
+        auto DispatchTask(
+            _FnTy&& Task,
+            _Args&&... Args) const
+        {
+            auto Future = m_TaskQueue.PushTask(std::forward<_FnTy>(Task), std::forward<_Args>(Args)...);
+            PostTaskMessage();
+            return Future;
+        }
+
+        /// <summary>
+        /// Post a task message to the window thread.
+        /// </summary>
+        void PostTaskMessage() const;
+
         /// <summary>
         /// Window thread function that creates the window and processes messages.
         /// </summary>
         void WindowThread();
 
+    public:
         /// <summary>
         /// Window procedure that handles all messages sent to the window.
         /// </summary>
@@ -108,20 +125,28 @@ namespace Neon::Windowing
         void SwitchToFullscreen();
 
         /// <summary>
-        /// Process all events in the event queue.
-        /// </summary>
-        void ProcessMessages();
-
-        /// <summary>
         /// Emplace an event into the event queue.
         /// </summary>
         void QueueEvent(
             Event Msg);
 
+        /// <summary>
+        /// Process a message sent to the window.
+        /// </summary>
         void ProcessMessage(
             UINT   Message,
             WPARAM wParam,
             LPARAM lParam);
+
+        /// <summary>
+        /// Get window size.
+        /// </summary>
+        [[nodiscard]] Size2I GetWindowSize() const;
+
+        /// <summary>
+        /// Get window title.
+        /// </summary>
+        [[nodiscard]] String GetWindowTitle() const;
 
     private:
         HWND  m_Handle = nullptr;
@@ -132,9 +157,14 @@ namespace Neon::Windowing
         int    m_BitsPerPixel;
 
         std::queue<Event> m_PendingEvents;
-        MWindowFlags      m_WindowFlags;
-        MWindowStyle      m_WindowStyle;
+        std::mutex        m_PendingEventsMutex;
 
-        std::jthread m_WindowThread;
+        MWindowFlags m_WindowFlags;
+        MWindowStyle m_WindowStyle;
+
+        std::atomic_bool          m_IsRunning = true;
+        std::latch                m_WindowCreatedLatch;
+        mutable Asio::QueueTaskMT m_TaskQueue;
+        std::jthread              m_WindowThread;
     };
 } // namespace Neon::Windowing

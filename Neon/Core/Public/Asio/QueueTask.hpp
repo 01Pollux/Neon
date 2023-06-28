@@ -15,15 +15,16 @@ namespace Neon::Asio
         /// <summary>
         /// Push a task to the queue and return a future
         /// </summary>
-        template<std::invocable _FnTy>
-        auto Push(
-            _FnTy&& Function)
+        template<typename _FnTy, typename... _Args>
+        auto PushTask(
+            _FnTy&& Function,
+            _Args&&... Args)
         {
-            using _RetTy          = std::invoke_result_t<_FnTy>;
+            using _RetTy          = std::invoke_result_t<_FnTy, _Args...>;
             using _PackagedTaskTy = std::packaged_task<_RetTy()>;
 
-            _PackagedTaskTy Task{ std::forward<_FnTy>(Function) };
-            std::future     Future = Task.get_future();
+            _PackagedTaskTy Task{ std::bind(std::forward<_FnTy>(Function), std::forward<_Args>(Args)...) };
+            auto            Future = Task.get_future();
 
             if constexpr (std::is_same_v<_MtxType, NullMutex>)
             {
@@ -43,7 +44,7 @@ namespace Neon::Asio
         /// <summary>
         /// Pop the first task from the queue and execute it
         /// </summary>
-        void Pop()
+        void PopExecute()
         {
             TaskType Task;
             if constexpr (std::is_same_v<_MtxType, NullMutex>)

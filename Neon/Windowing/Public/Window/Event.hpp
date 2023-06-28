@@ -13,14 +13,8 @@ namespace Neon::Windowing
         {
             Size2I NewSize;
         };
-
-        struct Close
-        {
-            int ExitCode;
-        };
     } // namespace Events
 
     using Event = std::variant<
-        Events::SizeChanged,
-        Events::Close>;
+        Events::SizeChanged>;
 } // namespace Neon::Windowing

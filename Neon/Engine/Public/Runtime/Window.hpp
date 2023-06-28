@@ -10,12 +10,12 @@ namespace Neon::Runtime
 {
     class DefaultGameEngine;
 
-    class EnginetWindow
+    class EngineWindow
     {
         friend class DefaultGameEngine;
 
     public:
-        EnginetWindow(
+        EngineWindow(
             Runtime::DefaultGameEngine* Engine,
             const Config::EngineConfig& Config);
 

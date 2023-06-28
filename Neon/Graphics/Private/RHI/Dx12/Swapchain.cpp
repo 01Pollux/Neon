@@ -126,12 +126,15 @@ namespace Neon::RHI
     void Dx12Swapchain::CreateSwapchain(
         const InitDesc& Desc)
     {
+        auto WindowSizeFuture = Desc.Window->GetSize();
+
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
-        auto WindowSize  = Desc.Window->GetSize();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
 
         auto GraphicsQueue = m_BudgetManager.GetQueueManager()->GetGraphics()->Queue.Get();
+
+        auto WindowSize = WindowSizeFuture.get();
 
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {

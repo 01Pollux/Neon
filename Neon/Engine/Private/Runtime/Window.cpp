@@ -4,7 +4,7 @@
 
 namespace Neon::Runtime
 {
-    EnginetWindow::EnginetWindow(
+    EngineWindow::EngineWindow(
         Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config)
     {
@@ -35,38 +35,31 @@ namespace Neon::Runtime
         m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
     }
 
-    int EnginetWindow::GetExitCode() const noexcept
+    int EngineWindow::GetExitCode() const noexcept
     {
         return m_ExitCode;
     }
 
-    Windowing::IWindowApp* EnginetWindow::GetWindow() const noexcept
+    Windowing::IWindowApp* EngineWindow::GetWindow() const noexcept
     {
         return m_Window.get();
     }
 
-    bool EnginetWindow::Run()
+    bool EngineWindow::Run()
     {
         namespace WinEvents = Windowing::Events;
 
         Windowing::Event Msg;
-
-        bool keepRunning = true;
-        while (m_Window->PeekEvent(&Msg))
+        while (m_Window->PeekEvent(Msg))
         {
             std::visit(
                 VariantVisitor{
-                    [this, &keepRunning](const WinEvents::Close& CloseMsg)
-                    {
-                        m_ExitCode  = CloseMsg.ExitCode;
-                        keepRunning = false;
-                    },
                     [this](const WinEvents::SizeChanged& SizeMsg)
                     {
                         OnWindowSizeChanged().Broadcast(SizeMsg.NewSize);
                     } },
                 Msg);
         }
-        return keepRunning;
+        return m_Window->IsRunning();
     }
 } // namespace Neon::Runtime

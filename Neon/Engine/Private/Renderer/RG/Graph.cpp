@@ -248,7 +248,7 @@ namespace Neon::RG
 
                         if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
                         {
-                            auto Size = Swapchain->GetWindow()->GetSize();
+                            auto Size = Swapchain->GetWindow()->GetSize().get();
 
                             RenderCommandList->SetViewport(
                                 ViewportF{

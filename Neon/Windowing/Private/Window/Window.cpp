@@ -87,68 +87,80 @@ namespace Neon::Windowing
         const Size2I&       Size,
         const MWindowStyle& Style,
         bool                StartInMiddle) :
-        m_WindowThread(&WindowApp::WindowThread, this),
         m_WindowSize(Size),
-        m_WindowStyle(Style)
+        m_WindowStyle(Style),
+        m_WindowCreatedLatch(1),
+        m_WindowThread(&WindowApp::WindowThread, this)
     {
-        NEON_TRACE_TAG(
-            "Window", "Creating Window '{}' -- Size: {}x{}",
-            StringUtils::Transform<StringU8>(Title),
-            Size.Width(),
-            Size.Height());
+        auto Future = m_TaskQueue.PushTask(
+            [&]()
+            {
+                NEON_TRACE_TAG(
+                    "Window", "Creating Window '{}' -- Size: {}x{}",
+                    StringUtils::Transform<StringU8>(Title),
+                    Size.Width(),
+                    Size.Height());
 
-        Impl::InitializeClassName();
+                Impl::InitializeClassName();
 
-        Size2I FinalSize = Size;
+                Size2I FinalSize = Size;
 
-        HDC WindowDC = GetDC(nullptr);
-        int Left, Top;
-        if (!StartInMiddle)
-        {
-            Left = Top = CW_USEDEFAULT;
-        }
-        else
-        {
-            Left = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
-            Top  = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
-        }
-        m_BitsPerPixel = GetDeviceCaps(WindowDC, BITSPIXEL);
-        ReleaseDC(nullptr, WindowDC);
+                HDC WindowDC = GetDC(nullptr);
+                int Left, Top;
+                if (!StartInMiddle)
+                {
+                    Left = Top = CW_USEDEFAULT;
+                }
+                else
+                {
+                    Left = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
+                    Top  = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
+                }
+                m_BitsPerPixel = GetDeviceCaps(WindowDC, BITSPIXEL);
+                ReleaseDC(nullptr, WindowDC);
 
-        DWORD WinStyle = GetWindowStyle(Style);
+                DWORD WinStyle = GetWindowStyle(Style);
 
-        if (!Style.Test(EWindowStyle::Fullscreen))
-        {
-            RECT Rect = { 0, 0, FinalSize.Width(), FinalSize.Height() };
-            AdjustWindowRect(&Rect, WinStyle, false);
-            FinalSize.Width(Rect.right - Rect.left);
-            FinalSize.Height(Rect.bottom - Rect.top);
-        }
+                if (!Style.Test(EWindowStyle::Fullscreen))
+                {
+                    RECT Rect = { 0, 0, FinalSize.Width(), FinalSize.Height() };
+                    AdjustWindowRect(&Rect, WinStyle, false);
+                    FinalSize.Width(Rect.right - Rect.left);
+                    FinalSize.Height(Rect.bottom - Rect.top);
+                }
 
-        CreateWindowExW(
-            0,
-            Impl::s_ClassName,
-            Title.c_str(),
-            WinStyle,
-            Left,
-            Top,
-            FinalSize.Width(),
-            FinalSize.Height(),
-            nullptr,
-            nullptr,
-            GetModuleHandle(nullptr),
-            this);
+                m_Handle = CreateWindowExW(
+                    0,
+                    Impl::s_ClassName,
+                    Title.c_str(),
+                    WinStyle,
+                    Left,
+                    Top,
+                    FinalSize.Width(),
+                    FinalSize.Height(),
+                    nullptr,
+                    nullptr,
+                    GetModuleHandle(nullptr),
+                    this);
 
-        if (Style.Test(EWindowStyle::Fullscreen))
-        {
-            SwitchToFullscreen();
-        }
+                if (Style.Test(EWindowStyle::Fullscreen))
+                {
+                    SwitchToFullscreen();
+                }
+            });
+
+        m_WindowCreatedLatch.count_down();
+        Future.get();
     }
 
     WindowApp::~WindowApp()
     {
-        DestroyWindow(m_Handle);
-        Impl::ShutdownClassName();
+        DispatchTask(
+            [this]()
+            {
+                DestroyWindow(m_Handle);
+                Impl::ShutdownClassName();
+            });
     }
 
     void* WindowApp::GetPlatformHandle() const
@@ -158,208 +170,248 @@ namespace Neon::Windowing
 
     void WindowApp::Close()
     {
-        PostMessage(m_Handle, WM_CLOSE, 0, 0);
+        m_IsRunning = false;
     }
 
-    String WindowApp::GetTitle() const
+    bool WindowApp::IsRunning() const
     {
-        int    TitleLength = GetWindowTextLengthW(m_Handle) + 1;
-        String Title(TitleLength, '\0');
-        GetWindowTextW(m_Handle, Title.data(), TitleLength);
-        return Title;
+        return m_IsRunning;
     }
 
-    void WindowApp::SetTitle(
+    std::future<String> WindowApp::GetTitle() const
+    {
+        return DispatchTask(
+            [this]
+            {
+                return GetWindowTitle();
+            });
+    }
+
+    std::future<void> WindowApp::SetTitle(
         const String& Title)
     {
-        SetWindowTextW(m_Handle, Title.c_str());
+        return DispatchTask(
+            [this, Title]
+            {
+                SetWindowTextW(m_Handle, Title.c_str());
+            });
     }
 
-    MWindowStyle WindowApp::GetStyle() const
+    std::future<MWindowStyle> WindowApp::GetStyle() const
     {
-        return m_WindowStyle;
+        return DispatchTask(
+            [this]
+            {
+                return m_WindowStyle;
+            });
     }
 
-    void WindowApp::SetStyle(
+    std::future<void> WindowApp::SetStyle(
         const MWindowStyle& Style)
     {
-        m_WindowStyle = Style;
+        return DispatchTask(
+            [this, Style]
+            {
+                m_WindowStyle = Style;
 
-        DWORD WinStyle = GetWindowStyle(m_WindowStyle);
-        SetWindowLong(m_Handle, GWL_STYLE, WinStyle);
+                DWORD WinStyle = GetWindowStyle(m_WindowStyle);
+                SetWindowLong(m_Handle, GWL_STYLE, WinStyle);
 
-        if (m_WindowStyle.Test(EWindowStyle::Fullscreen))
-        {
-            SwitchToFullscreen();
-        }
-        else
-        {
-            RECT Rect;
-            GetClientRect(m_Handle, &Rect);
+                if (m_WindowStyle.Test(EWindowStyle::Fullscreen))
+                {
+                    SwitchToFullscreen();
+                }
+                else
+                {
+                    RECT Rect;
+                    GetClientRect(m_Handle, &Rect);
 
-            SetWindowPos(
-                m_Handle,
-                HWND_NOTOPMOST,
-                Rect.left,
-                Rect.top,
-                Rect.right - Rect.left,
-                Rect.bottom - Rect.top,
-                SWP_FRAMECHANGED | SWP_NOACTIVATE);
+                    SetWindowPos(
+                        m_Handle,
+                        HWND_NOTOPMOST,
+                        Rect.left,
+                        Rect.top,
+                        Rect.right - Rect.left,
+                        Rect.bottom - Rect.top,
+                        SWP_FRAMECHANGED | SWP_NOACTIVATE);
 
-            ShowWindow(m_Handle, SW_NORMAL);
-        }
+                    ShowWindow(m_Handle, SW_NORMAL);
+                }
+            });
     }
 
-    Size2I WindowApp::GetScreenCaps() const
+    std::future<Size2I> WindowApp::GetScreenCaps() const
     {
-        HDC    WindowDC = GetDC(m_Handle);
-        Size2I Size{
-            GetDeviceCaps(WindowDC, DESKTOPHORZRES),
-            GetDeviceCaps(WindowDC, DESKTOPVERTRES)
-        };
-        ReleaseDC(m_Handle, WindowDC);
-        return Size;
+        return DispatchTask(
+            [this]
+            {
+                HDC    WindowDC = GetDC(m_Handle);
+                Size2I Size{
+                    GetDeviceCaps(WindowDC, DESKTOPHORZRES),
+                    GetDeviceCaps(WindowDC, DESKTOPVERTRES)
+                };
+                ReleaseDC(m_Handle, WindowDC);
+                return Size;
+            });
     }
 
-    Vector2I WindowApp::GetPosition() const
+    std::future<Vector2I> WindowApp::GetPosition() const
     {
-        RECT Rect;
-        GetClientRect(m_Handle, &Rect);
-        return { Rect.left, Rect.top };
+        return DispatchTask(
+            [this]
+            {
+                RECT Rect;
+                GetClientRect(m_Handle, &Rect);
+                return Vector2I{ Rect.left, Rect.top };
+            });
     }
 
-    void WindowApp::SetPosition(
+    std::future<void> WindowApp::SetPosition(
         const Vector2I& Position)
     {
-        SetWindowPos(m_Handle, nullptr, Position.x, Position.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        return DispatchTask(
+            [this, Position]
+            {
+                SetWindowPos(m_Handle, nullptr, Position.x, Position.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+            });
     }
 
-    Size2I WindowApp::GetSize() const
+    std::future<Size2I> WindowApp::GetSize() const
     {
-        RECT Rect;
-        GetClientRect(m_Handle, &Rect);
-        return { Rect.right - Rect.left, Rect.bottom - Rect.top };
+        return DispatchTask([this]
+                            { return GetWindowSize(); });
     }
 
-    void WindowApp::SetSize(
+    std::future<void> WindowApp::SetSize(
         const Size2I& Size)
     {
-        RECT Rect = { 0, 0, Size.Width(), Size.Height() };
-        AdjustWindowRect(&Rect, static_cast<DWORD>(GetWindowLongPtr(m_Handle, GWL_STYLE)), false);
+        return DispatchTask(
+            [this, Size]
+            {
+                RECT Rect = { 0, 0, Size.Width(), Size.Height() };
+                AdjustWindowRect(&Rect, static_cast<DWORD>(GetWindowLongPtr(m_Handle, GWL_STYLE)), false);
 
-        int Width  = Rect.right - Rect.left;
-        int Height = Rect.bottom - Rect.top;
+                int Width  = Rect.right - Rect.left;
+                int Height = Rect.bottom - Rect.top;
 
-        SetWindowPos(m_Handle, nullptr, 0, 0, Width, Height, SWP_NOMOVE | SWP_NOZORDER);
+                SetWindowPos(m_Handle, nullptr, 0, 0, Width, Height, SWP_NOMOVE | SWP_NOZORDER);
+            });
     }
 
-    bool WindowApp::IsMinimized() const
+    std::future<bool> WindowApp::IsMinimized() const
     {
-        return m_WindowFlags.Test(EWindowFlags::Minimized);
+        return DispatchTask([this]
+                            { return m_WindowFlags.Test(EWindowFlags::Minimized); });
     }
 
-    bool WindowApp::IsMaximized() const
+    std::future<bool> WindowApp::IsMaximized() const
     {
-        return m_WindowFlags.Test(EWindowFlags::Maximized);
+        return DispatchTask([this]
+                            { return m_WindowFlags.Test(EWindowFlags::Maximized); });
     }
 
-    bool WindowApp::IsVisible() const
+    std::future<bool> WindowApp::IsVisible() const
     {
-        return !IsMinimized() && IsWindowVisible(m_Handle);
+        return DispatchTask([this]
+                            { return !m_WindowFlags.Test(EWindowFlags::Minimized) && IsWindowVisible(m_Handle); });
     }
 
-    void WindowApp::SetIcon(
+    std::future<void> WindowApp::SetIcon(
         const void*     IconData,
         const Vector2I& Size)
     {
-        if (m_Icon)
-            DestroyIcon(m_Icon);
-
-        if (!IconData)
+        // TODO: no, this is ugly, dont use shared pointers for this
+        std::shared_ptr<uint8_t[]> CopyData;
+        if (IconData)
         {
-            m_Icon = nullptr;
-            return;
+            CopyData = std::make_shared<uint8_t[]>(
+                sizeof(uint8_t) * Size.x * Size.y * 4);
+
+            std::copy_n(
+                std::bit_cast<const uint8_t*>(IconData),
+                Size.x * Size.y * 4,
+                CopyData.get());
         }
 
-        // Create the icon from the pixel array
-        m_Icon = CreateIcon(
-            GetModuleHandleW(nullptr),
-            Size.x,
-            Size.y,
-            1,
-            32,
-            nullptr,
-            std::bit_cast<const uint8_t*>(IconData));
+        return DispatchTask(
+            [this, Size](std::shared_ptr<uint8_t[]> CopyData)
+            {
+                if (m_Icon)
+                    DestroyIcon(m_Icon);
 
-        if (m_Icon)
-        {
-            SendMessageW(m_Handle, WM_SETICON, ICON_BIG, std::bit_cast<LPARAM>(m_Icon));
-            SendMessageW(m_Handle, WM_SETICON, ICON_SMALL, std::bit_cast<LPARAM>(m_Icon));
-        }
-        else
-        {
-            NEON_WARNING_TAG("Window", "Failed to set the window's icon");
-        }
+                if (!CopyData.get())
+                {
+                    m_Icon = nullptr;
+                    return;
+                }
+
+                // Create the icon from the pixel array
+                m_Icon = CreateIcon(
+                    GetModuleHandleW(nullptr),
+                    Size.x,
+                    Size.y,
+                    1,
+                    32,
+                    nullptr,
+                    CopyData.get());
+
+                if (m_Icon)
+                {
+                    SendMessageW(m_Handle, WM_SETICON, ICON_BIG, std::bit_cast<LPARAM>(m_Icon));
+                    SendMessageW(m_Handle, WM_SETICON, ICON_SMALL, std::bit_cast<LPARAM>(m_Icon));
+                }
+                else
+                {
+                    NEON_WARNING_TAG("Window", "Failed to set the window's icon");
+                }
+            },
+            std::move(CopyData));
     }
 
-    void WindowApp::SetVisible(
+    std::future<void> WindowApp::SetVisible(
         bool Show)
     {
-        ShowWindow(m_Handle, Show ? SW_SHOW : SW_HIDE);
+        return DispatchTask([this, Show]
+                            { ShowWindow(m_Handle, Show ? SW_SHOW : SW_HIDE); });
     }
 
-    void WindowApp::RequestFocus()
+    std::future<void> WindowApp::RequestFocus()
     {
-        if (HasFocus())
-        {
-            SetForegroundWindow(m_Handle);
-        }
-        else
-        {
-            FLASHWINFO Info{
-                .cbSize    = sizeof(Info),
-                .hwnd      = m_Handle,
-                .dwFlags   = FLASHW_TRAY,
-                .uCount    = 3,
-                .dwTimeout = 0
-            };
-            FlashWindowEx(&Info);
-        }
+        return DispatchTask(
+            [this]
+            {
+                if (GetForegroundWindow() == m_Handle)
+                {
+                    SetForegroundWindow(m_Handle);
+                }
+                else
+                {
+                    FLASHWINFO Info{
+                        .cbSize    = sizeof(Info),
+                        .hwnd      = m_Handle,
+                        .dwFlags   = FLASHW_TRAY,
+                        .uCount    = 3,
+                        .dwTimeout = 0
+                    };
+                    FlashWindowEx(&Info);
+                }
+            });
     }
 
-    bool WindowApp::HasFocus() const
+    std::future<bool> WindowApp::HasFocus() const
     {
-        return m_Handle == GetForegroundWindow();
+        return DispatchTask([this]
+                            { return m_Handle == GetForegroundWindow(); });
     }
 
     bool WindowApp::PeekEvent(
-        Event* Msg,
-        bool   Erase,
-        bool   Block)
+        Event& Message)
     {
+        std::scoped_lock Lock(m_PendingEventsMutex);
         if (m_PendingEvents.empty())
-        {
-            ProcessMessages();
-            if (Block)
-            {
-                while (m_PendingEvents.empty())
-                {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                    ProcessMessages();
-                }
-            }
-            else if (m_PendingEvents.empty())
-            {
-                return false;
-            }
-        }
-
-        *Msg = m_PendingEvents.back();
-        if (Erase)
-        {
-            m_PendingEvents.pop();
-        }
-
+            return false;
+        Message = std::move(m_PendingEvents.front());
+        m_PendingEvents.pop();
         return true;
     }
 

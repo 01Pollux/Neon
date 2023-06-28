@@ -230,18 +230,22 @@ namespace Neon::RG
         auto& Desc = Handle.GetDesc();
         if (Handle.IsWindowSizedTexture())
         {
-            auto WindowSize = m_Swapchain->GetWindow()->GetSize();
-            Desc.Width      = WindowSize.Width();
-            Desc.Height     = WindowSize.Height();
+            auto WindowSize = m_Swapchain->GetWindow()->GetSize().get();
+
+            Desc.Width  = WindowSize.Width();
+            Desc.Height = WindowSize.Height();
         }
 
-        auto Iter = std::ranges::find_if(
-            m_InactiveResources,
-            [&Desc](const ResourceHandle& OtherHandle)
+        auto p = Desc == Desc;
+
+        auto Iter = m_InactiveResources.begin();
+        for (; Iter != m_InactiveResources.end(); Iter++)
+        {
+            if (Iter->GetDesc() == Desc)
             {
-                return false;
-                // return Desc == OtherHandle.GetDesc();
-            });
+                break;
+            }
+        }
 
         if (Iter != m_InactiveResources.end())
         {

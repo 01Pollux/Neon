@@ -10,7 +10,7 @@ namespace Neon::Runtime
         Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config)
     {
-        m_Window = Engine->QueryInterface<EnginetWindow>();
+        m_Window = Engine->QueryInterface<EngineWindow>();
 
         auto& GraphicsConfig = Config.Renderer;
 
@@ -44,7 +44,7 @@ namespace Neon::Runtime
 
     void EngineRenderer::PreRender()
     {
-        m_WindowIsVisible = m_Window->GetWindow()->IsVisible();
+        m_WindowIsVisible = m_Window->GetWindow()->IsVisible().get();
         if (IsRendering())
         {
             m_Swapchain->PrepareFrame();

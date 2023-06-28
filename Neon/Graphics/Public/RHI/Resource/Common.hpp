@@ -374,7 +374,27 @@ namespace Neon::RHI
         RHI::EResourceFormat               Format;
         std::variant<Color4, DepthStencil> Value;
 
-        constexpr auto operator<=>(const ClearOperation&) const noexcept = default;
+        constexpr auto operator==(const ClearOperation& Other) const noexcept
+        {
+            if (Format != Other.Format || Value.index() != Other.Value.index())
+            {
+                return false;
+            }
+            if (auto Color = std::get_if<Color4>(&Value))
+            {
+                return *Color == std::get<Color4>(Other.Value);
+            }
+            else if (auto DS = std::get_if<DepthStencil>(&Value))
+            {
+                auto& OtherDS = std::get<DepthStencil>(Other.Value);
+                return DS->Depth == OtherDS.Depth &&
+                       DS->Stencil == OtherDS.Stencil;
+            }
+            else
+            {
+                return false;
+            }
+        }
     };
 
     using ClearOperationOpt = std::optional<ClearOperation>;

@@ -3,6 +3,7 @@
 #include <Window/Event.hpp>
 #include <Core/Bitmask.hpp>
 #include <Utils/Signal.hpp>
+#include <future>
 
 namespace Neon::Windowing
 {
@@ -51,99 +52,101 @@ namespace Neon::Windowing
         virtual void Close() = 0;
 
         /// <summary>
+        /// Check whether the window is running or not
+        /// </summary>
+        [[nodiscard]] virtual bool IsRunning() const = 0;
+
+        /// <summary>
         /// Get window title
         /// </summary>
-        [[nodiscard]] virtual String GetTitle() const = 0;
+        [[nodiscard]] virtual std::future<String> GetTitle() const = 0;
 
         /// <summary>
         /// Set window title
         /// </summary>
-        virtual void SetTitle(
+        virtual std::future<void> SetTitle(
             const String& Title) = 0;
 
         /// <summary>
         /// Get window style
         /// </summary>
-        [[nodiscard]] virtual MWindowStyle GetStyle() const = 0;
+        [[nodiscard]] virtual std::future<MWindowStyle> GetStyle() const = 0;
 
         /// <summary>
         /// Set window style
         /// </summary>
-        virtual void SetStyle(
+        virtual std::future<void> SetStyle(
             const MWindowStyle& Style) = 0;
 
         /// <summary>
         /// Get window screen caps
         /// </summary>
-        [[nodiscard]] virtual Size2I GetScreenCaps() const = 0;
+        [[nodiscard]] virtual std::future<Size2I> GetScreenCaps() const = 0;
 
         /// <summary>
         /// Get window position
         /// </summary>
-        [[nodiscard]] virtual Vector2I GetPosition() const = 0;
+        [[nodiscard]] virtual std::future<Vector2I> GetPosition() const = 0;
 
         /// <summary>
         /// Set window position
         /// </summary>
-        virtual void SetPosition(
+        virtual std::future<void> SetPosition(
             const Vector2I& Position) = 0;
 
         /// <summary>
         /// Get window size
         /// </summary>
-        [[nodiscard]] virtual Size2I GetSize() const = 0;
+        [[nodiscard]] virtual std::future<Size2I> GetSize() const = 0;
 
         /// <summary>
         /// Check whether the window is minimized or not
         /// </summary>
-        [[nodiscard]] virtual bool IsMinimized() const = 0;
+        [[nodiscard]] virtual std::future<bool> IsMinimized() const = 0;
 
         /// <summary>
         /// Check whether the window is maximized or not
         /// </summary>
-        [[nodiscard]] virtual bool IsMaximized() const = 0;
+        [[nodiscard]] virtual std::future<bool> IsMaximized() const = 0;
 
         /// <summary>
         /// Check whether the window is visible or not
         /// </summary>
-        [[nodiscard]] virtual bool IsVisible() const = 0;
+        [[nodiscard]] virtual std::future<bool> IsVisible() const = 0;
 
         /// <summary>
         /// Set window size
         /// </summary>
-        virtual void SetSize(
+        virtual std::future<void> SetSize(
             const Size2I& Size) = 0;
 
         /// <summary>
         /// Set window icon
         /// </summary>
-        virtual void SetIcon(
+        virtual std::future<void> SetIcon(
             const void*     IconData,
             const Vector2I& Size) = 0;
 
         /// <summary>
         /// Set window visbility
         /// </summary>
-        virtual void SetVisible(
+        virtual std::future<void> SetVisible(
             bool Show) = 0;
 
         /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        virtual void RequestFocus() = 0;
+        virtual std::future<void> RequestFocus() = 0;
 
         /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        [[nodiscard]] virtual bool HasFocus() const = 0;
+        [[nodiscard]] virtual std::future<bool> HasFocus() const = 0;
 
         /// <summary>
-        /// Peek event with option to erase it from the queue
-        /// return true if event was found, false otherwise
+        /// Peek the next event from the event queue and return true if there is atleast one
         /// </summary>
         [[nodiscard]] virtual bool PeekEvent(
-            Event* Msg,
-            bool   Erase = true,
-            bool   Block = false) = 0;
+            Event& Message) = 0;
     };
 } // namespace Neon::Windowing

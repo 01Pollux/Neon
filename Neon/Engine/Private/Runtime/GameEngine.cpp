@@ -34,7 +34,7 @@ namespace Neon::Runtime
 
         //
 
-        RegisterInterface<EnginetWindow>(this, Config);
+        RegisterInterface<EngineWindow>(this, Config);
         RegisterInterface<EngineRenderer>(this, Config);
 
         // RegisterInterface<EngineRuntime, LoadingScreenRuntime>(this);
@@ -43,7 +43,7 @@ namespace Neon::Runtime
 
     int DefaultGameEngine::Run()
     {
-        auto Window = QueryInterface<EnginetWindow>();
+        auto Window = QueryInterface<EngineWindow>();
         while (Window->Run())
         {
             if (auto Pipeline = QueryInterface<EnginePipeline>())

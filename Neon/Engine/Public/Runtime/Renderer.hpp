@@ -53,8 +53,8 @@ namespace Neon::Runtime
     private:
         RHI::IRenderDevice::Instance m_RenderDevice;
 
-        Ptr<EnginetWindow> m_Window;
-        bool               m_WindowIsVisible = false;
+        Ptr<EngineWindow> m_Window;
+        bool              m_WindowIsVisible = false;
 
         UPtr<RHI::ISwapchain> m_Swapchain;
         UPtr<RG::RenderGraph> m_RenderGraph;
