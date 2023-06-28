@@ -45,10 +45,17 @@ namespace Neon::Runtime
         /// </summary>
         void PostRender();
 
+        /// <summary>
+        /// Check if the renderer is rendering ie the window is visible.
+        /// </summary>
+        [[nodiscard]] bool IsRendering() const noexcept;
+
     private:
         RHI::IRenderDevice::Instance m_RenderDevice;
 
-        Ptr<EnginetWindow>    m_Window;
+        Ptr<EnginetWindow> m_Window;
+        bool               m_WindowIsVisible = false;
+
         UPtr<RHI::ISwapchain> m_Swapchain;
         UPtr<RG::RenderGraph> m_RenderGraph;
 

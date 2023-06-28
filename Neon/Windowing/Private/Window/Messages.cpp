@@ -87,6 +87,29 @@ namespace Neon::Windowing
                 QueueEvent(Events::SizeChanged{
                     .NewSize = Size });
             }
+
+            switch (wParam)
+            {
+            case SIZE_MINIMIZED:
+            {
+                m_WindowFlags.Set(EWindowFlags::Minimized);
+                m_WindowFlags.Set(EWindowFlags::Maximized, false);
+                break;
+            }
+            case SIZE_MAXIMIZED:
+            {
+                m_WindowFlags.Set(EWindowFlags::Maximized);
+                m_WindowFlags.Set(EWindowFlags::Minimized, false);
+                break;
+            }
+            case SIZE_RESTORED:
+            {
+                m_WindowFlags.Set(EWindowFlags::Minimized, false);
+                m_WindowFlags.Set(EWindowFlags::Maximized, false);
+                break;
+            }
+            }
+
             break;
         }
         case WM_ENTERSIZEMOVE:

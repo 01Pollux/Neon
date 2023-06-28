@@ -9,6 +9,8 @@ namespace Neon::Windowing
     enum class EWindowFlags : uint8_t
     {
         Resizing,
+        Minimized,
+        Maximized,
 
         _Last_Enum
     };
@@ -56,8 +58,14 @@ namespace Neon::Windowing
         void SetSize(
             const Size2I& Size) override;
 
+        bool IsMinimized() const;
+
+        bool IsMaximized() const;
+
+        bool IsVisible() const;
+
         void SetIcon(
-            const void*      IconData,
+            const void*     IconData,
             const Vector2I& Size) override;
 
         void SetVisible(

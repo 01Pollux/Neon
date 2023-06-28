@@ -94,6 +94,21 @@ namespace Neon::Windowing
         [[nodiscard]] virtual Size2I GetSize() const = 0;
 
         /// <summary>
+        /// Check whether the window is minimized or not
+        /// </summary>
+        [[nodiscard]] virtual bool IsMinimized() const = 0;
+
+        /// <summary>
+        /// Check whether the window is maximized or not
+        /// </summary>
+        [[nodiscard]] virtual bool IsMaximized() const = 0;
+
+        /// <summary>
+        /// Check whether the window is visible or not
+        /// </summary>
+        [[nodiscard]] virtual bool IsVisible() const = 0;
+
+        /// <summary>
         /// Set window size
         /// </summary>
         virtual void SetSize(

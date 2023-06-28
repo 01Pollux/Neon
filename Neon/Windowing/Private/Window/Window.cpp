@@ -252,6 +252,21 @@ namespace Neon::Windowing
         SetWindowPos(m_Handle, nullptr, 0, 0, Width, Height, SWP_NOMOVE | SWP_NOZORDER);
     }
 
+    bool WindowApp::IsMinimized() const
+    {
+        return m_WindowFlags.Test(EWindowFlags::Minimized);
+    }
+
+    bool WindowApp::IsMaximized() const
+    {
+        return m_WindowFlags.Test(EWindowFlags::Maximized);
+    }
+
+    bool WindowApp::IsVisible() const
+    {
+        return !IsMinimized() && IsWindowVisible(m_Handle);
+    }
+
     void WindowApp::SetIcon(
         const void*     IconData,
         const Vector2I& Size)
@@ -392,5 +407,4 @@ namespace Neon::Windowing
         SetWindowPos(m_Handle, HWND_TOP, 0, 0, m_WindowSize.Width(), m_WindowSize.Height(), SWP_FRAMECHANGED);
         ShowWindow(m_Handle, SW_SHOW);
     }
-
 } // namespace Neon::Windowing
