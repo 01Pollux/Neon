@@ -179,7 +179,7 @@ namespace Neon::RG
                         Renderer::SpriteBatch::QuadCommand{
                             .Position = Transform.World.GetPosition(),
                             .Size     = Sprite.Size,
-                            .Color    = Colors::Red }
+                            .Color    = Sprite.ModulationColor }
 
                     );
                 });

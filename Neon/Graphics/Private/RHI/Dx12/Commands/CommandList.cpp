@@ -250,13 +250,6 @@ namespace Neon::RHI
         // Detect any heap change
         if (OldHeaps != NewHeaps)
         {
-            for (uint32_t i = 0; i < HeapsCount; ++i)
-            {
-                if (NewHeaps[i])
-                {
-                    printf("%p\n", NewHeaps[i]);
-                }
-            }
             m_CommandList->SetDescriptorHeaps(HeapsCount, NewHeaps.data());
         }
     }

@@ -113,7 +113,8 @@ namespace Neon::Renderer
 
         uint8_t* m_VertexBufferPtr = nullptr;
 
-        uint32_t m_DrawCount    = 0;
-        uint32_t m_TextureCount = 0;
+        uint32_t m_VerticesCount = 0;
+        uint32_t m_DrawCount     = 0;
+        uint32_t m_TextureCount  = 0;
     };
 } // namespace Neon::Renderer

@@ -78,9 +78,28 @@ namespace Neon::Runtime
 
         //
 
-        auto Sprite = m_Scene->entity("Sprite");
-        Sprite.set<Scene::Component::Transform>({});
-        Sprite.set<Scene::Component::Sprite>({});
+        bool Black = false;
+        for (float y = -1.f; y < 1.f; y += .2f)
+        {
+            for (float x = -1.f; x < 1.f; x += .2f)
+            {
+                constexpr float Size = 0.2f;
+
+                // create grid like using Sprite component
+                auto Sprite = m_Scene->entity();
+
+                Scene::Component::Transform Transform;
+                Transform.Local.SetPosition(Vector3(x, y, 0.f));
+                Transform.World.SetPosition(Vector3(x, y, 0.f));
+                Sprite.set(Transform);
+
+                Scene::Component::Sprite SpriteComponent;
+                SpriteComponent.ModulationColor = Black ? Colors::Black : Colors::White;
+                SpriteComponent.Size            = Size2(Size, Size);
+                Sprite.set(SpriteComponent);
+                Black = !Black;
+            }
+        }
 
         // auto Trs = Sprite.get_mut<Scene::Component::Transform>();
         // Trs->Local.SetPosition(Vector3::Forward * 5.f);

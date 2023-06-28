@@ -44,17 +44,19 @@ namespace Neon::Renderer
         /// </summary>
         void CreateIndexInstance(
             IndexType* IndexBuffer,
+            IndexType& Index,
             IndexType& Offset)
         {
-            IndexBuffer[Offset + 0] = Offset;
-            IndexBuffer[Offset + 1] = Offset + 1;
-            IndexBuffer[Offset + 2] = Offset + 2;
+            IndexBuffer[Index + 0] = Offset;
+            IndexBuffer[Index + 1] = Offset + 1;
+            IndexBuffer[Index + 2] = Offset + 2;
 
-            IndexBuffer[Offset + 3] = Offset;
-            IndexBuffer[Offset + 4] = Offset + 2;
-            IndexBuffer[Offset + 5] = Offset + 3;
+            IndexBuffer[Index + 3] = Offset;
+            IndexBuffer[Index + 4] = Offset + 2;
+            IndexBuffer[Index + 5] = Offset + 3;
 
-            Offset += IndicesCount;
+            Index += IndicesCount;
+            Offset += VerticesCount;
         }
     } // namespace SpriteBatchConstants
 
@@ -85,8 +87,9 @@ namespace Neon::Renderer
 
         m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
-        m_DrawCount    = 0;
-        m_TextureCount = 0;
+        m_DrawCount     = 0;
+        m_VerticesCount = 0;
+        m_TextureCount  = 0;
     }
 
     void SpriteBatch::Draw(
@@ -124,7 +127,7 @@ namespace Neon::Renderer
 
         for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i)
         {
-            auto Buffer        = m_BufferLayout.Access(m_VertexBufferPtr, m_DrawCount * SpriteBatchConstants::VerticesCount + i);
+            auto Buffer        = m_BufferLayout.Access(m_VertexBufferPtr, m_VerticesCount++);
             Buffer["Position"] = QuadPositions[i];
             Buffer["TexCoord"] = TexCoords[i];
             Buffer["Color"]    = Quad.Color;
@@ -217,10 +220,10 @@ namespace Neon::Renderer
 
         auto IndexBuffer = m_IndexBuffer->Map<SpriteBatchConstants::IndexType>();
 
-        SpriteBatchConstants::IndexType Offset = 0;
-        while (Offset < SpriteBatchConstants::MaxIndices)
+        SpriteBatchConstants::IndexType Offset = 0, Index = 0;
+        while (Index < SpriteBatchConstants::MaxIndices)
         {
-            SpriteBatchConstants::CreateIndexInstance(IndexBuffer, Offset);
+            SpriteBatchConstants::CreateIndexInstance(IndexBuffer, Index, Offset);
         }
 
         m_IndexBuffer->Unmap();
