@@ -238,6 +238,10 @@ namespace Neon::RHI
             else
                 ShaderReflection->GetInputParameterDesc(i, &SigParam);
 
+            // Ignore system values semantics (SV_*)
+            if (SigParam.SemanticName[0] == 'S' && SigParam.SemanticName[1] == 'V' && SigParam.SemanticName[2] == '_')
+                continue;
+
             EResourceFormat Format;
 
             auto SelectFrom = [](D3D_REGISTER_COMPONENT_TYPE Type, auto UIntType, auto IntType, auto FloatType)

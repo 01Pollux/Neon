@@ -83,7 +83,7 @@ namespace Neon::RHI
             MaxUInt32
         };
 
-        enum class Toplogy : uint8_t
+        enum class PrimitiveTopology : uint8_t
         {
             Undefined,
             Point,
@@ -100,18 +100,19 @@ namespace Neon::RHI
         IShader* HullShader     = nullptr;
         IShader* DomainShader   = nullptr;
 
-        BlendState BlendState;
+        BlendState Blend;
         uint32_t   SampleMask = 0xFFFFFFFF;
 
-        RasterizerState RasterizerState;
+        RasterizerState Rasterizer;
 
-        DepthStencilState DepthStencilState;
+        DepthStencilState DepthStencil;
 
-        ShaderInputLayout InputLayout;
+        ShaderInputLayout Input;
+        bool              UseVertexInput = false;
 
         StripCutType StripCut = StripCutType::None;
 
-        Toplogy PrimitiveTopology = Toplogy::Undefined;
+        PrimitiveTopology Topology = PrimitiveTopology::Undefined;
 
         std::vector<EResourceFormat> RTFormats;
         EResourceFormat              DSFormat = EResourceFormat::Unknown;
@@ -119,6 +120,7 @@ namespace Neon::RHI
         uint32_t SampleCount   = 1;
         uint32_t SampleQuality = 0;
     };
+    using PipelineStateBuilderG = PipelineStateBuilder<false>;
 
     template<>
     struct PipelineStateBuilder<true>
@@ -126,15 +128,16 @@ namespace Neon::RHI
         IRootSignature* RootSignature = nullptr;
         IShader*        ComputeShader = nullptr;
     };
+    using PipelineStateBuilderC = PipelineStateBuilder<true>;
 
     class IPipelineState
     {
     public:
         [[nodiscard]] static Ptr<IPipelineState> Create(
-            const PipelineStateBuilder<false>& Builder);
+            const PipelineStateBuilderG& Builder);
 
         [[nodiscard]] static Ptr<IPipelineState> Create(
-            const PipelineStateBuilder<true>& Builder);
+            const PipelineStateBuilderC& Builder);
 
         virtual ~IPipelineState() = default;
     };

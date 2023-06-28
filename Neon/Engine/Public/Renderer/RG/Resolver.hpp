@@ -116,15 +116,15 @@ namespace Neon::RG
         /// Load a pipeline state.
         /// </summary>
         void Load(
-            const ResourceId&               Id,
-            RHI::PipelineStateBuilder<true> Builder);
+            const ResourceId&          Id,
+            RHI::PipelineStateBuilderC Builder);
 
         /// <summary>
         /// Load a pipeline state.
         /// </summary>
         void Load(
-            const ResourceId&                Id,
-            RHI::PipelineStateBuilder<false> Builder);
+            const ResourceId&          Id,
+            RHI::PipelineStateBuilderG Builder);
 
         /// <summary>
         /// Load a pipeline state.
@@ -151,8 +151,8 @@ namespace Neon::RG
         std::map<
             ResourceId,
             std::variant<
-                RHI::PipelineStateBuilder<true>,
-                RHI::PipelineStateBuilder<false>,
+                RHI::PipelineStateBuilderC,
+                RHI::PipelineStateBuilderG,
                 Ptr<RHI::IPipelineState>>>
             m_PipelinesToLoad;
     };

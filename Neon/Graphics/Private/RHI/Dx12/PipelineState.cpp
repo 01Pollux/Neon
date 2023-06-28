@@ -195,13 +195,13 @@ namespace Neon::RHI
     //
 
     Ptr<IPipelineState> IPipelineState::Create(
-        const PipelineStateBuilder<false>& Builder)
+        const PipelineStateBuilderG& Builder)
     {
         return Dx12PipelineStateCache::Load(Builder);
     }
 
     Ptr<IPipelineState> IPipelineState::Create(
-        const PipelineStateBuilder<true>& Builder)
+        const PipelineStateBuilderC& Builder)
     {
         return Dx12PipelineStateCache::Load(Builder);
     }
@@ -240,7 +240,7 @@ namespace Neon::RHI
     }
 
     Ptr<IPipelineState> Dx12PipelineStateCache::Load(
-        const PipelineStateBuilder<false>& Builder)
+        const PipelineStateBuilderG& Builder)
     {
         auto Result = Dx12PipelineStateCache::Build(Builder);
 
@@ -256,7 +256,7 @@ namespace Neon::RHI
     }
 
     Ptr<IPipelineState> Dx12PipelineStateCache::Load(
-        const PipelineStateBuilder<true>& Builder)
+        const PipelineStateBuilderC& Builder)
     {
         auto Result = Dx12PipelineStateCache::Build(Builder);
 
@@ -274,7 +274,7 @@ namespace Neon::RHI
     //
 
     auto Dx12PipelineStateCache::Build(
-        const PipelineStateBuilder<false>& Builder) -> GraphicsBuildResult
+        const PipelineStateBuilderG& Builder) -> GraphicsBuildResult
     {
         GraphicsBuildResult Result;
 
@@ -320,12 +320,12 @@ namespace Neon::RHI
             auto& BlendState = Result.Desc.BlendState;
             BlendState       = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 
-            BlendState.AlphaToCoverageEnable  = Builder.BlendState.AlphaToCoverageEnable;
-            BlendState.IndependentBlendEnable = Builder.BlendState.AlphaToCoverageEnable;
+            BlendState.AlphaToCoverageEnable  = Builder.Blend.AlphaToCoverageEnable;
+            BlendState.IndependentBlendEnable = Builder.Blend.AlphaToCoverageEnable;
 
-            for (size_t i = 0; i < std::size(Builder.BlendState.RenderTargets); ++i)
+            for (size_t i = 0; i < std::size(Builder.Blend.RenderTargets); ++i)
             {
-                auto& Src = Builder.BlendState.RenderTargets[i];
+                auto& Src = Builder.Blend.RenderTargets[i];
                 auto& Dst = BlendState.RenderTarget[i];
 
                 Dst.BlendEnable   = Src.BlendEnable;
@@ -357,17 +357,17 @@ namespace Neon::RHI
         {
             auto& RasterizerState = Result.Desc.RasterizerState;
             RasterizerState       = CD3DX12_RASTERIZER_DESC(
-                CastFillMode(Builder.RasterizerState.FillMode),
-                CastCullMode(Builder.RasterizerState.CullMode),
-                Builder.RasterizerState.FrontCounterClockwise,
-                Builder.RasterizerState.DepthBias,
-                Builder.RasterizerState.DepthBiasClamp,
-                Builder.RasterizerState.SlopeScaledDepthBias,
-                Builder.RasterizerState.DepthClipEnable,
-                Builder.RasterizerState.MultisampleEnable,
-                Builder.RasterizerState.AntialiasedLineEnable,
-                Builder.RasterizerState.ForcedSampleCount,
-                Builder.RasterizerState.ConservativeRaster ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+                CastFillMode(Builder.Rasterizer.FillMode),
+                CastCullMode(Builder.Rasterizer.CullMode),
+                Builder.Rasterizer.FrontCounterClockwise,
+                Builder.Rasterizer.DepthBias,
+                Builder.Rasterizer.DepthBiasClamp,
+                Builder.Rasterizer.SlopeScaledDepthBias,
+                Builder.Rasterizer.DepthClipEnable,
+                Builder.Rasterizer.MultisampleEnable,
+                Builder.Rasterizer.AntialiasedLineEnable,
+                Builder.Rasterizer.ForcedSampleCount,
+                Builder.Rasterizer.ConservativeRaster ? D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON : D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
 
             );
 
@@ -378,28 +378,37 @@ namespace Neon::RHI
 
             auto& DepthStencilState = Result.Desc.DepthStencilState;
             DepthStencilState       = CD3DX12_DEPTH_STENCIL_DESC(
-                Builder.DepthStencilState.DepthEnable,
-                Builder.DepthStencilState.DepthWriteEnable ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO,
-                CastComparisonFunc(Builder.DepthStencilState.DepthCmpFunc),
-                Builder.DepthStencilState.StencilEnable,
-                Builder.DepthStencilState.StencilReadMask,
-                Builder.DepthStencilState.StencilWriteMask,
-                CastStencilOp(Builder.DepthStencilState.StencilFrontFace.FailOp),
-                CastStencilOp(Builder.DepthStencilState.StencilFrontFace.DepthFailOp),
-                CastStencilOp(Builder.DepthStencilState.StencilFrontFace.PassOp),
-                CastComparisonFunc(Builder.DepthStencilState.StencilFrontFace.CmpOp),
-                CastStencilOp(Builder.DepthStencilState.StencilBackFace.FailOp),
-                CastStencilOp(Builder.DepthStencilState.StencilBackFace.DepthFailOp),
-                CastStencilOp(Builder.DepthStencilState.StencilBackFace.PassOp),
-                CastComparisonFunc(Builder.DepthStencilState.StencilBackFace.CmpOp));
+                Builder.DepthStencil.DepthEnable,
+                Builder.DepthStencil.DepthWriteEnable ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO,
+                CastComparisonFunc(Builder.DepthStencil.DepthCmpFunc),
+                Builder.DepthStencil.StencilEnable,
+                Builder.DepthStencil.StencilReadMask,
+                Builder.DepthStencil.StencilWriteMask,
+                CastStencilOp(Builder.DepthStencil.StencilFrontFace.FailOp),
+                CastStencilOp(Builder.DepthStencil.StencilFrontFace.DepthFailOp),
+                CastStencilOp(Builder.DepthStencil.StencilFrontFace.PassOp),
+                CastComparisonFunc(Builder.DepthStencil.StencilFrontFace.CmpOp),
+                CastStencilOp(Builder.DepthStencil.StencilBackFace.FailOp),
+                CastStencilOp(Builder.DepthStencil.StencilBackFace.DepthFailOp),
+                CastStencilOp(Builder.DepthStencil.StencilBackFace.PassOp),
+                CastComparisonFunc(Builder.DepthStencil.StencilBackFace.CmpOp));
 
             Hash.Append(std::bit_cast<const uint8_t*>(&DepthStencilState), sizeof(DepthStencilState));
         }
 
         // Input layout
         {
+            auto Input = &Builder.Input;
+
+            ShaderInputLayout VtxInput;
+            if (Builder.UseVertexInput)
+            {
+                Builder.VertexShader->CreateInputLayout(VtxInput);
+                Input = &VtxInput;
+            }
+
             auto& InputLayout = Result.Desc.InputLayout;
-            for (auto& [Name, Element] : Builder.InputLayout)
+            for (auto& [Name, Element] : *Input)
             {
                 auto SemanticView = Name |
                                     std::views::split('#') |
@@ -432,13 +441,13 @@ namespace Neon::RHI
         {
             switch (Builder.StripCut)
             {
-            case PipelineStateBuilder<false>::StripCutType::None:
+            case PipelineStateBuilderG::StripCutType::None:
                 Result.Desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
                 break;
-            case PipelineStateBuilder<false>::StripCutType::MaxUInt16:
+            case PipelineStateBuilderG::StripCutType::MaxUInt16:
                 Result.Desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFF;
                 break;
-            case PipelineStateBuilder<false>::StripCutType::MaxUInt32:
+            case PipelineStateBuilderG::StripCutType::MaxUInt32:
                 Result.Desc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_0xFFFFFFFF;
                 break;
             }
@@ -448,21 +457,21 @@ namespace Neon::RHI
 
         // Primitive topology
         {
-            switch (Builder.PrimitiveTopology)
+            switch (Builder.Topology)
             {
-            case PipelineStateBuilder<false>::Toplogy::Undefined:
+            case PipelineStateBuilderG::PrimitiveTopology::Undefined:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
                 break;
-            case PipelineStateBuilder<false>::Toplogy::Point:
+            case PipelineStateBuilderG::PrimitiveTopology::Point:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
                 break;
-            case PipelineStateBuilder<false>::Toplogy::Line:
+            case PipelineStateBuilderG::PrimitiveTopology::Line:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
                 break;
-            case PipelineStateBuilder<false>::Toplogy::Triangle:
+            case PipelineStateBuilderG::PrimitiveTopology::Triangle:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
                 break;
-            case PipelineStateBuilder<false>::Toplogy::Patch:
+            case PipelineStateBuilderG::PrimitiveTopology::Patch:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
                 break;
             }
@@ -499,7 +508,7 @@ namespace Neon::RHI
     }
 
     auto Dx12PipelineStateCache::Build(
-        const PipelineStateBuilder<true>& Builder) -> ComputeBuildResult
+        const PipelineStateBuilderC& Builder) -> ComputeBuildResult
     {
         ComputeBuildResult Result;
 

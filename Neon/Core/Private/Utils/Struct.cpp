@@ -436,7 +436,7 @@ namespace Neon::Structured
 
     size_t CookedLayout::GetSize() const noexcept
     {
-        return ElementView(&m_CookedLayout).GetSize();
+        return m_Size;
     }
 
     BufferView CookedLayout::Access(

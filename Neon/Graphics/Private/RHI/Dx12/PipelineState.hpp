@@ -35,13 +35,13 @@ namespace Neon::RHI
         /// Get or save pipeline state from cache
         /// </summary>
         [[nodiscard]] static Ptr<IPipelineState> Load(
-            const PipelineStateBuilder<false>& Builder);
+            const PipelineStateBuilderG& Builder);
 
         /// <summary>
         /// Get or save pipeline state from cache
         /// </summary>
         [[nodiscard]] static Ptr<IPipelineState> Load(
-            const PipelineStateBuilder<true>& Builder);
+            const PipelineStateBuilderC& Builder);
 
     private:
         struct GraphicsBuildResult
@@ -70,12 +70,12 @@ namespace Neon::RHI
         /// Build the pipeline state
         /// </summary>
         [[nodiscard]] static GraphicsBuildResult Build(
-            const PipelineStateBuilder<false>& Builder);
+            const PipelineStateBuilderG& Builder);
 
         /// <summary
         /// Build the pipeline state
         /// </summary>
         [[nodiscard]] static ComputeBuildResult Build(
-            const PipelineStateBuilder<true>& Builder);
+            const PipelineStateBuilderC& Builder);
     };
 } // namespace Neon::RHI

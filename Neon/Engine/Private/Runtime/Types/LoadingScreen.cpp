@@ -133,26 +133,25 @@ namespace Neon::Runtime
                     auto& VS      = Resolver.GetShader(RG::ResourceId(STR("Test.VS")));
                     auto& PS      = Resolver.GetShader(RG::ResourceId(STR("Test.PS")));
 
-                    RHI::PipelineStateBuilder<false> Builder{
-                        .RootSignature     = RootSig.get(),
-                        .VertexShader      = VS.get(),
-                        .PixelShader       = PS.get(),
-                        .RasterizerState   = { .CullMode = RHI::CullMode::None },
-                        .DepthStencilState = { .DepthEnable = false },
-                        .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
-                        .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+                    RHI::PipelineStateBuilderG Builder{
+                        .RootSignature  = RootSig.get(),
+                        .VertexShader   = VS.get(),
+                        .PixelShader    = PS.get(),
+                        .Rasterizer     = { .CullMode = RHI::CullMode::None },
+                        .DepthStencil   = { .DepthEnable = false },
+                        .UseVertexInput = true,
+                        .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
+                        .RTFormats      = { RHI::EResourceFormat::R8G8B8A8_UNorm }
                     };
 
                     // configure transparency
-                    Builder.BlendState.RenderTargets[0].BlendEnable = true;
-                    Builder.BlendState.RenderTargets[0].Src         = RHI::BlendTarget::SrcAlpha;
-                    Builder.BlendState.RenderTargets[0].Dest        = RHI::BlendTarget::InvSrcAlpha;
-                    Builder.BlendState.RenderTargets[0].OpSrc       = RHI::BlendOp::Add;
-                    Builder.BlendState.RenderTargets[0].SrcAlpha    = RHI::BlendTarget::One;
-                    Builder.BlendState.RenderTargets[0].DestAlpha   = RHI::BlendTarget::Zero;
-                    Builder.BlendState.RenderTargets[0].OpAlpha     = RHI::BlendOp::Add;
-
-                    VS->CreateInputLayout(Builder.InputLayout);
+                    Builder.Blend.RenderTargets[0].BlendEnable = true;
+                    Builder.Blend.RenderTargets[0].Src         = RHI::BlendTarget::SrcAlpha;
+                    Builder.Blend.RenderTargets[0].Dest        = RHI::BlendTarget::InvSrcAlpha;
+                    Builder.Blend.RenderTargets[0].OpSrc       = RHI::BlendOp::Add;
+                    Builder.Blend.RenderTargets[0].SrcAlpha    = RHI::BlendTarget::One;
+                    Builder.Blend.RenderTargets[0].DestAlpha   = RHI::BlendTarget::Zero;
+                    Builder.Blend.RenderTargets[0].OpAlpha     = RHI::BlendOp::Add;
 
                     Resolver.Load(
                         RG::ResourceId(STR("Test.Pipeline")),

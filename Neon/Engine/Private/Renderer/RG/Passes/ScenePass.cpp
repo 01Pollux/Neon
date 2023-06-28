@@ -103,17 +103,17 @@ namespace Neon::RG
         auto& VS = Resolver.GetShader(RG::ResourceId(STR("Sprite.VS")));
         auto& PS = Resolver.GetShader(RG::ResourceId(STR("Sprite.PS")));
 
-        RHI::PipelineStateBuilder<false> Builder{
-            .RootSignature   = RootSig.get(),
-            .VertexShader    = VS.get(),
-            .PixelShader     = PS.get(),
-            .RasterizerState = { .CullMode = RHI::CullMode::None },
-            .DepthStencilState{ .DepthEnable = false },
-            .PrimitiveTopology = RHI::PipelineStateBuilder<false>::Toplogy::Triangle,
-            .RTFormats         = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+        RHI::PipelineStateBuilderG Builder{
+            .RootSignature = RootSig.get(),
+            .VertexShader  = VS.get(),
+            .PixelShader   = PS.get(),
+            .Rasterizer    = { .CullMode = RHI::CullMode::None },
+            .DepthStencil  = { .DepthEnable = false },
+            .Topology      = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
+            .RTFormats     = { RHI::EResourceFormat::R8G8B8A8_UNorm },
         };
 
-        VS->CreateInputLayout(Builder.InputLayout);
+        VS->CreateInputLayout(Builder.Input);
 
         Resolver.Load(
             RG::ResourceId(STR("Sprite.Pipeline")),
