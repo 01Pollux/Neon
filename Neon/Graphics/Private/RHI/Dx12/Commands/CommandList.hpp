@@ -37,7 +37,7 @@ namespace Neon::RHI
 
         void CopyTextureRegion(
             const TextureCopyLocation& Dst,
-            const Vector3I&           DstPosition,
+            const Vector3I&            DstPosition,
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) override;
 
@@ -98,6 +98,7 @@ namespace Neon::RHI
         Views::Generic
             m_ResourceView,
             m_SamplerView;
+        bool m_DescriptorDirty = true;
 
         UPtr<Dx12DescriptorHeapBuddyAllocator>
             m_ResourceViewAllocator,

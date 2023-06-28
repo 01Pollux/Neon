@@ -183,19 +183,13 @@ namespace Neon::RHI
 
     const Views::Generic& Dx12CommonCommandList::GetResourceView()
     {
-        if (!m_ResourceView)
-        {
-            ReserveDescriptorHeaps();
-        }
+        ReserveDescriptorHeaps();
         return m_ResourceView;
     }
 
     const Views::Generic& Dx12CommonCommandList::GetSamplerView()
     {
-        if (!m_SamplerView)
-        {
-            ReserveDescriptorHeaps();
-        }
+        ReserveDescriptorHeaps();
         return m_SamplerView;
     }
 
@@ -222,6 +216,12 @@ namespace Neon::RHI
 
     void Dx12CommonCommandList::ReserveDescriptorHeaps()
     {
+        if (!m_DescriptorDirty)
+        {
+            return;
+        }
+
+        m_DescriptorDirty   = false;
         uint32_t HeapsCount = 0;
 
         std::array<ID3D12DescriptorHeap*, 2> OldHeaps{}, NewHeaps{};
@@ -250,6 +250,13 @@ namespace Neon::RHI
         // Detect any heap change
         if (OldHeaps != NewHeaps)
         {
+            for (uint32_t i = 0; i < HeapsCount; ++i)
+            {
+                if (NewHeaps[i])
+                {
+                    printf("%p\n", NewHeaps[i]);
+                }
+            }
             m_CommandList->SetDescriptorHeaps(HeapsCount, NewHeaps.data());
         }
     }
@@ -259,13 +266,12 @@ namespace Neon::RHI
         if (m_ResourceView)
         {
             m_Swapchain->SafeRelease(m_ResourceViewAllocator.get(), m_ResourceView.GetHandle());
-            m_ResourceView = {};
         }
         if (m_SamplerView)
         {
             m_Swapchain->SafeRelease(m_SamplerViewAllocator.get(), m_SamplerView.GetHandle());
-            m_SamplerView = {};
         }
+        m_DescriptorDirty = true;
     }
 
     //

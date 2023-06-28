@@ -81,9 +81,9 @@ namespace Neon::Renderer
     {
         m_CommandList = CommandList;
         m_CommandList->SetRootSignature(m_RootSignature);
+        m_CommandList->SetPipelineState(m_PipelineState);
 
-        m_ResourceView = m_CommandList->GetResourceView();
-        m_SamplerView  = m_CommandList->GetSamplerView();
+        m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
         m_DrawCount    = 0;
         m_TextureCount = 0;
@@ -107,11 +107,26 @@ namespace Neon::Renderer
                 m_TextureCount++);
         }
 
+        Vector2 TexCoords[]{
+            Quad.TexCoord.TopLeft(),
+            Quad.TexCoord.TopRight(),
+            Quad.TexCoord.BottomRight(),
+            Quad.TexCoord.BottomLeft()
+        };
+
+        Vector2 HalfSize = Quad.Size * 0.5f;
+        Vector3 QuadPositions[]{
+            Quad.Position + Vector3(-HalfSize.x, HalfSize.y, 0.f),
+            Quad.Position + Vector3(HalfSize.x, HalfSize.y, 0.f),
+            Quad.Position + Vector3(HalfSize.x, -HalfSize.y, 0.f),
+            Quad.Position + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
+        };
+
         for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i)
         {
             auto Buffer        = m_BufferLayout.Access(m_VertexBufferPtr, m_DrawCount * SpriteBatchConstants::VerticesCount + i);
-            Buffer["Position"] = Quad.Position;
-            Buffer["TexCoord"] = Quad.TexCoord;
+            Buffer["Position"] = QuadPositions[i];
+            Buffer["TexCoord"] = TexCoords[i];
             Buffer["Color"]    = Quad.Color;
 
             if (Quad.Texture)
@@ -128,17 +143,23 @@ namespace Neon::Renderer
 
     void SpriteBatch::End()
     {
-        auto& ResourceView = m_CommandList->GetResourceView();
+        if (m_TextureCount > 0)
+        {
+            m_ResourceView = m_CommandList->GetResourceView();
+            m_SamplerView  = m_CommandList->GetSamplerView();
+
+            m_CommandList->SetDescriptorTable(0, m_ResourceView.GetGpuHandle());
+        }
 
         RHI::Views::Vertex VertexView;
         VertexView.Append(
             m_VertexBuffer->GetHandle(),
             m_BufferLayout.GetSize(),
-            m_BufferLayout.GetSize() * SpriteBatchConstants::VerticesCount * m_DrawCount);
+            m_VertexBuffer->GetSize());
 
         RHI::Views::Index IndexView(
             m_IndexBuffer->GetHandle(),
-            m_DrawCount * SpriteBatchConstants::IndicesCount);
+            m_IndexBuffer->GetSize());
 
         m_CommandList->SetVertexBuffer(0, VertexView);
         m_CommandList->SetIndexBuffer(IndexView);

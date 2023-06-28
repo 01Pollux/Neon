@@ -14,6 +14,6 @@ namespace Neon::Scene::Component
 
         Color4 ModulationColor = Colors::White;
         RectI  TextureRect     = RectI(Vec::Zero<Vector2I>, Vec::Zero<Vector2I>);
-        Size2  Scale           = Size2(1.0f, 1.0f);
+        Size2  Size            = Size2(1.0f, 1.0f);
     };
 } // namespace Neon::Scene::Component

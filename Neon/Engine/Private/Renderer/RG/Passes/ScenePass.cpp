@@ -83,7 +83,8 @@ namespace Neon::RG
             RHI::RootSignatureBuilder()
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
-                        .AddSrvRange(0, 0, 1))
+                        .AddSrvRange(0, 0, 10'000,
+                                     RHI::MRootDescriptorTableFlags::FromEnum(RHI::ERootDescriptorTableFlags::Descriptor_Volatile)))
                 .AddSampler(Sampler)
                 .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
     }
@@ -170,8 +171,19 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
+            m_SpriteBatch->Begin(RenderCommandList);
+            m_SpriteQuery.each(
+                [this](const Component::Transform& Transform, const Component::Sprite& Sprite)
+                {
+                    m_SpriteBatch->Draw(
+                        Renderer::SpriteBatch::QuadCommand{
+                            .Position = Transform.World.GetPosition(),
+                            .Size     = Sprite.Size,
+                            .Color    = Colors::Red }
 
-            // m_SpriteQuery.each(DrawToBuffer);
+                    );
+                });
+            m_SpriteBatch->End();
         }
     }
 } // namespace Neon::RG

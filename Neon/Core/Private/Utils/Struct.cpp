@@ -443,13 +443,13 @@ namespace Neon::Structured
         void*  Buffer,
         size_t ArrayIndex) const noexcept
     {
-        return BufferView(static_cast<uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex);
+        return BufferView(static_cast<uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex * GetSize());
     }
 
     CBufferView CookedLayout::Access(
         const void* Buffer,
         size_t      ArrayIndex) const noexcept
     {
-        return CBufferView(static_cast<const uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex);
+        return CBufferView(static_cast<const uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex * GetSize());
     }
 } // namespace Neon::Structured
