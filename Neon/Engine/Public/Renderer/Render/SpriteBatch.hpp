@@ -60,10 +60,20 @@ namespace Neon::Renderer
             RHI::ISwapchain*             Swapchain);
 
         /// <summary>
+        /// Begins drawing.
+        /// </summary>
+        void Begin();
+
+        /// <summary>
         /// Enqueues a quad to be drawn.
         /// </summary>
         void Draw(
             const QuadCommand& Quad);
+
+        /// <summary>
+        /// Ends drawing.
+        /// </summary>
+        void End();
 
     private:
         /// <summary>

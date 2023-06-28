@@ -25,17 +25,33 @@ namespace Neon::Renderer
             Structured::RawLayout Layout;
 
             Layout.Append(Structured::Type::Float3, "Position");
-            Layout.Append(Structured::Type::Float4, "Color");
             Layout.Append(Structured::Type::Float2, "TexCoord");
+            Layout.Append(Structured::Type::Int, "TexIndex");
+            Layout.Append(Structured::Type::Float4, "Color");
 
             return Layout.Cook(true);
         }
 
-        // a sprite's quad is made up of 4 vertices and looks like this:
-        // 0---1
-        // |   |
-        // 3---2
+        /// <summary>
+        /// a sprite's quad is made up of 4 vertices and looks like this:
+        /// 0---1
+        /// |   |
+        /// 3---2
+        /// </summary>
+        void CreateIndexInstance(
+            IndexType* IndexBuffer,
+            IndexType& Offset)
+        {
+            IndexBuffer[Offset + 0] = Offset;
+            IndexBuffer[Offset + 1] = Offset + 1;
+            IndexBuffer[Offset + 2] = Offset + 2;
 
+            IndexBuffer[Offset + 3] = Offset;
+            IndexBuffer[Offset + 4] = Offset + 2;
+            IndexBuffer[Offset + 5] = Offset + 3;
+
+            Offset += 6;
+        }
     } // namespace SpriteBatchConstants
 
     SpriteBatch::SpriteBatch(
@@ -56,8 +72,16 @@ namespace Neon::Renderer
 
     //
 
+    void SpriteBatch::Begin()
+    {
+    }
+
     void SpriteBatch::Draw(
         const QuadCommand& Quad)
+    {
+    }
+
+    void SpriteBatch::End()
     {
     }
 
@@ -102,17 +126,10 @@ namespace Neon::Renderer
 
         auto IndexBuffer = m_IndexBuffer->Map<SpriteBatchConstants::IndexType>();
 
-        for (SpriteBatchConstants::IndexType i = 0;
-             i < SpriteBatchConstants::IndexType(SpriteBatchConstants::MaxIndices);
-             i += 6)
+        SpriteBatchConstants::IndexType Offset = 0;
+        while (Offset < SpriteBatchConstants::MaxIndices)
         {
-            IndexBuffer[i + 0] = i;
-            IndexBuffer[i + 1] = i + 1;
-            IndexBuffer[i + 2] = i + 2;
-
-            IndexBuffer[i + 3] = i;
-            IndexBuffer[i + 4] = i + 2;
-            IndexBuffer[i + 5] = i + 3;
+            SpriteBatchConstants::CreateIndexInstance(IndexBuffer, Offset);
         }
 
         m_IndexBuffer->Unmap();
