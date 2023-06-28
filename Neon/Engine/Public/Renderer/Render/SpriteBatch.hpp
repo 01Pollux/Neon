@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RHI/Resource/Resource.hpp>
+#include <RHI/Resource/Views/ShaderResource.hpp>
 #include <Utils/Struct.hpp>
 
 #include <Resource/Pack.hpp>
@@ -16,6 +17,7 @@ namespace Neon
     {
         class ISwapchain;
         class IPipelineState;
+        class IGraphicsCommandList;
     } // namespace RHI
 } // namespace Neon
 
@@ -26,7 +28,7 @@ namespace Neon::Renderer
     public:
         struct QuadCommand
         {
-            Vector2 Position;
+            Vector3 Position;
             Vector2 Size;
             float   Rotation = 0.f;
             float   Depth    = 0.f;
@@ -49,6 +51,7 @@ namespace Neon::Renderer
         struct CompiledPipelineState
         {
             Ptr<RHI::IPipelineState> QuadPipelineState;
+            Ptr<RHI::IRootSignature> QuadRootSignature;
         };
 
         SpriteBatch(
@@ -62,7 +65,8 @@ namespace Neon::Renderer
         /// <summary>
         /// Begins drawing.
         /// </summary>
-        void Begin();
+        void Begin(
+            RHI::IGraphicsCommandList* CommandList);
 
         /// <summary>
         /// Enqueues a quad to be drawn.
@@ -95,15 +99,21 @@ namespace Neon::Renderer
             const CompiledPipelineState& InitInfo);
 
     private:
-        Structured::CookedLayout m_BufferLayout;
+        Structured::CookedLayout   m_BufferLayout;
+        RHI::IGraphicsCommandList* m_CommandList = nullptr;
+
+        RHI::Views::ShaderResource m_ResourceView;
+        RHI::Views::Generic        m_SamplerView;
 
         Ptr<RHI::IPipelineState> m_PipelineState;
+        Ptr<RHI::IRootSignature> m_RootSignature;
 
-        UPtr<RHI::IUploadBuffer> m_VertexBuffers;
+        UPtr<RHI::IUploadBuffer> m_VertexBuffer;
         UPtr<RHI::IUploadBuffer> m_IndexBuffer;
 
         uint8_t* m_VertexBufferPtr = nullptr;
 
-        size_t m_DrawCount = 0;
+        uint32_t m_DrawCount    = 0;
+        uint32_t m_TextureCount = 0;
     };
 } // namespace Neon::Renderer

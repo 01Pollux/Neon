@@ -8,14 +8,18 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
+#include <RHI/Resource/Views/Shader.hpp>
 
 namespace Neon::Renderer
 {
     namespace SpriteBatchConstants
     {
-        constexpr size_t MaxPoints   = 10'000;
-        constexpr size_t MaxVertices = MaxPoints * 4;
-        constexpr size_t MaxIndices  = MaxPoints * 6;
+        constexpr uint32_t VerticesCount = 4;
+        constexpr uint32_t IndicesCount  = 6;
+
+        constexpr uint32_t MaxPoints   = 10'000;
+        constexpr uint32_t MaxVertices = MaxPoints * VerticesCount;
+        constexpr uint32_t MaxIndices  = MaxPoints * IndicesCount;
 
         using IndexType = uint16_t;
         static_assert(MaxIndices < std::numeric_limits<IndexType>::max());
@@ -50,7 +54,7 @@ namespace Neon::Renderer
             IndexBuffer[Offset + 4] = Offset + 2;
             IndexBuffer[Offset + 5] = Offset + 3;
 
-            Offset += 6;
+            Offset += IndicesCount;
         }
     } // namespace SpriteBatchConstants
 
@@ -72,17 +76,78 @@ namespace Neon::Renderer
 
     //
 
-    void SpriteBatch::Begin()
+    void SpriteBatch::Begin(
+        RHI::IGraphicsCommandList* CommandList)
     {
+        m_CommandList = CommandList;
+        m_CommandList->SetRootSignature(m_RootSignature);
+
+        m_ResourceView = m_CommandList->GetResourceView();
+        m_SamplerView  = m_CommandList->GetSamplerView();
+
+        m_DrawCount    = 0;
+        m_TextureCount = 0;
     }
 
     void SpriteBatch::Draw(
         const QuadCommand& Quad)
     {
+        if (m_DrawCount >= SpriteBatchConstants::MaxPoints)
+        {
+            auto CommandList = m_CommandList;
+            End();
+            Begin(CommandList);
+        }
+
+        if (Quad.Texture)
+        {
+            m_ResourceView.Bind(
+                Quad.Texture.get(),
+                nullptr,
+                m_TextureCount++);
+        }
+
+        for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i)
+        {
+            auto Buffer        = m_BufferLayout.Access(m_VertexBufferPtr, m_DrawCount * SpriteBatchConstants::VerticesCount + i);
+            Buffer["Position"] = Quad.Position;
+            Buffer["TexCoord"] = Quad.TexCoord;
+            Buffer["Color"]    = Quad.Color;
+
+            if (Quad.Texture)
+            {
+                Buffer["TexIndex"] = m_TextureCount - 1;
+            }
+            else
+            {
+                Buffer["TexIndex"] = -1;
+            }
+        }
+        m_DrawCount++;
     }
 
     void SpriteBatch::End()
     {
+        auto& ResourceView = m_CommandList->GetResourceView();
+
+        RHI::Views::Vertex VertexView;
+        VertexView.Append(
+            m_VertexBuffer->GetHandle(),
+            m_BufferLayout.GetSize(),
+            m_BufferLayout.GetSize() * SpriteBatchConstants::VerticesCount * m_DrawCount);
+
+        RHI::Views::Index IndexView(
+            m_IndexBuffer->GetHandle(),
+            m_DrawCount * SpriteBatchConstants::IndicesCount);
+
+        m_CommandList->SetVertexBuffer(0, VertexView);
+        m_CommandList->SetIndexBuffer(IndexView);
+
+        m_CommandList->Draw(
+            RHI::DrawIndexArgs{
+                .IndexCountPerInstance = m_DrawCount * SpriteBatchConstants::IndicesCount });
+
+        m_CommandList = nullptr;
     }
 
     //
@@ -94,8 +159,10 @@ namespace Neon::Renderer
         InitInfo.Pack->LoadAsync(InitInfo.QuadVertexShader);
         InitInfo.Pack->LoadAsync(InitInfo.QuadPixelShader);
 
+        auto RootSignature = InitInfo.Pack->Load<Asset::RootSignatureAsset>(InitInfo.QuadRootSignature)->GetRootSignature();
+
         RHI::PipelineStateBuilderG QuadPipelineState{
-            .RootSignature  = InitInfo.Pack->Load<Asset::RootSignatureAsset>(InitInfo.QuadRootSignature)->GetRootSignature().get(),
+            .RootSignature  = RootSignature.get(),
             .VertexShader   = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadVertexShader)->GetShader().get(),
             .PixelShader    = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadPixelShader)->GetShader().get(),
             .Rasterizer     = { .CullMode = RHI::CullMode::None },
@@ -103,20 +170,21 @@ namespace Neon::Renderer
         };
 
         return {
-            .QuadPipelineState = { RHI::IPipelineState::Create(QuadPipelineState) }
+            .QuadPipelineState = { RHI::IPipelineState::Create(QuadPipelineState) },
+            .QuadRootSignature = RootSignature
         };
     }
 
     void SpriteBatch::CreateBuffers(
         RHI::ISwapchain* Swapchain)
     {
-        m_VertexBuffers.reset(RHI::IUploadBuffer::Create(
+        m_VertexBuffer.reset(RHI::IUploadBuffer::Create(
             Swapchain,
             {
                 .Size = m_BufferLayout.GetSize() * SpriteBatchConstants::MaxVertices,
             }));
 
-        m_VertexBufferPtr = m_VertexBuffers->Map();
+        m_VertexBufferPtr = m_VertexBuffer->Map();
 
         m_IndexBuffer.reset(RHI::IUploadBuffer::Create(
             Swapchain,
@@ -141,5 +209,6 @@ namespace Neon::Renderer
         const CompiledPipelineState& InitInfo)
     {
         m_PipelineState = InitInfo.QuadPipelineState;
+        m_RootSignature = InitInfo.QuadRootSignature;
     }
 } // namespace Neon::Renderer

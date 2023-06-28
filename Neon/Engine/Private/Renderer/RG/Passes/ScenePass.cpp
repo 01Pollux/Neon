@@ -27,13 +27,6 @@
 
 namespace Neon::RG
 {
-    struct VSInput
-    {
-        Vector4 Position;
-        Color4  Color = Colors::Red;
-        Vector2 TexCoord;
-    };
-
     using namespace Scene;
 
     ScenePass::ScenePass(
@@ -132,18 +125,6 @@ namespace Neon::RG
             });
 
         //
-
-        Resolver.CreateBuffer(
-            RG::ResourceId(STR("SpriteVertexBuffer")),
-            RHI::BufferDesc{
-                .Size = 1024 * 4 * sizeof(VSInput) },
-            RHI::GraphicsBufferType::Upload);
-
-        Resolver.CreateBuffer(
-            RG::ResourceId(STR("SpriteIndexBuffer")),
-            RHI::BufferDesc{
-                .Size = 1024 * 4 * sizeof(uint16_t) },
-            RHI::GraphicsBufferType::Upload);
     }
 
     void ScenePass::Dispatch(
@@ -156,69 +137,6 @@ namespace Neon::RG
         }
 
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
-
-        //
-
-        auto& Pipeline      = Storage.GetPipelineState(RG::ResourceId(STR("Sprite.Pipeline")));
-        auto& RootSignature = Storage.GetRootSignature(RG::ResourceId(STR("Sprite.RS")));
-
-        RenderCommandList->SetRootSignature(RootSignature);
-        RenderCommandList->SetPipelineState(Pipeline);
-
-        //
-
-        //
-
-        auto VertexBuffer = Storage.GetResource(RG::ResourceId(STR("SpriteVertexBuffer"))).AsUploadBuffer();
-        auto IndexBuffer  = Storage.GetResource(RG::ResourceId(STR("SpriteIndexBuffer"))).AsUploadBuffer();
-
-        size_t DrawIndex = 0;
-
-        auto DrawToBuffer =
-            [VertexBuffer, IndexBuffer, DrawIndex](
-                const Component::Transform& Transform,
-                const Component::Sprite&    Sprite) mutable
-        {
-            auto World = Vector4(Transform.World.GetPosition(), 1.0f);
-
-            //
-
-            auto Vertex = VertexBuffer->Map<VSInput>(DrawIndex * sizeof(VSInput));
-
-            Vertex[0].Position = World + Vector4(Vector2(Sprite.Scale.x * -0.5f, Sprite.Scale.y * +0.5f), 0.f, 0.f);
-            Vertex[1].Position = World + Vector4(Vector2(Sprite.Scale.x * +0.5f, Sprite.Scale.y * +0.5f), 0.f, 0.f);
-            Vertex[2].Position = World + Vector4(Vector2(Sprite.Scale.x * +0.5f, Sprite.Scale.y * -0.5f), 0.f, 0.f);
-            Vertex[3].Position = World + Vector4(Vector2(Sprite.Scale.x * -0.5f, Sprite.Scale.y * -0.5f), 0.f, 0.f);
-
-            Vertex[0].TexCoord = Sprite.TextureRect.TopLeft();
-            Vertex[1].TexCoord = Sprite.TextureRect.TopRight();
-            Vertex[2].TexCoord = Sprite.TextureRect.BottomRight();
-            Vertex[3].TexCoord = Sprite.TextureRect.BottomLeft();
-
-            Vertex[0].Color = Sprite.ModulationColor;
-            Vertex[1].Color = Sprite.ModulationColor;
-            Vertex[2].Color = Sprite.ModulationColor;
-            Vertex[3].Color = Sprite.ModulationColor;
-
-            //
-
-            auto Index = IndexBuffer->Map<uint16_t>(DrawIndex * sizeof(uint16_t));
-
-            Index[0] = 0;
-            Index[1] = 1;
-            Index[2] = 2;
-
-            Index[3] = 0;
-            Index[4] = 2;
-            Index[5] = 3;
-
-            //
-
-            DrawIndex++;
-
-            IndexBuffer->Unmap();
-            VertexBuffer->Unmap();
-        };
 
         //
 
@@ -243,19 +161,7 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
-            m_SpriteQuery.each(DrawToBuffer);
-
-            RHI::Views::Vertex Vtx;
-            Vtx.Append(VertexBuffer.get(), 0, sizeof(VSInput), sizeof(VSInput) * 4);
-            RenderCommandList->SetVertexBuffer(0, Vtx);
-
-            RHI::Views::Index Idx(IndexBuffer.get(), 0, sizeof(uint16_t) * 6);
-            RenderCommandList->SetIndexBuffer(Idx);
-
-            RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
-
-            RenderCommandList->Draw(RHI::DrawIndexArgs{
-                .IndexCountPerInstance = 6 });
+            // m_SpriteQuery.each(DrawToBuffer);
         }
     }
 } // namespace Neon::RG

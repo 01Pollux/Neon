@@ -424,7 +424,7 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] BufferView operator[](
-            const std::string& Name)
+            const char* Name)
         {
             return BufferView(m_Data, m_View[Name], m_ArrayOffset);
         }
@@ -433,9 +433,27 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] BufferView operator[](
-            const std::string& Name) const
+            const char* Name) const
         {
             return BufferView(m_Data, m_View[Name], m_ArrayOffset);
+        }
+
+        /// <summary>
+        /// Get element in struct layout
+        /// </summary>
+        [[nodiscard]] BufferView operator[](
+            const std::string& Name)
+        {
+            return (*this)[Name.c_str()];
+        }
+
+        /// <summary>
+        /// Get element in struct layout
+        /// </summary>
+        [[nodiscard]] BufferView operator[](
+            const std::string& Name) const
+        {
+            return (*this)[Name.c_str()];
         }
 
         /// <summary>
@@ -541,9 +559,18 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] CBufferView operator[](
-            const std::string& Name) const
+            const char* Name) const
         {
             return CBufferView(m_Data, m_View[Name], m_ArrayOffset);
+        }
+
+        /// <summary>
+        /// Get element in struct layout
+        /// </summary>
+        [[nodiscard]] CBufferView operator[](
+            const std::string& Name) const
+        {
+            return (*this)[Name.c_str()];
         }
 
         /// <summary>
