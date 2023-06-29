@@ -18,8 +18,9 @@ namespace Neon::RHI
         /// <summary>
         /// Compile shader from source code
         /// </summary>
-        IShader::ByteCode Compile(
-            const ShaderCompileDesc& Desc);
+        std::unique_ptr<uint8_t[]> Compile(
+            const ShaderCompileDesc& Desc,
+            size_t&                  DataSize);
 
         /// <summary>
         /// Reflect shader layout from shader bytecode

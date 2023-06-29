@@ -50,19 +50,16 @@ namespace Neon::RG
         auto Text = Stream.str();
 
         RHI::ShaderCompileDesc Desc{
-            .Stage      = RHI::ShaderStage::Vertex,
             .SourceCode = Text,
-            .EntryPoint = STR("VSMain")
         };
         Desc.Flags.Set(RHI::EShaderCompileFlags::Debug);
 
+        Desc.Stage = RHI::ShaderStage::Vertex;
         Resolver.Load(
             RG::ResourceId(STR("Sprite.VS")),
             Desc);
 
-        Desc.Stage      = RHI::ShaderStage::Pixel;
-        Desc.EntryPoint = STR("PSMain");
-
+        Desc.Stage = RHI::ShaderStage::Pixel;
         Resolver.Load(
             RG::ResourceId(STR("Sprite.PS")),
             Desc);
@@ -98,9 +95,9 @@ namespace Neon::RG
         auto& PS = Resolver.GetShader(RG::ResourceId(STR("Sprite.PS")));
 
         RHI::PipelineStateBuilderG Builder{
-            .RootSignature  = RootSig.get(),
-            .VertexShader   = VS.get(),
-            .PixelShader    = PS.get(),
+            .RootSignature  = RootSig,
+            .VertexShader   = VS,
+            .PixelShader    = PS,
             .Rasterizer     = { .CullMode = RHI::CullMode::None },
             .DepthStencil   = { .DepthEnable = false },
             .UseVertexInput = true,

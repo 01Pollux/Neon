@@ -85,8 +85,9 @@ namespace Neon::RHI
 
     //
 
-    IShader::ByteCode Dx12ShaderCompiler::Compile(
-        const ShaderCompileDesc& Desc)
+    std::unique_ptr<uint8_t[]> Dx12ShaderCompiler::Compile(
+        const ShaderCompileDesc& Desc,
+        size_t&                  DataSize)
     {
         Win32::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
@@ -114,22 +115,44 @@ namespace Neon::RHI
         Options.emplace_back(STR("-HV 2021"));
 
         Options.emplace_back(STR("-E"));
-        Options.emplace_back(Desc.EntryPoint.c_str());
+        const wchar_t* EntryPoint = nullptr;
+        switch (Desc.Stage)
+        {
+        case ShaderStage::Compute:
+            EntryPoint = STR("CS_Main");
+            break;
+        case ShaderStage::Vertex:
+            EntryPoint = STR("VS_Main");
+            break;
+        case ShaderStage::Hull:
+            EntryPoint = STR("HS_Main");
+            break;
+        case ShaderStage::Domain:
+            EntryPoint = STR("DS_Main");
+            break;
+        case ShaderStage::Geometry:
+            EntryPoint = STR("GS_Main");
+            break;
+        case ShaderStage::Pixel:
+            EntryPoint = STR("PS_Main");
+            break;
+        }
+        Options.emplace_back(EntryPoint);
 
         Options.emplace_back(STR("-T"));
         String Model = GetShaderModel(Desc.Stage, Desc.Profile);
         Options.emplace_back(Model.c_str());
 
         std::vector<String> MacrosCombined;
-        MacrosCombined.reserve(Desc.Defines.size());
-        Options.reserve(Options.size() + Desc.Defines.size());
+        MacrosCombined.reserve(Desc.Macros.Size());
+        Options.reserve(Options.size() + Desc.Macros.Size());
 
-        for (auto& Macro : Desc.Defines)
+        for (auto& [Key, Value] : Desc.Macros.Get())
         {
             MacrosCombined.emplace_back(StringUtils::Format(
                 STR("{}{}"),
-                Macro.first,
-                Macro.second.empty() ? STR("=1") : Macro.second));
+                Key,
+                Value.empty() ? STR("=1") : Value));
             Options.emplace_back(STR("-D"));
             Options.emplace_back(MacrosCombined.back().c_str());
         }
@@ -192,7 +215,8 @@ namespace Neon::RHI
             }
         }
 
-        return { CodePtr.release(), CodeSize };
+        DataSize = CodeSize;
+        return CodePtr;
     }
 
     void Dx12ShaderCompiler::ReflectLayout(

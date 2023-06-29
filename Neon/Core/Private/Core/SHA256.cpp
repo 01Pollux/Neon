@@ -105,9 +105,15 @@ namespace Neon
     }
 
     void SHA256::Append(
-        const std::string& data)
+        const std::string& Data)
     {
-        Append(std::bit_cast<const uint8_t*>(data.c_str()), data.size());
+        Append(std::bit_cast<const uint8_t*>(Data.c_str()), Data.size());
+    }
+
+    void SHA256::Append(
+        const std::wstring& Data)
+    {
+        Append(std::bit_cast<const uint8_t*>(Data.c_str()), Data.size() * sizeof(std::wstring::value_type));
     }
 
     auto SHA256::Digest() -> Bytes

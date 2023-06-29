@@ -15,7 +15,7 @@ namespace Neon::Asset
     {
         AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
-        AddHandler<ShaderAsset::Handler>();
+        // AddHandler<ShaderAsset::Handler>();
         AddHandler<RootSignatureAsset::Handler>();
         AddHandler<TextureAsset::Handler>();
     }

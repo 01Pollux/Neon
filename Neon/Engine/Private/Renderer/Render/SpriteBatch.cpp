@@ -185,10 +185,11 @@ namespace Neon::Renderer
 
         auto RootSignature = InitInfo.Pack->Load<Asset::RootSignatureAsset>(InitInfo.QuadRootSignature)->GetRootSignature();
 
+        // TODO
         RHI::PipelineStateBuilderG QuadPipelineState{
-            .RootSignature  = RootSignature.get(),
-            .VertexShader   = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadVertexShader)->GetShader().get(),
-            .PixelShader    = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadPixelShader)->GetShader().get(),
+            .RootSignature = RootSignature, /*
+            .VertexShader   = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadVertexShader)->GetShader(),
+            .PixelShader    = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadPixelShader)->GetShader(),*/
             .Rasterizer     = { .CullMode = RHI::CullMode::None },
             .UseVertexInput = true,
             .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,

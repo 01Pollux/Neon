@@ -15,24 +15,48 @@ namespace Neon
         struct Bytes : std::array<uint8_t, 32>
         {
         public:
+            /// <summary>
+            /// Convert to hex string
+            /// </summary>
             [[nodiscard]] std::string ToString() const;
         };
 
         SHA256();
 
+        /// <summary>
+        /// Reset internal state
+        /// </summary>
         void Reset();
 
+        /// <summary>
+        /// Append raw data from binary stream
+        /// </summary>
         void Append(
             IO::BinaryStreamReader Stream,
             size_t                 Size);
 
+        /// <summary>
+        /// Append raw data
+        /// </summary>
         void Append(
             const uint8_t* Data,
             size_t         Size);
 
+        /// <summary>
+        /// Append UTF-8 string
+        /// </summary>
         void Append(
             const std::string& Data);
 
+        /// <summary>
+        /// Append UTF-16 string
+        /// </summary>
+        void Append(
+            const std::wstring& Data);
+
+        /// <summary>
+        /// Append pod type
+        /// </summary>
         template<typename _Ty>
             requires std::is_standard_layout_v<_Ty>
         void Append(
@@ -41,9 +65,15 @@ namespace Neon
             Append(std::bit_cast<uint8_t*>(std::addressof(Data)), sizeof(_Ty));
         }
 
+        /// <summary>
+        /// Get digest of appended data
+        /// </summary>
         [[nodiscard]] Bytes Digest();
 
     private:
+        /// <summary>
+        /// Process 64-byte chunk of data
+        /// </summary>
         void ProcessChunk(
             const uint8_t* Chunk);
 

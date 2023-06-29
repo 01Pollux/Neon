@@ -92,13 +92,13 @@ namespace Neon::RHI
             Patch
         };
 
-        IRootSignature* RootSignature = nullptr;
+        Ptr<IRootSignature> RootSignature = nullptr;
 
-        IShader* VertexShader   = nullptr;
-        IShader* PixelShader    = nullptr;
-        IShader* GeometryShader = nullptr;
-        IShader* HullShader     = nullptr;
-        IShader* DomainShader   = nullptr;
+        Ptr<IShader> VertexShader   = nullptr;
+        Ptr<IShader> PixelShader    = nullptr;
+        Ptr<IShader> GeometryShader = nullptr;
+        Ptr<IShader> HullShader     = nullptr;
+        Ptr<IShader> DomainShader   = nullptr;
 
         BlendState Blend;
         uint32_t   SampleMask = 0xFFFFFFFF;
@@ -125,8 +125,8 @@ namespace Neon::RHI
     template<>
     struct PipelineStateBuilder<true>
     {
-        IRootSignature* RootSignature = nullptr;
-        IShader*        ComputeShader = nullptr;
+        Ptr<IRootSignature> RootSignature = nullptr;
+        Ptr<IShader>        ComputeShader = nullptr;
     };
     using PipelineStateBuilderC = PipelineStateBuilder<true>;
 

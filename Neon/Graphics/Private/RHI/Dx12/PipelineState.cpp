@@ -282,7 +282,7 @@ namespace Neon::RHI
 
         // Root signature
         {
-            auto  RootSignature     = static_cast<Dx12RootSignature*>(Builder.RootSignature);
+            auto  RootSignature     = static_cast<Dx12RootSignature*>(Builder.RootSignature.get());
             auto& RootSignatureHash = RootSignature->GetHash();
             Hash.Append(RootSignatureHash.data(), RootSignatureHash.size());
 
@@ -292,11 +292,11 @@ namespace Neon::RHI
         // Shaders
         {
             for (auto [TargetShader, SrcShader] : {
-                     std::pair{ &Result.Desc.VS, Builder.VertexShader },
-                     std::pair{ &Result.Desc.PS, Builder.PixelShader },
-                     std::pair{ &Result.Desc.GS, Builder.GeometryShader },
-                     std::pair{ &Result.Desc.HS, Builder.HullShader },
-                     std::pair{ &Result.Desc.DS, Builder.DomainShader } })
+                     std::pair{ &Result.Desc.VS, Builder.VertexShader.get() },
+                     std::pair{ &Result.Desc.PS, Builder.PixelShader.get() },
+                     std::pair{ &Result.Desc.GS, Builder.GeometryShader.get() },
+                     std::pair{ &Result.Desc.HS, Builder.HullShader.get() },
+                     std::pair{ &Result.Desc.DS, Builder.DomainShader.get() } })
             {
                 if (SrcShader)
                 {
@@ -516,7 +516,7 @@ namespace Neon::RHI
 
         // Root signature
         {
-            auto  RootSignature     = static_cast<Dx12RootSignature*>(Builder.RootSignature);
+            auto  RootSignature     = static_cast<Dx12RootSignature*>(Builder.RootSignature.get());
             auto& RootSignatureHash = RootSignature->GetHash();
             Hash.Append(RootSignatureHash.data(), RootSignatureHash.size());
 

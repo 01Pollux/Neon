@@ -5,40 +5,6 @@
 
 namespace Neon::IO
 {
-    namespace BinaryStream
-    {
-        /// <summary>
-        /// Get size of string in bytes
-        /// </summary>
-        template<typename _Ty, typename _Traits = std::char_traits<_Ty>>
-        [[nodiscard]] constexpr static size_t Size(
-            const std::basic_string<_Ty, _Traits>& String) noexcept
-        {
-            return sizeof(size_t) + String.size() * sizeof(_Ty);
-        }
-
-        /// <summary>
-        /// Get size of string in bytes
-        /// </summary>
-        template<typename _Ty>
-            requires std::is_standard_layout_v<_Ty>
-        [[nodiscard]] constexpr static size_t Size(
-            const _Ty&) noexcept
-        {
-            return sizeof(_Ty);
-        }
-
-        /// <summary>
-        /// Get size of string in bytes
-        /// </summary>
-        template<typename _Ty>
-            requires std::is_standard_layout_v<_Ty>
-        [[nodiscard]] constexpr static size_t Size() noexcept
-        {
-            return sizeof(_Ty);
-        }
-    } // namespace BinaryStream
-
     template<typename _FSTy>
     class TBinaryStreamReader
     {
@@ -142,7 +108,7 @@ namespace Neon::IO
 
     private:
         _FSTy* m_Stream = nullptr;
-    };
+    }; // namespace BinaryStreamtemplate<typename_FSTy>class TBinaryStreamReader
     using BinaryStreamReader = TBinaryStreamReader<std::istream>;
     using BinaryFileReader   = TBinaryStreamReader<std::ifstream>;
 

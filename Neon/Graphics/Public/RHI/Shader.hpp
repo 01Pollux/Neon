@@ -10,6 +10,7 @@ namespace Neon::RHI
 {
     enum class ShaderStage : uint8_t
     {
+        Unknown,
         Compute,
         Vertex,
         Hull,
@@ -29,6 +30,8 @@ namespace Neon::RHI
     };
     using MShaderCompileFlags = Bitmask<EShaderCompileFlags>;
 
+    static constexpr auto MShaderCompileFlags_Default = MShaderCompileFlags{};
+
     enum class ShaderProfile : uint8_t
     {
         SP_5_0,
@@ -44,15 +47,44 @@ namespace Neon::RHI
         Count
     };
 
-    struct ShaderCompileDesc
+    struct ShaderMacros
     {
         std::vector<std::pair<String, String>> Defines;
 
-        ShaderProfile Profile = ShaderProfile::SP_6_5;
-        ShaderStage   Stage;
+        /// <summary>
+        /// Append new macro
+        /// </summary>
+        void Append(
+            const String& Name,
+            const String& Value)
+        {
+            Defines.emplace_back(Name, Value);
+        }
 
-        StringU8 SourceCode;
-        String   EntryPoint;
+        /// <summary>
+        /// Get all macros
+        /// </summary>
+        [[nodiscard]] const auto& Get() const noexcept
+        {
+            return Defines;
+        }
+
+        /// <summary>
+        /// Get macro count
+        /// </summary>
+        [[nodiscard]] size_t Size() const noexcept
+        {
+            return Defines.size();
+        }
+    };
+
+    struct ShaderCompileDesc
+    {
+        ShaderMacros Macros;
+        StringU8View SourceCode;
+
+        ShaderProfile Profile = ShaderProfile::SP_6_5;
+        ShaderStage   Stage   = ShaderStage::Unknown;
 
         MShaderCompileFlags Flags;
     };
@@ -66,10 +98,11 @@ namespace Neon::RHI
             size_t   Size;
         };
 
-        [[nodiscard]] static IShader* Create(
-            const ByteCode& CompiledCode);
+        [[nodiscard]] static Ptr<IShader> Create(
+            std::unique_ptr<uint8_t[]> Data,
+            size_t                     DataSize);
 
-        [[nodiscard]] static IShader* Create(
+        [[nodiscard]] static Ptr<IShader> Create(
             const ShaderCompileDesc& Desc);
 
         virtual ~IShader() = default;

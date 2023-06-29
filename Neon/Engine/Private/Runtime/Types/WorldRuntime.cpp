@@ -100,10 +100,6 @@ namespace Neon::Runtime
                 Black = !Black;
             }
         }
-
-        // auto Trs = Sprite.get_mut<Scene::Component::Transform>();
-        // Trs->Local.SetPosition(Vector3::Forward * 5.f);
-        // Trs->World.SetPosition(Vector3::Forward * 5.f);
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()
@@ -122,7 +118,7 @@ namespace Neon::Runtime
         auto RenderGraph = Renderer->GetRenderGraph();
         auto Builder     = RenderGraph->Reset();
 
-        Builder.AppendPass<RG::ScenePass>(m_Scene);
+        // Builder.AppendPass<RG::ScenePass>(m_Scene);
 
         Builder.Build();
     }
