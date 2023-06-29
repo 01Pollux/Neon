@@ -1,9 +1,9 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
 
-#include <Window/Window.hpp>
-#include <RHI/Resource/State.hpp>
 #include <RHI/Swapchain.hpp>
+#include <RHI/Resource/State.hpp>
+
 #include <execution>
 
 #include <Log/Logger.hpp>
@@ -153,7 +153,7 @@ namespace Neon::RG
                 {
                     auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
 
-                    RHI::ICommandList* CommandList;
+                    RHI::ICommandList* CommandList = nullptr;
 
                     switch (RenderPass->GetQueueType())
                     {
@@ -248,7 +248,7 @@ namespace Neon::RG
 
                         if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
                         {
-                            auto Size = Swapchain->GetWindow()->GetSize().get();
+                            auto &Size = Swapchain->GetSize();
 
                             RenderCommandList->SetViewport(
                                 ViewportF{

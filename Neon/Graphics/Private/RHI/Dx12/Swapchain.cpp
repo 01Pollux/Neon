@@ -22,7 +22,8 @@ namespace Neon::RHI
         const InitDesc& Desc) :
         m_BudgetManager(this),
         m_WindowApp(Desc.Window),
-        m_BackbufferFormat(Desc.BackbufferFormat)
+        m_BackbufferFormat(Desc.BackbufferFormat),
+        m_Size(Desc.Window->GetSize().get())
     {
         CreateSwapchain(Desc);
         ResizeBackbuffers(Desc.FramesInFlight);
@@ -53,9 +54,9 @@ namespace Neon::RHI
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
-    Windowing::IWindowApp* Dx12Swapchain::GetWindow()
+    const Size2I& Dx12Swapchain::GetSize()
     {
-        return m_WindowApp;
+        return m_Size;
     }
 
     EResourceFormat Dx12Swapchain::GetFormat()
@@ -77,10 +78,17 @@ namespace Neon::RHI
         const Size2I&   Size,
         EResourceFormat NewFormat)
     {
-        if (NewFormat != EResourceFormat::Unknown)
+        if (NewFormat == EResourceFormat::Unknown)
         {
-            m_BackbufferFormat = NewFormat;
+            NewFormat = m_BackbufferFormat;
         }
+        if (m_BackbufferFormat == NewFormat && m_Size == Size)
+        {
+            return;
+        }
+
+        m_Size             = Size;
+        m_BackbufferFormat = NewFormat;
 
         uint32_t BackbufferCount = uint32_t(m_BackBuffers.size());
         m_BackBuffers.clear();

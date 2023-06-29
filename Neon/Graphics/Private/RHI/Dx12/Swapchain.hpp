@@ -22,7 +22,7 @@ namespace Neon::RHI
 
         void Present() override;
 
-        Windowing::IWindowApp* GetWindow() override;
+        const Size2I& GetSize() override;
 
         EResourceFormat GetFormat() override;
 
@@ -121,7 +121,9 @@ namespace Neon::RHI
             uint32_t NewSize);
 
     private:
-        Windowing::IWindowApp*         m_WindowApp;
+        Windowing::IWindowApp* m_WindowApp;
+        Size2I                 m_Size;
+
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
         BudgetManager                  m_BudgetManager;
         GraphicsMemoryAllocator        m_MemoryAllocator;

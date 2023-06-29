@@ -2,14 +2,13 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Storage.hpp>
 
+#include <RHI/Swapchain.hpp>
+
 #include <RHI/Resource/Views/ConstantBuffer.hpp>
 #include <RHI/Resource/Views/ShaderResource.hpp>
 #include <RHI/Resource/Views/UnorderedAccess.hpp>
 #include <RHI/Resource/Views/RenderTarget.hpp>
 #include <RHI/Resource/Views/DepthStencil.hpp>
-
-#include <RHI/Swapchain.hpp>
-#include <Window/Window.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -230,7 +229,7 @@ namespace Neon::RG
         auto& Desc = Handle.GetDesc();
         if (Handle.IsWindowSizedTexture())
         {
-            auto WindowSize = m_Swapchain->GetWindow()->GetSize().get();
+            auto& WindowSize = m_Swapchain->GetSize();
 
             Desc.Width  = WindowSize.Width();
             Desc.Height = WindowSize.Height();

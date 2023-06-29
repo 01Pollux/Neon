@@ -56,9 +56,9 @@ namespace Neon::RHI
         virtual void Present() = 0;
 
         /// <summary>
-        /// Get the swapchain's window.
+        /// Get the swapchain's window size.
         /// </summary>
-        [[nodiscard]] virtual Windowing::IWindowApp* GetWindow() = 0;
+        [[nodiscard]] virtual const Size2I& GetSize() = 0;
 
         /// <summary>
         /// Get the swapchain's format (backbuffer format).
