@@ -214,7 +214,6 @@ namespace Neon::Asset
         {
             throw std::runtime_error(StringUtils::Format("Failed to decompress file '{}'", FilePath));
         }
-        Filter.seekg(0);
         m_File << Filter.rdbuf();
     }
 

@@ -205,9 +205,14 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::EnableDebugLayerIfNeeded()
     {
-        Win32::ComPtr<ID3D12Debug> DebugController;
+#if !NEON_DIST
+        Win32::ComPtr<ID3D12Debug1> DebugController;
         ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
         DebugController->EnableDebugLayer();
+#if NEON_DEBUG
+        DebugController->SetEnableGPUBasedValidation(true);
+#endif
+#endif
     }
 
     void Dx12RenderDevice::CreateFactory()

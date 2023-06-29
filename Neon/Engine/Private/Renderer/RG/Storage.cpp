@@ -236,16 +236,12 @@ namespace Neon::RG
             Desc.Height = WindowSize.Height();
         }
 
-        auto p = Desc == Desc;
-
-        auto Iter = m_InactiveResources.begin();
-        for (; Iter != m_InactiveResources.end(); Iter++)
-        {
-            if (Iter->GetDesc() == Desc)
+        auto Iter = std::ranges::find_if(
+            m_InactiveResources,
+            [&Desc](const ResourceHandle& Handle)
             {
-                break;
-            }
-        }
+                return Handle.GetDesc() == Desc;
+            });
 
         if (Iter != m_InactiveResources.end())
         {
