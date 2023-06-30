@@ -51,8 +51,8 @@ namespace Neon::Asio
 
                             auto Task = std::move(m_Queue.front());
                             m_Queue.pop();
-
                             Lock.unlock();
+
 #if NEON_DEBUG
                             try
                             {
@@ -65,6 +65,11 @@ namespace Neon::Asio
 #else
                             std::invoke(Task);
 #endif
+
+                            if (m_Queue.empty())
+                            {
+                                m_TaskWaiter.notify_one();
+                            }
                         }
                     });
             }
@@ -90,6 +95,16 @@ namespace Neon::Asio
 
             m_TaskWaiter.notify_one();
             return Future;
+        }
+
+        /// <summary>
+        /// Wait for all tasks to finish.
+        /// </summary>
+        void Wait()
+        {
+            std::unique_lock Lock(m_QueueMutex);
+            m_TaskWaiter.wait(Lock, [this]
+                              { return m_Queue.empty(); });
         }
 
         /// <summary>

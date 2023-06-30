@@ -98,11 +98,11 @@ namespace Neon::RHI
             size_t   Size;
         };
 
-        [[nodiscard]] static Ptr<IShader> Create(
+        [[nodiscard]] static UPtr<IShader> Create(
             std::unique_ptr<uint8_t[]> Data,
             size_t                     DataSize);
 
-        [[nodiscard]] static Ptr<IShader> Create(
+        [[nodiscard]] static UPtr<IShader> Create(
             const ShaderCompileDesc& Desc);
 
         virtual ~IShader() = default;

@@ -6,14 +6,14 @@
 
 namespace Neon::RHI
 {
-    Ptr<IShader> IShader::Create(
+    UPtr<IShader> IShader::Create(
         std::unique_ptr<uint8_t[]> Data,
         size_t                     DataSize)
     {
-        return Ptr<IShader>{ NEON_NEW Dx12Shader(std::move(Data), DataSize) };
+        return UPtr<IShader>{ NEON_NEW Dx12Shader(std::move(Data), DataSize) };
     }
 
-    Ptr<IShader> IShader::Create(
+    UPtr<IShader> IShader::Create(
         const ShaderCompileDesc& Desc)
     {
         auto   ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();

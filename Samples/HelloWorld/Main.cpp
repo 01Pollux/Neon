@@ -40,7 +40,7 @@ float4 PS_Main(VSOutput Input) : SV_TARGET
 		Color = Texture.Sample(Sampler, Input.TexCoord);
 	}
 	return Color * Input.Color;
-}|
+}
 )";
 
 /*
@@ -102,32 +102,57 @@ LoadShader:
     return Shader;
 */
 
+#include <chrono>
+
 using namespace Neon;
 
 class TestGameEngine : public Runtime::DefaultGameEngine
 {
 public:
+    Asset::ShaderLibraryAsset ShaderLibrary;
+
     void Initialize(
         const Config::EngineConfig& Config) override
     {
         Runtime::DefaultGameEngine::Initialize(Config);
 
-        Asset::ShaderAsset ShaderAsset("Test", Shader);
+        auto t1 = std::chrono::high_resolution_clock::now();
 
-        auto p = ShaderAsset.LoadShader(
+        ShaderLibrary.SetModule(Asset::ShaderModuleId(1), "Sprite", Shader);
+        ShaderLibrary.SetModule(Asset::ShaderModuleId(2), "Other", Shader);
+
+        auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1));
+
+        auto p = Mod1->LoadStage(
             RHI::ShaderStage::Vertex,
             RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile::SP_6_0);
 
-        auto xp = ShaderAsset.LoadShader(
+        auto a = p.get();
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        auto xp = Mod1->LoadStage(
             RHI::ShaderStage::Vertex,
             RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile::SP_6_0);
 
-        auto x = ShaderAsset.LoadShader(
+        a = xp.get();
+
+        auto t3 = std::chrono::high_resolution_clock::now();
+
+        auto x = Mod1->LoadStage(
             RHI::ShaderStage::Pixel,
             RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile::SP_6_0);
+
+        a = x.get();
+
+        auto t4 = std::chrono::high_resolution_clock::now();
+
+        printf("t2-t1: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
+        printf("t3-t2: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t3 - t2).count());
+        printf("t4-t3: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t4 - t3).count());
     }
 };
 

@@ -1,28 +1,21 @@
 #pragma once
 
+#include <Core/SHA256.hpp>
+
 #include <Resource/Asset.hpp>
 #include <Resource/Handler.hpp>
 #include <Asio/ThreadPool.hpp>
 #include <RHI/Shader.hpp>
 
+#include <map>
 #include <fstream>
 #include <future>
 
 namespace Neon::Asset
 {
-    class ShaderModuleId
-    {
-        friend class ShaderLibraryAsset;
+    class ShaderLibraryAsset;
 
-    public:
-        ShaderModuleId(uint32_t Id) :
-            m_Id(Id)
-        {
-        }
-
-    private:
-        uint32_t m_Id;
-    };
+    using ShaderModuleId = uint32_t;
 
     /// <summary>
     /// Shader module (Contains all shader stages)
@@ -33,7 +26,7 @@ namespace Neon::Asset
     {
         friend class ShaderLibraryAsset;
 
-        struct ByteCode
+        struct PrivateByteCode
         {
             std::unique_ptr<uint8_t[]> Data;
             size_t                     Size;
@@ -49,15 +42,41 @@ namespace Neon::Asset
             RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
             const RHI::ShaderMacros&       Macros  = {});
 
+        /// <summary>
+        /// Remove all loaded binaries from this shader module
+        /// </summary>
+        void Optimize();
+
     protected:
-        ShaderModule(ShaderLibraryAsset* Library) :
-            m_Library(Library)
-        {
-        }
+        ShaderModule(
+            const StringU8&     ModName,
+            ShaderLibraryAsset* Library,
+            ShaderModuleId      Id);
 
     private:
-        ShaderLibraryAsset*                         m_Library;
+        /// <summary>
+        /// Seek shader in cache
+        /// </summary>
+        bool SeekShader(
+            const SHA256::Bytes&        Hash,
+            std::unique_ptr<uint8_t[]>* ShaderData,
+            size_t*                     ShaderSize);
+
+        /// <summary>
+        /// Write shader to cache
+        /// </summary>
+        void WriteCache(
+            const SHA256::Bytes& Hash,
+            RHI::IShader*        Shader);
+
+    private:
+        ShaderModuleId      m_Id;
+        ShaderLibraryAsset* m_Library;
+
         std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
+
+        size_t       m_FileSize = 0;
+        std::fstream m_ShaderCache;
     };
 
     /// <summary>
@@ -67,12 +86,28 @@ namespace Neon::Asset
     /// </summary>
     class ShaderLibraryAsset : public IAssetResource
     {
+        friend class ShaderModule;
+
         struct ShaderModuleTable
         {
-            ShaderModuleId ModId;
-            StringU8       ModName;
-            size_t         ModOffset;
-            size_t         ModSize;
+            StringU8 ModName;
+            size_t   ModOffset;
+            size_t   ModSize;
+
+            ShaderModule Module;
+
+            ShaderModuleTable(
+                ShaderModuleId      Id,
+                StringU8            ModName,
+                size_t              ModOffset,
+                size_t              ModSize,
+                ShaderLibraryAsset* Library) :
+                ModName(std::move(ModName)),
+                ModOffset(ModOffset),
+                ModSize(ModSize),
+                Module(this->ModName, Library, Id)
+            {
+            }
         };
 
     public:
@@ -80,6 +115,12 @@ namespace Neon::Asset
         /// Get shader module by id
         /// </summary>
         [[nodiscard]] ShaderModule* LoadModule(
+            ShaderModuleId Id);
+
+        /// <summary>
+        /// Get shader module's code by id
+        /// </summary>
+        [[nodiscard]] const StringU8* GetModuleCode(
             ShaderModuleId Id);
 
         /// <summary>
@@ -106,12 +147,16 @@ namespace Neon::Asset
         void Optimize();
 
     private:
-        std::vector<ShaderModuleTable> m_Modules;
-        std::vector<uint8_t>           m_ModulesData;
-        Asio::ThreadPool<>             m_ThreadPool;
+        std::list<StringU8> m_ModulesData;
+        std::vector<bool>   m_ModulesDecompressed;
+
+        std::map<ShaderModuleId, size_t> m_AsyncTasks;
+
+        std::map<ShaderModuleId, ShaderModuleTable> m_Modules;
+        Asio::ThreadPool<>                          m_ThreadPool{ 1 };
     };
 
-    class ShaderAsset : public IAssetResource
+    /*class ShaderAsset : public IAssetResource
     {
     public:
         ShaderAsset(
@@ -196,5 +241,5 @@ namespace Neon::Asset
         size_t       m_FileSize = 0;
 
         std::map<SHA256::Bytes, std::future<void()>> m_PreloadingShaders;
-    };
+    };*/
 } // namespace Neon::Asset
