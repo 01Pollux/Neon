@@ -16,8 +16,15 @@ project "NeonWindowing"
         }
     filter {}
 
+    links
+    {
+        "NeonCore",
+        "NeonCoroutines"
+    }
+
     includedirs
     {
         "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
         "%{CommonDir.Neon.Windowing}"
     }

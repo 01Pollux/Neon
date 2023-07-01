@@ -1,9 +1,8 @@
-Function Copy-Boost
-{
+Function Copy-Boost {
     Param
     (
-        [Parameter(Mandatory=$true)][string]$Tag,
-        [Parameter(Mandatory=$true)][string]$Path
+        [Parameter(Mandatory = $true)][string]$Tag,
+        [Parameter(Mandatory = $true)][string]$Path
     )
 
     Write-Output "$Tag Copying boost headers..."
@@ -29,7 +28,7 @@ Push-Location -Path .\boost -StackName "BoostTempPath"
 
 # Boost with address sanitizer
 
-.\b2 address-sanitizer=on runtime-link=static threading=multi -s BZIP2_SOURCE=..\..\Deps\Externals\bzip2 -s ZLIB_SOURCE=..\..\Deps\Externals\zlib
+.\b2 address-sanitizer=on debug-symbols=on runtime-link=static threading=multi -s BZIP2_SOURCE=..\..\Deps\Externals\bzip2 -s ZLIB_SOURCE=..\..\Deps\Externals\zlib
 
 Pop-Location -StackName "BoostTempPath"
 Pop-Location -StackName "TempPath"

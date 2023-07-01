@@ -9,8 +9,15 @@ project "NeonResource"
     common_add_pch("ResourcePCH")
     common_neon()
 
+    links
+    {
+        "NeonCore",
+        "NeonCoroutines"
+    }
+
     includedirs
     {
         "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
         "%{CommonDir.Neon.Resource}"
     }

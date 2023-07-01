@@ -43,65 +43,6 @@ float4 PS_Main(VSOutput Input) : SV_TARGET
 }
 )";
 
-/*
-
-// ShaderLibrary File Format
-// 1. Header:
-// ShaderId
-// ModuleName
-// OffsetToCompressedShader
-// CompressedShaderSize
-//
-// ...
-//
-// 0xFFFFFFFF
-//
-// 2. Body:
-// CompressedShader
-// Just text code for shaders
-
-// ShaderModule File Format
-// Hash
-// CompiledBinary
-// ...
-
-
-// ShaderId must exist in ShaderLibrary
-// ShaderModule is a file with name generated from ModuleName in header
-auto ShaderModule = ShaderLibrary->LoadModule(ShaderId(0x00000001));
-
-ShaderLibrary->SetModule(ShaderId(0x00000001), ModuleName, Code);
-
-// Shader stage can exist in ShaderModule or not (if not, it will be compiled and added to ShaderModule)
-auto Future = ShaderModule->LoadStage(ShaderStage::Vertex, ShaderProfile::SP_6_0, ShaderMacros{});
-
-// Remove all loaded binaries from this shader module
-ShaderModule->Optimize();
-
-// Remove all loaded binaries from all shader modules
-ShaderLibrary->Optimize();
-
-
-
-
-
-PreloadShader:
-
-
-LoadShader:
-    auto Hash = ShaderLibrary->GetHash(Asset, Stage, Flags, Profile, Macros);
-    if (ShaderLibrary->Contains(Hash))
-    {
-        return ShaderLibrary->GetShader(Hash);
-    }
-
-
-
-    auto Shader = ShaderLibrary->CreateShader(Asset, Stage, Flags, Profile, Macros);
-    ShaderLibrary->AddShader(Asset, Stage, Flags, Profile, Macros, Shader);
-    return Shader;
-*/
-
 #include <chrono>
 
 using namespace Neon;
@@ -116,12 +57,12 @@ public:
     {
         Runtime::DefaultGameEngine::Initialize(Config);
 
-        auto t1 = std::chrono::high_resolution_clock::now();
-
         ShaderLibrary.SetModule(Asset::ShaderModuleId(1), "Sprite", Shader);
         ShaderLibrary.SetModule(Asset::ShaderModuleId(2), "Other", Shader);
 
         auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1));
+
+        auto t1 = std::chrono::high_resolution_clock::now();
 
         auto p = Mod1->LoadStage(
             RHI::ShaderStage::Vertex,

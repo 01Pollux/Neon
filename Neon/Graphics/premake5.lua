@@ -9,9 +9,17 @@ project "NeonGraphics"
     common_add_pch("GraphicsPCH")
     common_neon()
     
+    links
+    {
+        "NeonCore",
+        "NeonCoroutines",
+        "NeonWindowing"
+    }
+
     includedirs
     {
         "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}"
     }
