@@ -18,6 +18,8 @@ extern "C"
     __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
 }
 
+#define GPU_BASED_VALIDATION false
+
 namespace Neon::RHI
 {
     static inline std::mutex          s_CreateDeviceMutex;
@@ -210,7 +212,7 @@ namespace Neon::RHI
         ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
         DebugController->EnableDebugLayer();
 #if NEON_DEBUG
-        DebugController->SetEnableGPUBasedValidation(true);
+        DebugController->SetEnableGPUBasedValidation(GPU_BASED_VALIDATION);
 #endif
 #endif
     }

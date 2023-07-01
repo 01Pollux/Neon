@@ -45,6 +45,11 @@ float4 PS_Main(VSOutput Input) : SV_TARGET
 
 #include <chrono>
 
+#include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/when_all.hpp>
+#include <cppcoro/schedule_on.hpp>
+#include <cppcoro/sync_wait.hpp>
+
 using namespace Neon;
 
 class TestGameEngine : public Runtime::DefaultGameEngine
@@ -57,74 +62,40 @@ public:
     {
         Runtime::DefaultGameEngine::Initialize(Config);
 
-        ShaderLibrary.SetModule(Asset::ShaderModuleId(1), "Sprite", Shader);
-        ShaderLibrary.SetModule(Asset::ShaderModuleId(2), "Other", Shader);
+        for (int i = 0; i < 100; ++i)
+        {
+            std::string str = "Shader" + std::to_string(i);
+            ShaderLibrary.SetModule(Asset::ShaderModuleId(1 + i), str, Shader);
 
-        auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1));
+            auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1 + i));
 
-        auto t1 = std::chrono::high_resolution_clock::now();
+            auto t1 = std::chrono::high_resolution_clock::now();
 
-        auto p = Mod1->LoadStage(
-            RHI::ShaderStage::Vertex,
-            RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile::SP_6_0);
+            auto Shaders =
+                cppcoro::sync_wait(
+                    cppcoro::when_all(
+                        Mod1->LoadStage(
+                            RHI::ShaderStage::Vertex,
+                            RHI::MShaderCompileFlags_Default,
+                            RHI::ShaderProfile::SP_6_0),
+                        Mod1->LoadStage(
+                            RHI::ShaderStage::Vertex,
+                            RHI::MShaderCompileFlags_Default,
+                            RHI::ShaderProfile::SP_6_0),
+                        Mod1->LoadStage(
+                            RHI::ShaderStage::Pixel,
+                            RHI::MShaderCompileFlags_Default,
+                            RHI::ShaderProfile::SP_6_0)));
 
-        auto a = p.get();
+            auto t2 = std::chrono::high_resolution_clock::now();
 
-        auto t2 = std::chrono::high_resolution_clock::now();
-
-        auto xp = Mod1->LoadStage(
-            RHI::ShaderStage::Vertex,
-            RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile::SP_6_0);
-
-        a = xp.get();
-
-        auto t3 = std::chrono::high_resolution_clock::now();
-
-        auto x = Mod1->LoadStage(
-            RHI::ShaderStage::Pixel,
-            RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile::SP_6_0);
-
-        a = x.get();
-
-        auto t4 = std::chrono::high_resolution_clock::now();
-
-        printf("t2-t1: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
-        printf("t3-t2: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t3 - t2).count());
-        printf("t4-t3: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t4 - t3).count());
+            printf("t2-t1: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
+        }
     }
 };
 
-#include <cppcoro/generator.hpp>
-#include <iostream>
-
-cppcoro::generator<const std::uint64_t> fibonacci()
-{
-    std::uint64_t a = 0, b = 1;
-    while (true)
-    {
-        co_yield b;
-        auto tmp = a;
-        a        = b;
-        b += tmp;
-    }
-}
-
-void usage()
-{
-    for (auto i : fibonacci())
-    {
-        if (i > 1'000'000)
-            break;
-        std::cout << i << std::endl;
-    }
-}
-
 NEON_MAIN(Argc, Argv)
 {
-    usage();
     Config::EngineConfig Config{
         .Window = {
             .Title      = STR("Test Engine"),

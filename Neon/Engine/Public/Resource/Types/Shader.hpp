@@ -7,6 +7,9 @@
 #include <Asio/ThreadPool.hpp>
 #include <RHI/Shader.hpp>
 
+#include <cppcoro/task.hpp>
+#include <cppcoro/async_mutex.hpp>
+
 #include <map>
 #include <fstream>
 #include <future>
@@ -36,16 +39,11 @@ namespace Neon::Asset
         /// <summary>
         /// Load or compile shader stage by the specified parameters
         /// </summary>
-        std::future<RHI::IShader*> LoadStage(
+        cppcoro::task<RHI::IShader*> LoadStage(
             RHI::ShaderStage               Stage,
             const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
             const RHI::ShaderMacros&       Macros  = {});
-
-        /// <summary>
-        /// Remove all loaded binaries from this shader module
-        /// </summary>
-        void Optimize();
 
     protected:
         ShaderModule(
@@ -57,7 +55,7 @@ namespace Neon::Asset
         /// <summary>
         /// Seek shader in cache
         /// </summary>
-        bool SeekShader(
+        cppcoro::task<bool> SeekShader(
             const SHA256::Bytes&        Hash,
             std::unique_ptr<uint8_t[]>* ShaderData,
             size_t*                     ShaderSize);
@@ -65,18 +63,25 @@ namespace Neon::Asset
         /// <summary>
         /// Write shader to cache
         /// </summary>
-        void WriteCache(
+        cppcoro::task<> WriteCache(
             const SHA256::Bytes& Hash,
             RHI::IShader*        Shader);
+
+        /// <summary>
+        /// Remove all loaded binaries from this shader module
+        /// </summary>
+        void Optimize();
 
     private:
         ShaderModuleId      m_Id;
         ShaderLibraryAsset* m_Library;
 
         std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
+        cppcoro::async_mutex                        m_BinariesMutex;
 
-        size_t       m_FileSize = 0;
-        std::fstream m_ShaderCache;
+        size_t               m_FileSize = 0;
+        std::fstream         m_ShaderCache;
+        cppcoro::async_mutex m_ShaderCacheMutex;
     };
 
     /// <summary>
@@ -134,26 +139,19 @@ namespace Neon::Asset
         /// <summary>
         /// Remove shader module by id
         /// </summary>
-        /// <param name="Id"></param>
         void RemoveModule(
-            ShaderModuleId Id)
-        {
-            SetModule(Id, {}, {});
-        }
+            ShaderModuleId Id);
 
         /// <summary>
-        /// Optimize shader library (Remove unused loaded binaries)
+        /// Optimize shader library (clear all loaded binaries)
         /// </summary>
-        void Optimize();
+        cppcoro::task<> Optimize();
 
     private:
         std::list<StringU8> m_ModulesData;
         std::vector<bool>   m_ModulesDecompressed;
 
-        std::map<ShaderModuleId, size_t> m_AsyncTasks;
-
         std::map<ShaderModuleId, ShaderModuleTable> m_Modules;
-        Asio::ThreadPool<>                          m_ThreadPool{ 1 };
     };
 
     /*class ShaderAsset : public IAssetResource
