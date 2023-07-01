@@ -44,3 +44,5 @@ bin-int/*
 
 # NuGet Packages
 /packages/*
+/Neon/Coroutines/Public/cppcoro
+/Neon/Coroutines/Private/cppcoro

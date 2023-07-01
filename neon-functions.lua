@@ -52,6 +52,7 @@ function link_engine_library()
     includedirs
     {
         "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}",
         "%{CommonDir.Neon.Resource}",

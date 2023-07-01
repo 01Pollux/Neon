@@ -48,6 +48,7 @@ Function Make-Directory {
 
 
 
+
 # Initialize premake + include files
 
 
@@ -151,5 +152,16 @@ Copy-IncludePath "DirectX-Headers\include\wsl\wrladapter.h" "DX"
 #
 # GLM
 #
+Write-Output "Copying glm files..."
 Remove-Directory $(Get-DepIncPath("glm"))
 Copy-Item -Recurse $(Get-DepSrcPath("glm\glm")) $(Get-DepIncPath("glm"))
+
+
+#
+# CppCoro
+#
+#  Remove items that doesnt end with .lua
+Write-Output "Copying cppcoro files..."
+Remove-Item "Neon/Coroutines"  -Exclude *.lua -Force -Recurse
+Copy-Item -Recurse $(Get-DepSrcPath("cppcoro\lib")) "Neon/Coroutines/Private/cppcoro"
+Copy-Item -Recurse $(Get-DepSrcPath("cppcoro\include")) "Neon/Coroutines/Public"
