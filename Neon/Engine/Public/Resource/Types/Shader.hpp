@@ -4,11 +4,7 @@
 
 #include <Resource/Asset.hpp>
 #include <Resource/Handler.hpp>
-#include <Asio/ThreadPool.hpp>
 #include <RHI/Shader.hpp>
-
-#include <cppcoro/task.hpp>
-#include <cppcoro/async_mutex.hpp>
 
 #include <map>
 #include <fstream>
@@ -39,7 +35,7 @@ namespace Neon::Asset
         /// <summary>
         /// Load or compile shader stage by the specified parameters
         /// </summary>
-        cppcoro::task<RHI::IShader*> LoadStage(
+        RHI::IShader* LoadStage(
             RHI::ShaderStage               Stage,
             const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
@@ -55,7 +51,7 @@ namespace Neon::Asset
         /// <summary>
         /// Seek shader in cache
         /// </summary>
-        cppcoro::task<bool> SeekShader(
+        bool SeekShader(
             const SHA256::Bytes&        Hash,
             std::unique_ptr<uint8_t[]>* ShaderData,
             size_t*                     ShaderSize);
@@ -63,7 +59,7 @@ namespace Neon::Asset
         /// <summary>
         /// Write shader to cache
         /// </summary>
-        cppcoro::task<> WriteCache(
+        void WriteCache(
             const SHA256::Bytes& Hash,
             RHI::IShader*        Shader);
 
@@ -77,11 +73,11 @@ namespace Neon::Asset
         ShaderLibraryAsset* m_Library;
 
         std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
-        cppcoro::async_mutex                        m_BinariesMutex;
+        std::mutex                                  m_BinariesMutex;
 
-        size_t               m_FileSize = 0;
-        std::fstream         m_ShaderCache;
-        cppcoro::async_mutex m_ShaderCacheMutex;
+        size_t       m_FileSize = 0;
+        std::fstream m_ShaderCache;
+        std::mutex   m_ShaderCacheMutex;
     };
 
     /// <summary>
@@ -145,7 +141,7 @@ namespace Neon::Asset
         /// <summary>
         /// Optimize shader library (clear all loaded binaries)
         /// </summary>
-        cppcoro::task<> Optimize();
+        void Optimize();
 
     private:
         std::list<StringU8> m_ModulesData;
@@ -153,91 +149,4 @@ namespace Neon::Asset
 
         std::map<ShaderModuleId, ShaderModuleTable> m_Modules;
     };
-
-    /*class ShaderAsset : public IAssetResource
-    {
-    public:
-        ShaderAsset(
-            const StringU8& CacheName,
-            const StringU8& Code = {});
-
-        /// <summary>
-        /// Get shader code
-        /// </summary>
-        const StringU8& GetCode() const;
-
-        /// <summary>
-        /// Set shader code
-        /// </summary>
-        void SetCode(
-            const StringU8& Code);
-
-        /// <summary>
-        /// Preload shader (async)
-        /// </summary>
-        void PreloadShader(
-            RHI::ShaderStage               Stage,
-            const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
-            const RHI::ShaderMacros&       Macros  = {});
-
-        /// <summary>
-        /// Load shader immediately
-        /// </summary>
-        [[nodiscard]] Ptr<RHI::IShader> LoadShader(
-            RHI::ShaderStage               Stage,
-            const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
-            const RHI::ShaderMacros&       Macros  = {});
-
-    private:
-        /// <summary>
-        /// Get temp file name
-        /// </summary>
-        [[nodiscard]] std::filesystem::path GetTempFileName() const;
-
-        /// <summary>
-        /// Seek shader in cache
-        /// </summary>
-        bool SeekShader(
-            const SHA256::Bytes&        Hash,
-            std::unique_ptr<uint8_t[]>* ShaderData = nullptr,
-            size_t*                     ShaderSize = nullptr);
-
-        /// <summary>
-        /// Load shader immediately
-        /// </summary>
-        [[nodiscard]] Ptr<RHI::IShader> LoadShaderImpl(
-            bool                           CreateIfExists,
-            RHI::ShaderStage               Stage,
-            const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
-            RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
-            const RHI::ShaderMacros&       Macros  = {});
-
-    public:
-        class Handler : public IAssetResourceHandler
-        {
-        public:
-            bool CanCastTo(
-                const Ptr<IAssetResource>& Resource) override;
-
-            Ptr<IAssetResource> Load(
-                IAssetPack*    Pack,
-                IO::InArchive& Archive,
-                size_t         DataSize) override;
-
-            void Save(
-                IAssetPack*                Pack,
-                const Ptr<IAssetResource>& Resource,
-                IO::OutArchive&            Archive) override;
-        };
-
-    private:
-        StringU8     m_ShaderCode;
-        StringU8     m_ShaderCacheName;
-        std::fstream m_ShaderCache;
-        size_t       m_FileSize = 0;
-
-        std::map<SHA256::Bytes, std::future<void()>> m_PreloadingShaders;
-    };*/
 } // namespace Neon::Asset

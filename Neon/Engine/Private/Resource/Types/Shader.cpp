@@ -36,7 +36,7 @@ namespace Neon::Asset
         return Hash.Digest();
     }
 
-    cppcoro::task<RHI::IShader*> ShaderModule::LoadStage(
+    RHI::IShader* ShaderModule::LoadStage(
         RHI::ShaderStage               Stage,
         const RHI::MShaderCompileFlags Flags,
         RHI::ShaderProfile             Profile,
@@ -47,21 +47,21 @@ namespace Neon::Asset
 
         IterMapType Iter;
         {
-            auto Lock = co_await m_BinariesMutex.scoped_lock_async();
-            Iter      = m_Binaries.find(Hash);
+            std::scoped_lock Lock(m_BinariesMutex);
+            Iter = m_Binaries.find(Hash);
         }
 
         // Check if shader was already compiled and is in cache
         if (Iter != m_Binaries.end())
         {
-            co_return Iter->second.get();
+            return Iter->second.get();
         }
 
         std::unique_ptr<uint8_t[]> ShaderData;
         size_t                     ShaderSize = 0;
 
         // Check if shader was already compiled
-        if (co_await SeekShader(
+        if (SeekShader(
                 Hash,
                 &ShaderData,
                 &ShaderSize))
@@ -70,10 +70,10 @@ namespace Neon::Asset
             auto ShaderPtr = Shader.get();
 
             {
-                auto Lock = co_await m_BinariesMutex.scoped_lock_async();
+                std::scoped_lock Lock(m_BinariesMutex);
                 m_Binaries.emplace(Hash, std::move(Shader));
             }
-            co_return ShaderPtr;
+            return ShaderPtr;
         }
 
         auto Shader = RHI::IShader::Create(RHI::ShaderCompileDesc{
@@ -88,17 +88,18 @@ namespace Neon::Asset
         if (Shader)
         {
             {
-                auto Lock = co_await m_BinariesMutex.scoped_lock_async();
+                std::scoped_lock Lock(m_BinariesMutex);
                 m_Binaries.emplace(Hash, std::move(Shader));
             }
-            co_await WriteCache(Hash, ShaderPtr);
+            WriteCache(Hash, ShaderPtr);
         }
 
-        co_return ShaderPtr;
+        return ShaderPtr;
     }
 
     void ShaderModule::Optimize()
     {
+        std::scoped_lock Lock(m_BinariesMutex);
         m_Binaries.clear();
     }
 
@@ -115,14 +116,14 @@ namespace Neon::Asset
         m_FileSize = m_ShaderCache.tellg();
     }
 
-    cppcoro::task<bool> ShaderModule::SeekShader(
+    bool ShaderModule::SeekShader(
         const SHA256::Bytes&        Hash,
         std::unique_ptr<uint8_t[]>* ShaderData,
         size_t*                     ShaderSize)
     {
-        auto Lock = co_await m_ShaderCacheMutex.scoped_lock_async();
-
+        std::scoped_lock Lock(m_ShaderCacheMutex);
         m_ShaderCache.seekg(0, std::ios::beg);
+
         for (size_t i = 0; i < m_FileSize; i = m_ShaderCache.tellg())
         {
             SHA256::Bytes CurHash;
@@ -137,7 +138,7 @@ namespace Neon::Asset
                     *ShaderData = std::make_unique<uint8_t[]>(*ShaderSize);
                     m_ShaderCache.read(std::bit_cast<char*>(ShaderData->get()), *ShaderSize);
 
-                    co_return true;
+                    return true;
                 }
             }
             else
@@ -149,14 +150,14 @@ namespace Neon::Asset
             }
         }
 
-        co_return false;
+        return false;
     }
 
-    cppcoro::task<> ShaderModule::WriteCache(
+    void ShaderModule::WriteCache(
         const SHA256::Bytes& Hash,
         RHI::IShader*        Shader)
     {
-        auto Lock = co_await m_ShaderCacheMutex.scoped_lock_async();
+        std::scoped_lock Lock(m_ShaderCacheMutex);
 
         m_ShaderCache.seekg(0, std::ios::beg);
         m_ShaderCache.seekp(0, std::ios::beg);
@@ -178,7 +179,7 @@ namespace Neon::Asset
             {
                 m_ShaderCache.seekp(i, std::ios::beg);
                 WriteToFile();
-                co_return;
+                return;
             }
             else
             {
@@ -192,7 +193,6 @@ namespace Neon::Asset
         m_ShaderCache.write(std::bit_cast<char*>(Hash.data()), Hash.size());
 
         WriteToFile();
-        co_return;
     }
 
     //
@@ -255,7 +255,7 @@ namespace Neon::Asset
         }
     }
 
-    cppcoro::task<> ShaderLibraryAsset::Optimize()
+    void ShaderLibraryAsset::Optimize()
     {
         std::vector<cppcoro::task<>> Tasks;
         Tasks.reserve(m_Modules.size());
@@ -264,7 +264,5 @@ namespace Neon::Asset
         {
             LoadedData.Module.Optimize();
         }
-
-        co_return;
     }
 } // namespace Neon::Asset

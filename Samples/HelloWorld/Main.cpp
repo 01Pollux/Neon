@@ -46,6 +46,7 @@ float4 PS_Main(VSOutput Input) : SV_TARGET
 #include <chrono>
 
 #include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/async_mutex.hpp>
 #include <cppcoro/when_all.hpp>
 #include <cppcoro/schedule_on.hpp>
 #include <cppcoro/sync_wait.hpp>
@@ -62,35 +63,50 @@ public:
     {
         Runtime::DefaultGameEngine::Initialize(Config);
 
+        cppcoro::static_thread_pool ThreadPool(4);
+        cppcoro::async_mutex        ModuleMutex;
+
+        std::vector<cppcoro::task<void>> Tasks;
+        Tasks.reserve(100);
+
+        auto t1 = std::chrono::high_resolution_clock::now();
         for (int i = 0; i < 100; ++i)
         {
-            std::string str = "Shader" + std::to_string(i);
-            ShaderLibrary.SetModule(Asset::ShaderModuleId(1 + i), str, Shader);
+            auto Task = [this, i, &ModuleMutex]() -> cppcoro::task<>
+            {
+                {
+                    std::string str        = "Shader" + std::to_string(i);
+                    auto        ModuleLock = co_await ModuleMutex.scoped_lock_async();
+                    ShaderLibrary.SetModule(Asset::ShaderModuleId(1 + i), str, Shader);
+                }
 
-            auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1 + i));
+                auto Mod1 = ShaderLibrary.LoadModule(Asset::ShaderModuleId(1 + i));
 
-            auto t1 = std::chrono::high_resolution_clock::now();
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Vertex,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_0);
 
-            auto Shaders =
-                cppcoro::sync_wait(
-                    cppcoro::when_all(
-                        Mod1->LoadStage(
-                            RHI::ShaderStage::Vertex,
-                            RHI::MShaderCompileFlags_Default,
-                            RHI::ShaderProfile::SP_6_0),
-                        Mod1->LoadStage(
-                            RHI::ShaderStage::Vertex,
-                            RHI::MShaderCompileFlags_Default,
-                            RHI::ShaderProfile::SP_6_0),
-                        Mod1->LoadStage(
-                            RHI::ShaderStage::Pixel,
-                            RHI::MShaderCompileFlags_Default,
-                            RHI::ShaderProfile::SP_6_0)));
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Vertex,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_0);
 
-            auto t2 = std::chrono::high_resolution_clock::now();
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Pixel,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_0);
 
-            printf("t2-t1: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
+                co_return;
+            }();
+
+            Tasks.emplace_back(cppcoro::schedule_on(ThreadPool, std::move(Task)));
         }
+
+        cppcoro::sync_wait(cppcoro::when_all(std::move(Tasks)));
+        auto t2 = std::chrono::high_resolution_clock::now();
+
+        printf("t2-t1: %lf\n", std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1).count());
     }
 };
 
