@@ -93,7 +93,6 @@ namespace Neon::Asset
         {
             StringU8 ModName;
             size_t   ModOffset;
-            size_t   ModSize;
 
             ShaderModule Module;
 
@@ -101,11 +100,9 @@ namespace Neon::Asset
                 ShaderModuleId      Id,
                 StringU8            ModName,
                 size_t              ModOffset,
-                size_t              ModSize,
                 ShaderLibraryAsset* Library) :
                 ModName(std::move(ModName)),
                 ModOffset(ModOffset),
-                ModSize(ModSize),
                 Module(this->ModName, Library, Id)
             {
             }
@@ -142,6 +139,40 @@ namespace Neon::Asset
         /// Optimize shader library (clear all loaded binaries)
         /// </summary>
         void Optimize();
+
+    private:
+        /// <summary>
+        /// Decompress shader module once
+        /// </summary>
+        const StringU8& DecompressOnce(
+            size_t ModOffset);
+
+        /// <summary>
+        /// Set shader module by id
+        /// </summary>
+        [[nodiscard]] void SetModule(
+            ShaderModuleId Id,
+            StringU8       ModName,
+            StringU8       ModCode,
+            bool           Compressed);
+
+    public:
+        class Handler : public IAssetResourceHandler
+        {
+        public:
+            bool CanCastTo(
+                const Ptr<IAssetResource>& Resource) override;
+
+            Ptr<IAssetResource> Load(
+                IAssetPack*    Pack,
+                IO::InArchive& Archive,
+                size_t         DataSize) override;
+
+            void Save(
+                IAssetPack*                Pack,
+                const Ptr<IAssetResource>& Resource,
+                IO::OutArchive&            Archive) override;
+        };
 
     private:
         std::list<StringU8> m_ModulesData;

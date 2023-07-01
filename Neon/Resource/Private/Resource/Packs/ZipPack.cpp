@@ -208,7 +208,7 @@ namespace Neon::Asset
         ResetReadWrite();
 
         bio::filtering_istream Filter;
-        Filter.push(bio::gzip_decompressor());
+        Filter.push(bio::gzip_decompressor{});
         Filter.push(File);
         if (Filter.bad())
         {
@@ -231,7 +231,7 @@ namespace Neon::Asset
         }
 
         bio::filtering_ostream Filter;
-        Filter.push(bio::gzip_compressor());
+        Filter.push(bio::gzip_compressor{});
         Filter.push(bio::file_sink(FilePath, std::ios::out | std::ios::trunc | std::ios::binary));
 
         Filter << m_File.rdbuf();

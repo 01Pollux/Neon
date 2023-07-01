@@ -1,20 +1,63 @@
 #include <EnginePCH.hpp>
 #include <Resource/Types/Shader.hpp>
+#include <IO/Archive.hpp>
 #include <RHI/Shader.hpp>
 
-#include <cppcoro/resume_on.hpp>
-#include <cppcoro/schedule_on.hpp>
-#include <cppcoro/sync_wait.hpp>
-#include <cppcoro/when_all.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
 #include <filesystem>
 #include <Core/SHA256.hpp>
 #include <Log/Logger.hpp>
 
 namespace ranges = std::ranges;
+namespace bio    = boost::iostreams;
 
 namespace Neon::Asset
 {
+    static StringU8 CompressString(
+        IO::InArchive&  Archive,
+        const StringU8& Data)
+    {
+        std::istringstream Stream(Data);
+
+        bio::filtering_istreambuf Filter;
+        Filter.push(bio::gzip_compressor{});
+        Filter.push(Data, Data.size());
+
+        bio::copy(Filter, Archive);
+    }
+
+    static StringU8 DecompressString(
+        IO::OutArchive& Archive,
+        const StringU8& Data)
+    {
+        std::istringstream Stream(Data);
+
+        bio::filtering_istreambuf Filter;
+        Filter.push(bio::gzip_compressor{});
+        Filter.push(Stream);
+
+        bio::copy(Filter, Archive);
+    }
+
+    static StringU8 DecompressString(
+        StringU8 Data)
+    {
+        std::istringstream Stream(std::move(Data));
+
+        bio::filtering_istreambuf Filter;
+        Filter.push(bio::gzip_decompressor{});
+        Filter.push(Stream);
+
+        std::istringstream Output;
+        bio::copy(Filter, Output);
+        return Output.str();
+    }
+
+    //
+
     /// <summary>
     /// Get hash of shader
     /// </summary>
@@ -210,7 +253,7 @@ namespace Neon::Asset
         auto Iter = m_Modules.find(Id);
         if (Iter != m_Modules.end())
         {
-            return &*std::next(m_ModulesData.begin(), Iter->second.ModOffset);
+            return &DecompressOnce(Iter->second.ModOffset);
         }
         else
         {
@@ -223,26 +266,7 @@ namespace Neon::Asset
         StringU8       ModName,
         StringU8       ModCode)
     {
-        if (ModName.empty() && ModCode.empty())
-        {
-            m_Modules.erase(Id);
-            return;
-        }
-
-        auto Iter = m_Modules.find(Id);
-        if (Iter == m_Modules.end())
-        {
-            m_Modules.emplace(std::piecewise_construct, std::forward_as_tuple(Id), std::forward_as_tuple(Id, ModName, m_ModulesData.size(), ModCode.size(), this));
-            m_ModulesData.emplace_back(std::move(ModCode));
-            m_ModulesDecompressed.push_back(true);
-        }
-        else
-        {
-            size_t Offset = Iter->second.ModOffset;
-
-            *std::next(m_ModulesData.begin(), Offset) = std::move(ModCode);
-            m_ModulesDecompressed[Offset]             = true;
-        }
+        SetModule(Id, std::move(ModName), std::move(ModCode), false);
     }
 
     void ShaderLibraryAsset::RemoveModule(
@@ -257,12 +281,86 @@ namespace Neon::Asset
 
     void ShaderLibraryAsset::Optimize()
     {
-        std::vector<cppcoro::task<>> Tasks;
-        Tasks.reserve(m_Modules.size());
-
         for (auto& LoadedData : m_Modules | std::views::values)
         {
             LoadedData.Module.Optimize();
+        }
+    }
+
+    const StringU8& ShaderLibraryAsset::DecompressOnce(
+        size_t ModOffset)
+    {
+        auto Iter = std::next(m_ModulesData.begin(), ModOffset);
+        if (!m_ModulesDecompressed[ModOffset])
+        {
+            auto Code = DecompressString(std::move(*Iter));
+            Iter->assign(std::move(Code));
+        }
+        return *Iter;
+    }
+
+    void ShaderLibraryAsset::SetModule(
+        ShaderModuleId Id,
+        StringU8       ModName,
+        StringU8       ModCode,
+        bool           Compressed)
+    {
+        m_Modules.erase(Id);
+        m_Modules.emplace(std::piecewise_construct, std::forward_as_tuple(Id), std::forward_as_tuple(Id, ModName, m_ModulesData.size(), ModCode.size(), this));
+        m_ModulesData.emplace_back(std::move(ModCode));
+        m_ModulesDecompressed.push_back(!Compressed);
+    }
+
+    //
+
+    bool ShaderLibraryAsset::Handler::CanCastTo(
+        const Ptr<IAssetResource>& Resource)
+    {
+        return dynamic_cast<ShaderLibraryAsset*>(Resource.get());
+    }
+
+    Ptr<IAssetResource> ShaderLibraryAsset::Handler::Load(
+        IAssetPack*,
+        IO::InArchive& Archive,
+        size_t)
+    {
+        auto ShaderLib = std::make_shared<ShaderLibraryAsset>();
+
+        size_t NumModules = 0;
+        Archive >> NumModules;
+
+        for (size_t i = 0; i < NumModules; i++)
+        {
+            ShaderModuleId Id;
+            Archive >> Id;
+
+            StringU8 ModName;
+            Archive >> ModName;
+
+            StringU8 ModCode;
+            Archive >> ModCode;
+
+            ShaderLib->SetModule(Id, std::move(ModName), std::move(ModCode), true);
+        }
+    }
+
+    void ShaderLibraryAsset::Handler::Save(
+        IAssetPack*,
+        const Ptr<IAssetResource>& Resource,
+        IO::OutArchive&            Archive)
+    {
+        auto ShaderLib = std::static_pointer_cast<ShaderLibraryAsset>(Resource);
+        Archive << ShaderLib->m_ModulesData.size();
+
+        for (auto& [ModId, ModData] : ShaderLib->m_Modules)
+        {
+            Archive << ModId;
+            Archive << ModData.ModName;
+            if (m_ModulesDecompressed[ModData.ModOffset])
+            {
+                DecompressString(ModData, );
+            }
+            Archive << ModData.ModOffset;
         }
     }
 } // namespace Neon::Asset
