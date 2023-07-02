@@ -118,7 +118,7 @@ namespace Neon::Runtime
         auto RenderGraph = Renderer->GetRenderGraph();
         auto Builder     = RenderGraph->Reset();
 
-        // Builder.AppendPass<RG::ScenePass>(m_Scene);
+        Builder.AppendPass<RG::ScenePass>(m_Scene);
 
         Builder.Build();
     }

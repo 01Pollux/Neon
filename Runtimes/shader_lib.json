@@ -1,5 +1,5 @@
 {
-  "Export Path": "neonrt.np",
+  "Export Path": "Runtimes/shader_lib.np",
   "Type": "ZipAsset",
   "Assets": [
     {
@@ -9,7 +9,23 @@
         {
           "Id": 0,
           "Name": "Sprite2D",
-          "Path": "Shaders/Sprite2D.hlsl"
+          "Path": "Runtimes/Shaders/Sprite2D.hlsl",
+          "Validation": [
+            {
+              "Stage": "Vertex",
+              "Profile": "6.0",
+              "Defines": [
+                "SPRITE2D"
+              ]
+            },
+            {
+              "Stage": "Pixel",
+              "Profile": "6.0",
+              "Defines": [
+                "SPRITE2D"
+              ]
+            }
+          ]
         }
       ]
     }
