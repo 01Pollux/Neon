@@ -151,9 +151,9 @@ namespace PakC::Handler
                                                                  { return Range.as_object(); }))
                     {
                         auto RangeType      = StringU8(Range.at("Range Type").as_string());
-                        auto RangeCount     = uint32_t(Range.at("Count").as_int64());
-                        auto ShaderRegister = uint32_t(Range.at("Shader Register").as_int64());
-                        auto RegisterSpace  = uint32_t(Range.at("Register Space").as_int64());
+                        auto RangeCount     = Range.at("Count").to_number<uint32_t>();
+                        auto ShaderRegister = Range.at("Shader Register").to_number<uint32_t>();
+                        auto RegisterSpace  = Range.at("Register Space").to_number<uint32_t>();
                         auto Flags          = GetRangeFlags(Range.at("Flags").as_array());
 
                         switch (StringUtils::Hash(RangeType))
@@ -207,9 +207,9 @@ namespace PakC::Handler
                 }
                 case StringUtils::Hash("Constants"):
                 {
-                    auto ShaderRegister = uint32_t(Parameter.at("Shader Register").as_int64());
-                    auto RegisterSpace  = uint32_t(Parameter.at("Register Space").as_int64());
-                    auto Count32Bits    = uint32_t(Parameter.at("Count 32 Bits").as_int64());
+                    auto ShaderRegister = Parameter.at("Shader Register").to_number<uint32_t>();
+                    auto RegisterSpace  = Parameter.at("Register Space").to_number<uint32_t>();
+                    auto Count32Bits    = Parameter.at("Count 32 Bits").to_number<uint32_t>();
                     auto Visibility     = ConvertShaderVisibility(Parameter.at("Shader Visibility").as_string());
 
                     Builder.Add32BitConstants(
@@ -222,8 +222,8 @@ namespace PakC::Handler
 
                 case StringUtils::Hash("Descriptor"):
                 {
-                    auto ShaderRegister = uint32_t(Parameter.at("Shader Register").as_int64());
-                    auto RegisterSpace  = uint32_t(Parameter.at("Register Space").as_int64());
+                    auto ShaderRegister = Parameter.at("Shader Register").to_number<uint32_t>();
+                    auto RegisterSpace  = Parameter.at("Register Space").to_number<uint32_t>();
                     auto Visibility     = ConvertShaderVisibility(Parameter.at("Shader Visibility").as_string());
                     auto RootType       = StringU8(Parameter.at("Root Type").as_string());
                     auto Flags          = GetRootFlags(Parameter.at("Flags").as_array());
@@ -280,8 +280,8 @@ namespace PakC::Handler
             {
                 RHI::StaticSamplerDesc Desc;
 
-                Desc.ShaderRegister = uint32_t(Parameter.at("Shader Register").as_int64());
-                Desc.RegisterSpace  = uint32_t(Parameter.at("Register Space").as_int64());
+                Desc.ShaderRegister = Parameter.at("Shader Register").to_number<uint32_t>();
+                Desc.RegisterSpace  = Parameter.at("Register Space").to_number<uint32_t>();
                 Desc.Visibility     = ConvertShaderVisibility(Parameter.at("Shader Visibility").as_string());
 
                 Desc.Filter   = ConvertSamplerFilter(StringU8(Parameter.at("Filter").as_string()));
@@ -289,16 +289,16 @@ namespace PakC::Handler
                 Desc.AddressV = ConvertSamplerAddressMode(StringU8(Parameter.at("Address V").as_string()));
                 Desc.AddressW = ConvertSamplerAddressMode(StringU8(Parameter.at("Address W").as_string()));
 
-                Desc.MipLODBias     = float(Parameter.at("Mip LOD Bias").as_double());
-                Desc.MaxAnisotropy  = uint32_t(Parameter.at("Max Anisotropy").as_int64());
+                Desc.MipLODBias     = Parameter.at("Mip LOD Bias").to_number<float>();
+                Desc.MaxAnisotropy  = Parameter.at("Max Anisotropy").to_number<uint32_t>();
                 Desc.ComparisonFunc = ConvertCompareFunc(StringU8(Parameter.at("Comparaison Function").as_string()));
                 auto BorderColor    = Parameter.at("Border Color").as_array() |
                                    std::views::transform([](auto&& Color)
-                                                         { return float(Color.as_double()); }) |
+                                                         { return Color.to_number<float>(); }) |
                                    std::ranges::to<std::vector<float>>();
 
-                Desc.MinLOD = float(Parameter.at("Min LOD").as_double());
-                Desc.MaxLOD = float(Parameter.at("Max LOD").as_double());
+                Desc.MinLOD = Parameter.at("Min LOD").to_number<float>();
+                Desc.MaxLOD = Parameter.at("Max LOD").to_number<float>();
 
                 NEON_VALIDATE(BorderColor.size() == 4, "Invalid border color");
                 Desc.BorderColor = {

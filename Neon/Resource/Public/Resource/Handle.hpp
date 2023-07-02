@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include <Core/String.hpp>
 #include <boost/uuid/uuid.hpp>
 
 namespace Neon::Asset
@@ -11,20 +11,20 @@ namespace Neon::Asset
         /// Generate asset handle from string
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] std::string ToString() const;
+        [[nodiscard]] StringU8 ToString() const;
 
         /// <summary>
         /// Generate asset handle from string
         /// </summary>
         /// <returns></returns>
-        [[nodiscard]] std::wstring ToWideString() const;
+        [[nodiscard]] String ToWideString() const;
 
         /// <summary>
         /// Generate asset handle from string
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] static AssetHandle FromString(
-            const std::string& Id);
+            const StringU8& Id);
 
         /// <summary>
         /// Generate random asset handle

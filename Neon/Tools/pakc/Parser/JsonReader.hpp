@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/String.hpp>
+
 #include <Resource/Pack.hpp>
 #include <Resource/Manager.hpp>
 
@@ -13,18 +15,16 @@ namespace PakC
 
     class JsonHandler
     {
+        using ResourceLoaderMap = std::map<Neon::StringU8, std::function<AssetResourcePtr(const boost::json::object&)>>;
+
     public:
         JsonHandler();
-
-        NEON_CLASS_NO_COPYMOVE(JsonHandler);
-
-        ~JsonHandler();
 
         /// <summary>
         /// Parses a JSON file.
         /// </summary>
         void Parse(
-            const std::string& Path);
+            const Neon::StringU8& Path);
 
     private:
         /// <summary>
@@ -34,10 +34,6 @@ namespace PakC
 
     private:
         Neon::UPtr<Neon::Asset::IResourceManager> m_ResourceManager;
-
-        std::map<std::string, std::function<AssetResourcePtr(const boost::json::object&)>>
-            m_AssetResources;
-
-        std::vector<std::jthread> m_Threads;
+        ResourceLoaderMap                         m_AssetResources;
     };
 } // namespace PakC

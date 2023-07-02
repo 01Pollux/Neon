@@ -13,7 +13,7 @@ namespace PakC::Handler
     {
         if (auto FileName = Object.find("File"); FileName != Object.end() && FileName->value().is_string())
         {
-            std::string    Path(FileName->value().as_string());
+            StringU8       Path(FileName->value().as_string());
             std::wifstream File(Path);
             if (!File)
             {
@@ -27,7 +27,7 @@ namespace PakC::Handler
         {
             if (auto Content = Object.find("Content"); Content != Object.end() && Content->value().is_string())
             {
-                return std::make_shared<Asset::TextFileAsset>(std::string(Content->value().as_string()));
+                return std::make_shared<Asset::TextFileAsset>(StringU8(Content->value().as_string()));
             }
         }
         throw std::runtime_error("No file or content specified for text file.");

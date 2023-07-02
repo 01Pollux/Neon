@@ -7,12 +7,12 @@
 
 namespace Neon::Asset
 {
-    std::string AssetHandle::ToString() const
+    StringU8 AssetHandle::ToString() const
     {
         return boost::uuids::to_string(*this);
     }
 
-    std::wstring AssetHandle::ToWideString() const
+    String AssetHandle::ToWideString() const
     {
         return boost::uuids::to_wstring(*this);
     }

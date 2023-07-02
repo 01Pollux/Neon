@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <Core/BitMask.hpp>
+#include <Core/String.hpp>
 #include <Math/Colors.hpp>
 #include <optional>
 #include <variant>
@@ -263,7 +263,7 @@ namespace Neon::RHI
         SamplerFeedback_MipRegionUsed_Opaque,
     };
 
-    using ShaderInputLayout = std::vector<std::pair<std::string, EResourceFormat>>;
+    using ShaderInputLayout = std::vector<std::pair<StringU8, EResourceFormat>>;
 
     //
 

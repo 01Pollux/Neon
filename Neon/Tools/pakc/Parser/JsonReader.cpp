@@ -16,8 +16,6 @@
 
 //
 
-#include <Resource/Types/RootSignature.hpp>
-
 namespace PakC
 {
     using namespace Neon;
@@ -28,12 +26,8 @@ namespace PakC
         RegisterTypes();
     }
 
-    JsonHandler::~JsonHandler()
-    {
-    }
-
     void JsonHandler::Parse(
-        const std::string& Path)
+        const StringU8& Path)
     {
         NEON_INFO("Parsing: '{}'", Path);
 
@@ -87,7 +81,7 @@ namespace PakC
 
         Neon::Asset::IAssetPack* Pack;
 
-        std::string PackName(PackType->value().as_string());
+        StringU8 PackName(PackType->value().as_string());
         switch (Neon::StringUtils::Hash(PackName))
         {
         case Neon::StringUtils::Hash("ZipAsset"):
@@ -119,23 +113,23 @@ namespace PakC
 
             Neon::Asset::AssetHandle Handle =
                 ForceHandle != Element.end() && ForceHandle->value().is_string()
-                    ? Asset::AssetHandle::FromString(std::string(ForceHandle->value().as_string()))
+                    ? Asset::AssetHandle::FromString(StringU8(ForceHandle->value().as_string()))
                     : Asset::AssetHandle::Random();
 
             auto Tag = Element.find("Tag");
             if (Tag != Element.end() && Tag->value().is_string())
             {
-                NEON_INFO("Loading: '{}'", std::string(Tag->value().as_string()));
+                NEON_INFO("Loading: '{}'", StringU8(Tag->value().as_string()));
             }
             else
             {
                 NEON_INFO("Loading: {} -- Handle: {}", Count, Handle.ToString());
             }
 
-            auto TypeHandler = m_AssetResources.find(std::string(Type->value().as_string()));
+            auto TypeHandler = m_AssetResources.find(StringU8(Type->value().as_string()));
             if (TypeHandler == m_AssetResources.end())
             {
-                NEON_ERROR("Failed to find handler for type: '{}'", std::string(Type->value().as_string()));
+                NEON_ERROR("Failed to find handler for type: '{}'", StringU8(Type->value().as_string()));
                 continue;
             }
 
@@ -153,17 +147,18 @@ namespace PakC
                 continue;
             }
 
+            NEON_INFO("Successfully loaded asset");
             Pack->SaveAsync(Handle, Asset);
         }
 
-        Pack->ExportAsync(std::string(ExportPath->value().as_string()));
+        Pack->ExportAsync(StringU8(ExportPath->value().as_string()));
     }
 
     void JsonHandler::RegisterTypes()
     {
         m_AssetResources["LoggerAsset"]        = &Handler::LoadLoggerResource;
         m_AssetResources["TextFileAsset"]      = &Handler::LoadTextResource;
-        m_AssetResources["ShaderAsset"]        = &Handler::LoadShaderResource;
+        m_AssetResources["ShaderLibraryAsset"] = &Handler::LoadShaderResource;
         m_AssetResources["RootSignatureAsset"] = &Handler::LoadRootSignatureResource;
         m_AssetResources["TextureAsset"]       = &Handler::LoadTextureResource;
     }

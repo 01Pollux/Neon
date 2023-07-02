@@ -18,7 +18,7 @@ namespace PakC::Handler
             for (auto& [Tag, SeverityName] : Tags->value().as_object())
             {
                 Logger::LogSeverity Severity;
-                switch (StringUtils::Hash(std::string(SeverityName.as_string())))
+                switch (StringUtils::Hash(StringU8(SeverityName.as_string())))
                 {
                 case StringUtils::Hash("Disabled"):
                     Severity = Logger::LogSeverity::Disabled;
