@@ -5,6 +5,9 @@
 #include <Private/RHI/Dx12/RootSignature.hpp>
 #include <RHI/Shader.hpp>
 
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
 namespace Neon::RHI
 {
     std::mutex                                   s_PipelineStateCacheMutex;
@@ -411,11 +414,11 @@ namespace Neon::RHI
             for (auto& [Name, Element] : Result.InputLayout)
             {
                 auto SemanticView = Name |
-                                    std::views::split('#') |
-                                    std::views::take(2) |
-                                    std::views::transform([](auto&& Range)
-                                                          { return StringU8View(Range.begin(), Range.end()); }) |
-                                    std::ranges::to<std::vector<StringU8View>>();
+                                    views::split('#') |
+                                    views::take(2) |
+                                    views::transform([](auto&& Range)
+                                                     { return StringU8View(Range.begin(), Range.end()); }) |
+                                    ranges::to<std::vector<StringU8View>>();
 
                 auto& NameIter = SemanticView[0];
 
@@ -481,8 +484,8 @@ namespace Neon::RHI
         // Render target formats + depth stencil format
         {
             Result.Desc.NumRenderTargets = UINT(Builder.RTFormats.size());
-            std::ranges::transform(Builder.RTFormats, Result.Desc.RTVFormats, [](auto&& Format)
-                                   { return CastFormat(Format); });
+            ranges::transform(Builder.RTFormats, Result.Desc.RTVFormats, [](auto&& Format)
+                              { return CastFormat(Format); });
             Hash.Append(
                 std::bit_cast<const uint8_t*>(&Result.Desc.RTVFormats[0]),
                 Result.Desc.NumRenderTargets * sizeof(Result.Desc.RTVFormats[0]));

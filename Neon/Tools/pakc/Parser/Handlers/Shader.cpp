@@ -6,6 +6,9 @@
 #include <Resource/Types/Shader.hpp>
 #include <Log/Logger.hpp>
 
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
 namespace PakC::Handler
 {
     using namespace Neon;
@@ -51,16 +54,16 @@ namespace PakC::Handler
             if (auto ProfileName = Object.if_contains("Profile"); ProfileName && ProfileName->is_string())
             {
                 auto ProfileView = ProfileName->as_string() |
-                                   std::views::split('.') |
-                                   std::views::take(2) |
-                                   std::views::transform([](auto&& Range)
-                                                         { return StringU8(Range.begin(), Range.end()); }) |
-                                   std::ranges::to<std::vector<StringU8>>();
+                                   views::split('.') |
+                                   views::take(2) |
+                                   views::transform([](auto&& Range)
+                                                    { return StringU8(Range.begin(), Range.end()); }) |
+                                   ranges::to<std::vector<StringU8>>();
 
                 auto ProfileIter = ProfileView.begin();
 
                 uint8_t Major = std::stoi(ProfileIter[0]);
-                uint8_t Minor = std::stoi(ProfileIter[1]);
+                uint8_t Minor = ProfileView.size() > 1 ? std::stoi(ProfileIter[1]) : 0;
 
                 switch (Major)
                 {

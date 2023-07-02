@@ -7,6 +7,9 @@
 #include <Resource/Types/Texture.hpp>
 #include <Log/Logger.hpp>
 
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
 namespace PakC::Handler
 {
     using namespace Neon;
@@ -46,10 +49,10 @@ namespace PakC::Handler
         {
             // convert to uppercase
             auto Extension = Path.extension().string() |
-                             std::views::drop(1) | // drop the dot
-                             std::views::transform([](char c)
-                                                   { return std::toupper(c); }) |
-                             std::ranges::to<StringU8>();
+                             views::drop(1) | // drop the dot
+                             views::transform([](char c)
+                                              { return std::toupper(c); }) |
+                             ranges::to<StringU8>();
 
             auto FormatType = s_TextureImageFormat.find(Extension);
             if (FormatType != s_TextureImageFormat.end())
