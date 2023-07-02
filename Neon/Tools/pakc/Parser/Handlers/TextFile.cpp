@@ -11,9 +11,9 @@ namespace PakC::Handler
     AssetResourcePtr LoadTextResource(
         const boost::json::object& Object)
     {
-        if (auto FileName = Object.find("File"); FileName != Object.end() && FileName->value().is_string())
+        if (auto FileName = Object.if_contains("File"); FileName && FileName->is_string())
         {
-            StringU8       Path(FileName->value().as_string());
+            StringU8       Path(FileName->as_string());
             std::wifstream File(Path);
             if (!File)
             {
@@ -23,13 +23,13 @@ namespace PakC::Handler
             Stream << File.rdbuf();
             return std::make_shared<Asset::TextFileAsset>(Stream.str());
         }
+        else if (auto Content = Object.if_contains("Content"); Content && Content->is_string())
+        {
+            return std::make_shared<Asset::TextFileAsset>(StringU8(Content->as_string()));
+        }
         else
         {
-            if (auto Content = Object.find("Content"); Content != Object.end() && Content->value().is_string())
-            {
-                return std::make_shared<Asset::TextFileAsset>(StringU8(Content->value().as_string()));
-            }
+            throw std::runtime_error("No file or content specified for text file.");
         }
-        throw std::runtime_error("No file or content specified for text file.");
     }
 } // namespace PakC::Handler

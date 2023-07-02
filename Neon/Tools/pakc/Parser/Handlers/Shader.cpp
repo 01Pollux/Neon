@@ -13,15 +13,17 @@ namespace PakC::Handler
 {
     using namespace Neon;
 
-    bool ValidateShader(
+    void ValidateShader(
         Asset::ShaderModule*      ShaderModule,
         const boost::json::array& Validation)
     {
         for (auto& Object : Validation |
-                                std::views::transform(
+                                views::transform(
                                     [](const auto& Stage) -> decltype(auto)
                                     { return Stage.as_object(); }))
         {
+            ValidateFields(Object, "Stage");
+
             RHI::ShaderStage Stage;
             auto             StageName = StringU8(Object.at("Stage").as_string());
 
@@ -46,8 +48,7 @@ namespace PakC::Handler
                 Stage = RHI::ShaderStage::Domain;
                 break;
             default:
-                NEON_ERROR("Failed to parse shader stage: {}", StageName);
-                return false;
+                throw std::runtime_error("Invalid shader stage " + StageName);
             }
 
             RHI::ShaderProfile Profile = RHI::ShaderProfile::SP_6_0;
@@ -77,8 +78,7 @@ namespace PakC::Handler
                 }
                 default:
                 {
-                    NEON_ERROR("Invalid shader profile {}", StringU8(ProfileName->as_string()));
-                    return false;
+                    throw std::runtime_error("Invalid shader profile " + StringU8(ProfileName->as_string()));
                 }
                 }
             }
@@ -108,8 +108,7 @@ namespace PakC::Handler
                     }
                     default:
                     {
-                        NEON_ERROR("Invalid shader flag: {}", StringU8(Flag.as_string()));
-                        return false;
+                        throw std::runtime_error("Invalid shader flag " + StringU8(Flag.as_string()));
                     }
                     }
                 }
@@ -121,12 +120,9 @@ namespace PakC::Handler
 
             if (!ShaderModule->LoadStage(Stage, Flags, Profile, Macros))
             {
-                NEON_ERROR("Failed to load shader stage: {}", StageName);
-                return false;
+                throw std::runtime_error("Failed to load shader stage " + StageName);
             }
         }
-
-        return true;
     }
 
     AssetResourcePtr LoadShaderResource(
@@ -138,12 +134,14 @@ namespace PakC::Handler
         std::stringstream Buffer;
 
         for (auto& Module : Object.at("Modules").as_array() |
-                                std::views::transform(
+                                views::transform(
                                     [](const auto& Module) -> decltype(auto)
                                     { return Module.as_object(); })
 
         )
         {
+            ValidateFields(Module, "Id", "Name", "Path");
+
             auto ModId   = Asset::ShaderModuleId(Module.at("Id").to_number<uint32_t>());
             auto ModName = StringU8(Module.at("Name").as_string());
             auto ModPath = StringU8(Module.at("Path").as_string());
@@ -163,10 +161,7 @@ namespace PakC::Handler
 
             if (auto Validation = Module.if_contains("Validation"); Validation && Validation->is_array())
             {
-                if (!ValidateShader(ShaderLib->LoadModule(ModId), Validation->as_array()))
-                {
-                    return nullptr;
-                }
+                ValidateShader(ShaderLib->LoadModule(ModId), Validation->as_array());
             }
         }
 

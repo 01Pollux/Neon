@@ -28,6 +28,8 @@ namespace PakC::Handler
     AssetResourcePtr LoadTextureResource(
         const boost::json::object& Object)
     {
+        ValidateFields(Object, "Path");
+
         auto Path = std::filesystem::path(StringU8(Object.at("Path").as_string()));
 
         std::ifstream File(Path, std::ios::binary | std::ios::ate);
@@ -61,10 +63,9 @@ namespace PakC::Handler
             }
         }
 
-        auto Format = Object.find("Format");
-        if (Format != Object.end() && Format->value().is_string())
+        if (auto Format = Object.if_contains("Format"); Format && Format->is_string())
         {
-            auto FormatType = s_TextureImageFormat.find(StringU8(Format->value().as_string()));
+            auto FormatType = s_TextureImageFormat.find(StringU8(Format->as_string()));
             if (FormatType != s_TextureImageFormat.end())
             {
                 ExpectedFormat = FormatType->second;

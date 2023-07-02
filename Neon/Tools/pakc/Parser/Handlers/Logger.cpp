@@ -12,10 +12,9 @@ namespace PakC::Handler
         const boost::json::object& Object)
     {
         auto Asset = std::make_shared<Asset::LoggerAsset>();
-        auto Tags  = Object.find("Tags");
-        if (Tags != Object.end() && Tags->value().is_object())
+        if (auto Tags = Object.if_contains("Tags"); Tags && Tags->is_object())
         {
-            for (auto& [Tag, SeverityName] : Tags->value().as_object())
+            for (auto& [Tag, SeverityName] : Tags->as_object())
             {
                 Logger::LogSeverity Severity;
                 switch (StringUtils::Hash(StringU8(SeverityName.as_string())))
@@ -39,8 +38,7 @@ namespace PakC::Handler
                     Severity = Logger::LogSeverity::Fatal;
                     break;
                 default:
-                    Severity = Logger::LogSeverity::Disabled;
-                    break;
+                    throw std::runtime_error("Invalid log severity " + StringU8(SeverityName.as_string()));
                 }
                 Asset->SetLogTag(Tag, Severity);
             }
