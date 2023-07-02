@@ -6,17 +6,9 @@
 
 //
 
-#include <RHI/Resource/Views/Shader.hpp>
-
-//
-
 #include <Scene/Scene.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
-
-//
-
-#include <fstream>
 
 //
 
@@ -38,76 +30,25 @@ namespace Neon::RG
                                    Component::Transform,
                                    Component::Sprite>()
                             .build();
+
+        //
+
+        // Renderer::MaterialBuilder;
     }
 
     void ScenePass::ResolveShaders(
         ShaderResolver& Resolver)
     {
-        std::stringstream Stream;
-        std::ifstream     File(L"D:\\Dev\\Sprite.hlsl");
-
-        Stream << File.rdbuf();
-        auto Text = Stream.str();
-
-        RHI::ShaderCompileDesc Desc{
-            .SourceCode = Text,
-        };
-        Desc.Flags.Set(RHI::EShaderCompileFlags::Debug);
-
-        Desc.Stage = RHI::ShaderStage::Vertex;
-        Resolver.Load(
-            RG::ResourceId(STR("Sprite.VS")),
-            Desc);
-
-        Desc.Stage = RHI::ShaderStage::Pixel;
-        Resolver.Load(
-            RG::ResourceId(STR("Sprite.PS")),
-            Desc);
     }
 
     void ScenePass::ResolveRootSignature(
         RootSignatureResolver& Resolver)
     {
-        RHI::StaticSamplerDesc Sampler;
-
-        Sampler.Filter         = RHI::ESamplerFilter::MinMagMipPoint;
-        Sampler.RegisterSpace  = 0;
-        Sampler.ShaderRegister = 0;
-        Sampler.Visibility     = RHI::ShaderVisibility::Pixel;
-
-        Resolver.Load(
-            RG::ResourceId(STR("Sprite.RS")),
-            RHI::RootSignatureBuilder()
-                .AddDescriptorTable(
-                    RHI::RootDescriptorTable()
-                        .AddSrvRange(0, 0, 10'000,
-                                     RHI::MRootDescriptorTableFlags::FromEnum(RHI::ERootDescriptorTableFlags::Descriptor_Volatile)))
-                .AddSampler(Sampler)
-                .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout));
     }
 
     void ScenePass::ResolvePipelineStates(
         PipelineStateResolver& Resolver)
     {
-        auto& RootSig = Resolver.GetRootSignature(RG::ResourceId(STR("Sprite.RS")));
-
-        auto& VS = Resolver.GetShader(RG::ResourceId(STR("Sprite.VS")));
-        auto& PS = Resolver.GetShader(RG::ResourceId(STR("Sprite.PS")));
-
-        RHI::PipelineStateBuilderG Builder{
-            .RootSignature  = RootSig,
-            .VertexShader   = VS,
-            .PixelShader    = PS,
-            .Rasterizer     = { .CullMode = RHI::CullMode::None },
-            .DepthStencil   = { .DepthEnable = false },
-            .UseVertexInput = true,
-            .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
-            .RTFormats      = { RHI::EResourceFormat::R8G8B8A8_UNorm },
-        };
-
-        Resolver.Load(
-            RG::ResourceId(STR("Sprite.Pipeline")),
-            Builder);
     }
 
     void ScenePass::ResolveResources(

@@ -3,7 +3,6 @@
 #include <Renderer/RG/Pass.hpp>
 
 #include <Resource/Handle.hpp>
-#include <Renderer/Material/Material.hpp>
 
 #include <RHI/Shader.hpp>
 #include <RHI/RootSignature.hpp>
