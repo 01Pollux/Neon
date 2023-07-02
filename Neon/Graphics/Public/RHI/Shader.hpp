@@ -34,8 +34,6 @@ namespace Neon::RHI
 
     enum class ShaderProfile : uint8_t
     {
-        SP_5_0,
-        SP_5_1,
         SP_6_0,
         SP_6_1,
         SP_6_2,

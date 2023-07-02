@@ -90,12 +90,37 @@ public:
                 Mod1->LoadStage(
                     RHI::ShaderStage::Vertex,
                     RHI::MShaderCompileFlags_Default,
-                    RHI::ShaderProfile::SP_6_0);
+                    RHI::ShaderProfile::SP_6_1);
+
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Vertex,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_2);
+
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Vertex,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_3);
 
                 Mod1->LoadStage(
                     RHI::ShaderStage::Pixel,
                     RHI::MShaderCompileFlags_Default,
                     RHI::ShaderProfile::SP_6_0);
+
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Pixel,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_1);
+
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Pixel,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_2);
+
+                Mod1->LoadStage(
+                    RHI::ShaderStage::Pixel,
+                    RHI::MShaderCompileFlags_Default,
+                    RHI::ShaderProfile::SP_6_3);
 
                 co_return;
             }();

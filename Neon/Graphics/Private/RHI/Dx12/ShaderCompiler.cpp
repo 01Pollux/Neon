@@ -353,12 +353,6 @@ namespace Neon::RHI
 
         switch (Profile)
         {
-        case ShaderProfile::SP_5_0:
-            Model += STR("_5_0");
-            break;
-        case ShaderProfile::SP_5_1:
-            Model += STR("_6_0");
-            break;
         case ShaderProfile::SP_6_0:
             Model += STR("_6_0");
             break;
