@@ -36,14 +36,40 @@ namespace Neon::Renderer
         uint32_t TableSamplerCount        = 0,
                  TableSharedSamplerCount  = 0;
 
+        uint32_t RootIndex = 0;
+
+        struct BatchedDescriptorEntry
+        {
+            ShaderBinding Binding;
+            uint32_t      Size;
+
+            auto operator<=>(const BatchedDescriptorEntry& Other) const noexcept
+            {
+                auto Cmp = Binding.Space <=> Other.Binding.Space;
+                if (Cmp != std::strong_ordering::equal)
+                {
+                    Cmp = Binding.Register <=> Other.Binding.Register;
+                }
+                return Cmp;
+            }
+        };
+
+        std::map<
+            RHI::ShaderVisibility,
+            std::map<MaterialVarType,
+                     std::set<BatchedDescriptorEntry>>>
+            BatchedDescriptorEntries;
+
         auto& VarMap = Builder.VarMap();
         VarMap.ForEachVariable(
-            [&RootSigBuilder,
+            [&BatchedDescriptorEntries,
+             &RootSigBuilder,
              &TableResourceCount,
              &TableSharedResourceCount,
              &TableSamplerCount,
-             &TableSharedSamplerCount](
-                const MaterialVariableMap::View& View)
+             &TableSharedSamplerCount,
+             &RootIndex](
+                const MaterialVariableMap::View& View) mutable
             {
                 switch (View.Type())
                 {
@@ -51,14 +77,38 @@ namespace Neon::Renderer
                 case MaterialVarType::Resource:
                 case MaterialVarType::RWResource:
                 {
+                    Material::DescriptorEntry DescriptorEntry{
+                        .Type = View.Type()
+                    };
+
+                    DescriptorEntry.Descs.resize(View.ArraySize());
+                    DescriptorEntry.Resources.resize(View.ArraySize());
+
                     if (View.Flags().Test(EMaterialVarFlags::Shared))
                     {
+                        DescriptorEntry.Offset = TableResourceCount;
                         TableResourceCount += View.ArraySize();
+
+                        BatchedDescriptorEntries[View.Visibility()][View.Type()].insert(
+                            BatchedDescriptorEntry{
+                                .Binding = View.Binding(),
+                                .Size    = View.ArraySize() });
                     }
                     else
                     {
+                        DescriptorEntry.Offset = TableResourceCount;
                         TableSharedResourceCount += View.ArraySize();
+
+                        BatchedDescriptorEntries[View.Visibility()][View.Type()].insert(
+                            BatchedDescriptorEntry{
+                                .Binding = View.Binding(),
+                                .Size    = uint32_t(-1) });
                     }
+
+                    // Mat->m_EntryMap[View.Name()] = {
+                    //     .Entry     = std::move(DescriptorEntry),
+                    //     .RootIndex = RootIndex++
+                    // };
                     break;
                 }
                 default:
