@@ -34,7 +34,11 @@ namespace Neon::RG
         //
 
         Renderer::RenderMaterialBuilder Builder;
-        auto                            Material = std::make_shared<Renderer::Material>(Builder);
+
+        Builder.VertexShader(Asset::ShaderModuleId(1));
+        Builder.PixelShader(Asset::ShaderModuleId(1));
+
+        auto Material = std::make_shared<Renderer::Material>(Builder);
 
         m_SpriteBatch.reset(
             NEON_NEW Renderer::SpriteBatch(

@@ -115,11 +115,39 @@ namespace Neon::Asset
         ShaderLibraryAsset* Library,
         ShaderModuleId      Id) :
         m_Library(Library),
-        m_Id(Id),
-        m_ShaderCache(StringUtils::Format("{}_{}.nsmc", std::filesystem::temp_directory_path().string(), ModName), std::ios::in | std::ios::out | std::ios::app | std::ios::binary)
+        m_Id(Id)
     {
+        auto CachePath = StringUtils::Format("{}_{}.nsmc", std::filesystem::temp_directory_path().string(), ModName);
+        m_ShaderCache.open(CachePath, std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
+
         NEON_ASSERT(m_ShaderCache.is_open(), "Failed to open shader cache file");
         m_ShaderCache.seekg(0, std::ios::end);
+        m_FileSize = m_ShaderCache.tellg();
+
+        // Check if the current file will be used for caching
+        // The file is used for caching if it exists and has same code as the module
+        auto   ModuleCode = Library->GetModuleCode(Id);
+        SHA256 Hash;
+        Hash.Append(*ModuleCode);
+        auto ExpectedHash = Hash.Digest();
+
+        // File wasn't empty
+        if (m_FileSize)
+        {
+            m_ShaderCache.seekg(0, std::ios::beg);
+            SHA256::Bytes CurHash;
+            m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
+
+            if (CurHash == ExpectedHash)
+            {
+                return;
+            }
+
+            m_ShaderCache.close();
+            m_ShaderCache.open(CachePath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+        }
+
+        m_ShaderCache.write(std::bit_cast<char*>(ExpectedHash.data()), ExpectedHash.size());
         m_FileSize = m_ShaderCache.tellg();
     }
 
@@ -128,7 +156,7 @@ namespace Neon::Asset
         std::unique_ptr<uint8_t[]>* ShaderData,
         size_t*                     ShaderSize)
     {
-        m_ShaderCache.seekg(0, std::ios::beg);
+        m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
 
         for (size_t i = 0; i < m_FileSize; i = m_ShaderCache.tellg())
         {
@@ -163,8 +191,7 @@ namespace Neon::Asset
         const SHA256::Bytes& Hash,
         RHI::IShader*        Shader)
     {
-        m_ShaderCache.seekg(0, std::ios::beg);
-        m_ShaderCache.seekp(0, std::ios::beg);
+        m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
 
         auto WriteToFile =
             [this, Shader]()

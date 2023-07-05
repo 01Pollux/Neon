@@ -13,9 +13,11 @@ namespace Neon::Renderer
 
         struct ShaderModuleHandle
         {
+            Asset::ShaderModuleId    ModuleId = -1;
             RHI::ShaderMacros        Macros;
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5;
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default;
+            bool                     Enabled;
         };
 
     public:
@@ -38,23 +40,13 @@ namespace Neon::Renderer
         }
 
         /// <summary>
-        /// Get the shader module id.
-        /// </summary>
-        [[nodiscard]] const Ptr<Asset::ShaderLibraryAsset>& ShaderModuleId() const
-        {
-            return m_ShaderLibrary;
-        }
-
-        /// <summary>
         /// Set the shader library.
         /// </summary>
         _Ty& ShaderLibrary(
-            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary,
-            Asset::ShaderModuleId                 ShaderModuleId)
+            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary)
         {
-            m_ShaderModules  = {};
-            m_ShaderLibrary  = ShaderLibrary;
-            m_ShaderModuleId = ShaderModuleId;
+            m_ShaderModules = {};
+            m_ShaderLibrary = ShaderLibrary;
             return *this;
         }
 
@@ -64,7 +56,6 @@ namespace Neon::Renderer
     private:
         MaterialVariableMap            m_VarMap;
         Ptr<Asset::ShaderLibraryAsset> m_ShaderLibrary;
-        Asset::ShaderModuleId          m_ShaderModuleId;
     };
 
     template<bool _IsCompute>
@@ -78,9 +69,15 @@ namespace Neon::Renderer
         /// Set the vertex shader.
         /// </summary>
         GenericMaterialBuilder& VertexShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the vertex shader.
+        /// </summary>
+        GenericMaterialBuilder& RemoveVertexShader();
 
         /// <summary>
         /// Get the vertex shader.
@@ -91,9 +88,15 @@ namespace Neon::Renderer
         /// Set the hull shader.
         /// </summary>
         GenericMaterialBuilder& HullShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the hull shader.
+        /// </summary>
+        GenericMaterialBuilder& RemoveHullShader();
 
         /// <summary>
         /// Get the hull shader.
@@ -104,9 +107,15 @@ namespace Neon::Renderer
         /// Set the domain shader.
         /// </summary>
         GenericMaterialBuilder& DomainShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the domain shader.
+        /// </summary>
+        GenericMaterialBuilder& RemoveDomainShader();
 
         /// <summary>
         /// Get the domain shader.
@@ -117,9 +126,15 @@ namespace Neon::Renderer
         /// Set the geometry shader.
         /// </summary>
         GenericMaterialBuilder& GeometryShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the geometry shader.
+        /// </summary>
+        GenericMaterialBuilder& RemoveGeometryShader();
 
         /// <summary>
         /// Get the geometry shader.
@@ -130,9 +145,15 @@ namespace Neon::Renderer
         /// Set the pixel shader.
         /// </summary>
         GenericMaterialBuilder& PixelShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the pixel shader.
+        /// </summary>
+        GenericMaterialBuilder& RemovePixelShader();
 
         /// <summary>
         /// Get the pixel shader.
@@ -148,9 +169,15 @@ namespace Neon::Renderer
         /// Set the compute shader.
         /// </summary>
         GenericMaterialBuilder& ComputeShader(
-            const RHI::ShaderMacros& Macros,
+            Asset::ShaderModuleId    Module,
+            const RHI::ShaderMacros& Macros  = {},
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+
+        /// <summary>
+        /// Unset the compute shader.
+        /// </summary>
+        GenericMaterialBuilder& RemoveComputeShader();
 
         /// <summary>
         /// Get the compute shader.

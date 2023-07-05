@@ -5,15 +5,24 @@ namespace Neon::Renderer
 {
 #define MATERIAL_SHADER_FUNC(MaterialClass, ShaderStage, Index)        \
     MaterialClass& MaterialClass::ShaderStage(                         \
+        Asset::ShaderModuleId    Module,                               \
         const RHI::ShaderMacros& Macros,                               \
         RHI::ShaderProfile       Profile,                              \
         RHI::MShaderCompileFlags Flags)                                \
     {                                                                  \
         m_ShaderModules[Index] = {                                     \
-            .Macros  = Macros,                                         \
-            .Profile = Profile,                                        \
-            .Flags   = Flags,                                          \
+            .ModuleId = Module,                                        \
+            .Macros   = Macros,                                        \
+            .Profile  = Profile,                                       \
+            .Flags    = Flags,                                         \
+            .Enabled  = false                                          \
         };                                                             \
+        return *this;                                                  \
+    }                                                                  \
+                                                                       \
+    MaterialClass& MaterialClass::Remove##ShaderStage()                \
+    {                                                                  \
+        m_ShaderModules[Index].Enabled = false;                        \
         return *this;                                                  \
     }                                                                  \
                                                                        \
