@@ -13,4 +13,16 @@ namespace Neon::Renderer
         const ComputeMaterialBuilder& Builder)
     {
     }
+
+    Ptr<MaterialInstance> Material::CreateInstance()
+    {
+        return m_DefaultInstace->CreateInstance();
+    }
+
+    //
+
+    Ptr<MaterialInstance> MaterialInstance::CreateInstance()
+    {
+        return Ptr<MaterialInstance>();
+    }
 } // namespace Neon::Renderer

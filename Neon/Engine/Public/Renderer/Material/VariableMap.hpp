@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/BitMask.hpp>
 #include <Renderer/Material/Common.hpp>
 #include <RHI/RootSignature.hpp>
 
@@ -40,6 +41,18 @@ namespace Neon::Renderer
         DynamicSampler
     };
 
+    enum class EMaterialVarFlags : uint8_t
+    {
+        /// <summary>
+        /// Variable is shared between all instances of materials.
+        /// This assumes the resource won't be unified into global resource table.
+        /// </summary>
+        Shared,
+
+        _Last_Enum
+    };
+    using MMaterialVarFlags = Bitmask<EMaterialVarFlags>;
+
     class MaterialVariableMap
     {
     public:
@@ -62,7 +75,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Add a new static sampler to the map.
         /// </summary>
-        void AddSampler(
+        void AddStaticSampler(
             const StringU8&         Name,
             ShaderBinding           Binding,
             RHI::ShaderVisibility   Visibility,
@@ -71,7 +84,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Add a common static sampler to the map.
         /// </summary>
-        void AddSampler(
+        void AddStaticSampler(
             const StringU8&         Name,
             ShaderBinding           Binding,
             RHI::ShaderVisibility   Visibility,
@@ -80,7 +93,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Remove static sampler from the map.
         /// </summary>
-        void RemoveSampler(
+        void RemoveStaticSampler(
             const StringU8& Name);
 
     private:
@@ -175,11 +188,64 @@ namespace Neon::Renderer
             return m_Type;
         }
 
+        //
+
+        /// <summary>
+        /// Set visibility of the variable.
+        /// </summary>
+        View& Visibility(
+            RHI::ShaderVisibility Visibility)
+        {
+            m_Visibility = Visibility;
+            return *this;
+        }
+
+        /// <summary>
+        /// Get visibility of the variable.
+        /// </summary>
+        [[nodiscard]] RHI::ShaderVisibility Visibility() const
+        {
+            return m_Visibility;
+        }
+
+        //
+
+        /// <summary>
+        /// Set the material variable flags.
+        /// </summary>
+        View& Flags(
+            const MMaterialVarFlags& Flags)
+        {
+            m_Flags = Flags;
+            return *this;
+        }
+
+        /// <summary>
+        /// Set the material variable flags.
+        /// </summary>
+        View& Flags(
+            EMaterialVarFlags Type,
+            bool              State)
+        {
+            m_Flags.Set(Type, State);
+            return *this;
+        }
+
+        /// <summary>
+        /// Get visibility of the variable.
+        /// </summary>
+        [[nodiscard]] const MMaterialVarFlags& Flags() const
+        {
+            return m_Flags;
+        }
+
     private:
         StringU8 m_Name;
         size_t   m_ArraySize = 1;
 
-        ShaderBinding   m_Binding;
-        MaterialVarType m_Type;
+        ShaderBinding         m_Binding;
+        MMaterialVarFlags     m_Flags;
+        MaterialVarType       m_Type;
+        RHI::ShaderVisibility m_Visibility = RHI::ShaderVisibility::All;
     };
 } // namespace Neon::Renderer

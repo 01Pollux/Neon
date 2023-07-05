@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Renderer/Material/VariableMap.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Renderer
 {
     auto MaterialVariableMap::Add(
@@ -8,6 +10,8 @@ namespace Neon::Renderer
         ShaderBinding   Binding,
         MaterialVarType Type) -> View&
     {
+        NEON_ASSERT(Type != MaterialVarType::StaticSampler, "Static samplers must be added with AddSampler.");
+
         auto Iter = std::ranges::find_if(
             m_Variables,
             [&Name](const auto& View)
@@ -41,7 +45,7 @@ namespace Neon::Renderer
 
     //
 
-    void MaterialVariableMap::AddSampler(
+    void MaterialVariableMap::AddStaticSampler(
         const StringU8&         Name,
         ShaderBinding           Binding,
         RHI::ShaderVisibility   Visibility,
@@ -53,7 +57,7 @@ namespace Neon::Renderer
         Sampler.Visibility     = Visibility;
     }
 
-    void MaterialVariableMap::AddSampler(
+    void MaterialVariableMap::AddStaticSampler(
         const StringU8&         Name,
         ShaderBinding           Binding,
         RHI::ShaderVisibility   Visibility,
@@ -91,10 +95,10 @@ namespace Neon::Renderer
             break;
         }
 
-        AddSampler(Name, Binding, Visibility, Desc);
+        AddStaticSampler(Name, Binding, Visibility, Desc);
     }
 
-    void MaterialVariableMap::RemoveSampler(
+    void MaterialVariableMap::RemoveStaticSampler(
         const StringU8& Name)
     {
         m_StaticSamplers.erase(Name);

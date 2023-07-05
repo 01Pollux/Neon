@@ -24,7 +24,9 @@ namespace Neon::Renderer
             LinearWrap,
             LinearClamp,
             AnisotropicWrap,
-            AnisotropicClamp
+            AnisotropicClamp,
+
+            _Last
         };
     } // namespace MaterialCommon
 } // namespace Neon::Renderer

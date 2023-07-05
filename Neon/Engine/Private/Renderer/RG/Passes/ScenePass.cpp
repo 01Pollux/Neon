@@ -16,9 +16,12 @@
 
 //
 
+namespace ranges = std::ranges;
+
 namespace Neon::RG
 {
     using namespace Scene;
+    using namespace Renderer;
 
     ScenePass::ScenePass(
         const GraphStorage&                   Storage,
@@ -34,17 +37,29 @@ namespace Neon::RG
 
         //
 
-        Renderer::RenderMaterialBuilder Builder;
+        RenderMaterialBuilder Builder;
 
         Builder.ShaderLibrary(ShaderLibrary)
-            .VertexShader(Asset::ShaderModuleId(1))
-            .PixelShader(Asset::ShaderModuleId(1));
+            .VertexShader(Asset::ShaderModuleId(0))
+            .PixelShader(Asset::ShaderModuleId(0));
 
-        auto Material = std::make_shared<Renderer::Material>(Builder);
+        auto& VarMap = Builder.VarMap();
+
+        VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
+            .Visibility(RHI::ShaderVisibility::Pixel)
+            .Flags(EMaterialVarFlags::Shared, true);
+
+        for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialCommon::Sampler::_Last)))
+        {
+            auto Name = StringUtils::Format("StaticSampler_{}", i);
+            VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialCommon::Sampler(i));
+        }
+
+        auto Mat = std::make_shared<Material>(Builder);
 
         m_SpriteBatch.reset(
-            NEON_NEW Renderer::SpriteBatch(
-                std::move(Material),
+            NEON_NEW SpriteBatch(
+                std::move(Mat),
                 Storage.GetSwapchain()));
     }
 
