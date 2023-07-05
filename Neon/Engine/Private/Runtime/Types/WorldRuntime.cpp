@@ -1,6 +1,9 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
+#include <Resource/Manager.hpp>
+#include <Resource/Pack.hpp>
+
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Renderer.hpp>
 #include <Runtime/Pipeline.hpp>
@@ -41,6 +44,10 @@ namespace Neon::Runtime
 
         auto Pipeline = Engine->OverwriteInterface<EnginePipeline>(std::move(Builder), 2);
         auto Renderer = Engine->QueryInterface<EngineRenderer>();
+        auto MainPack = Engine->QueryInterface<Asset::IAssetManager>()->GetPack("__neon");
+
+        auto DefaultShaderLib = Asset::AssetHandle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
+        auto ShaderLib        = MainPack->Load<Asset::ShaderLibraryAsset>(DefaultShaderLib);
 
         //
 
@@ -74,7 +81,7 @@ namespace Neon::Runtime
                 Renderer->PostRender();
             });
 
-        SetupRenderPasses(Renderer.get());
+        SetupRenderPasses(Renderer.get(), ShaderLib);
 
         //
 
@@ -113,12 +120,13 @@ namespace Neon::Runtime
     }
 
     void EngineWorldRuntime::SetupRenderPasses(
-        EngineRenderer* Renderer)
+        EngineRenderer*                       Renderer,
+        const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary)
     {
         auto RenderGraph = Renderer->GetRenderGraph();
         auto Builder     = RenderGraph->Reset();
 
-        Builder.AppendPass<RG::ScenePass>(RenderGraph->GetStorage(), m_Scene);
+        Builder.AppendPass<RG::ScenePass>(RenderGraph->GetStorage(), ShaderLibrary, m_Scene);
 
         Builder.Build();
     }

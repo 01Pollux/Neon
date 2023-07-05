@@ -33,8 +33,8 @@ namespace PakC
         void RegisterTypes();
 
     private:
-        Neon::UPtr<Neon::Asset::IResourceManager> m_ResourceManager;
-        ResourceLoaderMap                         m_AssetResources;
+        Neon::UPtr<Neon::Asset::IAssetManager> m_ResourceManager;
+        ResourceLoaderMap                      m_AssetResources;
     };
 
     /// <summary>

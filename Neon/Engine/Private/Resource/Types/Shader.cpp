@@ -111,10 +111,10 @@ namespace Neon::Asset
     }
 
     ShaderModule::ShaderModule(
-        const StringU8&     ModName,
-        ShaderLibraryAsset* Library,
-        ShaderModuleId      Id) :
-        m_Library(Library),
+        const StringU8&         ModName,
+        Ptr<ShaderLibraryAsset> Library,
+        ShaderModuleId          Id) :
+        m_Library(std::move(Library)),
         m_Id(Id)
     {
         auto CachePath = StringUtils::Format("{}_{}.nsmc", std::filesystem::temp_directory_path().string(), ModName);
@@ -135,7 +135,7 @@ namespace Neon::Asset
         if (m_FileSize)
         {
             m_ShaderCache.seekg(0, std::ios::beg);
-            SHA256::Bytes CurHash;
+            SHA256::Bytes CurHash{};
             m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
 
             if (CurHash == ExpectedHash)
@@ -228,13 +228,13 @@ namespace Neon::Asset
 
     //
 
-    ShaderModule* ShaderLibraryAsset::LoadModule(
+    const Ptr<ShaderModule>& ShaderLibraryAsset::LoadModule(
         ShaderModuleId Id)
     {
         std::scoped_lock Lock(m_LibraryAccessMutex);
 
         auto Iter = m_Modules.find(Id);
-        return Iter != m_Modules.end() ? &Iter->second.Module : nullptr;
+        return Iter != m_Modules.end() ? Iter->second.Module : nullptr;
     }
 
     void ShaderLibraryAsset::SetModule(
@@ -267,7 +267,7 @@ namespace Neon::Asset
             m_Modules.end(),
             [](auto& Module)
             {
-                Module.second.Module.Optimize();
+                Module.second.Module->Optimize();
             });
     }
 
@@ -304,8 +304,14 @@ namespace Neon::Asset
         bool           Compressed)
     {
         m_Modules.erase(Id);
-        m_Modules.emplace(std::piecewise_construct, std::forward_as_tuple(Id), std::forward_as_tuple(Id, std::move(ModName), this));
-        m_ModulesData.emplace(std::piecewise_construct, std::forward_as_tuple(Id), std::forward_as_tuple(std::move(ModCode), Compressed));
+        m_Modules.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(Id),
+            std::forward_as_tuple(Id, std::move(ModName), std::static_pointer_cast<ShaderLibraryAsset>(shared_from_this())));
+        m_ModulesData.emplace(
+            std::piecewise_construct,
+            std::forward_as_tuple(Id),
+            std::forward_as_tuple(std::move(ModCode), Compressed));
     }
 
     //

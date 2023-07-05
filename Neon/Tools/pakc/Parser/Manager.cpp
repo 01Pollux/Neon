@@ -13,7 +13,7 @@ namespace PakC
 {
     using namespace Neon::Asset;
 
-    CustomResourceManager::CustomResourceManager()
+    CustomAssetManager::CustomAssetManager()
     {
         AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
@@ -22,7 +22,7 @@ namespace PakC
         AddHandler<TextureAsset::Handler>();
     }
 
-    Neon::UPtr<IAssetPack> CustomResourceManager::OpenPack(
+    Neon::Ptr<IAssetPack> CustomAssetManager::OpenPack(
         const Neon::StringU8& Path)
     {
         if (Path.ends_with(".np"))

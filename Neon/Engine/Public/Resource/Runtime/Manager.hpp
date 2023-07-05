@@ -4,13 +4,13 @@
 
 namespace Neon::Asset
 {
-    class RuntimeResourceManager : public IResourceManager
+    class RuntimeAssetManager : public IAssetManager
     {
     public:
-        RuntimeResourceManager();
+        RuntimeAssetManager();
 
     protected:
-        UPtr<IAssetPack> OpenPack(
+        Ptr<IAssetPack> OpenPack(
             const StringU8& Path) override;
     };
 } // namespace Neon::Asset

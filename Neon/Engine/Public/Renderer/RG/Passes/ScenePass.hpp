@@ -4,6 +4,8 @@
 #include <Renderer/RG/Graph.hpp>
 #include <Renderer/Render/SpriteBatch.hpp>
 
+#include <Resource/Types/Shader.hpp>
+
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Scene.hpp>
@@ -14,8 +16,9 @@ namespace Neon::RG
     {
     public:
         ScenePass(
-            const GraphStorage& Storage,
-            Scene::GameScene&   Scene);
+            const GraphStorage&                   Storage,
+            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary,
+            Scene::GameScene&                     Scene);
 
         void ResolveShaders(
             ShaderResolver& Resolver) override;

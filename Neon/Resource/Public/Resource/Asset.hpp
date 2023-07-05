@@ -5,7 +5,7 @@
 
 namespace Neon::Asset
 {
-    class IAssetResource
+    class IAssetResource : public std::enable_shared_from_this<IAssetResource>
     {
     public:
         IAssetResource() = default;

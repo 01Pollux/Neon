@@ -13,11 +13,11 @@ namespace Neon::Renderer
 
         struct ShaderModuleHandle
         {
-            Asset::ShaderModuleId    ModuleId = -1;
+            Asset::ShaderModuleId    ModuleId;
             RHI::ShaderMacros        Macros;
             RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5;
             RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default;
-            bool                     Enabled;
+            bool                     Enabled = false;
         };
 
     public:
@@ -47,7 +47,7 @@ namespace Neon::Renderer
         {
             m_ShaderModules = {};
             m_ShaderLibrary = ShaderLibrary;
-            return *this;
+            return static_cast<_Ty&>(*this);
         }
 
     protected:

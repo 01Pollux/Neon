@@ -14,8 +14,8 @@ namespace PakC::Handler
     using namespace Neon;
 
     void ValidateShader(
-        Asset::ShaderModule*      ShaderModule,
-        const boost::json::array& Validation)
+        const Ptr<Asset::ShaderModule>& ShaderModule,
+        const boost::json::array&       Validation)
     {
         for (auto& Object : Validation |
                                 views::transform(

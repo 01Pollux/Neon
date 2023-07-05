@@ -21,7 +21,7 @@ namespace PakC
     using namespace Neon;
 
     JsonHandler::JsonHandler() :
-        m_ResourceManager(std::make_unique<CustomResourceManager>())
+        m_ResourceManager(std::make_unique<CustomAssetManager>())
     {
         RegisterTypes();
     }
@@ -79,7 +79,7 @@ namespace PakC
             return;
         }
 
-        Neon::Asset::IAssetPack* Pack;
+        Ptr<Neon::Asset::IAssetPack> Pack;
 
         StringU8 PackName(PackType->value().as_string());
         switch (Neon::StringUtils::Hash(PackName))

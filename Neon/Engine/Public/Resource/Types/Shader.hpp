@@ -32,6 +32,11 @@ namespace Neon::Asset
         };
 
     public:
+        ShaderModule(
+            const StringU8&         ModName,
+            Ptr<ShaderLibraryAsset> Library,
+            ShaderModuleId          Id);
+
         /// <summary>
         /// Load or compile shader stage by the specified parameters
         /// </summary>
@@ -40,12 +45,6 @@ namespace Neon::Asset
             const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
             const RHI::ShaderMacros&       Macros  = {});
-
-    protected:
-        ShaderModule(
-            const StringU8&     ModName,
-            ShaderLibraryAsset* Library,
-            ShaderModuleId      Id);
 
     private:
         /// <summary>
@@ -69,8 +68,8 @@ namespace Neon::Asset
         void Optimize();
 
     private:
-        ShaderModuleId      m_Id;
-        ShaderLibraryAsset* m_Library;
+        Ptr<ShaderLibraryAsset> m_Library;
+        ShaderModuleId          m_Id;
 
         std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
 
@@ -91,15 +90,15 @@ namespace Neon::Asset
 
         struct ShaderModuleTable
         {
-            ShaderModule   Module;
-            StringU8       ModName;
-            ShaderModuleId ModId;
+            Ptr<ShaderModule> Module;
+            StringU8          ModName;
+            ShaderModuleId    ModId;
 
             ShaderModuleTable(
-                ShaderModuleId      Id,
-                StringU8            ModName,
-                ShaderLibraryAsset* Library) :
-                Module(ModName, Library, Id),
+                ShaderModuleId          Id,
+                StringU8                ModName,
+                Ptr<ShaderLibraryAsset> Library) :
+                Module(std::make_shared<ShaderModule>(ModName, std::move(Library), Id)),
                 ModName(std::move(ModName)),
                 ModId(Id)
             {
@@ -110,7 +109,7 @@ namespace Neon::Asset
         /// <summary>
         /// Get shader module by id
         /// </summary>
-        [[nodiscard]] ShaderModule* LoadModule(
+        [[nodiscard]] const Ptr<ShaderModule>& LoadModule(
             ShaderModuleId Id);
 
         /// <summary>

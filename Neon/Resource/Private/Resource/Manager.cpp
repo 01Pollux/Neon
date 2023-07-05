@@ -6,7 +6,7 @@
 
 namespace Neon::Asset
 {
-    void IResourceManager::AddHandler(
+    void IAssetManager::AddHandler(
         UPtr<IAssetResourceHandler> Handler)
     {
         m_Handlers.Append(std::move(Handler));
@@ -14,32 +14,32 @@ namespace Neon::Asset
 
     //
 
-    auto IResourceManager::GetPacks() const -> const AssetPackMap&
+    auto IAssetManager::GetPacks() const -> const AssetPackMap&
     {
         return m_LoadedPacks;
     }
 
-    IAssetPack* IResourceManager::GetPack(
+    const Ptr<IAssetPack>& IAssetManager::GetPack(
         const StringU8& Tag)
     {
         auto Iter = m_LoadedPacks.find(Tag);
         NEON_VALIDATE(Iter == m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
-        return Iter->second.get();
+        return Iter->second;
     }
 
-    IAssetPack* IResourceManager::TryLoadPack(
+    Ptr<IAssetPack> IAssetManager::TryLoadPack(
         const StringU8& Tag,
         const StringU8& Path)
     {
         PackIsUnique(Tag);
 
-        UPtr<IAssetPack> Pack = OpenPack(Path);
+        auto Pack = OpenPack(Path);
         if (Pack)
         {
             NEON_TRACE_TAG("Resource", "Loading pack: '{}' with tag: '{}'", static_cast<void*>(Pack.get()), Tag);
             Pack->ImportAsync(Path);
 
-            return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second.get();
+            return m_LoadedPacks.emplace(Tag, std::move(Pack)).first->second;
         }
         else
         {
@@ -47,7 +47,7 @@ namespace Neon::Asset
         }
     }
 
-    IAssetPack* IResourceManager::LoadPack(
+    Ptr<IAssetPack> IAssetManager::LoadPack(
         const StringU8& Tag,
         const StringU8& Path)
     {
@@ -56,14 +56,14 @@ namespace Neon::Asset
         return Pack;
     }
 
-    void IResourceManager::UnloadPack(
+    void IAssetManager::UnloadPack(
         const StringU8& Tag)
     {
         bool Erased = m_LoadedPacks.erase(Tag) > 0;
         NEON_VALIDATE(Erased, "Resource pack '{}' doesn't exists", Tag);
     }
 
-    void IResourceManager::PackIsUnique(
+    void IAssetManager::PackIsUnique(
         const StringU8& Tag) const
     {
         NEON_ASSERT(!m_LoadedPacks.contains(Tag), "Loading pack with duplicate tag");

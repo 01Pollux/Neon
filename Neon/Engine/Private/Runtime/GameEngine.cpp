@@ -17,7 +17,7 @@ namespace Neon::Runtime
     void DefaultGameEngine::Initialize(
         const Config::EngineConfig& Config)
     {
-        auto ResourceManager = RegisterInterface<Asset::IResourceManager, Asset::RuntimeResourceManager>();
+        auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
 
         const auto LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
 
@@ -59,7 +59,7 @@ namespace Neon::Runtime
     void DefaultGameEngine::LoadPacks(
         const Config::EngineConfig& Config)
     {
-        if (auto ResourceManager = QueryInterface<Asset::IResourceManager>())
+        if (auto ResourceManager = QueryInterface<Asset::IAssetManager>())
         {
             for (auto& [PackName, Path] : Config.Resource.Packs)
             {

@@ -21,8 +21,9 @@ namespace Neon::RG
     using namespace Scene;
 
     ScenePass::ScenePass(
-        const GraphStorage& Storage,
-        GameScene&          Scene) :
+        const GraphStorage&                   Storage,
+        const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary,
+        GameScene&                            Scene) :
         IRenderPass(PassQueueType::Direct),
         m_Scene(Scene)
     {
@@ -35,8 +36,9 @@ namespace Neon::RG
 
         Renderer::RenderMaterialBuilder Builder;
 
-        Builder.VertexShader(Asset::ShaderModuleId(1));
-        Builder.PixelShader(Asset::ShaderModuleId(1));
+        Builder.ShaderLibrary(ShaderLibrary)
+            .VertexShader(Asset::ShaderModuleId(1))
+            .PixelShader(Asset::ShaderModuleId(1));
 
         auto Material = std::make_shared<Renderer::Material>(Builder);
 

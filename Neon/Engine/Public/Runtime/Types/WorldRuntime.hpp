@@ -3,6 +3,11 @@
 #include <Runtime/Runtime.hpp>
 #include <Scene/Scene.hpp>
 
+namespace Neon::Asset
+{
+    class ShaderLibraryAsset;
+}
+
 namespace Neon::Runtime
 {
     class EngineRenderer;
@@ -28,7 +33,8 @@ namespace Neon::Runtime
         /// Import the render graph.
         /// </summary>
         void SetupRenderPasses(
-            EngineRenderer* Renderer);
+            EngineRenderer*                       Renderer,
+            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary);
 
     private:
         Scene::GameScene m_Scene;

@@ -11,7 +11,7 @@
 
 namespace Neon::Asset
 {
-    RuntimeResourceManager::RuntimeResourceManager()
+    RuntimeAssetManager::RuntimeAssetManager()
     {
         AddHandler<LoggerAsset::Handler>();
         AddHandler<TextFileAsset::Handler>();
@@ -20,7 +20,7 @@ namespace Neon::Asset
         AddHandler<TextureAsset::Handler>();
     }
 
-    UPtr<IAssetPack> RuntimeResourceManager::OpenPack(
+    Ptr<IAssetPack> RuntimeAssetManager::OpenPack(
         const StringU8& Path)
     {
         if (Path.ends_with(".np"))
