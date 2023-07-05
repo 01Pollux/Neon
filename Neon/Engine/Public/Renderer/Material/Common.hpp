@@ -29,4 +29,44 @@ namespace Neon::Renderer
             _Last
         };
     } // namespace MaterialCommon
+
+    enum class MaterialVarType : uint8_t
+    {
+        Bool,
+        Bool2,
+        Bool3,
+        Bool4,
+        Int,
+        Int2,
+        Int3,
+        Int4,
+        UInt,
+        UInt2,
+        UInt3,
+        UInt4,
+        Float,
+        Float2,
+        Float3,
+        Float4,
+        Color,
+        Matrix3x3,
+        Matrix4x4,
+
+        // CBV
+        RawBuffer,
+        // SRV
+        RawResource,
+        // UAV
+        RawRWBuffer,
+
+        // CBV
+        Buffer,
+        // SRV
+        Resource,
+        // UAV
+        RWResource,
+
+        StaticSampler,
+        DynamicSampler
+    };
 } // namespace Neon::Renderer

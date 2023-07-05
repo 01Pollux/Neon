@@ -11,36 +11,6 @@ namespace Neon::Renderer
         uint32_t Register = 0, Space = 0;
     };
 
-    enum class MaterialVarType : uint8_t
-    {
-        Bool,
-        Bool2,
-        Bool3,
-        Bool4,
-        Int,
-        Int2,
-        Int3,
-        Int4,
-        UInt,
-        UInt2,
-        UInt3,
-        UInt4,
-        Float,
-        Float2,
-        Float3,
-        Float4,
-        Color,
-        Matrix3x3,
-        Matrix4x4,
-
-        Buffer,
-        Resource,
-        RWResource,
-
-        StaticSampler,
-        DynamicSampler
-    };
-
     enum class EMaterialVarFlags : uint8_t
     {
         /// <summary>
@@ -96,6 +66,34 @@ namespace Neon::Renderer
         void RemoveStaticSampler(
             const StringU8& Name);
 
+        /// <summary>
+        /// Iterate over all variables.
+        /// </summary>
+        template<typename _Ty>
+            requires std::is_invocable_v<_Ty, View&>
+        void ForEachVariable(
+            _Ty Callback) const
+        {
+            for (auto& Var : m_Variables)
+            {
+                Callback(Var);
+            }
+        }
+
+        /// <summary>
+        /// Iterate over all static samplers.
+        /// </summary>
+        template<typename _Ty>
+            requires std::is_invocable_v<_Ty, const StringU8&, const RHI::StaticSamplerDesc&>
+        void ForEachStaticSampler(
+            _Ty Callback) const
+        {
+            for (auto& [Name, Desc] : m_StaticSamplers)
+            {
+                Callback(Name, Desc);
+            }
+        }
+
     private:
         std::list<View>                            m_Variables;
         std::map<StringU8, RHI::StaticSamplerDesc> m_StaticSamplers;
@@ -137,7 +135,7 @@ namespace Neon::Renderer
         /// Set array size of the variable.
         /// </summary>
         View& ArraySize(
-            size_t Count)
+            uint32_t Count)
         {
             m_ArraySize = Count;
             return *this;
@@ -146,7 +144,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get array size of the variable.
         /// </summary>
-        [[nodiscard]] size_t ArraySize() const
+        [[nodiscard]] uint32_t ArraySize() const
         {
             return m_ArraySize;
         }
@@ -241,7 +239,7 @@ namespace Neon::Renderer
 
     private:
         StringU8 m_Name;
-        size_t   m_ArraySize = 1;
+        uint32_t m_ArraySize = 1;
 
         ShaderBinding         m_Binding;
         MMaterialVarFlags     m_Flags;

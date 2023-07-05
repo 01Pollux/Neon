@@ -2,6 +2,7 @@
 
 #include <Renderer/Material/VariableMap.hpp>
 #include <Resource/Types/Shader.hpp>
+#include <RHI/PipelineState.hpp>
 
 namespace Neon::Renderer
 {
@@ -25,6 +26,14 @@ namespace Neon::Renderer
         /// Get the variable map.
         /// </summary>
         [[nodiscard]] MaterialVariableMap& VarMap()
+        {
+            return m_VarMap;
+        }
+
+        /// <summary>
+        /// Get the variable map.
+        /// </summary>
+        [[nodiscard]] const MaterialVariableMap& VarMap() const
         {
             return m_VarMap;
         }

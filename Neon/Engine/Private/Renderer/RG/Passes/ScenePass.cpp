@@ -43,19 +43,21 @@ namespace Neon::RG
             .VertexShader(Asset::ShaderModuleId(0))
             .PixelShader(Asset::ShaderModuleId(0));
 
-        auto& VarMap = Builder.VarMap();
-
-        VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
-            .Visibility(RHI::ShaderVisibility::Pixel)
-            .Flags(EMaterialVarFlags::Shared, true);
-
-        for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialCommon::Sampler::_Last)))
         {
-            auto Name = StringUtils::Format("StaticSampler_{}", i);
-            VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialCommon::Sampler(i));
+            auto& VarMap = Builder.VarMap();
+
+            VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::Pixel)
+                .Flags(EMaterialVarFlags::Shared, true);
+
+            for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialCommon::Sampler::_Last)))
+            {
+                auto Name = StringUtils::Format("StaticSampler_{}", i);
+                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialCommon::Sampler(i));
+            }
         }
 
-        auto Mat = std::make_shared<Material>(Builder);
+        auto Mat = std::make_shared<Material>(Storage.GetSwapchain(), Builder);
 
         m_SpriteBatch.reset(
             NEON_NEW SpriteBatch(
