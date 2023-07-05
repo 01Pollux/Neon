@@ -84,7 +84,7 @@ namespace Neon::Renderer
             const StringU8& Name);
 
     private:
-        std::map<StringU8, View>                   m_Variables;
+        std::list<View>                            m_Variables;
         std::map<StringU8, RHI::StaticSamplerDesc> m_StaticSamplers;
     };
 

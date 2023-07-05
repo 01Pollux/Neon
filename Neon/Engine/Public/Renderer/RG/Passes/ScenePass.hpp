@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RG/Pass.hpp>
+#include <Renderer/RG/Graph.hpp>
 #include <Renderer/Render/SpriteBatch.hpp>
 
 #include <Scene/Component/Sprite.hpp>
@@ -13,7 +14,8 @@ namespace Neon::RG
     {
     public:
         ScenePass(
-            Scene::GameScene& Scene);
+            const GraphStorage& Storage,
+            Scene::GameScene&   Scene);
 
         void ResolveShaders(
             ShaderResolver& Resolver) override;

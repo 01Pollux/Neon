@@ -24,17 +24,13 @@ namespace Neon::Renderer
         using IndexType = uint16_t;
         static_assert(MaxIndices < std::numeric_limits<IndexType>::max());
 
-        [[nodiscard]] Structured::CookedLayout CreateLayout()
+        struct Layout
         {
-            Structured::RawLayout Layout;
-
-            Layout.Append(Structured::Type::Float3, "Position");
-            Layout.Append(Structured::Type::Float2, "TexCoord");
-            Layout.Append(Structured::Type::Int, "TexIndex");
-            Layout.Append(Structured::Type::Float4, "Color");
-
-            return Layout.Cook(true);
-        }
+            alignas(16) Vector3 Position;
+            alignas(16) Vector2 TexCoord;
+            alignas(16) int32_t TexIndex;
+            alignas(16) Color4 Color;
+        };
 
         /// <summary>
         /// a sprite's quad is made up of 4 vertices and looks like this:
@@ -61,19 +57,11 @@ namespace Neon::Renderer
     } // namespace SpriteBatchConstants
 
     SpriteBatch::SpriteBatch(
-        const CompiledShader& InitInfo,
-        RHI::ISwapchain*      Swapchain) :
-        SpriteBatch(CreatePipelineStates(InitInfo), Swapchain)
-    {
-    }
-
-    SpriteBatch::SpriteBatch(
-        const CompiledPipelineState& InitInfo,
-        RHI::ISwapchain*             Swapchain) :
-        m_BufferLayout(SpriteBatchConstants::CreateLayout())
+        Ptr<Material>    SpriteMaterial,
+        RHI::ISwapchain* Swapchain) :
+        m_SpriteMaterial(SpriteMaterial)
     {
         CreateBuffers(Swapchain);
-        CreatePipelineState(InitInfo);
     }
 
     //
@@ -81,11 +69,11 @@ namespace Neon::Renderer
     void SpriteBatch::Begin(
         RHI::IGraphicsCommandList* CommandList)
     {
-        m_CommandList = CommandList;
-        m_CommandList->SetRootSignature(m_RootSignature);
-        m_CommandList->SetPipelineState(m_PipelineState);
+        /* m_CommandList = CommandList;
+         m_CommandList->SetRootSignature(m_RootSignature);
+         m_CommandList->SetPipelineState(m_PipelineState);
 
-        m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
+         m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);*/
 
         m_DrawCount     = 0;
         m_VerticesCount = 0;
@@ -125,22 +113,24 @@ namespace Neon::Renderer
             Quad.Position + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
         };
 
-        for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i)
+        for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i, ++m_VerticesCount)
         {
-            auto Buffer        = m_BufferLayout.Access(m_VertexBufferPtr, m_VerticesCount++);
-            Buffer["Position"] = QuadPositions[i];
-            Buffer["TexCoord"] = TexCoords[i];
-            Buffer["Color"]    = Quad.Color;
+            auto Buffer = std::bit_cast<SpriteBatchConstants::Layout*>(m_VertexBufferPtr) + m_VerticesCount;
+
+            Buffer->Position = QuadPositions[i];
+            Buffer->TexCoord = TexCoords[i];
+            Buffer->Color    = Quad.Color;
 
             if (Quad.Texture)
             {
-                Buffer["TexIndex"] = m_TextureCount - 1;
+                Buffer->TexIndex = m_TextureCount - 1;
             }
             else
             {
-                Buffer["TexIndex"] = -1;
+                Buffer->TexIndex = -1;
             }
         }
+
         m_DrawCount++;
     }
 
@@ -157,7 +147,7 @@ namespace Neon::Renderer
         RHI::Views::Vertex VertexView;
         VertexView.Append(
             m_VertexBuffer->GetHandle(),
-            m_BufferLayout.GetSize(),
+            sizeof(SpriteBatchConstants::Layout),
             m_VertexBuffer->GetSize());
 
         RHI::Views::Index IndexView(
@@ -176,39 +166,13 @@ namespace Neon::Renderer
 
     //
 
-    auto SpriteBatch::CreatePipelineStates(
-        const CompiledShader& InitInfo) -> CompiledPipelineState
-    {
-        InitInfo.Pack->LoadAsync(InitInfo.QuadRootSignature);
-        InitInfo.Pack->LoadAsync(InitInfo.QuadVertexShader);
-        InitInfo.Pack->LoadAsync(InitInfo.QuadPixelShader);
-
-        auto RootSignature = InitInfo.Pack->Load<Asset::RootSignatureAsset>(InitInfo.QuadRootSignature)->GetRootSignature();
-
-        // TODO
-        RHI::PipelineStateBuilderG QuadPipelineState{
-            .RootSignature = RootSignature, /*
-            .VertexShader   = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadVertexShader)->GetShader(),
-            .PixelShader    = InitInfo.Pack->Load<Asset::ShaderAsset>(InitInfo.QuadPixelShader)->GetShader(),*/
-            .Rasterizer     = { .CullMode = RHI::CullMode::None },
-            .UseVertexInput = true,
-            .Topology       = RHI::PipelineStateBuilderG::PrimitiveTopology::Triangle,
-            .RTFormats      = { RHI::EResourceFormat::R8G8B8A8_UNorm }
-        };
-
-        return {
-            .QuadPipelineState = { RHI::IPipelineState::Create(QuadPipelineState) },
-            .QuadRootSignature = RootSignature
-        };
-    }
-
     void SpriteBatch::CreateBuffers(
         RHI::ISwapchain* Swapchain)
     {
         m_VertexBuffer.reset(RHI::IUploadBuffer::Create(
             Swapchain,
             {
-                .Size = m_BufferLayout.GetSize() * SpriteBatchConstants::MaxVertices,
+                .Size = sizeof(SpriteBatchConstants::Layout) * SpriteBatchConstants::MaxVertices,
             }));
 
         m_VertexBufferPtr = m_VertexBuffer->Map();
@@ -228,14 +192,5 @@ namespace Neon::Renderer
         }
 
         m_IndexBuffer->Unmap();
-    }
-
-    //
-
-    void SpriteBatch::CreatePipelineState(
-        const CompiledPipelineState& InitInfo)
-    {
-        m_PipelineState = InitInfo.QuadPipelineState;
-        m_RootSignature = InitInfo.QuadRootSignature;
     }
 } // namespace Neon::Renderer

@@ -2,13 +2,12 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 
-#include <glm/gtc/type_ptr.hpp>
-
 //
 
 #include <Scene/Scene.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
+#include <Renderer/Material/Builder.hpp>
 
 //
 
@@ -22,7 +21,8 @@ namespace Neon::RG
     using namespace Scene;
 
     ScenePass::ScenePass(
-        GameScene& Scene) :
+        const GraphStorage& Storage,
+        GameScene&          Scene) :
         IRenderPass(PassQueueType::Direct),
         m_Scene(Scene)
     {
@@ -33,7 +33,13 @@ namespace Neon::RG
 
         //
 
-        // Renderer::MaterialBuilder;
+        Renderer::RenderMaterialBuilder Builder;
+        auto                            Material = std::make_shared<Renderer::Material>(Builder);
+
+        m_SpriteBatch.reset(
+            NEON_NEW Renderer::SpriteBatch(
+                std::move(Material),
+                Storage.GetSwapchain()));
     }
 
     void ScenePass::ResolveShaders(
@@ -69,43 +75,8 @@ namespace Neon::RG
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
-        if (!m_SpriteQuery.is_true())
-        {
-            return;
-        }
-
-        if (!m_SpriteBatch)
-        {
-            m_SpriteBatch = std::make_unique<Renderer::SpriteBatch>(
-                Renderer::SpriteBatch::CompiledPipelineState{
-                    .QuadPipelineState = Storage.GetPipelineState(RG::ResourceId(STR("Sprite.Pipeline"))),
-                    .QuadRootSignature = Storage.GetRootSignature(RG::ResourceId(STR("Sprite.RS"))),
-                },
-                Storage.GetSwapchain());
-        }
-
+        return;
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
-
-        //
-
-        /*
-
-        m_SpriteBatcher->Begin();
-
-        m_SpriteQuery->each(
-            [this](const Component::Transform& Transform, const Component::Sprite& Sprite)
-            {
-                m_SpriteBatcher->Draw(
-                    QuadCommand{
-                        .Position = Transform.World.GetPosition(),
-                        .Texture  = Sprite.Texture,
-                        .Rect     = Sprite.TextureRect,
-                        .Color    = Sprite.ModulationColor,
-                        .Scale    = Sprite.Scale,
-                        .Rotation = Sprite.Rotation });
-            });
-
-        */
 
         if (m_SpriteQuery.is_true())
         {

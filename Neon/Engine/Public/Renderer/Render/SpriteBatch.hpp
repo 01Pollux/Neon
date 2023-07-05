@@ -2,10 +2,7 @@
 
 #include <RHI/Resource/Resource.hpp>
 #include <RHI/Resource/Views/ShaderResource.hpp>
-#include <Utils/Struct.hpp>
-
-#include <Resource/Pack.hpp>
-#include <Resource/Handle.hpp>
+#include <Renderer/Material/Material.hpp>
 
 #include <Math/Vector.hpp>
 #include <Math/Rect.hpp>
@@ -39,28 +36,9 @@ namespace Neon::Renderer
         };
 
     public:
-        struct CompiledShader
-        {
-            Asset::IAssetPack* Pack;
-
-            Asset::AssetHandle QuadVertexShader;
-            Asset::AssetHandle QuadPixelShader;
-            Asset::AssetHandle QuadRootSignature;
-        };
-
-        struct CompiledPipelineState
-        {
-            Ptr<RHI::IPipelineState> QuadPipelineState;
-            Ptr<RHI::IRootSignature> QuadRootSignature;
-        };
-
         SpriteBatch(
-            const CompiledShader& InitInfo,
-            RHI::ISwapchain*      Swapchain);
-
-        SpriteBatch(
-            const CompiledPipelineState& InitInfo,
-            RHI::ISwapchain*             Swapchain);
+            Ptr<Material>    SpriteMaterial,
+            RHI::ISwapchain* Swapchain);
 
         /// <summary>
         /// Begins drawing.
@@ -81,32 +59,18 @@ namespace Neon::Renderer
 
     private:
         /// <summary>
-        /// Creates the pipeline states.
-        /// </summary>
-        static CompiledPipelineState CreatePipelineStates(
-            const CompiledShader& InitInfo);
-
-        /// <summary>
         /// Creates the vertex and index buffers.
         /// </summary>
         void CreateBuffers(
             RHI::ISwapchain* Swapchain);
 
-        /// <summary>
-        /// Creates the pipeline state.
-        /// </summary>
-        void CreatePipelineState(
-            const CompiledPipelineState& InitInfo);
-
     private:
-        Structured::CookedLayout   m_BufferLayout;
+        Ptr<Material> m_SpriteMaterial;
+
         RHI::IGraphicsCommandList* m_CommandList = nullptr;
 
         RHI::Views::ShaderResource m_ResourceView;
         RHI::Views::Generic        m_SamplerView;
-
-        Ptr<RHI::IPipelineState> m_PipelineState;
-        Ptr<RHI::IRootSignature> m_RootSignature;
 
         UPtr<RHI::IUploadBuffer> m_VertexBuffer;
         UPtr<RHI::IUploadBuffer> m_IndexBuffer;

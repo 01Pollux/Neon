@@ -8,17 +8,35 @@ namespace Neon::Renderer
         ShaderBinding   Binding,
         MaterialVarType Type) -> View&
     {
-        return m_Variables.emplace(
-                              std::piecewise_construct,
-                              std::forward_as_tuple(Name),
-                              std::forward_as_tuple(Binding, Type))
-            .first->second;
+        auto Iter = std::ranges::find_if(
+            m_Variables,
+            [&Name](const auto& View)
+            {
+                return View.Name() == Name;
+            });
+        if (Iter == m_Variables.end())
+        {
+            return m_Variables.emplace_back(Name, Binding, Type);
+        }
+        else
+        {
+            return *Iter;
+        }
     }
 
     void MaterialVariableMap::Remove(
         const StringU8& Name)
     {
-        m_Variables.erase(Name);
+        auto Iter = std::ranges::find_if(
+            m_Variables,
+            [&Name](const auto& View)
+            {
+                return View.Name() == Name;
+            });
+        if (Iter != m_Variables.end())
+        {
+            m_Variables.erase(Iter);
+        }
     }
 
     //
