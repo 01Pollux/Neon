@@ -88,7 +88,7 @@ namespace Neon::Asset
 
         auto Shader = RHI::IShader::Create(RHI::ShaderCompileDesc{
             .Macros     = Macros,
-            .SourceCode = m_Library->GetModuleCode(m_Id)->c_str(),
+            .SourceCode = m_Code,
             .Profile    = Profile,
             .Stage      = Stage,
             .Flags      = Flags,
@@ -110,12 +110,35 @@ namespace Neon::Asset
         m_Binaries.clear();
     }
 
+    StringU8 ShaderModule::Decompress(
+        StringU8 Code,
+        bool     Compressed)
+    {
+        if (Compressed)
+        {
+            std::istringstream Stream(std::move(Code));
+
+            bio::filtering_istreambuf Filter;
+            Filter.push(bio::gzip_decompressor{});
+            Filter.push(Stream);
+
+            std::ostringstream Output;
+            bio::copy(Filter, Output);
+
+            Code = Output.str();
+        }
+        return std::move(Code);
+    }
+
     ShaderModule::ShaderModule(
-        const StringU8&         ModName,
+        StringU8                ModName,
+        StringU8                ModCode,
+        bool                    Compressed,
         Ptr<ShaderLibraryAsset> Library,
         ShaderModuleId          Id) :
         m_Library(std::move(Library)),
-        m_Id(Id)
+        m_Id(Id),
+        m_Code(Decompress(std::move(ModCode), Compressed))
     {
         auto CachePath = StringUtils::Format("{}_{}.nsmc", std::filesystem::temp_directory_path().string(), ModName);
         m_ShaderCache.open(CachePath, std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
@@ -126,9 +149,8 @@ namespace Neon::Asset
 
         // Check if the current file will be used for caching
         // The file is used for caching if it exists and has same code as the module
-        auto   ModuleCode = Library->GetModuleCode(Id);
         SHA256 Hash;
-        Hash.Append(*ModuleCode);
+        Hash.Append(m_Code);
         auto ExpectedHash = Hash.Digest();
 
         // File wasn't empty
@@ -158,7 +180,7 @@ namespace Neon::Asset
     {
         m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
 
-        for (size_t i = 0; i < m_FileSize; i = m_ShaderCache.tellg())
+        for (size_t i = sizeof(SHA256::Bytes); i != m_FileSize; i = m_ShaderCache.tellg())
         {
             SHA256::Bytes CurHash;
             m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
@@ -201,7 +223,7 @@ namespace Neon::Asset
             m_ShaderCache.write(std::bit_cast<char*>(ByteCode.Data), ByteCode.Size);
         };
 
-        for (size_t i = 0; i != m_FileSize; i = m_ShaderCache.tellg())
+        for (size_t i = sizeof(SHA256::Bytes); i != m_FileSize; i = m_ShaderCache.tellg())
         {
             SHA256::Bytes CurHash;
             m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
@@ -228,7 +250,7 @@ namespace Neon::Asset
 
     //
 
-    const Ptr<ShaderModule>& ShaderLibraryAsset::LoadModule(
+    Ptr<ShaderModule> ShaderLibraryAsset::LoadModule(
         ShaderModuleId Id)
     {
         std::scoped_lock Lock(m_LibraryAccessMutex);
@@ -243,7 +265,6 @@ namespace Neon::Asset
         StringU8       ModCode)
     {
         std::scoped_lock Lock(m_LibraryAccessMutex);
-
         SetModule(Id, std::move(ModName), std::move(ModCode), false);
     }
 
@@ -251,50 +272,7 @@ namespace Neon::Asset
         ShaderModuleId Id)
     {
         std::scoped_lock Lock(m_LibraryAccessMutex);
-
-        auto Iter = m_Modules.find(Id);
-        if (Iter != m_Modules.end())
-        {
-            m_Modules.erase(Iter);
-        }
-    }
-
-    void ShaderLibraryAsset::Optimize()
-    {
-        std::for_each(
-            std::execution::par_unseq,
-            m_Modules.begin(),
-            m_Modules.end(),
-            [](auto& Module)
-            {
-                Module.second.Module->Optimize();
-            });
-    }
-
-    const StringU8* ShaderLibraryAsset::GetModuleCode(
-        ShaderModuleId Id)
-    {
-        auto Iter = m_Modules.find(Id);
-        if (Iter != m_Modules.end())
-        {
-            return &DecompressOnce(Id);
-        }
-        else
-        {
-            return nullptr;
-        }
-    }
-
-    const StringU8& ShaderLibraryAsset::DecompressOnce(
-        ShaderModuleId ModOffset)
-    {
-        auto& Module = m_ModulesData[ModOffset];
-        if (Module.Compressed)
-        {
-            Module.Compressed = false;
-            Module.Code       = DecompressString(std::move(Module.Code));
-        }
-        return Module.Code;
+        m_Modules.erase(Id);
     }
 
     void ShaderLibraryAsset::SetModule(
@@ -307,11 +285,12 @@ namespace Neon::Asset
         m_Modules.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(Id),
-            std::forward_as_tuple(Id, std::move(ModName), std::static_pointer_cast<ShaderLibraryAsset>(shared_from_this())));
-        m_ModulesData.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(Id),
-            std::forward_as_tuple(std::move(ModCode), Compressed));
+            std::forward_as_tuple(
+                Id,
+                std::move(ModName),
+                std::move(ModCode),
+                Compressed,
+                std::static_pointer_cast<ShaderLibraryAsset>(shared_from_this())));
     }
 
     //
@@ -355,7 +334,7 @@ namespace Neon::Asset
         IO::OutArchive&            Archive)
     {
         auto ShaderLib = std::static_pointer_cast<ShaderLibraryAsset>(Resource);
-        Archive << ShaderLib->m_ModulesData.size();
+        Archive << ShaderLib->m_Modules.size();
 
         std::istringstream Stream;
         std::ostringstream CompressedStream;
@@ -374,21 +353,14 @@ namespace Neon::Asset
         {
             Archive << ModId;
             Archive << ModData.ModName;
-            auto& Module = ShaderLib->m_ModulesData[ModData.ModId];
-            if (!Module.Compressed)
-            {
-                ResetStream(Stream);
-                ResetStream(CompressedStream);
 
-                Stream.str(Module.Code);
-                bio::copy(Filter, CompressedStream);
+            ResetStream(Stream);
+            ResetStream(CompressedStream);
 
-                Archive << CompressedStream.str();
-            }
-            else
-            {
-                Archive << Module.Code;
-            }
+            Stream.str(ModData.Module->m_Code);
+            bio::copy(Filter, CompressedStream);
+
+            Archive << CompressedStream.str();
         }
     }
 } // namespace Neon::Asset

@@ -33,7 +33,9 @@ namespace Neon::Asset
 
     public:
         ShaderModule(
-            const StringU8&         ModName,
+            StringU8                ModName,
+            StringU8                ModCode,
+            bool                    Compressed,
             Ptr<ShaderLibraryAsset> Library,
             ShaderModuleId          Id);
 
@@ -67,12 +69,20 @@ namespace Neon::Asset
         /// </summary>
         void Optimize();
 
+        /// <summary>
+        /// Decompress shader code if needed
+        /// </summary>
+        [[nodiscard]] static StringU8 Decompress(
+            StringU8 Code,
+            bool     Compressed);
+
     private:
         Ptr<ShaderLibraryAsset> m_Library;
         ShaderModuleId          m_Id;
 
         std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
 
+        StringU8     m_Code;
         size_t       m_FileSize = 0;
         std::fstream m_ShaderCache;
 
@@ -97,8 +107,10 @@ namespace Neon::Asset
             ShaderModuleTable(
                 ShaderModuleId          Id,
                 StringU8                ModName,
+                StringU8                ModCode,
+                bool                    Compressed,
                 Ptr<ShaderLibraryAsset> Library) :
-                Module(std::make_shared<ShaderModule>(ModName, std::move(Library), Id)),
+                Module(std::make_shared<ShaderModule>(std::move(ModName), std::move(ModCode), Compressed, std::move(Library), Id)),
                 ModName(std::move(ModName)),
                 ModId(Id)
             {
@@ -109,7 +121,7 @@ namespace Neon::Asset
         /// <summary>
         /// Get shader module by id
         /// </summary>
-        [[nodiscard]] const Ptr<ShaderModule>& LoadModule(
+        [[nodiscard]] Ptr<ShaderModule> LoadModule(
             ShaderModuleId Id);
 
         /// <summary>
@@ -126,24 +138,7 @@ namespace Neon::Asset
         void RemoveModule(
             ShaderModuleId Id);
 
-        /// <summary>
-        /// Optimize shader library (clear all loaded binaries)
-        /// </summary>
-        void Optimize();
-
     private:
-        /// <summary>
-        /// Get shader module's code by id
-        /// </summary>
-        [[nodiscard]] const StringU8* GetModuleCode(
-            ShaderModuleId Id);
-
-        /// <summary>
-        /// Decompress shader module once
-        /// </summary>
-        const StringU8& DecompressOnce(
-            ShaderModuleId ModOffset);
-
         /// <summary>
         /// Set shader module by id
         /// </summary>
@@ -172,13 +167,6 @@ namespace Neon::Asset
         };
 
     private:
-        struct ModuleData
-        {
-            StringU8 Code;
-            bool     Compressed;
-        };
-
-        std::map<ShaderModuleId, ModuleData>        m_ModulesData;
         std::map<ShaderModuleId, ShaderModuleTable> m_Modules;
 
         std::mutex m_LibraryAccessMutex;
