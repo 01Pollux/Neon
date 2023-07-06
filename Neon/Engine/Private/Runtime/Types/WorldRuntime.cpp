@@ -85,7 +85,6 @@ namespace Neon::Runtime
 
         //
 
-        bool Black = false;
         for (float y = -1.f; y < 1.f; y += .2f)
         {
             for (float x = -1.f; x < 1.f; x += .2f)
@@ -101,10 +100,15 @@ namespace Neon::Runtime
                 Sprite.set(Transform);
 
                 Scene::Component::Sprite SpriteComponent;
-                SpriteComponent.ModulationColor = Black ? Colors::Black : Colors::White;
-                SpriteComponent.Size            = Size2(Size, Size);
+
+                // lerp from (0, 1.0, 0.3, 1.0) to (0.2, 0.1, 1.0, 1.0), no predefined functions
+                // Color::Lerp doesnt exists
+                SpriteComponent.ModulationColor =
+                    Color4(0.0f, 1.0f, 0.3f, 1.0f) * (1.f - x) * (1.f - y) +
+                    Color4(0.2f, 0.1f, 1.0f, 1.0f) * x * y;
+
+                SpriteComponent.Size = Size2(Size, Size);
                 Sprite.set(SpriteComponent);
-                Black = !Black;
             }
         }
     }
