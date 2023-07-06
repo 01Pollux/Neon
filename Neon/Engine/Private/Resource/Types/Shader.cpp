@@ -182,7 +182,7 @@ namespace Neon::Asset
             SHA256::Bytes CurHash;
             m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
 
-            if (Hash == Hash)
+            if (Hash == CurHash)
             {
                 if (ShaderSize)
                 {
