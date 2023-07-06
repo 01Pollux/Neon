@@ -10,8 +10,6 @@ namespace Neon::Renderer
         ShaderBinding   Binding,
         MaterialVarType Type) -> View&
     {
-        NEON_ASSERT(Type != MaterialVarType::StaticSampler, "Static samplers must be added with AddSampler.");
-
         auto Iter = std::ranges::find_if(
             m_Variables,
             [&Name](const auto& View)

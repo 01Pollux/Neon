@@ -74,6 +74,7 @@ namespace Neon::Renderer
         {
             EntryVariant Entry;
             uint32_t     RootIndex;
+            bool         IsShared;
         };
 
     private:

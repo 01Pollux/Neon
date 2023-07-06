@@ -85,13 +85,13 @@ namespace Neon::Renderer
         /// Iterate over all static samplers.
         /// </summary>
         template<typename _Ty>
-            requires std::is_invocable_v<_Ty, const StringU8&, const RHI::StaticSamplerDesc&>
+            requires std::is_invocable_v<_Ty, const RHI::StaticSamplerDesc&>
         void ForEachStaticSampler(
             _Ty Callback) const
         {
-            for (auto& [Name, Desc] : m_StaticSamplers)
+            for (auto& Desc : m_StaticSamplers | std::views::values)
             {
-                Callback(Name, Desc);
+                Callback(Desc);
             }
         }
 
@@ -138,7 +138,7 @@ namespace Neon::Renderer
         View& ArraySize(
             uint32_t Count)
         {
-            m_ArraySize = Count;
+            m_ArraySize = std::min(Count, 1u);
             return *this;
         }
 

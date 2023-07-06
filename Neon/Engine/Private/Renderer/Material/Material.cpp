@@ -62,15 +62,12 @@ namespace Neon::Renderer
         uint32_t RootParamIndex = 0;
 
         auto& VarMap = Builder.VarMap();
+
         VarMap.ForEachVariable(
             [Mat,
              &BatchedDescriptorEntries,
-             &RootSigBuilder,
              &TableResourceCount,
-             &TableSharedResourceCount,
-             &TableSamplerCount,
-             &TableSharedSamplerCount,
-             &RootIndex](
+             &TableSharedResourceCount](
                 const MaterialVariableMap::View& View) mutable
             {
                 switch (View.Type())
@@ -78,8 +75,11 @@ namespace Neon::Renderer
                 case MaterialVarType::Buffer:
                 case MaterialVarType::Resource:
                 case MaterialVarType::RWResource:
+                case MaterialVarType::Sampler:
                 {
-                    auto& Descriptors = BatchedDescriptorEntries[0][View.Visibility()][View.Type()];
+                    size_t BatchIndex = View.Type() == MaterialVarType::Sampler ? 1 : 0;
+
+                    auto& Descriptors = BatchedDescriptorEntries[BatchIndex][View.Visibility()][View.Type()];
 
                     Material::DescriptorEntry DescriptorEntry{};
 
@@ -87,6 +87,7 @@ namespace Neon::Renderer
                     DescriptorEntry.Resources.resize(View.ArraySize());
 
                     uint32_t EntrySize;
+                    bool     IsShared;
 
                     if (View.Flags().Test(EMaterialVarFlags::Shared))
                     {
@@ -94,6 +95,7 @@ namespace Neon::Renderer
                         TableResourceCount += View.ArraySize();
 
                         EntrySize = View.ArraySize();
+                        IsShared  = true;
                     }
                     else
                     {
@@ -101,10 +103,12 @@ namespace Neon::Renderer
                         TableSharedResourceCount += View.ArraySize();
 
                         EntrySize = Material::UnboundedTableSize;
+                        IsShared  = false;
                     }
 
-                    auto& LayoutEntry = Mat->m_EntryMap[View.Name()];
-                    LayoutEntry.Entry = std::move(DescriptorEntry);
+                    auto& LayoutEntry    = Mat->m_EntryMap[View.Name()];
+                    LayoutEntry.Entry    = std::move(DescriptorEntry);
+                    LayoutEntry.IsShared = IsShared;
 
                     Descriptors.insert(
                         BatchedDescriptorEntry{
@@ -114,14 +118,17 @@ namespace Neon::Renderer
 
                     break;
                 }
-                case MaterialVarType::DynamicSampler:
-                case MaterialVarType::StaticSampler:
-                {
-                }
 
                 default:
                     NEON_ASSERT(false);
                 }
+            });
+
+        VarMap.ForEachStaticSampler(
+            [&RootSigBuilder](
+                const RHI::StaticSamplerDesc& Desc)
+            {
+                RootSigBuilder.AddSampler(Desc);
             });
 
         // Merge batched descriptors
@@ -152,7 +159,7 @@ namespace Neon::Renderer
                             Table.AddUavRange(Binding.Register, Binding.Space, Size, std::move(Flags));
                             break;
 
-                        case MaterialVarType::DynamicSampler:
+                        case MaterialVarType::Sampler:
                             Table.AddSamplerRange(Binding.Register, Binding.Space, Size, std::move(Flags));
                             break;
                         }

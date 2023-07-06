@@ -55,8 +55,6 @@ namespace Neon::Renderer
         Buffer,
         Resource,
         RWResource,
-
-        StaticSampler,
-        DynamicSampler
+        Sampler
     };
 } // namespace Neon::Renderer
