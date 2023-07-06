@@ -175,6 +175,8 @@ namespace Neon::Asset
         std::unique_ptr<uint8_t[]>* ShaderData,
         size_t*                     ShaderSize)
     {
+        // TODO: Temporarily disabled
+#if 0
         m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
 
         for (size_t i = sizeof(SHA256::Bytes); i != m_FileSize; i = m_ShaderCache.tellg())
@@ -202,14 +204,17 @@ namespace Neon::Asset
                 m_ShaderCache.seekg(ShaderSize, std::ios::cur);
             }
         }
+#else
 
         return false;
+#endif
     }
 
     void ShaderModule::WriteCache(
         const SHA256::Bytes& Hash,
         RHI::IShader*        Shader)
     {
+#if 0
         m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
 
         auto WriteToFile =
@@ -243,6 +248,7 @@ namespace Neon::Asset
         m_ShaderCache.write(std::bit_cast<char*>(Hash.data()), Hash.size());
 
         WriteToFile();
+#endif
     }
 
     //

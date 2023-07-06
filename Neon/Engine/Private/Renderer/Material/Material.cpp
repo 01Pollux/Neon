@@ -294,7 +294,7 @@ namespace Neon::Renderer
     //
 
     template<bool _Compute>
-    void Material_CreatePipelineState(
+    static void Material_CreatePipelineState(
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {

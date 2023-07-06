@@ -26,10 +26,10 @@ namespace Neon::Renderer
 
         struct Layout
         {
-            alignas(16) Vector3 Position;
-            alignas(16) Vector2 TexCoord;
-            alignas(16) int32_t TexIndex;
-            alignas(16) Color4 Color;
+            Vector3 Position;
+            Vector2 TexCoord;
+            int32_t TexIndex;
+            Color4  Color;
         };
 
         /// <summary>
