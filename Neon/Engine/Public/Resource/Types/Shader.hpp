@@ -42,7 +42,7 @@ namespace Neon::Asset
         /// <summary>
         /// Load or compile shader stage by the specified parameters
         /// </summary>
-        RHI::IShader* LoadStage(
+        Ptr<RHI::IShader> LoadStage(
             RHI::ShaderStage               Stage,
             const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
             RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
@@ -80,7 +80,7 @@ namespace Neon::Asset
         Ptr<ShaderLibraryAsset> m_Library;
         ShaderModuleId          m_Id;
 
-        std::map<SHA256::Bytes, UPtr<RHI::IShader>> m_Binaries;
+        std::map<SHA256::Bytes, Ptr<RHI::IShader>> m_Binaries;
 
         StringU8     m_Code;
         size_t       m_FileSize = 0;

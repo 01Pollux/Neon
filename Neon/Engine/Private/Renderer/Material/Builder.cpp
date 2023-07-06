@@ -60,14 +60,14 @@ namespace Neon::Renderer
 
     //
 
-    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, BlendState, m_BlendState);
+    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, Blend, m_BlendState);
     MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, Rasterizer, m_Rasterizer);
     MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, DepthStencil, m_DepthStencil);
     MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, InputLayout, m_InputLayout);
 
     //
 
-    RenderMaterialBuilder& RenderMaterialBuilder::BlendState(
+    RenderMaterialBuilder& RenderMaterialBuilder::Blend(
         size_t                Index,
         MaterialStates::Blend State)
     {
@@ -106,6 +106,7 @@ namespace Neon::Renderer
         default:
             std::unreachable();
         }
+        return *this;
     }
 
     //

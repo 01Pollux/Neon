@@ -100,25 +100,19 @@ namespace Neon::RHI
         Ptr<IShader> HullShader     = nullptr;
         Ptr<IShader> DomainShader   = nullptr;
 
-        BlendState Blend;
-        uint32_t   SampleMask = 0xFFFFFFFF;
-
-        RasterizerState Rasterizer;
-
-        DepthStencilState DepthStencil;
-
-        ShaderInputLayout Input;
-        bool              UseVertexInput = false;
-
-        StripCutType StripCut = StripCutType::None;
-
-        PrimitiveTopology Topology = PrimitiveTopology::Undefined;
-
+        BlendState                   Blend;
+        RasterizerState              Rasterizer;
+        DepthStencilState            DepthStencil;
+        ShaderInputLayout            Input;
         std::vector<EResourceFormat> RTFormats;
-        EResourceFormat              DSFormat = EResourceFormat::Unknown;
 
+        uint32_t SampleMask    = 0xFFFFFFFF;
         uint32_t SampleCount   = 1;
         uint32_t SampleQuality = 0;
+
+        PrimitiveTopology Topology = PrimitiveTopology::Undefined;
+        StripCutType      StripCut = StripCutType::None;
+        EResourceFormat   DSFormat = EResourceFormat::Unknown;
     };
     using PipelineStateBuilderG = PipelineStateBuilder<false>;
 

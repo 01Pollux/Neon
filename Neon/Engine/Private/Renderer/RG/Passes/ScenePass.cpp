@@ -53,7 +53,7 @@ namespace Neon::RG
                 .Visibility(RHI::ShaderVisibility::Pixel)
                 .Flags(EMaterialVarFlags::Shared, true);
 
-#if 1
+#if 0
 
             VarMap.Add("T1S0", { 1, 0 }, MaterialVarType::Resource)
                 .Visibility(RHI::ShaderVisibility::Pixel)

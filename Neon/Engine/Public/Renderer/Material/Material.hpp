@@ -26,6 +26,11 @@ namespace Neon::Renderer
             uint32_t&                               LocaResourceDescriptorSize,
             uint32_t&                               LocaSamplerDescriptorSize);
 
+        template<bool _Compute>
+        friend void Material_CreatePipelineState(
+            const GenericMaterialBuilder<_Compute>& Builder,
+            Material*                               Mat);
+
     public:
         Material(
             RHI::ISwapchain*                    Swapchain,

@@ -54,7 +54,7 @@ namespace Neon::Asset
         return Hash.Digest();
     }
 
-    RHI::IShader* ShaderModule::LoadStage(
+    Ptr<RHI::IShader> ShaderModule::LoadStage(
         RHI::ShaderStage               Stage,
         const RHI::MShaderCompileFlags Flags,
         RHI::ShaderProfile             Profile,
@@ -67,7 +67,7 @@ namespace Neon::Asset
         // Check if shader was already compiled and is in cache
         if (Iter != m_Binaries.end())
         {
-            return Iter->second.get();
+            return Iter->second;
         }
 
         std::unique_ptr<uint8_t[]> ShaderData;
@@ -79,14 +79,12 @@ namespace Neon::Asset
                 &ShaderData,
                 &ShaderSize))
         {
-            auto Shader    = RHI::IShader::Create(std::move(ShaderData), ShaderSize);
-            auto ShaderPtr = Shader.get();
-
-            m_Binaries.emplace(Hash, std::move(Shader));
-            return ShaderPtr;
+            Ptr Shader = RHI::IShader::Create(std::move(ShaderData), ShaderSize);
+            m_Binaries.emplace(Hash, Shader);
+            return Shader;
         }
 
-        auto Shader = RHI::IShader::Create(RHI::ShaderCompileDesc{
+        Ptr Shader = RHI::IShader::Create(RHI::ShaderCompileDesc{
             .Macros     = Macros,
             .SourceCode = m_Code,
             .Profile    = Profile,
@@ -94,14 +92,13 @@ namespace Neon::Asset
             .Flags      = Flags,
         });
 
-        auto ShaderPtr = Shader.get();
         if (Shader)
         {
-            m_Binaries.emplace(Hash, std::move(Shader));
-            WriteCache(Hash, ShaderPtr);
+            m_Binaries.emplace(Hash, Shader);
+            WriteCache(Hash, Shader.get());
         }
 
-        return ShaderPtr;
+        return Shader;
     }
 
     void ShaderModule::Optimize()

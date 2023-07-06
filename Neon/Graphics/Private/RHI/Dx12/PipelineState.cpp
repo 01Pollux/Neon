@@ -401,16 +401,9 @@ namespace Neon::RHI
 
         // Input layout
         {
-            if (!Builder.UseVertexInput)
-            {
-                Result.InputLayout = Builder.Input;
-            }
-            else
-            {
-                Builder.VertexShader->CreateInputLayout(Result.InputLayout);
-            }
+            Result.InputLayout = Builder.Input;
+            auto& InputLayout  = Result.Desc.InputLayout;
 
-            auto& InputLayout = Result.Desc.InputLayout;
             for (auto& [Name, Element] : Result.InputLayout)
             {
                 auto SemanticView = Name |

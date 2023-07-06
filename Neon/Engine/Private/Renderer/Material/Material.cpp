@@ -8,6 +8,9 @@
 
 #include <Log/Logger.hpp>
 
+namespace ranges = std::ranges;
+namespace views  = std::views;
+
 namespace Neon::Renderer
 {
     static void CreateDescriptorIfNeeded(
@@ -179,6 +182,154 @@ namespace Neon::Renderer
 
     //
 
+    template<bool _Compute>
+    void Material_CreatePipelineState(
+        const GenericMaterialBuilder<_Compute>& Builder,
+        Material*                               Mat)
+    {
+        auto LoadShader = [&Builder](const auto& ModuleHandle, RHI::ShaderStage Stage)
+        {
+            Ptr<RHI::IShader> Shader;
+            if (ModuleHandle.Enabled)
+            {
+                auto& ShaderLib = Builder.ShaderLibrary();
+                auto  Module    = ShaderLib->LoadModule(ModuleHandle.ModuleId);
+                if (Module)
+                {
+                    Shader = Module->LoadStage(Stage, ModuleHandle.Flags, ModuleHandle.Profile, ModuleHandle.Macros);
+                }
+                else
+                {
+                    NEON_WARNING("Material", "Failed to load shader module: {:X}", ModuleHandle.ModuleId);
+                }
+            }
+            return Shader;
+        };
+
+        if constexpr (!_Compute)
+        {
+            RHI::PipelineStateBuilderG PipelineDesc{
+                .RootSignature = Mat->m_RootSignature,
+
+                .VertexShader   = LoadShader(Builder.VertexShader(), RHI::ShaderStage::Vertex),
+                .PixelShader    = LoadShader(Builder.PixelShader(), RHI::ShaderStage::Pixel),
+                .GeometryShader = LoadShader(Builder.GeometryShader(), RHI::ShaderStage::Geometry),
+                .HullShader     = LoadShader(Builder.HullShader(), RHI::ShaderStage::Hull),
+                .DomainShader   = LoadShader(Builder.DomainShader(), RHI::ShaderStage::Domain),
+
+                .Blend        = Builder.Blend(),
+                .Rasterizer   = Builder.Rasterizer(),
+                .DepthStencil = Builder.DepthStencil(),
+
+                .RTFormats = Builder.RenderTargets() |
+                             views::transform([](auto& RenderTarget)
+                                              { return RenderTarget.second.second; }) |
+                             ranges::to<std::vector>(),
+
+                .SampleMask    = Builder.SampleMask(),
+                .SampleCount   = Builder.SampleCount(),
+                .SampleQuality = Builder.SampleQuality(),
+
+                .StripCut = Builder.StripCut(),
+                .DSFormat = Builder.DepthStencilFormat()
+            };
+
+            if (auto& InputLayout = Builder.InputLayout(); !InputLayout.has_value())
+            {
+                auto Shaders = {
+                    PipelineDesc.VertexShader,
+                    PipelineDesc.HullShader,
+                    PipelineDesc.DomainShader,
+                    PipelineDesc.GeometryShader,
+                    PipelineDesc.PixelShader
+                };
+                RHI::ShaderInputLayout NewInput;
+                for (auto& Shader : Shaders)
+                {
+                    if (Shader)
+                    {
+                        Shader->CreateInputLayout(NewInput);
+                        break;
+                    }
+                }
+                PipelineDesc.Input = std::move(NewInput);
+            }
+            else
+            {
+                PipelineDesc.Input = InputLayout.value();
+            }
+
+            using PipelineTopology = RHI::PipelineStateBuilderG::PrimitiveTopology;
+            switch (Builder.Topology())
+            {
+            case RHI::PrimitiveTopology::PointList:
+                PipelineDesc.Topology = PipelineTopology::Point;
+                break;
+            case RHI::PrimitiveTopology::LineList:
+            case RHI::PrimitiveTopology::LineStrip:
+            case RHI::PrimitiveTopology::LineList_Adj:
+            case RHI::PrimitiveTopology::LineStrip_Adj:
+                PipelineDesc.Topology = PipelineTopology::Line;
+                break;
+            case RHI::PrimitiveTopology::TriangleList:
+            case RHI::PrimitiveTopology::TriangleStrip:
+            case RHI::PrimitiveTopology::TriangleList_Adj:
+            case RHI::PrimitiveTopology::TriangleStrip_Adj:
+                PipelineDesc.Topology = PipelineTopology::Triangle;
+                break;
+            case RHI::PrimitiveTopology::PatchList_1:
+            case RHI::PrimitiveTopology::PatchList_2:
+            case RHI::PrimitiveTopology::PatchList_3:
+            case RHI::PrimitiveTopology::PatchList_4:
+            case RHI::PrimitiveTopology::PatchList_5:
+            case RHI::PrimitiveTopology::PatchList_6:
+            case RHI::PrimitiveTopology::PatchList_7:
+            case RHI::PrimitiveTopology::PatchList_8:
+            case RHI::PrimitiveTopology::PatchList_9:
+            case RHI::PrimitiveTopology::PatchList_10:
+            case RHI::PrimitiveTopology::PatchList_11:
+            case RHI::PrimitiveTopology::PatchList_12:
+            case RHI::PrimitiveTopology::PatchList_13:
+            case RHI::PrimitiveTopology::PatchList_14:
+            case RHI::PrimitiveTopology::PatchList_15:
+            case RHI::PrimitiveTopology::PatchList_16:
+            case RHI::PrimitiveTopology::PatchList_17:
+            case RHI::PrimitiveTopology::PatchList_18:
+            case RHI::PrimitiveTopology::PatchList_19:
+            case RHI::PrimitiveTopology::PatchList_20:
+            case RHI::PrimitiveTopology::PatchList_21:
+            case RHI::PrimitiveTopology::PatchList_22:
+            case RHI::PrimitiveTopology::PatchList_23:
+            case RHI::PrimitiveTopology::PatchList_24:
+            case RHI::PrimitiveTopology::PatchList_25:
+            case RHI::PrimitiveTopology::PatchList_26:
+            case RHI::PrimitiveTopology::PatchList_27:
+            case RHI::PrimitiveTopology::PatchList_28:
+            case RHI::PrimitiveTopology::PatchList_29:
+            case RHI::PrimitiveTopology::PatchList_30:
+            case RHI::PrimitiveTopology::PatchList_31:
+            case RHI::PrimitiveTopology::PatchList_32:
+                PipelineDesc.Topology = PipelineTopology::Patch;
+                break;
+            default:
+                std::unreachable();
+            }
+
+            Mat->m_PipelineState = RHI::IPipelineState::Create(PipelineDesc);
+        }
+        else
+        {
+            RHI::PipelineStateBuilderC PipelineDesc{
+                .RootSignature = Mat->m_RootSignature,
+                .ComputeShader = LoadShader(Builder.ComputeShader(), RHI::ShaderStage::Compute)
+            };
+
+            Mat->m_PipelineState = RHI::IPipelineState::Create(PipelineDesc);
+        }
+    }
+
+    //
+
     Material::Material(
         RHI::ISwapchain*             Swapchain,
         const RenderMaterialBuilder& Builder) :
@@ -193,6 +344,12 @@ namespace Neon::Renderer
             this,
             LocalResourceDescriptorSize,
             LocalSamplerDescriptorSize);
+
+        Material_CreatePipelineState(
+            Builder,
+            this);
+
+        //
 
         m_DefaultInstace = Ptr<MaterialInstance>(
             NEON_NEW MaterialInstance{
@@ -214,6 +371,12 @@ namespace Neon::Renderer
             this,
             LocalResourceDescriptorSize,
             LocalSamplerDescriptorSize);
+
+        Material_CreatePipelineState(
+            Builder,
+            this);
+
+        //
 
         m_DefaultInstace = Ptr<MaterialInstance>(
             NEON_NEW MaterialInstance{

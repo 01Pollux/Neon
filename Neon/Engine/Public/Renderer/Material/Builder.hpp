@@ -175,20 +175,20 @@ namespace Neon::Renderer
         /// <summary>
         /// Set the blend state.
         /// </summary>
-        GenericMaterialBuilder& BlendState(
+        GenericMaterialBuilder& Blend(
             RHI::PipelineStateBuilderG::BlendState State);
 
         /// <summary>
         /// Set the blend state.
         /// </summary>
-        GenericMaterialBuilder& BlendState(
+        GenericMaterialBuilder& Blend(
             size_t                Index,
             MaterialStates::Blend State);
 
         /// <summary>
         /// Get the blend state.
         /// </summary>
-        [[nodiscard]] const RHI::PipelineStateBuilderG::BlendState& BlendState() const;
+        [[nodiscard]] const RHI::PipelineStateBuilderG::BlendState& Blend() const;
 
     public:
         /// <summary>
