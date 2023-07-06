@@ -57,7 +57,7 @@ namespace Neon::Renderer
     } // namespace SpriteBatchConstants
 
     SpriteBatch::SpriteBatch(
-        Ptr<Material>    SpriteMaterial,
+        Ptr<IMaterial>   SpriteMaterial,
         RHI::ISwapchain* Swapchain) :
         m_SpriteMaterial(SpriteMaterial)
     {

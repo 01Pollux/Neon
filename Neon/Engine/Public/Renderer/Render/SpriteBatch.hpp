@@ -37,7 +37,7 @@ namespace Neon::Renderer
 
     public:
         SpriteBatch(
-            Ptr<Material>    SpriteMaterial,
+            Ptr<IMaterial>   SpriteMaterial,
             RHI::ISwapchain* Swapchain);
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Neon::Renderer
             RHI::ISwapchain* Swapchain);
 
     private:
-        Ptr<Material> m_SpriteMaterial;
+        Ptr<IMaterial> m_SpriteMaterial;
 
         RHI::IGraphicsCommandList* m_CommandList = nullptr;
 

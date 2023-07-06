@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
+
 #include <Renderer/Material/Builder.hpp>
-#include <Renderer/Material/Material.hpp>
+#include <Private/Renderer/Material/Material.hpp>
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/RootSignature.hpp>
@@ -13,6 +14,32 @@ namespace views  = std::views;
 
 namespace Neon::Renderer
 {
+    Ptr<IMaterial> IMaterial::Create(
+        RHI::ISwapchain*                     Swapchain,
+        const GenericMaterialBuilder<false>& Builder)
+    {
+        uint32_t LocalResourceDescriptorSize = 0,
+                 LocalSamplerDescriptorSize  = 0;
+
+        Ptr<Material> Mat{ NEON_NEW Material(Swapchain, Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
+        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
+        return Mat;
+    }
+
+    Ptr<IMaterial> IMaterial::Create(
+        RHI::ISwapchain*                    Swapchain,
+        const GenericMaterialBuilder<true>& Builder)
+    {
+        uint32_t LocalResourceDescriptorSize = 0,
+                 LocalSamplerDescriptorSize  = 0;
+
+        Ptr<Material> Mat{ NEON_NEW Material(Swapchain, Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
+        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
+        return Mat;
+    }
+
+    //
+
     static void CreateDescriptorIfNeeded(
         RHI::DescriptorHeapHandle& Descriptor,
         RHI::ISwapchain*           Swapchain,
@@ -169,6 +196,31 @@ namespace Neon::Renderer
             }
         }
 
+        //
+
+        if constexpr (_Compute)
+        {
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyVSAccess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyHSAccess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyDSAccess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyGSAccess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyPSAccess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyAmpAcess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyMeshAccess, true);
+        }
+        else
+        {
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout, !Builder.NoVertexInput());
+
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyVSAccess, !Builder.VertexShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyHSAccess, !Builder.HullShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyDSAccess, !Builder.DomainShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyGSAccess, !Builder.GeometryShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyPSAccess, !Builder.PixelShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyAmpAcess, true);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyMeshAccess, true);
+        }
+
         Mat->m_RootSignature = RHI::IRootSignature::Create(RootSigBuilder);
 
         //
@@ -234,25 +286,10 @@ namespace Neon::Renderer
                 .DSFormat = Builder.DepthStencilFormat()
             };
 
-            if (auto& InputLayout = Builder.InputLayout(); !InputLayout.has_value())
+            if (auto& InputLayout = Builder.InputLayout();
+                !InputLayout.has_value() && !Builder.NoVertexInput())
             {
-                auto Shaders = {
-                    PipelineDesc.VertexShader,
-                    PipelineDesc.HullShader,
-                    PipelineDesc.DomainShader,
-                    PipelineDesc.GeometryShader,
-                    PipelineDesc.PixelShader
-                };
-                RHI::ShaderInputLayout NewInput;
-                for (auto& Shader : Shaders)
-                {
-                    if (Shader)
-                    {
-                        Shader->CreateInputLayout(NewInput);
-                        break;
-                    }
-                }
-                PipelineDesc.Input = std::move(NewInput);
+                PipelineDesc.VertexShader->CreateInputLayout(PipelineDesc.Input);
             }
             else
             {
@@ -332,12 +369,11 @@ namespace Neon::Renderer
 
     Material::Material(
         RHI::ISwapchain*             Swapchain,
-        const RenderMaterialBuilder& Builder) :
+        const RenderMaterialBuilder& Builder,
+        uint32_t&                    LocalResourceDescriptorSize,
+        uint32_t&                    LocalSamplerDescriptorSize) :
         m_Swapchain(Swapchain)
     {
-        uint32_t LocalResourceDescriptorSize = 0,
-                 LocalSamplerDescriptorSize  = 0;
-
         Material_CreateDescriptors(
             Swapchain,
             Builder,
@@ -348,23 +384,14 @@ namespace Neon::Renderer
         Material_CreatePipelineState(
             Builder,
             this);
-
-        //
-
-        m_DefaultInstace = Ptr<MaterialInstance>(
-            NEON_NEW MaterialInstance{
-                shared_from_this(),
-                LocalResourceDescriptorSize,
-                LocalSamplerDescriptorSize });
     }
 
     Material::Material(
         RHI::ISwapchain*              Swapchain,
-        const ComputeMaterialBuilder& Builder)
+        const ComputeMaterialBuilder& Builder,
+        uint32_t&                     LocalResourceDescriptorSize,
+        uint32_t&                     LocalSamplerDescriptorSize)
     {
-        uint32_t LocalResourceDescriptorSize = 0,
-                 LocalSamplerDescriptorSize  = 0;
-
         Material_CreateDescriptors(
             Swapchain,
             Builder,
@@ -375,14 +402,6 @@ namespace Neon::Renderer
         Material_CreatePipelineState(
             Builder,
             this);
-
-        //
-
-        m_DefaultInstace = Ptr<MaterialInstance>(
-            NEON_NEW MaterialInstance{
-                shared_from_this(),
-                LocalResourceDescriptorSize,
-                LocalSamplerDescriptorSize });
     }
 
     Material::~Material()
@@ -400,6 +419,17 @@ namespace Neon::Renderer
     Ptr<MaterialInstance> Material::CreateInstance()
     {
         return m_DefaultInstace->CreateInstance();
+    }
+
+    void Material::CreateDefaultInstance(
+        uint32_t LocalResourceDescriptorSize,
+        uint32_t LocalSamplerDescriptorSize)
+    {
+        NEON_ASSERT(!m_DefaultInstace);
+        m_DefaultInstace.reset(NEON_NEW MaterialInstance(
+            std::static_pointer_cast<Material>(shared_from_this()),
+            LocalResourceDescriptorSize,
+            LocalSamplerDescriptorSize));
     }
 
     //

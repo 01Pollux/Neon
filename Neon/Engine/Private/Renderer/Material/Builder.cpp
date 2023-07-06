@@ -3,6 +3,20 @@
 
 namespace Neon::Renderer
 {
+    RenderMaterialBuilder& RenderMaterialBuilder::NoVertexInput(
+        bool NoInput)
+    {
+        m_NoVertexInput = NoInput;
+        return *this;
+    }
+
+    bool RenderMaterialBuilder::NoVertexInput() const
+    {
+        return m_NoVertexInput;
+    }
+
+    //
+
 #define MATERIAL_SHADER_FUNC(MaterialClass, ShaderStage, Index)        \
     MaterialClass& MaterialClass::ShaderStage(                         \
         Asset::ShaderModuleId    Module,                               \
@@ -15,7 +29,7 @@ namespace Neon::Renderer
             .Macros   = Macros,                                        \
             .Profile  = Profile,                                       \
             .Flags    = Flags,                                         \
-            .Enabled  = false                                          \
+            .Enabled  = true                                           \
         };                                                             \
         return *this;                                                  \
     }                                                                  \

@@ -8,14 +8,6 @@
 #include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>
 
-namespace Neon
-{
-    namespace Renderer
-    {
-        class Material;
-    } // namespace Renderer
-} // namespace Neon
-
 /// <summary>
 /// Purpose of those classes is to defer the loading of resources to the render graph.
 /// This allows to load resources only when they are needed.

@@ -43,6 +43,7 @@ namespace Neon::RG
             .VertexShader(Asset::ShaderModuleId(0))
             .PixelShader(Asset::ShaderModuleId(0))
             .Rasterizer(MaterialStates::Rasterizer::CullNone)
+            .DepthStencil(MaterialStates::DepthStencil::None)
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
             .Topology(RHI::PrimitiveTopology::TriangleList);
 
@@ -89,7 +90,7 @@ namespace Neon::RG
             }
         }
 
-        auto Mat = std::make_shared<Material>(Storage.GetSwapchain(), Builder);
+        auto Mat = IMaterial::Create(Storage.GetSwapchain(), Builder);
 
         m_SpriteBatch.reset(
             NEON_NEW SpriteBatch(

@@ -75,6 +75,18 @@ namespace Neon::Renderer
     {
     public:
         /// <summary>
+        /// Disable or enable vertex input.
+        /// </summary>
+        GenericMaterialBuilder& NoVertexInput(
+            bool NoInput);
+
+        /// <summary>
+        /// Get whether vertex input is disabled.
+        /// </summary>
+        bool NoVertexInput() const;
+
+    public:
+        /// <summary>
         /// Set the vertex shader.
         /// </summary>
         GenericMaterialBuilder& VertexShader(
@@ -332,6 +344,7 @@ namespace Neon::Renderer
         RHI::PipelineStateBuilderG::StripCutType m_StripCut           = RHI::PipelineStateBuilderG::StripCutType::None;
         RHI::PrimitiveTopology                   m_Topology           = RHI::PrimitiveTopology::Undefined;
         RHI::EResourceFormat                     m_DepthStencilFormat = RHI::EResourceFormat::Unknown;
+        bool                                     m_NoVertexInput      = false;
     };
 
     template<>
