@@ -41,7 +41,10 @@ namespace Neon::RG
 
         Builder.ShaderLibrary(ShaderLibrary)
             .VertexShader(Asset::ShaderModuleId(0))
-            .PixelShader(Asset::ShaderModuleId(0));
+            .PixelShader(Asset::ShaderModuleId(0))
+            .Rasterizer(MaterialStates::Rasterizer::CullNone)
+            .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
+            .Topology(RHI::PrimitiveTopology::TriangleList);
 
         {
             auto& VarMap = Builder.VarMap();

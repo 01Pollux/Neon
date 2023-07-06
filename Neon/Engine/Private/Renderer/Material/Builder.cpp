@@ -220,6 +220,20 @@ namespace Neon::Renderer
 
     //
 
+    RenderMaterialBuilder& RenderMaterialBuilder::Topology(
+        RHI::PrimitiveTopology Type)
+    {
+        m_Topology = Type;
+        return *this;
+    }
+
+    RHI::PrimitiveTopology RenderMaterialBuilder::Topology() const
+    {
+        return m_Topology;
+    }
+
+    //
+
     RenderMaterialBuilder& RenderMaterialBuilder::DepthStencilFormat(
         RHI::EResourceFormat Format)
     {

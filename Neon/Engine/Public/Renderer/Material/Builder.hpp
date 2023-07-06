@@ -295,6 +295,18 @@ namespace Neon::Renderer
         /// <summary>
         /// Set the depth stencil format.
         /// </summary>
+        GenericMaterialBuilder& Topology(
+            RHI::PrimitiveTopology Type);
+
+        /// <summary>
+        /// Get the depth stencil format.
+        /// </summary>
+        [[nodiscard]] RHI::PrimitiveTopology Topology() const;
+
+    public:
+        /// <summary>
+        /// Set the depth stencil format.
+        /// </summary>
         GenericMaterialBuilder& DepthStencilFormat(
             RHI::EResourceFormat Format);
 
