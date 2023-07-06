@@ -91,7 +91,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the vertex shader.
         /// </summary>
-        const ShaderModuleHandle& VertexShader() const;
+        [[nodiscard]] const ShaderModuleHandle& VertexShader() const;
 
         /// <summary>
         /// Set the hull shader.
@@ -110,7 +110,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the hull shader.
         /// </summary>
-        const ShaderModuleHandle& HullShader() const;
+        [[nodiscard]] const ShaderModuleHandle& HullShader() const;
 
         /// <summary>
         /// Set the domain shader.
@@ -129,7 +129,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the domain shader.
         /// </summary>
-        const ShaderModuleHandle& DomainShader() const;
+        [[nodiscard]] const ShaderModuleHandle& DomainShader() const;
 
         /// <summary>
         /// Set the geometry shader.
@@ -148,7 +148,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the geometry shader.
         /// </summary>
-        const ShaderModuleHandle& GeometryShader() const;
+        [[nodiscard]] const ShaderModuleHandle& GeometryShader() const;
 
         /// <summary>
         /// Set the pixel shader.
@@ -167,7 +167,150 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the pixel shader.
         /// </summary>
-        const ShaderModuleHandle& PixelShader() const;
+        [[nodiscard]] const ShaderModuleHandle& PixelShader() const;
+
+        //
+
+    public:
+        /// <summary>
+        /// Set the blend state.
+        /// </summary>
+        GenericMaterialBuilder& BlendState(
+            RHI::PipelineStateBuilderG::BlendState State);
+
+        /// <summary>
+        /// Get the blend state.
+        /// </summary>
+        [[nodiscard]] const RHI::PipelineStateBuilderG::BlendState& BlendState() const;
+
+    public:
+        /// <summary>
+        /// Set sample mask, count and quality.
+        /// </summary>
+        GenericMaterialBuilder& Sample(
+            uint32_t Mask,
+            uint32_t Count,
+            uint32_t Quality);
+
+        /// <summary>
+        /// Get sample mask.
+        /// </summary>
+        [[nodiscard]] uint32_t SampleMask() const;
+
+        /// <summary>
+        /// Get sample count.
+        /// </summary>
+        [[nodiscard]] uint32_t SampleCount() const;
+
+        /// <summary>
+        /// Get sample quality.
+        /// </summary>
+        [[nodiscard]] uint32_t SampleQuality() const;
+
+    public:
+        /// <summary>
+        /// Set the rasterizer state.
+        /// </summary>
+        GenericMaterialBuilder& Rasterizer(
+            RHI::PipelineStateBuilderG::RasterizerState State);
+
+        /// <summary>
+        /// Get the rasterizer state.
+        /// </summary>
+        [[nodiscard]] const RHI::PipelineStateBuilderG::RasterizerState& Rasterizer() const;
+
+    public:
+        /// <summary>
+        /// Set the depth stencil state.
+        /// </summary>
+        GenericMaterialBuilder& DepthStencil(
+            RHI::PipelineStateBuilderG::DepthStencilState State);
+
+        /// <summary>
+        /// Get the rasterizer state.
+        /// </summary>
+        [[nodiscard]] const RHI::PipelineStateBuilderG::DepthStencilState& DepthStencil() const;
+
+    public:
+        /// <summary>
+        /// Set the depth stencil state.
+        /// </summary>
+        GenericMaterialBuilder& DepthStencil(
+            RHI::PipelineStateBuilderG::DepthStencilState State);
+
+        /// <summary>
+        /// Get the depth stencil state.
+        /// </summary>
+        [[nodiscard]] const RHI::PipelineStateBuilderG::DepthStencilState& DepthStencil() const;
+
+    public:
+        /// <summary>
+        /// Set the input layout.
+        /// </summary>
+        GenericMaterialBuilder& InputLayout(
+            std::optional<RHI::ShaderInputLayout> Layout);
+
+        /// <summary>
+        /// Get the input layout.
+        /// </summary>
+        [[nodiscard]] const std::optional<RHI::ShaderInputLayout>& InputLayout() const;
+
+    public:
+        /// <summary>
+        /// Set the strip cut type.
+        /// </summary>
+        GenericMaterialBuilder& StripCut(
+            RHI::PipelineStateBuilderG::StripCutType Type);
+
+        /// <summary>
+        /// Get the strip cut type.
+        /// </summary>
+        [[nodiscard]] RHI::PipelineStateBuilderG::StripCutType StripCut() const;
+
+    public:
+        /// <summary>
+        /// Set the render target format.
+        /// </summary>
+        GenericMaterialBuilder& RenderTarget(
+            uint32_t Index, const StringU8& Name, RHI::EResourceFormat Format);
+
+        /// <summary>
+        /// Get the render target formats.
+        /// </summary>
+        [[nodiscard]] auto& RenderTargets() const
+        {
+            return m_RenderTargetFormats;
+        }
+
+    public:
+        /// <summary>
+        /// Set the depth stencil format.
+        /// </summary>
+        GenericMaterialBuilder& DepthStencilFormat(
+            RHI::EResourceFormat Format);
+
+        /// <summary>
+        /// Get the depth stencil format.
+        /// </summary>
+        [[nodiscard]] RHI::EResourceFormat DepthStencilFormat() const;
+
+    private:
+        RHI::PipelineStateBuilderG::BlendState m_BlendState;
+
+        uint32_t m_SampleMask    = 0xFFFFFFFF;
+        uint32_t m_SampleCount   = 1;
+        uint32_t m_SampleQuality = 0;
+
+        RHI::PipelineStateBuilderG::RasterizerState   m_Rasterizer;
+        RHI::PipelineStateBuilderG::DepthStencilState m_DepthStencil;
+
+        std::optional<RHI::ShaderInputLayout> m_InputLayout;
+
+        std::map<StringU8, std::pair<uint32_t, RHI::EResourceFormat>> m_RenderTargetFormats;
+
+        RHI::PipelineStateBuilderG::StripCutType m_StripCut           = RHI::PipelineStateBuilderG::StripCutType::None;
+        RHI::PrimitiveTopology                   m_Topology           = RHI::PrimitiveTopology::Undefined;
+        RHI::EResourceFormat                     m_DepthStencilFormat = RHI::EResourceFormat::Unknown;
     };
 
     template<>

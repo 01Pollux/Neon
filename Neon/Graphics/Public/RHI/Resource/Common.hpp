@@ -637,6 +637,7 @@ namespace Neon::RHI
 
     enum class PrimitiveTopology : uint8_t
     {
+        Undefined,
         PointList,
         LineList,
         LineStrip,
