@@ -138,7 +138,7 @@ namespace Neon::Renderer
         View& ArraySize(
             uint32_t Count)
         {
-            m_ArraySize = std::min(Count, 1u);
+            m_ArraySize = std::max(Count, 1u);
             return *this;
         }
 

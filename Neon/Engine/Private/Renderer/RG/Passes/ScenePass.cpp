@@ -62,7 +62,7 @@ namespace Neon::RG
             VarMap.Add("TInfS1", { 0, 1 }, MaterialVarType::Resource)
                 .Visibility(RHI::ShaderVisibility::Pixel);
 
-            VarMap.Add("T0InfS4", { 0, 4 }, MaterialVarType::Resource)
+            VarMap.Add("T0InfS4", { 0, 3 }, MaterialVarType::Resource)
                 .ArraySize(10)
                 .Visibility(RHI::ShaderVisibility::Pixel);
 

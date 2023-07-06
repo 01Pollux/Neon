@@ -67,7 +67,9 @@ namespace Neon::Renderer
             [Mat,
              &BatchedDescriptorEntries,
              &TableResourceCount,
-             &TableSharedResourceCount](
+             &TableSharedResourceCount,
+             &TableSamplerCount,
+             &TableSharedSamplerCount](
                 const MaterialVariableMap::View& View) mutable
             {
                 switch (View.Type())
@@ -86,25 +88,17 @@ namespace Neon::Renderer
                     DescriptorEntry.Descs.resize(View.ArraySize());
                     DescriptorEntry.Resources.resize(View.ArraySize());
 
-                    uint32_t EntrySize;
-                    bool     IsShared;
+                    const bool IsShared = View.Flags().Test(EMaterialVarFlags::Shared);
 
-                    if (View.Flags().Test(EMaterialVarFlags::Shared))
-                    {
-                        DescriptorEntry.Offset = TableResourceCount;
-                        TableResourceCount += View.ArraySize();
+                    auto& DescriptorCount =
+                        View.Type() == MaterialVarType::Sampler
+                            ? (IsShared ? TableSharedSamplerCount : TableSamplerCount)
+                            : (IsShared ? TableSharedResourceCount : TableResourceCount);
 
-                        EntrySize = View.ArraySize();
-                        IsShared  = true;
-                    }
-                    else
-                    {
-                        DescriptorEntry.Offset = TableResourceCount;
-                        TableSharedResourceCount += View.ArraySize();
+                    DescriptorEntry.Offset = DescriptorCount;
+                    DescriptorCount += View.ArraySize();
 
-                        EntrySize = Material::UnboundedTableSize;
-                        IsShared  = false;
-                    }
+                    const uint32_t EntrySize = IsShared ? View.ArraySize() : Material::UnboundedTableSize;
 
                     auto& LayoutEntry    = Mat->m_EntryMap[View.Name()];
                     LayoutEntry.Entry    = std::move(DescriptorEntry);
