@@ -50,6 +50,35 @@ namespace Neon::RG
                 .Visibility(RHI::ShaderVisibility::Pixel)
                 .Flags(EMaterialVarFlags::Shared, true);
 
+#if 1
+
+            VarMap.Add("T1S0", { 1, 0 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::Pixel)
+                .Flags(EMaterialVarFlags::Shared, true);
+
+            VarMap.Add("TInfS0", { 2, 0 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::Pixel);
+
+            VarMap.Add("TInfS1", { 0, 1 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::Pixel);
+
+            VarMap.Add("T0InfS4", { 0, 4 }, MaterialVarType::Resource)
+                .ArraySize(10)
+                .Visibility(RHI::ShaderVisibility::Pixel);
+
+            VarMap.Add("T0InfS4Vtx", { 0, 4 }, MaterialVarType::Resource)
+                .ArraySize(10)
+                .Visibility(RHI::ShaderVisibility::Vertex);
+
+            VarMap.Add("T0InfS5All", { 0, 5 }, MaterialVarType::Resource)
+                .ArraySize(10)
+                .Visibility(RHI::ShaderVisibility::All);
+
+            VarMap.Add("T0InfS6All", { 0, 6 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::All);
+
+#endif
+
             for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialCommon::Sampler::_Last)))
             {
                 auto Name = StringUtils::Format("StaticSampler_{}", i);

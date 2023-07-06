@@ -11,10 +11,12 @@
 namespace Neon::Renderer
 {
     static void CreateDescriptorIfNeeded(
-        RHI::DescriptorHeapHandle&     Descriptor,
-        RHI::IDescriptorHeapAllocator* Allocator,
-        uint32_t                       Count)
+        RHI::DescriptorHeapHandle& Descriptor,
+        RHI::ISwapchain*           Swapchain,
+        RHI::DescriptorType        Type,
+        uint32_t                   Count)
     {
+        auto Allocator = Swapchain->GetDescriptorHeapManager(Type, false);
         if (Count)
         {
             Descriptor = Allocator->Allocate(Count);
@@ -40,17 +42,14 @@ namespace Neon::Renderer
 
         struct BatchedDescriptorEntry
         {
+            Material::LayoutEntry* LayoutEntry;
+
             ShaderBinding Binding;
             uint32_t      Size;
 
             auto operator<=>(const BatchedDescriptorEntry& Other) const noexcept
             {
-                auto Cmp = Binding.Space <=> Other.Binding.Space;
-                if (Cmp != std::strong_ordering::equal)
-                {
-                    Cmp = Binding.Register <=> Other.Binding.Register;
-                }
-                return Cmp;
+                return Binding <=> Other.Binding;
             }
         };
 
@@ -58,11 +57,14 @@ namespace Neon::Renderer
             RHI::ShaderVisibility,
             std::map<MaterialVarType,
                      std::set<BatchedDescriptorEntry>>>
-            BatchedDescriptorEntries;
+            BatchedDescriptorEntries[2];
+
+        uint32_t RootParamIndex = 0;
 
         auto& VarMap = Builder.VarMap();
         VarMap.ForEachVariable(
-            [&BatchedDescriptorEntries,
+            [Mat,
+             &BatchedDescriptorEntries,
              &RootSigBuilder,
              &TableResourceCount,
              &TableSharedResourceCount,
@@ -77,50 +79,98 @@ namespace Neon::Renderer
                 case MaterialVarType::Resource:
                 case MaterialVarType::RWResource:
                 {
-                    Material::DescriptorEntry DescriptorEntry{
-                        .Type = View.Type()
-                    };
+                    auto& Descriptors = BatchedDescriptorEntries[0][View.Visibility()][View.Type()];
+
+                    Material::DescriptorEntry DescriptorEntry{};
 
                     DescriptorEntry.Descs.resize(View.ArraySize());
                     DescriptorEntry.Resources.resize(View.ArraySize());
+
+                    uint32_t EntrySize;
 
                     if (View.Flags().Test(EMaterialVarFlags::Shared))
                     {
                         DescriptorEntry.Offset = TableResourceCount;
                         TableResourceCount += View.ArraySize();
 
-                        BatchedDescriptorEntries[View.Visibility()][View.Type()].insert(
-                            BatchedDescriptorEntry{
-                                .Binding = View.Binding(),
-                                .Size    = View.ArraySize() });
+                        EntrySize = View.ArraySize();
                     }
                     else
                     {
                         DescriptorEntry.Offset = TableResourceCount;
                         TableSharedResourceCount += View.ArraySize();
 
-                        BatchedDescriptorEntries[View.Visibility()][View.Type()].insert(
-                            BatchedDescriptorEntry{
-                                .Binding = View.Binding(),
-                                .Size    = uint32_t(-1) });
+                        EntrySize = Material::UnboundedTableSize;
                     }
 
-                    // Mat->m_EntryMap[View.Name()] = {
-                    //     .Entry     = std::move(DescriptorEntry),
-                    //     .RootIndex = RootIndex++
-                    // };
+                    auto& LayoutEntry = Mat->m_EntryMap[View.Name()];
+                    LayoutEntry.Entry = std::move(DescriptorEntry);
+
+                    Descriptors.insert(
+                        BatchedDescriptorEntry{
+                            .LayoutEntry = &LayoutEntry,
+                            .Binding     = View.Binding(),
+                            .Size        = EntrySize });
+
                     break;
                 }
+                case MaterialVarType::DynamicSampler:
+                case MaterialVarType::StaticSampler:
+                {
+                }
+
                 default:
                     NEON_ASSERT(false);
                 }
             });
 
-        auto ResourceDescriptor = Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, false);
-        auto SamplerDescriptor  = Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, false);
+        // Merge batched descriptors
+        for (auto& Entries : BatchedDescriptorEntries)
+        {
+            for (auto& [Visibility, DescriptorEntries] : Entries)
+            {
+                RHI::RootDescriptorTable Table;
+                for (auto& [Type, Descriptors] : DescriptorEntries)
+                {
+                    for (auto& [Entry, Binding, Size] : Descriptors)
+                    {
+                        RHI::MRootDescriptorTableFlags Flags;
+                        Flags.Set(RHI::ERootDescriptorTableFlags::Descriptor_Volatile);
+                        Flags.Set(RHI::ERootDescriptorTableFlags::Data_Static_While_Execute);
 
-        CreateDescriptorIfNeeded(Mat->m_SharedResourceDescriptor, ResourceDescriptor, TableSharedResourceCount);
-        CreateDescriptorIfNeeded(Mat->m_SharedSamplerDescriptor, SamplerDescriptor, TableSharedSamplerCount);
+                        switch (Type)
+                        {
+                        case MaterialVarType::Buffer:
+                            Table.AddCbvRange(Binding.Register, Binding.Space, Size, std::move(Flags));
+                            break;
+
+                        case MaterialVarType::Resource:
+                            Table.AddSrvRange(Binding.Register, Binding.Space, Size, std::move(Flags));
+                            break;
+
+                        case MaterialVarType::RWResource:
+                            Table.AddUavRange(Binding.Register, Binding.Space, Size, std::move(Flags));
+                            break;
+
+                        case MaterialVarType::DynamicSampler:
+                            Table.AddSamplerRange(Binding.Register, Binding.Space, Size, std::move(Flags));
+                            break;
+                        }
+
+                        Entry->RootIndex = RootParamIndex;
+                    }
+                }
+                RootSigBuilder.AddDescriptorTable(std::move(Table), Visibility);
+                ++RootParamIndex;
+            }
+        }
+
+        Mat->m_RootSignature = RHI::IRootSignature::Create(RootSigBuilder);
+
+        //
+
+        CreateDescriptorIfNeeded(Mat->m_SharedResourceDescriptor, Swapchain, RHI::DescriptorType::ResourceView, TableSharedResourceCount);
+        CreateDescriptorIfNeeded(Mat->m_SharedSamplerDescriptor, Swapchain, RHI::DescriptorType::Sampler, TableSharedSamplerCount);
 
         LocaResourceDescriptorSize = TableResourceCount;
         LocaSamplerDescriptorSize  = TableSamplerCount;
@@ -197,8 +247,8 @@ namespace Neon::Renderer
         m_Swapchain(Mat->m_Swapchain),
         m_ParentMaterial(std::move(Mat))
     {
-        CreateDescriptorIfNeeded(m_ResourceDescriptor, m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true), LocaResourceDescriptorSize);
-        CreateDescriptorIfNeeded(m_SamplerDescriptor, m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, true), LocaSamplerDescriptorSize);
+        CreateDescriptorIfNeeded(m_ResourceDescriptor, m_Swapchain, RHI::DescriptorType::ResourceView, LocaResourceDescriptorSize);
+        CreateDescriptorIfNeeded(m_SamplerDescriptor, m_Swapchain, RHI::DescriptorType::Sampler, LocaSamplerDescriptorSize);
     }
 
     Ptr<MaterialInstance> MaterialInstance::CreateInstance()

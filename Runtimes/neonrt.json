@@ -30,16 +30,12 @@
             {
               "Stage": "Vertex",
               "Profile": "6.0",
-              "Defines": [
-                "SPRITE2D"
-              ]
+              "Defines": []
             },
             {
               "Stage": "Pixel",
               "Profile": "6.0",
-              "Defines": [
-                "SPRITE2D"
-              ]
+              "Defines": []
             }
           ]
         }

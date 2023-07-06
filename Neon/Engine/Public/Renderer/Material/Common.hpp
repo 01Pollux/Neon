@@ -52,18 +52,8 @@ namespace Neon::Renderer
         Matrix3x3,
         Matrix4x4,
 
-        // CBV
-        RawBuffer,
-        // SRV
-        RawResource,
-        // UAV
-        RawRWBuffer,
-
-        // CBV
         Buffer,
-        // SRV
         Resource,
-        // UAV
         RWResource,
 
         StaticSampler,

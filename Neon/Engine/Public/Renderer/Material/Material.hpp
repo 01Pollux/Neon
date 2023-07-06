@@ -13,6 +13,8 @@ namespace Neon::Renderer
 
     class Material : public std::enable_shared_from_this<Material>
     {
+        static constexpr uint32_t UnboundedTableSize = 0x7FFF;
+
         friend class MaterialInstance;
         using DescriptorHeapHandle = RHI::DescriptorHeapHandle;
 
@@ -43,6 +45,12 @@ namespace Neon::Renderer
         [[nodiscard]] Ptr<MaterialInstance> CreateInstance();
 
     private:
+        struct ConstantEntry
+        {
+            std::vector<uint8_t> Data;
+            size_t               DataStride;
+        };
+
         struct DescriptorEntry
         {
             std::vector<RHI::DescriptorViewDesc> Descs;
@@ -50,19 +58,6 @@ namespace Neon::Renderer
 
             uint32_t        Offset;
             MaterialVarType Type;
-        };
-
-        struct RootEntry
-        {
-            std::vector<Ptr<RHI::IBuffer>> Resources;
-
-            MaterialVarType Type;
-        };
-
-        struct ConstantEntry
-        {
-            std::vector<uint8_t> Data;
-            size_t               DataStride;
         };
 
         struct SamplerEntry
@@ -73,7 +68,7 @@ namespace Neon::Renderer
             uint32_t Count;
         };
 
-        using EntryVariant = std::variant<DescriptorEntry, RootEntry, ConstantEntry, SamplerEntry>;
+        using EntryVariant = std::variant<DescriptorEntry, ConstantEntry, SamplerEntry>;
 
         struct LayoutEntry
         {
@@ -83,6 +78,9 @@ namespace Neon::Renderer
 
     private:
         RHI::ISwapchain* m_Swapchain;
+
+        Ptr<RHI::IRootSignature> m_RootSignature;
+        Ptr<RHI::IPipelineState> m_PipelineState;
 
         DescriptorHeapHandle
             m_SharedResourceDescriptor,

@@ -9,6 +9,7 @@ namespace Neon::Renderer
     struct ShaderBinding
     {
         uint32_t Register = 0, Space = 0;
+        auto     operator<=>(const ShaderBinding& Other) const noexcept = default;
     };
 
     enum class EMaterialVarFlags : uint8_t

@@ -25,7 +25,7 @@ VSOutput VS_Main(VSInput Input)
 }
 
 Texture2D<float4> Texture : register(t0, space0);
-SamplerState Sampler;
+SamplerState DefaultSamplers : register(s0, space0);
 
 float4 PS_Main(VSOutput Input) : SV_TARGET
 {
