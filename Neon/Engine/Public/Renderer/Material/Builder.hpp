@@ -233,18 +233,6 @@ namespace Neon::Renderer
 
     public:
         /// <summary>
-        /// Set the depth stencil state.
-        /// </summary>
-        GenericMaterialBuilder& DepthStencil(
-            RHI::PipelineStateBuilderG::DepthStencilState State);
-
-        /// <summary>
-        /// Get the depth stencil state.
-        /// </summary>
-        [[nodiscard]] const RHI::PipelineStateBuilderG::DepthStencilState& DepthStencil() const;
-
-    public:
-        /// <summary>
         /// Set the input layout.
         /// </summary>
         GenericMaterialBuilder& InputLayout(
@@ -272,7 +260,9 @@ namespace Neon::Renderer
         /// Set the render target format.
         /// </summary>
         GenericMaterialBuilder& RenderTarget(
-            uint32_t Index, const StringU8& Name, RHI::EResourceFormat Format);
+            uint32_t             Index,
+            const StringU8&      Name,
+            RHI::EResourceFormat Format);
 
         /// <summary>
         /// Get the render target formats.
@@ -306,7 +296,7 @@ namespace Neon::Renderer
 
         std::optional<RHI::ShaderInputLayout> m_InputLayout;
 
-        std::map<StringU8, std::pair<uint32_t, RHI::EResourceFormat>> m_RenderTargetFormats;
+        std::map<uint32_t, std::pair<StringU8, RHI::EResourceFormat>> m_RenderTargetFormats;
 
         RHI::PipelineStateBuilderG::StripCutType m_StripCut           = RHI::PipelineStateBuilderG::StripCutType::None;
         RHI::PrimitiveTopology                   m_Topology           = RHI::PrimitiveTopology::Undefined;

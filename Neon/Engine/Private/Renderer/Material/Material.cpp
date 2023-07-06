@@ -114,9 +114,6 @@ namespace Neon::Renderer
                 }
 
                 default:
-                    if (size_t(MaterialVarType::_First_Constant) <= size_t(View.Type()) && View.Type() <= size_t(MaterialVarType::_Last_Constant))
-                    {
-                    }
                     NEON_ASSERT(false);
                 }
             });

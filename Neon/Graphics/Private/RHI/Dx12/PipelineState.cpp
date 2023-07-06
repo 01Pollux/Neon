@@ -436,8 +436,11 @@ namespace Neon::RHI
                 Hash.Append(Element);
             }
 
-            InputLayout.pInputElementDescs = Result.InputElements.data();
-            InputLayout.NumElements        = UINT(Result.InputElements.size());
+            if (!Result.InputElements.empty())
+            {
+                InputLayout.pInputElementDescs = Result.InputElements.data();
+                InputLayout.NumElements        = UINT(Result.InputElements.size());
+            }
         }
 
         // Strip cut value

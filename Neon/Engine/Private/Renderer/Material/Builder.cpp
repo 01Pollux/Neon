@@ -31,6 +31,8 @@ namespace Neon::Renderer
         return m_ShaderModules[Index];                                 \
     }
 
+    //
+
     MATERIAL_SHADER_FUNC(RenderMaterialBuilder, VertexShader, 0);
     MATERIAL_SHADER_FUNC(RenderMaterialBuilder, HullShader, 1);
     MATERIAL_SHADER_FUNC(RenderMaterialBuilder, DomainShader, 2);
@@ -43,6 +45,90 @@ namespace Neon::Renderer
 
     //
 
+#define MATERIAL_GET_SET_FUNC(MaterialClass, FuncName, MemberName)                   \
+    MaterialClass& MaterialClass::FuncName(                                          \
+        decltype(MaterialClass::MemberName) Value)                                   \
+    {                                                                                \
+        MemberName = std::move(Value);                                               \
+        return *this;                                                                \
+    }                                                                                \
+                                                                                     \
+    auto MaterialClass::FuncName() const->const decltype(MaterialClass::MemberName)& \
+    {                                                                                \
+        return MemberName;                                                           \
+    }
+
     //
 
+    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, BlendState, m_BlendState);
+    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, Rasterizer, m_Rasterizer);
+    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, DepthStencil, m_DepthStencil);
+    MATERIAL_GET_SET_FUNC(RenderMaterialBuilder, InputLayout, m_InputLayout);
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::Sample(
+        uint32_t Mask,
+        uint32_t Count,
+        uint32_t Quality)
+    {
+        m_SampleMask    = Mask;
+        m_SampleCount   = Count;
+        m_SampleQuality = Quality;
+        return *this;
+    }
+
+    uint32_t RenderMaterialBuilder::SampleMask() const
+    {
+        return m_SampleMask;
+    }
+
+    uint32_t RenderMaterialBuilder::SampleCount() const
+    {
+        return m_SampleCount;
+    }
+
+    uint32_t RenderMaterialBuilder::SampleQuality() const
+    {
+        return m_SampleQuality;
+    }
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::StripCut(
+        RHI::PipelineStateBuilderG::StripCutType Type)
+    {
+        m_StripCut = Type;
+        return *this;
+    }
+
+    RHI::PipelineStateBuilderG::StripCutType RenderMaterialBuilder::StripCut() const
+    {
+        return m_StripCut;
+    }
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::RenderTarget(
+        uint32_t             Index,
+        const StringU8&      Name,
+        RHI::EResourceFormat Format)
+    {
+        m_RenderTargetFormats[Index] = { Name, Format };
+        return *this;
+    }
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::DepthStencilFormat(
+        RHI::EResourceFormat Format)
+    {
+        m_DepthStencilFormat = Format;
+        return *this;
+    }
+
+    RHI::EResourceFormat RenderMaterialBuilder::DepthStencilFormat() const
+    {
+        return m_DepthStencilFormat;
+    }
 } // namespace Neon::Renderer
