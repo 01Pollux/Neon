@@ -1,12 +1,17 @@
 #pragma once
 
-#include <RHI/Resource/Descriptor.hpp>
-#include <RHI/Resource/Resource.hpp>
-#include <Renderer/Material/Common.hpp>
+#include <Core/Neon.hpp>
+#include <RHI/Resource/Common.hpp>
+
+namespace Neon::RHI
+{
+    class ISwapchain;
+    class IGraphicsCommandList;
+} // namespace Neon::RHI
 
 namespace Neon::Renderer
 {
-    class MaterialInstance;
+    class IMaterialInstance;
 
     template<bool>
     class GenericMaterialBuilder;
@@ -27,7 +32,18 @@ namespace Neon::Renderer
         /// <summary>
         /// Creates a new material instance.
         /// </summary>
-        [[nodiscard]] virtual Ptr<MaterialInstance> CreateInstance() = 0;
+        [[nodiscard]] virtual Ptr<IMaterialInstance> CreateInstance() = 0;
+
+        /// <summary>
+        /// Get the default material instance.
+        /// </summary>
+        [[nodiscard]] virtual const Ptr<IMaterialInstance>& GetDefaultInstance() = 0;
+
+        /// <summary>
+        /// Bind the material to the command list.
+        /// </summary>
+        virtual void Bind(
+            RHI::IGraphicsCommandList* CommandList) = 0;
     };
 
     class IMaterialInstance
@@ -38,17 +54,26 @@ namespace Neon::Renderer
         /// <summary>
         /// Creates a new material instance.
         /// </summary>
-        [[nodiscard]] virtual Ptr<MaterialInstance> CreateInstance() = 0;
+        [[nodiscard]] virtual Ptr<IMaterialInstance> CreateInstance() = 0;
+
+        /// <summary>
+        /// Get the intsance primitive topology.
+        /// </summary>
+        [[nodiscard]] RHI::PrimitiveTopology GetTopology();
+
+        /// <summary>
+        /// Set the intsance primitive topology.
+        /// </summary>
+        [[nodiscard]] void SetTopology(
+            RHI::PrimitiveTopology Topology);
 
         /// <summary>
         /// Get the parent material.
         /// </summary>
-        [[nodiscard]] const Ptr<IMaterial>& GetParentMaterial() const
-        {
-            return m_ParentMaterial;
-        }
+        [[nodiscard]] const Ptr<IMaterial>& GetParentMaterial() const;
 
-    private:
-        Ptr<IMaterial> m_ParentMaterial;
+    protected:
+        Ptr<IMaterial>         m_ParentMaterial;
+        RHI::PrimitiveTopology m_Topology;
     };
 } // namespace Neon::Renderer

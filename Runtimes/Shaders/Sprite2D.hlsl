@@ -24,15 +24,27 @@ VSOutput VS_Main(VSInput Input)
 	return Output;
 }
 
+enum class Sprite2DSamplers
+{
+	PointWrap,
+	PointClamp,
+	LinearWrap,
+	LinearClamp,
+	AnisotropicWrap,
+	AnisotropicClamp,
+	
+	_Last
+};
+
 Texture2D<float4> Texture : register(t0, space0);
-SamplerState DefaultSamplers : register(s0, space0);
+SamplerState DefaultSamplers[(int) Sprite2DSamplers::_Last] : register(s0, space0);
 
 float4 PS_Main(VSOutput Input) : SV_TARGET
 {
 	float4 Color = (float4) 1.f;
 	if (Input.TexIndex != -1)
 	{
-		Color = Texture.Sample(Sampler, Input.TexCoord);
+		Color = Texture.Sample(DefaultSamplers[(int) Sprite2DSamplers::PointWrap], Input.TexCoord);
 	}
 	return Color * Input.Color;
 }

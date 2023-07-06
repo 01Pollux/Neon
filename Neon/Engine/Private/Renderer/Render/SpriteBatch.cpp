@@ -69,11 +69,12 @@ namespace Neon::Renderer
     void SpriteBatch::Begin(
         RHI::IGraphicsCommandList* CommandList)
     {
-        /* m_CommandList = CommandList;
-         m_CommandList->SetRootSignature(m_RootSignature);
-         m_CommandList->SetPipelineState(m_PipelineState);
+        m_CommandList = CommandList;
 
-         m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);*/
+        m_SpriteMaterial->Bind(CommandList);
+
+        auto& Instance = m_SpriteMaterial->GetDefaultInstance();
+        m_CommandList->SetPrimitiveTopology(Instance->GetTopology());
 
         m_DrawCount     = 0;
         m_VerticesCount = 0;
@@ -132,6 +133,8 @@ namespace Neon::Renderer
         }
 
         m_DrawCount++;
+
+        //
     }
 
     void SpriteBatch::End()

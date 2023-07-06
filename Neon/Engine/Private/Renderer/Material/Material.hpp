@@ -50,15 +50,21 @@ namespace Neon::Renderer
 
         ~Material() override;
 
-        Ptr<MaterialInstance> CreateInstance() override;
+        Ptr<IMaterialInstance> CreateInstance() override;
+
+        const Ptr<IMaterialInstance>& GetDefaultInstance() override;
+
+        void Bind(
+            RHI::IGraphicsCommandList* CommandList) override;
 
     public:
         /// <summary>
         /// Create a default material instance.
         /// </summary>
         void CreateDefaultInstance(
-            uint32_t LocalResourceDescriptorSize,
-            uint32_t LocalSamplerDescriptorSize);
+            RHI::PrimitiveTopology Topology,
+            uint32_t               LocalResourceDescriptorSize,
+            uint32_t               LocalSamplerDescriptorSize);
 
     private:
         struct ConstantEntry
@@ -103,7 +109,7 @@ namespace Neon::Renderer
             m_SharedResourceDescriptor,
             m_SharedSamplerDescriptor;
 
-        Ptr<MaterialInstance>           m_DefaultInstace;
+        Ptr<IMaterialInstance>          m_DefaultInstace;
         std::map<StringU8, LayoutEntry> m_EntryMap;
     };
 
@@ -114,9 +120,10 @@ namespace Neon::Renderer
 
     public:
         MaterialInstance(
-            Ptr<Material> Mat,
-            uint32_t      LocaResourceDescriptorSize,
-            uint32_t      LocaSamplerDescriptorSize);
+            Ptr<IMaterial>         Mat,
+            RHI::PrimitiveTopology Topology,
+            uint32_t               LocaResourceDescriptorSize,
+            uint32_t               LocaSamplerDescriptorSize);
 
         NEON_CLASS_NO_COPYMOVE(MaterialInstance);
 
@@ -125,16 +132,10 @@ namespace Neon::Renderer
         /// <summary>
         /// Creates a new material instance.
         /// </summary>
-        [[nodiscard]] Ptr<MaterialInstance> CreateInstance() override;
-
-        /// <summary>
-        /// Get the parent material.
-        /// </summary>
-        [[nodiscard]] const Ptr<Material>& GetParentMaterial() const;
+        [[nodiscard]] Ptr<IMaterialInstance> CreateInstance() override;
 
     private:
         RHI::ISwapchain* m_Swapchain;
-        Ptr<Material>    m_ParentMaterial;
 
         DescriptorHeapHandle
             m_ResourceDescriptor,
