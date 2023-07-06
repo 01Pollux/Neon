@@ -59,32 +59,32 @@ namespace Neon::Renderer
         const StringU8&         Name,
         ShaderBinding           Binding,
         RHI::ShaderVisibility   Visibility,
-        MaterialCommon::Sampler Sampler)
+        MaterialStates::Sampler Sampler)
     {
         RHI::SamplerDesc Desc;
         switch (Sampler)
         {
-        case MaterialCommon::Sampler::PointWrap:
+        case MaterialStates::Sampler::PointWrap:
             Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
             break;
-        case MaterialCommon::Sampler::PointClamp:
+        case MaterialStates::Sampler::PointClamp:
             Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
             break;
-        case MaterialCommon::Sampler::LinearWrap:
+        case MaterialStates::Sampler::LinearWrap:
             Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
             break;
-        case MaterialCommon::Sampler::LinearClamp:
+        case MaterialStates::Sampler::LinearClamp:
             Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
             break;
-        case MaterialCommon::Sampler::AnisotropicWrap:
+        case MaterialStates::Sampler::AnisotropicWrap:
             Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
             break;
-        case MaterialCommon::Sampler::AnisotropicClamp:
+        case MaterialStates::Sampler::AnisotropicClamp:
             Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
             Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
             break;

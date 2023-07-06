@@ -67,6 +67,49 @@ namespace Neon::Renderer
 
     //
 
+    RenderMaterialBuilder& RenderMaterialBuilder::BlendState(
+        size_t                Index,
+        MaterialStates::Blend State)
+    {
+        auto& Desc = m_BlendState.RenderTargets[Index];
+        switch (State)
+        {
+        case MaterialStates::Blend::Opaque:
+            break;
+        case MaterialStates::Blend::AlphaBlend:
+            Desc.BlendEnable = true;
+            Desc.Src         = RHI::BlendTarget::SrcAlpha;
+            Desc.Dest        = RHI::BlendTarget::InvSrcAlpha;
+            Desc.OpSrc       = RHI::BlendOp::Add;
+            Desc.SrcAlpha    = RHI::BlendTarget::One;
+            Desc.DestAlpha   = RHI::BlendTarget::InvSrcAlpha;
+            Desc.OpAlpha     = RHI::BlendOp::Add;
+            break;
+        case MaterialStates::Blend::Additive:
+            Desc.BlendEnable = true;
+            Desc.Src         = RHI::BlendTarget::SrcAlpha;
+            Desc.Dest        = RHI::BlendTarget::One;
+            Desc.OpSrc       = RHI::BlendOp::Add;
+            Desc.SrcAlpha    = RHI::BlendTarget::SrcAlpha;
+            Desc.DestAlpha   = RHI::BlendTarget::One;
+            Desc.OpAlpha     = RHI::BlendOp::Add;
+            break;
+        case MaterialStates::Blend::NonPremultiplied:
+            Desc.BlendEnable = true;
+            Desc.Src         = RHI::BlendTarget::SrcAlpha;
+            Desc.Dest        = RHI::BlendTarget::InvSrcAlpha;
+            Desc.OpSrc       = RHI::BlendOp::Add;
+            Desc.SrcAlpha    = RHI::BlendTarget::SrcAlpha;
+            Desc.DestAlpha   = RHI::BlendTarget::InvSrcAlpha;
+            Desc.OpAlpha     = RHI::BlendOp::Add;
+            break;
+        default:
+            std::unreachable();
+        }
+    }
+
+    //
+
     RenderMaterialBuilder& RenderMaterialBuilder::Sample(
         uint32_t Mask,
         uint32_t Count,
@@ -91,6 +134,63 @@ namespace Neon::Renderer
     uint32_t RenderMaterialBuilder::SampleQuality() const
     {
         return m_SampleQuality;
+    }
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::Rasterizer(
+        MaterialStates::Rasterizer State)
+    {
+        RHI::PipelineStateBuilderG::RasterizerState Desc;
+        switch (State)
+        {
+        case MaterialStates::Rasterizer::CullNone:
+            Desc.CullMode = RHI::ECullMode::None;
+            break;
+        case MaterialStates::Rasterizer::CullClockwise:
+            Desc.CullMode = RHI::ECullMode::Front;
+            break;
+        case MaterialStates::Rasterizer::CullCounterClockwise:
+            Desc.CullMode = RHI::ECullMode::Back;
+            break;
+        case MaterialStates::Rasterizer::Wireframe:
+            Desc.FillMode = RHI::FillMode::Wireframe;
+            Desc.CullMode = RHI::ECullMode::None;
+            break;
+        default:
+            std::unreachable();
+        }
+        return Rasterizer(std::move(Desc));
+    }
+
+    //
+
+    RenderMaterialBuilder& RenderMaterialBuilder::DepthStencil(
+        MaterialStates::DepthStencil State)
+    {
+        RHI::PipelineStateBuilderG::DepthStencilState Desc;
+        switch (State)
+        {
+        case MaterialStates::DepthStencil::None:
+            Desc.DepthEnable      = false;
+            Desc.DepthWriteEnable = false;
+            break;
+        case MaterialStates::DepthStencil::Default:
+            break;
+        case MaterialStates::DepthStencil::Read:
+            Desc.DepthWriteEnable = false;
+            break;
+        case MaterialStates::DepthStencil::ReverseZ:
+            Desc.DepthCmpFunc = RHI::ECompareFunc::Greater;
+            break;
+        case MaterialStates::DepthStencil::ReadReverseZ:
+            Desc.DepthWriteEnable = false;
+            Desc.DepthCmpFunc     = RHI::ECompareFunc::Greater;
+            break;
+        default:
+            std::unreachable();
+        }
+        return DepthStencil(std::move(Desc));
     }
 
     //

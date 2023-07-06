@@ -179,6 +179,13 @@ namespace Neon::Renderer
             RHI::PipelineStateBuilderG::BlendState State);
 
         /// <summary>
+        /// Set the blend state.
+        /// </summary>
+        GenericMaterialBuilder& BlendState(
+            size_t                Index,
+            MaterialStates::Blend State);
+
+        /// <summary>
         /// Get the blend state.
         /// </summary>
         [[nodiscard]] const RHI::PipelineStateBuilderG::BlendState& BlendState() const;
@@ -215,6 +222,12 @@ namespace Neon::Renderer
             RHI::PipelineStateBuilderG::RasterizerState State);
 
         /// <summary>
+        /// Set the rasterizer state.
+        /// </summary>
+        GenericMaterialBuilder& Rasterizer(
+            MaterialStates::Rasterizer State);
+
+        /// <summary>
         /// Get the rasterizer state.
         /// </summary>
         [[nodiscard]] const RHI::PipelineStateBuilderG::RasterizerState& Rasterizer() const;
@@ -225,6 +238,12 @@ namespace Neon::Renderer
         /// </summary>
         GenericMaterialBuilder& DepthStencil(
             RHI::PipelineStateBuilderG::DepthStencilState State);
+
+        /// <summary>
+        /// Set the depth stencil state.
+        /// </summary>
+        GenericMaterialBuilder& DepthStencil(
+            MaterialStates::DepthStencil State);
 
         /// <summary>
         /// Get the rasterizer state.

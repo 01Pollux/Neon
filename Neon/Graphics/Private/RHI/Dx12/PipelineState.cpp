@@ -151,15 +151,15 @@ namespace Neon::RHI
     /// Casts a Neon cull mode to a D3D12 cull mode.
     ///
     [[nodiscard]] D3D12_CULL_MODE CastCullMode(
-        CullMode Mode)
+        ECullMode Mode)
     {
         switch (Mode)
         {
-        case CullMode::None:
+        case ECullMode::None:
             return D3D12_CULL_MODE_NONE;
-        case CullMode::Front:
+        case ECullMode::Front:
             return D3D12_CULL_MODE_FRONT;
-        case CullMode::Back:
+        case ECullMode::Back:
             return D3D12_CULL_MODE_BACK;
         default:
             std::unreachable();

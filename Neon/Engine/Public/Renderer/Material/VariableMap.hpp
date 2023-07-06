@@ -59,7 +59,7 @@ namespace Neon::Renderer
             const StringU8&         Name,
             ShaderBinding           Binding,
             RHI::ShaderVisibility   Visibility,
-            MaterialCommon::Sampler Sampler);
+            MaterialStates::Sampler Sampler);
 
         /// <summary>
         /// Remove static sampler from the map.

@@ -612,7 +612,7 @@ namespace Neon::RHI
         Solid
     };
 
-    enum class CullMode : uint8_t
+    enum class ECullMode : uint8_t
     {
         None,
         Front,

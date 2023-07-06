@@ -44,23 +44,23 @@ namespace Neon::RHI
 
         struct RasterizerState
         {
-            FillMode FillMode              = FillMode::Solid;
-            CullMode CullMode              = CullMode::Back;
-            bool     FrontCounterClockwise = false;
-            int32_t  DepthBias             = 0;
-            float    DepthBiasClamp        = 0.0f;
-            float    SlopeScaledDepthBias  = 0.0f;
-            bool     DepthClipEnable       = true;
-            bool     MultisampleEnable     = false;
-            bool     AntialiasedLineEnable = false;
-            uint32_t ForcedSampleCount     = 0;
-            bool     ConservativeRaster    = false;
+            FillMode  FillMode              = FillMode::Solid;
+            ECullMode CullMode              = ECullMode::Back;
+            bool      FrontCounterClockwise = false;
+            int32_t   DepthBias             = 0;
+            float     DepthBiasClamp        = 0.0f;
+            float     SlopeScaledDepthBias  = 0.0f;
+            bool      DepthClipEnable       = true;
+            bool      MultisampleEnable     = false;
+            bool      AntialiasedLineEnable = false;
+            uint32_t  ForcedSampleCount     = 0;
+            bool      ConservativeRaster    = false;
         };
 
         struct DepthStencilState
         {
             bool         DepthEnable      = true;
-            ECompareFunc DepthCmpFunc     = ECompareFunc::Less;
+            ECompareFunc DepthCmpFunc     = ECompareFunc::LessEqual;
             bool         DepthWriteEnable = true;
 
             bool    StencilEnable    = false;

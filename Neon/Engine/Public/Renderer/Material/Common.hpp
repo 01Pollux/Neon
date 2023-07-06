@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Renderer/Material/States.hpp>
+
 #include <Resource/Asset.hpp>
 #include <Resource/Pack.hpp>
 #include <Resource/Manager.hpp>
@@ -15,21 +17,6 @@
 
 namespace Neon::Renderer
 {
-    namespace MaterialCommon
-    {
-        enum class Sampler : uint8_t
-        {
-            PointWrap,
-            PointClamp,
-            LinearWrap,
-            LinearClamp,
-            AnisotropicWrap,
-            AnisotropicClamp,
-
-            _Last
-        };
-    } // namespace MaterialCommon
-
     enum class MaterialVarType : uint8_t
     {
         _First_Constant,

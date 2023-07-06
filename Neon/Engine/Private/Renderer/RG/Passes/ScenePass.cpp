@@ -79,10 +79,10 @@ namespace Neon::RG
 
 #endif
 
-            for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialCommon::Sampler::_Last)))
+            for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
             {
                 auto Name = StringUtils::Format("StaticSampler_{}", i);
-                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialCommon::Sampler(i));
+                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialStates::Sampler(i));
             }
         }
 
