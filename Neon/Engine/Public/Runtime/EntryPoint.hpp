@@ -61,33 +61,8 @@ namespace Neon::Runtime
     int RunEngine(
         const Config::EngineConfig& Config)
     {
-        _Ty Engine;
-        Engine.Initialize(Config);
-        return Engine.Run();
-    }
-
-    template<typename... _Ty>
-        requires(std::is_base_of_v<DefaultGameEngine, _Ty> && ...)
-    int RunEngines()
-    {
-        std::vector<std::future<int>> Futures;
-        Futures.reserve(sizeof...(_Ty));
-
-        ((Futures.emplace_back(std::async(RunEngine<_Ty>, _Ty::GetConfig()))), ...);
-
-        std::optional<int> Ret;
-        for (auto& Future : Futures)
-        {
-            Future.wait();
-            if (!Ret)
-            {
-                int CurRet = Future.get();
-                if (CurRet != 0)
-                {
-                    Ret = CurRet;
-                }
-            }
-        }
-        return Ret.value_or(0);
+        Utils::SingletonRtti<_Ty> Engine;
+        Engine->Initialize(Config);
+        return Engine->Run();
     }
 } // namespace Neon::Runtime

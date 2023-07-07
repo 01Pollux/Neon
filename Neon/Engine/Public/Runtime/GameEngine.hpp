@@ -1,11 +1,13 @@
 #pragma once
 
 #include <Config/Engine.hpp>
+#include <Utils/Singleton.hpp>
 #include <Runtime/Interface.hpp>
 
 namespace Neon::Runtime
 {
-    class DefaultGameEngine : public InterfaceContainer
+    class DefaultGameEngine : public InterfaceContainer,
+                              public Utils::Singleton<DefaultGameEngine>
     {
     public:
         DefaultGameEngine() = default;
