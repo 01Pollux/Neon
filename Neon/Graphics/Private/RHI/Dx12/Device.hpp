@@ -10,8 +10,7 @@ namespace Neon::RHI
     class Dx12RenderDevice final : public IRenderDevice
     {
     public:
-        Dx12RenderDevice(
-            const SwapchainCreateDesc& Swapchain);
+        Dx12RenderDevice();
         ~Dx12RenderDevice() override;
 
         RHI::ISwapchain* GetSwapchain() override;
@@ -21,6 +20,17 @@ namespace Neon::RHI
         /// Gets the global render device.
         /// </summary>
         [[nodiscard]] static Dx12RenderDevice* Get();
+
+        /// <summary>
+        /// Initialize render device.
+        /// </summary>
+        void PostInitialize(
+            const SwapchainCreateDesc& Swapchain);
+
+        /// <summary>
+        /// Shutdown render device.
+        /// </summary>
+        void Shudown();
 
         /// <summary>
         /// Get dxgi factory.
@@ -52,6 +62,16 @@ namespace Neon::RHI
         /// Get shader compiler.
         /// </summary>
         [[nodiscard]] Dx12ShaderCompiler* GetShaderCompiler();
+
+        /// <summary>
+        /// Get graphics memory allocator.
+        /// </summary>
+        [[nodiscard]] GraphicsMemoryAllocator* GetAllocator();
+
+        /// <summary>
+        /// Get resource state manager.
+        /// </summary>
+        [[nodiscard]] IResourceStateManager* GetStateManager();
 
     private:
         /// <summary>
@@ -104,12 +124,6 @@ namespace Neon::RHI
         };
 
     private:
-        class DxgiDump
-        {
-        public:
-            DxgiDump();
-        } m_DummyDxgiDump;
-
         Win32::ComPtr<IDXGIFactory> m_DxgiFactory;
         Win32::ComPtr<IDXGIAdapter> m_Adapter;
         Win32::ComPtr<ID3D12Device> m_Device;
@@ -119,6 +133,7 @@ namespace Neon::RHI
 
         Dx12ShaderCompiler m_Compiler;
 
-        UPtr<Dx12Swapchain> m_Swapchain;
+        UPtr<GraphicsMemoryAllocator> m_MemoryAllocator;
+        UPtr<Dx12Swapchain>           m_Swapchain;
     };
 } // namespace Neon::RHI

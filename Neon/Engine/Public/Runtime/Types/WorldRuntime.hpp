@@ -1,22 +1,20 @@
 #pragma once
 
 #include <Runtime/Runtime.hpp>
+#include <Renderer/RG/Graph.hpp>
 #include <Scene/Scene.hpp>
 
 namespace Neon::Asset
 {
     class ShaderLibraryAsset;
-}
+} // namespace Neon::Asset
 
 namespace Neon::Runtime
 {
-    class EngineRenderer;
-
     class EngineWorldRuntime : public EngineRuntime
     {
     public:
-        EngineWorldRuntime(
-            DefaultGameEngine* Engine);
+        EngineWorldRuntime();
 
         /// <summary>
         /// Get the current scene.
@@ -33,10 +31,11 @@ namespace Neon::Runtime
         /// Import the render graph.
         /// </summary>
         void SetupRenderPasses(
-            EngineRenderer*                       Renderer,
             const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary);
 
     private:
         Scene::GameScene m_Scene;
+        RG::RenderGraph  m_RenderGraph;
+        bool             m_WindowIsVisible = false;
     };
 } // namespace Neon::Runtime

@@ -16,8 +16,9 @@ namespace Neon::Runtime
 
     public:
         EngineWindow(
-            Runtime::DefaultGameEngine* Engine,
             const Config::EngineConfig& Config);
+        NEON_CLASS_NO_COPYMOVE(EngineWindow);
+        ~EngineWindow();
 
         /// <summary>
         /// Get exit code.

@@ -7,9 +7,26 @@ namespace Neon::RHI
     class ISwapchain;
     struct SwapchainCreateDesc;
 
-    class IRenderDevice : public Utils::Singleton<IRenderDevice>
+    class IRenderDevice
     {
         friend class Utils::Singleton<IRenderDevice>;
+
+    public:
+        /// <summary>
+        /// </summary>
+        /// <param name="...Args"></param>
+        static void Create(
+            const SwapchainCreateDesc& Swapchain);
+
+        /// <summary>
+        /// Get the render device instance
+        /// </summary>
+        [[nodiscard]] static IRenderDevice* Get();
+
+        /// <summary>
+        /// Destroy the render device instance
+        /// </summary>
+        static void Destroy();
 
     public:
         IRenderDevice() = default;
@@ -20,12 +37,5 @@ namespace Neon::RHI
         /// Get the swapchain instance of the render device
         /// </summary>
         [[nodiscard]] virtual RHI::ISwapchain* GetSwapchain() = 0;
-
-    private:
-        /// <summary>
-        /// Create a render device instance
-        /// </summary>
-        [[nodiscard]] static IRenderDevice* SConstruct(
-            const SwapchainCreateDesc& Swapchain);
     };
 } // namespace Neon::RHI

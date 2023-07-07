@@ -1,7 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Resource/TextureLoader.hpp>
 #include <Private/RHI/Dx12/Resource/LoaderHelper.hpp>
-#include <Private/RHI/Dx12/Swapchain.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
 namespace Neon::RHI
@@ -621,7 +620,7 @@ namespace Neon::RHI
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 
         ThrowIfFailed(DDS::LoadDDSTextureFromMemoryEx(
-            Dx12Swapchain::Get()->GetAllocator()->GetMA(),
+            Dx12RenderDevice::Get()->GetAllocator()->GetMA(),
             Data,
             DataSize,
             0,

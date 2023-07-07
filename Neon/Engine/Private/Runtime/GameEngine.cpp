@@ -6,10 +6,8 @@
 #include <Resource/Pack.hpp>
 
 #include <Runtime/Window.hpp>
-#include <Runtime/Renderer.hpp>
 #include <Runtime/Pipeline.hpp>
 
-// #include <Runtime/Types/LoadingScene.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
 namespace Neon::Runtime
@@ -17,11 +15,15 @@ namespace Neon::Runtime
     void DefaultGameEngine::Initialize(
         const Config::EngineConfig& Config)
     {
-        auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
+        m_Window.reset(NEON_NEW EngineWindow(Config));
+
+        //
 
         const auto LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
 
-        auto Pack = ResourceManager->LoadPack("__neon", "neonrt.np");
+        auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
+        auto Pack            = ResourceManager->LoadPack("__neon", "neonrt.np");
+
         // Set global logger settings
         if (auto Logger = Pack->Load<Asset::LoggerAsset>(LoggerAssetUid))
         {
@@ -34,26 +36,43 @@ namespace Neon::Runtime
 
         //
 
-        RegisterInterface<EngineWindow>(this, Config);
-        RegisterInterface<EngineRenderer>(this, Config);
-
-        // RegisterInterface<EngineRuntime, LoadingScreenRuntime>(this);
-        RegisterInterface<EngineRuntime, EngineWorldRuntime>(this);
+        RegisterInterface<EngineRuntime, EngineWorldRuntime>();
     }
 
     int DefaultGameEngine::Run()
     {
-        auto Window = QueryInterface<EngineWindow>();
-        while (Window->Run())
+        while (m_Window->Run())
         {
-            if (auto Pipeline = QueryInterface<EnginePipeline>())
+            if (m_PendingPipeline)
+            {
+                m_Pipeline = std::move(m_PendingPipeline.value());
+                m_PendingPipeline.reset();
+            }
+            if (auto Pipeline = m_Pipeline.get())
             {
                 Pipeline->BeginDispatch();
                 Pipeline->EndDispatch();
             }
         }
         Shutdown();
-        return Window->GetExitCode();
+        UnregisterAllInterfaces();
+        return m_Window->GetExitCode();
+    }
+
+    Windowing::IWindowApp* DefaultGameEngine::GetWindow() const
+    {
+        return m_Window->GetWindow();
+    }
+
+    EnginePipeline* DefaultGameEngine::GetPipeline() const
+    {
+        return m_Pipeline.get();
+    }
+
+    void DefaultGameEngine::SetPipeline(
+        UPtr<EnginePipeline> Pipeline)
+    {
+        m_PendingPipeline = std::move(Pipeline);
     }
 
     void DefaultGameEngine::LoadPacks(

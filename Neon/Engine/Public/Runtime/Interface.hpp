@@ -29,16 +29,6 @@ namespace Neon::Runtime
         }
 
         /// <summary>
-        /// Register an interface to the container with the same type
-        /// </summary>
-        template<typename _Ty, typename... _Args>
-        Ptr<_Ty> RegisterInterface(
-            _Args&&... Args)
-        {
-            return RegisterInterface<_Ty, _Ty, _Args...>(std::forward<_Args>(Args)...);
-        }
-
-        /// <summary>
         /// Register an interface to the container or overwrite if already exists
         /// </summary>
         template<typename _Interface, typename _Ty, typename... _Args>
@@ -49,16 +39,6 @@ namespace Neon::Runtime
             Ptr<_Interface> Interface = std::make_shared<_Ty>(std::forward<_Args>(Args)...);
             m_Interfaces[TypeId]      = Interface;
             return Interface;
-        }
-
-        /// <summary>
-        /// Register an interface to the container or overwrite if already exists with the same type
-        /// </summary>
-        template<typename _Ty, typename... _Args>
-        Ptr<_Ty> OverwriteInterface(
-            _Args&&... Args)
-        {
-            return OverwriteInterface<_Ty, _Ty, _Args...>(std::forward<_Args>(Args)...);
         }
 
         /// <summary>
@@ -104,6 +84,14 @@ namespace Neon::Runtime
                 return std::any_cast<std::shared_ptr<_Interface>>(It->second);
             }
             return nullptr;
+        }
+
+        /// <summary>
+        /// Unregister all interfaces from the container
+        /// </summary>
+        void UnregisterAllInterfaces()
+        {
+            m_Interfaces.clear();
         }
 
     private:

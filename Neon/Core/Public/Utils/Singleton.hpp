@@ -24,10 +24,10 @@ namespace Neon::Utils
             {
                 if (std::scoped_lock Lock(s_Mutex); !s_Instance.load(std::memory_order_relaxed))
                 {
-                    // check if _Ty has a function named SConstruct() using constexpr requires
-                    if constexpr (requires { {_Ty::SConstruct(std::forward<_Args>(Args)...)}->std::same_as<_Ty*>; })
+                    // check if _Ty has a function named S_Construct() using constexpr requires
+                    if constexpr (requires { {_Ty::S_Construct(std::forward<_Args>(Args)...)}->std::same_as<_Ty*>; })
                     {
-                        Instance = _Ty::SConstruct(std::forward<_Args>(Args)...);
+                        Instance = _Ty::S_Construct(std::forward<_Args>(Args)...);
                     }
                     else
                     {

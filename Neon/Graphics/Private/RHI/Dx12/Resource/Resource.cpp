@@ -66,7 +66,7 @@ namespace Neon::RHI
         const BufferDesc&  Desc,
         GraphicsBufferType Type)
     {
-        auto Allocator = Dx12Swapchain::Get()->GetAllocator();
+        auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
         m_Buffer       = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), CastResourceFlags(Desc.Flags));
         m_Resource     = m_Buffer.Resource;
         m_Alignement   = Desc.Alignment;
@@ -278,7 +278,7 @@ namespace Neon::RHI
 
         auto InitialState = Subresources.empty() ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_COPY_DEST;
 
-        auto Allocator = Dx12Swapchain::Get()->GetAllocator()->GetMA();
+        auto Allocator = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
         ThrowIfFailed(Allocator->CreateResource(
             &AllocDesc,
             &Dx12Desc,
@@ -306,9 +306,7 @@ namespace Neon::RHI
                          int(Dx12Desc.DepthOrArraySize) };
         m_MipLevels  = Desc.MipLevels;
 
-        auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(Dx12Swapchain::Get()->GetStateManager());
-        Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
-
+        Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         if (!Subresources.empty())
         {
             CopyFrom(Subresources, *CopyId);

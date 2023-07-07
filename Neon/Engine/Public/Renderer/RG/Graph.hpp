@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RG/Storage.hpp>
+#include <Renderer/RG/Pass.hpp>
 #include <Asio/ThreadPool.hpp>
 
 namespace Neon::RG

@@ -11,7 +11,7 @@ namespace Neon
     };
 } // namespace Neon
 
-#if NEON_DIST
+#ifdef NEON_DIST
 #define NEON_NEW new
 #else
 #define NEON_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)

@@ -14,7 +14,7 @@ namespace Neon::Runtime
         wchar_t* Argv[]);
 }; // namespace Neon::Runtime
 
-#if NEON_DIST
+#ifdef NEON_DIST
 
 #define NEON_MAIN(Argc, Argv)                  \
     int __stdcall wWinMain(                    \

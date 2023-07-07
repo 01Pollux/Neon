@@ -172,7 +172,7 @@ namespace Neon::RHI
 
     //
 
-    class BudgetManager
+    class FrameManager
     {
     public:
         struct CommandContextPool
@@ -182,12 +182,10 @@ namespace Neon::RHI
         };
         using CommandContextPools = std::array<CommandContextPool, 2>;
 
-        using DescriptorHeapAllocators = std::array<Dx12DescriptorHeapBuddyAllocator, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES>;
-
     public:
-        BudgetManager();
-        NEON_CLASS_NO_COPYMOVE(BudgetManager);
-        ~BudgetManager() = default;
+        FrameManager();
+        NEON_CLASS_NO_COPYMOVE(FrameManager);
+        ~FrameManager();
 
         /// <summary>
         /// Get command queue manager
@@ -227,11 +225,6 @@ namespace Neon::RHI
         /// </summary>
         void IdleGPU();
 
-        /// <summary>
-        /// Shutdown budget manager and wait for GPU to finish.
-        /// </summary>
-        void Shutdown();
-
     public:
         /// <summary>
         /// Allocate or reuse command lists
@@ -255,13 +248,6 @@ namespace Neon::RHI
             std::span<ICommandList*> Commands);
 
     public:
-        /// <summary>
-        /// Get descriptor heap manager
-        /// </summary>
-        [[nodiscard]] IDescriptorHeapAllocator* GetDescriptorHeapManager(
-            D3D12_DESCRIPTOR_HEAP_TYPE Type,
-            bool                       Dynamic);
-
         /// <summary>
         /// Enqueue a descriptor handle to be released at the end of the frame.
         /// </summary>
@@ -310,9 +296,7 @@ namespace Neon::RHI
         CommandContextPools m_ContextPool;
         uint64_t            m_FenceValue = 0;
 
-        std::mutex               m_StaleResourcesMutex[4];
-        DescriptorHeapAllocators m_StaticDescriptorHeap;
-        DescriptorHeapAllocators m_DynamicDescriptorHeap;
+        std::mutex m_StaleResourcesMutex[4];
 
         CopyContextManager m_CopyContext;
     };

@@ -11,7 +11,7 @@ namespace Neon::RHI
 {
     IResourceStateManager* IResourceStateManager::Get()
     {
-        return RHI::ISwapchain::Get()->GetStateManager();
+        return RHI::Dx12RenderDevice::Get()->GetStateManager();
     }
 
     Dx12ResourceStateManager* Dx12ResourceStateManager::Get()

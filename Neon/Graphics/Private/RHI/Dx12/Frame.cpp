@@ -29,7 +29,7 @@ namespace Neon::RHI
             HeapAllocators->Free(Handles);
         }
 
-        auto Allocator = Dx12Swapchain::Get()->GetAllocator();
+        auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
         Allocator->FreeBuffers(m_Buffers);
 
         m_DescriptorHeapHandles.clear();

@@ -5,11 +5,14 @@
 #include <Resource/Pack.hpp>
 
 #include <Runtime/GameEngine.hpp>
-#include <Runtime/Renderer.hpp>
 #include <Runtime/Pipeline.hpp>
+
+#include <Window/Window.hpp>
+#include <RHI/Swapchain.hpp>
 
 //
 
+#include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 
 //
@@ -19,9 +22,10 @@
 
 namespace Neon::Runtime
 {
-    EngineWorldRuntime::EngineWorldRuntime(
-        DefaultGameEngine* Engine)
+    EngineWorldRuntime::EngineWorldRuntime()
     {
+        auto Engine = DefaultGameEngine::Get();
+
         EnginePipelineBuilder Builder;
 
         auto PreUpdate  = Builder.NewPhase("PreUpdate");
@@ -42,8 +46,7 @@ namespace Neon::Runtime
 
         //
 
-        auto Pipeline = Engine->OverwriteInterface<EnginePipeline>(std::move(Builder), 2);
-        auto Renderer = Engine->QueryInterface<EngineRenderer>();
+        auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder), 2);
         auto MainPack = Engine->QueryInterface<Asset::IAssetManager>()->GetPack("__neon");
 
         auto DefaultShaderLib = Asset::AssetHandle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
@@ -62,26 +65,38 @@ namespace Neon::Runtime
 
         Pipeline->Attach(
             "PreRender",
-            [this, Renderer]
+            [this]
             {
-                Renderer->PreRender();
+                m_WindowIsVisible = DefaultGameEngine::Get()->GetWindow()->IsVisible().get();
+                if (m_WindowIsVisible)
+                {
+                    RHI::ISwapchain::Get()->PrepareFrame();
+                }
             });
 
         Pipeline->Attach(
             "Render",
-            [this, Renderer]
+            [this]
             {
-                Renderer->Render();
+                if (m_WindowIsVisible)
+                {
+                    m_RenderGraph.Run();
+                }
             });
 
         Pipeline->Attach(
             "PostRender",
-            [this, Renderer]
+            [this]
             {
-                Renderer->PostRender();
+                if (m_WindowIsVisible)
+                {
+                    RHI::ISwapchain::Get()->Present();
+                }
             });
 
-        SetupRenderPasses(Renderer.get(), ShaderLib);
+        Engine->SetPipeline(std::move(Pipeline));
+
+        SetupRenderPasses(ShaderLib);
 
         //
 
@@ -121,13 +136,11 @@ namespace Neon::Runtime
     }
 
     void EngineWorldRuntime::SetupRenderPasses(
-        EngineRenderer*                       Renderer,
         const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary)
     {
-        auto RenderGraph = Renderer->GetRenderGraph();
-        auto Builder     = RenderGraph->Reset();
+        auto Builder = m_RenderGraph.Reset();
 
-        Builder.AppendPass<RG::ScenePass>(RenderGraph->GetStorage(), ShaderLibrary, m_Scene);
+        Builder.AppendPass<RG::ScenePass>(m_RenderGraph.GetStorage(), ShaderLibrary, m_Scene);
 
         Builder.Build();
     }

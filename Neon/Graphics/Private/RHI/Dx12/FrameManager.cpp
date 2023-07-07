@@ -1,24 +1,11 @@
 #include <GraphicsPCH.hpp>
-#include <Private/RHI/Dx12/Budget.hpp>
+#include <Private/RHI/Dx12/FrameManager.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
-#include <Private/RHI/Dx12/Swapchain.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::RHI
 {
-    static constexpr uint32_t SizeOfCPUDescriptor_Resource = 256;
-    static constexpr uint32_t SizeOfCPUDescriptor_Samplers = 8;
-    static constexpr uint32_t SizeOfCPUDescriptor_Rtv      = 64;
-    static constexpr uint32_t SizeOfCPUDescriptor_Dsv      = 16;
-
-    static constexpr uint32_t SizeOfGPUDescriptor_Resource = 16'384;
-    static constexpr uint32_t SizeOfGPUDescriptor_Samplers = 32;
-    static constexpr uint32_t SizeOfGPUDescriptor_Rtv      = 24;
-    static constexpr uint32_t SizeOfGPUDescriptor_Dsv      = 16;
-
-    //
-
     Dx12CommandQueueManager::QueueAndFence::QueueAndFence(
         CommandQueueType QueueType) :
         Queue(QueueType),
@@ -137,19 +124,7 @@ namespace Neon::RHI
 
     //
 
-    BudgetManager::BudgetManager() :
-        m_StaticDescriptorHeap{
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfCPUDescriptor_Resource, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfCPUDescriptor_Samplers, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfCPUDescriptor_Rtv, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfCPUDescriptor_Dsv, false),
-        },
-        m_DynamicDescriptorHeap{
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfGPUDescriptor_Resource, true),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfGPUDescriptor_Samplers, true),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfGPUDescriptor_Rtv, false),
-            Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfGPUDescriptor_Dsv, false),
-        },
+    FrameManager::FrameManager() :
         m_ContextPool{
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_DIRECT)),
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_COMPUTE)),
@@ -157,16 +132,22 @@ namespace Neon::RHI
     {
     }
 
+    FrameManager::~FrameManager()
+    {
+        m_CopyContext.Shutdown();
+        IdleGPU();
+    }
+
     //
 
-    Dx12CommandQueueManager* BudgetManager::GetQueueManager()
+    Dx12CommandQueueManager* FrameManager::GetQueueManager()
     {
         return &m_QueueManager;
     }
 
     //
 
-    void BudgetManager::NewFrame()
+    void FrameManager::NewFrame()
     {
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -179,7 +160,7 @@ namespace Neon::RHI
         Frame.Reset();
     }
 
-    void BudgetManager::EndFrame()
+    void FrameManager::EndFrame()
     {
         ++m_FenceValue;
         for (auto QueueType : {
@@ -189,29 +170,29 @@ namespace Neon::RHI
             auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
             Fence.SignalGPU(&Queue, m_FenceValue);
         }
-        m_FrameIndex = (m_FrameIndex + 1) % m_FrameResources.size();
+        m_FrameIndex = (m_FrameIndex + 1) % uint32_t(m_FrameResources.size());
     }
 
     //
 
-    void BudgetManager::ResizeFrames(
+    void FrameManager::ResizeFrames(
         size_t FramesCount)
     {
         m_FrameResources.resize(FramesCount);
         m_FrameIndex = 0;
     }
 
-    uint32_t BudgetManager::GetFrameIndex() const
+    uint32_t FrameManager::GetFrameIndex() const
     {
         return m_FrameIndex;
     }
 
-    void BudgetManager::ResetFrameIndex()
+    void FrameManager::ResetFrameIndex()
     {
         m_FrameIndex = 0;
     }
 
-    void BudgetManager::IdleGPU()
+    void FrameManager::IdleGPU()
     {
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -235,15 +216,9 @@ namespace Neon::RHI
         }
     }
 
-    void BudgetManager::Shutdown()
-    {
-        m_CopyContext.Shutdown();
-        IdleGPU();
-    }
-
     //
 
-    std::vector<ICommandList*> BudgetManager::AllocateCommandLists(
+    std::vector<ICommandList*> FrameManager::AllocateCommandLists(
         D3D12_COMMAND_LIST_TYPE Type,
         size_t                  Count)
     {
@@ -263,7 +238,7 @@ namespace Neon::RHI
         return Result;
     }
 
-    void BudgetManager::FreeCommandLists(
+    void FrameManager::FreeCommandLists(
         D3D12_COMMAND_LIST_TYPE  Type,
         std::span<ICommandList*> Commands)
     {
@@ -279,7 +254,7 @@ namespace Neon::RHI
         }
     }
 
-    void BudgetManager::ResetCommandLists(
+    void FrameManager::ResetCommandLists(
         D3D12_COMMAND_LIST_TYPE  Type,
         std::span<ICommandList*> Commands)
     {
@@ -298,14 +273,7 @@ namespace Neon::RHI
 
     //
 
-    IDescriptorHeapAllocator* BudgetManager::GetDescriptorHeapManager(
-        D3D12_DESCRIPTOR_HEAP_TYPE Type,
-        bool                       Dynamic)
-    {
-        return Dynamic ? &m_DynamicDescriptorHeap[Type] : &m_StaticDescriptorHeap[Type];
-    }
-
-    void BudgetManager::SafeRelease(
+    void FrameManager::SafeRelease(
         IDescriptorHeapAllocator*   Allocator,
         const DescriptorHeapHandle& Handle)
     {
@@ -314,7 +282,7 @@ namespace Neon::RHI
         Frame.SafeRelease(Allocator, Handle);
     }
 
-    void BudgetManager::SafeRelease(
+    void FrameManager::SafeRelease(
         const Dx12Buffer::Handle& Handle)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[1]);
@@ -322,7 +290,7 @@ namespace Neon::RHI
         Frame.SafeRelease(Handle);
     }
 
-    void BudgetManager::SafeRelease(
+    void FrameManager::SafeRelease(
         const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[2]);
@@ -330,7 +298,7 @@ namespace Neon::RHI
         Frame.SafeRelease(Descriptor);
     }
 
-    void BudgetManager::SafeRelease(
+    void FrameManager::SafeRelease(
         const Win32::ComPtr<ID3D12Resource>&      Resource,
         const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
     {
@@ -339,14 +307,14 @@ namespace Neon::RHI
         Frame.SafeRelease(Resource, Allocation);
     }
 
-    void BudgetManager::WaitForCopy(
+    void FrameManager::WaitForCopy(
         Dx12CommandQueue* Queue,
         uint64_t          FenceValue)
     {
         m_CopyContext.WaitForCopy(Queue, FenceValue);
     }
 
-    uint64_t BudgetManager::RequestCopy(
+    uint64_t FrameManager::RequestCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
         return m_CopyContext.EnqueueCopy(Task);

@@ -2,10 +2,12 @@
 #include <Runtime/Window.hpp>
 #include <Runtime/GameEngine.hpp>
 
+#include <RHI/Device.hpp>
+#include <RHI/Swapchain.hpp>
+
 namespace Neon::Runtime
 {
     EngineWindow::EngineWindow(
-        Runtime::DefaultGameEngine* Engine,
         const Config::EngineConfig& Config)
     {
         auto& WindowConfig = Config.Window;
@@ -33,6 +35,23 @@ namespace Neon::Runtime
         }
 
         m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
+
+        // Create the render device and swapchain
+
+        auto& GraphicsConfig = Config.Renderer;
+
+        RHI::SwapchainCreateDesc Desc{
+            .Window         = m_Window.get(),
+            .RefreshRate    = { GraphicsConfig.RefreshRate.Numerator, GraphicsConfig.RefreshRate.Denominator },
+            .Sample         = { GraphicsConfig.Sample.Count, GraphicsConfig.Sample.Quality },
+            .FramesInFlight = GraphicsConfig.FramesInFlight,
+        };
+        RHI::IRenderDevice::Create(Desc);
+    }
+
+    EngineWindow::~EngineWindow()
+    {
+        RHI::IRenderDevice::Destroy();
     }
 
     int EngineWindow::GetExitCode() const noexcept
@@ -56,6 +75,7 @@ namespace Neon::Runtime
                 VariantVisitor{
                     [this](const WinEvents::SizeChanged& SizeMsg)
                     {
+                        RHI::ISwapchain::Get()->Resize(SizeMsg.NewSize);
                         OnWindowSizeChanged().Broadcast(SizeMsg.NewSize);
                     } },
                 Msg);

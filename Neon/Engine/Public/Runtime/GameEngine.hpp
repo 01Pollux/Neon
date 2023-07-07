@@ -2,7 +2,20 @@
 
 #include <Config/Engine.hpp>
 #include <Utils/Singleton.hpp>
+
 #include <Runtime/Interface.hpp>
+#include <Runtime/Window.hpp>
+#include <Runtime/Pipeline.hpp>
+
+#include <optional>
+
+namespace Neon
+{
+    namespace Windowing
+    {
+        class IWindowApp;
+    }
+} // namespace Neon
 
 namespace Neon::Runtime
 {
@@ -35,11 +48,34 @@ namespace Neon::Runtime
         /// </summary>
         int Run();
 
+    public:
+        /// <summary>
+        /// Get the window associated with the engine.
+        /// </summary>
+        [[nodiscard]] Windowing::IWindowApp* GetWindow() const;
+
+        /// <summary>
+        /// Get the pipeline associated with the engine.
+        /// </summary>
+        [[nodiscard]] EnginePipeline* GetPipeline() const;
+
+        /// <summary>
+        /// Set the pipeline associated with the engine.
+        /// </summary>
+        void SetPipeline(
+            UPtr<EnginePipeline> Pipeline);
+
     protected:
         /// <summary>
         /// Load packs from config.
         /// </summary>
         void LoadPacks(
             const Config::EngineConfig& Config);
+
+    private:
+        UPtr<EngineWindow>   m_Window;
+        UPtr<EnginePipeline> m_Pipeline;
+
+        std::optional<UPtr<EnginePipeline>> m_PendingPipeline;
     };
 } // namespace Neon::Runtime

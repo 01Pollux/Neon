@@ -6,7 +6,7 @@
 
 #include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
-#include <Private/RHI/Dx12/Budget.hpp>
+#include <Private/RHI/Dx12/FrameManager.hpp>
 
 #include <RHI/Resource/Views/RenderTarget.hpp>
 
@@ -14,11 +14,11 @@ namespace Neon::RHI
 {
     class Dx12Swapchain final : public ISwapchain
     {
+        using DescriptorHeapAllocators = std::array<Dx12DescriptorHeapBuddyAllocator, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES>;
+
     public:
         Dx12Swapchain(
             const SwapchainCreateDesc& Desc);
-
-        ~Dx12Swapchain() override;
 
         void PrepareFrame() override;
 
@@ -39,8 +39,6 @@ namespace Neon::RHI
         [[nodiscard]] ICommandQueue* GetQueue(
             CommandQueueType Type) override;
 
-        [[nodiscard]] IResourceStateManager* GetStateManager() override;
-
         [[nodiscard]] IDescriptorHeapAllocator* GetDescriptorHeapManager(
             DescriptorType Type,
             bool           Dynamic) override;
@@ -50,6 +48,17 @@ namespace Neon::RHI
         /// Get the singleton instance.
         /// </summary>
         static [[nodiscard]] Dx12Swapchain* Get();
+
+        /// <summary>
+        /// Initialize the swapchain.
+        /// </summary>
+        void PostInitialize(
+            const SwapchainCreateDesc& Desc);
+
+        /// <summary>
+        /// Shutdown the swapchain.
+        /// </summary>
+        void Shutdown();
 
         /// <summary>
         /// Allocate or reuse command lists
@@ -108,12 +117,6 @@ namespace Neon::RHI
         uint64_t EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) override;
 
-    public:
-        /// <summary>
-        /// Get memory allocator
-        /// </summary>
-        [[nodiscard]] GraphicsMemoryAllocator* GetAllocator();
-
     private:
         /// <summary>
         /// Create the swapchain.
@@ -132,12 +135,14 @@ namespace Neon::RHI
         Size2I                 m_Size;
 
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
-        BudgetManager                  m_BudgetManager;
-        GraphicsMemoryAllocator        m_MemoryAllocator;
+        UPtr<FrameManager>             m_BudgetManager;
 
         std::vector<Dx12Texture> m_BackBuffers;
         Views::RenderTarget      m_RenderTargets;
 
         EResourceFormat m_BackbufferFormat = EResourceFormat::Unknown;
+
+        UPtr<DescriptorHeapAllocators> m_StaticDescriptorHeap;
+        UPtr<DescriptorHeapAllocators> m_DynamicDescriptorHeap;
     };
 } // namespace Neon::RHI

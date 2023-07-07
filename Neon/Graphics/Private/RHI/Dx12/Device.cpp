@@ -22,14 +22,28 @@ extern "C"
 
 namespace Neon::RHI
 {
-    IRenderDevice* IRenderDevice::SConstruct(
+    static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
+
+    void IRenderDevice::Create(
         const SwapchainCreateDesc& Swapchain)
     {
-        return NEON_NEW Dx12RenderDevice(Swapchain);
+        NEON_ASSERT(!s_RenderDevice);
+        s_RenderDevice.reset(NEON_NEW Dx12RenderDevice);
+        s_RenderDevice->PostInitialize(Swapchain);
     }
 
-    Dx12RenderDevice::DxgiDump::DxgiDump()
+    IRenderDevice* IRenderDevice::Get()
     {
+        return s_RenderDevice.get();
+    }
+
+    void IRenderDevice::Destroy()
+    {
+        NEON_ASSERT(s_RenderDevice);
+        s_RenderDevice->Shudown();
+        s_RenderDevice = nullptr;
+
+#ifndef NEON_DIST
         Win32::ComPtr<IDXGIDebug1> Debug;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&Debug))))
         {
@@ -37,8 +51,8 @@ namespace Neon::RHI
             GUID DebugAll = { 0xe48ae283, 0xda80, 0x490b, 0x87, 0xe6, 0x43, 0xe9, 0xa9, 0xcf, 0xda, 0x8 };
             Debug->ReportLiveObjects(DebugAll, DXGI_DEBUG_RLO_SUMMARY);
         }
+#endif
     }
-    //
 
 #if !NEON_DIST
     void RenameObject(IRootSignature* Object, const wchar_t* Name)
@@ -64,8 +78,7 @@ namespace Neon::RHI
 
     //
 
-    Dx12RenderDevice::Dx12RenderDevice(
-        const SwapchainCreateDesc& Swapchain)
+    Dx12RenderDevice::Dx12RenderDevice()
     {
         NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
 
@@ -75,7 +88,6 @@ namespace Neon::RHI
         CreateDevice();
         CheckDeviceFeatures();
         FillInDescriptorSizes();
-        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Swapchain));
     }
 
     Dx12RenderDevice::~Dx12RenderDevice()
@@ -91,6 +103,21 @@ namespace Neon::RHI
     }
 
     //
+
+    void Dx12RenderDevice::PostInitialize(
+        const SwapchainCreateDesc& Swapchain)
+    {
+        m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
+        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Swapchain));
+        m_Swapchain->PostInitialize(Swapchain);
+    }
+
+    void Dx12RenderDevice::Shudown()
+    {
+        m_Swapchain->Shutdown();
+        m_Swapchain       = nullptr;
+        m_MemoryAllocator = nullptr;
+    }
 
     Dx12RenderDevice* Dx12RenderDevice::Get()
     {
@@ -235,6 +262,16 @@ namespace Neon::RHI
     Dx12ShaderCompiler* Dx12RenderDevice::GetShaderCompiler()
     {
         return &m_Compiler;
+    }
+
+    GraphicsMemoryAllocator* Dx12RenderDevice::GetAllocator()
+    {
+        return m_MemoryAllocator.get();
+    }
+
+    IResourceStateManager* Dx12RenderDevice::GetStateManager()
+    {
+        return m_MemoryAllocator->GetStateManager();
     }
 
     void Dx12RenderDevice::CheckDeviceFeatures()
