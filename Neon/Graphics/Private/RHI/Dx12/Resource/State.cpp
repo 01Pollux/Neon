@@ -1,4 +1,5 @@
 #include <GraphicsPCH.hpp>
+#include <Private/RHI/Dx12/Device.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 #include <Private/RHI/Dx12/Resource/Common.hpp>
@@ -8,6 +9,16 @@
 
 namespace Neon::RHI
 {
+    IResourceStateManager* IResourceStateManager::Get()
+    {
+        return RHI::ISwapchain::Get()->GetStateManager();
+    }
+
+    Dx12ResourceStateManager* Dx12ResourceStateManager::Get()
+    {
+        return static_cast<Dx12ResourceStateManager*>(IResourceStateManager::Get());
+    }
+
     void Dx12ResourceStateManager::TransitionResource(
         IGpuResource*  Resource,
         MResourceState NewState,
@@ -57,12 +68,11 @@ namespace Neon::RHI
             });
     }
 
-    CommandContext Dx12ResourceStateManager::FlushBarriers(
-        ISwapchain* Swapchain)
+    CommandContext Dx12ResourceStateManager::FlushBarriers()
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            TCommandContext<CommandQueueType::Graphics> CtxBatch(Swapchain);
+            TCommandContext<CommandQueueType::Graphics> CtxBatch;
 
             auto CommandList = CtxBatch.Append();
 

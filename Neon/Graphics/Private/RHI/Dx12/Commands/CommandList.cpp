@@ -21,16 +21,6 @@ namespace Neon::RHI
     static constexpr uint32_t SizeOfResourceDescriptorHeap = 8192;
     static constexpr uint32_t SizeOfSamplerDescriptorHeap  = 8;
 
-    Dx12CommandList::Dx12CommandList(
-        ISwapchain* Swapchain) :
-        m_Swapchain(static_cast<Dx12Swapchain*>(Swapchain))
-    {
-    }
-
-    Dx12CommandList::~Dx12CommandList()
-    {
-    }
-
     void Dx12CommandList::CopySubresources(
         IGpuResource*                    DstResource,
         IGpuResource*                    Intermediate,
@@ -161,18 +151,6 @@ namespace Neon::RHI
 
     //
 
-    Dx12CommonCommandList::Dx12CommonCommandList(
-        ISwapchain* Swapchain) :
-        Dx12CommandList(Swapchain)
-    {
-        m_ResourceViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
-            Swapchain,
-            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfResourceDescriptorHeap, true);
-        m_SamplerViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
-            Swapchain,
-            D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfSamplerDescriptorHeap, true);
-    }
-
     void Dx12CommonCommandList::SetPipelineState(
         const Ptr<IPipelineState>& State)
     {
@@ -202,7 +180,7 @@ namespace Neon::RHI
         const uint32_t Alignment =
             Type == ViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
 
-        UPtr<IUploadBuffer> Buffer{ IUploadBuffer::Create(m_Swapchain, { .Size = Size, .Alignment = Alignment }) };
+        UPtr<IUploadBuffer> Buffer{ IUploadBuffer::Create({ .Size = Size, .Alignment = Alignment }) };
 
         auto BufferData = Buffer->Map();
         std::copy_n(static_cast<const uint8_t*>(Data), Size, BufferData);
@@ -234,6 +212,12 @@ namespace Neon::RHI
 
         if (uint32_t Count = m_RootSignature->GetResourceCountInDescriptor())
         {
+            if (!m_ResourceViewAllocator)
+            {
+                m_ResourceViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
+                    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfResourceDescriptorHeap, true);
+            }
+
             m_ResourceView = Views::Generic(
                 m_ResourceViewAllocator.get(),
                 Count);
@@ -241,6 +225,12 @@ namespace Neon::RHI
         }
         if (uint32_t Count = m_RootSignature->GetSamplerCountInDescriptor())
         {
+            if (!m_SamplerViewAllocator)
+            {
+                m_SamplerViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
+                    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfSamplerDescriptorHeap, true);
+            }
+
             m_SamplerView = Views::Generic(
                 m_SamplerViewAllocator.get(),
                 Count);
@@ -258,11 +248,11 @@ namespace Neon::RHI
     {
         if (m_ResourceView)
         {
-            m_Swapchain->SafeRelease(m_ResourceViewAllocator.get(), m_ResourceView.GetHandle());
+            Dx12Swapchain::Get()->SafeRelease(m_ResourceViewAllocator.get(), m_ResourceView.GetHandle());
         }
         if (m_SamplerView)
         {
-            m_Swapchain->SafeRelease(m_SamplerViewAllocator.get(), m_SamplerView.GetHandle());
+            Dx12Swapchain::Get()->SafeRelease(m_SamplerViewAllocator.get(), m_SamplerView.GetHandle());
         }
         m_DescriptorDirty = true;
     }

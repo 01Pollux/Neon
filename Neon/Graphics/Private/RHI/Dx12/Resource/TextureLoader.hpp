@@ -13,7 +13,6 @@ namespace Neon::RHI
         /// Load texture from memory as DDS.
         /// </summary>
         [[nodiscard]] static TextureLoader LoadDDS(
-            Dx12Swapchain* Swapchain,
             const uint8_t* Data,
             size_t         DataSize);
 
@@ -21,7 +20,6 @@ namespace Neon::RHI
         /// Load texture from memory as WIC.
         /// </summary>
         [[nodiscard]] static TextureLoader LoadWIC(
-            Dx12Swapchain* Swapchain,
             const uint8_t* Data,
             size_t         DataSize);
 
@@ -37,7 +35,6 @@ namespace Neon::RHI
 
     private:
         TextureLoader(
-            Dx12Swapchain*                     Swapchain,
             Win32::ComPtr<ID3D12Resource>      Texture,
             Win32::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>   Subresources);

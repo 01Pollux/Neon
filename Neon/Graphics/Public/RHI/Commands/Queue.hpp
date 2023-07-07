@@ -12,7 +12,6 @@ namespace Neon::RHI
     {
     public:
         [[nodiscard]] static ICommandQueue* Create(
-            ISwapchain*      Swapchain,
             CommandQueueType Type);
 
         virtual ~ICommandQueue() = default;

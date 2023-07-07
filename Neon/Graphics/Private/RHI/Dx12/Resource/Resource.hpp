@@ -10,11 +10,6 @@ namespace Neon::RHI
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
-        Dx12GpuResource(
-            ISwapchain* Swapchain);
-
-        ISwapchain* GetSwapchain() const override;
-
         void QueryFootprint(
             uint32_t              FirstSubresource,
             uint32_t              SubresourceCount,
@@ -35,7 +30,6 @@ namespace Neon::RHI
         [[nodiscard]] D3D12MA::Allocation* GetAllocation() const;
 
     protected:
-        ISwapchain*                        m_OwningSwapchain = nullptr;
         Win32::ComPtr<ID3D12Resource>      m_Resource;
         Win32::ComPtr<D3D12MA::Allocation> m_Allocation;
     };
@@ -56,7 +50,6 @@ namespace Neon::RHI
         };
 
         Dx12Buffer(
-            ISwapchain*        Swapchain,
             const BufferDesc&  Desc,
             GraphicsBufferType Type);
 
@@ -83,7 +76,6 @@ namespace Neon::RHI
     {
     public:
         Dx12UploadBuffer(
-            ISwapchain*       Swapchain,
             const BufferDesc& Desc);
 
         uint8_t* Map() override;
@@ -101,7 +93,6 @@ namespace Neon::RHI
     {
     public:
         Dx12ReadbackBuffer(
-            ISwapchain*       Swapchain,
             const BufferDesc& Desc);
 
         uint8_t* Map() override;
@@ -119,19 +110,16 @@ namespace Neon::RHI
     {
     public:
         Dx12Texture(
-            ISwapchain*                      Swapchain,
             const RHI::ResourceDesc&         Desc,
             std::span<const SubresourceDesc> Subresources,
             uint64_t*                        CopyId);
 
         Dx12Texture(
-            ISwapchain*                        Swapchain,
             Win32::ComPtr<ID3D12Resource>      Texture,
             D3D12_RESOURCE_STATES              InitialState,
             Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
 
         Dx12Texture(
-            ISwapchain*                        Swapchain,
             Win32::ComPtr<ID3D12Resource>      Texture,
             Win32::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>   Subresources,
@@ -171,7 +159,7 @@ namespace Neon::RHI
 
     protected:
         Vector3I m_Dimensions;
-        uint16_t  m_MipLevels = 0;
+        uint16_t m_MipLevels = 0;
 
         ClearOperationOpt m_ClearValue;
     };

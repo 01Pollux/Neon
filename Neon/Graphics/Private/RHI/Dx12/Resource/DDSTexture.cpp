@@ -612,7 +612,6 @@ namespace Neon::RHI
     //
 
     TextureLoader TextureLoader::LoadDDS(
-        Dx12Swapchain* Swapchain,
         const uint8_t* Data,
         size_t         DataSize)
     {
@@ -622,7 +621,7 @@ namespace Neon::RHI
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 
         ThrowIfFailed(DDS::LoadDDSTextureFromMemoryEx(
-            Swapchain->GetAllocator()->GetMA(),
+            Dx12Swapchain::Get()->GetAllocator()->GetMA(),
             Data,
             DataSize,
             0,
@@ -631,6 +630,6 @@ namespace Neon::RHI
             &Allocation,
             TextureDataToUpload));
 
-        return TextureLoader(Swapchain, Texture.Get(), Allocation.Get(), TextureDataToUpload);
+        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload);
     }
 } // namespace Neon::RHI

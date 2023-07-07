@@ -26,7 +26,6 @@ namespace Neon::RHI
 
     public:
         [[nodiscard]] static IDescriptorHeap* Create(
-            ISwapchain*    Swapchain,
             DescriptorType Type,
             uint32_t       MaxCount,
             bool           ShaderVisible);
@@ -154,7 +153,6 @@ namespace Neon::RHI
         };
 
         [[nodiscard]] static IDescriptorHeapAllocator* Create(
-            ISwapchain*    Swapchain,
             AllocationType Type,
             DescriptorType DescType,
             uint32_t       SizeOfHeap,

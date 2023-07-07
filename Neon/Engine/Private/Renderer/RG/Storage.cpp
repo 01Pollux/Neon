@@ -14,12 +14,6 @@
 
 namespace Neon::RG
 {
-    GraphStorage::GraphStorage(
-        RHI::ISwapchain* Swapchain) :
-        m_Swapchain(Swapchain)
-    {
-    }
-
     void GraphStorage::Reset()
     {
         FlushResources();
@@ -94,11 +88,6 @@ namespace Neon::RG
 
         NEON_ASSERT(false, "Resource view doesn't exists");
         std::unreachable();
-    }
-
-    RHI::ISwapchain* GraphStorage::GetSwapchain() const
-    {
-        return m_Swapchain;
     }
 
     //
@@ -229,7 +218,7 @@ namespace Neon::RG
         auto& Desc = Handle.GetDesc();
         if (Handle.IsWindowSizedTexture())
         {
-            auto& WindowSize = m_Swapchain->GetSize();
+            auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
 
             Desc.Width  = WindowSize.Width();
             Desc.Height = WindowSize.Height();
@@ -265,13 +254,13 @@ namespace Neon::RG
                 switch (Handle.GetBufferType())
                 {
                 case RHI::GraphicsBufferType::Default:
-                    Res.reset(RHI::IBuffer::Create(m_Swapchain, BufferDesc));
+                    Res.reset(RHI::IBuffer::Create(BufferDesc));
                     break;
                 case RHI::GraphicsBufferType::Upload:
-                    Res.reset(RHI::IUploadBuffer::Create(m_Swapchain, BufferDesc));
+                    Res.reset(RHI::IUploadBuffer::Create(BufferDesc));
                     break;
                 case RHI::GraphicsBufferType::Readback:
-                    Res.reset(RHI::IReadbackBuffer::Create(m_Swapchain, BufferDesc));
+                    Res.reset(RHI::IReadbackBuffer::Create(BufferDesc));
                     break;
                 default:
                     std::unreachable();
@@ -279,7 +268,7 @@ namespace Neon::RG
             }
             else
             {
-                Res.reset(RHI::ITexture::Create(m_Swapchain, Desc));
+                Res.reset(RHI::ITexture::Create(Desc));
             }
 
             Handle.Set(Res);
@@ -312,6 +301,7 @@ namespace Neon::RG
         {
             auto& [ViewDescHandle, ViewDesc] = View.second;
 
+            auto Swapchain = RHI::ISwapchain::Get();
             // TODO: batch allocations
             std::visit(
                 VariantVisitor{
@@ -319,42 +309,42 @@ namespace Neon::RG
                     {
                         NEON_ASSERT(false, "Invalid view type");
                     },
-                    [&ViewDescHandle, this](const RHI::CBVDesc& Desc)
+                    [&ViewDescHandle, this, Swapchain](const RHI::CBVDesc& Desc)
                     {
                         auto View = RHI::Views::ConstantBuffer(
-                            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
+                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
                             1);
                         View.Bind(Desc);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::SRVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::SRVDesc>& Desc)
                     {
                         auto View = RHI::Views::ShaderResource(
-                            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
+                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
                             1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::UAVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::UAVDesc>& Desc)
                     {
                         auto View = RHI::Views::UnorderedAccess(
-                            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
+                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
                             1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::RTVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::RTVDesc>& Desc)
                     {
                         auto View = RHI::Views::RenderTarget(
-                            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::RenderTargetView, true),
+                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::RenderTargetView, true),
                             1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::DSVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::DSVDesc>& Desc)
                     {
                         auto View = RHI::Views::DepthStencil(
-                            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::DepthStencilView, true),
+                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::DepthStencilView, true),
                             1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;

@@ -6,16 +6,13 @@
 namespace Neon::RHI
 {
     CommandContext::CommandContext(
-        ISwapchain*      Swapchain,
         CommandQueueType Type) :
-        m_Swapchain(Swapchain),
         m_Type(Type)
     {
     }
 
     CommandContext::CommandContext(
         CommandContext&& Context) noexcept :
-        m_Swapchain(Context.m_Swapchain),
         m_Type(Context.m_Type),
         m_CommandLists(std::exchange(Context.m_CommandLists, {}))
     {
@@ -26,7 +23,6 @@ namespace Neon::RHI
     {
         if (this != &Context)
         {
-            m_Swapchain    = Context.m_Swapchain;
             m_CommandLists = std::exchange(Context.m_CommandLists, {});
         }
         return *this;
@@ -41,7 +37,7 @@ namespace Neon::RHI
         size_t Size)
     {
         size_t Pos      = m_CommandLists.size();
-        auto   Queue    = m_Swapchain->GetQueue(m_Type);
+        auto   Queue    = ISwapchain::Get()->GetQueue(m_Type);
         auto   Commands = Queue->AllocateCommandLists(m_Type, Size);
         m_CommandLists.insert_range(m_CommandLists.end(), Commands);
         return Pos;
@@ -63,7 +59,7 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            auto Queue = m_Swapchain->GetQueue(m_Type);
+            auto Queue = ISwapchain::Get()->GetQueue(m_Type);
             Queue->Upload(m_CommandLists);
             if (Clear)
             {
@@ -77,7 +73,7 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            auto Queue = m_Swapchain->GetQueue(m_Type);
+            auto Queue = ISwapchain::Get()->GetQueue(m_Type);
             Queue->Reset(m_Type, m_CommandLists);
         }
     }

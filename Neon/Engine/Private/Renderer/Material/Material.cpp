@@ -74,25 +74,23 @@ namespace Neon::Renderer
     //
 
     Ptr<IMaterial> IMaterial::Create(
-        RHI::ISwapchain*                     Swapchain,
         const GenericMaterialBuilder<false>& Builder)
     {
         uint32_t LocalResourceDescriptorSize = 0,
                  LocalSamplerDescriptorSize  = 0;
 
-        Ptr<Material> Mat{ NEON_NEW Material(Swapchain, Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
+        Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
         Mat->CreateDefaultInstance(Builder.Topology(), LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
         return Mat;
     }
 
     Ptr<IMaterial> IMaterial::Create(
-        RHI::ISwapchain*                    Swapchain,
         const GenericMaterialBuilder<true>& Builder)
     {
         uint32_t LocalResourceDescriptorSize = 0,
                  LocalSamplerDescriptorSize  = 0;
 
-        Ptr<Material> Mat{ NEON_NEW Material(Swapchain, Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
+        Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
         Mat->CreateDefaultInstance(RHI::PrimitiveTopology::Undefined, LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
         return Mat;
     }
@@ -101,11 +99,10 @@ namespace Neon::Renderer
 
     static void CreateDescriptorIfNeeded(
         RHI::DescriptorHeapHandle& Descriptor,
-        RHI::ISwapchain*           Swapchain,
         RHI::DescriptorType        Type,
         uint32_t                   Count)
     {
-        auto Allocator = Swapchain->GetDescriptorHeapManager(Type, false);
+        auto Allocator = RHI::ISwapchain::Get()->GetDescriptorHeapManager(Type, false);
         if (Count)
         {
             Descriptor = Allocator->Allocate(Count);
@@ -114,7 +111,6 @@ namespace Neon::Renderer
 
     template<bool _Compute>
     static void Material_CreateDescriptors(
-        RHI::ISwapchain*                        Swapchain,
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat,
         uint32_t&                               LocaResourceDescriptorSize,
@@ -284,8 +280,8 @@ namespace Neon::Renderer
 
         //
 
-        CreateDescriptorIfNeeded(Mat->m_SharedResourceDescriptor, Swapchain, RHI::DescriptorType::ResourceView, TableSharedResourceCount);
-        CreateDescriptorIfNeeded(Mat->m_SharedSamplerDescriptor, Swapchain, RHI::DescriptorType::Sampler, TableSharedSamplerCount);
+        CreateDescriptorIfNeeded(Mat->m_SharedResourceDescriptor, RHI::DescriptorType::ResourceView, TableSharedResourceCount);
+        CreateDescriptorIfNeeded(Mat->m_SharedSamplerDescriptor, RHI::DescriptorType::Sampler, TableSharedSamplerCount);
 
         LocaResourceDescriptorSize = TableResourceCount;
         LocaSamplerDescriptorSize  = TableSamplerCount;
@@ -374,14 +370,11 @@ namespace Neon::Renderer
     //
 
     Material::Material(
-        RHI::ISwapchain*             Swapchain,
         const RenderMaterialBuilder& Builder,
         uint32_t&                    LocalResourceDescriptorSize,
-        uint32_t&                    LocalSamplerDescriptorSize) :
-        m_Swapchain(Swapchain)
+        uint32_t&                    LocalSamplerDescriptorSize)
     {
         Material_CreateDescriptors(
-            Swapchain,
             Builder,
             this,
             LocalResourceDescriptorSize,
@@ -393,14 +386,11 @@ namespace Neon::Renderer
     }
 
     Material::Material(
-        RHI::ISwapchain*              Swapchain,
         const ComputeMaterialBuilder& Builder,
         uint32_t&                     LocalResourceDescriptorSize,
-        uint32_t&                     LocalSamplerDescriptorSize) :
-        m_Swapchain(Swapchain)
+        uint32_t&                     LocalSamplerDescriptorSize)
     {
         Material_CreateDescriptors(
-            Swapchain,
             Builder,
             this,
             LocalResourceDescriptorSize,
@@ -459,14 +449,13 @@ namespace Neon::Renderer
         Ptr<IMaterial>         Mat,
         RHI::PrimitiveTopology Topology,
         uint32_t               LocaResourceDescriptorSize,
-        uint32_t               LocaSamplerDescriptorSize) :
-        m_Swapchain(static_cast<Material*>(Mat.get())->m_Swapchain)
+        uint32_t               LocaSamplerDescriptorSize)
     {
         m_ParentMaterial = std::move(Mat);
         m_Topology       = Topology;
 
-        CreateDescriptorIfNeeded(m_ResourceDescriptor, m_Swapchain, RHI::DescriptorType::ResourceView, LocaResourceDescriptorSize);
-        CreateDescriptorIfNeeded(m_SamplerDescriptor, m_Swapchain, RHI::DescriptorType::Sampler, LocaSamplerDescriptorSize);
+        CreateDescriptorIfNeeded(m_ResourceDescriptor, RHI::DescriptorType::ResourceView, LocaResourceDescriptorSize);
+        CreateDescriptorIfNeeded(m_SamplerDescriptor, RHI::DescriptorType::Sampler, LocaSamplerDescriptorSize);
     }
 
     Ptr<IMaterialInstance> MaterialInstance::CreateInstance()
@@ -482,11 +471,11 @@ namespace Neon::Renderer
     {
         if (m_ResourceDescriptor)
         {
-            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true)->Free(m_ResourceDescriptor);
+            RHI::ISwapchain::Get()->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true)->Free(m_ResourceDescriptor);
         }
         if (m_SamplerDescriptor)
         {
-            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, true)->Free(m_SamplerDescriptor);
+            RHI::ISwapchain::Get()->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, true)->Free(m_SamplerDescriptor);
         }
     }
 

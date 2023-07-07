@@ -48,6 +48,11 @@ namespace Neon::RHI
         return m_BudgetManager.GetDescriptorHeapManager(CastDescriptorType(Type), Dynamic);
     }
 
+    Dx12Swapchain* Dx12Swapchain::Get()
+    {
+        return static_cast<Dx12Swapchain*>(IRenderDevice::Get()->GetSwapchain());
+    }
+
     void Dx12Swapchain::SafeRelease(
         IDescriptorHeapAllocator*   Allocator,
         const DescriptorHeapHandle& Handle)

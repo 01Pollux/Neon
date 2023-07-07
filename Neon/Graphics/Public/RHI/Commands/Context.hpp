@@ -8,14 +8,12 @@ namespace Neon::RHI
 {
     class ICommandQueue;
     class ICommandList;
-    class IGraphicsCommandList;
 
     class CommandContext
     {
     public:
         CommandContext() = default;
         CommandContext(
-            ISwapchain*      Swapchain,
             CommandQueueType Type);
 
         NEON_CLASS_NO_COPY(CommandContext);
@@ -55,10 +53,9 @@ namespace Neon::RHI
         void Reset();
 
     private:
-        ISwapchain*      m_Swapchain;
-        CommandQueueType m_Type;
-
         std::vector<ICommandList*> m_CommandLists;
+
+        CommandQueueType m_Type;
     };
 
     template<CommandQueueType _Type>
@@ -77,11 +74,8 @@ namespace Neon::RHI
         >;
         // clang-format on
 
-        TCommandContext() = default;
-
-        explicit TCommandContext(
-            ISwapchain* Swapchain) :
-            CommandContext(Swapchain, _Type)
+        explicit TCommandContext() :
+            CommandContext(_Type)
         {
         }
 

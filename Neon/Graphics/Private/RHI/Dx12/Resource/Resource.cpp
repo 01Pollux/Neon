@@ -9,17 +9,6 @@
 
 namespace Neon::RHI
 {
-    Dx12GpuResource::Dx12GpuResource(
-        ISwapchain* Swapchain) :
-        m_OwningSwapchain(Swapchain)
-    {
-    }
-
-    ISwapchain* Dx12GpuResource::GetSwapchain() const
-    {
-        return m_OwningSwapchain;
-    }
-
     void Dx12GpuResource::QueryFootprint(
         uint32_t              FirstSubresource,
         uint32_t              SubresourceCount,
@@ -68,19 +57,16 @@ namespace Neon::RHI
     //
 
     IBuffer* IBuffer::Create(
-        ISwapchain*       Swapchain,
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Default);
+        return NEON_NEW Dx12Buffer(Desc, GraphicsBufferType::Default);
     }
 
     Dx12Buffer::Dx12Buffer(
-        ISwapchain*        Swapchain,
         const BufferDesc&  Desc,
-        GraphicsBufferType Type) :
-        Dx12GpuResource(Swapchain)
+        GraphicsBufferType Type)
     {
-        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator();
+        auto Allocator = Dx12Swapchain::Get()->GetAllocator();
         m_Buffer       = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), CastResourceFlags(Desc.Flags));
         m_Resource     = m_Buffer.Resource;
         m_Alignement   = Desc.Alignment;
@@ -88,7 +74,7 @@ namespace Neon::RHI
 
     Dx12Buffer::~Dx12Buffer()
     {
-        static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Buffer);
+        Dx12Swapchain::Get()->SafeRelease(m_Buffer);
     }
 
     ResourceDesc Dx12Buffer::GetDesc() const
@@ -108,16 +94,14 @@ namespace Neon::RHI
     //
 
     IUploadBuffer* IUploadBuffer::Create(
-        ISwapchain*       Swapchain,
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12UploadBuffer(Swapchain, Desc);
+        return NEON_NEW Dx12UploadBuffer(Desc);
     }
 
     Dx12UploadBuffer::Dx12UploadBuffer(
-        ISwapchain*       Swapchain,
         const BufferDesc& Desc) :
-        Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Upload)
+        Dx12Buffer(Desc, GraphicsBufferType::Upload)
     {
     }
 
@@ -136,16 +120,14 @@ namespace Neon::RHI
     //
 
     IReadbackBuffer* IReadbackBuffer::Create(
-        ISwapchain*       Swapchain,
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12ReadbackBuffer(Swapchain, Desc);
+        return NEON_NEW Dx12ReadbackBuffer(Desc);
     }
 
     Dx12ReadbackBuffer::Dx12ReadbackBuffer(
-        ISwapchain*       Swapchain,
         const BufferDesc& Desc) :
-        Dx12Buffer(Swapchain, Desc, GraphicsBufferType::Readback)
+        Dx12Buffer(Desc, GraphicsBufferType::Readback)
     {
     }
 
@@ -164,23 +146,20 @@ namespace Neon::RHI
     //
 
     ITexture* ITexture::Create(
-        ISwapchain*         Swapchain,
         const ResourceDesc& Desc)
     {
-        return NEON_NEW Dx12Texture(Swapchain, Desc, {}, nullptr);
+        return NEON_NEW Dx12Texture(Desc, {}, nullptr);
     }
 
     ITexture* ITexture::Create(
-        ISwapchain*                      Swapchain,
         const ResourceDesc&              Desc,
         std::span<const SubresourceDesc> Subresources,
         uint64_t&                        CopyId)
     {
-        return NEON_NEW Dx12Texture(Swapchain, Desc, Subresources, &CopyId);
+        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyId);
     }
 
     ITexture* ITexture::Create(
-        ISwapchain*            Swapchain,
         const TextureRawImage& ImageData,
         uint64_t&              CopyId)
     {
@@ -215,17 +194,15 @@ namespace Neon::RHI
             std::unreachable();
         }
 
-        auto Image = LoadFunc(static_cast<Dx12Swapchain*>(Swapchain), ImageData.Data, ImageData.Size);
+        auto Image = LoadFunc(ImageData.Data, ImageData.Size);
         CopyId     = Image.GetUploadId();
         return Image.Release();
     }
 
     Dx12Texture::Dx12Texture(
-        ISwapchain*                      Swapchain,
         const RHI::ResourceDesc&         Desc,
         std::span<const SubresourceDesc> Subresources,
-        uint64_t*                        CopyId) :
-        Dx12GpuResource(Swapchain)
+        uint64_t*                        CopyId)
     {
         D3D12_RESOURCE_DESC Dx12Desc{
             .Width            = Desc.Width,
@@ -301,7 +278,7 @@ namespace Neon::RHI
 
         auto InitialState = Subresources.empty() ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_COPY_DEST;
 
-        auto Allocator = static_cast<Dx12Swapchain*>(m_OwningSwapchain)->GetAllocator()->GetMA();
+        auto Allocator = Dx12Swapchain::Get()->GetAllocator()->GetMA();
         ThrowIfFailed(Allocator->CreateResource(
             &AllocDesc,
             &Dx12Desc,
@@ -329,7 +306,7 @@ namespace Neon::RHI
                          int(Dx12Desc.DepthOrArraySize) };
         m_MipLevels  = Desc.MipLevels;
 
-        auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
+        auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(Dx12Swapchain::Get()->GetStateManager());
         Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
 
         if (!Subresources.empty())
@@ -339,11 +316,9 @@ namespace Neon::RHI
     }
 
     Dx12Texture::Dx12Texture(
-        ISwapchain*                        Swapchain,
         Win32::ComPtr<ID3D12Resource>      Texture,
         D3D12_RESOURCE_STATES              InitialState,
-        Win32::ComPtr<D3D12MA::Allocation> Allocation) :
-        Dx12GpuResource(Swapchain)
+        Win32::ComPtr<D3D12MA::Allocation> Allocation)
     {
         m_Resource   = std::move(Texture);
         m_Allocation = std::move(Allocation);
@@ -357,18 +332,16 @@ namespace Neon::RHI
                              int(Desc.DepthOrArraySize) };
             m_MipLevels  = Desc.MipLevels;
 
-            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
-            Dx12StateManager->StartTrakingResource(m_Resource.Get(), InitialState);
+            Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         }
     }
 
     Dx12Texture::Dx12Texture(
-        ISwapchain*                        Swapchain,
         Win32::ComPtr<ID3D12Resource>      Texture,
         Win32::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>   Subresources,
         uint64_t&                          CopyId) :
-        Dx12Texture{ Swapchain, std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
+        Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
     {
         CopyFrom(Subresources, CopyId);
     }
@@ -377,9 +350,8 @@ namespace Neon::RHI
     {
         if (m_Resource)
         {
-            auto Dx12StateManager = static_cast<Dx12ResourceStateManager*>(m_OwningSwapchain->GetStateManager());
-            Dx12StateManager->StopTrakingResource(m_Resource.Get());
-            static_cast<Dx12Swapchain*>(m_OwningSwapchain)->SafeRelease(m_Resource, m_Allocation);
+            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
+            Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
         }
     }
 
@@ -509,12 +481,11 @@ namespace Neon::RHI
             Subresource.Data = NewData;
         }
 
-        CopyId = m_OwningSwapchain->RequestCopy(
+        CopyId = Dx12Swapchain::Get()->RequestCopy(
             [SubreourcesGuard = std::move(Guard)](ICopyCommandList* CommandList,
                                                   Dx12Texture*      Texture)
             {
                 Dx12UploadBuffer Buffer{
-                    Texture->m_OwningSwapchain,
                     { .Size = Texture->GetTextureCopySize(uint32_t(SubreourcesGuard->Subresources.size())) }
                 };
 

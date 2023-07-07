@@ -26,12 +26,10 @@ namespace Neon::RHI
             Dx12Fence        Fence;
 
             QueueAndFence(
-                ISwapchain*      Swapchain,
                 CommandQueueType QueueType);
         };
 
-        explicit Dx12CommandQueueManager(
-            ISwapchain* Swapchain);
+        explicit Dx12CommandQueueManager();
 
         /// <summary>
         /// Get graphics command queue
@@ -63,7 +61,6 @@ namespace Neon::RHI
             std::unique_ptr<Dx12CommandList>         CommandList;
 
             CommandListInstance(
-                ISwapchain*             Swapchain,
                 ID3D12CommandAllocator* Allocator,
                 D3D12_COMMAND_LIST_TYPE CommandType);
         };
@@ -78,14 +75,12 @@ namespace Neon::RHI
         /// Request command list from pool
         /// </summary>
         ICommandList* Request(
-            ISwapchain*             Swapchain,
             ID3D12CommandAllocator* Allocator);
 
         /// <summary>
         /// Request command list from pool
         /// </summary>
         ICommandList* Request(
-            ISwapchain*    Swapchain,
             FrameResource& Frame);
 
         /// <summary>
@@ -142,8 +137,7 @@ namespace Neon::RHI
         };
 
     public:
-        CopyContextManager(
-            ISwapchain* Swapchain);
+        CopyContextManager();
 
         /// <summary>
         /// Enqueue task to copy queue
@@ -191,8 +185,7 @@ namespace Neon::RHI
         using DescriptorHeapAllocators = std::array<Dx12DescriptorHeapBuddyAllocator, D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES>;
 
     public:
-        BudgetManager(
-            ISwapchain* Swapchain);
+        BudgetManager();
         NEON_CLASS_NO_COPYMOVE(BudgetManager);
         ~BudgetManager() = default;
 
@@ -309,8 +302,6 @@ namespace Neon::RHI
             std::function<void(ICopyCommandList*)> Task);
 
     private:
-        Dx12Swapchain* m_Swapchain;
-
         std::vector<FrameResource> m_FrameResources;
         uint32_t                   m_FrameIndex = 0;
 

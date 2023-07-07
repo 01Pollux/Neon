@@ -29,9 +29,6 @@ namespace Neon::RG
         using InactiveResourceListType = std::deque<ResourceHandle>;
 
     public:
-        GraphStorage(
-            RHI::ISwapchain* Swapchain);
-
         /// <summary>
         /// Reset resources
         /// </summary>
@@ -70,11 +67,6 @@ namespace Neon::RG
             const ResourceViewId&     ViewId,
             RHI::CpuDescriptorHandle* CpuHandle = nullptr,
             RHI::GpuDescriptorHandle* GpuHandle = nullptr) const;
-
-        /// <summary>
-        /// Get underlying swapchain
-        /// </summary>
-        [[nodiscard]] RHI::ISwapchain* GetSwapchain() const;
 
     public:
         /// <summary>
@@ -211,8 +203,6 @@ namespace Neon::RG
 
             mutable std::shared_mutex m_Mutex;
         };
-
-        RHI::ISwapchain* m_Swapchain;
 
         ResourceMapType      m_Resources;
         std::set<ResourceId> m_ImportedResources;

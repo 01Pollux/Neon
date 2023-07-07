@@ -223,11 +223,6 @@ namespace Neon::RG
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
     }
 
-    RHI::EResourceFormat IRenderPass::ResourceResolver::GetSwapchainFormat() const
-    {
-        return m_Storage.GetSwapchain()->GetFormat();
-    }
-
     void IRenderPass::ResourceResolver::SetResourceState(
         const ResourceViewId& ViewId,
         RHI::MResourceState   State,

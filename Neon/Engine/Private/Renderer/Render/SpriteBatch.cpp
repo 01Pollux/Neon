@@ -57,11 +57,10 @@ namespace Neon::Renderer
     } // namespace SpriteBatchConstants
 
     SpriteBatch::SpriteBatch(
-        Ptr<IMaterial>   SpriteMaterial,
-        RHI::ISwapchain* Swapchain) :
+        Ptr<IMaterial> SpriteMaterial) :
         m_SpriteMaterial(SpriteMaterial)
     {
-        CreateBuffers(Swapchain);
+        CreateBuffers();
     }
 
     //
@@ -169,11 +168,9 @@ namespace Neon::Renderer
 
     //
 
-    void SpriteBatch::CreateBuffers(
-        RHI::ISwapchain* Swapchain)
+    void SpriteBatch::CreateBuffers()
     {
         m_VertexBuffer.reset(RHI::IUploadBuffer::Create(
-            Swapchain,
             {
                 .Size = sizeof(SpriteBatchConstants::Layout) * SpriteBatchConstants::MaxVertices,
             }));
@@ -181,7 +178,6 @@ namespace Neon::Renderer
         m_VertexBufferPtr = m_VertexBuffer->Map();
 
         m_IndexBuffer.reset(RHI::IUploadBuffer::Create(
-            Swapchain,
             {
                 .Size = sizeof(SpriteBatchConstants::IndexType) * SpriteBatchConstants::MaxIndices,
             }));

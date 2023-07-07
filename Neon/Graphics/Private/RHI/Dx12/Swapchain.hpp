@@ -1,12 +1,14 @@
 #pragma once
 
+#include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 #include <RHI/Fence.hpp>
 
 #include <Private/RHI/Dx12/Resource/GraphicsMemoryAllocator.hpp>
 #include <Private/RHI/Dx12/Commands/CommandQueue.hpp>
-#include <RHI/Resource/Views/RenderTarget.hpp>
 #include <Private/RHI/Dx12/Budget.hpp>
+
+#include <RHI/Resource/Views/RenderTarget.hpp>
 
 namespace Neon::RHI
 {
@@ -14,7 +16,7 @@ namespace Neon::RHI
     {
     public:
         Dx12Swapchain(
-            const InitDesc& Desc);
+            const SwapchainCreateDesc& Desc);
 
         ~Dx12Swapchain() override;
 
@@ -44,6 +46,11 @@ namespace Neon::RHI
             bool           Dynamic) override;
 
     public:
+        /// <summary>
+        /// Get the singleton instance.
+        /// </summary>
+        static [[nodiscard]] Dx12Swapchain* Get();
+
         /// <summary>
         /// Allocate or reuse command lists
         /// </summary>
@@ -112,7 +119,7 @@ namespace Neon::RHI
         /// Create the swapchain.
         /// </summary>
         void CreateSwapchain(
-            const InitDesc& Desc);
+            const SwapchainCreateDesc& Desc);
 
         /// <summary>
         /// Resize the swapchain.

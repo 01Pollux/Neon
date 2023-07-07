@@ -22,19 +22,18 @@ namespace Neon::RHI
         ThrowIfFailed(CommandList->Close());
     }
 
-    CopyContextManager::CopyContextManager(
-        ISwapchain* Swapchain) :
-        m_CopyQueue(Swapchain, CommandQueueType::Copy),
+    CopyContextManager::CopyContextManager() :
+        m_CopyQueue(CommandQueueType::Copy),
         m_CopyFence(0)
     {
         for (size_t i = 0; i < m_Threads.size(); i++)
         {
             m_Threads[i] = std::jthread(
-                [this, Swapchain](std::stop_token Token, size_t Index)
+                [this](std::stop_token Token, size_t Index)
                 {
                     auto& Context = m_CommandContexts[Index];
 
-                    Dx12CopyCommandList CopyCommandList(Swapchain);
+                    Dx12CopyCommandList CopyCommandList;
                     CopyCommandList.AttachCommandList(Context.CommandList.Get());
 
                     while (!Token.stop_requested())

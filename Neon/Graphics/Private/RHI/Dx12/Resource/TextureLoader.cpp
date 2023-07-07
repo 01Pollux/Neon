@@ -15,11 +15,10 @@ namespace Neon::RHI
     }
 
     TextureLoader::TextureLoader(
-        Dx12Swapchain*                     Swapchain,
         Win32::ComPtr<ID3D12Resource>      Texture,
         Win32::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>   Subresources) :
-        m_Texture(std::make_unique<Dx12Texture>(Swapchain, std::move(Texture), std::move(Allocation), Subresources, m_UploadId))
+        m_Texture(std::make_unique<Dx12Texture>(std::move(Texture), std::move(Allocation), Subresources, m_UploadId))
     {
     }
 } // namespace Neon::RHI

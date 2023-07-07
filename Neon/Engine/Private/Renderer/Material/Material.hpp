@@ -22,7 +22,6 @@ namespace Neon::Renderer
 
         template<bool _Compute>
         friend void Material_CreateDescriptors(
-            RHI::ISwapchain*                        Swapchain,
             const GenericMaterialBuilder<_Compute>& Builder,
             Material*                               Mat,
             uint32_t&                               LocaResourceDescriptorSize,
@@ -35,13 +34,11 @@ namespace Neon::Renderer
 
     public:
         Material(
-            RHI::ISwapchain*                    Swapchain,
             const GenericMaterialBuilder<true>& Builder,
             uint32_t&                           LocalResourceDescriptorSize,
             uint32_t&                           LocalSamplerDescriptorSize);
 
         Material(
-            RHI::ISwapchain*                     Swapchain,
             const GenericMaterialBuilder<false>& Builder,
             uint32_t&                            LocalResourceDescriptorSize,
             uint32_t&                            LocalSamplerDescriptorSize);
@@ -135,8 +132,6 @@ namespace Neon::Renderer
         [[nodiscard]] Ptr<IMaterialInstance> CreateInstance() override;
 
     private:
-        RHI::ISwapchain* m_Swapchain;
-
         DescriptorHeapHandle
             m_ResourceDescriptor,
             m_SamplerDescriptor;

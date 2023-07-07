@@ -9,7 +9,7 @@ namespace Neon::RHI
     {
         if (m_CopyId)
         {
-            m_Resource->GetSwapchain()->WaitForCopy(
+            RHI::ISwapchain::Get()->WaitForCopy(
                 Queue,
                 *m_CopyId);
             m_CopyId = std::nullopt;
@@ -22,8 +22,8 @@ namespace Neon::RHI
     {
         if (m_CopyId)
         {
-            m_Resource->GetSwapchain()->WaitForCopy(
-                m_Resource->GetSwapchain()->GetQueue(QueueType),
+            RHI::ISwapchain::Get()->WaitForCopy(
+                RHI::ISwapchain::Get()->GetQueue(QueueType),
                 *m_CopyId);
             m_CopyId = std::nullopt;
         }

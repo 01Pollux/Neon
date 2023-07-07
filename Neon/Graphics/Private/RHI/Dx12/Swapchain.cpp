@@ -12,15 +12,15 @@
 
 namespace Neon::RHI
 {
-    ISwapchain* ISwapchain::Create(
-        const InitDesc& Desc)
+    ISwapchain* ISwapchain::Get()
     {
-        return NEON_NEW Dx12Swapchain(Desc);
+        return IRenderDevice::Get()->GetSwapchain();
     }
 
+    //
+
     Dx12Swapchain::Dx12Swapchain(
-        const InitDesc& Desc) :
-        m_BudgetManager(this),
+        const SwapchainCreateDesc& Desc) :
         m_WindowApp(Desc.Window),
         m_BackbufferFormat(Desc.BackbufferFormat),
         m_Size(Desc.Window->GetSize().get())
@@ -117,7 +117,7 @@ namespace Neon::RHI
         {
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(this, std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
             m_RenderTargets.Bind(
                 &Buffer,
@@ -132,7 +132,7 @@ namespace Neon::RHI
     //
 
     void Dx12Swapchain::CreateSwapchain(
-        const InitDesc& Desc)
+        const SwapchainCreateDesc& Desc)
     {
         auto WindowSizeFuture = Desc.Window->GetSize();
 
@@ -237,7 +237,7 @@ namespace Neon::RHI
         {
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(this, std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
 
             m_RenderTargets.Bind(
                 &Buffer,

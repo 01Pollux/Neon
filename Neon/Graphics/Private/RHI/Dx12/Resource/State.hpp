@@ -28,6 +28,11 @@ namespace Neon::RHI
         };
 
     public:
+        /// <summary>
+        /// Get resource state manager instance
+        /// </summary>
+        [[nodiscard]] static Dx12ResourceStateManager* Get();
+
         void TransitionResource(
             IGpuResource*  Resource,
             MResourceState NewState,
@@ -37,8 +42,7 @@ namespace Neon::RHI
             IGpuResource*            Resource,
             const SubresourceStates& NewStates) override;
 
-        CommandContext FlushBarriers(
-            ISwapchain* Swapchain) override;
+        CommandContext FlushBarriers() override;
 
         void FlushBarriers(
             ICommandList* CommandList) override;

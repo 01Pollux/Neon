@@ -15,9 +15,6 @@ namespace Neon::RG
         using DepdencyLevelList = std::vector<RenderGraphDepdencyLevel>;
 
     public:
-        RenderGraph(
-            RHI::ISwapchain* Swapchain);
-
         /// <summary>
         /// Reset resource graph for recording
         /// </summary>
@@ -48,7 +45,7 @@ namespace Neon::RG
     private:
         GraphStorage       m_Storage;
         DepdencyLevelList  m_Levels;
-        Asio::ThreadPool<> m_ThreadPool;
+        Asio::ThreadPool<> m_ThreadPool{ 4 };
     };
 
     //
@@ -80,22 +77,19 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            Asio::ThreadPool<>& ThreadPool,
-            RHI::ISwapchain*    Swapchain);
+            Asio::ThreadPool<>& ThreadPool);
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
-        void ExecuteBarriers(
-            RHI::ISwapchain* Swapchain);
+        void ExecuteBarriers();
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            Asio::ThreadPool<>& ThreadPool,
-            RHI::ISwapchain*    Swapchain) const;
+            Asio::ThreadPool<>& ThreadPool) const;
 
     private:
         struct RenderPassInfo

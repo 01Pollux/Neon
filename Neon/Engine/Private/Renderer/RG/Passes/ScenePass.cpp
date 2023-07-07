@@ -11,6 +11,7 @@
 
 //
 
+#include <RHI/Swapchain.hpp>
 #include <RHI/Resource/Resource.hpp>
 #include <RHI/Commands/List.hpp>
 
@@ -61,12 +62,11 @@ namespace Neon::RG
             }
         }
 
-        auto Mat = IMaterial::Create(Storage.GetSwapchain(), Builder);
+        auto Mat = IMaterial::Create(Builder);
 
         m_SpriteBatch.reset(
             NEON_NEW SpriteBatch(
-                std::move(Mat),
-                Storage.GetSwapchain()));
+                std::move(Mat)));
     }
 
     void ScenePass::ResolveShaders(
@@ -92,7 +92,7 @@ namespace Neon::RG
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Color,
-                .Format    = Resolver.GetSwapchainFormat(),
+                .Format    = RHI::ISwapchain::Get()->GetFormat(),
             });
 
         //

@@ -11,7 +11,7 @@ namespace Neon::RG
         ResourceResolver& Resolver)
     {
         auto Desc = RHI::ResourceDesc::Tex2D(
-            Resolver.GetSwapchainFormat(),
+            RHI::ISwapchain::Get()->GetFormat(),
             0, 0, 1, 1);
         Desc.SetClearValue(Colors::Fuchsia);
 
@@ -35,10 +35,9 @@ namespace Neon::RG
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
-        auto Swapchain    = Storage.GetSwapchain();
-        auto StateManager = Swapchain->GetStateManager();
+        auto StateManager = RHI::IResourceStateManager::Get();
 
-        auto Backbuffer = Swapchain->GetBackBuffer();
+        auto Backbuffer = RHI::ISwapchain::Get()->GetBackBuffer();
         auto FinalImage = Storage.GetResource(RG::ResourceId(STR("FinalImage"))).AsTexture();
 
         //

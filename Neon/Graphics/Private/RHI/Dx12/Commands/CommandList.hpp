@@ -12,11 +12,6 @@ namespace Neon::RHI
     class Dx12CommandList : public virtual ICommandList
     {
     public:
-        Dx12CommandList(
-            ISwapchain* Swapchain);
-        NEON_CLASS_NO_COPYMOVE(Dx12CommandList);
-        ~Dx12CommandList() override;
-
         void CopySubresources(
             IGpuResource*                    DstResource,
             IGpuResource*                    Intermediate,
@@ -55,17 +50,12 @@ namespace Neon::RHI
 
     protected:
         ID3D12GraphicsCommandList* m_CommandList = nullptr;
-        Dx12Swapchain*             m_Swapchain   = nullptr;
     };
 
     class Dx12CommonCommandList : public virtual ICommonCommandList,
                                   public Dx12CommandList
-
     {
     public:
-        Dx12CommonCommandList(
-            ISwapchain* Swapchain);
-
         void SetPipelineState(
             const Ptr<IPipelineState>& State) override;
 

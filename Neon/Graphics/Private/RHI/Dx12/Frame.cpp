@@ -22,15 +22,14 @@ namespace Neon::RHI
         return Allocator;
     }
 
-    void FrameResource::Reset(
-        Dx12Swapchain* Swapchain)
+    void FrameResource::Reset()
     {
         for (auto& [HeapAllocators, Handles] : m_DescriptorHeapHandles)
         {
             HeapAllocators->Free(Handles);
         }
 
-        auto Allocator = Swapchain->GetAllocator();
+        auto Allocator = Dx12Swapchain::Get()->GetAllocator();
         Allocator->FreeBuffers(m_Buffers);
 
         m_DescriptorHeapHandles.clear();

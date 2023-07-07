@@ -12,7 +12,6 @@ namespace Neon::RHI
     {
     public:
         Dx12CommandQueue(
-            ISwapchain*      Swapchain,
             CommandQueueType Type);
 
         std::vector<ICommandList*> AllocateCommandLists(
@@ -36,8 +35,6 @@ namespace Neon::RHI
         [[nodiscard]] ID3D12CommandQueue* Get();
 
     private:
-        ISwapchain* m_Swapchain;
-
         Win32::ComPtr<ID3D12CommandQueue> m_CommandQueue;
     };
 } // namespace Neon::RHI

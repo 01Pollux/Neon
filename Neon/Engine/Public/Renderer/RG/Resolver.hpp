@@ -201,11 +201,6 @@ namespace Neon::RG
         void ReadSrcResource(
             const ResourceViewId& ViewId);
 
-        /// <summary>
-        /// Get swapchain's format
-        /// </summary>
-        [[nodiscard]] RHI::EResourceFormat GetSwapchainFormat() const;
-
     private:
         /// <summary>
         /// Initialize resource to the default state

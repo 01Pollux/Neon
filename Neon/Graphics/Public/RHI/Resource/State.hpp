@@ -16,6 +16,11 @@ namespace Neon::RHI
         virtual ~IResourceStateManager() = default;
 
         /// <summary>
+        /// Get resource state manager instance
+        /// </summary>
+        [[nodiscard]] static IResourceStateManager* Get();
+
+        /// <summary>
         /// Transition a resource to a new state.
         /// </summary>
         virtual void TransitionResource(
@@ -33,8 +38,7 @@ namespace Neon::RHI
         /// <summary>
         /// Flush all the pending barriers into newly created command list.
         /// </summary>
-        virtual CommandContext FlushBarriers(
-            ISwapchain* Swapchain) = 0;
+        virtual CommandContext FlushBarriers() = 0;
 
         /// <summary>
         /// Flush all the pending barriers into the given command list.

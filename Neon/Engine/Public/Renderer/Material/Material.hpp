@@ -20,11 +20,9 @@ namespace Neon::Renderer
     {
     public:
         static Ptr<IMaterial> Create(
-            RHI::ISwapchain*                     Swapchain,
             const GenericMaterialBuilder<false>& Builder);
 
         static Ptr<IMaterial> Create(
-            RHI::ISwapchain*                    Swapchain,
             const GenericMaterialBuilder<true>& Builder);
 
         virtual ~IMaterial() = default;

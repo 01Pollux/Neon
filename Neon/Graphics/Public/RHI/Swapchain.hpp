@@ -18,32 +18,36 @@ namespace Neon::RHI
     class IFence;
     class ICopyCommandList;
 
+    struct SwapchainCreateDesc
+    {
+        Windowing::IWindowApp* Window;
+        struct
+        {
+            uint16_t Numerator   = 0;
+            uint16_t Denominator = 0;
+        } RefreshRate;
+        struct
+        {
+            uint16_t Count   = 1;
+            uint16_t Quality = 0;
+        } Sample;
+
+        uint32_t        FramesInFlight   = 3;
+        EResourceFormat BackbufferFormat = EResourceFormat::R8G8B8A8_UNorm;
+        // TODO: Add more swapchain settings. such as format, vsync, etc.
+    };
+
     class ISwapchain
     {
     public:
-        struct InitDesc
-        {
-            Windowing::IWindowApp* Window;
-            struct
-            {
-                uint16_t Numerator   = 0;
-                uint16_t Denominator = 0;
-            } RefreshRate;
-            struct
-            {
-                uint16_t Count   = 1;
-                uint16_t Quality = 0;
-            } Sample;
-            uint32_t        FramesInFlight   = 3;
-            EResourceFormat BackbufferFormat = EResourceFormat::R8G8B8A8_UNorm;
-
-            // TODO: Add more swapchain settings. such as format, vsync, etc.
-        };
-
-        [[nodiscard]] static ISwapchain* Create(
-            const InitDesc& Desc);
-
+        ISwapchain() = default;
+        NEON_CLASS_NO_COPYMOVE(ISwapchain);
         virtual ~ISwapchain() = default;
+
+        /// <summary>
+        /// Get the swapchain instance.
+        /// </summary>
+        [[nodiscard]] static ISwapchain* Get();
 
         /// <summary>
         /// Prepare frame for rendering.

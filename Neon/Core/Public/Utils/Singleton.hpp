@@ -20,11 +20,20 @@ namespace Neon::Utils
         static void Construct(
             _Args&&... Args)
         {
-            if (auto Instance = s_Instance.load(std::memory_order_acquire))
+            if (auto Instance = s_Instance.load(std::memory_order_acquire); !Instance)
             {
                 if (std::scoped_lock Lock(s_Mutex); !s_Instance.load(std::memory_order_relaxed))
                 {
-                    s_Instance.store(NEON_NEW _Ty(std::forward<_Args>(Args)...), std::memory_order_release);
+                    // check if _Ty has a function named SConstruct() using constexpr requires
+                    if constexpr (requires { {_Ty::SConstruct(std::forward<_Args>(Args)...)}->std::same_as<_Ty*>; })
+                    {
+                        Instance = _Ty::SConstruct(std::forward<_Args>(Args)...);
+                    }
+                    else
+                    {
+                        Instance = NEON_NEW _Ty(std::forward<_Args>(Args)...);
+                    }
+                    s_Instance.store(Instance, std::memory_order_release);
                 }
             }
         }
@@ -49,8 +58,8 @@ namespace Neon::Utils
         }
 
     private:
-        static std::atomic<_Ty*> s_Instance;
-        static std::mutex        s_Mutex;
+        static inline std::atomic<_Ty*> s_Instance;
+        static inline std::mutex        s_Mutex;
     };
 
     template<typename _Ty>

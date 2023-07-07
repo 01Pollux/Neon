@@ -37,8 +37,7 @@ namespace Neon::Renderer
 
     public:
         SpriteBatch(
-            Ptr<IMaterial>   SpriteMaterial,
-            RHI::ISwapchain* Swapchain);
+            Ptr<IMaterial> SpriteMaterial);
 
         /// <summary>
         /// Begins drawing.
@@ -61,8 +60,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Creates the vertex and index buffers.
         /// </summary>
-        void CreateBuffers(
-            RHI::ISwapchain* Swapchain);
+        void CreateBuffers();
 
     private:
         Ptr<IMaterial> m_SpriteMaterial;

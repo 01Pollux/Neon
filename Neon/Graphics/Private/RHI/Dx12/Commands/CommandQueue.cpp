@@ -10,16 +10,13 @@
 namespace Neon::RHI
 {
     ICommandQueue* ICommandQueue::Create(
-        ISwapchain*      Swapchain,
         CommandQueueType Type)
     {
-        return NEON_NEW Dx12CommandQueue(Swapchain, Type);
+        return NEON_NEW Dx12CommandQueue(Type);
     }
 
     Dx12CommandQueue::Dx12CommandQueue(
-        ISwapchain*      Swapchain,
-        CommandQueueType Type) :
-        m_Swapchain(Swapchain)
+        CommandQueueType Type)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
 
@@ -35,14 +32,14 @@ namespace Neon::RHI
         CommandQueueType Type,
         size_t           Count)
     {
-        return static_cast<Dx12Swapchain*>(m_Swapchain)->AllocateCommandLists(CastCommandQueueType(Type), Count);
+        return Dx12Swapchain::Get()->AllocateCommandLists(CastCommandQueueType(Type), Count);
     }
 
     void Dx12CommandQueue::FreeCommandLists(
         CommandQueueType         Type,
         std::span<ICommandList*> Commands)
     {
-        static_cast<Dx12Swapchain*>(m_Swapchain)->FreeCommandLists(CastCommandQueueType(Type), Commands);
+        Dx12Swapchain::Get()->FreeCommandLists(CastCommandQueueType(Type), Commands);
     }
 
     void Dx12CommandQueue::Upload(
@@ -66,7 +63,7 @@ namespace Neon::RHI
         CommandQueueType         Type,
         std::span<ICommandList*> Commands)
     {
-        static_cast<Dx12Swapchain*>(m_Swapchain)->ResetCommandLists(CastCommandQueueType(Type), Commands);
+        Dx12Swapchain::Get()->ResetCommandLists(CastCommandQueueType(Type), Commands);
     }
 
     ID3D12CommandQueue* Dx12CommandQueue::Get()

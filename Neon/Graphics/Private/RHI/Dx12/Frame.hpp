@@ -6,8 +6,6 @@
 
 namespace Neon::RHI
 {
-    class Dx12Swapchain;
-
     class FrameResource
     {
     public:
@@ -31,8 +29,7 @@ namespace Neon::RHI
         /// <summary>
         /// Release all stale resources
         /// </summary>
-        void Reset(
-            Dx12Swapchain* Swapchain);
+        void Reset();
 
         /// <summary>
         /// Enqueue a descriptor handle to be released at the end of the frame.

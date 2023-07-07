@@ -55,13 +55,11 @@ namespace Neon::RHI
     //
 
     IDescriptorHeap* IDescriptorHeap::Create(
-        ISwapchain*    Swapchain,
         DescriptorType Type,
         uint32_t       MaxCount,
         bool           ShaderVisible)
     {
         return NEON_NEW Dx12DescriptorHeap(
-            Swapchain,
             CastDescriptorType(Type),
             LimitDescriptorHeapSize(Type == DescriptorType::Sampler, MaxCount),
             ShaderVisible);
@@ -70,11 +68,9 @@ namespace Neon::RHI
     //
 
     Dx12DescriptorHeap::Dx12DescriptorHeap(
-        ISwapchain*                Swapchain,
         D3D12_DESCRIPTOR_HEAP_TYPE Type,
         uint32_t                   MaxCount,
         bool                       ShaderVisible) :
-        m_Swapchain(Swapchain),
         m_HeapSize(MaxCount),
         m_HeapType(Type)
     {
@@ -101,7 +97,7 @@ namespace Neon::RHI
     {
         if (m_DescriptorHeap)
         {
-            static_cast<Dx12Swapchain*>(m_Swapchain)->SafeRelease(m_DescriptorHeap);
+            Dx12Swapchain::Get()->SafeRelease(m_DescriptorHeap);
             m_DescriptorHeap = nullptr;
         }
     }
@@ -624,7 +620,6 @@ namespace Neon::RHI
     //
 
     IDescriptorHeapAllocator* IDescriptorHeapAllocator::Create(
-        ISwapchain*    Swapchain,
         AllocationType Type,
         DescriptorType DescType,
         uint32_t       SizeOfHeap,
@@ -633,9 +628,9 @@ namespace Neon::RHI
         switch (Type)
         {
         case AllocationType::Ring:
-            return NEON_NEW Dx12RingDescriptorHeapAllocator(Swapchain, CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+            return NEON_NEW Dx12RingDescriptorHeapAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
         case AllocationType::Buddy:
-            return NEON_NEW Dx12DescriptorHeapBuddyAllocator(Swapchain, CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
+            return NEON_NEW Dx12DescriptorHeapBuddyAllocator(CastDescriptorType(DescType), SizeOfHeap, ShaderVisible);
         default:
             std::unreachable();
         }
@@ -644,11 +639,10 @@ namespace Neon::RHI
     //
 
     Dx12RingDescriptorHeapAllocator::Dx12RingDescriptorHeapAllocator(
-        ISwapchain*                Swapchain,
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         uint32_t                   MaxCount,
         bool                       ShaderVisible) :
-        m_HeapDescriptor(Swapchain, DescriptorType, MaxCount, ShaderVisible)
+        m_HeapDescriptor(DescriptorType, MaxCount, ShaderVisible)
     {
     }
 
@@ -691,17 +685,16 @@ namespace Neon::RHI
 
     Dx12DescriptorHeapBuddyAllocator::BuddyBlock::BuddyBlock(
         const HeapDescriptorAllocInfo& Info) :
-        Heap(Info.Swapchain, Info.DescriptorType, Info.SizeOfHeap, Info.ShaderVisible),
+        Heap(Info.DescriptorType, Info.SizeOfHeap, Info.ShaderVisible),
         Allocator(Info.SizeOfHeap)
     {
     }
 
     Dx12DescriptorHeapBuddyAllocator::Dx12DescriptorHeapBuddyAllocator(
-        ISwapchain*                Swapchain,
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
         uint32_t                   SizeOfHeap,
         bool                       ShaderVisible) :
-        m_HeapBlockAllocInfo{ Swapchain, SizeOfHeap, DescriptorType, ShaderVisible }
+        m_HeapBlockAllocInfo{ SizeOfHeap, DescriptorType, ShaderVisible }
     {
     }
 

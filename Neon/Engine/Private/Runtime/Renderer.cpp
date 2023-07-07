@@ -1,8 +1,12 @@
 #include <EnginePCH.hpp>
+
 #include <Runtime/Renderer.hpp>
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Window.hpp>
 #include <Renderer/RG/RG.hpp>
+
+#include <RHI/Device.hpp>
+#include <RHI/Swapchain.hpp>
 
 namespace Neon::Runtime
 {
@@ -14,27 +18,29 @@ namespace Neon::Runtime
 
         auto& GraphicsConfig = Config.Renderer;
 
-        RHI::ISwapchain::InitDesc Desc{
+        RHI::SwapchainCreateDesc Desc{
             .Window         = m_Window->GetWindow(),
             .RefreshRate    = { GraphicsConfig.RefreshRate.Numerator, GraphicsConfig.RefreshRate.Denominator },
             .Sample         = { GraphicsConfig.Sample.Count, GraphicsConfig.Sample.Quality },
             .FramesInFlight = GraphicsConfig.FramesInFlight,
         };
-        m_Swapchain.reset(RHI::ISwapchain::Create(Desc));
+        RHI::IRenderDevice::Construct(Desc);
 
         m_OnWindowSizeChanged.Attach(
             m_Window->OnWindowSizeChanged(),
             [this](const Size2I& Extent)
-            { m_Swapchain->Resize(Extent); });
+            {
+                RHI::ISwapchain::Get()->Resize(Extent);
+            });
 
         //
 
-        m_RenderGraph = std::make_unique<RG::RenderGraph>(m_Swapchain.get());
+        m_RenderGraph = std::make_unique<RG::RenderGraph>();
     }
 
-    RHI::ISwapchain* EngineRenderer::GetSwapchain() noexcept
+    EngineRenderer::~EngineRenderer()
     {
-        return m_Swapchain.get();
+        RHI::IRenderDevice::Destruct();
     }
 
     RG::RenderGraph* EngineRenderer::GetRenderGraph() noexcept
@@ -47,7 +53,7 @@ namespace Neon::Runtime
         m_WindowIsVisible = m_Window->GetWindow()->IsVisible().get();
         if (IsRendering())
         {
-            m_Swapchain->PrepareFrame();
+            RHI::ISwapchain::Get()->PrepareFrame();
         }
     }
 
@@ -63,7 +69,7 @@ namespace Neon::Runtime
     {
         if (IsRendering())
         {
-            m_Swapchain->Present();
+            RHI::ISwapchain::Get()->Present();
         }
     }
 

@@ -3,9 +3,6 @@
 #include <Config/Engine.hpp>
 #include <Runtime/Window.hpp>
 
-#include <RHI/Device.hpp>
-#include <RHI/Swapchain.hpp>
-
 #include <Renderer/RG/RG.hpp>
 
 namespace Neon::Runtime
@@ -20,10 +17,9 @@ namespace Neon::Runtime
             Runtime::DefaultGameEngine* Engine,
             const Config::EngineConfig& Config);
 
-        /// <summary>
-        /// Get the swapchain.
-        /// </summary>
-        [[nodiscard]] RHI::ISwapchain* GetSwapchain() noexcept;
+        NEON_CLASS_NO_COPYMOVE(EngineRenderer);
+
+        ~EngineRenderer();
 
         /// <summary>
         /// Get the render graph.
@@ -51,14 +47,10 @@ namespace Neon::Runtime
         [[nodiscard]] bool IsRendering() const noexcept;
 
     private:
-        RHI::IRenderDevice::Instance m_RenderDevice;
-
         Ptr<EngineWindow> m_Window;
         bool              m_WindowIsVisible = false;
 
-        UPtr<RHI::ISwapchain> m_Swapchain;
-        UPtr<RG::RenderGraph> m_RenderGraph;
-
+        UPtr<RG::RenderGraph>          m_RenderGraph;
         Signals::SHOnWindowSizeChanged m_OnWindowSizeChanged;
     };
 } // namespace Neon::Runtime

@@ -25,7 +25,6 @@ namespace Neon::RHI
     {
     public:
         Dx12DescriptorHeap(
-            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE Type,
             uint32_t                   MaxCount,
             bool                       ShaderVisible);
@@ -131,7 +130,6 @@ namespace Neon::RHI
         [[nodiscard]] D3D12_DESCRIPTOR_HEAP_TYPE GetType() const noexcept;
 
     protected:
-        ISwapchain*                         m_Swapchain;
         Win32::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 
         D3D12_CPU_DESCRIPTOR_HANDLE m_CpuHandle{};
@@ -145,7 +143,6 @@ namespace Neon::RHI
 
     struct HeapDescriptorAllocInfo
     {
-        ISwapchain*                Swapchain;
         uint32_t                   SizeOfHeap;
         D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType;
         bool                       ShaderVisible;
@@ -155,7 +152,6 @@ namespace Neon::RHI
     {
     public:
         Dx12RingDescriptorHeapAllocator(
-            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             uint32_t                   MaxCount,
             bool                       ShaderVisible);
@@ -192,7 +188,6 @@ namespace Neon::RHI
 
     public:
         Dx12DescriptorHeapBuddyAllocator(
-            ISwapchain*                Swapchain,
             D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
             uint32_t                   SizeOfHeap,
             bool                       ShaderVisible);

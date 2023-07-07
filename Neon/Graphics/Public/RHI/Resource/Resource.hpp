@@ -54,11 +54,6 @@ namespace Neon::RHI
         [[nodiscard]] virtual ResourceDesc GetDesc() const = 0;
 
         /// <summary>
-        /// Get the swapchain that the resource belongs to.
-        /// </summary>
-        [[nodiscard]] virtual ISwapchain* GetSwapchain() const = 0;
-
-        /// <summary>
         /// Query the footprint of the resource.
         /// </summary>
         virtual void QueryFootprint(
@@ -89,7 +84,6 @@ namespace Neon::RHI
         /// Creates a buffer.
         /// </summary>
         [[nodiscard]] static IBuffer* Create(
-            ISwapchain*       Swapchain,
             const BufferDesc& Desc);
 
         /// <summary>
@@ -114,7 +108,6 @@ namespace Neon::RHI
         /// Creates an upload buffer.
         /// </summary>
         [[nodiscard]] static IUploadBuffer* Create(
-            ISwapchain*       Swapchain,
             const BufferDesc& Desc);
 
         /// <summary>
@@ -162,7 +155,6 @@ namespace Neon::RHI
         /// Creates a readback buffer.
         /// </summary>
         [[nodiscard]] static IReadbackBuffer* Create(
-            ISwapchain*       Swapchain,
             const BufferDesc& Desc);
 
         /// <summary>
@@ -206,14 +198,12 @@ namespace Neon::RHI
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            ISwapchain*         Swapchain,
             const ResourceDesc& Desc);
 
         /// <summary>
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            ISwapchain*                      Swapchain,
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
             uint64_t&                        CopyId);
@@ -222,7 +212,6 @@ namespace Neon::RHI
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            ISwapchain*            Swapchain,
             const TextureRawImage& ImageData,
             uint64_t&              CopyId);
 
@@ -254,13 +243,11 @@ namespace Neon::RHI
     {
     public:
         PendingResource(
-            ISwapchain*                      Swapchain,
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources)
         {
             uint64_t CopyId = 0;
             m_Resource      = UPtr<ITexture>(ITexture::Create(
-                Swapchain,
                 Desc,
                 Subresources,
                 CopyId));
@@ -268,12 +255,10 @@ namespace Neon::RHI
         }
 
         PendingResource(
-            ISwapchain*            Swapchain,
             const TextureRawImage& ImageData)
         {
             uint64_t CopyId = 0;
             m_Resource      = UPtr<ITexture>(ITexture::Create(
-                Swapchain,
                 ImageData,
                 CopyId));
             m_CopyId        = CopyId;

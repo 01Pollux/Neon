@@ -10,13 +10,6 @@
 
 namespace Neon::RG
 {
-    RenderGraph::RenderGraph(
-        RHI::ISwapchain* Swapchain) :
-        m_Storage(Swapchain),
-        m_ThreadPool(4)
-    {
-    }
-
     RenderGraphBuilder RenderGraph::Reset()
     {
         m_Storage.Reset();
@@ -43,11 +36,10 @@ namespace Neon::RG
 
         for (auto& Level : m_Levels)
         {
-            Level.Execute(m_ThreadPool, m_Storage.m_Swapchain);
+            Level.Execute(m_ThreadPool);
         }
 
-        auto StateManager = m_Storage.m_Swapchain->GetStateManager();
-        StateManager->FlushBarriers(m_Storage.m_Swapchain);
+        RHI::IResourceStateManager::Get()->FlushBarriers();
 
         m_Storage.FlushResources();
     }
@@ -87,8 +79,7 @@ namespace Neon::RG
     }
 
     void RenderGraphDepdencyLevel::Execute(
-        Asio::ThreadPool<>& ThreadPool,
-        RHI::ISwapchain*    Swapchain)
+        Asio::ThreadPool<>& ThreadPool)
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -99,8 +90,8 @@ namespace Neon::RG
             Storage.CreateViews(Handle);
         }
 
-        ExecuteBarriers(Swapchain);
-        ExecutePasses(ThreadPool, Swapchain);
+        ExecuteBarriers();
+        ExecutePasses(ThreadPool);
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -109,11 +100,10 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::ExecuteBarriers(
-        RHI::ISwapchain* Swapchain)
+    void RenderGraphDepdencyLevel::ExecuteBarriers()
     {
         auto& Storage      = m_Context.GetStorage();
-        auto  StateManager = Swapchain->GetStateManager();
+        auto  StateManager = RHI::IResourceStateManager::Get();
 
         for (auto& [ViewId, State] : m_States)
         {
@@ -124,19 +114,18 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        StateManager->FlushBarriers(Swapchain);
+        StateManager->FlushBarriers();
     }
 
     //
 
     void RenderGraphDepdencyLevel::ExecutePasses(
-        Asio::ThreadPool<>& ThreadPool,
-        RHI::ISwapchain*    Swapchain) const
+        Asio::ThreadPool<>& ThreadPool) const
     {
         std::mutex RenderMutex, ComputeMutex, CopyMutex;
 
-        RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext(Swapchain);
-        RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext(Swapchain);
+        RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext;
+        RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext;
 
         std::vector<std::future<void>> Futures;
         Futures.reserve(m_Passes.size());
@@ -248,7 +237,7 @@ namespace Neon::RG
 
                         if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
                         {
-                            auto &Size = Swapchain->GetSize();
+                            auto& Size = RHI::ISwapchain::Get()->GetSize();
 
                             RenderCommandList->SetViewport(
                                 ViewportF{
