@@ -32,7 +32,7 @@ namespace Neon::Logger
                 std::filesystem::create_directories("Logs");
 
             std::vector<spdlog::sink_ptr> Sinks{
-                std::make_shared<spdlog::sinks::basic_file_sink_mt>("Logs/Engine.log", true),
+                std::make_shared<spdlog::sinks::basic_file_sink_mt>("Logs/Engine.log"),
 #ifndef NEON_DIST
                 std::make_shared<spdlog::sinks::stdout_color_sink_mt>(),
                 std::make_shared<spdlog::sinks::msvc_sink_mt>()

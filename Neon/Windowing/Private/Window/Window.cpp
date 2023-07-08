@@ -21,7 +21,17 @@ namespace Neon::Windowing
         BOOL ConsoleCloseRoutine(
             DWORD CtrlType)
         {
-            return CtrlType == CTRL_CLOSE_EVENT;
+            switch (CtrlType)
+            {
+            case CTRL_CLOSE_EVENT:
+            case CTRL_LOGOFF_EVENT:
+            case CTRL_SHUTDOWN_EVENT:
+                NEON_TRACE_TAG("Window", "Closing Engine");
+                Logger::Shutdown();
+                return TRUE;
+            default:
+                return FALSE;
+            }
         }
 #endif
 

@@ -18,7 +18,7 @@ extern "C"
     __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
 }
 
-#define GPU_BASED_VALIDATION true
+#define GPU_BASED_VALIDATION false
 
 namespace Neon::RHI
 {

@@ -14,22 +14,22 @@ namespace Neon::Runtime
         wchar_t* Argv[]);
 }; // namespace Neon::Runtime
 
-#ifdef NEON_DIST
+#if defined(NEON_PLATFORM_WINDOWS) && defined(NEON_DIST)
 
-#define NEON_MAIN(Argc, Argv)                  \
-    int __stdcall wWinMain(                    \
-        void*,                                 \
-        void*,                                 \
-        const wchar_t*,                        \
-        int)                                   \
-    {                                          \
-        Neon::Logger::Initialize();            \
-        int Ret = Neon::Main(__argc, __wargv); \
-        Neon::Logger::Shutdown();              \
-        return Ret;                            \
-    }                                          \
-    int Neon::Runtime::Main(                   \
-        int      Argc,                         \
+#define NEON_MAIN(Argc, Argv)                      \
+    int __stdcall wWinMain(                        \
+        void*,                                     \
+        void*,                                     \
+        const wchar_t*,                            \
+        int)                                       \
+    {                                              \
+        Neon::Logger::Initialize();                \
+        std::atexit(&Neon::Logger::Shutdown);      \
+        int Ret = Neon::Runtime::Main(argc, argv); \
+        return Ret;                                \
+    }                                              \
+    int Neon::Runtime::Main(                       \
+        int      Argc,                             \
         wchar_t* Argv[])
 
 #else
@@ -40,8 +40,8 @@ namespace Neon::Runtime
         wchar_t** argv)                            \
     {                                              \
         Neon::Logger::Initialize();                \
+        std::atexit(&Neon::Logger::Shutdown);      \
         int Ret = Neon::Runtime::Main(argc, argv); \
-        Neon::Logger::Shutdown();                  \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
