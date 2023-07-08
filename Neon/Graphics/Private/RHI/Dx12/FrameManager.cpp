@@ -112,7 +112,14 @@ namespace Neon::RHI
         ID3D12CommandAllocator* Allocator,
         ICommandList*           CommandList)
     {
-        ThrowIfFailed(m_ToPoolMap[CommandList]->Dx12CmdList->Reset(Allocator, nullptr));
+        auto Dx12CommandList = m_ToPoolMap[CommandList]->Dx12CmdList;
+        ThrowIfFailed(Dx12CommandList->Reset(Allocator, nullptr));
+
+        ID3D12DescriptorHeap* Heaps[]{
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap(),
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()
+        };
+        Dx12CommandList->SetDescriptorHeaps(2, Heaps);
     }
 
     void Dx12CommandContextManager::Reset(
@@ -156,7 +163,7 @@ namespace Neon::RHI
             auto& Info = *m_QueueManager.Get(QueueType);
             Info.Fence.WaitCPU(m_FenceValue);
         }
-        auto& Frame = m_FrameResources[m_FrameIndex];
+        auto& Frame = *m_FrameResources[m_FrameIndex];
         Frame.Reset();
     }
 
@@ -178,7 +185,21 @@ namespace Neon::RHI
     void FrameManager::ResizeFrames(
         size_t FramesCount)
     {
-        m_FrameResources.resize(FramesCount);
+        // Resizing the frame resources
+        if (m_FrameResources.size() < FramesCount)
+        {
+            for (size_t i = m_FrameResources.size(); i < FramesCount; i++)
+            {
+                m_FrameResources.emplace_back(std::make_unique<FrameResource>());
+            }
+        }
+        else
+        {
+            for (size_t i = FramesCount; i < m_FrameResources.size(); i++)
+            {
+                m_FrameResources.pop_back();
+            }
+        }
         m_FrameIndex = 0;
     }
 
@@ -212,7 +233,7 @@ namespace Neon::RHI
 
         for (auto& Frame : m_FrameResources)
         {
-            Frame.Reset();
+            Frame->Reset();
         }
     }
 
@@ -228,7 +249,7 @@ namespace Neon::RHI
         Result.reserve(Count);
 
         auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
-        auto& Frame   = m_FrameResources[m_FrameIndex];
+        auto& Frame   = *m_FrameResources[m_FrameIndex];
 
         std::scoped_lock Lock(Context.Mutex);
         for (size_t i = 0; i < Count; i++)
@@ -264,7 +285,7 @@ namespace Neon::RHI
 
         std::scoped_lock Lock(Context.Mutex);
 
-        auto& Frame = m_FrameResources[m_FrameIndex];
+        auto& Frame = *m_FrameResources[m_FrameIndex];
         for (auto Command : Commands)
         {
             Context.Pool.Reset(Frame, Command);
@@ -278,7 +299,7 @@ namespace Neon::RHI
         const DescriptorHeapHandle& Handle)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[0]);
-        auto&            Frame = m_FrameResources[m_FrameIndex];
+        auto&            Frame = *m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Allocator, Handle);
     }
 
@@ -286,7 +307,7 @@ namespace Neon::RHI
         const Dx12Buffer::Handle& Handle)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[1]);
-        auto&            Frame = m_FrameResources[m_FrameIndex];
+        auto&            Frame = *m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Handle);
     }
 
@@ -294,7 +315,7 @@ namespace Neon::RHI
         const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[2]);
-        auto&            Frame = m_FrameResources[m_FrameIndex];
+        auto&            Frame = *m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Descriptor);
     }
 
@@ -303,7 +324,7 @@ namespace Neon::RHI
         const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[3]);
-        auto&            Frame = m_FrameResources[m_FrameIndex];
+        auto&            Frame = *m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Resource, Allocation);
     }
 
@@ -318,5 +339,19 @@ namespace Neon::RHI
         std::function<void(ICopyCommandList*)> Task)
     {
         return m_CopyContext.EnqueueCopy(Task);
+    }
+
+    Dx12FrameDescriptorHeap* FrameManager::GetFrameDescriptorAllocator(
+        DescriptorType Type) noexcept
+    {
+        auto& Frame = *m_FrameResources[m_FrameIndex];
+        return Frame.GetFrameDescriptorAllocator(Type);
+    }
+
+    Dx12StagedDescriptorHeap* FrameManager::GetStagedDescriptorAllocator(
+        DescriptorType Type) noexcept
+    {
+        auto& Frame = *m_FrameResources[m_FrameIndex];
+        return Frame.GetStagedDescriptorAllocator(Type);
     }
 } // namespace Neon::RHI

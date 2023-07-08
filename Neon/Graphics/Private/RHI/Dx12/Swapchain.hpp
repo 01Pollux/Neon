@@ -39,10 +39,6 @@ namespace Neon::RHI
         [[nodiscard]] ICommandQueue* GetQueue(
             CommandQueueType Type) override;
 
-        [[nodiscard]] IDescriptorHeapAllocator* GetDescriptorHeapManager(
-            DescriptorType Type,
-            bool           Dynamic) override;
-
     public:
         /// <summary>
         /// Get the singleton instance.
@@ -81,10 +77,6 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE  Type,
             std::span<ICommandList*> Commands);
 
-        void SafeRelease(
-            IDescriptorHeapAllocator*   Allocator,
-            const DescriptorHeapHandle& Handle) override;
-
         /// <summary>
         /// Enqueue buffer to be released at the end of the frame.
         /// </summary>
@@ -117,6 +109,25 @@ namespace Neon::RHI
         uint64_t EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) override;
 
+    public:
+        /// <summary>
+        /// Get frame descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12FrameDescriptorHeap* GetFrameDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
+        /// <summary>
+        /// Get staged descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12StagedDescriptorHeap* GetStagedDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
+        /// <summary>
+        /// Get frame descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12StaticDescriptorHeap* GetStaticDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
     private:
         /// <summary>
         /// Create the swapchain.
@@ -135,14 +146,19 @@ namespace Neon::RHI
         Size2I                 m_Size;
 
         Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
-        UPtr<FrameManager>             m_BudgetManager;
+
+        Dx12StaticDescriptorHeap m_StaticDescriptors[size_t(DescriptorType::Count)]{
+            DescriptorType::ResourceView,
+            DescriptorType::RenderTargetView,
+            DescriptorType::DepthStencilView,
+            DescriptorType::Sampler
+        };
+
+        UPtr<FrameManager> m_FrameManager;
 
         std::vector<Dx12Texture> m_BackBuffers;
         Views::RenderTarget      m_RenderTargets;
 
         EResourceFormat m_BackbufferFormat = EResourceFormat::Unknown;
-
-        UPtr<DescriptorHeapAllocators> m_StaticDescriptorHeap;
-        UPtr<DescriptorHeapAllocators> m_DynamicDescriptorHeap;
     };
 } // namespace Neon::RHI

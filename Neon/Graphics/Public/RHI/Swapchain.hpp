@@ -92,20 +92,6 @@ namespace Neon::RHI
             CommandQueueType Type) = 0;
 
         /// <summary>
-        /// Get descriptor heap manager.
-        /// </summary>
-        [[nodiscard]] virtual IDescriptorHeapAllocator* GetDescriptorHeapManager(
-            DescriptorType Type,
-            bool           Dynamic) = 0;
-
-        /// <summary>
-        /// Enqueue a descriptor handle to be released at the end of the frame.
-        /// </summary>
-        virtual void SafeRelease(
-            IDescriptorHeapAllocator*   Allocator,
-            const DescriptorHeapHandle& Handle) = 0;
-
-        /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
         template<typename _FnTy, typename... _Args>

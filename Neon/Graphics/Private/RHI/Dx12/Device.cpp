@@ -25,11 +25,13 @@ namespace Neon::RHI
     static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
 
     void IRenderDevice::Create(
-        const SwapchainCreateDesc& Swapchain)
+        const DeviceCreateDesc&    DeviceDesc,
+        const SwapchainCreateDesc& SwapchainDesc)
     {
         NEON_ASSERT(!s_RenderDevice);
+        s_DescriptorSize = DeviceDesc.Descriptors;
         s_RenderDevice.reset(NEON_NEW Dx12RenderDevice);
-        s_RenderDevice->PostInitialize(Swapchain);
+        s_RenderDevice->PostInitialize(SwapchainDesc);
     }
 
     IRenderDevice* IRenderDevice::Get()
@@ -105,11 +107,11 @@ namespace Neon::RHI
     //
 
     void Dx12RenderDevice::PostInitialize(
-        const SwapchainCreateDesc& Swapchain)
+        const SwapchainCreateDesc& SwapchainDesc)
     {
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
-        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Swapchain));
-        m_Swapchain->PostInitialize(Swapchain);
+        m_Swapchain.reset(NEON_NEW Dx12Swapchain(SwapchainDesc));
+        m_Swapchain->PostInitialize(SwapchainDesc);
     }
 
     void Dx12RenderDevice::Shudown()

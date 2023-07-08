@@ -129,6 +129,11 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] D3D12_DESCRIPTOR_HEAP_TYPE GetType() const noexcept;
 
+        /// <summary>
+        /// Free descriptor without notifying swapchain to release
+        /// </summary>
+        void SilentDelete() noexcept;
+
     protected:
         Win32::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 
@@ -160,12 +165,18 @@ namespace Neon::RHI
             uint32_t DescriptorSize) override;
 
         void Free(
-            std::span<DescriptorHeapHandle> Handles) override;
+            std::span<const DescriptorHeapHandle> Handles) override
+        {
+        }
 
-        void FreeAll() override;
+        void FreeAll() override
+        {
+        }
 
         IDescriptorHeap* GetHeap(
             uint32_t) override;
+
+        uint32_t GetHeapsCount() override;
 
     private:
         std::mutex         m_DescriptorLock;
@@ -196,15 +207,31 @@ namespace Neon::RHI
             uint32_t DescriptorSize) override;
 
         void Free(
-            std::span<DescriptorHeapHandle> Handles) override;
+            std::span<const DescriptorHeapHandle> Handles) override;
 
         void FreeAll() override;
 
         IDescriptorHeap* GetHeap(
             uint32_t Index) override;
 
+        uint32_t GetHeapsCount() override;
+
+    public:
+        /// <summary>
+        /// Helper function to get all heaps in this allocator
+        /// </summary>
+        auto GetAllHeaps() noexcept
+        {
+            return m_HeapBlocks |
+                   std::views::transform(
+                       [](auto& Block) -> Dx12DescriptorHeap*
+                       {
+                           return &Block.Heap;
+                       });
+        }
+
     private:
-        std::mutex              m_HeapsBlockMutex;
+        std::mutex              m_HeapBlocksMutex;
         HeapDescriptorAllocInfo m_HeapBlockAllocInfo;
         std::list<BuddyBlock>   m_HeapBlocks;
     };

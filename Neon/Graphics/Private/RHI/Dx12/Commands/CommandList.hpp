@@ -60,11 +60,6 @@ namespace Neon::RHI
             const Ptr<IPipelineState>& State) override;
 
     public:
-        [[nodiscard]] const Views::Generic& GetResourceView() override;
-
-        [[nodiscard]] const Views::Generic& GetSamplerView() override;
-
-    public:
         void SetDynamicResourceView(
             ViewType    Type,
             uint32_t    RootIndex,
@@ -72,22 +67,8 @@ namespace Neon::RHI
             size_t      Size) override;
 
     protected:
-        /// <summary>
-        /// Reserve descriptor heaps for resource and sampler views.
-        /// </summary>
-        void ReserveDescriptorHeaps();
-
-        /// <summary>
-        /// Discard descriptor heaps for resource and sampler views.
-        /// </summary>
-        void DiscardDescriptorHeaps();
-
-    protected:
         Ptr<IRootSignature> m_RootSignature;
 
-        Views::Generic
-            m_ResourceView,
-            m_SamplerView;
         bool m_DescriptorDirty = true;
 
         UPtr<Dx12DescriptorHeapBuddyAllocator>

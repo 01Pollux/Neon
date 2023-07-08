@@ -617,6 +617,11 @@ namespace Neon::RHI
         return m_HeapType;
     }
 
+    void Dx12DescriptorHeap::SilentDelete() noexcept
+    {
+        m_DescriptorHeap = nullptr;
+    }
+
     //
 
     IDescriptorHeapAllocator* IDescriptorHeapAllocator::Create(
@@ -649,7 +654,7 @@ namespace Neon::RHI
     DescriptorHeapHandle Dx12RingDescriptorHeapAllocator::Allocate(
         uint32_t DescriptorSize)
     {
-        std::lock_guard DescLock(m_DescriptorLock);
+        std::scoped_lock DescLock(m_DescriptorLock);
 
         uint32_t HeapOffset = m_CurrentDescriptorOffset;
         m_CurrentDescriptorOffset += DescriptorSize;
@@ -666,19 +671,16 @@ namespace Neon::RHI
         };
     }
 
-    void Dx12RingDescriptorHeapAllocator::Free(
-        std::span<DescriptorHeapHandle>)
-    {
-    }
-
-    void Dx12RingDescriptorHeapAllocator::FreeAll()
-    {
-    }
-
     IDescriptorHeap* Dx12RingDescriptorHeapAllocator::GetHeap(
-        uint32_t)
+        uint32_t Index)
     {
+        NEON_ASSERT(Index == 0);
         return &m_HeapDescriptor;
+    }
+
+    uint32_t Dx12RingDescriptorHeapAllocator::GetHeapsCount()
+    {
+        return 1;
     }
 
     //
@@ -701,7 +703,7 @@ namespace Neon::RHI
     DescriptorHeapHandle Dx12DescriptorHeapBuddyAllocator::Allocate(
         uint32_t DescriptorSize)
     {
-        std::lock_guard HeapLock(m_HeapsBlockMutex);
+        std::scoped_lock HeapLock(m_HeapBlocksMutex);
 
         bool Allocated = false;
         for (auto Iter = m_HeapBlocks.begin(); Iter != m_HeapBlocks.end(); Iter++)
@@ -739,9 +741,9 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeapBuddyAllocator::Free(
-        std::span<DescriptorHeapHandle> Handles)
+        std::span<const DescriptorHeapHandle> Handles)
     {
-        std::lock_guard HeapLock(m_HeapsBlockMutex);
+        std::scoped_lock HeapLock(m_HeapBlocksMutex);
 
         for (auto& Data : Handles)
         {
@@ -761,7 +763,7 @@ namespace Neon::RHI
 
     void Dx12DescriptorHeapBuddyAllocator::FreeAll()
     {
-        std::lock_guard HeapLock(m_HeapsBlockMutex);
+        std::scoped_lock HeapLock(m_HeapBlocksMutex);
 
         for (auto& Block : m_HeapBlocks)
         {
@@ -772,7 +774,12 @@ namespace Neon::RHI
     IDescriptorHeap* Dx12DescriptorHeapBuddyAllocator::GetHeap(
         uint32_t Index)
     {
-        NEON_ASSERT(Index <= m_HeapBlocks.size());
+        NEON_ASSERT(Index < m_HeapBlocks.size());
         return &std::next(m_HeapBlocks.begin(), Index)->Heap;
+    }
+
+    uint32_t Dx12DescriptorHeapBuddyAllocator::GetHeapsCount()
+    {
+        return uint32_t(m_HeapBlocks.size());
     }
 } // namespace Neon::RHI

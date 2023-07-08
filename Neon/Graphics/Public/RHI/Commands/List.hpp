@@ -30,7 +30,6 @@ namespace Neon::RHI
     {
         class Index;
         class Vertex;
-        class Generic;
     } // namespace Views
 
     //

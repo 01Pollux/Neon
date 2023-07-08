@@ -287,9 +287,23 @@ namespace Neon::RHI
         uint64_t RequestCopy(
             std::function<void(ICopyCommandList*)> Task);
 
+    public:
+        /// <summary>
+        /// Get frame descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12FrameDescriptorHeap* GetFrameDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
+        /// <summary>
+        /// Get staged descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12StagedDescriptorHeap* GetStagedDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
     private:
-        std::vector<FrameResource> m_FrameResources;
-        uint32_t                   m_FrameIndex = 0;
+        std::vector<UPtr<FrameResource>> m_FrameResources;
+
+        uint32_t m_FrameIndex = 0;
 
         Dx12CommandQueueManager m_QueueManager;
 

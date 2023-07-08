@@ -86,6 +86,18 @@ namespace Neon::RHI
             m_Allocation.emplace_back(Allocation);
     }
 
+    Dx12FrameDescriptorHeap* FrameResource::GetFrameDescriptorAllocator(
+        DescriptorType Type) noexcept
+    {
+        return &m_FrameDescriptors[Type == DescriptorType::ResourceView ? 0 : 1];
+    }
+
+    Dx12StagedDescriptorHeap* FrameResource::GetStagedDescriptorAllocator(
+        DescriptorType Type) noexcept
+    {
+        return &m_StagedDescriptors[size_t(Type)];
+    }
+
     //
 
     D3D12_COMMAND_LIST_TYPE FrameResource::GetCommandListType(

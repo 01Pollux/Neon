@@ -9,12 +9,6 @@ namespace Neon::RHI::Views
     {
     public:
         Generic() = default;
-        Generic(
-            IDescriptorHeapAllocator* Allocator,
-            uint32_t                  Size) :
-            m_Handle(Allocator->Allocate(Size))
-        {
-        }
 
         Generic(
             const DescriptorHeapHandle& Handle) :

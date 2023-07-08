@@ -4,6 +4,8 @@
 #include <Private/Renderer/Material/Material.hpp>
 
 #include <RHI/Swapchain.hpp>
+#include <RHI/GlobalDescriptors.hpp>
+
 #include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>
 #include <RHI/Commands/List.hpp>
@@ -102,7 +104,7 @@ namespace Neon::Renderer
         RHI::DescriptorType        Type,
         uint32_t                   Count)
     {
-        auto Allocator = RHI::ISwapchain::Get()->GetDescriptorHeapManager(Type, false);
+        auto Allocator = RHI::IStaticDescriptorHeap::Get(Type);
         if (Count)
         {
             Descriptor = Allocator->Allocate(Count);
@@ -405,11 +407,13 @@ namespace Neon::Renderer
     {
         if (m_SharedResourceDescriptor)
         {
-            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, false)->Free(m_SharedResourceDescriptor);
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+            Allocator->Free(m_SharedResourceDescriptor);
         }
         if (m_SharedSamplerDescriptor)
         {
-            m_Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, false)->Free(m_SharedSamplerDescriptor);
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+            Allocator->Free(m_SharedSamplerDescriptor);
         }
     }
 
@@ -471,11 +475,13 @@ namespace Neon::Renderer
     {
         if (m_ResourceDescriptor)
         {
-            RHI::ISwapchain::Get()->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true)->Free(m_ResourceDescriptor);
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+            Allocator->Free(m_ResourceDescriptor);
         }
         if (m_SamplerDescriptor)
         {
-            RHI::ISwapchain::Get()->GetDescriptorHeapManager(RHI::DescriptorType::Sampler, true)->Free(m_SamplerDescriptor);
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+            Allocator->Free(m_SamplerDescriptor);
         }
     }
 

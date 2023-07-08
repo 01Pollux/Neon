@@ -2,6 +2,7 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Storage.hpp>
 
+#include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Swapchain.hpp>
 
 #include <RHI/Resource/Views/ConstantBuffer.hpp>
@@ -301,7 +302,6 @@ namespace Neon::RG
         {
             auto& [ViewDescHandle, ViewDesc] = View.second;
 
-            auto Swapchain = RHI::ISwapchain::Get();
             // TODO: batch allocations
             std::visit(
                 VariantVisitor{
@@ -309,43 +309,33 @@ namespace Neon::RG
                     {
                         NEON_ASSERT(false, "Invalid view type");
                     },
-                    [&ViewDescHandle, this, Swapchain](const RHI::CBVDesc& Desc)
+                    [&ViewDescHandle, this](const RHI::CBVDesc& Desc)
                     {
-                        auto View = RHI::Views::ConstantBuffer(
-                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
-                            1);
+                        RHI::Views::ConstantBuffer View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Desc);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::SRVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const std::optional<RHI::SRVDesc>& Desc)
                     {
-                        auto View = RHI::Views::ShaderResource(
-                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
-                            1);
+                        RHI::Views::ShaderResource View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::UAVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const std::optional<RHI::UAVDesc>& Desc)
                     {
-                        auto View = RHI::Views::UnorderedAccess(
-                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::ResourceView, true),
-                            1);
+                        RHI::Views::UnorderedAccess View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::RTVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const std::optional<RHI::RTVDesc>& Desc)
                     {
-                        auto View = RHI::Views::RenderTarget(
-                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::RenderTargetView, true),
-                            1);
+                        RHI::Views::RenderTarget View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::RenderTargetView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this, Swapchain](const std::optional<RHI::DSVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const std::optional<RHI::DSVDesc>& Desc)
                     {
-                        auto View = RHI::Views::DepthStencil(
-                            Swapchain->GetDescriptorHeapManager(RHI::DescriptorType::DepthStencilView, true),
-                            1);
+                        RHI::Views::DepthStencil View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::DepthStencilView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     } },

@@ -13,6 +13,7 @@ namespace Neon::RHI
         RenderTargetView,
         DepthStencilView,
         Sampler,
+        Count
     };
 
     class IDescriptorHeap
@@ -148,7 +149,13 @@ namespace Neon::RHI
 
         enum class AllocationType : uint8_t
         {
+            /// <summary>
+            /// Allocate descriptor from ring buffer
+            /// </summary>
             Ring,
+            /// <summary>
+            /// Allocate descriptor from buddy allocator
+            /// </summary>
             Buddy
         };
 
@@ -168,16 +175,15 @@ namespace Neon::RHI
         /// Free current descriptor handles
         /// </summary>
         virtual void Free(
-            std::span<DescriptorHeapHandle> Handles) = 0;
+            std::span<const DescriptorHeapHandle> Handles) = 0;
 
         /// <summary>
         /// Free current descriptor handle
         /// </summary>
         void Free(
-            const DescriptorHeapHandle& Data)
+            const DescriptorHeapHandle& Handle)
         {
-            std::array Handles(Data);
-            Free(Handles);
+            Free({ &Handle, 1 });
         }
 
         /// <summary>
@@ -192,5 +198,10 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] virtual IDescriptorHeap* GetHeap(
             uint32_t Index = 0) = 0;
+
+        /// <summary>
+        /// Get heaps count of current allocator
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetHeapsCount() = 0;
     };
 } // namespace Neon::RHI

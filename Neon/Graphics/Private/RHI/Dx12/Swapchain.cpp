@@ -12,18 +12,6 @@
 
 namespace Neon::RHI
 {
-    static constexpr uint32_t SizeOfCPUDescriptor_Resource = 256;
-    static constexpr uint32_t SizeOfCPUDescriptor_Samplers = 8;
-    static constexpr uint32_t SizeOfCPUDescriptor_Rtv      = 64;
-    static constexpr uint32_t SizeOfCPUDescriptor_Dsv      = 16;
-
-    static constexpr uint32_t SizeOfGPUDescriptor_Resource = 16'384;
-    static constexpr uint32_t SizeOfGPUDescriptor_Samplers = 32;
-    static constexpr uint32_t SizeOfGPUDescriptor_Rtv      = 24;
-    static constexpr uint32_t SizeOfGPUDescriptor_Dsv      = 16;
-
-    //
-
     ISwapchain* ISwapchain::Get()
     {
         return IRenderDevice::Get()->GetSwapchain();
@@ -39,16 +27,8 @@ namespace Neon::RHI
     {
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
 
-        auto Allocator = GetDescriptorHeapManager(DescriptorType::RenderTargetView, false);
-        if (m_RenderTargets)
-        {
-            Allocator->Free(m_RenderTargets.GetHandle());
-        }
-
         m_BackBuffers.clear();
-        m_DynamicDescriptorHeap = nullptr;
-        m_StaticDescriptorHeap  = nullptr;
-        m_BudgetManager         = nullptr;
+        m_FrameManager = nullptr;
     }
 
     //
@@ -57,25 +37,9 @@ namespace Neon::RHI
         const SwapchainCreateDesc& Desc) :
         m_WindowApp(Desc.Window),
         m_BackbufferFormat(Desc.BackbufferFormat),
-        m_Size(Desc.Window->GetSize().get()),
-        m_StaticDescriptorHeap{
-            UPtr<DescriptorHeapAllocators>(
-                NEON_NEW DescriptorHeapAllocators{
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfCPUDescriptor_Resource, false),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfCPUDescriptor_Samplers, false),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfCPUDescriptor_Rtv, false),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfCPUDescriptor_Dsv, false) })
-        },
-        m_DynamicDescriptorHeap{
-            UPtr<DescriptorHeapAllocators>(
-                NEON_NEW DescriptorHeapAllocators{
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfGPUDescriptor_Resource, true),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfGPUDescriptor_Samplers, true),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, SizeOfGPUDescriptor_Rtv, false),
-                    Dx12DescriptorHeapBuddyAllocator(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, SizeOfGPUDescriptor_Dsv, false) })
-        }
+        m_Size(Desc.Window->GetSize().get())
     {
-        m_BudgetManager = std::make_unique<FrameManager>();
+        m_FrameManager = std::make_unique<FrameManager>();
         CreateSwapchain(Desc);
     }
 
@@ -83,12 +47,12 @@ namespace Neon::RHI
 
     void Dx12Swapchain::PrepareFrame()
     {
-        m_BudgetManager->NewFrame();
+        m_FrameManager->NewFrame();
     }
 
     void Dx12Swapchain::Present()
     {
-        m_BudgetManager->EndFrame();
+        m_FrameManager->EndFrame();
         ThrowIfFailed(m_Swapchain->Present(1, 0));
     }
 
@@ -104,12 +68,12 @@ namespace Neon::RHI
 
     IGpuResource* Dx12Swapchain::GetBackBuffer()
     {
-        return &m_BackBuffers[m_BudgetManager->GetFrameIndex()];
+        return &m_BackBuffers[m_FrameManager->GetFrameIndex()];
     }
 
     CpuDescriptorHandle Dx12Swapchain::GetBackBufferView()
     {
-        return m_RenderTargets.GetCpuHandle(m_BudgetManager->GetFrameIndex());
+        return m_RenderTargets.GetCpuHandle(m_FrameManager->GetFrameIndex());
     }
 
     void Dx12Swapchain::Resize(
@@ -129,16 +93,20 @@ namespace Neon::RHI
         m_BackbufferFormat = NewFormat;
 
         uint32_t BackbufferCount = uint32_t(m_BackBuffers.size());
+        // Clearing the backbuffer vector will release the resources into the 'garbage collector' for current frame
+        // and will be released after the frame is finished or the call to IdleGPU()
         m_BackBuffers.clear();
         m_BackBuffers.reserve(BackbufferCount);
 
-        auto Allocator = GetDescriptorHeapManager(DescriptorType::RenderTargetView, false);
+        m_FrameManager->IdleGPU();
+
+        auto Allocator = IStaticDescriptorHeap::Get(DescriptorType::RenderTargetView);
         if (m_RenderTargets)
         {
             Allocator->Free(m_RenderTargets.GetHandle());
         }
 
-        m_BudgetManager->IdleGPU();
+        m_RenderTargets = Allocator->Allocate(BackbufferCount);
 
         ThrowIfFailed(m_Swapchain->ResizeBuffers(
             0,
@@ -146,10 +114,6 @@ namespace Neon::RHI
             Size.Height(),
             CastFormat(m_BackbufferFormat),
             0));
-
-        m_RenderTargets = Views::RenderTarget(
-            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false),
-            BackbufferCount);
 
         for (uint32_t i = 0; i < BackbufferCount; ++i)
         {
@@ -163,8 +127,8 @@ namespace Neon::RHI
                 i);
         }
 
-        m_BudgetManager->ResetFrameIndex();
-        m_BudgetManager->IdleGPU();
+        m_FrameManager->ResetFrameIndex();
+        m_FrameManager->IdleGPU();
     }
 
     //
@@ -178,7 +142,7 @@ namespace Neon::RHI
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
 
-        auto GraphicsQueue = m_BudgetManager->GetQueueManager()->GetGraphics()->Queue.Get();
+        auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
 
         auto WindowSize = WindowSizeFuture.get();
 
@@ -259,17 +223,14 @@ namespace Neon::RHI
     {
         m_BackBuffers.clear();
         m_BackBuffers.reserve(NewSize);
-        m_BudgetManager->ResizeFrames(NewSize);
+        m_FrameManager->ResizeFrames(NewSize);
 
-        auto Allocator = GetDescriptorHeapManager(DescriptorType::RenderTargetView, false);
+        auto Allocator = IStaticDescriptorHeap::Get(DescriptorType::RenderTargetView);
         if (m_RenderTargets)
         {
             Allocator->Free(m_RenderTargets.GetHandle());
         }
-
-        m_RenderTargets = Views::RenderTarget(
-            GetDescriptorHeapManager(DescriptorType::RenderTargetView, false),
-            NewSize);
+        m_RenderTargets = Allocator->Allocate(NewSize);
 
         for (uint32_t i = 0; i < NewSize; ++i)
         {

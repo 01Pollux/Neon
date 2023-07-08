@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Private/RHI/Dx12/Resource/Descriptor.hpp>
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
+#include <Private/RHI/Dx12/GlobalDescriptors.hpp>
 #include <Allocator/FreeList.hpp>
 
 namespace Neon::RHI
@@ -59,6 +59,19 @@ namespace Neon::RHI
 
     public:
         /// <summary>
+        /// Get frame descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12FrameDescriptorHeap* GetFrameDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
+        /// <summary>
+        /// Get staged descriptor heap allocator
+        /// </summary>
+        [[nodiscard]] Dx12StagedDescriptorHeap* GetStagedDescriptorAllocator(
+            DescriptorType Type) noexcept;
+
+    public:
+        /// <summary>
         /// Convert index to command list type
         /// </summary>
         static D3D12_COMMAND_LIST_TYPE GetCommandListType(
@@ -71,6 +84,17 @@ namespace Neon::RHI
             D3D12_COMMAND_LIST_TYPE Type) noexcept;
 
     private:
+        Dx12FrameDescriptorHeap m_FrameDescriptors[2]{
+            DescriptorType::ResourceView,
+            DescriptorType::Sampler
+        };
+        Dx12StagedDescriptorHeap m_StagedDescriptors[size_t(DescriptorType::Count)]{
+            DescriptorType::ResourceView,
+            DescriptorType::RenderTargetView,
+            DescriptorType::DepthStencilView,
+            DescriptorType::Sampler
+        };
+
         Dx12CommandAllocatorPools m_AllocatorsPools;
 
         std::map<IDescriptorHeapAllocator*, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;

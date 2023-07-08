@@ -159,18 +159,6 @@ namespace Neon::RHI
 
     //
 
-    const Views::Generic& Dx12CommonCommandList::GetResourceView()
-    {
-        ReserveDescriptorHeaps();
-        return m_ResourceView;
-    }
-
-    const Views::Generic& Dx12CommonCommandList::GetSamplerView()
-    {
-        ReserveDescriptorHeaps();
-        return m_SamplerView;
-    }
-
     void Dx12CommonCommandList::SetDynamicResourceView(
         ViewType    Type,
         uint32_t    RootIndex,
@@ -192,71 +180,6 @@ namespace Neon::RHI
             Buffer.get());
     }
 
-    void Dx12CommonCommandList::ReserveDescriptorHeaps()
-    {
-        if (!m_DescriptorDirty)
-        {
-            return;
-        }
-
-        m_DescriptorDirty   = false;
-        uint32_t HeapsCount = 0;
-
-        std::array<ID3D12DescriptorHeap*, 2> OldHeaps{}, NewHeaps{};
-
-        auto& ResourceView = m_ResourceView.GetHandle();
-        auto& SamplerView  = m_SamplerView.GetHandle();
-
-        OldHeaps[0] = ResourceView.Heap ? static_cast<Dx12DescriptorHeap*>(ResourceView.Heap)->Get() : nullptr;
-        OldHeaps[1] = SamplerView.Heap ? static_cast<Dx12DescriptorHeap*>(SamplerView.Heap)->Get() : nullptr;
-
-        if (uint32_t Count = m_RootSignature->GetResourceCountInDescriptor())
-        {
-            if (!m_ResourceViewAllocator)
-            {
-                m_ResourceViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
-                    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, SizeOfResourceDescriptorHeap, true);
-            }
-
-            m_ResourceView = Views::Generic(
-                m_ResourceViewAllocator.get(),
-                Count);
-            NewHeaps[HeapsCount++] = static_cast<Dx12DescriptorHeap*>(m_ResourceView.GetHandle().Heap)->Get();
-        }
-        if (uint32_t Count = m_RootSignature->GetSamplerCountInDescriptor())
-        {
-            if (!m_SamplerViewAllocator)
-            {
-                m_SamplerViewAllocator = std::make_unique<Dx12DescriptorHeapBuddyAllocator>(
-                    D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SizeOfSamplerDescriptorHeap, true);
-            }
-
-            m_SamplerView = Views::Generic(
-                m_SamplerViewAllocator.get(),
-                Count);
-            NewHeaps[HeapsCount++] = static_cast<Dx12DescriptorHeap*>(m_SamplerView.GetHandle().Heap)->Get();
-        }
-
-        // Detect any heap change
-        if (OldHeaps != NewHeaps)
-        {
-            m_CommandList->SetDescriptorHeaps(HeapsCount, NewHeaps.data());
-        }
-    }
-
-    void Dx12CommonCommandList::DiscardDescriptorHeaps()
-    {
-        if (m_ResourceView)
-        {
-            Dx12Swapchain::Get()->SafeRelease(m_ResourceViewAllocator.get(), m_ResourceView.GetHandle());
-        }
-        if (m_SamplerView)
-        {
-            Dx12Swapchain::Get()->SafeRelease(m_SamplerViewAllocator.get(), m_SamplerView.GetHandle());
-        }
-        m_DescriptorDirty = true;
-    }
-
     //
 
     void Dx12GraphicsCommandList::SetRootSignature(
@@ -264,7 +187,6 @@ namespace Neon::RHI
     {
         m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
         m_RootSignature = RootSig;
-        DiscardDescriptorHeaps();
     }
 
     //
@@ -487,7 +409,6 @@ namespace Neon::RHI
             Args.StartIndex,
             Args.StartVertex,
             Args.StartInstance);
-        DiscardDescriptorHeaps();
     }
 
     void Dx12GraphicsCommandList::Draw(
@@ -498,7 +419,6 @@ namespace Neon::RHI
             Args.InstanceCount,
             Args.StartVertex,
             Args.StartInstance);
-        DiscardDescriptorHeaps();
     }
 
     //
@@ -508,7 +428,6 @@ namespace Neon::RHI
     {
         m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
         m_RootSignature = RootSig;
-        DiscardDescriptorHeaps();
     }
 
     void Dx12ComputeCommandList::SetConstants(
@@ -566,6 +485,5 @@ namespace Neon::RHI
             UINT(GroupCountX),
             UINT(GroupCountY),
             UINT(GroupCountZ));
-        DiscardDescriptorHeaps();
     }
 } // namespace Neon::RHI

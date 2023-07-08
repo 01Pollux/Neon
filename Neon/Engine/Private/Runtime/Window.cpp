@@ -40,13 +40,14 @@ namespace Neon::Runtime
 
         auto& GraphicsConfig = Config.Renderer;
 
-        RHI::SwapchainCreateDesc Desc{
+        RHI::DeviceCreateDesc    DeviceDesc{};
+        RHI::SwapchainCreateDesc SwapchainDesc{
             .Window         = m_Window.get(),
             .RefreshRate    = { GraphicsConfig.RefreshRate.Numerator, GraphicsConfig.RefreshRate.Denominator },
             .Sample         = { GraphicsConfig.Sample.Count, GraphicsConfig.Sample.Quality },
             .FramesInFlight = GraphicsConfig.FramesInFlight,
         };
-        RHI::IRenderDevice::Create(Desc);
+        RHI::IRenderDevice::Create(DeviceDesc, SwapchainDesc);
     }
 
     EngineWindow::~EngineWindow()
