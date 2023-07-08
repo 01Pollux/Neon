@@ -17,64 +17,6 @@ namespace views  = std::views;
 
 namespace Neon::Renderer
 {
-    RHI::PipelineStateBuilderG::PrimitiveTopology GetPrimitiveCategory(
-        RHI::PrimitiveTopology Topology)
-    {
-        using PipelineTopology = RHI::PipelineStateBuilderG::PrimitiveTopology;
-        switch (Topology)
-        {
-        case RHI::PrimitiveTopology::PointList:
-            return PipelineTopology::Point;
-        case RHI::PrimitiveTopology::LineList:
-        case RHI::PrimitiveTopology::LineStrip:
-        case RHI::PrimitiveTopology::LineList_Adj:
-        case RHI::PrimitiveTopology::LineStrip_Adj:
-            return PipelineTopology::Line;
-        case RHI::PrimitiveTopology::TriangleList:
-        case RHI::PrimitiveTopology::TriangleStrip:
-        case RHI::PrimitiveTopology::TriangleList_Adj:
-        case RHI::PrimitiveTopology::TriangleStrip_Adj:
-            return PipelineTopology::Triangle;
-        case RHI::PrimitiveTopology::PatchList_1:
-        case RHI::PrimitiveTopology::PatchList_2:
-        case RHI::PrimitiveTopology::PatchList_3:
-        case RHI::PrimitiveTopology::PatchList_4:
-        case RHI::PrimitiveTopology::PatchList_5:
-        case RHI::PrimitiveTopology::PatchList_6:
-        case RHI::PrimitiveTopology::PatchList_7:
-        case RHI::PrimitiveTopology::PatchList_8:
-        case RHI::PrimitiveTopology::PatchList_9:
-        case RHI::PrimitiveTopology::PatchList_10:
-        case RHI::PrimitiveTopology::PatchList_11:
-        case RHI::PrimitiveTopology::PatchList_12:
-        case RHI::PrimitiveTopology::PatchList_13:
-        case RHI::PrimitiveTopology::PatchList_14:
-        case RHI::PrimitiveTopology::PatchList_15:
-        case RHI::PrimitiveTopology::PatchList_16:
-        case RHI::PrimitiveTopology::PatchList_17:
-        case RHI::PrimitiveTopology::PatchList_18:
-        case RHI::PrimitiveTopology::PatchList_19:
-        case RHI::PrimitiveTopology::PatchList_20:
-        case RHI::PrimitiveTopology::PatchList_21:
-        case RHI::PrimitiveTopology::PatchList_22:
-        case RHI::PrimitiveTopology::PatchList_23:
-        case RHI::PrimitiveTopology::PatchList_24:
-        case RHI::PrimitiveTopology::PatchList_25:
-        case RHI::PrimitiveTopology::PatchList_26:
-        case RHI::PrimitiveTopology::PatchList_27:
-        case RHI::PrimitiveTopology::PatchList_28:
-        case RHI::PrimitiveTopology::PatchList_29:
-        case RHI::PrimitiveTopology::PatchList_30:
-        case RHI::PrimitiveTopology::PatchList_31:
-        case RHI::PrimitiveTopology::PatchList_32:
-            return PipelineTopology::Patch;
-        default:
-            return PipelineTopology::Undefined;
-        }
-    }
-
-    //
-
     Ptr<IMaterial> IMaterial::Create(
         const GenericMaterialBuilder<false>& Builder)
     {
@@ -82,7 +24,7 @@ namespace Neon::Renderer
                  LocalSamplerDescriptorSize  = 0;
 
         Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
-        Mat->CreateDefaultInstance(Builder.Topology(), LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
+        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
         return Mat;
     }
 
@@ -93,7 +35,7 @@ namespace Neon::Renderer
                  LocalSamplerDescriptorSize  = 0;
 
         Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
-        Mat->CreateDefaultInstance(RHI::PrimitiveTopology::Undefined, LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
+        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
         return Mat;
     }
 
@@ -338,6 +280,7 @@ namespace Neon::Renderer
                 .SampleMask    = Builder.SampleMask(),
                 .SampleCount   = Builder.SampleCount(),
                 .SampleQuality = Builder.SampleQuality(),
+                .Topology      = Builder.Topology(),
 
                 .StripCut = Builder.StripCut(),
                 .DSFormat = Builder.DepthStencilFormat()
@@ -355,8 +298,7 @@ namespace Neon::Renderer
                 }
             }
 
-            PipelineDesc.Topology = GetPrimitiveCategory(Builder.Topology());
-            Mat->m_PipelineState  = RHI::IPipelineState::Create(PipelineDesc);
+            Mat->m_PipelineState = RHI::IPipelineState::Create(PipelineDesc);
         }
         else
         {
@@ -435,14 +377,12 @@ namespace Neon::Renderer
     }
 
     void Material::CreateDefaultInstance(
-        RHI::PrimitiveTopology Topology,
-        uint32_t               LocalResourceDescriptorSize,
-        uint32_t               LocalSamplerDescriptorSize)
+        uint32_t LocalResourceDescriptorSize,
+        uint32_t LocalSamplerDescriptorSize)
     {
         NEON_ASSERT(!m_DefaultInstace);
         m_DefaultInstace.reset(NEON_NEW MaterialInstance(
             shared_from_this(),
-            Topology,
             LocalResourceDescriptorSize,
             LocalSamplerDescriptorSize));
     }
@@ -450,13 +390,11 @@ namespace Neon::Renderer
     //
 
     MaterialInstance::MaterialInstance(
-        Ptr<IMaterial>         Mat,
-        RHI::PrimitiveTopology Topology,
-        uint32_t               LocaResourceDescriptorSize,
-        uint32_t               LocaSamplerDescriptorSize)
+        Ptr<IMaterial> Mat,
+        uint32_t       LocaResourceDescriptorSize,
+        uint32_t       LocaSamplerDescriptorSize)
     {
         m_ParentMaterial = std::move(Mat);
-        m_Topology       = Topology;
 
         CreateDescriptorIfNeeded(m_ResourceDescriptor, RHI::DescriptorType::ResourceView, LocaResourceDescriptorSize);
         CreateDescriptorIfNeeded(m_SamplerDescriptor, RHI::DescriptorType::Sampler, LocaSamplerDescriptorSize);
@@ -466,7 +404,6 @@ namespace Neon::Renderer
     {
         return Ptr<IMaterialInstance>(NEON_NEW MaterialInstance(
             GetParentMaterial(),
-            GetTopology(),
             m_ResourceDescriptor.Size,
             m_SamplerDescriptor.Size));
     }
@@ -485,30 +422,22 @@ namespace Neon::Renderer
         }
     }
 
-    RHI::PrimitiveTopology IMaterialInstance::GetTopology()
-    {
-        return m_Topology;
-    }
-
-    void IMaterialInstance::SetTopology(
-        RHI::PrimitiveTopology Topology)
-    {
-        // This instance is not a compute material's instance
-        if (m_Topology != RHI::PrimitiveTopology::Undefined)
-        {
-            if (GetPrimitiveCategory(m_Topology) == GetPrimitiveCategory(Topology))
-            {
-                m_Topology = Topology;
-            }
-            else
-            {
-                NEON_WARNING("Topology mismatch : {} vs {}", int(m_Topology), int(Topology));
-            }
-        }
-    }
-
     const Ptr<IMaterial>& IMaterialInstance::GetParentMaterial() const
     {
         return m_ParentMaterial;
+    }
+
+    void MaterialInstance::GetDescriptor(
+        RHI::DescriptorHeapHandle* OutResourceDescriptor,
+        RHI::DescriptorHeapHandle* OutSamplerDescriptor) const
+    {
+        if (OutResourceDescriptor)
+        {
+            *OutResourceDescriptor = m_ResourceDescriptor;
+        }
+        if (OutSamplerDescriptor)
+        {
+            *OutSamplerDescriptor = m_SamplerDescriptor;
+        }
     }
 } // namespace Neon::Renderer

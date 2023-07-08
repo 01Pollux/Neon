@@ -112,14 +112,13 @@ namespace Neon::Runtime
             .Rasterizer(MaterialStates::Rasterizer::CullNone)
             .DepthStencil(MaterialStates::DepthStencil::None)
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
-            .Topology(RHI::PrimitiveTopology::TriangleList);
+            .Topology(RHI::PrimitiveTopologyCategory::Triangle);
 
         {
             auto& VarMap = MatBuilder.VarMap();
 
             VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
-                .Visibility(RHI::ShaderVisibility::Pixel)
-                .Flags(EMaterialVarFlags::Shared, true);
+                .Visibility(RHI::ShaderVisibility::Pixel);
 
             for (uint32_t i : std::ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
             {

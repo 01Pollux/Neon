@@ -30,7 +30,7 @@ namespace Neon::RHI::Views
         [[nodiscard]] CpuDescriptorHandle GetCpuHandle(
             uint32_t Offset = 0) const noexcept
         {
-            return m_Handle.Heap->GetCPUAddress(m_Handle.Offset + Offset);
+            return m_Handle.GetCpuHandle(Offset);
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Neon::RHI::Views
         [[nodiscard]] GpuDescriptorHandle GetGpuHandle(
             uint32_t Offset = 0) const noexcept
         {
-            return m_Handle.Heap->GetGPUAddress(m_Handle.Offset + Offset);
+            return m_Handle.GetGpuHandle(Offset);
         }
 
         /// <summary>

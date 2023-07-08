@@ -308,12 +308,12 @@ namespace Neon::Renderer
         /// Set the depth stencil format.
         /// </summary>
         GenericMaterialBuilder& Topology(
-            RHI::PrimitiveTopology Type);
+            RHI::PrimitiveTopologyCategory Type);
 
         /// <summary>
         /// Get the depth stencil format.
         /// </summary>
-        [[nodiscard]] RHI::PrimitiveTopology Topology() const;
+        [[nodiscard]] RHI::PrimitiveTopologyCategory Topology() const;
 
     public:
         /// <summary>
@@ -342,7 +342,7 @@ namespace Neon::Renderer
         std::map<uint32_t, std::pair<StringU8, RHI::EResourceFormat>> m_RenderTargetFormats;
 
         RHI::PipelineStateBuilderG::StripCutType m_StripCut           = RHI::PipelineStateBuilderG::StripCutType::None;
-        RHI::PrimitiveTopology                   m_Topology           = RHI::PrimitiveTopology::Undefined;
+        RHI::PrimitiveTopologyCategory           m_Topology           = RHI::PrimitiveTopologyCategory::Undefined;
         RHI::EResourceFormat                     m_DepthStencilFormat = RHI::EResourceFormat::Unknown;
         bool                                     m_NoVertexInput      = false;
     };

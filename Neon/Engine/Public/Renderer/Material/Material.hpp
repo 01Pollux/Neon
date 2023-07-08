@@ -7,6 +7,7 @@ namespace Neon::RHI
 {
     class ISwapchain;
     class IGraphicsCommandList;
+    struct DescriptorHeapHandle;
 } // namespace Neon::RHI
 
 namespace Neon::Renderer
@@ -55,23 +56,18 @@ namespace Neon::Renderer
         [[nodiscard]] virtual Ptr<IMaterialInstance> CreateInstance() = 0;
 
         /// <summary>
-        /// Get the intsance primitive topology.
-        /// </summary>
-        [[nodiscard]] RHI::PrimitiveTopology GetTopology();
-
-        /// <summary>
-        /// Set the intsance primitive topology.
-        /// </summary>
-        [[nodiscard]] void SetTopology(
-            RHI::PrimitiveTopology Topology);
-
-        /// <summary>
         /// Get the parent material.
         /// </summary>
         [[nodiscard]] const Ptr<IMaterial>& GetParentMaterial() const;
 
+        /// <summary>
+        /// Get the parent material.
+        /// </summary>
+        [[nodiscard]] virtual void GetDescriptor(
+            RHI::DescriptorHeapHandle* OutResourceDescriptor,
+            RHI::DescriptorHeapHandle* OutSamplerDescriptor) const = 0;
+
     protected:
-        Ptr<IMaterial>         m_ParentMaterial;
-        RHI::PrimitiveTopology m_Topology;
+        Ptr<IMaterial> m_ParentMaterial;
     };
 } // namespace Neon::Renderer

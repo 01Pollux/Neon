@@ -636,6 +636,15 @@ namespace Neon::RHI
 
     //
 
+    enum class PrimitiveTopologyCategory : uint8_t
+    {
+        Undefined,
+        Point,
+        Line,
+        Triangle,
+        Patch
+    };
+
     enum class PrimitiveTopology : uint8_t
     {
         Undefined,

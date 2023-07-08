@@ -458,19 +458,19 @@ namespace Neon::RHI
         {
             switch (Builder.Topology)
             {
-            case PipelineStateBuilderG::PrimitiveTopology::Undefined:
+            case PrimitiveTopologyCategory::Undefined:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
                 break;
-            case PipelineStateBuilderG::PrimitiveTopology::Point:
+            case PrimitiveTopologyCategory::Point:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
                 break;
-            case PipelineStateBuilderG::PrimitiveTopology::Line:
+            case PrimitiveTopologyCategory::Line:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
                 break;
-            case PipelineStateBuilderG::PrimitiveTopology::Triangle:
+            case PrimitiveTopologyCategory::Triangle:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
                 break;
-            case PipelineStateBuilderG::PrimitiveTopology::Patch:
+            case PrimitiveTopologyCategory::Patch:
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
                 break;
             }

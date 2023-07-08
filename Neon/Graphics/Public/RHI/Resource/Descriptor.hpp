@@ -138,6 +138,24 @@ namespace Neon::RHI
         {
             return Heap;
         }
+
+        /// <summary>
+        /// Get the CPU descriptor handle.
+        /// </summary>
+        [[nodiscard]] CpuDescriptorHandle GetCpuHandle(
+            uint32_t RelOffset = 0) const noexcept
+        {
+            return Heap->GetCPUAddress(Offset + RelOffset);
+        }
+
+        /// <summary>
+        /// Get the GPU descriptor handle.
+        /// </summary>
+        [[nodiscard]] GpuDescriptorHandle GetGpuHandle(
+            uint32_t RelOffset = 0) const noexcept
+        {
+            return Heap->GetGPUAddress(Offset + RelOffset);
+        }
     };
 
     //

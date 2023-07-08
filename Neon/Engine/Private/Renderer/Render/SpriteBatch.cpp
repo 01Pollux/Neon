@@ -6,7 +6,7 @@
 #include <Resource/Types/Shader.hpp>
 
 #include <RHI/Swapchain.hpp>
-#include <RHI/PipelineState.hpp>
+#include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Resource/State.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
 
@@ -138,7 +138,50 @@ namespace Neon::Renderer
 
         //
 
-        // Copy descriptors for materials into the command list
+        if (!m_MaterialInstances.empty())
+        {
+            // TODO: bind shared descriptor
+            // auto MasterMaterial = m_MaterialInstances[0]->GetParentMaterial();
+
+            auto ResourceTable = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView),
+                 SamplerTable  = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+
+            uint32_t GPUResourceDescriptorSize = 0,
+                     GPUSamplerDescriptorSize  = 0;
+
+            std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
+
+            RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
+            for (auto Instance : m_MaterialInstances)
+            {
+                Instance->GetDescriptor(&ResourceDescriptor, &SamplerDescriptor);
+
+                if (ResourceDescriptor.Size)
+                {
+                    ResourceDescriptors.emplace_back(ResourceDescriptor.GetCpuHandle(), ResourceDescriptor.Size);
+                    GPUResourceDescriptorSize += ResourceDescriptor.Size;
+                }
+                if (SamplerDescriptor.Size)
+                {
+                    SamplerDescriptors.emplace_back(SamplerDescriptor.GetCpuHandle(), SamplerDescriptor.Size);
+                    GPUSamplerDescriptorSize += SamplerDescriptor.Size;
+                }
+            }
+
+            if (GPUResourceDescriptorSize)
+            {
+                auto ResourceHandle = ResourceTable->Allocate(GPUResourceDescriptorSize);
+
+                RHI::IDescriptorHeap::CopyInfo Destination{
+                    .Descriptor = ResourceHandle.GetCpuHandle(),
+                    .CopySize   = ResourceHandle.Size
+                };
+                RHI::IDescriptorHeap::Copy(RHI::DescriptorType::ResourceView, { &Destination, 1 }, ResourceDescriptors);
+
+                m_CommandList->SetDescriptorTable(0, ResourceHandle.GetGpuHandle());
+            }
+            // auto SamplerHandle = SamplerTable->Allocate(GPUSamplerDescriptorSize);
+        }
 
         //
 

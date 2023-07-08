@@ -59,9 +59,8 @@ namespace Neon::Renderer
         /// Create a default material instance.
         /// </summary>
         void CreateDefaultInstance(
-            RHI::PrimitiveTopology Topology,
-            uint32_t               LocalResourceDescriptorSize,
-            uint32_t               LocalSamplerDescriptorSize);
+            uint32_t LocalResourceDescriptorSize,
+            uint32_t LocalSamplerDescriptorSize);
 
     private:
         struct ConstantEntry
@@ -117,19 +116,19 @@ namespace Neon::Renderer
 
     public:
         MaterialInstance(
-            Ptr<IMaterial>         Mat,
-            RHI::PrimitiveTopology Topology,
-            uint32_t               LocaResourceDescriptorSize,
-            uint32_t               LocaSamplerDescriptorSize);
+            Ptr<IMaterial> Mat,
+            uint32_t       LocaResourceDescriptorSize,
+            uint32_t       LocaSamplerDescriptorSize);
 
         NEON_CLASS_NO_COPYMOVE(MaterialInstance);
 
         ~MaterialInstance() override;
 
-        /// <summary>
-        /// Creates a new material instance.
-        /// </summary>
         [[nodiscard]] Ptr<IMaterialInstance> CreateInstance() override;
+
+        void GetDescriptor(
+            RHI::DescriptorHeapHandle* OutResourceDescriptor,
+            RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
 
     private:
         DescriptorHeapHandle

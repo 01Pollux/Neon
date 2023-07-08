@@ -236,13 +236,13 @@ namespace Neon::Renderer
     //
 
     RenderMaterialBuilder& RenderMaterialBuilder::Topology(
-        RHI::PrimitiveTopology Type)
+        RHI::PrimitiveTopologyCategory Type)
     {
         m_Topology = Type;
         return *this;
     }
 
-    RHI::PrimitiveTopology RenderMaterialBuilder::Topology() const
+    RHI::PrimitiveTopologyCategory RenderMaterialBuilder::Topology() const
     {
         return m_Topology;
     }

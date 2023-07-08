@@ -83,15 +83,6 @@ namespace Neon::RHI
             MaxUInt32
         };
 
-        enum class PrimitiveTopology : uint8_t
-        {
-            Undefined,
-            Point,
-            Line,
-            Triangle,
-            Patch
-        };
-
         Ptr<IRootSignature> RootSignature = nullptr;
 
         Ptr<IShader> VertexShader   = nullptr;
@@ -110,9 +101,10 @@ namespace Neon::RHI
         uint32_t SampleCount   = 1;
         uint32_t SampleQuality = 0;
 
-        PrimitiveTopology Topology = PrimitiveTopology::Undefined;
-        StripCutType      StripCut = StripCutType::None;
-        EResourceFormat   DSFormat = EResourceFormat::Unknown;
+        PrimitiveTopologyCategory Topology = PrimitiveTopologyCategory::Undefined;
+
+        StripCutType    StripCut = StripCutType::None;
+        EResourceFormat DSFormat = EResourceFormat::Unknown;
     };
     using PipelineStateBuilderG = PipelineStateBuilder<false>;
 
