@@ -185,20 +185,11 @@ namespace Neon::RHI
     void FrameManager::ResizeFrames(
         size_t FramesCount)
     {
-        // Resizing the frame resources
-        if (m_FrameResources.size() < FramesCount)
+        auto OldSize = m_FrameResources.size();
+        m_FrameResources.resize(FramesCount);
+        for (size_t i = OldSize; i < FramesCount; i++)
         {
-            for (size_t i = m_FrameResources.size(); i < FramesCount; i++)
-            {
-                m_FrameResources.emplace_back(std::make_unique<FrameResource>());
-            }
-        }
-        else
-        {
-            for (size_t i = FramesCount; i < m_FrameResources.size(); i++)
-            {
-                m_FrameResources.pop_back();
-            }
+            m_FrameResources[i] = std::make_unique<FrameResource>();
         }
         m_FrameIndex = 0;
     }

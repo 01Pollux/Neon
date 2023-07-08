@@ -77,6 +77,11 @@ namespace Neon::RHI
         void Free(
             std::span<const DescriptorHeapHandle> Handles) override;
 
+        /// <summary>
+        /// Resets the allocator.
+        /// </summary>
+        void Reset();
+
     private:
         Dx12DescriptorHeapBuddyAllocator m_Allocator;
     };
@@ -98,6 +103,11 @@ namespace Neon::RHI
         /// Returns the underlying heap.
         /// </summary>
         [[nodiscard]] ID3D12DescriptorHeap* GetHeap();
+
+        /// <summary>
+        /// Resets the allocator.
+        /// </summary>
+        void Reset();
 
     private:
         Dx12DFrameDescriptorHeapBuddyAllocator m_Allocator;

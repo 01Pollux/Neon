@@ -144,6 +144,11 @@ namespace Neon::RHI
         m_Allocator.Free(Handles);
     }
 
+    void Dx12StagedDescriptorHeap::Reset()
+    {
+        m_Allocator.FreeAll();
+    }
+
     //
 
     IFrameDescriptorHeap* IFrameDescriptorHeap::Get(
@@ -170,5 +175,10 @@ namespace Neon::RHI
     ID3D12DescriptorHeap* Dx12FrameDescriptorHeap::GetHeap()
     {
         return m_Allocator.GetHeap();
+    }
+
+    void Dx12FrameDescriptorHeap::Reset()
+    {
+        m_Allocator.FreeAll();
     }
 } // namespace Neon::RHI

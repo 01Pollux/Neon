@@ -41,6 +41,16 @@ namespace Neon::RHI
         {
             Allocator.ClearActives();
         }
+
+        for (auto& Allocator : m_FrameDescriptors)
+        {
+            Allocator.Reset();
+        }
+
+        for (auto& Allocator : m_StagedDescriptors)
+        {
+            Allocator.Reset();
+        }
     }
 
     void FrameResource::SafeRelease(
