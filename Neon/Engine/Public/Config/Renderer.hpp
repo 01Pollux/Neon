@@ -1,39 +1,20 @@
 #pragma once
 
-#include <Math/Size2.hpp>
-#include <Core/String.hpp>
+#include <RHI/DeviceConfig.hpp>
+#include <RHI/SwapchainConfig.hpp>
 
 namespace Neon::Config
 {
     struct RendererConfig
     {
-        struct
-        {
-            /// <summary>
-            /// The numerator of the refresh rate.
-            /// </summary>
-            uint16_t Numerator = 0;
-            /// <summary>
-            /// The denominator of the refresh rate.
-            /// </summary>
-            uint16_t Denominator = 0;
-        } RefreshRate;
-
-        struct
-        {
-            /// <summary>
-            /// The number of multisamples per pixel.
-            /// </summary>
-            uint16_t Count = 1;
-            /// <summary>
-            /// The image quality level. The higher the quality, the lower the performance.
-            /// </summary>
-            uint16_t Quality = 0;
-        } Sample;
+        /// <summary>
+        /// The device creation descriptor.
+        /// </summary>
+        RHI::DeviceCreateDesc Device;
 
         /// <summary>
-        /// The number of frames in flight.
+        /// The swapchain creation descriptor.
         /// </summary>
-        uint32_t FramesInFlight = 3;
+        RHI::SwapchainCreateDesc Swapchain;
     };
 } // namespace Neon::Config

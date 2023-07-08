@@ -34,10 +34,11 @@ namespace Neon::RHI
     //
 
     Dx12Swapchain::Dx12Swapchain(
+        Windowing::IWindowApp*     Window,
         const SwapchainCreateDesc& Desc) :
-        m_WindowApp(Desc.Window),
+        m_WindowApp(Window),
         m_BackbufferFormat(Desc.BackbufferFormat),
-        m_Size(Desc.Window->GetSize().get())
+        m_Size(m_WindowApp->GetSize().get())
     {
         m_FrameManager = std::make_unique<FrameManager>();
         CreateSwapchain(Desc);
@@ -136,23 +137,19 @@ namespace Neon::RHI
     void Dx12Swapchain::CreateSwapchain(
         const SwapchainCreateDesc& Desc)
     {
-        auto WindowSizeFuture = Desc.Window->GetSize();
-
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
 
         Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
 
         auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
 
-        auto WindowSize = WindowSizeFuture.get();
-
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
             Win32::ComPtr<IDXGISwapChain1> Swapchain;
 
             DXGI_SWAP_CHAIN_DESC1 SwapchainDesc{
-                .Width      = UINT(WindowSize.Width()),
-                .Height     = UINT(WindowSize.Height()),
+                .Width      = UINT(m_Size.Width()),
+                .Height     = UINT(m_Size.Height()),
                 .Format     = CastFormat(m_BackbufferFormat),
                 .SampleDesc = {
                     .Count   = Desc.Sample.Count,
@@ -174,7 +171,7 @@ namespace Neon::RHI
 
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
                 GraphicsQueue,
-                HWND(Desc.Window->GetPlatformHandle()),
+                HWND(m_WindowApp->GetPlatformHandle()),
                 &SwapchainDesc,
                 &FullscreenDesc,
                 nullptr,
@@ -188,8 +185,8 @@ namespace Neon::RHI
 
             DXGI_SWAP_CHAIN_DESC SCDesc{
                 .BufferDesc = {
-                    .Width       = UINT(WindowSize.Width()),
-                    .Height      = UINT(WindowSize.Height()),
+                    .Width       = UINT(m_Size.Width()),
+                    .Height      = UINT(m_Size.Height()),
                     .RefreshRate = {
                         .Numerator   = Desc.RefreshRate.Numerator,
                         .Denominator = Desc.RefreshRate.Denominator,
@@ -201,7 +198,7 @@ namespace Neon::RHI
                 },
                 .BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount  = Desc.FramesInFlight,
-                .OutputWindow = HWND(Desc.Window->GetPlatformHandle()),
+                .OutputWindow = HWND(m_WindowApp->GetPlatformHandle()),
                 .Windowed     = TRUE,
                 .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD,
                 .Flags        = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT

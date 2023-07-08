@@ -18,6 +18,7 @@ namespace Neon::RHI
 
     public:
         Dx12Swapchain(
+            Windowing::IWindowApp*     Window,
             const SwapchainCreateDesc& Desc);
 
         void PrepareFrame() override;

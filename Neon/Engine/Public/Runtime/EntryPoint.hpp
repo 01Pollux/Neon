@@ -57,8 +57,8 @@ namespace Neon::Runtime
     int RunEngine(
         const Config::EngineConfig& Config)
     {
-        Utils::SingletonRtti<_Ty> Engine;
-        Engine->Initialize(Config);
-        return Engine->Run();
+        _Ty Engine{};
+        Engine.Initialize(Config);
+        return Engine.Run();
     }
 } // namespace Neon::Runtime

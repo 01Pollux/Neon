@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <Utils/Singleton.hpp>
 #include <RHI/Resource/Descriptor.hpp>
 
 namespace Neon::RHI

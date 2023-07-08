@@ -38,16 +38,8 @@ namespace Neon::Runtime
 
         // Create the render device and swapchain
 
-        auto& GraphicsConfig = Config.Renderer;
-
-        RHI::DeviceCreateDesc    DeviceDesc{};
-        RHI::SwapchainCreateDesc SwapchainDesc{
-            .Window         = m_Window.get(),
-            .RefreshRate    = { GraphicsConfig.RefreshRate.Numerator, GraphicsConfig.RefreshRate.Denominator },
-            .Sample         = { GraphicsConfig.Sample.Count, GraphicsConfig.Sample.Quality },
-            .FramesInFlight = GraphicsConfig.FramesInFlight,
-        };
-        RHI::IRenderDevice::Create(DeviceDesc, SwapchainDesc);
+        auto& RendererConfig = Config.Renderer;
+        RHI::IRenderDevice::Create(m_Window.get(), RendererConfig.Device, RendererConfig.Swapchain);
     }
 
     EngineWindow::~EngineWindow()

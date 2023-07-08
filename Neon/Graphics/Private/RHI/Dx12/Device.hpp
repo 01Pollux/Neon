@@ -25,6 +25,7 @@ namespace Neon::RHI
         /// Initialize render device.
         /// </summary>
         void PostInitialize(
+            Windowing::IWindowApp*     Window,
             const SwapchainCreateDesc& Swapchain);
 
         /// <summary>

@@ -1,14 +1,14 @@
 #pragma once
 
 #include <Math/Size2.hpp>
+#include <RHI/SwapchainConfig.hpp>
 #include <RHI/Commands/Common.hpp>
-#include <RHI/Resource/Descriptor.hpp>
 #include <future>
 
 namespace Neon::Windowing
 {
     class IWindowApp;
-}
+} // namespace Neon::Windowing
 
 namespace Neon::RHI
 {
@@ -16,25 +16,6 @@ namespace Neon::RHI
     class ICommandQueue;
     class IFence;
     class ICopyCommandList;
-
-    struct SwapchainCreateDesc
-    {
-        Windowing::IWindowApp* Window;
-        struct
-        {
-            uint16_t Numerator   = 0;
-            uint16_t Denominator = 0;
-        } RefreshRate;
-        struct
-        {
-            uint16_t Count   = 1;
-            uint16_t Quality = 0;
-        } Sample;
-
-        uint32_t        FramesInFlight   = 3;
-        EResourceFormat BackbufferFormat = EResourceFormat::R8G8B8A8_UNorm;
-        // TODO: Add more swapchain settings. such as format, vsync, etc.
-    };
 
     class ISwapchain
     {

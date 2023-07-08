@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Config/Engine.hpp>
-#include <Utils/Singleton.hpp>
 
 #include <Runtime/Interface.hpp>
 #include <Runtime/Window.hpp>
@@ -19,16 +18,20 @@ namespace Neon
 
 namespace Neon::Runtime
 {
-    class DefaultGameEngine : public InterfaceContainer,
-                              public Utils::Singleton<DefaultGameEngine>
+    class DefaultGameEngine : public InterfaceContainer
     {
     public:
-        DefaultGameEngine() = default;
+        DefaultGameEngine();
 
         NEON_CLASS_NO_COPY(DefaultGameEngine);
         NEON_CLASS_MOVE(DefaultGameEngine);
 
-        virtual ~DefaultGameEngine() = default;
+        virtual ~DefaultGameEngine();
+
+        /// <summary>
+        /// Get the singleton instance of the engine.
+        /// </summary>
+        static DefaultGameEngine* Get();
 
         /// <summary>
         /// Called when the engine is initialized.

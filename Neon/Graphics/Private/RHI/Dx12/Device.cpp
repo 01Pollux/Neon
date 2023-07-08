@@ -18,20 +18,21 @@ extern "C"
     __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
 }
 
-#define GPU_BASED_VALIDATION false
+#define GPU_BASED_VALIDATION true
 
 namespace Neon::RHI
 {
     static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
 
     void IRenderDevice::Create(
+        Windowing::IWindowApp*     Window,
         const DeviceCreateDesc&    DeviceDesc,
         const SwapchainCreateDesc& SwapchainDesc)
     {
         NEON_ASSERT(!s_RenderDevice);
         s_DescriptorSize = DeviceDesc.Descriptors;
         s_RenderDevice.reset(NEON_NEW Dx12RenderDevice);
-        s_RenderDevice->PostInitialize(SwapchainDesc);
+        s_RenderDevice->PostInitialize(Window, SwapchainDesc);
     }
 
     IRenderDevice* IRenderDevice::Get()
@@ -107,10 +108,11 @@ namespace Neon::RHI
     //
 
     void Dx12RenderDevice::PostInitialize(
+        Windowing::IWindowApp*     Window,
         const SwapchainCreateDesc& SwapchainDesc)
     {
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
-        m_Swapchain.reset(NEON_NEW Dx12Swapchain(SwapchainDesc));
+        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
         m_Swapchain->PostInitialize(SwapchainDesc);
     }
 

@@ -12,13 +12,28 @@
 
 namespace Neon::Runtime
 {
+    static DefaultGameEngine* s_GameEngine = nullptr;
+
+    DefaultGameEngine::DefaultGameEngine()
+    {
+        NEON_ASSERT(!s_GameEngine);
+        s_GameEngine = this;
+    }
+
+    DefaultGameEngine::~DefaultGameEngine()
+    {
+        NEON_ASSERT(s_GameEngine);
+        s_GameEngine = nullptr;
+    }
+
+    DefaultGameEngine* DefaultGameEngine::Get()
+    {
+        return s_GameEngine;
+    }
+
     void DefaultGameEngine::Initialize(
         const Config::EngineConfig& Config)
     {
-        m_Window.reset(NEON_NEW EngineWindow(Config));
-
-        //
-
         const auto LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
 
         auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
@@ -35,6 +50,8 @@ namespace Neon::Runtime
         LoadPacks(Config);
 
         //
+
+        m_Window.reset(NEON_NEW EngineWindow(Config));
 
         RegisterInterface<EngineRuntime, EngineWorldRuntime>();
     }

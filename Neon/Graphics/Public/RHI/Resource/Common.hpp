@@ -5,6 +5,7 @@
 #include <Math/Colors.hpp>
 #include <optional>
 #include <variant>
+#include <vector>
 
 namespace Neon::RHI
 {
