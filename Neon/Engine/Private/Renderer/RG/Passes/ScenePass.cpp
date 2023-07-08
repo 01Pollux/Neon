@@ -7,7 +7,7 @@
 #include <Scene/Scene.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
-#include <Renderer/Material/Builder.hpp>
+#include <Scene/Relation/Material.hpp>
 
 //
 
@@ -24,49 +24,34 @@ namespace Neon::RG
     using namespace Scene;
     using namespace Renderer;
 
+    struct DummyInstance
+    {
+        IMaterialInstance* Instance;
+    };
+
     ScenePass::ScenePass(
-        const GraphStorage&                   Storage,
-        const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary,
-        GameScene&                            Scene) :
+        const GraphStorage& Storage,
+        GameScene&          Scene) :
         IRenderPass(PassQueueType::Direct),
         m_Scene(Scene)
     {
-        m_SpriteQuery = m_Scene->query_builder<
-                                   Component::Transform,
-                                   Component::Sprite>()
-                            .build();
+        m_SpriteQuery =
+            m_Scene->query_builder<
+                       Component::Transform,
+                       Component::Sprite>()
+                .order_by(
+                    +[](flecs::entity_t          Lhs,
+                        const Component::Sprite* LhsSprite,
+                        flecs::entity_t          Rhs,
+                        const Component::Sprite* RhsSprite) -> int
+                    {
+                        return int(LhsSprite->MaterialInstance.get() - RhsSprite->MaterialInstance.get());
+                    })
+                .build();
 
         //
 
-        RenderMaterialBuilder Builder;
-
-        Builder.ShaderLibrary(ShaderLibrary)
-            .VertexShader(Asset::ShaderModuleId(0))
-            .PixelShader(Asset::ShaderModuleId(0))
-            .Rasterizer(MaterialStates::Rasterizer::CullNone)
-            .DepthStencil(MaterialStates::DepthStencil::None)
-            .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
-            .Topology(RHI::PrimitiveTopology::TriangleList);
-
-        {
-            auto& VarMap = Builder.VarMap();
-
-            VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
-                .Visibility(RHI::ShaderVisibility::Pixel)
-                .Flags(EMaterialVarFlags::Shared, true);
-
-            for (uint32_t i : ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
-            {
-                auto Name = StringUtils::Format("StaticSampler_{}", i);
-                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialStates::Sampler(i));
-            }
-        }
-
-        auto Mat = IMaterial::Create(Builder);
-
-        m_SpriteBatch.reset(
-            NEON_NEW SpriteBatch(
-                std::move(Mat)));
+        m_SpriteBatch.reset(NEON_NEW SpriteBatch);
     }
 
     void ScenePass::ResolveShaders(
@@ -106,18 +91,31 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
-            m_SpriteBatch->Begin(RenderCommandList);
-            m_SpriteQuery.each(
-                [this](const Component::Transform& Transform, const Component::Sprite& Sprite)
-                {
-                    m_SpriteBatch->Draw(
-                        Renderer::SpriteBatch::QuadCommand{
-                            .Position = Transform.World.GetPosition(),
-                            .Size     = Sprite.Size,
-                            .Color    = Sprite.ModulationColor }
+            std::map<IMaterialInstance*, std::vector<flecs::entity>> InstancedSprites;
 
-                    );
+            m_SpriteQuery.each(
+                [this, &InstancedSprites](
+                    flecs::entity         Entity,
+                    Component::Transform& Transform,
+                    Component::Sprite&    Sprite)
+                {
+                    InstancedSprites[Sprite.MaterialInstance.get()].emplace_back(Entity);
                 });
+
+            m_SpriteBatch->Begin(RenderCommandList);
+            for (auto& [Instance, Entities] : InstancedSprites)
+            {
+                for (flecs::entity Entity : Entities)
+                {
+                    auto Sprite = Entity.get<Component::Sprite>();
+                    m_SpriteBatch->Draw(
+                        SpriteBatch::QuadCommand{
+                            .Position         = Entity.get<Component::Transform>()->World.GetPosition(),
+                            .Size             = Sprite->Size,
+                            .Color            = Sprite->ModulationColor,
+                            .MaterialInstance = Instance });
+                }
+            }
             m_SpriteBatch->End();
         }
     }

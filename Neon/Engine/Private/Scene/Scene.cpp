@@ -14,6 +14,7 @@ namespace Neon::Scene
         }
 
         Exports::RegisterComponents(*m_World);
+        Exports::RegisterRelations(*m_World);
 
 #if NEON_DEBUG
         m_World->set<flecs::Rest>({});

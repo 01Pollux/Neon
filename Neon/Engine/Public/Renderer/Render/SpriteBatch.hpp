@@ -16,6 +16,10 @@ namespace Neon
         class IPipelineState;
         class IGraphicsCommandList;
     } // namespace RHI
+    namespace Renderer
+    {
+        class IMaterialInstance;
+    }
 } // namespace Neon
 
 namespace Neon::Renderer
@@ -31,13 +35,12 @@ namespace Neon::Renderer
             float   Depth    = 0.f;
             Color4  Color    = Colors::White;
 
-            Ptr<RHI::ITexture> Texture;
+            IMaterialInstance* MaterialInstance;
             RectF              TexCoord = RectF(Vec::Zero<Vector2>, Vec::One<Vector2>);
         };
 
     public:
-        SpriteBatch(
-            Ptr<IMaterial> SpriteMaterial);
+        SpriteBatch();
 
         /// <summary>
         /// Begins drawing.
@@ -63,12 +66,7 @@ namespace Neon::Renderer
         void CreateBuffers();
 
     private:
-        Ptr<IMaterial> m_SpriteMaterial;
-
         RHI::IGraphicsCommandList* m_CommandList = nullptr;
-
-        RHI::Views::ShaderResource m_ResourceView;
-        RHI::Views::Generic        m_SamplerView;
 
         UPtr<RHI::IUploadBuffer> m_VertexBuffer;
         UPtr<RHI::IUploadBuffer> m_IndexBuffer;
@@ -77,6 +75,7 @@ namespace Neon::Renderer
 
         uint32_t m_VerticesCount = 0;
         uint32_t m_DrawCount     = 0;
-        uint32_t m_TextureCount  = 0;
+
+        std::vector<Renderer::IMaterialInstance*> m_MaterialInstances;
     };
 } // namespace Neon::Renderer

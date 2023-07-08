@@ -16,9 +16,8 @@ namespace Neon::RG
     {
     public:
         ScenePass(
-            const GraphStorage&                   Storage,
-            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary,
-            Scene::GameScene&                     Scene);
+            const GraphStorage& Storage,
+            Scene::GameScene&   Scene);
 
         void ResolveShaders(
             ShaderResolver& Resolver) override;

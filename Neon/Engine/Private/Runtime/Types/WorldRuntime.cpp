@@ -7,18 +7,20 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Pipeline.hpp>
 
+#include <Renderer/RG/RG.hpp>
+#include <Renderer/RG/Passes/ScenePass.hpp>
+
 #include <Window/Window.hpp>
 #include <RHI/Swapchain.hpp>
 
 //
 
-#include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Passes/ScenePass.hpp>
-
 //
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
+#include <Scene/Relation/Material.hpp>
+#include <Renderer/Material/Builder.hpp>
 
 namespace Neon::Runtime
 {
@@ -96,7 +98,46 @@ namespace Neon::Runtime
 
         Engine->SetPipeline(std::move(Pipeline));
 
-        SetupRenderPasses(ShaderLib);
+        SetupRenderPasses();
+
+        //
+
+        using namespace Renderer;
+
+        RenderMaterialBuilder MatBuilder;
+
+        MatBuilder.ShaderLibrary(ShaderLib)
+            .VertexShader(Asset::ShaderModuleId(0))
+            .PixelShader(Asset::ShaderModuleId(0))
+            .Rasterizer(MaterialStates::Rasterizer::CullNone)
+            .DepthStencil(MaterialStates::DepthStencil::None)
+            .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
+            .Topology(RHI::PrimitiveTopology::TriangleList);
+
+        {
+            auto& VarMap = MatBuilder.VarMap();
+
+            VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
+                .Visibility(RHI::ShaderVisibility::Pixel)
+                .Flags(EMaterialVarFlags::Shared, true);
+
+            for (uint32_t i : std::ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
+            {
+                auto Name = StringUtils::Format("StaticSampler_{}", i);
+                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialStates::Sampler(i));
+            }
+        }
+
+        auto Material = IMaterial::Create(MatBuilder);
+
+        //
+
+        Ptr<IMaterialInstance> RandomInstances[]{
+            Material->CreateInstance(),
+            Material->CreateInstance(),
+            Material->CreateInstance(),
+            Material->CreateInstance()
+        };
 
         //
 
@@ -119,8 +160,11 @@ namespace Neon::Runtime
                     Color4(0.0f, 1.0f, 0.3f, 1.0f) * (1.f - x) * (1.f - y) +
                     Color4(0.2f, 0.1f, 1.0f, 1.0f) * x * y;
 
-                SpriteComponent.Size = Size2(Size, Size);
+                SpriteComponent.Size             = Size2(Size, Size);
+                SpriteComponent.MaterialInstance = RandomInstances[std::rand() % std::size(RandomInstances)];
+
                 Sprite.set(SpriteComponent);
+                // Sprite.set<Scene::Relation::GroupByMaterialInstance, Scene::Relation::GroupByMaterialInstance::Value>({ SpriteComponent.MaterialInstance.get() });
             }
         }
     }
@@ -135,12 +179,11 @@ namespace Neon::Runtime
         return m_Scene;
     }
 
-    void EngineWorldRuntime::SetupRenderPasses(
-        const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary)
+    void EngineWorldRuntime::SetupRenderPasses()
     {
         auto Builder = m_RenderGraph.Reset();
 
-        Builder.AppendPass<RG::ScenePass>(m_RenderGraph.GetStorage(), ShaderLibrary, m_Scene);
+        Builder.AppendPass<RG::ScenePass>(m_RenderGraph.GetStorage(), m_Scene);
 
         Builder.Build();
     }

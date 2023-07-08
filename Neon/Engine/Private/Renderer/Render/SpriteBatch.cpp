@@ -28,7 +28,7 @@ namespace Neon::Renderer
         {
             Vector3 Position;
             Vector2 TexCoord;
-            int32_t TexIndex;
+            int32_t MaterialIndex;
             Color4  Color;
         };
 
@@ -56,9 +56,7 @@ namespace Neon::Renderer
         }
     } // namespace SpriteBatchConstants
 
-    SpriteBatch::SpriteBatch(
-        Ptr<IMaterial> SpriteMaterial) :
-        m_SpriteMaterial(SpriteMaterial)
+    SpriteBatch::SpriteBatch()
     {
         CreateBuffers();
     }
@@ -70,14 +68,9 @@ namespace Neon::Renderer
     {
         m_CommandList = CommandList;
 
-        m_SpriteMaterial->Bind(CommandList);
-
-        auto& Instance = m_SpriteMaterial->GetDefaultInstance();
-        m_CommandList->SetPrimitiveTopology(Instance->GetTopology());
-
         m_DrawCount     = 0;
         m_VerticesCount = 0;
-        m_TextureCount  = 0;
+        m_MaterialInstances.clear();
     }
 
     void SpriteBatch::Draw(
@@ -88,14 +81,6 @@ namespace Neon::Renderer
             auto CommandList = m_CommandList;
             End();
             Begin(CommandList);
-        }
-
-        if (Quad.Texture)
-        {
-            m_ResourceView.Bind(
-                Quad.Texture.get(),
-                nullptr,
-                m_TextureCount++);
         }
 
         Vector2 TexCoords[]{
@@ -113,22 +98,30 @@ namespace Neon::Renderer
             Quad.Position + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
         };
 
+        int MaterialIndex = -1;
+        if (Quad.MaterialInstance)
+        {
+            for (MaterialIndex = 0; MaterialIndex < int(m_MaterialInstances.size()); MaterialIndex++)
+            {
+                if (m_MaterialInstances[MaterialIndex] == Quad.MaterialInstance)
+                {
+                    break;
+                }
+            }
+            if (MaterialIndex == int(m_MaterialInstances.size()))
+            {
+                m_MaterialInstances.push_back(Quad.MaterialInstance);
+            }
+        }
+
         for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i, ++m_VerticesCount)
         {
             auto Buffer = std::bit_cast<SpriteBatchConstants::Layout*>(m_VertexBufferPtr) + m_VerticesCount;
 
-            Buffer->Position = QuadPositions[i];
-            Buffer->TexCoord = TexCoords[i];
-            Buffer->Color    = Quad.Color;
-
-            if (Quad.Texture)
-            {
-                Buffer->TexIndex = m_TextureCount - 1;
-            }
-            else
-            {
-                Buffer->TexIndex = -1;
-            }
+            Buffer->Position      = QuadPositions[i];
+            Buffer->TexCoord      = TexCoords[i];
+            Buffer->Color         = Quad.Color;
+            Buffer->MaterialIndex = MaterialIndex;
         }
 
         m_DrawCount++;
@@ -138,13 +131,16 @@ namespace Neon::Renderer
 
     void SpriteBatch::End()
     {
-        if (m_TextureCount > 0)
+        if (m_DrawCount == 0)
         {
-            m_ResourceView = m_CommandList->GetResourceView();
-            m_SamplerView  = m_CommandList->GetSamplerView();
-
-            m_CommandList->SetDescriptorTable(0, m_ResourceView.GetGpuHandle());
+            return;
         }
+
+        //
+
+        // Copy descriptors for materials into the command list
+
+        //
 
         RHI::Views::Vertex VertexView;
         VertexView.Append(

@@ -30,8 +30,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Import the render graph.
         /// </summary>
-        void SetupRenderPasses(
-            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary);
+        void SetupRenderPasses();
 
     private:
         Scene::GameScene m_Scene;
