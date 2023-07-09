@@ -58,7 +58,6 @@ namespace Neon::RHI
                                 auto& [Task, Promise] = m_Queue.front();
                                 Task(&CopyCommandList);
                                 m_Queue.pop();
-                                printf("Executing copy %llu\n", m_CopyId);
                             }
                         }
                         catch (const std::exception& Exception)

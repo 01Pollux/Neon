@@ -140,8 +140,7 @@ namespace Neon::Renderer
 
         // TODO: bind shared descriptor
 
-        auto MasterMaterial = m_MaterialInstances[0]->GetParentMaterial();
-        MasterMaterial->Bind(m_CommandList);
+        m_MaterialInstances[0]->Bind(m_CommandList);
 
         auto ResourceTable = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView),
              SamplerTable  = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::Sampler);
@@ -154,7 +153,7 @@ namespace Neon::Renderer
         RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
         for (auto Instance : m_MaterialInstances)
         {
-            Instance->GetDescriptor(&ResourceDescriptor, &SamplerDescriptor);
+            Instance->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
 
             if (ResourceDescriptor.Size)
             {

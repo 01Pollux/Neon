@@ -131,11 +131,12 @@ namespace Neon::Runtime
 
         //
 
-        Ptr<IMaterialInstance> RandomInstances[]{
+        Ptr<IMaterial> RandomInstances[]{
             Material->CreateInstance(),
             Material->CreateInstance(),
             Material->CreateInstance(),
-            Material->CreateInstance()
+            Material->CreateInstance(),
+            Material
         };
 
         Ptr<RHI::ITexture> RandomTextures[]{

@@ -2,7 +2,7 @@
 
 namespace Neon::Renderer
 {
-    class IMaterialInstance;
+    class IMaterial;
 } // namespace Neon::Renderer
 
 namespace Neon::Scene::Relation
@@ -11,7 +11,7 @@ namespace Neon::Scene::Relation
     {
         struct Value
         {
-            Renderer::IMaterialInstance* MaterialInstance = nullptr;
+            Renderer::IMaterial* MaterialInstance = nullptr;
         };
     };
 } // namespace Neon::Scene::Relation

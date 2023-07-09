@@ -18,7 +18,7 @@ namespace Neon
     } // namespace RHI
     namespace Renderer
     {
-        class IMaterialInstance;
+        class IMaterial;
     }
 } // namespace Neon
 
@@ -35,8 +35,8 @@ namespace Neon::Renderer
             float   Depth    = 0.f;
             Color4  Color    = Colors::White;
 
-            IMaterialInstance* MaterialInstance;
-            RectF              TexCoord = RectF(Vec::Zero<Vector2>, Vec::One<Vector2>);
+            IMaterial* MaterialInstance;
+            RectF      TexCoord = RectF(Vec::Zero<Vector2>, Vec::One<Vector2>);
         };
 
     public:
@@ -76,6 +76,6 @@ namespace Neon::Renderer
         uint32_t m_VerticesCount = 0;
         uint32_t m_DrawCount     = 0;
 
-        std::vector<Renderer::IMaterialInstance*> m_MaterialInstances;
+        std::vector<Renderer::IMaterial*> m_MaterialInstances;
     };
 } // namespace Neon::Renderer

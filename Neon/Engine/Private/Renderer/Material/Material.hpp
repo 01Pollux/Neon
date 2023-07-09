@@ -23,9 +23,7 @@ namespace Neon::Renderer
         template<bool _Compute>
         friend void Material_CreateDescriptors(
             const GenericMaterialBuilder<_Compute>& Builder,
-            Material*                               Mat,
-            uint32_t&                               LocaResourceDescriptorSize,
-            uint32_t&                               LocaSamplerDescriptorSize);
+            Material*                               Mat);
 
         template<bool _Compute>
         friend void Material_CreatePipelineState(
@@ -34,32 +32,45 @@ namespace Neon::Renderer
 
     public:
         Material(
-            const GenericMaterialBuilder<true>& Builder,
-            uint32_t&                           LocalResourceDescriptorSize,
-            uint32_t&                           LocalSamplerDescriptorSize);
+            const GenericMaterialBuilder<true>& Builder);
 
         Material(
-            const GenericMaterialBuilder<false>& Builder,
-            uint32_t&                            LocalResourceDescriptorSize,
-            uint32_t&                            LocalSamplerDescriptorSize);
+            const GenericMaterialBuilder<false>& Builder);
+
+        Material(
+            Material* Other);
 
         NEON_CLASS_NO_COPYMOVE(Material);
 
-        ~Material() override;
+        ~Material() override = default;
 
-        Ptr<IMaterialInstance> CreateInstance() override;
-
-        const Ptr<IMaterialInstance>& GetDefaultInstance() override;
+        Ptr<IMaterial> CreateInstance() override;
 
         void Bind(
             RHI::IGraphicsCommandList* CommandList) override;
 
+        void GetDescriptor(
+            bool                       Local,
+            RHI::DescriptorHeapHandle* OutResourceDescriptor,
+            RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
+
+        const Ptr<RHI::IRootSignature>& GetRootSignature() const override;
+
+        const Ptr<RHI::IPipelineState>& GetPipelineState() const override;
+
     public:
+        void SetResource(
+            const std::string&             Name,
+            const Ptr<RHI::IGpuResource>   Resource,
+            const RHI::DescriptorViewDesc& Desc,
+            size_t                         ArrayIndex) override;
+
+    private:
         /// <summary>
         /// Create a default material instance.
         /// </summary>
-        void CreateDefaultInstance(
-            uint32_t LocalResourceDescriptorSize,
+        void CreateSharedDescriptor(
+            uint32_t Shared,
             uint32_t LocalSamplerDescriptorSize);
 
     private:
@@ -95,50 +106,33 @@ namespace Neon::Renderer
             bool         IsShared;
         };
 
-    private:
-        RHI::ISwapchain* m_Swapchain;
+        using LayoutEntryMap = std::map<StringU8, LayoutEntry>;
 
+    private:
+        struct UnqiueDescriptorHeapHandle
+        {
+            DescriptorHeapHandle ResourceDescriptors, SamplerDescriptors;
+
+            UnqiueDescriptorHeapHandle() = default;
+            UnqiueDescriptorHeapHandle(
+                uint32_t ResourceDescriptorSize,
+                uint32_t SamplerDescriptorSize);
+
+            NEON_CLASS_NO_COPY(UnqiueDescriptorHeapHandle);
+
+            UnqiueDescriptorHeapHandle(UnqiueDescriptorHeapHandle&& Other);
+            UnqiueDescriptorHeapHandle& operator=(UnqiueDescriptorHeapHandle&& Other);
+
+            ~UnqiueDescriptorHeapHandle();
+        };
+
+    private:
         Ptr<RHI::IRootSignature> m_RootSignature;
         Ptr<RHI::IPipelineState> m_PipelineState;
 
-        DescriptorHeapHandle
-            m_SharedResourceDescriptor,
-            m_SharedSamplerDescriptor;
+        Ptr<UnqiueDescriptorHeapHandle> m_SharedDescriptors;
+        UnqiueDescriptorHeapHandle      m_LocalDescriptors;
 
-        Ptr<IMaterialInstance>          m_DefaultInstance;
-        std::map<StringU8, LayoutEntry> m_EntryMap;
-    };
-
-    class MaterialInstance final : public IMaterialInstance
-    {
-        friend class Material;
-        using DescriptorHeapHandle = RHI::DescriptorHeapHandle;
-
-    public:
-        MaterialInstance(
-            Ptr<IMaterial> Mat,
-            uint32_t       LocaResourceDescriptorSize,
-            uint32_t       LocaSamplerDescriptorSize);
-
-        NEON_CLASS_NO_COPYMOVE(MaterialInstance);
-
-        ~MaterialInstance() override;
-
-        [[nodiscard]] Ptr<IMaterialInstance> CreateInstance() override;
-
-        void GetDescriptor(
-            RHI::DescriptorHeapHandle* OutResourceDescriptor,
-            RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
-
-        void SetResource(
-            const std::string&             Name,
-            const Ptr<RHI::IGpuResource>   Resource,
-            const RHI::DescriptorViewDesc& Desc,
-            size_t                         ArrayIndex) override;
-
-    private:
-        DescriptorHeapHandle
-            m_ResourceDescriptor,
-            m_SamplerDescriptor;
+        Ptr<LayoutEntryMap> m_EntryMap;
     };
 } // namespace Neon::Renderer

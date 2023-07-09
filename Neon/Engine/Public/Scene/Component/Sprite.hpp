@@ -9,6 +9,6 @@ namespace Neon::Scene::Component
     {
         NEON_EXPORT_COMPONENT();
 
-        Ptr<Renderer::IMaterialInstance> MaterialInstance;
+        Ptr<Renderer::IMaterial> MaterialInstance;
     };
 } // namespace Neon::Scene::Component

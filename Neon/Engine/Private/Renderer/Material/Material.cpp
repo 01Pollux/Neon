@@ -26,23 +26,13 @@ namespace Neon::Renderer
     Ptr<IMaterial> IMaterial::Create(
         const GenericMaterialBuilder<false>& Builder)
     {
-        uint32_t LocalResourceDescriptorSize = 0,
-                 LocalSamplerDescriptorSize  = 0;
-
-        Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
-        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
-        return Mat;
+        return Ptr<Material>{ NEON_NEW Material(Builder) };
     }
 
     Ptr<IMaterial> IMaterial::Create(
         const GenericMaterialBuilder<true>& Builder)
     {
-        uint32_t LocalResourceDescriptorSize = 0,
-                 LocalSamplerDescriptorSize  = 0;
-
-        Ptr<Material> Mat{ NEON_NEW Material(Builder, LocalResourceDescriptorSize, LocalSamplerDescriptorSize) };
-        Mat->CreateDefaultInstance(LocalResourceDescriptorSize, LocalSamplerDescriptorSize);
-        return Mat;
+        return Ptr<Material>{ NEON_NEW Material(Builder) };
     }
 
     //
@@ -62,9 +52,7 @@ namespace Neon::Renderer
     template<bool _Compute>
     void Material_CreateDescriptors(
         const GenericMaterialBuilder<_Compute>& Builder,
-        Material*                               Mat,
-        uint32_t&                               LocaResourceDescriptorSize,
-        uint32_t&                               LocaSamplerDescriptorSize)
+        Material*                               Mat)
     {
         RHI::RootSignatureBuilder RootSigBuilder;
 
@@ -133,7 +121,7 @@ namespace Neon::Renderer
 
                     const uint32_t EntrySize = IsShared ? View.ArraySize() : Material::UnboundedTableSize;
 
-                    auto& LayoutEntry    = Mat->m_EntryMap[View.Name()];
+                    auto& LayoutEntry    = (*Mat->m_EntryMap)[View.Name()];
                     LayoutEntry.Entry    = std::move(DescriptorEntry);
                     LayoutEntry.IsShared = IsShared;
 
@@ -228,11 +216,8 @@ namespace Neon::Renderer
 
         //
 
-        CreateDescriptorIfNeeded(Mat->m_SharedResourceDescriptor, RHI::DescriptorType::ResourceView, TableSharedResourceCount);
-        CreateDescriptorIfNeeded(Mat->m_SharedSamplerDescriptor, RHI::DescriptorType::Sampler, TableSharedSamplerCount);
-
-        LocaResourceDescriptorSize = TableResourceCount;
-        LocaSamplerDescriptorSize  = TableSamplerCount;
+        Mat->m_SharedDescriptors = std::make_shared<Material::UnqiueDescriptorHeapHandle>(TableSharedResourceCount, TableSharedSamplerCount);
+        Mat->m_LocalDescriptors  = Material::UnqiueDescriptorHeapHandle(TableResourceCount, TableSamplerCount);
     }
 
     //
@@ -318,15 +303,12 @@ namespace Neon::Renderer
     //
 
     Material::Material(
-        const RenderMaterialBuilder& Builder,
-        uint32_t&                    LocalResourceDescriptorSize,
-        uint32_t&                    LocalSamplerDescriptorSize)
+        const RenderMaterialBuilder& Builder) :
+        m_EntryMap(std::make_shared<LayoutEntryMap>())
     {
         Material_CreateDescriptors(
             Builder,
-            this,
-            LocalResourceDescriptorSize,
-            LocalSamplerDescriptorSize);
+            this);
 
         Material_CreatePipelineState(
             Builder,
@@ -334,43 +316,31 @@ namespace Neon::Renderer
     }
 
     Material::Material(
-        const ComputeMaterialBuilder& Builder,
-        uint32_t&                     LocalResourceDescriptorSize,
-        uint32_t&                     LocalSamplerDescriptorSize)
+        const ComputeMaterialBuilder& Builder) :
+        m_EntryMap(std::make_shared<LayoutEntryMap>())
     {
         Material_CreateDescriptors(
             Builder,
-            this,
-            LocalResourceDescriptorSize,
-            LocalSamplerDescriptorSize);
+            this);
 
         Material_CreatePipelineState(
             Builder,
             this);
     }
 
-    Material::~Material()
+    Material::Material(
+        Material* Other) :
+        m_RootSignature(Other->m_RootSignature),
+        m_PipelineState(Other->m_PipelineState),
+        m_SharedDescriptors(Other->m_SharedDescriptors),
+        m_LocalDescriptors(Other->m_LocalDescriptors.ResourceDescriptors.Size, Other->m_LocalDescriptors.SamplerDescriptors.Size),
+        m_EntryMap(Other->m_EntryMap)
     {
-        if (m_SharedResourceDescriptor)
-        {
-            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-            Allocator->Free(m_SharedResourceDescriptor);
-        }
-        if (m_SharedSamplerDescriptor)
-        {
-            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
-            Allocator->Free(m_SharedSamplerDescriptor);
-        }
     }
 
-    Ptr<IMaterialInstance> Material::CreateInstance()
+    Ptr<IMaterial> Material::CreateInstance()
     {
-        return m_DefaultInstance->CreateInstance();
-    }
-
-    const Ptr<IMaterialInstance>& Material::GetDefaultInstance()
-    {
-        return m_DefaultInstance;
+        return Ptr<IMaterial>(NEON_NEW Material(this));
     }
 
     void Material::Bind(
@@ -380,80 +350,43 @@ namespace Neon::Renderer
         CommandList->SetPipelineState(m_PipelineState);
     }
 
-    void Material::CreateDefaultInstance(
-        uint32_t LocalResourceDescriptorSize,
-        uint32_t LocalSamplerDescriptorSize)
-    {
-        NEON_ASSERT(!m_DefaultInstance);
-        m_DefaultInstance.reset(NEON_NEW MaterialInstance(
-            shared_from_this(),
-            LocalResourceDescriptorSize,
-            LocalSamplerDescriptorSize));
-    }
-
     //
 
-    MaterialInstance::MaterialInstance(
-        Ptr<IMaterial> Mat,
-        uint32_t       LocaResourceDescriptorSize,
-        uint32_t       LocaSamplerDescriptorSize)
-    {
-        m_ParentMaterial = std::move(Mat);
-
-        CreateDescriptorIfNeeded(m_ResourceDescriptor, RHI::DescriptorType::ResourceView, LocaResourceDescriptorSize);
-        CreateDescriptorIfNeeded(m_SamplerDescriptor, RHI::DescriptorType::Sampler, LocaSamplerDescriptorSize);
-    }
-
-    Ptr<IMaterialInstance> MaterialInstance::CreateInstance()
-    {
-        return Ptr<IMaterialInstance>(NEON_NEW MaterialInstance(
-            GetParentMaterial(),
-            m_ResourceDescriptor.Size,
-            m_SamplerDescriptor.Size));
-    }
-
-    MaterialInstance::~MaterialInstance()
-    {
-        if (m_ResourceDescriptor)
-        {
-            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-            Allocator->Free(m_ResourceDescriptor);
-        }
-        if (m_SamplerDescriptor)
-        {
-            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
-            Allocator->Free(m_SamplerDescriptor);
-        }
-    }
-
-    const Ptr<IMaterial>& IMaterialInstance::GetParentMaterial() const
-    {
-        return m_ParentMaterial;
-    }
-
-    void MaterialInstance::GetDescriptor(
+    void Material::GetDescriptor(
+        bool                       Local,
         RHI::DescriptorHeapHandle* OutResourceDescriptor,
         RHI::DescriptorHeapHandle* OutSamplerDescriptor) const
     {
         if (OutResourceDescriptor)
         {
-            *OutResourceDescriptor = m_ResourceDescriptor;
+            *OutResourceDescriptor = Local ? m_LocalDescriptors.ResourceDescriptors : m_SharedDescriptors->ResourceDescriptors;
         }
         if (OutSamplerDescriptor)
         {
-            *OutSamplerDescriptor = m_SamplerDescriptor;
+            *OutSamplerDescriptor = Local ? m_LocalDescriptors.SamplerDescriptors : m_SharedDescriptors->SamplerDescriptors;
         }
     }
 
-    void MaterialInstance::SetResource(
+    const Ptr<RHI::IRootSignature>& Material::GetRootSignature() const
+    {
+        return m_RootSignature;
+    }
+
+    const Ptr<RHI::IPipelineState>& Material::GetPipelineState() const
+    {
+        return m_PipelineState;
+    }
+
+    //
+
+    void Material::SetResource(
         const std::string&             Name,
         const Ptr<RHI::IGpuResource>   Resource,
         const RHI::DescriptorViewDesc& Desc,
         size_t                         ArrayIndex)
     {
-        auto Mat    = static_cast<Material*>(m_ParentMaterial.get());
-        auto Layout = Mat->m_EntryMap.find(Name);
-        if (Layout == Mat->m_EntryMap.end())
+        auto Layout = m_EntryMap->find(Name);
+        if (Layout == m_EntryMap->end())
         {
             NEON_WARNING("Material", "Failed to find resource: {}", Name);
             return;
@@ -461,7 +394,7 @@ namespace Neon::Renderer
 
         if (auto DescriptorEntry = std::get_if<Material::DescriptorEntry>(&Layout->second.Entry))
         {
-            DescriptorHeapHandle& Handle = Layout->second.IsShared ? Mat->m_SharedResourceDescriptor : m_ResourceDescriptor;
+            auto& Handle = Layout->second.IsShared ? m_SharedDescriptors->ResourceDescriptors : m_LocalDescriptors.ResourceDescriptors;
 
             NEON_ASSERT(ArrayIndex < DescriptorEntry->Descs.size());
 
@@ -507,6 +440,48 @@ namespace Neon::Renderer
         else
         {
             NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
+        }
+    }
+
+    //
+
+    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
+        uint32_t ResourceDescriptorSize,
+        uint32_t SamplerDescriptorSize)
+    {
+        CreateDescriptorIfNeeded(ResourceDescriptors, RHI::DescriptorType::ResourceView, ResourceDescriptorSize);
+        CreateDescriptorIfNeeded(SamplerDescriptors, RHI::DescriptorType::Sampler, SamplerDescriptorSize);
+    }
+
+    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
+        UnqiueDescriptorHeapHandle&& Other) :
+        ResourceDescriptors(std::exchange(Other.ResourceDescriptors, {})),
+        SamplerDescriptors(std::exchange(Other.SamplerDescriptors, {}))
+    {
+    }
+
+    auto Material::UnqiueDescriptorHeapHandle::operator=(
+        UnqiueDescriptorHeapHandle&& Other) -> UnqiueDescriptorHeapHandle&
+    {
+        if (this != &Other)
+        {
+            ResourceDescriptors = std::exchange(Other.ResourceDescriptors, {});
+            SamplerDescriptors  = std::exchange(Other.SamplerDescriptors, {});
+        }
+        return *this;
+    }
+
+    Material::UnqiueDescriptorHeapHandle::~UnqiueDescriptorHeapHandle()
+    {
+        if (ResourceDescriptors)
+        {
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+            Allocator->Free(ResourceDescriptors);
+        }
+        if (SamplerDescriptors)
+        {
+            auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+            Allocator->Free(SamplerDescriptors);
         }
     }
 } // namespace Neon::Renderer

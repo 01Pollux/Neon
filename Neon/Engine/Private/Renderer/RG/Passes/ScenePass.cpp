@@ -24,11 +24,6 @@ namespace Neon::RG
     using namespace Scene;
     using namespace Renderer;
 
-    struct DummyInstance
-    {
-        IMaterialInstance* Instance;
-    };
-
     ScenePass::ScenePass(
         const GraphStorage&,
         GameScene& Scene) :
@@ -91,7 +86,7 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
-            std::map<IMaterialInstance*, std::vector<flecs::entity>> InstancedSprites;
+            std::map<IMaterial*, std::vector<flecs::entity>> InstancedSprites;
 
             m_SpriteQuery.each(
                 [this, &InstancedSprites](

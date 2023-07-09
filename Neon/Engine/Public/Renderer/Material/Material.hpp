@@ -7,17 +7,17 @@ namespace Neon::RHI
 {
     class ISwapchain;
     class IGraphicsCommandList;
+    class IPipelineState;
+    class IRootSignature;
     struct DescriptorHeapHandle;
 } // namespace Neon::RHI
 
 namespace Neon::Renderer
 {
-    class IMaterialInstance;
-
     template<bool>
     class GenericMaterialBuilder;
 
-    class IMaterial : public std::enable_shared_from_this<IMaterial>
+    class IMaterial
     {
     public:
         static Ptr<IMaterial> Create(
@@ -31,41 +31,31 @@ namespace Neon::Renderer
         /// <summary>
         /// Creates a new material instance.
         /// </summary>
-        [[nodiscard]] virtual Ptr<IMaterialInstance> CreateInstance() = 0;
-
-        /// <summary>
-        /// Get the default material instance.
-        /// </summary>
-        [[nodiscard]] virtual const Ptr<IMaterialInstance>& GetDefaultInstance() = 0;
+        [[nodiscard]] virtual Ptr<IMaterial> CreateInstance() = 0;
 
         /// <summary>
         /// Bind the material to the command list.
         /// </summary>
         virtual void Bind(
             RHI::IGraphicsCommandList* CommandList) = 0;
-    };
-
-    class IMaterialInstance
-    {
-    public:
-        virtual ~IMaterialInstance() = default;
-
-        /// <summary>
-        /// Creates a new material instance.
-        /// </summary>
-        [[nodiscard]] virtual Ptr<IMaterialInstance> CreateInstance() = 0;
-
-        /// <summary>
-        /// Get the parent material.
-        /// </summary>
-        [[nodiscard]] const Ptr<IMaterial>& GetParentMaterial() const;
 
         /// <summary>
         /// Get the parent material.
         /// </summary>
         [[nodiscard]] virtual void GetDescriptor(
+            bool                       Local,
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
             RHI::DescriptorHeapHandle* OutSamplerDescriptor) const = 0;
+
+        /// <summary>
+        /// Get the root signature.
+        /// </summary>
+        virtual const Ptr<RHI::IRootSignature>& GetRootSignature() const = 0;
+
+        /// <summary>
+        /// Get pipeline state.
+        /// </summary>
+        virtual const Ptr<RHI::IPipelineState>& GetPipelineState() const = 0;
 
     public:
         /// <summary>
@@ -136,8 +126,5 @@ namespace Neon::Renderer
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
-
-    protected:
-        Ptr<IMaterial> m_ParentMaterial;
     };
 } // namespace Neon::Renderer
