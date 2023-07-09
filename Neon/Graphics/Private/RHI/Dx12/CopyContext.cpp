@@ -81,7 +81,6 @@ namespace Neon::RHI
                         m_CopyFence.SignalGPU(&m_CopyQueue, m_CopyId);
 
                         m_CopyId++;
-                        printf("NextId copy %llu\n", m_CopyId);
                         Lock.unlock();
                     }
                 },
@@ -104,7 +103,6 @@ namespace Neon::RHI
             std::scoped_lock Lock(m_QueueMutex);
             CopyId = m_CopyId;
             m_Queue.emplace(PackagedTaskType(Task));
-            printf("Enqueue copy %llu\n", CopyId);
         }
 
         m_TaskWaiter.notify_one();
