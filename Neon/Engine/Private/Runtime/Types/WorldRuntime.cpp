@@ -140,8 +140,6 @@ namespace Neon::Runtime
         Ptr<RHI::ITexture> RandomTextures[]{
             RHI::ITexture::GetDefault(RHI::DefaultTextures::Magenta_2D),
             RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D),
-            RHI::ITexture::GetDefault(RHI::DefaultTextures::Black_2D),
-            RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D)
         };
 
         //
@@ -171,7 +169,6 @@ namespace Neon::Runtime
                 SpriteComponent.MaterialInstance->SetTexture("Texture", RandomTextures[std::rand() % std::size(RandomTextures)]);
 
                 Sprite.set(SpriteComponent);
-                //  Sprite.set<Scene::Relation::GroupByMaterialInstance, Scene::Relation::GroupByMaterialInstance::Value>({ SpriteComponent.MaterialInstance.get() });
             }
         }
     }

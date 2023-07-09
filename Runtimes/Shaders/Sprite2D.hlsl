@@ -38,7 +38,7 @@ float4 PS_Main(VSOutput Input) : SV_TARGET
 	float4 Color = (float4) 1.f;
 	if (Input.MaterialIndex != -1)
 	{
-		//Color = Texture[Input.MaterialIndex].Sample(Sampler_PointWrap, Input.TexCoord);
+		Color = Texture[Input.MaterialIndex].Sample(Sampler_PointWrap, Input.TexCoord);
 	}
 	return Color * Input.Color;
 }

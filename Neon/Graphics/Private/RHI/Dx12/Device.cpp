@@ -355,21 +355,33 @@ namespace Neon::RHI
                                 Subresource, Subresource, Subresource };
         };
 
-        Subresource.Data = glm::value_ptr(Colors::Magenta);
+        //
+
+        Color4U8 Color{ Colors::Magenta * 255.f };
+
+        Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
         PendingResource MagentaTexture2D(Desc2D, Subresource2D);
         PendingResource MagentaTexture3D(Desc3D, Subresource3D);
         PendingResource MagentaTextureCube(DescCube, SubresourceCube);
 
-        Subresource.Data = glm::value_ptr(Colors::White);
+        //
+
+        Color.r = Color.g = Color.b = Color.a = 255;
+
+        Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
         PendingResource WhiteTexture2D(Desc2D, Subresource2D);
         PendingResource WhiteTexture3D(Desc3D, Subresource3D);
         PendingResource WhiteTextureCube(DescCube, SubresourceCube);
 
-        Subresource.Data = glm::value_ptr(Colors::Black);
+        //
+
+        Color.r = Color.g = Color.b = 0;
+
+        Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
         PendingResource BlackTexture2D(Desc2D, Subresource2D);
@@ -380,21 +392,22 @@ namespace Neon::RHI
 
         auto CommandQueue = m_Swapchain->GetQueue(CommandQueueType::Graphics);
 
-        auto LoadTexture = [this, CommandQueue](PendingResource& Resource, DefaultTextures Type)
+        auto LoadTexture = [this, CommandQueue](PendingResource& Resource, DefaultTextures Type, const wchar_t* Name)
         {
-            m_DefaultTextures[size_t(Type)] = Resource.Access<ITexture>(CommandQueue);
+            auto& Object = m_DefaultTextures[size_t(Type)] = Resource.Access<ITexture>(CommandQueue);
+            RHI::RenameObject(Object.get(), Name);
         };
 
-        LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D);
-        LoadTexture(MagentaTexture3D, DefaultTextures::Magenta_3D);
-        LoadTexture(MagentaTextureCube, DefaultTextures::Magenta_Cube);
+        LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D, STR("_Magenta2D"));
+        LoadTexture(MagentaTexture3D, DefaultTextures::Magenta_3D, STR("_Magenta3D"));
+        LoadTexture(MagentaTextureCube, DefaultTextures::Magenta_Cube, STR("_MagentaCube"));
 
-        LoadTexture(WhiteTexture2D, DefaultTextures::White_2D);
-        LoadTexture(WhiteTexture3D, DefaultTextures::White_3D);
-        LoadTexture(WhiteTextureCube, DefaultTextures::White_Cube);
+        LoadTexture(WhiteTexture2D, DefaultTextures::White_2D, STR("_White2D"));
+        LoadTexture(WhiteTexture3D, DefaultTextures::White_3D, STR("_White3D"));
+        LoadTexture(WhiteTextureCube, DefaultTextures::White_Cube, STR("_WhiteCube"));
 
-        LoadTexture(BlackTexture2D, DefaultTextures::Black_2D);
-        LoadTexture(BlackTexture3D, DefaultTextures::Black_3D);
-        LoadTexture(BlackTextureCube, DefaultTextures::Black_Cube);
+        LoadTexture(BlackTexture2D, DefaultTextures::Black_2D, STR("_Black2D"));
+        LoadTexture(BlackTexture3D, DefaultTextures::Black_3D, STR("_Black3D"));
+        LoadTexture(BlackTextureCube, DefaultTextures::Black_Cube, STR("_BlackCube"));
     }
 } // namespace Neon::RHI
