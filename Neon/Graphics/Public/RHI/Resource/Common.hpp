@@ -550,16 +550,16 @@ namespace Neon::RHI
         /// Set clear value for render target view
         /// </summary>
         void SetClearValue(
-            RHI::EResourceFormat Format,
+            RHI::EResourceFormat ResFormat,
             const Color4&        Color);
 
         /// <summary>
         /// Set clear value for depth stencil view
         /// </summary>
         void SetClearValue(
-            RHI::EResourceFormat Format,
-            float                Depth,
-            uint8_t              Stencil);
+            RHI::EResourceFormat ResFormat,
+            float                DepthValue,
+            uint8_t              StencilValue);
 
         /// <summary>
         /// Set clear value for render target view
@@ -571,8 +571,8 @@ namespace Neon::RHI
         /// Set clear value for depth stencil view
         /// </summary>
         void SetClearValue(
-            float   Depth,
-            uint8_t Stencil);
+            float   DepthValue,
+            uint8_t StencilValue);
 
         /// <summary>
         /// Unset clear value

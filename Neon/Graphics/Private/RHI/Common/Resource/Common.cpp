@@ -4,23 +4,23 @@
 namespace Neon::RHI
 {
     void ResourceDesc::SetClearValue(
-        RHI::EResourceFormat Format,
+        RHI::EResourceFormat ResFormat,
         const Color4&        Color)
     {
         ClearValue = ClearOperation{
-            .Format = Format,
+            .Format = ResFormat,
             .Value  = { Color }
         };
     }
 
     void ResourceDesc::SetClearValue(
-        RHI::EResourceFormat Format,
-        float                Depth,
-        uint8_t              Stencil)
+        RHI::EResourceFormat ResFormat,
+        float                DepthValue,
+        uint8_t              StencilValue)
     {
         ClearValue = ClearOperation{
-            .Format = Format,
-            .Value  = ClearOperation::DepthStencil{ Depth, Stencil }
+            .Format = ResFormat,
+            .Value  = ClearOperation::DepthStencil{ DepthValue, StencilValue }
         };
     }
 
@@ -31,10 +31,10 @@ namespace Neon::RHI
     }
 
     void ResourceDesc::SetClearValue(
-        float   Depth,
-        uint8_t Stencil)
+        float   DepthValue,
+        uint8_t StencilValue)
     {
-        SetClearValue(Format, Depth, Stencil);
+        SetClearValue(Format, DepthValue, StencilValue);
     }
 
     void ResourceDesc::UnsetClearValue()

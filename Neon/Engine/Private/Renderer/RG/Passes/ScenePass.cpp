@@ -30,8 +30,8 @@ namespace Neon::RG
     };
 
     ScenePass::ScenePass(
-        const GraphStorage& Storage,
-        GameScene&          Scene) :
+        const GraphStorage&,
+        GameScene& Scene) :
         IRenderPass(PassQueueType::Direct),
         m_Scene(Scene)
     {
@@ -40,9 +40,9 @@ namespace Neon::RG
                        Component::Transform,
                        Component::Sprite>()
                 .order_by(
-                    +[](flecs::entity_t          Lhs,
+                    +[](flecs::entity_t,
                         const Component::Sprite* LhsSprite,
-                        flecs::entity_t          Rhs,
+                        flecs::entity_t,
                         const Component::Sprite* RhsSprite) -> int
                     {
                         return int(LhsSprite->MaterialInstance.get() - RhsSprite->MaterialInstance.get());
@@ -55,17 +55,17 @@ namespace Neon::RG
     }
 
     void ScenePass::ResolveShaders(
-        ShaderResolver& Resolver)
+        ShaderResolver&)
     {
     }
 
     void ScenePass::ResolveRootSignature(
-        RootSignatureResolver& Resolver)
+        RootSignatureResolver&)
     {
     }
 
     void ScenePass::ResolvePipelineStates(
-        PipelineStateResolver& Resolver)
+        PipelineStateResolver&)
     {
     }
 
@@ -84,8 +84,8 @@ namespace Neon::RG
     }
 
     void ScenePass::Dispatch(
-        const GraphStorage& Storage,
-        RHI::ICommandList*  CommandList)
+        const GraphStorage&,
+        RHI::ICommandList* CommandList)
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
@@ -95,9 +95,9 @@ namespace Neon::RG
 
             m_SpriteQuery.each(
                 [this, &InstancedSprites](
-                    flecs::entity         Entity,
-                    Component::Transform& Transform,
-                    Component::Sprite&    Sprite)
+                    flecs::entity Entity,
+                    Component::Transform&,
+                    Component::Sprite& Sprite)
                 {
                     InstancedSprites[Sprite.MaterialInstance.get()].emplace_back(Entity);
                 });

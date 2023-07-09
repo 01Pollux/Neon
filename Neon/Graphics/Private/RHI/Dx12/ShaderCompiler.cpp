@@ -171,14 +171,16 @@ namespace Neon::RHI
             nullptr,
             IID_PPV_ARGS(&Result)));
 
-        Win32::ComPtr<IDxcBlobUtf8> Error;
-        if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
         {
-            if (Error && Error->GetStringLength() > 0)
+            Win32::ComPtr<IDxcBlobUtf8> Error;
+            if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
             {
-                size_t StrLen = Error->GetStringLength();
-                NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
-                return {};
+                if (Error && Error->GetStringLength() > 0)
+                {
+                    size_t StrLen = Error->GetStringLength();
+                    NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
+                    return {};
+                }
             }
         }
 

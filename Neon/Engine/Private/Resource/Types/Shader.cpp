@@ -171,9 +171,9 @@ namespace Neon::Asset
     }
 
     bool ShaderModule::SeekShader(
-        const SHA256::Bytes&        Hash,
-        std::unique_ptr<uint8_t[]>* ShaderData,
-        size_t*                     ShaderSize)
+        const SHA256::Bytes&,
+        std::unique_ptr<uint8_t[]>*,
+        size_t*)
     {
         // TODO: Temporarily disabled
 #if 0

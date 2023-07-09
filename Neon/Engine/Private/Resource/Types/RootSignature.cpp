@@ -12,7 +12,7 @@ namespace boost::serialization
     void serialize(
         _Archive&                     Archive,
         Neon::RHI::StaticSamplerDesc& Sampler,
-        const unsigned int            Version)
+        const unsigned int)
     {
         Archive& Sampler.Filter;
         Archive& Sampler.AddressU;

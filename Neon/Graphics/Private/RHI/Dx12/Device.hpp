@@ -127,13 +127,13 @@ namespace Neon::RHI
     private:
         struct HeapDescriptorSizeType
         {
-            uint16_t DSV = 0;
-            uint16_t RTV = 0;
-            uint16_t SAM = 0;
+            uint32_t DSV = 0;
+            uint32_t RTV = 0;
+            uint32_t SAM = 0;
             union {
-                uint16_t CBV = 0;
-                uint16_t SRV;
-                uint16_t UAV;
+                uint32_t CBV = 0;
+                uint32_t SRV;
+                uint32_t UAV;
             };
         };
 

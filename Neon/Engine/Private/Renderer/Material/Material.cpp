@@ -60,7 +60,7 @@ namespace Neon::Renderer
     }
 
     template<bool _Compute>
-    static void Material_CreateDescriptors(
+    void Material_CreateDescriptors(
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat,
         uint32_t&                               LocaResourceDescriptorSize,
@@ -72,8 +72,6 @@ namespace Neon::Renderer
                  TableSharedResourceCount = 0;
         uint32_t TableSamplerCount        = 0,
                  TableSharedSamplerCount  = 0;
-
-        uint32_t RootIndex = 0;
 
         struct BatchedDescriptorEntry
         {
@@ -240,7 +238,7 @@ namespace Neon::Renderer
     //
 
     template<bool _Compute>
-    static void Material_CreatePipelineState(
+    void Material_CreatePipelineState(
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {

@@ -14,7 +14,7 @@ namespace Neon::Runtime
     {
         std::queue<EnginePipelineBuilder::PipelinePhase*> CurrentLevel;
 
-        auto& Phases = m_Levels.emplace_back();
+        auto Phases = &m_Levels.emplace_back();
         for (auto& [PhaseName, Phase] : Builder.m_Phases)
         {
             auto Iter = &m_Phases[PhaseName];
@@ -24,7 +24,7 @@ namespace Neon::Runtime
                 {
                     CurrentLevel.push(&Phase);
                 }
-                Phases.emplace_back(Iter);
+                Phases->emplace_back(Iter);
             }
             for (auto& Child : Phase.DependentNodes)
             {
@@ -35,8 +35,8 @@ namespace Neon::Runtime
 
         while (!CurrentLevel.empty())
         {
-            auto&  Phases = m_Levels.emplace_back();
-            size_t Size   = CurrentLevel.size();
+            Phases      = &m_Levels.emplace_back();
+            size_t Size = CurrentLevel.size();
             for (size_t i = 0; i < Size; i++)
             {
                 auto CurrentPhase = CurrentLevel.front();
@@ -51,7 +51,7 @@ namespace Neon::Runtime
                         {
                             CurrentLevel.push(Dependent);
                         }
-                        Phases.emplace_back(&m_Phases[Dependent->Name]);
+                        Phases->emplace_back(&m_Phases[Dependent->Name]);
                     }
                 }
             }

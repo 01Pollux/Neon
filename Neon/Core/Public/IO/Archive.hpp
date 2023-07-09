@@ -219,7 +219,7 @@ namespace Neon::IO
         {
             invalid_flags
         } exception_code;
-        OutArchive_exception(exception_code c = invalid_flags)
+        OutArchive_exception(exception_code)
         {
         }
         virtual const char* what() const throw()

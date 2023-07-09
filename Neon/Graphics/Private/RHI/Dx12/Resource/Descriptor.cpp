@@ -267,7 +267,7 @@ namespace Neon::RHI
                             .ResourceMinLODClamp = Texture.MinLODClamp
                         };
                     },
-                    [&Dx12Desc](const SRVDesc::Texture2DMS& Texture)
+                    [&Dx12Desc](const SRVDesc::Texture2DMS&)
                     {
                         Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
                         Dx12Desc.Texture2DMS   = {};
@@ -705,7 +705,6 @@ namespace Neon::RHI
     {
         std::scoped_lock HeapLock(m_HeapBlocksMutex);
 
-        bool Allocated = false;
         for (auto Iter = m_HeapBlocks.begin(); Iter != m_HeapBlocks.end(); Iter++)
         {
             if (auto Hndl = Iter->Allocator.Allocate(DescriptorSize))

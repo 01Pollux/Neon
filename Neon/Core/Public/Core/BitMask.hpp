@@ -283,7 +283,7 @@ namespace Neon
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version)
+            uint32_t)
         {
             Archive& m_Bitset;
         }

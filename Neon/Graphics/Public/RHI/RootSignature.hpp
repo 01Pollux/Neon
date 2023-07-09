@@ -165,7 +165,7 @@ namespace Neon::RHI
             template<typename _Archive>
             void serialize(
                 _Archive& Archive,
-                uint32_t  Version)
+                uint32_t)
             {
                 Archive& ShaderRegister;
                 Archive& Num32BitValues;
@@ -186,7 +186,7 @@ namespace Neon::RHI
             template<typename _Archive>
             void serialize(
                 _Archive& Archive,
-                uint32_t  Version)
+                uint32_t)
             {
                 Archive& ShaderRegister;
                 Archive& RegisterSpace;
@@ -226,7 +226,7 @@ namespace Neon::RHI
         template<typename _Archive>
         void serialize(
             _Archive& Archive,
-            uint32_t  Version)
+            uint32_t)
         {
             Archive& m_Parameter;
             auto     Visibility = std::to_underlying(m_Visibility);

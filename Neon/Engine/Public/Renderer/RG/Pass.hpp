@@ -32,7 +32,7 @@ namespace Neon::RG
         /// Called when the render pass wans to load shaders.
         /// </summary>
         virtual void ResolveShaders(
-            ShaderResolver& Resolver)
+            ShaderResolver&)
         {
         }
 
@@ -40,7 +40,7 @@ namespace Neon::RG
         /// Called when the render pass wans to load shaders.
         /// </summary>
         virtual void ResolveRootSignature(
-            RootSignatureResolver& Resolver)
+            RootSignatureResolver&)
         {
         }
 
@@ -48,7 +48,7 @@ namespace Neon::RG
         /// Called when the render pass wants to create pipelines.
         /// </summary>
         virtual void ResolvePipelineStates(
-            PipelineStateResolver& Resolver)
+            PipelineStateResolver&)
         {
         }
 
@@ -56,7 +56,7 @@ namespace Neon::RG
         /// Called when the render pass wants to resolve the dependencies of resources.
         /// </summary>
         virtual void ResolveResources(
-            ResourceResolver& Resolver)
+            ResourceResolver&)
         {
         }
 
@@ -64,8 +64,8 @@ namespace Neon::RG
         /// Called to check if the pass should implements its own viewports
         /// </summary>
         virtual bool OverrideViewport(
-            const GraphStorage&        Storage,
-            RHI::IGraphicsCommandList* CommandList)
+            const GraphStorage&,
+            RHI::IGraphicsCommandList*)
         {
             return false;
         }
@@ -74,8 +74,8 @@ namespace Neon::RG
         /// Called when the render pass wants to dispatch.
         /// </summary>
         virtual void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList)
+            const GraphStorage&,
+            RHI::ICommandList*)
         {
         }
 

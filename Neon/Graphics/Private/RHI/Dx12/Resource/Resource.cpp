@@ -20,7 +20,7 @@ namespace Neon::RHI
     {
         auto Desc = m_Resource->GetDesc();
 
-        D3D12_PLACED_SUBRESOURCE_FOOTPRINT Footprint;
+        D3D12_PLACED_SUBRESOURCE_FOOTPRINT Footprint{};
 
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
         Dx12Device->GetCopyableFootprints(

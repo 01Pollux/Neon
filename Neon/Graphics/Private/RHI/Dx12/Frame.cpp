@@ -37,19 +37,19 @@ namespace Neon::RHI
         m_Resources.clear();
         m_Allocation.clear();
 
-        for (auto& Allocator : m_AllocatorsPools)
+        for (auto& Pool : m_AllocatorsPools)
         {
-            Allocator.ClearActives();
+            Pool.ClearActives();
         }
 
-        for (auto& Allocator : m_FrameDescriptors)
+        for (auto& Pool : m_FrameDescriptors)
         {
-            Allocator.Reset();
+            Pool.Reset();
         }
 
-        for (auto& Allocator : m_StagedDescriptors)
+        for (auto& Pool : m_StagedDescriptors)
         {
-            Allocator.Reset();
+            Pool.Reset();
         }
     }
 

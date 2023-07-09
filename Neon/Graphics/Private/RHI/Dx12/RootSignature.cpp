@@ -76,7 +76,6 @@ namespace Neon::RHI
         default:
             std::unreachable();
         }
-        return D3D12_SHADER_VISIBILITY();
     }
 
     ShaderVisibility CastShaderVisibility(
@@ -327,6 +326,8 @@ namespace Neon::RHI
                             case RootParameter::DescriptorType::Sampler:
                                 Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
                                 break;
+                            default:
+                                std::unreachable();
                             }
 
                             Ranges.emplace_back().Init(
