@@ -1,4 +1,5 @@
 #include <PakCPCH.hpp>
+#include <Runtime/EntryPoint.hpp>
 #include <Parser/JsonReader.hpp>
 
 #include <RHI/Device.hpp>
@@ -6,14 +7,13 @@
 
 #include <Log/Logger.hpp>
 
-int main(int Argc, char* Argv[])
-{
-    Neon::Logger::Initialize();
+using namespace Neon;
 
-    Neon::Logger::SetLogTag("", Neon::Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("Resource", Neon::Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("Graphics", Neon::Logger::LogSeverity::Info);
-    Neon::Logger::SetLogTag("ShaderCompiler", Neon::Logger::LogSeverity::Info);
+NEON_MAIN(Argc, Argv)
+{
+    Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
+    Logger::SetLogTag("Graphics", Logger::LogSeverity::Info);
+    Logger::SetLogTag("ShaderCompiler", Logger::LogSeverity::Info);
 
     if (Argc <= 1)
     {
@@ -21,18 +21,22 @@ int main(int Argc, char* Argv[])
         return 0;
     }
 
-    Neon::RHI::IRenderDevice::CreateGlobal();
+    Config::EngineConfig Config{
+        .Window = {
+            .Title      = STR("PakC"),
+            .Windowed   = true,
+            .Fullscreen = false },
+        .LoggerAssetUid = std::nullopt
+    };
 
+    Runtime::DefaultGameEngine Engine;
+    Engine.Initialize(Config);
+
+    PakC::JsonHandler Handler;
+    for (int i = 1; i < Argc; i++)
     {
-        PakC::JsonHandler Handler;
-        for (int i = 1; i < Argc; i++)
-        {
-            Handler.Parse(Argv[i]);
-        }
+        Handler.Parse(StringUtils::Transform<StringU8>(String(Argv[i])));
     }
 
-    Neon::RHI::IRenderDevice::DestroyGlobal();
-
-    Neon::Logger::Shutdown();
     return 0;
 }

@@ -138,50 +138,48 @@ namespace Neon::Renderer
 
         //
 
-        if (!m_MaterialInstances.empty())
+        // TODO: bind shared descriptor
+        auto MasterMaterial = m_MaterialInstances[0]->GetParentMaterial();
+        MasterMaterial->Bind(m_CommandList);
+
+        auto ResourceTable = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView),
+             SamplerTable  = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+
+        uint32_t GPUResourceDescriptorSize = 0,
+                 GPUSamplerDescriptorSize  = 0;
+
+        std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
+
+        RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
+        for (auto Instance : m_MaterialInstances)
         {
-            // TODO: bind shared descriptor
-            // auto MasterMaterial = m_MaterialInstances[0]->GetParentMaterial();
+            Instance->GetDescriptor(&ResourceDescriptor, &SamplerDescriptor);
 
-            auto ResourceTable = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView),
-                 SamplerTable  = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::Sampler);
-
-            uint32_t GPUResourceDescriptorSize = 0,
-                     GPUSamplerDescriptorSize  = 0;
-
-            std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
-
-            RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
-            for (auto Instance : m_MaterialInstances)
+            if (ResourceDescriptor.Size)
             {
-                Instance->GetDescriptor(&ResourceDescriptor, &SamplerDescriptor);
-
-                if (ResourceDescriptor.Size)
-                {
-                    ResourceDescriptors.emplace_back(ResourceDescriptor.GetCpuHandle(), ResourceDescriptor.Size);
-                    GPUResourceDescriptorSize += ResourceDescriptor.Size;
-                }
-                if (SamplerDescriptor.Size)
-                {
-                    SamplerDescriptors.emplace_back(SamplerDescriptor.GetCpuHandle(), SamplerDescriptor.Size);
-                    GPUSamplerDescriptorSize += SamplerDescriptor.Size;
-                }
+                ResourceDescriptors.emplace_back(ResourceDescriptor.GetCpuHandle(), ResourceDescriptor.Size);
+                GPUResourceDescriptorSize += ResourceDescriptor.Size;
             }
-
-            if (GPUResourceDescriptorSize)
+            if (SamplerDescriptor.Size)
             {
-                auto ResourceHandle = ResourceTable->Allocate(GPUResourceDescriptorSize);
-
-                RHI::IDescriptorHeap::CopyInfo Destination{
-                    .Descriptor = ResourceHandle.GetCpuHandle(),
-                    .CopySize   = ResourceHandle.Size
-                };
-                RHI::IDescriptorHeap::Copy(RHI::DescriptorType::ResourceView, { &Destination, 1 }, ResourceDescriptors);
-
-                m_CommandList->SetDescriptorTable(0, ResourceHandle.GetGpuHandle());
+                SamplerDescriptors.emplace_back(SamplerDescriptor.GetCpuHandle(), SamplerDescriptor.Size);
+                GPUSamplerDescriptorSize += SamplerDescriptor.Size;
             }
-            // auto SamplerHandle = SamplerTable->Allocate(GPUSamplerDescriptorSize);
         }
+
+        if (GPUResourceDescriptorSize)
+        {
+            auto ResourceHandle = ResourceTable->Allocate(GPUResourceDescriptorSize);
+
+            RHI::IDescriptorHeap::CopyInfo Destination{
+                .Descriptor = ResourceHandle.GetCpuHandle(),
+                .CopySize   = ResourceHandle.Size
+            };
+            RHI::IDescriptorHeap::Copy(RHI::DescriptorType::ResourceView, ResourceDescriptors, { &Destination, 1 });
+
+            m_CommandList->SetDescriptorTable(0, ResourceHandle.GetGpuHandle());
+        }
+        // auto SamplerHandle = SamplerTable->Allocate(GPUSamplerDescriptorSize);
 
         //
 
@@ -197,6 +195,7 @@ namespace Neon::Renderer
 
         m_CommandList->SetVertexBuffer(0, VertexView);
         m_CommandList->SetIndexBuffer(IndexView);
+        m_CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
 
         m_CommandList->Draw(
             RHI::DrawIndexArgs{

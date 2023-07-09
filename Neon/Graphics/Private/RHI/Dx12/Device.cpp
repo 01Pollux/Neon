@@ -18,7 +18,7 @@ extern "C"
     __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
 }
 
-#define GPU_BASED_VALIDATION false
+#define GPU_BASED_VALIDATION true
 
 namespace Neon::RHI
 {
@@ -112,8 +112,11 @@ namespace Neon::RHI
         const SwapchainCreateDesc& SwapchainDesc)
     {
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
-        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
-        m_Swapchain->PostInitialize(SwapchainDesc);
+        if (Window)
+        {
+            m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
+            m_Swapchain->PostInitialize(SwapchainDesc);
+        }
     }
 
     void Dx12RenderDevice::Shudown()

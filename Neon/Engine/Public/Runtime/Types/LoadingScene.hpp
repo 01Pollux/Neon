@@ -4,7 +4,7 @@
 
 namespace Neon::Runtime
 {
-    class LoadingScreenRuntime : public EngineRuntime
+    class LoadingScreenRuntime : public IEngineRuntime
     {
     public:
         LoadingScreenRuntime(

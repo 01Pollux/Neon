@@ -1,13 +1,20 @@
 #include <Runtime/EntryPoint.hpp>
+#include <Runtime/Types/WorldRuntime.hpp>
 
-int main(int argc, wchar_t** argv)
+using namespace Neon;
+
+class RuntimeSample : public Runtime::DefaultGameEngine
 {
-    Neon::Logger::Initialize();
-    int Ret = Neon::Runtime::Main(argc, argv);
-    Neon::Logger::Shutdown();
-    return Ret;
-}
-int Neon::Runtime::Main(int Argc, wchar_t* Argv[])
+public:
+    void Initialize(
+        const Config::EngineConfig& Config) override
+    {
+        DefaultGameEngine::Initialize(Config);
+        RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
+    }
+};
+
+NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
         .Window = {

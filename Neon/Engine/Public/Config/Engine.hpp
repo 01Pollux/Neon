@@ -4,6 +4,8 @@
 #include <Config/Resource.hpp>
 #include <Config/Renderer.hpp>
 
+#include <Resource/Asset.hpp>
+
 namespace Neon::Config
 {
     struct EngineConfig
@@ -11,5 +13,7 @@ namespace Neon::Config
         WindowConfig   Window;
         ResourceConfig Resource;
         RendererConfig Renderer;
+
+        std::optional<Asset::AssetHandle> LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
     };
 } // namespace Neon::Config

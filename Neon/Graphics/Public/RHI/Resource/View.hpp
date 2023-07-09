@@ -2,6 +2,7 @@
 
 #include <RHI/Resource/Common.hpp>
 #include <variant>
+#include <array>
 
 namespace Neon::RHI
 {

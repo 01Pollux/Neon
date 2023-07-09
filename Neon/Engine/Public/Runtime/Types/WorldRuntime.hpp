@@ -11,7 +11,7 @@ namespace Neon::Asset
 
 namespace Neon::Runtime
 {
-    class EngineWorldRuntime : public EngineRuntime
+    class EngineWorldRuntime : public IEngineRuntime
     {
     public:
         EngineWorldRuntime();

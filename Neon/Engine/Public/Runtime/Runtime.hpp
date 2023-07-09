@@ -4,14 +4,13 @@
 
 namespace Neon::Runtime
 {
-    class DefaultGameEngine;
-    class EngineRuntime
+    class IEngineRuntime
     {
     public:
-        EngineRuntime() = default;
+        IEngineRuntime() = default;
 
-        NEON_CLASS_NO_COPYMOVE(EngineRuntime);
+        NEON_CLASS_NO_COPYMOVE(IEngineRuntime);
 
-        virtual ~EngineRuntime() = default;
+        virtual ~IEngineRuntime() = default;
     };
 } // namespace Neon::Runtime

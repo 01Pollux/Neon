@@ -14,18 +14,35 @@ namespace Neon::Runtime
         /// <summary>
         /// Register an interface to the container
         /// </summary>
-        template<typename _Interface, typename _Ty, typename... _Args>
+        template<typename _Interface, typename _FnTy>
+            requires std::is_invocable_r_v<Ptr<_Interface>, _FnTy>
         Ptr<_Interface> RegisterInterface(
-            _Args&&... Args)
+            _FnTy&& InterfaceCreator)
         {
             Ptr<_Interface> Interface;
-
             std::type_index TypeId(typeid(_Interface));
             if (!ContainsInterface<_Interface>())
             {
-                m_Interfaces[TypeId] = Interface = std::make_shared<_Ty>(std::forward<_Args>(Args)...);
+                m_Interfaces[TypeId] = Interface = InterfaceCreator();
+            }
+            else
+            {
+                Interface = std::any_cast<Ptr<_Interface>>(m_Interfaces[TypeId]);
             }
             return Interface;
+        }
+
+        /// <summary>
+        /// Register an interface to the container
+        /// </summary>
+        template<typename _Interface, typename _Ty, typename... _Args>
+            requires std::is_base_of_v<_Interface, _Ty>
+        Ptr<_Interface> RegisterInterface(
+            _Args&&... Args)
+        {
+            return RegisterInterface<_Interface>(
+                [&]
+                { return std::make_shared<_Ty>(std::forward<_Args>(Args)...); });
         }
 
         /// <summary>

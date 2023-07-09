@@ -88,6 +88,12 @@ namespace Neon::RHI
         auto Iter = m_CommandListsPool.Allocate(Allocator, m_Type);
         ThrowIfFailed(Iter->Dx12CmdList->Reset(Allocator, nullptr));
 
+        ID3D12DescriptorHeap* Heaps[]{
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap(),
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()
+        };
+        Iter->Dx12CmdList->SetDescriptorHeaps(2, Heaps);
+
         Iter->CommandList->AttachCommandList(Iter->Dx12CmdList.Get());
         m_ToPoolMap.emplace(Iter->CommandList.get(), Iter);
 
@@ -112,14 +118,14 @@ namespace Neon::RHI
         ID3D12CommandAllocator* Allocator,
         ICommandList*           CommandList)
     {
-        auto Dx12CommandList = m_ToPoolMap[CommandList]->Dx12CmdList;
-        ThrowIfFailed(Dx12CommandList->Reset(Allocator, nullptr));
+        auto Dx12CmdList = m_ToPoolMap[CommandList]->Dx12CmdList;
+        ThrowIfFailed(Dx12CmdList->Reset(Allocator, nullptr));
 
         ID3D12DescriptorHeap* Heaps[]{
             static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap(),
             static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()
         };
-        Dx12CommandList->SetDescriptorHeaps(2, Heaps);
+        Dx12CmdList->SetDescriptorHeaps(2, Heaps);
     }
 
     void Dx12CommandContextManager::Reset(

@@ -34,26 +34,22 @@ namespace Neon::Runtime
     void DefaultGameEngine::Initialize(
         const Config::EngineConfig& Config)
     {
-        const auto LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
-
         auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
-        auto Pack            = ResourceManager->LoadPack("__neon", "neonrt.np");
-
-        // Set global logger settings
-        if (auto Logger = Pack->Load<Asset::LoggerAsset>(LoggerAssetUid))
+        if (Config.LoggerAssetUid)
         {
-            Logger->SetGlobal();
+            auto Pack = ResourceManager->LoadPack("__neon", "neonrt.np");
+            // Set global logger settings
+            if (auto Logger = Pack->Load<Asset::LoggerAsset>(*Config.LoggerAssetUid))
+            {
+                Logger->SetGlobal();
+            }
         }
-
-        //
 
         LoadPacks(Config);
 
         //
 
         m_Window.reset(NEON_NEW EngineWindow(Config));
-
-        RegisterInterface<EngineRuntime, EngineWorldRuntime>();
     }
 
     int DefaultGameEngine::Run()
