@@ -12,7 +12,9 @@ namespace Neon::RHI
     class Dx12RenderDevice final : public IRenderDevice
     {
     public:
-        Dx12RenderDevice();
+        Dx12RenderDevice(
+            const DeviceCreateDesc& DeviceDesc);
+        NEON_CLASS_NO_COPYMOVE(Dx12RenderDevice);
         ~Dx12RenderDevice() override;
 
         RHI::ISwapchain* GetSwapchain() override;
@@ -91,7 +93,8 @@ namespace Neon::RHI
         /// <summary>
         /// Enable debug layer if needed.
         /// </summary>
-        void EnableDebugLayerIfNeeded();
+        void EnableDebugLayerIfNeeded(
+            const DeviceCreateDesc& DeviceDesc);
 
         /// <summary>
         /// Create dxgi factory.

@@ -20,7 +20,7 @@ NEON_MAIN(Argc, Argv)
         .Window = {
             .Title      = STR("Test Engine"),
             .Windowed   = true,
-            .Fullscreen = false }
+            .Fullscreen = false },
     };
     return RunEngine<RuntimeSample>(Config);
 }

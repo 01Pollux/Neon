@@ -15,8 +15,6 @@
 
 //
 
-//
-
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Relation/Material.hpp>

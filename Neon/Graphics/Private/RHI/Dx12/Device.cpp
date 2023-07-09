@@ -20,8 +20,6 @@ extern "C"
     __declspec(dllexport) extern const char* D3D12SDKPath   = ".\\D3D12\\";
 }
 
-#define GPU_BASED_VALIDATION false
-
 namespace Neon::RHI
 {
     static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
@@ -33,7 +31,7 @@ namespace Neon::RHI
     {
         NEON_ASSERT(!s_RenderDevice);
         s_DescriptorSize = DeviceDesc.Descriptors;
-        s_RenderDevice.reset(NEON_NEW Dx12RenderDevice);
+        s_RenderDevice.reset(NEON_NEW Dx12RenderDevice(DeviceDesc));
         s_RenderDevice->PostInitialize(Window, SwapchainDesc);
     }
 
@@ -83,12 +81,16 @@ namespace Neon::RHI
 
     //
 
-    Dx12RenderDevice::Dx12RenderDevice()
+    Dx12RenderDevice::Dx12RenderDevice(
+        const DeviceCreateDesc& DeviceDesc)
     {
         NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
 
-        LoadPixRuntime();
-        EnableDebugLayerIfNeeded();
+        if (DeviceDesc.EnableGPUDebugger)
+        {
+            LoadPixRuntime();
+        }
+        EnableDebugLayerIfNeeded(DeviceDesc);
         CreateFactory();
         CreateDevice();
         CheckDeviceFeatures();
@@ -228,15 +230,20 @@ namespace Neon::RHI
 #endif
     }
 
-    void Dx12RenderDevice::EnableDebugLayerIfNeeded()
+    void Dx12RenderDevice::EnableDebugLayerIfNeeded(
+        const DeviceCreateDesc& DeviceDesc)
     {
 #if !NEON_DIST
         Win32::ComPtr<ID3D12Debug1> DebugController;
         ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
-        DebugController->EnableDebugLayer();
-#if NEON_DEBUG
-        DebugController->SetEnableGPUBasedValidation(GPU_BASED_VALIDATION);
-#endif
+        if (DeviceDesc.EnableDebugLayer)
+        {
+            DebugController->EnableDebugLayer();
+        }
+        if (DeviceDesc.EnableGpuBasedValidation)
+        {
+            DebugController->SetEnableGPUBasedValidation(true);
+        }
 #endif
     }
 

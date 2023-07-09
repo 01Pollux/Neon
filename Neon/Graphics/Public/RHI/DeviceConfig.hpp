@@ -33,5 +33,20 @@ namespace Neon::RHI
         };
 
         DescriptorSize Descriptors;
+
+        /// <summary>
+        /// Enable the debug layer for the render device (non-production)
+        /// </summary>
+        bool EnableDebugLayer : 1 = true;
+
+        /// <summary>
+        /// Enable the gpu debugger for the render device (non-production)
+        /// </summary>
+        bool EnableGPUDebugger : 1 = true;
+
+        /// <summary>
+        /// Enable the gpu based validation for the render device (non-production)
+        /// </summary>
+        bool EnableGpuBasedValidation : 1 = false;
     };
 } // namespace Neon::RHI
