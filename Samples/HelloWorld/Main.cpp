@@ -22,5 +22,5 @@ NEON_MAIN(Argc, Argv)
             .Windowed   = true,
             .Fullscreen = false }
     };
-    return RunEngine<Runtime::DefaultGameEngine>(Config);
+    return RunEngine<RuntimeSample>(Config);
 }

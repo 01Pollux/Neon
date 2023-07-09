@@ -117,14 +117,14 @@ namespace Neon::Logger
 #define NEON_TRACE(...) Neon::Logger::Log(Neon::Logger::LogSeverity::Trace, __VA_ARGS__)
 #define NEON_INFO(...)  Neon::Logger::Log(Neon::Logger::LogSeverity::Info, __VA_ARGS__)
 
-#define NEON_ASSERT(Expr, ...)                                \
-    do                                                        \
-    {                                                         \
-        if (!(Expr))                                          \
-        {                                                     \
-            NEON_FATAL_TAG("Assertion Failure", __VA_ARGS__); \
-            __debugbreak();                                   \
-        }                                                     \
+#define NEON_ASSERT(Expr, ...)                        \
+    do                                                \
+    {                                                 \
+        if (!(Expr))                                  \
+        {                                             \
+            NEON_FATAL_TAG("Assertion", __VA_ARGS__); \
+            __debugbreak();                           \
+        }                                             \
     } while (false)
 
 #else
@@ -139,13 +139,14 @@ namespace Neon::Logger
 
 #endif
 
-#define NEON_VALIDATE(Expr, ...)                               \
-    do                                                         \
-    {                                                          \
-        if (!(Expr))                                           \
-        {                                                      \
-            NEON_FATAL_TAG("Validation Failure", __VA_ARGS__); \
-        }                                                      \
+#define NEON_VALIDATE(Expr, ...)                       \
+    do                                                 \
+    {                                                  \
+        if (!(Expr))                                   \
+        {                                              \
+            NEON_FATAL_TAG("Validation", __VA_ARGS__); \
+            std::unreachable();                        \
+        }                                              \
     } while (false)
 
 #endif

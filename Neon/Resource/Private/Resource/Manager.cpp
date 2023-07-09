@@ -23,7 +23,7 @@ namespace Neon::Asset
         const StringU8& Tag)
     {
         auto Iter = m_LoadedPacks.find(Tag);
-        NEON_VALIDATE(Iter == m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
+        NEON_VALIDATE(Iter != m_LoadedPacks.end(), "Resource pack '{}' doesn't exists", Tag);
         return Iter->second;
     }
 
