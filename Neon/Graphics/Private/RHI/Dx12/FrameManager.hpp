@@ -125,7 +125,7 @@ namespace Neon::RHI
         };
 
     private:
-        static constexpr uint32_t CommandContextCount   = 2;
+        static constexpr uint32_t CommandContextCount   = 1;
         static constexpr uint32_t CommandsToHandleCount = 16;
 
         struct CommandContext

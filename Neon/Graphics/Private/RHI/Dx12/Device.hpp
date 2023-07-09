@@ -7,6 +7,8 @@
 
 namespace Neon::RHI
 {
+    class Dx12Texture;
+
     class Dx12RenderDevice final : public IRenderDevice
     {
     public:
@@ -74,6 +76,12 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] IResourceStateManager* GetStateManager();
 
+        /// <summary>
+        /// Get default texture.
+        /// </summary>
+        [[nodiscard]] Dx12Texture* GetDefaultTexture(
+            DefaultTextures Type) const;
+
     private:
         /// <summary>
         /// Load pix runtime.
@@ -111,6 +119,11 @@ namespace Neon::RHI
         /// </summary>
         void FillInDescriptorSizes();
 
+        /// <summary>
+        /// Create default textures.
+        /// </summary>
+        void CreateDefaultTextures();
+
     private:
         struct HeapDescriptorSizeType
         {
@@ -136,5 +149,7 @@ namespace Neon::RHI
 
         UPtr<GraphicsMemoryAllocator> m_MemoryAllocator;
         UPtr<Dx12Swapchain>           m_Swapchain;
+
+        std::array<Ptr<Dx12Texture>, size_t(DefaultTextures::Count)> m_DefaultTextures;
     };
 } // namespace Neon::RHI

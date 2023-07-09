@@ -4,7 +4,7 @@
 
 namespace Neon::RHI
 {
-    IGpuResource* PendingResource::Access(
+    Ptr<IGpuResource> PendingResource::Access(
         ICommandQueue* Queue) const
     {
         if (m_CopyId)
@@ -14,10 +14,10 @@ namespace Neon::RHI
                 *m_CopyId);
             m_CopyId = std::nullopt;
         }
-        return m_Resource.get();
+        return m_Resource;
     }
 
-    IGpuResource* PendingResource::Access(
+    Ptr<IGpuResource> PendingResource::Access(
         RHI::CommandQueueType QueueType) const
     {
         if (m_CopyId)
@@ -27,6 +27,6 @@ namespace Neon::RHI
                 *m_CopyId);
             m_CopyId = std::nullopt;
         }
-        return m_Resource.get();
+        return m_Resource;
     }
 } // namespace Neon::RHI

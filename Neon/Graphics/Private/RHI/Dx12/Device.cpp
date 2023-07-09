@@ -10,6 +10,8 @@
 #include <ShlObj_core.h>
 #include <dxgidebug.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <Log/Logger.hpp>
 
 extern "C"
@@ -114,10 +116,12 @@ namespace Neon::RHI
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
         m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
         m_Swapchain->PostInitialize(SwapchainDesc);
+        CreateDefaultTextures();
     }
 
     void Dx12RenderDevice::Shudown()
     {
+        m_DefaultTextures = {};
         m_Swapchain->Shutdown();
         m_Swapchain       = nullptr;
         m_MemoryAllocator = nullptr;
@@ -278,6 +282,11 @@ namespace Neon::RHI
         return m_MemoryAllocator->GetStateManager();
     }
 
+    Dx12Texture* Dx12RenderDevice::GetDefaultTexture(DefaultTextures Type) const
+    {
+        return m_DefaultTextures[size_t(Type)].get();
+    }
+
     void Dx12RenderDevice::CheckDeviceFeatures()
     {
         m_DeviceFeatures.Initialize(m_Device.Get());
@@ -314,5 +323,71 @@ namespace Neon::RHI
         m_HeapDescriptorSize.DSV = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
         m_HeapDescriptorSize.SAM = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
         m_HeapDescriptorSize.CBV = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    }
+
+    void Dx12RenderDevice::CreateDefaultTextures()
+    {
+        // Debug miplevels
+        auto Desc2D   = ResourceDesc::Tex2D(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
+        auto Desc3D   = ResourceDesc::Tex3D(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
+        auto DescCube = ResourceDesc::TexCube(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
+
+        SubresourceDesc Subresource{
+            .RowPitch   = 4,
+            .SlicePitch = 4,
+        };
+        std::span<SubresourceDesc>     Subresource2D{};
+        std::span<SubresourceDesc>     Subresource3D{};
+        std::array<SubresourceDesc, 6> SubresourceCube{};
+
+        auto CreateSubresources = [&]
+        {
+            Subresource2D   = { &Subresource, 1 };
+            Subresource3D   = { &Subresource, 1 };
+            SubresourceCube = { Subresource, Subresource, Subresource,
+                                Subresource, Subresource, Subresource };
+        };
+
+        Subresource.Data = glm::value_ptr(Colors::Magenta);
+        CreateSubresources();
+
+        PendingResource MagentaTexture2D(Desc2D, Subresource2D);
+        PendingResource MagentaTexture3D(Desc3D, Subresource3D);
+        PendingResource MagentaTextureCube(DescCube, SubresourceCube);
+
+        Subresource.Data = glm::value_ptr(Colors::White);
+        CreateSubresources();
+
+        PendingResource WhiteTexture2D(Desc2D, Subresource2D);
+        PendingResource WhiteTexture3D(Desc3D, Subresource3D);
+        PendingResource WhiteTextureCube(DescCube, SubresourceCube);
+
+        Subresource.Data = glm::value_ptr(Colors::Black);
+        CreateSubresources();
+
+        PendingResource BlackTexture2D(Desc2D, Subresource2D);
+        PendingResource BlackTexture3D(Desc3D, Subresource3D);
+        PendingResource BlackTextureCube(DescCube, SubresourceCube);
+
+        //
+
+        auto CommandQueue = m_Swapchain->GetQueue(CommandQueueType::Graphics);
+
+        auto LoadTexture = [this, CommandQueue](PendingResource& Resource, DefaultTextures Type)
+        {
+            m_DefaultTextures[size_t(Type)] = Resource.Access<Dx12Texture>(CommandQueue);
+        };
+
+        LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D);
+        LoadTexture(MagentaTexture3D, DefaultTextures::Magenta_3D);
+        LoadTexture(MagentaTextureCube, DefaultTextures::Magenta_Cube);
+
+        LoadTexture(WhiteTexture2D, DefaultTextures::White_2D);
+        LoadTexture(WhiteTexture3D, DefaultTextures::White_3D);
+        LoadTexture(WhiteTextureCube, DefaultTextures::White_Cube);
+
+        LoadTexture(BlackTexture2D, DefaultTextures::Black_2D);
+        LoadTexture(BlackTexture3D, DefaultTextures::Black_3D);
+        LoadTexture(BlackTextureCube, DefaultTextures::Black_Cube);
     }
 } // namespace Neon::RHI

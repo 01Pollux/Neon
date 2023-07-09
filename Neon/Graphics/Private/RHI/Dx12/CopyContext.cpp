@@ -2,6 +2,8 @@
 #include <Private/RHI/Dx12/FrameManager.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::RHI
 {
     CopyContextManager::CommandContext::CommandContext()
@@ -48,7 +50,7 @@ namespace Neon::RHI
                         ThrowIfFailed(Context.CommandAllocator->Reset());
                         ThrowIfFailed(Context.CommandList->Reset(Context.CommandAllocator.Get(), nullptr));
 
-#if NEON_DEBUG
+#if !NEON_DIST
                         try
                         {
                             for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
@@ -56,10 +58,12 @@ namespace Neon::RHI
                                 auto& [Task, Promise] = m_Queue.front();
                                 Task(&CopyCommandList);
                                 m_Queue.pop();
+                                printf("Executing copy %llu\n", m_CopyId);
                             }
                         }
-                        catch (...)
+                        catch (const std::exception& Exception)
                         {
+                            NEON_ERROR("Exception in copy context thread: {}", Exception.what());
                             std::terminate();
                         }
 #else
@@ -76,6 +80,8 @@ namespace Neon::RHI
                         m_CopyQueue.Get()->ExecuteCommandLists(1, CommandLists);
                         m_CopyFence.SignalGPU(&m_CopyQueue, m_CopyId);
 
+                        m_CopyId++;
+                        printf("NextId copy %llu\n", m_CopyId);
                         Lock.unlock();
                     }
                 },
@@ -96,8 +102,9 @@ namespace Neon::RHI
         uint64_t CopyId;
         {
             std::scoped_lock Lock(m_QueueMutex);
-            CopyId = m_CopyId + m_Queue.size();
+            CopyId = m_CopyId;
             m_Queue.emplace(PackagedTaskType(Task));
+            printf("Enqueue copy %llu\n", CopyId);
         }
 
         m_TaskWaiter.notify_one();

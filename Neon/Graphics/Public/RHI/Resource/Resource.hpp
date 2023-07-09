@@ -10,6 +10,7 @@ namespace Neon::RHI
 {
     class ISwapchain;
     class ICommandQueue;
+    struct DescriptorHeapHandle;
 
     //
 
@@ -189,6 +190,27 @@ namespace Neon::RHI
         Format   Type = Format::None;
     };
 
+    enum class DefaultTextures : uint8_t
+    {
+        Magenta_2D,
+        Magenta_3D,
+        Magenta_Cube,
+
+        White_2D,
+        White_3D,
+        White_Cube,
+
+        Black_2D,
+        Black_3D,
+        Black_Cube,
+
+        Count,
+
+        Error_2D   = Magenta_2D,
+        Error_3D   = Magenta_3D,
+        Error_Cube = Magenta_Cube,
+    };
+
     class ITexture : public virtual IGpuResource
     {
     public:
@@ -237,6 +259,13 @@ namespace Neon::RHI
             uint32_t PlaneIndex,
             uint32_t ArrayIndex,
             uint32_t MipIndex) const = 0;
+
+    public:
+        /// <summary>
+        /// Get default texture for specified type.
+        /// </summary>
+        static [[nodiscard]] ITexture* GetDefault(
+            DefaultTextures Type);
     };
 
     class PendingResource
@@ -275,13 +304,13 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the texture once it has been created.
         /// </summary>
-        [[nodiscard]] IGpuResource* Access(
+        [[nodiscard]] Ptr<IGpuResource> Access(
             ICommandQueue* Queue) const;
 
         /// <summary>
         /// Returns the texture once it has been created.
         /// </summary>
-        [[nodiscard]] IGpuResource* Access(
+        [[nodiscard]] Ptr<IGpuResource> Access(
             RHI::CommandQueueType QueueType) const;
 
         /// <summary>
@@ -289,10 +318,10 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
             requires std::derived_from<_Ty, IGpuResource>
-        [[nodiscard]] ITexture* Access(
+        [[nodiscard]] auto Access(
             ICommandQueue* Queue) const
         {
-            return dynamic_cast<_Ty*>(Access(Queue));
+            return std::dynamic_pointer_cast<_Ty>(Access(Queue));
         }
 
         /// <summary>
@@ -300,10 +329,10 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
             requires std::derived_from<_Ty, IGpuResource>
-        [[nodiscard]] IGpuResource* Access(
+        [[nodiscard]] auto Access(
             RHI::CommandQueueType QueueType) const
         {
-            return dynamic_cast<_Ty*>(Access(QueueType));
+            return std::dynamic_pointer_cast<_Ty>(Access(QueueType));
         }
 
     private:

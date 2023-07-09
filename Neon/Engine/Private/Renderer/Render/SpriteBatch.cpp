@@ -139,6 +139,7 @@ namespace Neon::Renderer
         //
 
         // TODO: bind shared descriptor
+
         auto MasterMaterial = m_MaterialInstances[0]->GetParentMaterial();
         MasterMaterial->Bind(m_CommandList);
 

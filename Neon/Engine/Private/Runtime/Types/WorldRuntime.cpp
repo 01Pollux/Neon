@@ -138,6 +138,13 @@ namespace Neon::Runtime
             Material->CreateInstance()
         };
 
+        RHI::ITexture* RandomTextures[]{
+            RHI::ITexture::GetDefault(RHI::DefaultTextures::Magenta_2D),
+            RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D),
+            RHI::ITexture::GetDefault(RHI::DefaultTextures::Black_2D),
+            RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D)
+        };
+
         //
 
         for (float y = -1.f; y < 1.f; y += .2f)
@@ -163,7 +170,9 @@ namespace Neon::Runtime
                 SpriteComponent.MaterialInstance = RandomInstances[std::rand() % std::size(RandomInstances)];
 
                 Sprite.set(SpriteComponent);
-                // Sprite.set<Scene::Relation::GroupByMaterialInstance, Scene::Relation::GroupByMaterialInstance::Value>({ SpriteComponent.MaterialInstance.get() });
+
+                // SpriteComponent.MaterialInstance->SetResource("Texture", );
+                //  Sprite.set<Scene::Relation::GroupByMaterialInstance, Scene::Relation::GroupByMaterialInstance::Value>({ SpriteComponent.MaterialInstance.get() });
             }
         }
     }

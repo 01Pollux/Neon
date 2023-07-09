@@ -287,24 +287,22 @@ namespace Neon::RHI
             &m_Allocation,
             IID_PPV_ARGS(&m_Resource)));
 
-        uint16_t MipLevels = 1;
         if (Dx12Desc.MipLevels == 0)
         {
             for (uint64_t Width = Dx12Desc.Width, Height = Dx12Desc.Height;
                  Width && Height;
                  Width >>= 1, Height >>= 1)
             {
-                MipLevels++;
+                m_MipLevels++;
             }
         }
         else
         {
-            MipLevels = Dx12Desc.MipLevels;
+            m_MipLevels = Dx12Desc.MipLevels;
         }
         m_Dimensions = { int(Dx12Desc.Width),
                          int(Dx12Desc.Height),
                          int(Dx12Desc.DepthOrArraySize) };
-        m_MipLevels  = Desc.MipLevels;
 
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         if (!Subresources.empty())
@@ -495,5 +493,11 @@ namespace Neon::RHI
                     SubreourcesGuard->Subresources);
             },
             this);
+    }
+
+    ITexture* ITexture::GetDefault(
+        DefaultTextures Type)
+    {
+        return Dx12RenderDevice::Get()->GetDefaultTexture(Type);
     }
 } // namespace Neon::RHI

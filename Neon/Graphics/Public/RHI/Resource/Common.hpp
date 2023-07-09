@@ -441,7 +441,7 @@ namespace Neon::RHI
             EResourceFormat      Format,
             size_t               Width,
             uint16_t             ArraySize,
-            uint16_t             MipLevels,
+            uint16_t             MipLevels     = 0,
             uint32_t             SampleCount   = 1,
             uint32_t             SampleQuality = 0,
             const MResourceFlags Flags         = {},
@@ -450,7 +450,7 @@ namespace Neon::RHI
         {
             return {
                 .Width         = Width,
-                .Depth         = 1,
+                .Depth         = ArraySize,
                 .MipLevels     = MipLevels,
                 .Alignment     = Alignment,
                 .SampleCount   = SampleCount,
@@ -470,7 +470,7 @@ namespace Neon::RHI
             size_t               Width,
             uint32_t             Height,
             uint16_t             ArraySize,
-            uint16_t             MipLevels,
+            uint16_t             MipLevels     = 0,
             uint32_t             SampleCount   = 1,
             uint32_t             SampleQuality = 0,
             const MResourceFlags Flags         = {},
@@ -480,7 +480,7 @@ namespace Neon::RHI
             return {
                 .Width         = Width,
                 .Height        = Height,
-                .Depth         = 1,
+                .Depth         = ArraySize,
                 .MipLevels     = MipLevels,
                 .Alignment     = Alignment,
                 .SampleCount   = SampleCount,
@@ -500,7 +500,7 @@ namespace Neon::RHI
             size_t               Width,
             uint32_t             Height,
             uint16_t             Depth,
-            uint16_t             MipLevels,
+            uint16_t             MipLevels = 0,
             const MResourceFlags Flags     = {},
             ResourceLayout       Layout    = ResourceLayout::Unknown,
             uint32_t             Alignment = 0)
@@ -516,6 +516,33 @@ namespace Neon::RHI
                 .Format    = Format,
                 .Layout    = Layout
             };
+        }
+
+        /// <summary>
+        /// Creates a texture resource description.
+        /// </summary>
+        static ResourceDesc TexCube(
+            EResourceFormat      Format,
+            size_t               Width,
+            uint32_t             Height,
+            uint16_t             MipLevels     = 0,
+            uint32_t             SampleCount   = 1,
+            uint32_t             SampleQuality = 0,
+            const MResourceFlags Flags         = {},
+            ResourceLayout       Layout        = ResourceLayout::Unknown,
+            uint32_t             Alignment     = 0)
+        {
+            return Tex2D(
+                Format,
+                Width,
+                Height,
+                6,
+                MipLevels,
+                SampleCount,
+                SampleQuality,
+                Flags,
+                Layout,
+                Alignment);
         }
 
     public:
