@@ -264,7 +264,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get default texture for specified type.
         /// </summary>
-        static [[nodiscard]] ITexture* GetDefault(
+        static [[nodiscard]] const Ptr<ITexture>& GetDefault(
             DefaultTextures Type);
     };
 

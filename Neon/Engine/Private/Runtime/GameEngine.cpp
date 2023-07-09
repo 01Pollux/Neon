@@ -5,11 +5,6 @@
 #include <Resource/Types/Logger.hpp>
 #include <Resource/Pack.hpp>
 
-#include <Runtime/Window.hpp>
-#include <Runtime/Pipeline.hpp>
-
-#include <Runtime/Types/WorldRuntime.hpp>
-
 namespace Neon::Runtime
 {
     static DefaultGameEngine* s_GameEngine = nullptr;

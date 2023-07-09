@@ -79,7 +79,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get default texture.
         /// </summary>
-        [[nodiscard]] Dx12Texture* GetDefaultTexture(
+        [[nodiscard]] const Ptr<ITexture>& GetDefaultTexture(
             DefaultTextures Type) const;
 
     private:
@@ -150,6 +150,6 @@ namespace Neon::RHI
         UPtr<GraphicsMemoryAllocator> m_MemoryAllocator;
         UPtr<Dx12Swapchain>           m_Swapchain;
 
-        std::array<Ptr<Dx12Texture>, size_t(DefaultTextures::Count)> m_DefaultTextures;
+        std::array<Ptr<ITexture>, size_t(DefaultTextures::Count)> m_DefaultTextures;
     };
 } // namespace Neon::RHI

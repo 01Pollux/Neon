@@ -105,7 +105,7 @@ namespace Neon::Renderer
             m_SharedResourceDescriptor,
             m_SharedSamplerDescriptor;
 
-        Ptr<IMaterialInstance>          m_DefaultInstace;
+        Ptr<IMaterialInstance>          m_DefaultInstance;
         std::map<StringU8, LayoutEntry> m_EntryMap;
     };
 
@@ -129,6 +129,12 @@ namespace Neon::Renderer
         void GetDescriptor(
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
             RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
+
+        void SetResource(
+            const std::string&             Name,
+            const Ptr<RHI::IGpuResource>   Resource,
+            const RHI::DescriptorViewDesc& Desc,
+            size_t                         ArrayIndex) override;
 
     private:
         DescriptorHeapHandle

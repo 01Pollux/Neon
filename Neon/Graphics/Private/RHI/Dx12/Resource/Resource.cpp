@@ -495,7 +495,7 @@ namespace Neon::RHI
             this);
     }
 
-    ITexture* ITexture::GetDefault(
+    const Ptr<ITexture>& ITexture::GetDefault(
         DefaultTextures Type)
     {
         return Dx12RenderDevice::Get()->GetDefaultTexture(Type);

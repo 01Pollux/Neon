@@ -282,9 +282,9 @@ namespace Neon::RHI
         return m_MemoryAllocator->GetStateManager();
     }
 
-    Dx12Texture* Dx12RenderDevice::GetDefaultTexture(DefaultTextures Type) const
+    const Ptr<ITexture>& Dx12RenderDevice::GetDefaultTexture(DefaultTextures Type) const
     {
-        return m_DefaultTextures[size_t(Type)].get();
+        return m_DefaultTextures[size_t(Type)];
     }
 
     void Dx12RenderDevice::CheckDeviceFeatures()
@@ -375,7 +375,7 @@ namespace Neon::RHI
 
         auto LoadTexture = [this, CommandQueue](PendingResource& Resource, DefaultTextures Type)
         {
-            m_DefaultTextures[size_t(Type)] = Resource.Access<Dx12Texture>(CommandQueue);
+            m_DefaultTextures[size_t(Type)] = Resource.Access<ITexture>(CommandQueue);
         };
 
         LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D);

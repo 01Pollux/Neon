@@ -10,6 +10,12 @@
 #include <RHI/PipelineState.hpp>
 #include <RHI/Commands/List.hpp>
 
+#include <RHI/Resource/Views/ConstantBuffer.hpp>
+#include <RHI/Resource/Views/ShaderResource.hpp>
+#include <RHI/Resource/Views/UnorderedAccess.hpp>
+#include <RHI/Resource/Views/RenderTarget.hpp>
+#include <RHI/Resource/Views/DepthStencil.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace ranges = std::ranges;
@@ -361,12 +367,12 @@ namespace Neon::Renderer
 
     Ptr<IMaterialInstance> Material::CreateInstance()
     {
-        return m_DefaultInstace->CreateInstance();
+        return m_DefaultInstance->CreateInstance();
     }
 
     const Ptr<IMaterialInstance>& Material::GetDefaultInstance()
     {
-        return m_DefaultInstace;
+        return m_DefaultInstance;
     }
 
     void Material::Bind(
@@ -380,8 +386,8 @@ namespace Neon::Renderer
         uint32_t LocalResourceDescriptorSize,
         uint32_t LocalSamplerDescriptorSize)
     {
-        NEON_ASSERT(!m_DefaultInstace);
-        m_DefaultInstace.reset(NEON_NEW MaterialInstance(
+        NEON_ASSERT(!m_DefaultInstance);
+        m_DefaultInstance.reset(NEON_NEW MaterialInstance(
             shared_from_this(),
             LocalResourceDescriptorSize,
             LocalSamplerDescriptorSize));
@@ -438,6 +444,71 @@ namespace Neon::Renderer
         if (OutSamplerDescriptor)
         {
             *OutSamplerDescriptor = m_SamplerDescriptor;
+        }
+    }
+
+    void MaterialInstance::SetResource(
+        const std::string&             Name,
+        const Ptr<RHI::IGpuResource>   Resource,
+        const RHI::DescriptorViewDesc& Desc,
+        size_t                         ArrayIndex)
+    {
+        auto Mat    = static_cast<Material*>(m_ParentMaterial.get());
+        auto Layout = Mat->m_EntryMap.find(Name);
+        if (Layout == Mat->m_EntryMap.end())
+        {
+            NEON_WARNING("Material", "Failed to find resource: {}", Name);
+            return;
+        }
+
+        if (auto DescriptorEntry = std::get_if<Material::DescriptorEntry>(&Layout->second.Entry))
+        {
+            DescriptorHeapHandle& Handle = Layout->second.IsShared ? Mat->m_SharedResourceDescriptor : m_ResourceDescriptor;
+
+            NEON_ASSERT(ArrayIndex < DescriptorEntry->Descs.size());
+
+            auto& EntryDesc     = DescriptorEntry->Descs[ArrayIndex];
+            auto& EntryResource = DescriptorEntry->Resources[ArrayIndex];
+
+            EntryDesc     = Desc;
+            EntryResource = Resource;
+
+            std::visit(
+                VariantVisitor{
+                    [](const std::monostate&)
+                    {
+                        NEON_ASSERT(false, "Invalid view type");
+                    },
+                    [&Handle, this](const RHI::CBVDesc& Desc)
+                    {
+                        RHI::Views::ConstantBuffer View{ Handle };
+                        View.Bind(Desc);
+                    },
+                    [&Handle, Resource, this](const std::optional<RHI::SRVDesc>& Desc)
+                    {
+                        RHI::Views::ShaderResource View{ Handle };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                    },
+                    [&Handle, Resource, this](const std::optional<RHI::UAVDesc>& Desc)
+                    {
+                        RHI::Views::UnorderedAccess View{ Handle };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                    },
+                    [&Handle, Resource, this](const std::optional<RHI::RTVDesc>& Desc)
+                    {
+                        RHI::Views::RenderTarget View{ Handle };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                    },
+                    [&Handle, Resource, this](const std::optional<RHI::DSVDesc>& Desc)
+                    {
+                        RHI::Views::DepthStencil View{ Handle };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                    } },
+                EntryDesc);
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
         }
     }
 } // namespace Neon::Renderer
