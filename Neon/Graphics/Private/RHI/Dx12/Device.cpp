@@ -112,11 +112,8 @@ namespace Neon::RHI
         const SwapchainCreateDesc& SwapchainDesc)
     {
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
-        if (Window)
-        {
-            m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
-            m_Swapchain->PostInitialize(SwapchainDesc);
-        }
+        m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
+        m_Swapchain->PostInitialize(SwapchainDesc);
     }
 
     void Dx12RenderDevice::Shudown()

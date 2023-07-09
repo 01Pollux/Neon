@@ -1,5 +1,5 @@
 #include <GraphicsPCH.hpp>
-#include <Private/RHI/Dx12/Budget.hpp>
+#include <Private/RHI/Dx12/FrameManager.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
 namespace Neon::RHI

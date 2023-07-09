@@ -72,8 +72,13 @@ namespace Neon::Logger
         }
 #endif
 
-        auto& Detail = s_LogDetails[Tag];
-        if (Detail.Enabled && Detail.Severity <= Severity)
+        bool ShouldLog = Severity >= LogSeverity::Error;
+        if (!ShouldLog)
+        {
+            auto& Detail = s_LogDetails[Tag];
+            ShouldLog    = Detail.Enabled && Detail.Severity <= Severity;
+        }
+        if (ShouldLog)
         {
             switch (Severity)
             {
@@ -109,8 +114,13 @@ namespace Neon::Logger
         }
 #endif
 
-        auto& Detail = s_LogDetails[""];
-        if (Detail.Enabled && Detail.Severity <= Severity)
+        bool ShouldLog = Severity >= LogSeverity::Error;
+        if (!ShouldLog)
+        {
+            auto& Detail = s_LogDetails[""];
+            ShouldLog    = Detail.Enabled && Detail.Severity <= Severity;
+        }
+        if (ShouldLog)
         {
             switch (Severity)
             {

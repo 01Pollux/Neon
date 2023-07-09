@@ -10,8 +10,8 @@ namespace Neon::Runtime
     /// Entry point for the engine.
     /// </summary>
     extern int Main(
-        int      Argc,
-        wchar_t* Argv[]);
+        int       Argc,
+        wchar_t** Argv);
 }; // namespace Neon::Runtime
 
 #if defined(NEON_PLATFORM_WINDOWS) && defined(NEON_DIST)
@@ -29,13 +29,13 @@ namespace Neon::Runtime
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
-        int      Argc,                             \
-        wchar_t* Argv[])
+        int       Argc,                            \
+        wchar_t** Argv)
 
 #else
 
 #define NEON_MAIN(Argc, Argv)                      \
-    int main(                                      \
+    int wmain(                                     \
         int       argc,                            \
         wchar_t** argv)                            \
     {                                              \
@@ -45,8 +45,8 @@ namespace Neon::Runtime
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
-        int      Argc,                             \
-        wchar_t* Argv[])
+        int       Argc,                            \
+        wchar_t** Argv)
 
 #endif
 

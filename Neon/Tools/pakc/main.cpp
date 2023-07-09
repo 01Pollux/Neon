@@ -11,13 +11,14 @@ using namespace Neon;
 
 NEON_MAIN(Argc, Argv)
 {
+    Logger::SetLogTag("", Logger::LogSeverity::Info);
     Logger::SetLogTag("Resource", Logger::LogSeverity::Info);
     Logger::SetLogTag("Graphics", Logger::LogSeverity::Info);
     Logger::SetLogTag("ShaderCompiler", Logger::LogSeverity::Info);
 
     if (Argc <= 1)
     {
-        NEON_WARNING("Usage: pakc <file>...");
+        NEON_FATAL("Usage: pakc <file>...");
         return 0;
     }
 
