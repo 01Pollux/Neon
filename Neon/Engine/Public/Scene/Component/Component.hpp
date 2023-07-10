@@ -3,7 +3,8 @@
 namespace flecs
 {
     struct world;
-}
+    struct entity;
+} // namespace flecs
 
 #define NEON_EXPORT_COMPONENT() \
     static void Register(       \
