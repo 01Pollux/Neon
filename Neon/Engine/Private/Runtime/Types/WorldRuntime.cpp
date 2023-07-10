@@ -7,13 +7,13 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Pipeline.hpp>
 
-#include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Passes/ScenePass.hpp>
-
 #include <Window/Window.hpp>
 #include <RHI/Swapchain.hpp>
 
 //
+
+#include <Renderer/RG/Graphs/Standard2D.hpp>
+#include <Scene/Component/Camera.hpp>
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
@@ -64,36 +64,24 @@ namespace Neon::Runtime
             "PreRender",
             [this]
             {
-                m_WindowIsVisible = DefaultGameEngine::Get()->GetWindow()->IsVisible().get();
-                if (m_WindowIsVisible)
-                {
-                    RHI::ISwapchain::Get()->PrepareFrame();
-                }
+                RHI::ISwapchain::Get()->PrepareFrame();
             });
 
         Pipeline->Attach(
             "Render",
             [this]
             {
-                if (m_WindowIsVisible)
-                {
-                    m_RenderGraph.Run();
-                }
+                m_Scene.Render();
             });
 
         Pipeline->Attach(
             "PostRender",
             [this]
             {
-                if (m_WindowIsVisible)
-                {
-                    RHI::ISwapchain::Get()->Present();
-                }
+                RHI::ISwapchain::Get()->Present();
             });
 
         Engine->SetPipeline(std::move(Pipeline));
-
-        SetupRenderPasses();
 
         //
 
@@ -149,10 +137,10 @@ namespace Neon::Runtime
 
                 auto Sprite = m_Scene->entity();
 
-                Scene::Component::Transform Transform;
-                Transform.Local.SetPosition(Vector3(x, y, 0.f));
-                Transform.World.SetPosition(Vector3(x, y, 0.f));
-                Sprite.set(Transform);
+                Scene::Component::Transform TransformComponent;
+                TransformComponent.Local.SetPosition(Vector3(x, y, 5.f));
+                TransformComponent.World.SetPosition(Vector3(x, y, 5.f));
+                Sprite.set(TransformComponent);
 
                 Scene::Component::Sprite SpriteComponent;
 
@@ -168,6 +156,18 @@ namespace Neon::Runtime
                 Sprite.set(SpriteComponent);
             }
         }
+
+        //
+
+        auto Camera = m_Scene->entity();
+
+        Camera.set<Scene::Component::Transform>({});
+
+        Scene::Component::Camera CameraComponent;
+        CameraComponent.RenderGraph = std::make_unique<RG::Standard2DRenderGraph>(m_Scene);
+        CameraComponent.LookAt      = Vector3(0.f, 0.f, 5.f);
+
+        Camera.set(std::move(CameraComponent));
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()
@@ -178,14 +178,5 @@ namespace Neon::Runtime
     const Scene::GameScene& EngineWorldRuntime::GetScene() const
     {
         return m_Scene;
-    }
-
-    void EngineWorldRuntime::SetupRenderPasses()
-    {
-        auto Builder = m_RenderGraph.Reset();
-
-        Builder.AppendPass<RG::ScenePass>(m_RenderGraph.GetStorage(), m_Scene);
-
-        Builder.Build();
     }
 } // namespace Neon::Runtime

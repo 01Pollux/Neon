@@ -33,6 +33,18 @@ namespace Neon
         template<typename _Ty>
         concept QuaternionType = std::is_same_v<_Ty, Quaternion>;
 
+        namespace Impl
+        {
+            template<VectorType _Ty>
+            constexpr _Ty MakeVec(int X, int Y)
+            {
+                _Ty Vec{};
+                Vec.x = static_cast<_Ty::value_type>(X);
+                Vec.y = static_cast<_Ty::value_type>(Y);
+                return Vec;
+            }
+        } // namespace Impl
+
         //
 
         template<VectorType _Ty>
@@ -42,16 +54,16 @@ namespace Neon
         inline constexpr _Ty Zero{ 0 };
 
         template<VectorType _Ty>
-        inline constexpr _Ty Up{ 0, 1 };
+        inline constexpr _Ty Up = Impl::MakeVec<_Ty>(0, 1);
 
         template<VectorType _Ty>
-        inline constexpr _Ty Down{ 0, -1 };
+        inline constexpr _Ty Down = Impl::MakeVec<_Ty>(0, -1);
 
         template<VectorType _Ty>
-        inline constexpr _Ty Left{ -1, 0 };
+        inline constexpr _Ty Left = Impl::MakeVec<_Ty>(-1, 0);
 
         template<VectorType _Ty>
-        inline constexpr _Ty Right{ 1, 0 };
+        inline constexpr _Ty Right = Impl::MakeVec<_Ty>(1, 0);
 
         template<VectorType _Ty>
         inline constexpr _Ty Forward{ 0, 0, 1 };

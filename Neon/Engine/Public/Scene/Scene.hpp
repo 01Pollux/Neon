@@ -35,6 +35,11 @@ namespace Neon::Scene
             return m_World.get();
         }
 
+        /// <summary>
+        /// Render the scene to all active cameras.
+        /// </summary>
+        void Render();
+
     private:
         std::unique_ptr<flecs::world> m_World;
     };

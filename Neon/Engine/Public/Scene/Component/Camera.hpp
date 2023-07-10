@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Neon.hpp>
 #include <Scene/Component/Component.hpp>
 #include <flecs/flecs.h>
 #include <Math/Matrix.hpp>
@@ -52,6 +53,16 @@ namespace Neon::Scene::Component
             float OrthographicSize = 1.0f;
 
             /// <summary>
+            /// Whether the viewport is using client width and height.
+            /// </summary>
+            bool ClientWidth = false;
+
+            /// <summary>
+            /// Whether the viewport is using client width and height.
+            /// </summary>
+            bool ClientHeight = false;
+
+            /// <summary>
             /// Get the aspect ratio of the viewport.
             /// </summary>
             [[nodiscard]] float AspectRatio() const;
@@ -73,16 +84,14 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Get the view matrix of the viewport.
         /// </summary>
-        [[nodiscard]] static Matrix4x4 ViewMatrix(
-            const flecs::entity& OwningEntity,
-            const Vector3&       Position);
+        [[nodiscard]] Matrix4x4 ViewMatrix(
+            const flecs::entity& OwningEntity);
 
         /// <summary>
         /// Get the view matrix of the viewport.
         /// </summary>
-        [[nodiscard]] static Matrix4x4 ViewProjectionMatrix(
-            const flecs::entity& OwningEntity,
-            const Vector3&       Position);
+        [[nodiscard]] Matrix4x4 ViewProjectionMatrix(
+            const flecs::entity& OwningEntity);
 
         NEON_EXPORT_COMPONENT();
 
@@ -95,6 +104,11 @@ namespace Neon::Scene::Component
         /// The viewport of the camera.
         /// </summary>
         Viewport Viewport;
+
+        /// <summary>
+        /// The position for the camera to look at.
+        /// </summary>
+        Vector3 LookAt = Vec::Zero<Vector3>;
 
         /// <summary>
         /// The culling mask of the camera.

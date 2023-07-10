@@ -30,4 +30,10 @@ namespace Neon::Scene
             m_World.reset();
         }
     }
+
+    //
+
+    void GameScene::Render()
+    {
+    }
 } // namespace Neon::Scene

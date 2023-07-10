@@ -26,15 +26,7 @@ namespace Neon::Runtime
         /// </summary>
         const Scene::GameScene& GetScene() const;
 
-    public:
-        /// <summary>
-        /// Import the render graph.
-        /// </summary>
-        void SetupRenderPasses();
-
     private:
         Scene::GameScene m_Scene;
-        RG::RenderGraph  m_RenderGraph;
-        bool             m_WindowIsVisible = false;
     };
 } // namespace Neon::Runtime

@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
+#include <Renderer/RG/Passes/OuputImage.hpp>
 
 #include <execution>
 
@@ -11,6 +12,7 @@ namespace Neon::RG
         RenderGraph& Context) :
         m_Context(Context)
     {
+        AppendPass<InitializeOutputImage>();
     }
 
     void RenderGraphBuilder::Build()
