@@ -2,8 +2,6 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/OuputImage.hpp>
 
-#include <execution>
-
 #include <Log/Logger.hpp>
 
 namespace Neon::RG

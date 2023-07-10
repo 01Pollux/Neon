@@ -5,8 +5,28 @@
 #include <flecs/flecs.h>
 #include <memory>
 
+namespace Neon::Scene::Component
+{
+    struct Transform;
+    struct Camera;
+} // namespace Neon::Scene::Component
+
 namespace Neon::Scene
 {
+    //
+
+    enum class EntityType
+    {
+        Empty,
+
+        Camera2D,
+        Camera3D,
+
+        Sprite,
+    };
+
+    //
+
     using Actor = flecs::entity;
 
     class GameScene
@@ -40,7 +60,20 @@ namespace Neon::Scene
         /// </summary>
         void Render();
 
+    public:
+        /// <summary>
+        /// Create a new entity.
+        /// </summary>
+        Actor CreateEntity(
+            EntityType  Type,
+            const char* Name = nullptr);
+
     private:
         std::unique_ptr<flecs::world> m_World;
+
+        flecs::query<
+            Component::Transform,
+            Component::Camera>
+            m_CameraQuery;
     };
 } // namespace Neon::Scene

@@ -7,7 +7,6 @@
 #include <Scene/Scene.hpp>
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
-#include <Scene/Relation/Material.hpp>
 
 //
 

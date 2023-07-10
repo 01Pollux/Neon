@@ -6,6 +6,8 @@
 #include <Scene/Component/Component.hpp>
 #include <Scene/Component/Sprite.hpp>
 
+#include <Scene/Component/Camera.hpp>
+
 namespace Neon::Scene::Exports
 {
     void RegisterActorComponents(
@@ -15,5 +17,7 @@ namespace Neon::Scene::Exports
 
         NEON_REGISTER_COMPONENT(Component::CanvasItem);
         NEON_REGISTER_COMPONENT(Component::Sprite);
+
+        NEON_REGISTER_COMPONENT(Component::Camera);
     }
 } // namespace Neon::Scene::Exports

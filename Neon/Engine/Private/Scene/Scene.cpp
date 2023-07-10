@@ -2,6 +2,14 @@
 #include <Scene/Scene.hpp>
 #include <Scene/Exports/Export.hpp>
 
+//
+
+#include <Renderer/RG/RG.hpp>
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Camera.hpp>
+
+//
+
 namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
@@ -20,6 +28,20 @@ namespace Neon::Scene
         m_World->set<flecs::Rest>({});
         m_World->import <flecs::monitor>();
 #endif
+
+        m_CameraQuery =
+            m_World->query_builder<
+                       Component::Transform,
+                       Component::Camera>()
+                .order_by(
+                    +[](flecs::entity_t,
+                        const Component::Camera* LhsCamera,
+                        flecs::entity_t,
+                        const Component::Camera* RhsCamera) -> int
+                    {
+                        return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
+                    })
+                .build();
     }
 
     GameScene::~GameScene()
@@ -35,5 +57,17 @@ namespace Neon::Scene
 
     void GameScene::Render()
     {
+        auto& CameraQuery = m_CameraQuery;
+
+        m_CameraQuery.each(
+            [&](Actor                 Entity,
+                Component::Transform& Transform,
+                Component::Camera&    Camera)
+            {
+                if (Camera.RenderGraph)
+                {
+                    Camera.RenderGraph->Run();
+                }
+            });
     }
 } // namespace Neon::Scene

@@ -4,8 +4,6 @@
 #include <Scene/Exports/Math.hpp>
 #include <Scene/Exports/Actor.hpp>
 
-#include <Scene/Relation/Material.hpp>
-
 namespace Neon::Scene::Exports
 {
     void RegisterComponents(
@@ -13,12 +11,11 @@ namespace Neon::Scene::Exports
     {
         RegisterMathComponents(World);
         RegisterActorComponents(World);
+        RegisterActorTags(World);
     }
 
     void RegisterRelations(
         flecs::world& World)
     {
-        World.component<Relation::GroupByMaterialInstance>();
-        World.component<Relation::GroupByMaterialInstance::Value>();
     }
 } // namespace Neon::Scene::Exports

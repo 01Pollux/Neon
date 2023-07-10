@@ -25,7 +25,7 @@ namespace Neon::Windowing
         EWindowStyle::Resize,
         EWindowStyle::Close);
 
-    class NEON_NOVTABLE IWindowApp
+    class IWindowApp
     {
     public:
         [[nodiscard]] static IWindowApp* Create(

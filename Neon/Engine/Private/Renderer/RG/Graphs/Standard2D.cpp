@@ -3,19 +3,23 @@
 
 //
 
+#include <Scene/Scene.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 
 //
 
 namespace Neon::RG
 {
-    Standard2DRenderGraph::Standard2DRenderGraph(
+    UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
         Scene::GameScene& Scene)
     {
-        auto Builder = Reset();
+        auto Graph   = std::make_unique<RenderGraph>();
+        auto Builder = Graph->Reset();
 
-        Builder.AppendPass<RG::ScenePass>(GetStorage(), Scene);
+        Builder.AppendPass<RG::ScenePass>(Graph->GetStorage(), Scene);
 
         Builder.Build();
+
+        return Graph;
     }
 } // namespace Neon::RG

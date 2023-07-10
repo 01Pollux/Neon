@@ -5,10 +5,25 @@
 
 namespace Neon::Scene::Component
 {
-    Camera::Camera() :
-        RenderGraph(std::make_unique<RG::RenderGraph>())
+    Camera::Camera() = default;
+
+    Camera::Camera(
+        UPtr<RG::RenderGraph> RenderGraph,
+        CameraType            Type) :
+        RenderGraph(std::move(RenderGraph)),
+        Type(Type)
     {
+        if (Type == CameraType::Orthographic)
+        {
+            Viewport.FieldOfView = 90.0f;
+            Viewport.NearPlane   = -1.f;
+            Viewport.FarPlane    = 1.f;
+        }
     }
+
+    NEON_CLASS_MOVE_IMPL(Camera);
+
+    Camera::~Camera() = default;
 
     float Camera::Viewport::AspectRatio() const
     {

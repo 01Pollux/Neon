@@ -12,12 +12,10 @@
 
 //
 
-#include <Renderer/RG/Graphs/Standard2D.hpp>
 #include <Scene/Component/Camera.hpp>
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
-#include <Scene/Relation/Material.hpp>
 #include <Renderer/Material/Builder.hpp>
 
 namespace Neon::Runtime
@@ -159,15 +157,9 @@ namespace Neon::Runtime
 
         //
 
-        auto Camera = m_Scene->entity();
-
-        Camera.set<Scene::Component::Transform>({});
-
-        Scene::Component::Camera CameraComponent;
-        CameraComponent.RenderGraph = std::make_unique<RG::Standard2DRenderGraph>(m_Scene);
-        CameraComponent.LookAt      = Vector3(0.f, 0.f, 5.f);
-
-        Camera.set(std::move(CameraComponent));
+        auto CameraActor        = m_Scene.CreateEntity(Scene::EntityType::Camera3D, "Main Camera");
+        auto CameraComponent    = CameraActor.get_mut<Scene::Component::Camera>();
+        CameraComponent->LookAt = Vector3(0.f, 0.f, 5.f);
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()

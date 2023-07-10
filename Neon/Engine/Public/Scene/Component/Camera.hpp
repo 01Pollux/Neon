@@ -1,9 +1,10 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <Scene/Component/Component.hpp>
 #include <flecs/flecs.h>
 #include <Math/Matrix.hpp>
+
+#include <Scene/Component/Component.hpp>
 
 namespace Neon::RG
 {
@@ -75,6 +76,14 @@ namespace Neon::Scene::Component
         };
 
         Camera();
+        Camera(
+            UPtr<RG::RenderGraph> RenderGraph,
+            CameraType            Type);
+
+        NEON_CLASS_NO_COPY(Camera);
+        NEON_CLASS_MOVE_DECL(Camera);
+
+        ~Camera();
 
         /// <summary>
         /// Get the projection matrix of the viewport.
@@ -116,8 +125,20 @@ namespace Neon::Scene::Component
         uint32_t CullMask = 0xFFFFFFFF;
 
         /// <summary>
+        /// The render order of the camera.
+        /// </summary>
+        uint32_t RenderPriority = 0;
+
+        /// <summary>
         /// The type of the camera.
         /// </summary>
         CameraType Type = CameraType::Perspective;
     };
 } // namespace Neon::Scene::Component
+
+namespace Neon::Scene::Tags
+{
+    struct MainCamera
+    {
+    };
+} // namespace Neon::Scene::Tags

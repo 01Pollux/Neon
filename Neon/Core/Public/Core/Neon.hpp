@@ -17,33 +17,79 @@ namespace Neon
 #define NEON_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)
 #endif
 
-#define NEON_NOVTABLE __declspec(novtable)
-
 // #define NEON_NO_LOG
+
+//
+
+#define NEON_CLASS_COPY_DECL(Class) \
+    Class(const Class&);            \
+    Class& operator=(const Class&)
+
+//
 
 #define NEON_CLASS_NO_COPY(Class)            \
     Class(const Class&)            = delete; \
     Class& operator=(const Class&) = delete
 
+#define NEON_CLASS_NO_COPY_IMPL(Class)              \
+    Class::Class(const Class&)            = delete; \
+    Class& Class::operator=(const Class&) = delete
+
+//
+
 #define NEON_CLASS_COPY(Class)                \
     Class(const Class&)            = default; \
     Class& operator=(const Class&) = default
+
+#define NEON_CLASS_COPY_IMPL(Class)                  \
+    Class::Class(const Class&)            = default; \
+    Class& Class::operator=(const Class&) = default
+
+//
+//
+
+#define NEON_CLASS_MOVE_DECL(Class) \
+    Class(Class&&);                 \
+    Class& operator=(Class&&)
+
+//
 
 #define NEON_CLASS_NO_MOVE(Class)       \
     Class(Class&&)            = delete; \
     Class& operator=(Class&&) = delete
 
+#define NEON_CLASS_NO_MOVE_IMPL(Class)         \
+    Class::Class(Class&&)            = delete; \
+    Class& Class::operator=(Class&&) = delete
+
+//
+
 #define NEON_CLASS_MOVE(Class)           \
     Class(Class&&)            = default; \
     Class& operator=(Class&&) = default
+
+#define NEON_CLASS_MOVE_IMPL(Class)             \
+    Class::Class(Class&&)            = default; \
+    Class& Class::operator=(Class&&) = default
+
+//
+//
 
 #define NEON_CLASS_NO_COPYMOVE(Class) \
     NEON_CLASS_NO_COPY(Class);        \
     NEON_CLASS_NO_MOVE(Class)
 
+#define NEON_CLASS_NO_COPYMOVE_IMPL(Class) \
+    NEON_CLASS_NO_COPY_IMPL(Class);        \
+    NEON_CLASS_NO_MOVE_IMPL(Class)
+
 #define NEON_CLASS_COPYMOVE(Class) \
     NEON_CLASS_COPY(Class);        \
     NEON_CLASS_MOVE(Class)
+
+#define NEON_CLASS_COPYMOVE_IMPL(Class) \
+    NEON_CLASS_COPY_IMPL(Class);        \
+    NEON_CLASS_MOVE_IMPL(Class)
 
 namespace Neon
 {

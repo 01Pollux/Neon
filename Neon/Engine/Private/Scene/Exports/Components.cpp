@@ -6,6 +6,8 @@
 #include <Scene/Component/CanvasItem.hpp>
 #include <Scene/Component/Sprite.hpp>
 
+#include <Scene/Component/Camera.hpp>
+
 namespace Neon::Scene::Component
 {
     NEON_IMPLEMENT_COMPONENT(Transform)
@@ -28,5 +30,13 @@ namespace Neon::Scene::Component
     {
         World.component<Sprite>("Neon::Scene::Sprite")
             .is_a<CanvasItem>();
+    }
+
+    //
+
+    NEON_IMPLEMENT_COMPONENT(Camera)
+    {
+        World.component<Camera>("Neon::Scene::Camera");
+        // TODO: Export Camera component
     }
 } // namespace Neon::Scene::Component
