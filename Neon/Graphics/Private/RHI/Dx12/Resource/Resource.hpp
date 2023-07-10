@@ -30,8 +30,8 @@ namespace Neon::RHI
         [[nodiscard]] D3D12MA::Allocation* GetAllocation() const;
 
     protected:
-        Win32::ComPtr<ID3D12Resource>      m_Resource;
-        Win32::ComPtr<D3D12MA::Allocation> m_Allocation;
+        WinAPI::ComPtr<ID3D12Resource>      m_Resource;
+        WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
     };
 
     class Dx12Buffer : public virtual IBuffer,
@@ -42,7 +42,7 @@ namespace Neon::RHI
     public:
         struct Handle
         {
-            Win32::ComPtr<ID3D12Resource> Resource;
+            WinAPI::ComPtr<ID3D12Resource> Resource;
             size_t                        Offset;
             size_t                        Size;
             GraphicsBufferType            Type;
@@ -115,13 +115,13 @@ namespace Neon::RHI
             uint64_t*                        CopyId);
 
         Dx12Texture(
-            Win32::ComPtr<ID3D12Resource>      Texture,
+            WinAPI::ComPtr<ID3D12Resource>      Texture,
             D3D12_RESOURCE_STATES              InitialState,
-            Win32::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
+            WinAPI::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
 
         Dx12Texture(
-            Win32::ComPtr<ID3D12Resource>      Texture,
-            Win32::ComPtr<D3D12MA::Allocation> Allocation,
+            WinAPI::ComPtr<ID3D12Resource>      Texture,
+            WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>   Subresources,
             uint64_t&                          CopyId);
 

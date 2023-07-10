@@ -24,7 +24,13 @@ project "NeonGraphics"
         "%{CommonDir.Neon.Graphics}"
     }
 
-    links
-    {
-        "%{CommonDir.Deps.Libs}/DxC/lib/x64/dxcompiler.lib"
-    }
+    filter "options:GraphicsAPI=Directx12"
+		defines
+		{
+			"NEON_GRAPHICS_DIRECTX12"
+		}
+		links
+		{
+            "%{CommonDir.Deps.Libs}/DxC/lib/x64/dxcompiler.lib"
+		}
+    filter {}

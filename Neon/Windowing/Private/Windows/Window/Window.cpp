@@ -1,5 +1,5 @@
 #include <WindowPCH.hpp>
-#include <Private/Window/Window.hpp>
+#include <Private/Windows/Window/Window.hpp>
 
 #include <consoleapi.h>
 #include <CommCtrl.h>
@@ -37,47 +37,40 @@ namespace Neon::Windowing
 
         void InitializeClassName()
         {
-            std::lock_guard ClassInit(s_ClassNameInitMutex);
-            if (!s_ClassNameInits++)
-            {
-                NEON_TRACE_TAG(
-                    "Window", "Registering Classname: {}",
-                    StringUtils::Transform<StringU8>(s_ClassName));
+            NEON_TRACE_TAG(
+                "Window", "Registering Classname: {}",
+                StringUtils::Transform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
-                NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, TRUE) != 0);
+            NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, TRUE) != 0);
 #endif
 
-                WNDCLASSEX WndClass{};
-                WndClass.cbSize        = sizeof(WndClass);
-                WndClass.style         = CS_OWNDC | CS_DBLCLKS;
-                WndClass.lpfnWndProc   = &WindowApp::WndProc;
-                WndClass.hInstance     = GetModuleHandle(nullptr);
-                WndClass.lpszClassName = s_ClassName;
+            WNDCLASSEX WndClass{
+                .cbSize        = sizeof(WndClass),
+                .style         = CS_OWNDC | CS_DBLCLKS,
+                .lpfnWndProc   = &WindowApp::WndProc,
+                .hInstance     = GetModuleHandle(nullptr),
+                .lpszClassName = s_ClassName
+            };
 
-                NEON_VALIDATE(RegisterClassEx(&WndClass) != 0);
-                NEON_VALIDATE(SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)));
-            }
+            NEON_VALIDATE(RegisterClassEx(&WndClass) != 0);
+            NEON_VALIDATE(SUCCEEDED(CoInitializeEx(nullptr, COINIT_MULTITHREADED)));
         }
 
         void ShutdownClassName()
         {
-            std::lock_guard ClassInit(s_ClassNameInitMutex);
-            if (!--s_ClassNameInits)
-            {
-                NEON_TRACE_TAG(
-                    "Window", "Unregistering Classname: {}",
-                    StringUtils::Transform<StringU8>(s_ClassName));
+            NEON_TRACE_TAG(
+                "Window", "Unregistering Classname: {}",
+                StringUtils::Transform<StringU8>(s_ClassName));
 
 #if !NEON_DIST
-                NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
+            NEON_ASSERT(SetConsoleCtrlHandler(ConsoleCloseRoutine, FALSE) != 0);
 #endif
 
-                CoUninitialize();
-                NEON_VALIDATE(UnregisterClass(s_ClassName, GetModuleHandle(nullptr)) != 0);
+            CoUninitialize();
+            NEON_VALIDATE(UnregisterClass(s_ClassName, GetModuleHandle(nullptr)) != 0);
 
-                RemoveVectoredExceptionHandler(s_ExceptionHandler);
-            }
+            RemoveVectoredExceptionHandler(s_ExceptionHandler);
         }
     } // namespace Impl
 

@@ -1,5 +1,5 @@
 #include <WindowPCH.hpp>
-#include <Private/Window/Window.hpp>
+#include <Private/Windows/Window/Window.hpp>
 
 #include <CommCtrl.h>
 

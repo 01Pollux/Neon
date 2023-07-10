@@ -11,7 +11,7 @@ namespace Neon::RHI
     public:
         struct CommandAllocatorInstance
         {
-            Win32::ComPtr<ID3D12CommandAllocator> CommandAllocator;
+            WinAPI::ComPtr<ID3D12CommandAllocator> CommandAllocator;
 
             CommandAllocatorInstance(
                 D3D12_COMMAND_LIST_TYPE CommandType);
@@ -48,14 +48,14 @@ namespace Neon::RHI
         /// Enqueue descriptor to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor);
+            const WinAPI::ComPtr<ID3D12DescriptorHeap>& Descriptor);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12Resource>&      Resource,
-            const Win32::ComPtr<D3D12MA::Allocation>& Allocation);
+            const WinAPI::ComPtr<ID3D12Resource>&      Resource,
+            const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation);
 
     public:
         /// <summary>
@@ -99,8 +99,8 @@ namespace Neon::RHI
 
         std::map<IDescriptorHeapAllocator*, std::vector<DescriptorHeapHandle>> m_DescriptorHeapHandles;
 
-        std::vector<Dx12Buffer::Handle>                 m_Buffers;
-        std::vector<Win32::ComPtr<ID3D12Object>>        m_Resources;
-        std::vector<Win32::ComPtr<D3D12MA::Allocation>> m_Allocation;
+        std::vector<Dx12Buffer::Handle>                  m_Buffers;
+        std::vector<WinAPI::ComPtr<ID3D12Object>>        m_Resources;
+        std::vector<WinAPI::ComPtr<D3D12MA::Allocation>> m_Allocation;
     };
 } // namespace Neon::RHI

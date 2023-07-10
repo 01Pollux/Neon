@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Window/Window.hpp>
-#include <Private/Window/WindowHeaders.hpp>
+#include <Private/Windows/Window/WindowHeaders.hpp>
 #include <Asio/QueueTask.hpp>
 #include <queue>
 #include <latch>
@@ -154,7 +154,7 @@ namespace Neon::Windowing
 
         Size2I m_WindowSize;
         Size2I m_UncappedWindowSize;
-        int    m_BitsPerPixel;
+        int    m_BitsPerPixel = 0;
 
         std::queue<Event> m_PendingEvents;
         std::mutex        m_PendingEventsMutex;

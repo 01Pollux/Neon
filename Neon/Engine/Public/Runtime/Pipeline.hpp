@@ -31,7 +31,7 @@ namespace Neon::Runtime
     public:
         EnginePipeline(
             EnginePipelineBuilder Builder,
-            size_t                ThreadCount = 2);
+            uint32_t              ThreadCount = 2);
 
         /// <summary>
         /// Execute the phases in the pipeline

@@ -18,7 +18,7 @@
 #include <DirectXMath.h>
 #include <dxgi1_6.h>
 
-#include <Window/Win32/WinPtr.hpp>
+#include <Private/Windows/API/WinPtr.hpp>
 #include <Private/RHI/Dx12/D3D12MemAlloc.hpp>
 
 namespace DX = DirectX;
@@ -55,8 +55,8 @@ namespace Neon::RHI
         requires std::conjunction_v<std::is_base_of<ID3D12Object, _Ty>,
                                     std::negation<std::is_same<ID3D12Object, _Ty>>>
     inline void RenameObject(
-        const Win32::ComPtr<_Ty>& Resource,
-        const wchar_t*            Name)
+        const WinAPI::ComPtr<_Ty>& Resource,
+        const wchar_t*             Name)
     {
         RenameObject(Resource.Get(), Name);
     }
@@ -65,9 +65,9 @@ namespace Neon::RHI
         requires std::conjunction_v<std::is_base_of<ID3D12Object, _Ty>,
                                     std::negation<std::is_same<ID3D12Object, _Ty>>>
     inline void RenameObject(
-        const Win32::ComPtr<_Ty>& Resource,
-        const wchar_t*            Name,
-        size_t                    Index)
+        const WinAPI::ComPtr<_Ty>& Resource,
+        const wchar_t*             Name,
+        size_t                     Index)
     {
         RenameObject(Resource.Get(), Name, Index);
     }

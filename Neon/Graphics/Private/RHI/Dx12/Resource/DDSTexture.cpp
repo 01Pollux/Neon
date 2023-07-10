@@ -614,8 +614,8 @@ namespace Neon::RHI
         const uint8_t* Data,
         size_t         DataSize)
     {
-        Win32::ComPtr<ID3D12Resource>      Texture;
-        Win32::ComPtr<D3D12MA::Allocation> Allocation;
+        WinAPI::ComPtr<ID3D12Resource>      Texture;
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
         std::vector<SubresourceDesc>       TextureDataToUpload;
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 

@@ -35,6 +35,6 @@ namespace Neon::RHI
         [[nodiscard]] ID3D12CommandQueue* Get();
 
     private:
-        Win32::ComPtr<ID3D12CommandQueue> m_CommandQueue;
+        WinAPI::ComPtr<ID3D12CommandQueue> m_CommandQueue;
     };
 } // namespace Neon::RHI

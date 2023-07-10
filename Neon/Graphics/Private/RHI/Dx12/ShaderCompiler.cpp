@@ -89,7 +89,7 @@ namespace Neon::RHI
         const ShaderCompileDesc& Desc,
         size_t&                  DataSize)
     {
-        Win32::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
+        WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
             Desc.SourceCode.data(),
             uint32_t(Desc.SourceCode.size()),
@@ -163,7 +163,7 @@ namespace Neon::RHI
             .Encoding = DXC_CP_ACP
         };
 
-        Win32::ComPtr<IDxcResult> Result;
+        WinAPI::ComPtr<IDxcResult> Result;
         ThrowIfFailed(m_Compiler->Compile(
             &Buffer,
             Options.data(),
@@ -172,7 +172,7 @@ namespace Neon::RHI
             IID_PPV_ARGS(&Result)));
 
         {
-            Win32::ComPtr<IDxcBlobUtf8> Error;
+            WinAPI::ComPtr<IDxcBlobUtf8> Error;
             if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
             {
                 if (Error && Error->GetStringLength() > 0)
@@ -184,7 +184,7 @@ namespace Neon::RHI
             }
         }
 
-        Win32::ComPtr<IDxcBlob> Data;
+        WinAPI::ComPtr<IDxcBlob> Data;
         ThrowIfFailed(Result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&Data), nullptr));
 
         uint8_t* CompiledShaderCode = static_cast<uint8_t*>(Data->GetBufferPointer());
@@ -196,7 +196,7 @@ namespace Neon::RHI
 
         // Add validation
         {
-            Win32::ComPtr<IDxcOperationResult> OperationResult;
+            WinAPI::ComPtr<IDxcOperationResult> OperationResult;
             ThrowIfFailed(m_Validator->Validate(
                 Data.Get(),
                 DxcValidatorFlags_InPlaceEdit,
@@ -207,8 +207,8 @@ namespace Neon::RHI
 
             if (FAILED(Status))
             {
-                Win32::ComPtr<IDxcBlobEncoding> Error;
-                Win32::ComPtr<IDxcBlobUtf8>     ErrorUtf8;
+                WinAPI::ComPtr<IDxcBlobEncoding> Error;
+                WinAPI::ComPtr<IDxcBlobUtf8>     ErrorUtf8;
                 OperationResult->GetErrorBuffer(&Error);
                 m_Utils->GetBlobAsUtf8(Error.Get(), &ErrorUtf8);
 
@@ -227,16 +227,16 @@ namespace Neon::RHI
         ShaderInputLayout& Layout,
         bool               IsOutput)
     {
-        Win32::ComPtr<IDxcContainerReflection> Reflection;
+        WinAPI::ComPtr<IDxcContainerReflection> Reflection;
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
 
-        Win32::ComPtr<ReflectionBlob> Blob(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
+        WinAPI::ComPtr<ReflectionBlob> Blob(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
         ThrowIfFailed(Reflection->Load(Blob.Get()));
 
         uint32_t DxilPart;
         ThrowIfFailed(Reflection->FindFirstPartKind(MAKEFOURCC('D', 'X', 'I', 'L'), &DxilPart));
 
-        Win32::ComPtr<ID3D12ShaderReflection> ShaderReflection;
+        WinAPI::ComPtr<ID3D12ShaderReflection> ShaderReflection;
         ThrowIfFailed(Reflection->GetPartReflection(DxilPart, IID_PPV_ARGS(&ShaderReflection)));
 
         ReflectLayout(

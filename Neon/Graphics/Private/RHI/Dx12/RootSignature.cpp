@@ -195,8 +195,8 @@ namespace Neon::RHI
         IRootSignature(std::move(Builder)),
         m_Hash(std::move(Hash))
     {
-        Win32::ComPtr<ID3DBlob> SignatureBlob;
-        Win32::ComPtr<ID3DBlob> ErrorBlob;
+        WinAPI::ComPtr<ID3DBlob> SignatureBlob;
+        WinAPI::ComPtr<ID3DBlob> ErrorBlob;
 
         auto  Dx12Device = Dx12RenderDevice::Get()->GetDevice();
         auto& Features   = Dx12RenderDevice::Get()->GetFeatures();

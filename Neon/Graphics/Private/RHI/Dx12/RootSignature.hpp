@@ -72,7 +72,7 @@ namespace Neon::RHI
         [[nodiscard]] const SHA256::Bytes& GetHash() const;
 
     private:
-        Win32::ComPtr<ID3D12RootSignature> m_RootSignature;
+        WinAPI::ComPtr<ID3D12RootSignature> m_RootSignature;
         SHA256::Bytes                      m_Hash;
 
         uint32_t m_ResourceCountInDescriptor = 0,

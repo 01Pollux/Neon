@@ -5,7 +5,7 @@
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
 
 #include <Allocator/Buddy.hpp>
-#include <Window/Win32/WinPtr.hpp>
+#include <Private/Windows/API/WinPtr.hpp>
 
 #include <mutex>
 #include <list>
@@ -18,9 +18,9 @@ namespace Neon::RHI
     {
         struct BuddyBlock
         {
-            Dx12ResourceStateManager&          StateManager;
-            Win32::ComPtr<ID3D12Resource>      Resource;
-            Win32::ComPtr<D3D12MA::Allocation> Allocation;
+            Dx12ResourceStateManager&           StateManager;
+            WinAPI::ComPtr<ID3D12Resource>      Resource;
+            WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
 
             Allocator::BuddyAllocator Allocator;
 
@@ -75,9 +75,9 @@ namespace Neon::RHI
         [[nodiscard]] Dx12ResourceStateManager* GetStateManager();
 
     private:
-        Dx12ResourceStateManager          m_StateManager;
-        std::mutex                        m_PoolMutex;
-        Win32::ComPtr<D3D12MA::Allocator> m_Allocator;
-        BufferAllocatorByFlags            m_BufferAllocators;
+        Dx12ResourceStateManager           m_StateManager;
+        std::mutex                         m_PoolMutex;
+        WinAPI::ComPtr<D3D12MA::Allocator> m_Allocator;
+        BufferAllocatorByFlags             m_BufferAllocators;
     };
 } // namespace Neon::RHI

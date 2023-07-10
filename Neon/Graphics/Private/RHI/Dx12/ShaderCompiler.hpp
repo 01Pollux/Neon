@@ -4,7 +4,7 @@
 #include <DX/d3d12shader.h>
 #include <DxC/dxcapi.h>
 
-#include <Window/Win32/WinPtr.hpp>
+#include <Private/Windows/API/WinPtr.hpp>
 
 namespace Neon::RHI
 {
@@ -49,9 +49,9 @@ namespace Neon::RHI
             ShaderProfile Profile);
 
     private:
-        Win32::ComPtr<IDxcValidator>      m_Validator;
-        Win32::ComPtr<IDxcUtils>          m_Utils;
-        Win32::ComPtr<IDxcCompiler3>      m_Compiler;
-        Win32::ComPtr<IDxcIncludeHandler> m_DefaultIncludeHandler;
+        WinAPI::ComPtr<IDxcValidator>      m_Validator;
+        WinAPI::ComPtr<IDxcUtils>          m_Utils;
+        WinAPI::ComPtr<IDxcCompiler3>      m_Compiler;
+        WinAPI::ComPtr<IDxcIncludeHandler> m_DefaultIncludeHandler;
     };
 } // namespace Neon::RHI

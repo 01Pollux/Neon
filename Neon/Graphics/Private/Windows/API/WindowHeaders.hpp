@@ -22,5 +22,6 @@
 #ifndef STRICT
 #define STRICT
 #endif
+
 #include <Windows.h>
 #include <combaseapi.h>

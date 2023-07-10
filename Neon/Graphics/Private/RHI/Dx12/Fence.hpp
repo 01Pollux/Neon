@@ -31,14 +31,14 @@ namespace Neon::RHI
             uint64_t       Value) override;
 
     private:
-        Win32::ComPtr<ID3D12Fence> m_Fence;
-        Win32::WinHandlePtr        m_FenceSingalEvent;
+        WinAPI::ComPtr<ID3D12Fence> m_Fence;
+        WinAPI::WinHandlePtr        m_FenceSingalEvent;
     };
 
     class Dx12MultiFence final : public virtual IMultiFence,
                                  public Dx12Fence
     {
-        using WaitSignalList = std::list<Win32::WinHandlePtr>;
+        using WaitSignalList = std::list<WinAPI::WinHandlePtr>;
 
     public:
         Dx12MultiFence(
@@ -76,7 +76,7 @@ namespace Neon::RHI
     private:
         std::mutex m_SignalMutex;
 
-        Win32::ComPtr<ID3D12Fence> m_Fence;
+        WinAPI::ComPtr<ID3D12Fence> m_Fence;
         uint64_t                   m_FenceValue = 0;
         WaitSignalList             m_ActiveSignals, m_FreeSignals;
     };

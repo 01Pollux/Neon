@@ -312,9 +312,9 @@ namespace Neon::RHI
     }
 
     Dx12Texture::Dx12Texture(
-        Win32::ComPtr<ID3D12Resource>      Texture,
+        WinAPI::ComPtr<ID3D12Resource>      Texture,
         D3D12_RESOURCE_STATES              InitialState,
-        Win32::ComPtr<D3D12MA::Allocation> Allocation)
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation)
     {
         m_Resource   = std::move(Texture);
         m_Allocation = std::move(Allocation);
@@ -333,8 +333,8 @@ namespace Neon::RHI
     }
 
     Dx12Texture::Dx12Texture(
-        Win32::ComPtr<ID3D12Resource>      Texture,
-        Win32::ComPtr<D3D12MA::Allocation> Allocation,
+        WinAPI::ComPtr<ID3D12Resource>      Texture,
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>   Subresources,
         uint64_t&                          CopyId) :
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }

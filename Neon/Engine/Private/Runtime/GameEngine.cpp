@@ -34,7 +34,7 @@ namespace Neon::Runtime
         auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
         if (Config.LoggerAssetUid)
         {
-            auto Pack = ResourceManager->LoadPack("__neon", "neonrt.np");
+            auto Pack = ResourceManager->LoadPack("__neon", "../../../Runtimes/neonrt.np");
             // Set global logger settings
             if (auto Logger = Pack->Load<Asset::LoggerAsset>(*Config.LoggerAssetUid))
             {

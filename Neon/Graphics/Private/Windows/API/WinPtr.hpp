@@ -4,7 +4,7 @@
 #include <wrl/client.h>
 #include <memory>
 
-namespace Neon::Win32
+namespace Neon::WinAPI
 {
     using Microsoft::WRL::ComPtr;
 
@@ -71,4 +71,4 @@ namespace Neon::Win32
 
     using WinHandlePtr     = WinHandlePtrImpl<HANDLE, nullptr>;
     using WinFileHandlePtr = WinHandlePtrImpl<HANDLE, nullptr, true>;
-} // namespace Neon::Win32
+} // namespace Neon::WinAPI

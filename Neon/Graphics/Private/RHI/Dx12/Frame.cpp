@@ -67,7 +67,7 @@ namespace Neon::RHI
     }
 
     void FrameResource::SafeRelease(
-        const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
+        const WinAPI::ComPtr<ID3D12DescriptorHeap>& Descriptor)
     {
         // First we check if the incoming descriptor exists in the to be deleted handles.
         // If it does, no need to remove the handle, just remove the descriptor instead.
@@ -88,8 +88,8 @@ namespace Neon::RHI
     }
 
     void FrameResource::SafeRelease(
-        const Win32::ComPtr<ID3D12Resource>&      Resource,
-        const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
+        const WinAPI::ComPtr<ID3D12Resource>&      Resource,
+        const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         m_Resources.emplace_back(Resource);
         if (Allocation)

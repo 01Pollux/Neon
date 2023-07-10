@@ -88,14 +88,14 @@ namespace Neon::RHI
         /// Enqueue descriptor to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12DescriptorHeap>& Resource);
+            const WinAPI::ComPtr<ID3D12DescriptorHeap>& Resource);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12Resource>&      Resource,
-            const Win32::ComPtr<D3D12MA::Allocation>& Allocation);
+            const WinAPI::ComPtr<ID3D12Resource>&      Resource,
+            const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation);
 
         /// <summary>
         /// Wait for a copy command list to be executed.
@@ -146,7 +146,7 @@ namespace Neon::RHI
         Windowing::IWindowApp* m_WindowApp;
         Size2I                 m_Size;
 
-        Win32::ComPtr<IDXGISwapChain3> m_Swapchain;
+        WinAPI::ComPtr<IDXGISwapChain3> m_Swapchain;
 
         Dx12StaticDescriptorHeap m_StaticDescriptors[size_t(DescriptorType::Count)]{
             DescriptorType::ResourceView,

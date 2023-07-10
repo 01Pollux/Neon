@@ -20,7 +20,7 @@ namespace Neon::RHI
         [[nodiscard]] ID3D12PipelineState* Get();
 
     private:
-        Win32::ComPtr<ID3D12PipelineState> m_PipelineState;
+        WinAPI::ComPtr<ID3D12PipelineState> m_PipelineState;
     };
 
     class Dx12PipelineStateCache

@@ -118,7 +118,7 @@ namespace Neon::RHI
 
         for (uint32_t i = 0; i < BackbufferCount; ++i)
         {
-            Win32::ComPtr<ID3D12Resource> BackBuffer;
+            WinAPI::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
             RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);
@@ -140,13 +140,13 @@ namespace Neon::RHI
     {
         auto DxgiFactory = Dx12RenderDevice::Get()->GetDxgiFactory();
 
-        Win32::ComPtr<IDXGIFactory2> DxgiFactory2;
+        WinAPI::ComPtr<IDXGIFactory2> DxgiFactory2;
 
         auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
 
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
-            Win32::ComPtr<IDXGISwapChain1> Swapchain;
+            WinAPI::ComPtr<IDXGISwapChain1> Swapchain;
 
             DXGI_SWAP_CHAIN_DESC1 SwapchainDesc{
                 .Width      = UINT(m_Size.Width()),
@@ -182,7 +182,7 @@ namespace Neon::RHI
         }
         else
         {
-            Win32::ComPtr<IDXGISwapChain> Swapchain;
+            WinAPI::ComPtr<IDXGISwapChain> Swapchain;
 
             DXGI_SWAP_CHAIN_DESC SCDesc{
                 .BufferDesc = {
@@ -230,7 +230,7 @@ namespace Neon::RHI
 
         for (uint32_t i = 0; i < NewSize; ++i)
         {
-            Win32::ComPtr<ID3D12Resource> BackBuffer;
+            WinAPI::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
             RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);

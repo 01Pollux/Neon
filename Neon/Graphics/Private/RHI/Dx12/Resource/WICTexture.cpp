@@ -159,7 +159,7 @@ namespace Neon::RHI
             if (!pWIC)
                 return 0;
 
-            Win32::ComPtr<IWICComponentInfo> cinfo;
+            WinAPI::ComPtr<IWICComponentInfo> cinfo;
             if (FAILED(pWIC->CreateComponentInfo(targetGuid, cinfo.GetAddressOf())))
                 return 0;
 
@@ -170,7 +170,7 @@ namespace Neon::RHI
             if (type != WICPixelFormat)
                 return 0;
 
-            Win32::ComPtr<IWICPixelFormatInfo> pfinfo;
+            WinAPI::ComPtr<IWICPixelFormatInfo> pfinfo;
             if (FAILED(cinfo.As(&pfinfo)))
                 return 0;
 
@@ -297,7 +297,7 @@ namespace Neon::RHI
                 if (!pWIC)
                     return E_NOINTERFACE;
 
-                Win32::ComPtr<IWICBitmapScaler> scaler;
+                WinAPI::ComPtr<IWICBitmapScaler> scaler;
                 hr = pWIC->CreateBitmapScaler(scaler.GetAddressOf());
                 if (FAILED(hr))
                     return hr;
@@ -320,7 +320,7 @@ namespace Neon::RHI
                 }
                 else
                 {
-                    Win32::ComPtr<IWICFormatConverter> FC;
+                    WinAPI::ComPtr<IWICFormatConverter> FC;
                     hr = pWIC->CreateFormatConverter(FC.GetAddressOf());
                     if (FAILED(hr))
                         return hr;
@@ -348,7 +348,7 @@ namespace Neon::RHI
                 if (!pWIC)
                     return E_NOINTERFACE;
 
-                Win32::ComPtr<IWICFormatConverter> FC;
+                WinAPI::ComPtr<IWICFormatConverter> FC;
                 hr = pWIC->CreateFormatConverter(FC.GetAddressOf());
                 if (FAILED(hr))
                     return hr;
@@ -428,7 +428,7 @@ namespace Neon::RHI
                 return E_NOINTERFACE;
 
             // Create input stream for memory
-            Win32::ComPtr<IWICStream> stream;
+            WinAPI::ComPtr<IWICStream> stream;
             HRESULT                   hr = pWIC->CreateStream(stream.GetAddressOf());
             if (FAILED(hr))
                 return hr;
@@ -438,12 +438,12 @@ namespace Neon::RHI
                 return hr;
 
             // Initialize WIC
-            Win32::ComPtr<IWICBitmapDecoder> decoder;
+            WinAPI::ComPtr<IWICBitmapDecoder> decoder;
             hr = pWIC->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnDemand, decoder.GetAddressOf());
             if (FAILED(hr))
                 return hr;
 
-            Win32::ComPtr<IWICBitmapFrameDecode> frame;
+            WinAPI::ComPtr<IWICBitmapFrameDecode> frame;
             hr = decoder->GetFrame(0, frame.GetAddressOf());
             if (FAILED(hr))
                 return hr;
@@ -461,8 +461,8 @@ namespace Neon::RHI
         const uint8_t* Data,
         size_t         DataSize)
     {
-        Win32::ComPtr<ID3D12Resource>      Texture;
-        Win32::ComPtr<D3D12MA::Allocation> Allocation;
+        WinAPI::ComPtr<ID3D12Resource>      Texture;
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
         std::vector<SubresourceDesc>       TextureDataToUpload;
         std::unique_ptr<uint8_t[]>         TextureDecodedData;
 

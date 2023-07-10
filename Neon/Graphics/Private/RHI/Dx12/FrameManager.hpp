@@ -57,7 +57,7 @@ namespace Neon::RHI
     private:
         struct CommandListInstance
         {
-            Win32::ComPtr<ID3D12GraphicsCommandList> Dx12CmdList;
+            WinAPI::ComPtr<ID3D12GraphicsCommandList> Dx12CmdList;
             std::unique_ptr<Dx12CommandList>         CommandList;
 
             CommandListInstance(
@@ -130,8 +130,8 @@ namespace Neon::RHI
 
         struct CommandContext
         {
-            Win32::ComPtr<ID3D12CommandAllocator>    CommandAllocator;
-            Win32::ComPtr<ID3D12GraphicsCommandList> CommandList;
+            WinAPI::ComPtr<ID3D12CommandAllocator>    CommandAllocator;
+            WinAPI::ComPtr<ID3D12GraphicsCommandList> CommandList;
 
             CommandContext();
         };
@@ -265,14 +265,14 @@ namespace Neon::RHI
         /// Enqueue descriptor to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12DescriptorHeap>& Resource);
+            const WinAPI::ComPtr<ID3D12DescriptorHeap>& Resource);
 
         /// <summary>
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Win32::ComPtr<ID3D12Resource>&      Resource,
-            const Win32::ComPtr<D3D12MA::Allocation>& Allocation);
+            const WinAPI::ComPtr<ID3D12Resource>&      Resource,
+            const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation);
 
         /// <summary>
         /// Wait for a copy command list to be executed.

@@ -135,7 +135,7 @@ namespace Neon::RHI
         void SilentDelete() noexcept;
 
     protected:
-        Win32::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
+        WinAPI::ComPtr<ID3D12DescriptorHeap> m_DescriptorHeap;
 
         D3D12_CPU_DESCRIPTOR_HANDLE m_CpuHandle{};
         D3D12_GPU_DESCRIPTOR_HANDLE m_GpuHandle{};

@@ -47,7 +47,7 @@ namespace Neon::RHI
         s_RenderDevice = nullptr;
 
 #ifndef NEON_DIST
-        Win32::ComPtr<IDXGIDebug1> Debug;
+        WinAPI::ComPtr<IDXGIDebug1> Debug;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&Debug))))
         {
             // DXGI_DEBUG_ALL
@@ -234,7 +234,7 @@ namespace Neon::RHI
         const DeviceCreateDesc& DeviceDesc)
     {
 #if !NEON_DIST
-        Win32::ComPtr<ID3D12Debug1> DebugController;
+        WinAPI::ComPtr<ID3D12Debug1> DebugController;
         ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
         if (DeviceDesc.EnableDebugLayer)
         {
@@ -299,10 +299,10 @@ namespace Neon::RHI
         m_DeviceFeatures.Initialize(m_Device.Get());
     }
 
-    Win32::ComPtr<IDXGIAdapter> Dx12RenderDevice::GetBestAdapter() const
+    WinAPI::ComPtr<IDXGIAdapter> Dx12RenderDevice::GetBestAdapter() const
     {
-        Win32::ComPtr<IDXGIAdapter> Adapter;
-        Win32::ComPtr<IDXGIAdapter> BestAdapter;
+        WinAPI::ComPtr<IDXGIAdapter> Adapter;
+        WinAPI::ComPtr<IDXGIAdapter> BestAdapter;
         size_t                      BestVideoMemory = 0;
         for (UINT i = 0; m_DxgiFactory->EnumAdapters(i, &Adapter) != DXGI_ERROR_NOT_FOUND; ++i)
         {

@@ -309,7 +309,7 @@ namespace Neon::RHI
     }
 
     void FrameManager::SafeRelease(
-        const Win32::ComPtr<ID3D12DescriptorHeap>& Descriptor)
+        const WinAPI::ComPtr<ID3D12DescriptorHeap>& Descriptor)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[2]);
         auto&            Frame = *m_FrameResources[m_FrameIndex];
@@ -317,8 +317,8 @@ namespace Neon::RHI
     }
 
     void FrameManager::SafeRelease(
-        const Win32::ComPtr<ID3D12Resource>&      Resource,
-        const Win32::ComPtr<D3D12MA::Allocation>& Allocation)
+        const WinAPI::ComPtr<ID3D12Resource>&      Resource,
+        const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[3]);
         auto&            Frame = *m_FrameResources[m_FrameIndex];

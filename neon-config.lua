@@ -1,4 +1,14 @@
 
+newoption {
+	trigger = "GraphicsAPI",
+	value = "API",
+	description = "Choose a particular 3D API for rendering",
+	allowed = {
+		{ "Directx12",  "Direct3D 12 (Windows only)" }
+	},
+	default = "Directx12"
+}
+
 OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 CommonDir = {}

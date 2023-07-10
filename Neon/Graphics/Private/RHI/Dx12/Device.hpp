@@ -114,7 +114,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get best adapter for render device.
         /// </summary>
-        [[nodiscard]] Win32::ComPtr<IDXGIAdapter> GetBestAdapter() const;
+        [[nodiscard]] WinAPI::ComPtr<IDXGIAdapter> GetBestAdapter() const;
 
     private:
         /// <summary>
@@ -141,9 +141,9 @@ namespace Neon::RHI
         };
 
     private:
-        Win32::ComPtr<IDXGIFactory> m_DxgiFactory;
-        Win32::ComPtr<IDXGIAdapter> m_Adapter;
-        Win32::ComPtr<ID3D12Device> m_Device;
+        WinAPI::ComPtr<IDXGIFactory> m_DxgiFactory;
+        WinAPI::ComPtr<IDXGIAdapter> m_Adapter;
+        WinAPI::ComPtr<ID3D12Device> m_Device;
 
         HeapDescriptorSizeType m_HeapDescriptorSize;
         Dx12DeviceFeatures     m_DeviceFeatures;
