@@ -5,14 +5,8 @@
 namespace Neon::Scene::Exports
 {
     /// <summary>
-    /// Register all math components.
+    /// Register all actor components.
     /// </summary>
     void RegisterActorComponents(
-        flecs::world& world);
-
-    /// <summary>
-    /// Register all math components.
-    /// </summary>
-    void RegisterActorTags(
         flecs::world& world);
 } // namespace Neon::Scene::Exports

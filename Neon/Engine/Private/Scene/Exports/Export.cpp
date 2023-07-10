@@ -11,11 +11,5 @@ namespace Neon::Scene::Exports
     {
         RegisterMathComponents(World);
         RegisterActorComponents(World);
-        RegisterActorTags(World);
-    }
-
-    void RegisterRelations(
-        flecs::world& World)
-    {
     }
 } // namespace Neon::Scene::Exports

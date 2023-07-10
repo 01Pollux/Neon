@@ -10,6 +10,9 @@
 
 //
 
+#include <RHI/Resource/State.hpp>
+#include <RHI/Swapchain.hpp>
+
 namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
@@ -22,7 +25,6 @@ namespace Neon::Scene
         }
 
         Exports::RegisterComponents(*m_World);
-        Exports::RegisterRelations(*m_World);
 
 #if NEON_DEBUG
         m_World->set<flecs::Rest>({});
@@ -57,17 +59,49 @@ namespace Neon::Scene
 
     void GameScene::Render()
     {
-        auto& CameraQuery = m_CameraQuery;
-
         m_CameraQuery.each(
-            [&](Actor                 Entity,
-                Component::Transform& Transform,
-                Component::Camera&    Camera)
+            [](Actor                 Entity,
+               Component::Transform& Transform,
+               Component::Camera&    Camera)
             {
                 if (Camera.RenderGraph)
                 {
                     Camera.RenderGraph->Run();
                 }
             });
+
+        auto MainCamera = m_World->get<Component::MainCamera>();
+        if (MainCamera)
+        {
+            auto& RenderGraph = MainCamera->Target.get<Component::Camera>()->RenderGraph;
+            auto& Storage     = RenderGraph->GetStorage();
+
+            auto OutputImage  = Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+            auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
+            auto StateManager = RHI::IResourceStateManager::Get();
+
+            //
+
+            // Transition the backbuffer to a copy destination.
+            StateManager->TransitionResource(
+                Backbuffer,
+                RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest));
+
+            // Transition the output image to a copy source.
+            StateManager->TransitionResource(
+                OutputImage.get(),
+                RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
+
+            // Prepare the command list.
+            auto CommandContext = StateManager->FlushBarriers();
+
+            CommandContext[0]->CopyResources(Backbuffer, OutputImage.get());
+
+            StateManager->TransitionResource(
+                Backbuffer,
+                RHI::MResourceState_Present);
+
+            StateManager->FlushBarriers(CommandContext[0]);
+        }
     }
 } // namespace Neon::Scene

@@ -67,7 +67,7 @@ namespace Neon::RG
         ResourceResolver& Resolver)
     {
         Resolver.WriteResource(
-            RG::ResourceViewId(STR("FinalImage"), STR("ScenePass")),
+            RG::ResourceViewId(STR("OutputImage"), STR("ScenePass")),
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Color,

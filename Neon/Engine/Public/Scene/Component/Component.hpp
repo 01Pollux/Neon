@@ -6,6 +6,11 @@ namespace flecs
     struct entity;
 } // namespace flecs
 
+namespace Neon::Scene
+{
+    using Actor = flecs::entity;
+}
+
 #define NEON_EXPORT_COMPONENT() \
     static void Register(       \
         flecs::world& World);

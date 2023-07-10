@@ -15,7 +15,7 @@ namespace Neon::RG
         Desc.SetClearValue(Colors::Fuchsia);
 
         Resolver.CreateTexture(
-            RG::ResourceId(STR("FinalImage")),
+            RG::ResourceId(STR("OutputImage")),
             Desc,
             MResourceFlags::FromEnum(EResourceFlags::WindowSizeDependent));
     }

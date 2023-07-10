@@ -1,9 +1,8 @@
 #pragma once
 
+#include <Scene/Component/Component.hpp>
 #include <Core/Neon.hpp>
-#include <Core/String.hpp>
 #include <flecs/flecs.h>
-#include <memory>
 
 namespace Neon::Scene::Component
 {
@@ -26,8 +25,6 @@ namespace Neon::Scene
     };
 
     //
-
-    using Actor = flecs::entity;
 
     class GameScene
     {
@@ -69,7 +66,7 @@ namespace Neon::Scene
             const char* Name = nullptr);
 
     private:
-        std::unique_ptr<flecs::world> m_World;
+        UPtr<flecs::world> m_World;
 
         flecs::query<
             Component::Transform,

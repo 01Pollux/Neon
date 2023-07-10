@@ -134,11 +134,9 @@ namespace Neon::Scene::Component
         /// </summary>
         CameraType Type = CameraType::Perspective;
     };
-} // namespace Neon::Scene::Component
 
-namespace Neon::Scene::Tags
-{
     struct MainCamera
     {
+        Actor Target;
     };
-} // namespace Neon::Scene::Tags
+} // namespace Neon::Scene::Component

@@ -136,8 +136,8 @@ namespace Neon::Runtime
                 auto Sprite = m_Scene->entity();
 
                 Scene::Component::Transform TransformComponent;
-                TransformComponent.Local.SetPosition(Vector3(x, y, 5.f));
-                TransformComponent.World.SetPosition(Vector3(x, y, 5.f));
+                TransformComponent.Local.SetPosition(Vector3(x, y, 0.f));
+                TransformComponent.World.SetPosition(Vector3(x, y, 0.f));
                 Sprite.set(TransformComponent);
 
                 Scene::Component::Sprite SpriteComponent;
@@ -160,6 +160,8 @@ namespace Neon::Runtime
         auto CameraActor        = m_Scene.CreateEntity(Scene::EntityType::Camera3D, "Main Camera");
         auto CameraComponent    = CameraActor.get_mut<Scene::Component::Camera>();
         CameraComponent->LookAt = Vector3(0.f, 0.f, 5.f);
+
+        m_Scene->set<Scene::Component::MainCamera>({ CameraActor });
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()
