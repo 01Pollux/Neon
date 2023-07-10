@@ -164,7 +164,7 @@ namespace Neon::RHI
         std::array<CommandContext, CommandContextCount> m_CommandContexts;
         std::array<std::jthread, CommandContextCount>   m_Threads;
 
-        uint64_t                       m_CopyId = 0;
+        uint64_t                       m_CopyId = 1;
         std::mutex                     m_QueueMutex;
         std::queue<PackagedTaskResult> m_Queue;
         std::condition_variable_any    m_TaskWaiter;

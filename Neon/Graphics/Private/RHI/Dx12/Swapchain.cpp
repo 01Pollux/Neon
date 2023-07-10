@@ -121,6 +121,7 @@ namespace Neon::RHI
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);
 
             m_RenderTargets.Bind(
                 &Buffer,
@@ -212,7 +213,7 @@ namespace Neon::RHI
             ThrowIfFailed(Swapchain.As(&m_Swapchain));
         }
 
-        m_Swapchain->SetMaximumFrameLatency(Desc.FramesInFlight);
+        // m_Swapchain->SetMaximumFrameLatency(Desc.FramesInFlight);
     }
 
     void Dx12Swapchain::ResizeBackbuffers(
@@ -234,6 +235,7 @@ namespace Neon::RHI
             Win32::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
             auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);
 
             m_RenderTargets.Bind(
                 &Buffer,

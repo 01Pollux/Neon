@@ -51,6 +51,27 @@ namespace Neon::Runtime
         void DependsOn(
             PhaseRef& Phase);
 
+        /// <summary>
+        /// Add a dependency to the phase.
+        /// </summary>
+        template<typename... _Args>
+            requires std::same_as<PhaseRef, std::common_type_t<_Args...>>
+        void Then(
+            _Args&... Phase)
+        {
+            (Phase.DependsOn(*this), ...);
+        }
+
+        /// <summary>
+        /// Add a dependency to the phase.
+        /// </summary>
+        PhaseRef& Then(
+            PhaseRef& Phase)
+        {
+            Phase.DependsOn(*this);
+            return Phase;
+        }
+
     protected:
         PhaseRef(
             PipelinePhase& Iter) :

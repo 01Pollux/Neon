@@ -38,15 +38,12 @@ namespace Neon::Runtime
 
         //
 
-        Update.DependsOn(PreUpdate);
-        PostUpdate.DependsOn(Update);
-
-        PreRender.DependsOn(PostUpdate);
-        Render.DependsOn(PreRender);
+        PreUpdate.Then(Update).Then(PostUpdate);
+        PreRender.Then(Render).Then(PostRender);
 
         //
 
-        auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder), 2);
+        auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder));
         auto MainPack = Engine->QueryInterface<Asset::IAssetManager>()->GetPack("__neon");
 
         auto DefaultShaderLib = Asset::AssetHandle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");

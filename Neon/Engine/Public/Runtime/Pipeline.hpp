@@ -3,7 +3,10 @@
 #include <Utils/Signal.hpp>
 #include <Core/BitMask.hpp>
 #include <Runtime/PipelineBuilder.hpp>
-#include <Asio/ThreadPool.hpp>
+
+#include <cppcoro/task.hpp>
+#include <cppcoro/shared_task.hpp>
+#include <cppcoro/static_thread_pool.hpp>
 
 namespace Neon::Runtime
 {
@@ -19,6 +22,11 @@ namespace Neon::Runtime
         /// </summary>
         DontParallelize,
 
+        /// <summary>
+        /// Pipeline is currently executing
+        /// </summary>
+        Executing,
+
         _Last_Enum
     };
     using MPipelineFlags = Bitmask<EPipelineFlags>;
@@ -27,8 +35,7 @@ namespace Neon::Runtime
     {
     public:
         EnginePipeline(
-            EnginePipelineBuilder Builder,
-            uint32_t              ThreadCount = 0);
+            EnginePipelineBuilder Builder);
 
         /// <summary>
         /// Execute the phases in the pipeline
@@ -109,22 +116,21 @@ namespace Neon::Runtime
         using PhaseMapType        = std::map<StringU8, PipelinePhase>;
         using ParentPhaseListType = std::vector<PipelinePhase*>;
         using PhaseLevelListType  = std::vector<std::vector<PipelinePhase*>>;
-        using AsyncExecutionType  = Asio::ThreadPool<>::FutureType;
 
         struct PipelinePhase
         {
-            ParentPhaseListType Parents;
-            Utils::Signal<>     Signal;
-            std::mutex          Mutex;
-            AsyncExecutionType  Async;
-            MPipelineFlags      Flags;
+            ParentPhaseListType    Parents;
+            Utils::Signal<>        Signal;
+            std::mutex             Mutex;
+            cppcoro::shared_task<> Task;
+            MPipelineFlags         Flags;
         };
 
     private:
         PhaseMapType       m_Phases;
         PhaseLevelListType m_Levels;
 
-        Asio::ThreadPool<>          m_ThreadPool;
+        cppcoro::static_thread_pool m_ThreadPool;
         std::vector<PipelinePhase*> m_NonAsyncPhases;
     };
 } // namespace Neon::Runtime

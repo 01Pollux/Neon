@@ -78,6 +78,7 @@ namespace Neon::RHI
                         ThrowIfFailed(Context.CommandList->Close());
                         m_CopyQueue.Get()->ExecuteCommandLists(1, CommandLists);
                         m_CopyFence.SignalGPU(&m_CopyQueue, m_CopyId);
+                        m_CopyFence.WaitCPU(m_CopyId);
 
                         m_CopyId++;
                         Lock.unlock();
