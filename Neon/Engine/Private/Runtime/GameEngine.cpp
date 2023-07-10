@@ -5,6 +5,8 @@
 #include <Resource/Types/Logger.hpp>
 #include <Resource/Pack.hpp>
 
+#include <cppcoro/sync_wait.hpp>
+
 namespace Neon::Runtime
 {
     static DefaultGameEngine* s_GameEngine = nullptr;
@@ -58,8 +60,7 @@ namespace Neon::Runtime
             }
             if (auto Pipeline = m_Pipeline.get())
             {
-                Pipeline->BeginDispatch();
-                Pipeline->EndDispatch();
+                cppcoro::sync_wait(Pipeline->Dispatch());
             }
         }
         Shutdown();

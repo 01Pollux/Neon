@@ -6,6 +6,7 @@
 
 #include <cppcoro/sync_wait.hpp>
 #include <cppcoro/schedule_on.hpp>
+#include <cppcoro/async_scope.hpp>
 #include <cppcoro/when_all.hpp>
 #include <cppcoro/when_all_ready.hpp>
 
@@ -17,8 +18,9 @@ namespace views  = std::views;
 namespace Neon::Runtime
 {
     EnginePipeline::EnginePipeline(
-        EnginePipelineBuilder Builder) :
-        m_ThreadPool(4)
+        EnginePipelineBuilder Builder,
+        size_t                ThreadCount) :
+        m_ThreadPool(ThreadCount)
     {
         std::queue<EnginePipelineBuilder::PipelinePhase*> CurrentLevel;
 
@@ -33,11 +35,6 @@ namespace Neon::Runtime
                     CurrentLevel.push(&Phase);
                 }
                 Phases->emplace_back(Iter);
-            }
-            for (auto& Child : Phase.DependentNodes)
-            {
-                auto ChildPhase = &m_Phases[Child->Name];
-                ChildPhase->Parents.emplace_back(Iter);
             }
         }
 
@@ -64,76 +61,53 @@ namespace Neon::Runtime
                 }
             }
         }
-
-        auto FindInstance = [this](PipelinePhase* Phase) -> StringU8
-        {
-            for (auto& [Name, Instance] : m_Phases)
-            {
-                if (&Instance == Phase)
-                {
-                    return Name;
-                }
-            }
-            return "";
-        };
     }
 
-    void EnginePipeline::BeginDispatch()
+    cppcoro::task<void> EnginePipeline::Dispatch()
     {
-        for (size_t i = 0; i < m_Levels.size(); i++)
+        for (auto& Passes : m_Levels)
         {
-            auto& Phase = m_Levels[i];
-            for (size_t j = 0; j < Phase.size(); j++)
+            std::vector<cppcoro::task<void>> Tasks;
+            Tasks.reserve(Passes.size());
+
+            for (size_t i = 0; i < Passes.size(); i++)
             {
-                auto CurPhase = Phase[j];
-                if (!CurPhase->Flags.Test(EPipelineFlags::Disabled))
+                auto Phase = Passes[i];
+
+                if (!Phase->Flags.Test(EPipelineFlags::Disabled))
                 {
                     size_t ListenerCount;
                     {
-                        std::scoped_lock Lock(CurPhase->Mutex);
-                        ListenerCount = CurPhase->Signal.GetListenerCount();
+                        std::scoped_lock Lock(Phase->Mutex);
+                        ListenerCount = Phase->Signal.GetListenerCount();
                     }
                     if (!ListenerCount)
                     {
                         continue;
                     }
 
-                    CurPhase->Flags.Set(EPipelineFlags::Executing, true);
-                    if (CurPhase->Flags.Test(EPipelineFlags::DontParallelize) && false)
+                    if (Phase->Flags.Test(EPipelineFlags::DontParallelize) || ((i == Passes.size() - 1) && m_NonAsyncPhases.empty()))
                     {
-                        m_NonAsyncPhases.emplace_back(CurPhase);
+                        m_NonAsyncPhases.emplace_back(Phase);
                     }
                     else
                     {
-                        auto Task = [](EnginePipeline* Pipeline, size_t i, size_t j) -> cppcoro::shared_task<>
+                        auto Task = [this](PipelinePhase* Phase) -> cppcoro::task<>
                         {
-                            auto                                CurPhase = Pipeline->m_Levels[i][j];
-                            std::vector<cppcoro::shared_task<>> ParentTasks;
-                            ParentTasks.reserve(CurPhase->Parents.size());
-                            for (auto Parent : CurPhase->Parents)
-                            {
-                                ParentTasks.emplace_back(Parent->Task);
-                            }
-
-                            // auto ParentTasks = CurPhase->Parents |
-                            //                    views::transform(
-                            //                        [](PipelinePhase* Parent)
-                            //                        {
-                            //                            return Parent->Task;
-                            //                        }) |
-                            //                    ranges::to<std::vector>();
-
-                            cppcoro::sync_wait(cppcoro::when_all_ready(ParentTasks));
-
-                            std::scoped_lock Lock(CurPhase->Mutex);
-                            CurPhase->Signal.Broadcast();
+                            std::scoped_lock Lock(Phase->Mutex);
+                            Phase->Signal.Broadcast();
                             co_return;
                         };
-
-                        CurPhase->Task = cppcoro::make_shared_task(cppcoro::schedule_on(m_ThreadPool, Task(this, i, j)));
+                        Tasks.emplace_back(cppcoro::schedule_on(m_ThreadPool, Task(Phase)));
                     }
                 }
             }
+
+            if (!Tasks.empty())
+            {
+                co_await cppcoro::when_all(std::move(Tasks));
+            }
+
             for (auto Phase : m_NonAsyncPhases)
             {
                 std::scoped_lock Lock(Phase->Mutex);
@@ -143,48 +117,12 @@ namespace Neon::Runtime
         }
     }
 
-    void EnginePipeline::EndDispatch()
-    {
-        std::vector<cppcoro::shared_task<>> Tasks;
-
-        for (auto& Phase : m_Levels)
-        {
-            auto PhaseTasks = Phase |
-                              views::take_while(
-                                  [](PipelinePhase* CurPhase)
-                                  {
-                                      return CurPhase->Flags.Test(EPipelineFlags::Executing);
-                                  }) |
-                              views::transform(
-                                  [](PipelinePhase* CurPhase)
-                                  {
-                                      return CurPhase->Task;
-                                  }) |
-                              ranges::to<std::vector>();
-
-            for (auto CurPhase : Phase)
-            {
-                CurPhase->Flags.Set(EPipelineFlags::Executing, false);
-            }
-
-            Tasks.reserve(PhaseTasks.size());
-            Tasks.insert(Tasks.end(), PhaseTasks.begin(), PhaseTasks.end());
-        }
-
-        cppcoro::sync_wait(cppcoro::when_all(Tasks));
-    }
-
-    void EnginePipeline::SetThreadCount(
-        size_t ThreadCount)
-    {
-    }
-
     void EnginePipeline::SetPhaseEnable(
         const StringU8& PhaseName,
         bool            Enabled)
     {
         auto& Phase = m_Phases.find(PhaseName)->second;
-        // Phase.Flags.Set(EPipelineFlags::Disabled, !Enabled);
+        Phase.Flags.Set(EPipelineFlags::Disabled, !Enabled);
     }
 
     void EnginePipeline::SetPhaseParallelize(
@@ -192,6 +130,6 @@ namespace Neon::Runtime
         bool            Parallelize)
     {
         auto& Phase = m_Phases.find(PhaseName)->second;
-        // Phase.Flags.Set(EPipelineFlags::DontParallelize, !Parallelize);
+        Phase.Flags.Set(EPipelineFlags::DontParallelize, !Parallelize);
     }
 } // namespace Neon::Runtime

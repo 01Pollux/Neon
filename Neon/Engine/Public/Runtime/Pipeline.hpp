@@ -5,8 +5,8 @@
 #include <Runtime/PipelineBuilder.hpp>
 
 #include <cppcoro/task.hpp>
-#include <cppcoro/shared_task.hpp>
 #include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/async_auto_reset_event.hpp>
 
 namespace Neon::Runtime
 {
@@ -22,11 +22,6 @@ namespace Neon::Runtime
         /// </summary>
         DontParallelize,
 
-        /// <summary>
-        /// Pipeline is currently executing
-        /// </summary>
-        Executing,
-
         _Last_Enum
     };
     using MPipelineFlags = Bitmask<EPipelineFlags>;
@@ -35,23 +30,13 @@ namespace Neon::Runtime
     {
     public:
         EnginePipeline(
-            EnginePipelineBuilder Builder);
+            EnginePipelineBuilder Builder,
+            size_t                ThreadCount = 2);
 
         /// <summary>
         /// Execute the phases in the pipeline
         /// </summary>
-        void BeginDispatch();
-
-        /// <summary>
-        /// Execute the phases in the pipeline
-        /// </summary>
-        void EndDispatch();
-
-        /// <summary>
-        /// Enable or disable parallelization for the pipeline
-        /// </summary>
-        void SetThreadCount(
-            size_t ThreadCount);
+        cppcoro::task<void> Dispatch();
 
     public:
         /// <summary>
@@ -119,11 +104,9 @@ namespace Neon::Runtime
 
         struct PipelinePhase
         {
-            ParentPhaseListType    Parents;
-            Utils::Signal<>        Signal;
-            std::mutex             Mutex;
-            cppcoro::shared_task<> Task;
-            MPipelineFlags         Flags;
+            Utils::Signal<> Signal;
+            std::mutex      Mutex;
+            MPipelineFlags  Flags;
         };
 
     private:
