@@ -212,8 +212,6 @@ namespace Neon::RHI
 
             ThrowIfFailed(Swapchain.As(&m_Swapchain));
         }
-
-        // m_Swapchain->SetMaximumFrameLatency(Desc.FramesInFlight);
     }
 
     void Dx12Swapchain::ResizeBackbuffers(

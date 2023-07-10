@@ -240,7 +240,6 @@ namespace Neon::RHI
         {
             DebugController->EnableDebugLayer();
         }
-        // DebugController->SetEnableSynchronizedCommandQueueValidation(false);
         if (DeviceDesc.EnableGpuBasedValidation)
         {
             DebugController->SetEnableGPUBasedValidation(true);

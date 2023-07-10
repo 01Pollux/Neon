@@ -4,7 +4,10 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/Resource/State.hpp>
 
-#include <execution>
+#include <cppcoro/sync_wait.hpp>
+#include <cppcoro/async_mutex.hpp>
+#include <cppcoro/schedule_on.hpp>
+#include <cppcoro/when_all.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -79,7 +82,7 @@ namespace Neon::RG
     }
 
     void RenderGraphDepdencyLevel::Execute(
-        Asio::ThreadPool<>& ThreadPool)
+        cppcoro::static_thread_pool& ThreadPool) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -100,7 +103,7 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::ExecuteBarriers()
+    void RenderGraphDepdencyLevel::ExecuteBarriers() const
     {
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
@@ -120,15 +123,15 @@ namespace Neon::RG
     //
 
     void RenderGraphDepdencyLevel::ExecutePasses(
-        Asio::ThreadPool<>& ThreadPool) const
+        cppcoro::static_thread_pool& ThreadPool) const
     {
-        std::mutex RenderMutex, ComputeMutex, CopyMutex;
+        cppcoro::async_mutex RenderMutex, ComputeMutex;
 
         RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext;
         RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext;
 
-        std::vector<std::future<void>> Futures;
-        Futures.reserve(m_Passes.size());
+        std::vector<cppcoro::task<void>> Tasks;
+        Tasks.reserve(m_Passes.size());
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
@@ -137,142 +140,137 @@ namespace Neon::RG
                 continue;
             }
 
-            auto Task = ThreadPool.Enqueue(
-                [&, &Storage = m_Context.GetStorage()](size_t PassIndex)
+            auto Task = [&, &Storage = m_Context.GetStorage()](size_t PassIndex) -> cppcoro::task<void>
+            {
+                auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
+
+                RHI::ICommandList* CommandList = nullptr;
+
+                switch (RenderPass->GetQueueType())
                 {
-                    auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
-
-                    RHI::ICommandList* CommandList = nullptr;
-
-                    switch (RenderPass->GetQueueType())
+                case PassQueueType::Direct:
+                {
+                    RHI::IGraphicsCommandList* RenderCommandList;
                     {
-                    case PassQueueType::Direct:
-                    {
-                        RHI::IGraphicsCommandList* RenderCommandList;
-                        {
-                            std::scoped_lock Lock(RenderMutex);
-                            RenderCommandList = RenderContext.Append();
-                            CommandList       = RenderCommandList;
-                        }
-
-                        std::vector<RHI::CpuDescriptorHandle> RtvHandles;
-                        RtvHandles.reserve(RenderTargets.size());
-
-                        RHI::CpuDescriptorHandle  DsvHandle;
-                        RHI::CpuDescriptorHandle* DsvHandlePtr = nullptr;
-
-                        for (auto& RtvViewId : RenderTargets)
-                        {
-                            RHI::CpuDescriptorHandle RtvHandle;
-
-                            auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
-                            auto& ViewDesc = std::get<std::optional<RHI::RTVDesc>>(Storage.GetResourceView(RtvViewId, &RtvHandle));
-
-                            auto& Desc = Handle.GetDesc();
-                            RtvHandles.emplace_back(RtvHandle);
-
-                            if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
-                            {
-                                if (ViewDesc->ForceColor || Desc.ClearValue)
-                                {
-                                    RenderCommandList->ClearRtv(RtvHandle, ViewDesc->ForceColor.value_or(
-                                                                               std::get<Color4>(Desc.ClearValue->Value)));
-                                }
-                                else
-                                {
-                                    NEON_WARNING("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
-                                }
-                            }
-                        }
-
-                        if (DepthStencil)
-                        {
-                            auto& Handle   = Storage.GetResource(DepthStencil->GetResource());
-                            auto& ViewDesc = std::get<std::optional<RHI::DSVDesc>>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
-                            auto& Desc     = Handle.GetDesc();
-
-                            std::optional<float>   Depth;
-                            std::optional<uint8_t> Stencil;
-
-                            auto& ClearValue = std::get<RHI::ClearOperation::DepthStencil>(Desc.ClearValue->Value);
-
-                            if (ViewDesc)
-                            {
-                                switch (ViewDesc->ClearType)
-                                {
-                                case RHI::EDSClearType::Depth:
-                                {
-                                    Depth = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
-                                    break;
-                                }
-                                case RHI::EDSClearType::Stencil:
-                                {
-                                    Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
-                                    break;
-                                }
-                                case RHI::EDSClearType::DepthStencil:
-                                {
-                                    Depth   = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
-                                    Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
-                                    break;
-                                }
-
-                                default:
-                                    std::unreachable();
-                                }
-                            }
-                            else if (Desc.ClearValue)
-                            {
-                                Depth   = ClearValue.Depth;
-                                Stencil = ClearValue.Stencil;
-                            }
-                            RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
-                            DsvHandlePtr = &DsvHandle;
-                        }
-
-                        RenderCommandList->SetRenderTargets(
-                            RtvHandles.data(),
-                            RtvHandles.size(),
-                            DsvHandlePtr);
-
-                        if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
-                        {
-                            auto& Size = RHI::ISwapchain::Get()->GetSize();
-
-                            RenderCommandList->SetViewport(
-                                ViewportF{
-                                    .Width    = float(Size.Width()),
-                                    .Height   = float(Size.Height()),
-                                    .MaxDepth = 1.f,
-                                });
-                            RenderCommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
-                        }
-
-                        break;
+                        auto Lock         = co_await RenderMutex.scoped_lock_async();
+                        RenderCommandList = RenderContext.Append();
+                        CommandList       = RenderCommandList;
                     }
 
-                    case PassQueueType::Compute:
+                    std::vector<RHI::CpuDescriptorHandle> RtvHandles;
+                    RtvHandles.reserve(RenderTargets.size());
+
+                    RHI::CpuDescriptorHandle  DsvHandle;
+                    RHI::CpuDescriptorHandle* DsvHandlePtr = nullptr;
+
+                    for (auto& RtvViewId : RenderTargets)
                     {
+                        RHI::CpuDescriptorHandle RtvHandle;
+
+                        auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
+                        auto& ViewDesc = std::get<std::optional<RHI::RTVDesc>>(Storage.GetResourceView(RtvViewId, &RtvHandle));
+
+                        auto& Desc = Handle.GetDesc();
+                        RtvHandles.emplace_back(RtvHandle);
+
+                        if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
                         {
-                            std::scoped_lock Lock(RenderMutex);
-                            CommandList = ComputeContext.Append();
+                            if (ViewDesc->ForceColor || Desc.ClearValue)
+                            {
+                                RenderCommandList->ClearRtv(RtvHandle, ViewDesc->ForceColor.value_or(
+                                                                           std::get<Color4>(Desc.ClearValue->Value)));
+                            }
+                            else
+                            {
+                                NEON_WARNING("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
+                            }
                         }
-                        break;
-                    }
                     }
 
-                    RenderPass->Dispatch(Storage, CommandList); },
-                i);
-            Futures.emplace_back(std::move(Task));
+                    if (DepthStencil)
+                    {
+                        auto& Handle   = Storage.GetResource(DepthStencil->GetResource());
+                        auto& ViewDesc = std::get<std::optional<RHI::DSVDesc>>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
+                        auto& Desc     = Handle.GetDesc();
+
+                        std::optional<float>   Depth;
+                        std::optional<uint8_t> Stencil;
+
+                        auto& ClearValue = std::get<RHI::ClearOperation::DepthStencil>(Desc.ClearValue->Value);
+
+                        if (ViewDesc)
+                        {
+                            switch (ViewDesc->ClearType)
+                            {
+                            case RHI::EDSClearType::Depth:
+                            {
+                                Depth = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
+                                break;
+                            }
+                            case RHI::EDSClearType::Stencil:
+                            {
+                                Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
+                                break;
+                            }
+                            case RHI::EDSClearType::DepthStencil:
+                            {
+                                Depth   = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
+                                Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
+                                break;
+                            }
+
+                            default:
+                                std::unreachable();
+                            }
+                        }
+                        else if (Desc.ClearValue)
+                        {
+                            Depth   = ClearValue.Depth;
+                            Stencil = ClearValue.Stencil;
+                        }
+                        RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
+                        DsvHandlePtr = &DsvHandle;
+                    }
+
+                    RenderCommandList->SetRenderTargets(
+                        RtvHandles.data(),
+                        RtvHandles.size(),
+                        DsvHandlePtr);
+
+                    if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
+                    {
+                        auto& Size = RHI::ISwapchain::Get()->GetSize();
+
+                        RenderCommandList->SetViewport(
+                            ViewportF{
+                                .Width    = float(Size.Width()),
+                                .Height   = float(Size.Height()),
+                                .MaxDepth = 1.f,
+                            });
+                        RenderCommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
+                    }
+
+                    break;
+                }
+
+                case PassQueueType::Compute:
+                {
+                    {
+                        auto Lock   = co_await ComputeMutex.scoped_lock_async();
+                        CommandList = ComputeContext.Append();
+                    }
+                    break;
+                }
+                }
+
+                RenderPass->Dispatch(Storage, CommandList);
+
+                co_return;
+            };
+
+            Tasks.emplace_back(cppcoro::schedule_on(ThreadPool, Task(i)));
         }
 
-        std::for_each(
-            std::execution::par_unseq,
-            Futures.begin(),
-            Futures.end(),
-            [](auto& Future)
-            {
-                Future.wait();
-            });
+        cppcoro::sync_wait(cppcoro::when_all(std::move(Tasks)));
     }
 } // namespace Neon::RG

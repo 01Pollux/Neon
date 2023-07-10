@@ -2,7 +2,9 @@
 
 #include <Renderer/RG/Storage.hpp>
 #include <Renderer/RG/Pass.hpp>
-#include <Asio/ThreadPool.hpp>
+
+#include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/task.hpp>
 
 namespace Neon::RG
 {
@@ -44,9 +46,9 @@ namespace Neon::RG
             DepdencyLevelList&& Levels);
 
     private:
-        GraphStorage       m_Storage;
-        DepdencyLevelList  m_Levels;
-        Asio::ThreadPool<> m_ThreadPool{ 4 };
+        GraphStorage                m_Storage;
+        DepdencyLevelList           m_Levels;
+        cppcoro::static_thread_pool m_ThreadPool{ 2 };
     };
 
     //
@@ -78,19 +80,19 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            Asio::ThreadPool<>& ThreadPool);
+            cppcoro::static_thread_pool& ThreadPool) const;
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
-        void ExecuteBarriers();
+        void ExecuteBarriers() const;
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            Asio::ThreadPool<>& ThreadPool) const;
+            cppcoro::static_thread_pool& ThreadPool) const;
 
     private:
         struct RenderPassInfo
