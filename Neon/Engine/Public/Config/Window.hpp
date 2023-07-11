@@ -16,5 +16,6 @@ namespace Neon::Config
         bool CanResize       : 1 = true;
         bool HasTitleBar     : 1 = true;
         bool StartInMiddle   : 1 = false;
+        bool InitialVisible  : 1 = true;
     };
 } // namespace Neon::Config

@@ -80,16 +80,18 @@ namespace Neon::Windowing
         const String&       Title,
         const Size2I&       Size,
         const MWindowStyle& Style,
-        bool                StartInMiddle)
+        bool                StartInMiddle,
+        bool                InitialVisible)
     {
-        return NEON_NEW WindowApp(Title, Size, Style, StartInMiddle);
+        return NEON_NEW WindowApp(Title, Size, Style, StartInMiddle, InitialVisible);
     }
 
     WindowApp::WindowApp(
         const String&       Title,
         const Size2I&       Size,
         const MWindowStyle& Style,
-        bool                StartInMiddle) :
+        bool                StartInMiddle,
+        bool                InitialVisible) :
         m_WindowSize(Size),
         m_WindowStyle(Style),
         m_WindowCreatedLatch(1),
@@ -130,6 +132,11 @@ namespace Neon::Windowing
                     AdjustWindowRect(&Rect, WinStyle, false);
                     FinalSize.Width(Rect.right - Rect.left);
                     FinalSize.Height(Rect.bottom - Rect.top);
+                }
+
+                if (!InitialVisible)
+                {
+                    WinStyle = WinStyle & ~WS_VISIBLE;
                 }
 
                 m_Handle = CreateWindowExW(

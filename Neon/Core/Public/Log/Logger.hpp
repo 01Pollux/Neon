@@ -128,7 +128,6 @@ namespace Neon::Logger
         if (!(Expr))                                  \
         {                                             \
             NEON_FATAL_TAG("Assertion", __VA_ARGS__); \
-            Neon::Logger::Flush();                    \
             __debugbreak();                           \
         }                                             \
     } while (false)

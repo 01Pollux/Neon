@@ -32,7 +32,8 @@ namespace Neon::Windowing
             const String&       Title,
             const Size2I&       Size,
             const MWindowStyle& Style,
-            bool                StartInMiddle);
+            bool                StartInMiddle,
+            bool                InitialVisible);
 
         IWindowApp() = default;
 

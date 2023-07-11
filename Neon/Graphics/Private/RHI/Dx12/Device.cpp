@@ -303,7 +303,7 @@ namespace Neon::RHI
     {
         WinAPI::ComPtr<IDXGIAdapter> Adapter;
         WinAPI::ComPtr<IDXGIAdapter> BestAdapter;
-        size_t                      BestVideoMemory = 0;
+        size_t                       BestVideoMemory = 0;
         for (UINT i = 0; m_DxgiFactory->EnumAdapters(i, &Adapter) != DXGI_ERROR_NOT_FOUND; ++i)
         {
             if (FAILED(D3D12CreateDevice(Adapter.Get(), D3D_FEATURE_LEVEL_12_0, __uuidof(ID3D12Device), nullptr)))

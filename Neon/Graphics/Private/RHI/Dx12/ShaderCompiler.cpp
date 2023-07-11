@@ -239,7 +239,7 @@ namespace Neon::RHI
         ThrowIfFailed(Reflection->Load(Blob.Get()));
 
         uint32_t DxilPart;
-        ThrowIfFailed(Reflection->FindFirstPartKind(MAKEFOURCC('D', 'X', 'I', 'L'), &DxilPart));
+        ThrowIfFailed(Reflection->FindFirstPartKind(DXC_PART_DXIL, &DxilPart));
 
         WinAPI::ComPtr<ID3D12ShaderReflection> ShaderReflection;
         ThrowIfFailed(Reflection->GetPartReflection(DxilPart, IID_PPV_ARGS(&ShaderReflection)));

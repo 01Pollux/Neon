@@ -6,6 +6,9 @@
 #include <spdlog/sinks/msvc_sink.h>
 #include <spdlog/spdlog.h>
 
+#include <boost/stacktrace.hpp>
+
+#include <fstream>
 #include <filesystem>
 
 namespace Neon::Logger
@@ -22,6 +25,20 @@ namespace Neon::Logger
     static inline std::mutex s_LogInitMutex;
 
     static inline std::unique_ptr<spdlog::logger> s_EngineLogger;
+
+    static inline void DumpBacktrace()
+    {
+        // Open file to write to
+        // The name of the file is the current date and time and year like so:
+        // 2021-01-01_00-00-00
+        // Using std::chrono::system_clock::now() to get the current time
+        // and formatting it using std::format
+        StringU8 FileName = std::format(
+            "Logs/Backtrace_{0:%Y-%m-%d_%H-%M-%S}.txt",
+            std::chrono::system_clock::now());
+        std::ofstream File(FileName);
+        File << boost::stacktrace::stacktrace(1, 128);
+    }
 
     void Initialize()
     {
@@ -49,6 +66,7 @@ namespace Neon::Logger
 #endif
 
             s_EngineLogger = std::make_unique<spdlog::logger>("Neon", Sinks.begin(), Sinks.end());
+            s_EngineLogger->flush_on(spdlog::level::err);
 
 #ifdef NEON_DEBUG
             s_EngineLogger->set_level(spdlog::level::trace);
@@ -98,6 +116,7 @@ namespace Neon::Logger
                 break;
             case Logger::LogSeverity::Fatal:
                 s_EngineLogger->critical("[{0}] {1}", Tag, Message);
+                DumpBacktrace();
                 break;
             }
         }
@@ -140,6 +159,7 @@ namespace Neon::Logger
                 break;
             case Logger::LogSeverity::Fatal:
                 s_EngineLogger->critical(Message);
+                DumpBacktrace();
                 break;
             }
         }

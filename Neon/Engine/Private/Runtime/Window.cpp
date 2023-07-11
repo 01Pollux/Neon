@@ -34,7 +34,7 @@ namespace Neon::Runtime
             Style.Set(Windowing::EWindowStyle::Fullscreen);
         }
 
-        m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle));
+        m_Window.reset(Windowing::IWindowApp::Create(WindowConfig.Title, WindowConfig.Size, Style, WindowConfig.StartInMiddle, WindowConfig.InitialVisible));
 
         // Create the render device and swapchain
 

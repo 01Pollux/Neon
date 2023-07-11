@@ -2,9 +2,6 @@
 #include <Runtime/EntryPoint.hpp>
 #include <Parser/JsonReader.hpp>
 
-#include <RHI/Device.hpp>
-#include <Runtime/GameEngine.hpp>
-
 #include <Log/Logger.hpp>
 
 using namespace Neon;
@@ -24,9 +21,10 @@ NEON_MAIN(Argc, Argv)
 
     Config::EngineConfig Config{
         .Window = {
-            .Title      = STR("PakC"),
-            .Windowed   = true,
-            .Fullscreen = false },
+            .Title          = STR("PakC"),
+            .Windowed       = true,
+            .Fullscreen     = false,
+            .InitialVisible = false },
         .LoggerAssetUid = std::nullopt
     };
 

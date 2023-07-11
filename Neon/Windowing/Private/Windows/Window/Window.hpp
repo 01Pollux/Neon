@@ -27,7 +27,8 @@ namespace Neon::Windowing
             const String&       Title,
             const Size2I&       Size,
             const MWindowStyle& Style,
-            bool                StartInMiddle);
+            bool                StartInMiddle,
+            bool                InitialVisible);
 
         NEON_CLASS_NO_COPYMOVE(WindowApp);
 

@@ -15,55 +15,64 @@ struct PerFrameData
 struct PerObjectData
 {
 	matrix World;
+	float4 Color;
+	int TextureIndex;
 };
-
-
 
 //
 
 struct VSInput
 {
 	float3 Position : POSITION;
-	float2 TexCoord : TEXCOORD;
-	int MaterialIndex : TEXINDEX;
-	float4 Color : COLOR;
+	float2 TexCoord : TEX_COORD;
+	int SpriteIndex : SPRITE_INDEX;
 };
 
 struct VSOutput
 {
 	float4 Position : SV_POSITION;
-	float4 Color : COLOR;
-	float2 TexCoord : TEXCOORD;
-	nointerpolation int MaterialIndex : TEXINDEX;
+	float2 TexCoord : TEX_COORD;
+	nointerpolation int SpriteIndex : SPRITE_INDEX;
 };
 
-//
+// --------------------
+// Global
+// --------------------
+
+ConstantBuffer<PerFrameData> g_FrameData : register(b0, space0);
+ConstantBuffer<PerObjectData> g_SpriteData[] : register(b0, space1);
+
+// --------------------
+// Vertex Shader
+// --------------------
 
 VSOutput VS_Main(VSInput Input)
 {
 	VSOutput Output;
 	Output.Position = float4(Input.Position, 1.0f);
+	Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
+	Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
 	Output.TexCoord = Input.TexCoord;
-	Output.Color = Input.Color;
-	Output.MaterialIndex = Input.MaterialIndex;
+	Output.SpriteIndex = Input.SpriteIndex;
 	return Output;
 }
 
-Texture2D Texture[] : register(t0, space0);
+// --------------------
+// Pixel Shader
+// --------------------
 
-SamplerState Sampler_PointWrap : register(s0, space0);
-SamplerState Sampler_PointClamp : register(s1, space0);
-SamplerState Sampler_LinearWrap : register(s2, space0);
-SamplerState Sampler_LinearClamp : register(s3, space0);
-SamplerState Sampler_AnisotropicWrap : register(s4, space0);
-SamplerState Sampler_AnisotropicClamp : register(s5, space0);
+Texture2D p_SpriteTextures[] : register(t0, space0);
+
+SamplerState p_Sampler_PointWrap : register(s0, space0);
+SamplerState p_Sampler_PointClamp : register(s1, space0);
+SamplerState p_Sampler_LinearWrap : register(s2, space0);
+SamplerState p_Sampler_LinearClamp : register(s3, space0);
+SamplerState p_Sampler_AnisotropicWrap : register(s4, space0);
+SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
 float4 PS_Main(VSOutput Input) : SV_TARGET
 {
-	float4 Color = (float4) 1.f;
-	if (Input.MaterialIndex != -1)
-	{
-		Color = Texture[Input.MaterialIndex].Sample(Sampler_PointWrap, Input.TexCoord);
-	}
-	return Color * Input.Color;
+	int TextureIndex = g_SpriteData[Input.SpriteIndex].TextureIndex;
+	float4 Color = p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Input.TexCoord);
+	return Color * g_SpriteData[Input.SpriteIndex].Color;
 }
