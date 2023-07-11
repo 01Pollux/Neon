@@ -343,13 +343,6 @@ namespace Neon::Renderer
         return Ptr<IMaterial>(NEON_NEW Material(this));
     }
 
-    void Material::Bind(
-        RHI::IGraphicsCommandList* CommandList)
-    {
-        CommandList->SetRootSignature(m_RootSignature);
-        CommandList->SetPipelineState(m_PipelineState);
-    }
-
     //
 
     void Material::GetDescriptor(
@@ -375,6 +368,36 @@ namespace Neon::Renderer
     const Ptr<RHI::IPipelineState>& Material::GetPipelineState() const
     {
         return m_PipelineState;
+    }
+
+    void Material::ApplyAll(
+        RHI::IGraphicsCommandList*       CommandList,
+        const RHI::DescriptorHeapHandle& ResourceDescriptor,
+        const RHI::DescriptorHeapHandle& SamplerDescriptor) const
+    {
+        uint32_t SizeOfSharedResource = m_SharedDescriptors->ResourceDescriptors.Size;
+        uint32_t SizeOfSharedSampler  = m_SharedDescriptors->SamplerDescriptors.Size;
+
+        for (auto& [Entry, RootIndex, IsShared] : *m_EntryMap | views::values)
+        {
+            std::visit(
+                VariantVisitor{
+                    [&](const Material::DescriptorEntry& Descriptor)
+                    {
+                        uint32_t Offset = IsShared ? 0 : SizeOfSharedResource;
+                        CommandList->SetDescriptorTable(RootIndex, ResourceDescriptor.GetGpuHandle(Descriptor.Offset + Offset));
+                    },
+                    [&](const Material::SamplerEntry& Sampler)
+                    {
+                        uint32_t Offset = IsShared ? 0 : SizeOfSharedSampler;
+                        CommandList->SetDescriptorTable(RootIndex, SamplerDescriptor.GetGpuHandle(Sampler.Offset + Offset));
+                    },
+                    [&](const Material::ConstantEntry& Constant)
+                    {
+                        CommandList->SetConstants(RootIndex, Constant.Data.data(), Constant.Data.size() / sizeof(uint32_t));
+                    } },
+                Entry);
+        }
     }
 
     //
@@ -483,5 +506,153 @@ namespace Neon::Renderer
             auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
             Allocator->Free(SamplerDescriptors);
         }
+    }
+
+    //
+
+    MaterialBinder::MaterialBinder(std::span<IMaterial*> Materials) :
+        m_Materials(Materials)
+    {
+#if NEON_DEBUG
+        NEON_ASSERT(!m_Materials.empty(), "Materials are empty");
+        auto FirstMaterial = m_Materials[0];
+        for (auto Material : m_Materials)
+        {
+            NEON_ASSERT(Material, "Material is null");
+            NEON_ASSERT(FirstMaterial == Material, "Materials are not the same");
+        }
+#endif
+    }
+
+    void MaterialBinder::Bind(
+        RHI::IGraphicsCommandList* CommandList)
+    {
+        CommandList->SetRootSignature(m_Materials[0]->GetRootSignature());
+        CommandList->SetPipelineState(m_Materials[0]->GetPipelineState());
+    }
+
+    void MaterialBinder::BindParams(
+        RHI::IGraphicsCommandList* CommandList)
+    {
+        uint32_t GPUResourceDescriptorSize = 0,
+                 GPUSamplerDescriptorSize  = 0;
+
+        uint32_t SizeOfSharedResourceDescriptors = 0,
+                 SizeOfSharedSamplerDescriptors  = 0;
+
+        std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
+
+        RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
+
+        //
+
+        auto SaveDescriptor = [&](bool IsSampler)
+        {
+            auto& Descriptor  = IsSampler ? SamplerDescriptor : ResourceDescriptor;
+            auto& Descriptors = IsSampler ? SamplerDescriptors : ResourceDescriptors;
+            auto& TotalSize   = IsSampler ? SizeOfSharedSamplerDescriptors : SizeOfSharedResourceDescriptors;
+
+            if (Descriptor.Size)
+            {
+                Descriptors.emplace_back(Descriptor.GetCpuHandle(), Descriptor.Size);
+                TotalSize += Descriptor.Size;
+            }
+        };
+
+        auto SaveDescriptors =
+            [&]()
+        {
+            SaveDescriptor(false);
+            SaveDescriptor(true);
+        };
+
+        //
+
+        auto UploadDescriptor =
+            [&](bool IsSampler)
+        {
+            RHI::DescriptorType Type;
+            uint32_t            DescriptorSize;
+
+            if (IsSampler)
+            {
+                Type           = RHI::DescriptorType::Sampler;
+                DescriptorSize = GPUSamplerDescriptorSize;
+            }
+            else
+            {
+                Type           = RHI::DescriptorType::ResourceView;
+                DescriptorSize = GPUResourceDescriptorSize;
+            }
+
+            if (!DescriptorSize)
+            {
+                return;
+            }
+
+            auto& Descriptors = IsSampler ? SamplerDescriptors : ResourceDescriptors;
+            auto  Descriptor  = IsSampler ? SamplerDescriptor : ResourceDescriptor;
+
+            auto ResourceTable = RHI::IFrameDescriptorHeap::Get(Type);
+            Descriptor         = ResourceTable->Allocate(DescriptorSize);
+
+            RHI::IDescriptorHeap::CopyInfo Destination{
+                .Descriptor = Descriptor.GetCpuHandle(),
+                .CopySize   = Descriptor.Size
+            };
+            RHI::IDescriptorHeap::Copy(Type, Descriptors, { &Destination, 1 });
+        };
+
+        auto UploadDescriptors =
+            [&]()
+        {
+            UploadDescriptor(false);
+            UploadDescriptor(true);
+        };
+
+        //
+
+        // Save shared descriptors
+        m_Materials[0]->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
+        SaveDescriptors();
+
+        // Save local descriptors
+        for (auto Instance : m_Materials)
+        {
+            Instance->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
+            SaveDescriptors();
+        }
+
+        // Allocate frame descriptors and upload to it
+        UploadDescriptors();
+        m_Materials[0]->ApplyAll(CommandList, ResourceDescriptor, SamplerDescriptor);
+    }
+
+    void MaterialBinder::BindAll(
+        RHI::IGraphicsCommandList* CommandList)
+    {
+        Bind(CommandList);
+        BindParams(CommandList);
+    }
+
+    //
+
+    void MaterialTable::Reset()
+    {
+        m_Materials.clear();
+    }
+
+    int MaterialTable::Append(
+        IMaterial* Material)
+    {
+        for (int i = 0; i < m_Materials.size(); i++)
+        {
+            if (m_Materials[i] == Material)
+            {
+                return i;
+            }
+        }
+        m_Materials.push_back(Material);
+        return int(m_Materials.size() - 1);
     }
 } // namespace Neon::Renderer

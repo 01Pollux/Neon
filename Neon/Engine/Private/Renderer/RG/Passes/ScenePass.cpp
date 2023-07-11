@@ -41,6 +41,7 @@ namespace Neon::RG
                     {
                         return int(LhsSprite->MaterialInstance.get() - RhsSprite->MaterialInstance.get());
                     })
+                // TODO: sort by pipeline state and root signature aswell
                 .build();
 
         //
@@ -85,31 +86,13 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
-            std::map<IMaterial*, std::vector<flecs::entity>> InstancedSprites;
-
-            m_SpriteQuery.each(
-                [this, &InstancedSprites](
-                    flecs::entity Entity,
-                    Component::Transform&,
-                    Component::Sprite& Sprite)
-                {
-                    InstancedSprites[Sprite.MaterialInstance.get()].emplace_back(Entity);
-                });
-
             m_SpriteBatch->Begin(RenderCommandList);
-            for (auto& [Instance, Entities] : InstancedSprites)
-            {
-                for (flecs::entity Entity : Entities)
+            m_SpriteQuery.each(
+                [this](const Component::Transform& Transform,
+                       const Component::Sprite&    Sprite)
                 {
-                    auto Sprite = Entity.get<Component::Sprite>();
-                    m_SpriteBatch->Draw(
-                        SpriteBatch::QuadCommand{
-                            .Position         = Entity.get<Component::Transform>()->World.GetPosition(),
-                            .Size             = Sprite->Size,
-                            .Color            = Sprite->ModulationColor,
-                            .MaterialInstance = Instance });
-                }
-            }
+                    m_SpriteBatch->Draw(Transform, Sprite);
+                });
             m_SpriteBatch->End();
         }
     }

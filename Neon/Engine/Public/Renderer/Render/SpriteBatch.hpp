@@ -20,25 +20,17 @@ namespace Neon
     {
         class IMaterial;
     }
+    namespace Scene::Component
+    {
+        struct Transform;
+        struct Sprite;
+    } // namespace Scene::Component
 } // namespace Neon
 
 namespace Neon::Renderer
 {
     class SpriteBatch
     {
-    public:
-        struct QuadCommand
-        {
-            Vector3 Position;
-            Vector2 Size;
-            float   Rotation = 0.f;
-            float   Depth    = 0.f;
-            Color4  Color    = Colors::White;
-
-            IMaterial* MaterialInstance;
-            RectF      TexCoord = RectF(Vec::Zero<Vector2>, Vec::One<Vector2>);
-        };
-
     public:
         SpriteBatch();
 
@@ -52,7 +44,8 @@ namespace Neon::Renderer
         /// Enqueues a quad to be drawn.
         /// </summary>
         void Draw(
-            const QuadCommand& Quad);
+            const Scene::Component::Transform& Transform,
+            const Scene::Component::Sprite&    Sprite);
 
         /// <summary>
         /// Ends drawing.
@@ -76,6 +69,7 @@ namespace Neon::Renderer
         uint32_t m_VerticesCount = 0;
         uint32_t m_DrawCount     = 0;
 
-        std::vector<Renderer::IMaterial*> m_MaterialInstances;
+        MaterialTable        m_MaterialTable;
+        RHI::IPipelineState* m_PipelineState = nullptr;
     };
 } // namespace Neon::Renderer

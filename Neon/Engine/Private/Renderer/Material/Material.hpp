@@ -46,9 +46,6 @@ namespace Neon::Renderer
 
         Ptr<IMaterial> CreateInstance() override;
 
-        void Bind(
-            RHI::IGraphicsCommandList* CommandList) override;
-
         void GetDescriptor(
             bool                       Local,
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
@@ -57,6 +54,11 @@ namespace Neon::Renderer
         const Ptr<RHI::IRootSignature>& GetRootSignature() const override;
 
         const Ptr<RHI::IPipelineState>& GetPipelineState() const override;
+
+        void ApplyAll(
+            RHI::IGraphicsCommandList*       CommandList,
+            const RHI::DescriptorHeapHandle& ResourceDescriptor,
+            const RHI::DescriptorHeapHandle& SamplerDescriptor) const override;
 
     public:
         void SetResource(
@@ -77,7 +79,6 @@ namespace Neon::Renderer
         struct ConstantEntry
         {
             std::vector<uint8_t> Data;
-            size_t               DataStride;
         };
 
         struct DescriptorEntry

@@ -1,6 +1,9 @@
 #include <EnginePCH.hpp>
 #include <Renderer/Render/SpriteBatch.hpp>
 
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Sprite.hpp>
+
 #include <Resource/Pack.hpp>
 #include <Resource/Types/RootSignature.hpp>
 #include <Resource/Types/Shader.hpp>
@@ -70,63 +73,65 @@ namespace Neon::Renderer
 
         m_DrawCount     = 0;
         m_VerticesCount = 0;
-        m_MaterialInstances.clear();
+
+        m_PipelineState = nullptr;
     }
 
     void SpriteBatch::Draw(
-        const QuadCommand& Quad)
+        const Scene::Component::Transform& Transform,
+        const Scene::Component::Sprite&    Sprite)
     {
-        if (m_DrawCount >= SpriteBatchConstants::MaxPoints)
+        if (!Sprite.MaterialInstance)
         {
-            auto CommandList = m_CommandList;
-            End();
-            Begin(CommandList);
+            return;
+        }
+
+        auto PipelineState = Sprite.MaterialInstance->GetPipelineState().get();
+        // This is not our first time calling ::Draw()
+        if (m_PipelineState) [[likely]]
+        {
+            if ((m_PipelineState != PipelineState) || (m_DrawCount >= SpriteBatchConstants::MaxPoints)) [[unlikely]]
+            {
+                auto CommandList = m_CommandList;
+                End();
+                Begin(CommandList);
+            }
+            m_PipelineState = PipelineState;
+        }
+        else
+        {
+            m_PipelineState = PipelineState;
         }
 
         Vector2 TexCoords[]{
-            Quad.TexCoord.TopLeft(),
-            Quad.TexCoord.TopRight(),
-            Quad.TexCoord.BottomRight(),
-            Quad.TexCoord.BottomLeft()
+            Sprite.TextureRect.TopLeft(),
+            Sprite.TextureRect.TopRight(),
+            Sprite.TextureRect.BottomRight(),
+            Sprite.TextureRect.BottomLeft()
         };
 
-        Vector2 HalfSize = Quad.Size * 0.5f;
+        Vector2 HalfSize = Sprite.Size * 0.5f;
         Vector3 QuadPositions[]{
-            Quad.Position + Vector3(-HalfSize.x, HalfSize.y, 0.f),
-            Quad.Position + Vector3(HalfSize.x, HalfSize.y, 0.f),
-            Quad.Position + Vector3(HalfSize.x, -HalfSize.y, 0.f),
-            Quad.Position + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
+            Transform.World.GetPosition() + Vector3(-HalfSize.x, HalfSize.y, 0.f),
+            Transform.World.GetPosition() + Vector3(HalfSize.x, HalfSize.y, 0.f),
+            Transform.World.GetPosition() + Vector3(HalfSize.x, -HalfSize.y, 0.f),
+            Transform.World.GetPosition() + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
         };
 
-        int MaterialIndex = -1;
-        if (Quad.MaterialInstance)
-        {
-            for (MaterialIndex = 0; MaterialIndex < int(m_MaterialInstances.size()); MaterialIndex++)
-            {
-                if (m_MaterialInstances[MaterialIndex] == Quad.MaterialInstance)
-                {
-                    break;
-                }
-            }
-            if (MaterialIndex == int(m_MaterialInstances.size()))
-            {
-                m_MaterialInstances.push_back(Quad.MaterialInstance);
-            }
-        }
+        int MaterialIndex = m_MaterialTable.Append(Sprite.MaterialInstance.get());
 
+        // Write vertices to the vertex buffer
         for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i, ++m_VerticesCount)
         {
             auto Buffer = std::bit_cast<SpriteBatchConstants::Layout*>(m_VertexBufferPtr) + m_VerticesCount;
 
             Buffer->Position      = QuadPositions[i];
             Buffer->TexCoord      = TexCoords[i];
-            Buffer->Color         = Quad.Color;
+            Buffer->Color         = Sprite.ModulationColor;
             Buffer->MaterialIndex = MaterialIndex;
         }
 
         m_DrawCount++;
-
-        //
     }
 
     void SpriteBatch::End()
@@ -138,50 +143,8 @@ namespace Neon::Renderer
 
         //
 
-        // TODO: bind shared descriptor
-
-        m_MaterialInstances[0]->Bind(m_CommandList);
-
-        auto ResourceTable = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView),
-             SamplerTable  = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::Sampler);
-
-        uint32_t GPUResourceDescriptorSize = 0,
-                 GPUSamplerDescriptorSize  = 0;
-
-        std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
-
-        RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
-        for (auto Instance : m_MaterialInstances)
-        {
-            Instance->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
-
-            if (ResourceDescriptor.Size)
-            {
-                ResourceDescriptors.emplace_back(ResourceDescriptor.GetCpuHandle(), ResourceDescriptor.Size);
-                GPUResourceDescriptorSize += ResourceDescriptor.Size;
-            }
-            if (SamplerDescriptor.Size)
-            {
-                SamplerDescriptors.emplace_back(SamplerDescriptor.GetCpuHandle(), SamplerDescriptor.Size);
-                GPUSamplerDescriptorSize += SamplerDescriptor.Size;
-            }
-        }
-
-        if (GPUResourceDescriptorSize)
-        {
-            auto ResourceHandle = ResourceTable->Allocate(GPUResourceDescriptorSize);
-
-            RHI::IDescriptorHeap::CopyInfo Destination{
-                .Descriptor = ResourceHandle.GetCpuHandle(),
-                .CopySize   = ResourceHandle.Size
-            };
-            RHI::IDescriptorHeap::Copy(RHI::DescriptorType::ResourceView, ResourceDescriptors, { &Destination, 1 });
-
-            m_CommandList->SetDescriptorTable(0, ResourceHandle.GetGpuHandle());
-        }
-        // auto SamplerHandle = SamplerTable->Allocate(GPUSamplerDescriptorSize);
-
-        //
+        MaterialBinder MatBinder(m_MaterialTable.GetMaterials());
+        MatBinder.BindAll(m_CommandList);
 
         RHI::Views::Vertex VertexView;
         VertexView.Append(
