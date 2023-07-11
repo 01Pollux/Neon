@@ -98,13 +98,13 @@ namespace Neon::Runtime
         {
             auto& VarMap = MatBuilder.VarMap();
 
-            VarMap.Add("g_FrameData", { 0, 0 }, MaterialVarType::Buffer)
-                .Visibility(RHI::ShaderVisibility::All)
-                .Flags(EMaterialVarFlags::Shared, true);
+            // VarMap.Add("g_FrameData", { 0, 0 }, MaterialVarType::Buffer)
+            //     .Visibility(RHI::ShaderVisibility::All)
+            //     .Flags(EMaterialVarFlags::Shared, true);
 
-            VarMap.Add("g_SpriteData", { 0, 1 }, MaterialVarType::Buffer)
-                .Visibility(RHI::ShaderVisibility::All)
-                .Flags(EMaterialVarFlags::Shared, true);
+            // VarMap.Add("g_SpriteData", { 0, 1 }, MaterialVarType::Buffer)
+            //     .Visibility(RHI::ShaderVisibility::All)
+            //     .Flags(EMaterialVarFlags::Shared, true);
 
             VarMap.Add("p_SpriteTextures", { 0, 0 }, MaterialVarType::Resource)
                 .Visibility(RHI::ShaderVisibility::Pixel);

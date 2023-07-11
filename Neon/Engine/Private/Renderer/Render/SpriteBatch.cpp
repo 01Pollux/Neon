@@ -171,19 +171,19 @@ namespace Neon::Renderer
         auto           FirstMaterial = m_MaterialTable.GetMaterial(0);
         MaterialBinder MatBinder(m_MaterialTable.GetMaterials());
 
-        FirstMaterial->SetResource(
-            "g_SpriteData",
-            m_VertexAndPerDataBuffer,
-            RHI::CBVDesc{
-                .Resource = m_VertexAndPerDataBuffer->GetHandle(SpriteBatchConstants::PerObjectDataBufferOffset),
-                .Size     = SpriteBatchConstants::PerObjectDataBufferSize });
+        // FirstMaterial->SetResource(
+        //     "g_SpriteData",
+        //     m_VertexAndPerDataBuffer,
+        //     RHI::CBVDesc{
+        //         .Resource = m_VertexAndPerDataBuffer->GetHandle(SpriteBatchConstants::PerObjectDataBufferOffset),
+        //         .Size     = SpriteBatchConstants::PerObjectDataBufferSize });
 
-        FirstMaterial->SetResource(
-            "g_CameraData",
-            m_CameraBuffer,
-            RHI::CBVDesc{
-                .Resource = m_CameraBuffer->GetHandle(),
-                .Size     = m_CameraBuffer->GetSize() });
+        // FirstMaterial->SetResource(
+        //     "g_CameraData",
+        //     m_CameraBuffer,
+        //     RHI::CBVDesc{
+        //         .Resource = m_CameraBuffer->GetHandle(),
+        //         .Size     = m_CameraBuffer->GetSize() });
 
         MatBinder.BindAll(m_CommandList);
 
