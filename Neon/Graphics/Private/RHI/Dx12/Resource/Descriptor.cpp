@@ -168,6 +168,7 @@ namespace Neon::RHI
     {
         auto RenderDevice = Dx12RenderDevice::Get();
 
+        NEON_ASSERT(m_GpuHandle.ptr, "Descriptor heap is not shader visible");
         GpuDescriptorHandle Address(m_GpuHandle.ptr);
         Address.Value += Offset * RenderDevice->GetDescriptorSize(m_HeapType);
         return Address;

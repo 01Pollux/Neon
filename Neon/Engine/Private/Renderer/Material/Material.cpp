@@ -516,10 +516,10 @@ namespace Neon::Renderer
 #if NEON_DEBUG
         NEON_ASSERT(!m_Materials.empty(), "Materials are empty");
         auto FirstMaterial = m_Materials[0];
-        for (auto Material : m_Materials)
+        for (auto Mat : m_Materials)
         {
-            NEON_ASSERT(Material, "Material is null");
-            NEON_ASSERT(FirstMaterial == Material, "Materials are not the same");
+            NEON_ASSERT(Mat, "Material is null");
+            NEON_ASSERT(FirstMaterial->GetPipelineState() == Mat->GetPipelineState(), "Materials have different pipeline states");
         }
 #endif
     }
@@ -537,9 +537,6 @@ namespace Neon::Renderer
         uint32_t GPUResourceDescriptorSize = 0,
                  GPUSamplerDescriptorSize  = 0;
 
-        uint32_t SizeOfSharedResourceDescriptors = 0,
-                 SizeOfSharedSamplerDescriptors  = 0;
-
         std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
 
         RHI::DescriptorHeapHandle ResourceDescriptor, SamplerDescriptor;
@@ -550,7 +547,7 @@ namespace Neon::Renderer
         {
             auto& Descriptor  = IsSampler ? SamplerDescriptor : ResourceDescriptor;
             auto& Descriptors = IsSampler ? SamplerDescriptors : ResourceDescriptors;
-            auto& TotalSize   = IsSampler ? SizeOfSharedSamplerDescriptors : SizeOfSharedResourceDescriptors;
+            auto& TotalSize   = IsSampler ? GPUSamplerDescriptorSize : GPUResourceDescriptorSize;
 
             if (Descriptor.Size)
             {
@@ -591,7 +588,7 @@ namespace Neon::Renderer
             }
 
             auto& Descriptors = IsSampler ? SamplerDescriptors : ResourceDescriptors;
-            auto  Descriptor  = IsSampler ? SamplerDescriptor : ResourceDescriptor;
+            auto& Descriptor  = IsSampler ? SamplerDescriptor : ResourceDescriptor;
 
             auto ResourceTable = RHI::IFrameDescriptorHeap::Get(Type);
             Descriptor         = ResourceTable->Allocate(DescriptorSize);
@@ -619,7 +616,7 @@ namespace Neon::Renderer
         // Save local descriptors
         for (auto Instance : m_Materials)
         {
-            Instance->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
+            Instance->GetDescriptor(false, &ResourceDescriptor, &SamplerDescriptor);
             SaveDescriptors();
         }
 
