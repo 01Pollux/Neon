@@ -1,3 +1,26 @@
+struct PerFrameData
+{
+	matrix View;
+	matrix Projection;
+	matrix ViewProjection;
+	matrix ViewInverse;
+	matrix ProjectionInverse;
+	matrix ViewProjectionInverse;
+	
+	float3 CameraPosition;
+	float3 CameraDirection;
+	float3 CameraUp;
+};
+
+struct PerObjectData
+{
+	matrix World;
+};
+
+
+
+//
+
 struct VSInput
 {
 	float3 Position : POSITION;
@@ -13,6 +36,8 @@ struct VSOutput
 	float2 TexCoord : TEXCOORD;
 	nointerpolation int MaterialIndex : TEXINDEX;
 };
+
+//
 
 VSOutput VS_Main(VSInput Input)
 {

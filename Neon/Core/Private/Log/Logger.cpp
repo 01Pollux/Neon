@@ -150,9 +150,13 @@ namespace Neon::Logger
         std::lock_guard LogInit(s_LogInitMutex);
         if (!--s_LogInitCount)
         {
-            s_EngineLogger = nullptr;
             spdlog::drop_all();
         }
+    }
+
+    void Flush()
+    {
+        s_EngineLogger->flush();
     }
 
     void SetLogTag(

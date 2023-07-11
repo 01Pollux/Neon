@@ -17,14 +17,19 @@ namespace Neon::Logger
     };
 
     /// <summary>
-    /// Must be called from the main thread, to initialize the logger.
+    /// Initialize the logger.
     /// </summary>
     void Initialize();
 
     /// <summary>
-    /// Must be called from the main thread, to shutdown the logger.
+    /// Shutdown the logger.
     /// </summary>
     void Shutdown();
+
+    /// <summary>
+    /// Flush the log file.
+    /// </summary>
+    void Flush();
 
     /// <summary>
     /// Enable or disable logging and the severity of the logs.
@@ -123,6 +128,7 @@ namespace Neon::Logger
         if (!(Expr))                                  \
         {                                             \
             NEON_FATAL_TAG("Assertion", __VA_ARGS__); \
+            Neon::Logger::Flush();                    \
             __debugbreak();                           \
         }                                             \
     } while (false)

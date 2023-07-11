@@ -179,20 +179,13 @@ namespace Neon::RHI
                 {
                     size_t StrLen = Error->GetStringLength();
                     NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
-                    return {};
+                    return nullptr;
                 }
             }
         }
 
         WinAPI::ComPtr<IDxcBlob> Data;
         ThrowIfFailed(Result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&Data), nullptr));
-
-        uint8_t* CompiledShaderCode = static_cast<uint8_t*>(Data->GetBufferPointer());
-
-        size_t CodeSize = Data->GetBufferSize();
-        auto   CodePtr  = std::make_unique<uint8_t[]>(CodeSize);
-
-        std::copy(CompiledShaderCode, CompiledShaderCode + CodeSize, CodePtr.get());
 
         // Add validation
         {
@@ -213,9 +206,21 @@ namespace Neon::RHI
                 m_Utils->GetBlobAsUtf8(Error.Get(), &ErrorUtf8);
 
                 NEON_ERROR_TAG("ShaderCompiler", StringU8(ErrorUtf8->GetStringPointer(), ErrorUtf8->GetBufferSize()));
-                return {};
+                return nullptr;
+            }
+            else
+            {
+                WinAPI::ComPtr<IDxcBlob> Data;
+                ThrowIfFailed(OperationResult->GetResult(&Data));
             }
         }
+
+        uint8_t* CompiledShaderCode = static_cast<uint8_t*>(Data->GetBufferPointer());
+
+        size_t CodeSize = Data->GetBufferSize();
+        auto   CodePtr  = std::make_unique<uint8_t[]>(CodeSize);
+
+        std::copy(CompiledShaderCode, CompiledShaderCode + CodeSize, CodePtr.get());
 
         DataSize = CodeSize;
         return CodePtr;

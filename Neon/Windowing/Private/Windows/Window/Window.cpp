@@ -27,7 +27,7 @@ namespace Neon::Windowing
             case CTRL_LOGOFF_EVENT:
             case CTRL_SHUTDOWN_EVENT:
                 NEON_TRACE_TAG("Window", "Closing Engine");
-                Logger::Shutdown();
+                Logger::Flush();
                 return TRUE;
             default:
                 return FALSE;
