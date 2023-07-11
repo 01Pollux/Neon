@@ -27,9 +27,8 @@ namespace Neon::Scene
         }
         case EntityType::Camera2D:
         {
-            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this);
-
-            auto Actor = m_World->entity(Name);
+            auto Actor       = m_World->entity(Name);
+            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Orthographic);
             Actor.set(std::move(CameraComponent));
@@ -40,9 +39,8 @@ namespace Neon::Scene
         case EntityType::Camera3D:
         {
             // TODO: change to 3D render graph
-            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this);
-
-            auto Actor = m_World->entity(Name);
+            auto Actor       = m_World->entity(Name);
+            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Perspective);
             Actor.set<Camera>(std::move(CameraComponent));

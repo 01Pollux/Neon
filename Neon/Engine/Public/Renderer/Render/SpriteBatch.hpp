@@ -22,8 +22,9 @@ namespace Neon
     }
     namespace Scene::Component
     {
-        struct Transform;
         struct Sprite;
+        struct Camera;
+        struct Transform;
     } // namespace Scene::Component
 } // namespace Neon
 
@@ -33,6 +34,12 @@ namespace Neon::Renderer
     {
     public:
         SpriteBatch();
+
+        /// <summary>
+        /// Update camera buffer.
+        /// </summary>
+        void SetCameraBuffer(
+            const Ptr<RHI::IUploadBuffer>& Buffer);
 
         /// <summary>
         /// Begins drawing.
@@ -58,11 +65,23 @@ namespace Neon::Renderer
         /// </summary>
         void CreateBuffers();
 
+        /// <summary>
+        /// Get pointer to the vertex buffer.
+        /// </summary>
+        [[nodiscard]] uint8_t* GetVertexBuffer() noexcept;
+
+        /// <summary>
+        /// Get pointer to the constant buffer per object.
+        /// </summary>
+        [[nodiscard]] uint8_t* GetPerObjectBuffer() noexcept;
+
     private:
         RHI::IGraphicsCommandList* m_CommandList = nullptr;
 
-        UPtr<RHI::IUploadBuffer> m_VertexBuffer;
-        UPtr<RHI::IUploadBuffer> m_IndexBuffer;
+        Ptr<RHI::IUploadBuffer> m_CameraBuffer;
+
+        Ptr<RHI::IUploadBuffer> m_VertexAndPerDataBuffer;
+        Ptr<RHI::IUploadBuffer> m_IndexBuffer;
 
         uint8_t* m_VertexBufferPtr = nullptr;
 

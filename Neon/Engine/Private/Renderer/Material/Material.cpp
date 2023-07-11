@@ -240,7 +240,7 @@ namespace Neon::Renderer
                 }
                 else
                 {
-                    NEON_WARNING("Material", "Failed to load shader module: {:X}", ModuleHandle.ModuleId);
+                    NEON_WARNING_TAG("Material", "Failed to load shader module: {:X}", ModuleHandle.ModuleId);
                 }
             }
             return Shader;
@@ -404,14 +404,15 @@ namespace Neon::Renderer
 
     void Material::SetResource(
         const std::string&             Name,
-        const Ptr<RHI::IGpuResource>   Resource,
+        const Ptr<RHI::IGpuResource>&  Resource,
         const RHI::DescriptorViewDesc& Desc,
-        size_t                         ArrayIndex)
+        uint32_t                       ArrayIndex,
+        const Ptr<RHI::IGpuResource>&  UavCounter)
     {
         auto Layout = m_EntryMap->find(Name);
         if (Layout == m_EntryMap->end())
         {
-            NEON_WARNING("Material", "Failed to find resource: {}", Name);
+            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
             return;
         }
 
@@ -433,30 +434,30 @@ namespace Neon::Renderer
                     {
                         NEON_ASSERT(false, "Invalid view type");
                     },
-                    [&Handle, this](const RHI::CBVDesc& Desc)
+                    [&Handle, this, ArrayIndex](const RHI::CBVDesc& Desc)
                     {
                         RHI::Views::ConstantBuffer View{ Handle };
-                        View.Bind(Desc);
+                        View.Bind(Desc, ArrayIndex);
                     },
-                    [&Handle, Resource, this](const std::optional<RHI::SRVDesc>& Desc)
+                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::SRVDesc>& Desc)
                     {
                         RHI::Views::ShaderResource View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
                     },
-                    [&Handle, Resource, this](const std::optional<RHI::UAVDesc>& Desc)
+                    [&Handle, &Resource, &UavCounter, this, ArrayIndex](const std::optional<RHI::UAVDesc>& Desc)
                     {
                         RHI::Views::UnorderedAccess View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), ArrayIndex);
                     },
-                    [&Handle, Resource, this](const std::optional<RHI::RTVDesc>& Desc)
+                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::RTVDesc>& Desc)
                     {
                         RHI::Views::RenderTarget View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
                     },
-                    [&Handle, Resource, this](const std::optional<RHI::DSVDesc>& Desc)
+                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::DSVDesc>& Desc)
                     {
                         RHI::Views::DepthStencil View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
                     } },
                 EntryDesc);
         }
@@ -476,23 +477,8 @@ namespace Neon::Renderer
         CreateDescriptorIfNeeded(SamplerDescriptors, RHI::DescriptorType::Sampler, SamplerDescriptorSize);
     }
 
-    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
-        UnqiueDescriptorHeapHandle&& Other) :
-        ResourceDescriptors(std::exchange(Other.ResourceDescriptors, {})),
-        SamplerDescriptors(std::exchange(Other.SamplerDescriptors, {}))
-    {
-    }
-
-    auto Material::UnqiueDescriptorHeapHandle::operator=(
-        UnqiueDescriptorHeapHandle&& Other) -> UnqiueDescriptorHeapHandle&
-    {
-        if (this != &Other)
-        {
-            ResourceDescriptors = std::exchange(Other.ResourceDescriptors, {});
-            SamplerDescriptors  = std::exchange(Other.SamplerDescriptors, {});
-        }
-        return *this;
-    }
+    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(UnqiueDescriptorHeapHandle&&)                    = default;
+    auto Material::UnqiueDescriptorHeapHandle::operator=(UnqiueDescriptorHeapHandle&&) -> UnqiueDescriptorHeapHandle& = default;
 
     Material::UnqiueDescriptorHeapHandle::~UnqiueDescriptorHeapHandle()
     {
@@ -610,13 +596,13 @@ namespace Neon::Renderer
         //
 
         // Save shared descriptors
-        m_Materials[0]->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
+        m_Materials[0]->GetDescriptor(false, &ResourceDescriptor, &SamplerDescriptor);
         SaveDescriptors();
 
         // Save local descriptors
         for (auto Instance : m_Materials)
         {
-            Instance->GetDescriptor(false, &ResourceDescriptor, &SamplerDescriptor);
+            Instance->GetDescriptor(true, &ResourceDescriptor, &SamplerDescriptor);
             SaveDescriptors();
         }
 

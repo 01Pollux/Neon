@@ -43,10 +43,10 @@ namespace Neon::RHI
         struct Handle
         {
             WinAPI::ComPtr<ID3D12Resource> Resource;
-            size_t                        Offset;
-            size_t                        Size;
-            GraphicsBufferType            Type;
-            D3D12_RESOURCE_FLAGS          Flags;
+            size_t                         Offset;
+            size_t                         Size;
+            GraphicsBufferType             Type;
+            D3D12_RESOURCE_FLAGS           Flags;
         };
 
         Dx12Buffer(
@@ -62,7 +62,8 @@ namespace Neon::RHI
 
         size_t GetSize() const override;
 
-        GpuResourceHandle GetHandle() const override;
+        GpuResourceHandle GetHandle(
+            size_t Offset) const override;
 
     protected:
         Handle   m_Buffer;
@@ -116,14 +117,14 @@ namespace Neon::RHI
 
         Dx12Texture(
             WinAPI::ComPtr<ID3D12Resource>      Texture,
-            D3D12_RESOURCE_STATES              InitialState,
+            D3D12_RESOURCE_STATES               InitialState,
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
 
         Dx12Texture(
             WinAPI::ComPtr<ID3D12Resource>      Texture,
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-            std::span<const SubresourceDesc>   Subresources,
-            uint64_t&                          CopyId);
+            std::span<const SubresourceDesc>    Subresources,
+            uint64_t&                           CopyId);
 
         NEON_CLASS_NO_COPY(Dx12Texture);
         NEON_CLASS_MOVE(Dx12Texture);

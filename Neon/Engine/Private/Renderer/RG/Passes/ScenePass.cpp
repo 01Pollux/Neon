@@ -5,8 +5,7 @@
 //
 
 #include <Scene/Scene.hpp>
-#include <Scene/Component/Sprite.hpp>
-#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Camera.hpp>
 
 //
 
@@ -23,11 +22,28 @@ namespace Neon::RG
     using namespace Scene;
     using namespace Renderer;
 
+    struct PerFrameData
+    {
+        alignas(16) Matrix4x4 View;
+        alignas(16) Matrix4x4 Projection;
+        alignas(16) Matrix4x4 ViewProjection;
+
+        alignas(16) Matrix4x4 ViewInverse;
+        alignas(16) Matrix4x4 ProjectionInverse;
+        alignas(16) Matrix4x4 ViewProjectionInverse;
+
+        alignas(16) Vector3 CameraPosition;
+        alignas(16) Vector3 CameraDirection;
+        alignas(16) Vector3 CameraUp;
+    };
+
     ScenePass::ScenePass(
         const GraphStorage&,
-        GameScene& Scene) :
+        GameScene& Scene,
+        Actor      Camera) :
         IRenderPass(PassQueueType::Direct),
-        m_Scene(Scene)
+        m_Scene(Scene),
+        m_Camera(Camera)
     {
         m_SpriteQuery =
             m_Scene->query_builder<
@@ -52,10 +68,10 @@ namespace Neon::RG
                         return int(LhsSprite->MaterialInstance->GetPipelineState().get() - RhsSprite->MaterialInstance->GetPipelineState().get());
                     })
                 .build();
-
         //
 
         m_SpriteBatch.reset(NEON_NEW SpriteBatch);
+        m_CameraBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(PerFrameData), 256) }));
     }
 
     void ScenePass::ResolveShaders(
@@ -95,6 +111,9 @@ namespace Neon::RG
 
         if (m_SpriteQuery.is_true())
         {
+            UpdateCameraBuffer();
+
+            m_SpriteBatch->SetCameraBuffer(m_CameraBuffer);
             m_SpriteBatch->Begin(RenderCommandList);
             m_SpriteQuery.each(
                 [this](const Component::Transform& Transform,
@@ -104,5 +123,25 @@ namespace Neon::RG
                 });
             m_SpriteBatch->End();
         }
+    }
+
+    void ScenePass::UpdateCameraBuffer()
+    {
+        auto CameraBuffer    = m_CameraBuffer->Map<PerFrameData>();
+        auto CameraComponent = m_Camera.get<Component::Camera>();
+
+        CameraBuffer->View           = glm::transpose(CameraComponent->ViewMatrix(m_Camera));
+        CameraBuffer->Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
+        CameraBuffer->ViewProjection = CameraBuffer->View * CameraBuffer->Projection;
+
+        CameraBuffer->ViewInverse           = glm::inverse(CameraBuffer->View);
+        CameraBuffer->ProjectionInverse     = glm::inverse(CameraBuffer->Projection);
+        CameraBuffer->ViewProjectionInverse = glm::inverse(CameraBuffer->ViewProjection);
+
+        // CameraBuffer->CameraPosition  = CameraComponent->GetPosition();
+        // CameraBuffer->CameraDirection = CameraComponent->GetDirection();
+        // CameraBuffer->CameraUp        = CameraComponent->GetUp();
+
+        m_CameraBuffer->Unmap();
     }
 } // namespace Neon::RG

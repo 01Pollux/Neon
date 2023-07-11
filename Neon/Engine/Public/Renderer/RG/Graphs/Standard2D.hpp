@@ -1,11 +1,7 @@
 #pragma once
 
 #include <Renderer/RG/RG.hpp>
-
-namespace Neon::Scene
-{
-    class GameScene;
-} // namespace Neon::Scene
+#include <Scene/Scene.hpp>
 
 namespace Neon::RG
 {
@@ -16,5 +12,7 @@ namespace Neon::RG
     /// This render graph contains the following passes:
     /// - ScenePass
     /// </summary>
-    [[nodiscard]] UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(Scene::GameScene& Scene);
+    [[nodiscard]] UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
+        Scene::GameScene& Scene,
+        Scene::Actor      Camera);
 } // namespace Neon::RG

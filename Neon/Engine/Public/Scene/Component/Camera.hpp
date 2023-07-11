@@ -94,13 +94,13 @@ namespace Neon::Scene::Component
         /// Get the view matrix of the viewport.
         /// </summary>
         [[nodiscard]] Matrix4x4 ViewMatrix(
-            const flecs::entity& OwningEntity);
+            const flecs::entity& OwningEntity) const;
 
         /// <summary>
         /// Get the view matrix of the viewport.
         /// </summary>
         [[nodiscard]] Matrix4x4 ViewProjectionMatrix(
-            const flecs::entity& OwningEntity);
+            const flecs::entity& OwningEntity) const;
 
         NEON_EXPORT_COMPONENT();
 

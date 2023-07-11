@@ -87,9 +87,10 @@ namespace Neon::RHI
         return m_Buffer.Size;
     }
 
-    GpuResourceHandle Dx12Buffer::GetHandle() const
+    GpuResourceHandle Dx12Buffer::GetHandle(
+        size_t Offset) const
     {
-        return { m_Resource->GetGPUVirtualAddress() + m_Buffer.Offset };
+        return { m_Resource->GetGPUVirtualAddress() + m_Buffer.Offset + Offset };
     }
     //
 
@@ -313,7 +314,7 @@ namespace Neon::RHI
 
     Dx12Texture::Dx12Texture(
         WinAPI::ComPtr<ID3D12Resource>      Texture,
-        D3D12_RESOURCE_STATES              InitialState,
+        D3D12_RESOURCE_STATES               InitialState,
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation)
     {
         m_Resource   = std::move(Texture);
@@ -335,8 +336,8 @@ namespace Neon::RHI
     Dx12Texture::Dx12Texture(
         WinAPI::ComPtr<ID3D12Resource>      Texture,
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-        std::span<const SubresourceDesc>   Subresources,
-        uint64_t&                          CopyId) :
+        std::span<const SubresourceDesc>    Subresources,
+        uint64_t&                           CopyId) :
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
     {
         CopyFrom(Subresources, CopyId);

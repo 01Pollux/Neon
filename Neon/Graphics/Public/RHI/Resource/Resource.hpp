@@ -95,7 +95,8 @@ namespace Neon::RHI
         /// <summary>
         /// Get resource handle in gpu.
         /// </summary>
-        [[nodiscard]] virtual GpuResourceHandle GetHandle() const = 0;
+        [[nodiscard]] virtual GpuResourceHandle GetHandle(
+            size_t Offset = 0) const = 0;
     };
 
     //

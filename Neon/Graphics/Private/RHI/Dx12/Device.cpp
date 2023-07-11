@@ -244,6 +244,24 @@ namespace Neon::RHI
         {
             DebugController->SetEnableGPUBasedValidation(true);
         }
+
+        if (DeviceDesc.EnableDredLayer)
+        {
+            WinAPI::ComPtr<ID3D12DeviceRemovedExtendedDataSettings> DredSettings;
+            if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DredSettings))))
+            {
+                DredSettings->SetAutoBreadcrumbsEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+                DredSettings->SetPageFaultEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            }
+
+            //
+
+            WinAPI::ComPtr<ID3D12DeviceRemovedExtendedDataSettings1> DredSettings1;
+            if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&DredSettings1))))
+            {
+                DredSettings1->SetBreadcrumbContextEnablement(D3D12_DRED_ENABLEMENT_FORCED_ON);
+            }
+        }
 #endif
     }
 

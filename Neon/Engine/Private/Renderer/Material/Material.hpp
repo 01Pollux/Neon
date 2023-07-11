@@ -59,9 +59,10 @@ namespace Neon::Renderer
     public:
         void SetResource(
             const std::string&             Name,
-            const Ptr<RHI::IGpuResource>   Resource,
+            const Ptr<RHI::IGpuResource>&  Resource,
             const RHI::DescriptorViewDesc& Desc,
-            size_t                         ArrayIndex) override;
+            uint32_t                       ArrayIndex,
+            const Ptr<RHI::IGpuResource>&  UavCounter) override;
 
     private:
         /// <summary>
@@ -116,9 +117,7 @@ namespace Neon::Renderer
                 uint32_t SamplerDescriptorSize);
 
             NEON_CLASS_NO_COPY(UnqiueDescriptorHeapHandle);
-
-            UnqiueDescriptorHeapHandle(UnqiueDescriptorHeapHandle&& Other);
-            UnqiueDescriptorHeapHandle& operator=(UnqiueDescriptorHeapHandle&& Other);
+            NEON_CLASS_MOVE_DECL(UnqiueDescriptorHeapHandle);
 
             ~UnqiueDescriptorHeapHandle();
         };

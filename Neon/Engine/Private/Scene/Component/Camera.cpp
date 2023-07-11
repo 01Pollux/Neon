@@ -60,15 +60,8 @@ namespace Neon::Scene::Component
         return Viewport.ProjectionMatrix(Type);
     }
 
-    constexpr Vector3 p()
-    {
-        Vector3 x{};
-        x.y = 1;
-        return x;
-    };
-
     Matrix4x4 Camera::ViewMatrix(
-        const flecs::entity& OwningEntity)
+        const flecs::entity& OwningEntity) const
     {
         auto TransformComponent = OwningEntity.get<Component::Transform>();
         return glm::lookAt(
@@ -78,7 +71,7 @@ namespace Neon::Scene::Component
     }
 
     Matrix4x4 Camera::ViewProjectionMatrix(
-        const flecs::entity& OwningEntity)
+        const flecs::entity& OwningEntity) const
     {
         return ViewMatrix(OwningEntity) * ProjectionMatrix();
     }

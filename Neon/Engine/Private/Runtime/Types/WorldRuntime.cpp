@@ -98,12 +98,20 @@ namespace Neon::Runtime
         {
             auto& VarMap = MatBuilder.VarMap();
 
-            VarMap.Add("Texture", { 0, 0 }, MaterialVarType::Resource)
+            VarMap.Add("g_FrameData", { 0, 0 }, MaterialVarType::Buffer)
+                .Visibility(RHI::ShaderVisibility::All)
+                .Flags(EMaterialVarFlags::Shared, true);
+
+            VarMap.Add("g_SpriteData", { 0, 1 }, MaterialVarType::Buffer)
+                .Visibility(RHI::ShaderVisibility::All)
+                .Flags(EMaterialVarFlags::Shared, true);
+
+            VarMap.Add("p_SpriteTextures", { 0, 0 }, MaterialVarType::Resource)
                 .Visibility(RHI::ShaderVisibility::Pixel);
 
             for (uint32_t i : std::ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
             {
-                auto Name = StringUtils::Format("StaticSampler_{}", i);
+                auto Name = StringUtils::Format("p_StaticSampler_{}", i);
                 VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialStates::Sampler(i));
             }
         }
@@ -149,7 +157,7 @@ namespace Neon::Runtime
                 SpriteComponent.Size             = Size2(Size, Size);
                 SpriteComponent.MaterialInstance = RandomInstances[std::rand() % std::size(RandomInstances)];
 
-                SpriteComponent.MaterialInstance->SetTexture("Texture", RandomTextures[std::rand() % std::size(RandomTextures)]);
+                SpriteComponent.MaterialInstance->SetTexture("p_SpriteTextures", RandomTextures[std::rand() % std::size(RandomTextures)]);
 
                 Sprite.set(SpriteComponent);
             }

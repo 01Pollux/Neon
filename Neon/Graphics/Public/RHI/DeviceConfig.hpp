@@ -40,6 +40,11 @@ namespace Neon::RHI
         bool EnableDebugLayer : 1 = true;
 
         /// <summary>
+        /// Enable the device removed extended data (DRED) layer for the render device (non-production)
+        /// </summary>
+        bool EnableDredLayer : 1 = true;
+
+        /// <summary>
         /// Enable the gpu debugger for the render device (non-production)
         /// </summary>
         bool EnableGPUDebugger : 1 = true;
