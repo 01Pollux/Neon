@@ -51,10 +51,6 @@ namespace Neon::Renderer
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
             RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
 
-        const Ptr<RHI::IRootSignature>& GetRootSignature() const override;
-
-        const Ptr<RHI::IPipelineState>& GetPipelineState() const override;
-
         void ApplyAll(
             RHI::IGraphicsCommandList*       CommandList,
             const RHI::DescriptorHeapHandle& ResourceDescriptor,
@@ -128,9 +124,6 @@ namespace Neon::Renderer
         };
 
     private:
-        Ptr<RHI::IRootSignature> m_RootSignature;
-        Ptr<RHI::IPipelineState> m_PipelineState;
-
         Ptr<UnqiueDescriptorHeapHandle> m_SharedDescriptors;
         UnqiueDescriptorHeapHandle      m_LocalDescriptors;
 

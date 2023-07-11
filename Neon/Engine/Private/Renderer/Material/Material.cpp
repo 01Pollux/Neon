@@ -330,12 +330,12 @@ namespace Neon::Renderer
 
     Material::Material(
         Material* Other) :
-        m_RootSignature(Other->m_RootSignature),
-        m_PipelineState(Other->m_PipelineState),
         m_SharedDescriptors(Other->m_SharedDescriptors),
         m_LocalDescriptors(Other->m_LocalDescriptors.ResourceDescriptors.Size, Other->m_LocalDescriptors.SamplerDescriptors.Size),
         m_EntryMap(Other->m_EntryMap)
     {
+        m_RootSignature = Other->m_RootSignature;
+        m_PipelineState = Other->m_PipelineState;
     }
 
     Ptr<IMaterial> Material::CreateInstance()
@@ -360,12 +360,12 @@ namespace Neon::Renderer
         }
     }
 
-    const Ptr<RHI::IRootSignature>& Material::GetRootSignature() const
+    const Ptr<RHI::IRootSignature>& IMaterial::GetRootSignature() const noexcept
     {
         return m_RootSignature;
     }
 
-    const Ptr<RHI::IPipelineState>& Material::GetPipelineState() const
+    const Ptr<RHI::IPipelineState>& IMaterial::GetPipelineState() const noexcept
     {
         return m_PipelineState;
     }

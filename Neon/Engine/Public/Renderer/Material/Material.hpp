@@ -49,12 +49,12 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the root signature.
         /// </summary>
-        virtual const Ptr<RHI::IRootSignature>& GetRootSignature() const = 0;
+        const Ptr<RHI::IRootSignature>& GetRootSignature() const noexcept;
 
         /// <summary>
         /// Get pipeline state.
         /// </summary>
-        virtual const Ptr<RHI::IPipelineState>& GetPipelineState() const = 0;
+        const Ptr<RHI::IPipelineState>& GetPipelineState() const noexcept;
 
         /// <summary>
         /// Apply all the material's resources.
@@ -135,6 +135,10 @@ namespace Neon::Renderer
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
+
+    protected:
+        Ptr<RHI::IRootSignature> m_RootSignature;
+        Ptr<RHI::IPipelineState> m_PipelineState;
     };
 
     //
