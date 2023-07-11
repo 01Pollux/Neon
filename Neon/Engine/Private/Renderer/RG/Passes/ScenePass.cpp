@@ -33,15 +33,24 @@ namespace Neon::RG
             m_Scene->query_builder<
                        Component::Transform,
                        Component::Sprite>()
+                // Order by material root signature
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Sprite* LhsSprite,
                         flecs::entity_t,
                         const Component::Sprite* RhsSprite) -> int
                     {
-                        return int(LhsSprite->MaterialInstance.get() - RhsSprite->MaterialInstance.get());
+                        return int(LhsSprite->MaterialInstance->GetRootSignature().get() - RhsSprite->MaterialInstance->GetRootSignature().get());
                     })
-                // TODO: sort by pipeline state and root signature aswell
+                // Order by material pipeline state
+                .order_by(
+                    +[](flecs::entity_t,
+                        const Component::Sprite* LhsSprite,
+                        flecs::entity_t,
+                        const Component::Sprite* RhsSprite) -> int
+                    {
+                        return int(LhsSprite->MaterialInstance->GetPipelineState().get() - RhsSprite->MaterialInstance->GetPipelineState().get());
+                    })
                 .build();
 
         //
