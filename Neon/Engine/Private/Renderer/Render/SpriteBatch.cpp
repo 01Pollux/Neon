@@ -29,9 +29,9 @@ namespace Neon::Renderer
 
         struct PerObjectData
         {
-            alignas(16) Matrix4x4 World;
-            alignas(16) Vector4 Color;
-            alignas(16) int TextureIndex;
+            Matrix4x4 World;
+            Vector4   Color;
+            int       TextureIndex;
         };
 
         struct VertexInput

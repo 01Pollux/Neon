@@ -33,8 +33,7 @@ namespace Neon::Renderer
     class SpriteBatch
     {
     public:
-        SpriteBatch(
-            size_t MaxSpritePageCount);
+        SpriteBatch();
 
         /// <summary>
         /// Update camera buffer.
@@ -46,8 +45,7 @@ namespace Neon::Renderer
         /// Begins drawing.
         /// </summary>
         void Begin(
-            RHI::IGraphicsCommandList* CommandList,
-            size_t                     SpritePageCount);
+            RHI::IGraphicsCommandList* CommandList);
 
         /// <summary>
         /// Enqueues a quad to be drawn.
@@ -63,7 +61,7 @@ namespace Neon::Renderer
 
     private:
         /// <summary>
-        /// Creates the vertex and index buffers.
+        /// Creates the vertex, per object and index buffers.
         /// </summary>
         void CreateBuffers();
 

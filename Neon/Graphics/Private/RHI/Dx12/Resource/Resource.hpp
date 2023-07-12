@@ -82,9 +82,6 @@ namespace Neon::RHI
         uint8_t* Map() override;
 
         void Unmap() override;
-
-    private:
-        uint8_t* m_MappedData = nullptr;
     };
 
     //
@@ -99,9 +96,6 @@ namespace Neon::RHI
         uint8_t* Map() override;
 
         void Unmap() override;
-
-    private:
-        uint8_t* m_MappedData = nullptr;
     };
 
     //
