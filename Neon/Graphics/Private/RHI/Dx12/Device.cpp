@@ -414,6 +414,7 @@ namespace Neon::RHI
         {
             auto& Object = m_DefaultTextures[size_t(Type)] = Resource.Access<ITexture>(CommandQueue);
             RHI::RenameObject(Object.get(), Name);
+            Dx12ResourceStateManager::Get()->TransitionResource(Object.get(), MResourceState_AllShaderResource);
         };
 
         LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D, STR("_Magenta2D"));
