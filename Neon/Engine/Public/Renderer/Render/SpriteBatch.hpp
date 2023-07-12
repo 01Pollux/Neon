@@ -33,7 +33,8 @@ namespace Neon::Renderer
     class SpriteBatch
     {
     public:
-        SpriteBatch();
+        SpriteBatch(
+            size_t MaxSpritePageCount);
 
         /// <summary>
         /// Update camera buffer.
@@ -45,7 +46,8 @@ namespace Neon::Renderer
         /// Begins drawing.
         /// </summary>
         void Begin(
-            RHI::IGraphicsCommandList* CommandList);
+            RHI::IGraphicsCommandList* CommandList,
+            size_t                     SpritePageCount);
 
         /// <summary>
         /// Enqueues a quad to be drawn.
@@ -65,25 +67,17 @@ namespace Neon::Renderer
         /// </summary>
         void CreateBuffers();
 
-        /// <summary>
-        /// Get pointer to the vertex buffer.
-        /// </summary>
-        [[nodiscard]] uint8_t* GetVertexBuffer() noexcept;
-
-        /// <summary>
-        /// Get pointer to the constant buffer per object.
-        /// </summary>
-        [[nodiscard]] uint8_t* GetPerObjectBuffer() noexcept;
-
     private:
         RHI::IGraphicsCommandList* m_CommandList = nullptr;
 
         Ptr<RHI::IUploadBuffer> m_CameraBuffer;
 
-        Ptr<RHI::IUploadBuffer> m_VertexAndPerDataBuffer;
+        Ptr<RHI::IUploadBuffer> m_PerDataBuffer;
+        Ptr<RHI::IUploadBuffer> m_VertexBuffer;
         Ptr<RHI::IUploadBuffer> m_IndexBuffer;
 
-        uint8_t* m_VertexBufferPtr = nullptr;
+        uint8_t* m_VertexBufferPtr  = nullptr;
+        uint8_t* m_PerDataBufferPtr = nullptr;
 
         uint32_t m_VerticesCount = 0;
         uint32_t m_DrawCount     = 0;

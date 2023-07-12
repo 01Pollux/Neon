@@ -146,18 +146,29 @@ namespace Neon::Renderer
 
         // We will be using a contiguous descriptor table for all resources across all shaders
         // so we need to merge all the descriptor entries into a single table
-        uint32_t RootParamIndex = 0;
+        uint32_t DescriptorOffset = 0;
 
         // Merge batched descriptors
         // Per batch loop (resources and samplers)
+        bool IsSampler = false;
+        static_assert(std::size(BatchedDescriptorEntries) == 2, "Only resource and sampler batch are possible");
         for (auto& Entries : BatchedDescriptorEntries)
         {
             // Reset root param index for each batch
-            RootParamIndex = 0;
+            DescriptorOffset = 0;
 
             // Per shader loop
             for (auto& [Visibility, DescriptorEntries] : Entries)
             {
+                if (IsSampler)
+                {
+                    Mat->m_Descriptor->RootParams.emplace_back(Material::SamplerEntry::Root{ DescriptorOffset });
+                }
+                else
+                {
+                    Mat->m_Descriptor->RootParams.emplace_back(Material::DescriptorEntry::Root{ DescriptorOffset });
+                }
+
                 RHI::RootDescriptorTable Table;
 
                 // Per descriptor type loop
@@ -189,12 +200,12 @@ namespace Neon::Renderer
                             break;
                         }
 
-                        RootParamIndex += Size;
+                        DescriptorOffset += Size;
                     }
                 }
                 RootSigBuilder.AddDescriptorTable(std::move(Table), Visibility);
-                // Mat->m_Descriptor->RootParams.emplace_back(RootParamIndex);
             }
+            IsSampler = true;
         }
 
         //
