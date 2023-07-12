@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <RHI/Resource/View.hpp>
+#include <RHI/Resource/Descriptor.hpp>
 
 #include <map>
 #include <vector>
@@ -12,7 +12,6 @@ namespace Neon::RHI
     class IGraphicsCommandList;
     class IPipelineState;
     class IRootSignature;
-    struct DescriptorHeapHandle;
 } // namespace Neon::RHI
 
 namespace Neon::Renderer
@@ -39,12 +38,20 @@ namespace Neon::Renderer
         [[nodiscard]] virtual Ptr<IMaterial> CreateInstance() = 0;
 
         /// <summary>
-        /// Get the parent material.
+        /// Get descriptor table.
         /// </summary>
-        [[nodiscard]] virtual void GetDescriptor(
+        [[nodiscard]] virtual void GetDescriptorTable(
             bool                       Local,
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
             RHI::DescriptorHeapHandle* OutSamplerDescriptor) const = 0;
+
+        /// <summary>
+        /// Get used descriptors.
+        /// </summary>
+        [[nodiscard]] virtual void GetUsedDescriptors(
+            bool                                         Local,
+            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutResourceDescriptors,
+            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutSamplerDescriptors) const = 0;
 
         /// <summary>
         /// Get the root signature.
@@ -80,10 +87,18 @@ namespace Neon::Renderer
         /// <summary>
         /// Set the material's resource as a sampler.
         /// </summary>
-        virtual void SetSampler(
+        virtual void SetResource(
             const std::string&      Name,
             const RHI::SamplerDesc& Desc,
             uint32_t                ArrayIndex = 0) = 0;
+
+        /// <summary>
+        /// Set the material's resource size.
+        /// The materials mustn't be instanced nor have a bounded array size.
+        /// </summary>
+        virtual void SetResourceSize(
+            const StringU8& Name,
+            uint32_t        Size) = 0;
 
         //
 
@@ -109,6 +124,18 @@ namespace Neon::Renderer
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
+        }
+
+        /// <summary>
+        /// Set the material's resource as a resource view.
+        /// </summary>
+        void SetStructuredBuffer(
+            const std::string&                 Name,
+            const Ptr<RHI::IGpuResource>&      Resource,
+            const std::optional<RHI::SRVDesc>& Desc       = std::nullopt,
+            uint32_t                           ArrayIndex = 0)
+        {
+            SetTexture(Name, Resource, Desc, ArrayIndex);
         }
 
         /// <summary>
@@ -227,6 +254,22 @@ namespace Neon::Renderer
             size_t Index) const
         {
             return m_Materials[Index];
+        }
+
+        /// <summary>
+        /// Get the number of materials.
+        /// </summary>
+        [[nodiscard]] uint32_t GetMaterialCount() const noexcept
+        {
+            return uint32_t(m_Materials.size());
+        }
+
+        /// <summary>
+        /// Get the materials.
+        /// </summary>
+        [[nodiscard]] const auto& GetMaterials() const noexcept
+        {
+            return m_Materials;
         }
 
         /// <summary>

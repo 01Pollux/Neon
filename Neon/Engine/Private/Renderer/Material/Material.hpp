@@ -46,10 +46,15 @@ namespace Neon::Renderer
 
         Ptr<IMaterial> CreateInstance() override;
 
-        void GetDescriptor(
+        void GetDescriptorTable(
             bool                       Local,
             RHI::DescriptorHeapHandle* OutResourceDescriptor,
             RHI::DescriptorHeapHandle* OutSamplerDescriptor) const override;
+
+        void GetUsedDescriptors(
+            bool                                         Local,
+            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutResourceDescriptor,
+            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutSamplerDescriptor) const override;
 
         void ApplyAll(
             RHI::IGraphicsCommandList*       CommandList,
@@ -58,38 +63,45 @@ namespace Neon::Renderer
 
     public:
         void SetResource(
-            const std::string&             Name,
+            const StringU8&                Name,
             const Ptr<RHI::IGpuResource>&  Resource,
             const RHI::DescriptorViewDesc& Desc,
             uint32_t                       ArrayIndex,
             const Ptr<RHI::IGpuResource>&  UavCounter) override;
 
-        void SetSampler(
-            const std::string&      Name,
+        void SetResource(
+            const StringU8&         Name,
             const RHI::SamplerDesc& Desc,
             uint32_t                ArrayIndex = 0) override;
 
-    private:
-        /// <summary>
-        /// Create a default material instance.
-        /// </summary>
-        void CreateSharedDescriptor(
-            uint32_t Shared,
-            uint32_t LocalSamplerDescriptorSize);
+        void SetResourceSize(
+            const StringU8& Name,
+            uint32_t        Size) override;
 
     private:
         struct ConstantEntry
         {
             std::vector<uint8_t> Data;
+            struct Root
+            {
+                uint8_t* Data;
+                size_t   Num32Bits;
+            };
         };
 
         struct DescriptorEntry
         {
-            std::vector<RHI::DescriptorViewDesc> Descs;
-            std::vector<Ptr<RHI::IGpuResource>>  Resources;
+            std::map<uint32_t, Ptr<RHI::IGpuResource>> Resources;
 
-            uint32_t        Offset;
+            uint32_t Offset;
+            uint32_t Count;
+
             MaterialVarType Type;
+
+            struct Root
+            {
+                uint32_t Offset;
+            };
         };
 
         struct SamplerEntry
@@ -98,18 +110,29 @@ namespace Neon::Renderer
 
             uint32_t Offset;
             uint32_t Count;
+
+            struct Root
+            {
+                uint32_t Offset;
+            };
         };
 
-        using EntryVariant = std::variant<DescriptorEntry, ConstantEntry, SamplerEntry>;
+        using EntryVariant     = std::variant<ConstantEntry, DescriptorEntry, SamplerEntry>;
+        using RootEntryVariant = std::variant<ConstantEntry::Root, DescriptorEntry::Root, SamplerEntry::Root>;
 
         struct LayoutEntry
         {
             EntryVariant Entry;
-            uint32_t     RootIndex;
-            bool         IsShared;
+            bool         IsInstanced;
         };
 
         using LayoutEntryMap = std::map<StringU8, LayoutEntry>;
+
+        struct MaterialDescriptor
+        {
+            LayoutEntryMap                Entries;
+            std::vector<RootEntryVariant> RootParams;
+        };
 
     private:
         struct UnqiueDescriptorHeapHandle
@@ -131,6 +154,6 @@ namespace Neon::Renderer
         Ptr<UnqiueDescriptorHeapHandle> m_SharedDescriptors;
         UnqiueDescriptorHeapHandle      m_LocalDescriptors;
 
-        Ptr<LayoutEntryMap> m_EntryMap;
+        Ptr<MaterialDescriptor> m_Descriptor;
     };
 } // namespace Neon::Renderer

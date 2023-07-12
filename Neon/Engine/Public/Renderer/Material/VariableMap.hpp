@@ -20,6 +20,12 @@ namespace Neon::Renderer
         /// </summary>
         Instanced,
 
+        /// <summary>
+        /// This variable is an unbounded array.
+        /// Cannot be combined with 'Instanced' flag.
+        /// </summary>
+        Unbounded,
+
         _Last_Enum
     };
     using MMaterialVarFlags = Bitmask<EMaterialVarFlags>;

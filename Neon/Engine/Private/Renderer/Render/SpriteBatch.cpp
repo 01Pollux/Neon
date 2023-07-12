@@ -48,8 +48,8 @@ namespace Neon::Renderer
         static constexpr size_t VertexBufferSize        = Math::AlignUp(MaxVertices * VertexSize, 256);
         static constexpr size_t PerObjectDataBufferSize = Math::AlignUp(MaxPoints * PerObjectDataSize, 256);
 
-        static constexpr size_t VertexBufferOffset        = 0;
-        static constexpr size_t PerObjectDataBufferOffset = VertexBufferSize;
+        static constexpr size_t PerObjectDataBufferOffset = 0;
+        static constexpr size_t VertexBufferOffset        = PerObjectDataBufferSize;
 
         /// <summary>
         /// a sprite's quad is made up of 4 vertices and looks like this:
@@ -171,25 +171,26 @@ namespace Neon::Renderer
         auto           FirstMaterial = m_MaterialTable.GetMaterial(0);
         MaterialBinder MatBinder(m_MaterialTable.GetMaterials());
 
-        FirstMaterial->SetConstantBuffer(
-            "g_SpriteData",
-            m_VertexAndPerDataBuffer,
-            RHI::CBVDesc{
-                .Resource = m_VertexAndPerDataBuffer->GetHandle(SpriteBatchConstants::PerObjectDataBufferOffset),
-                .Size     = SpriteBatchConstants::PerObjectDataBufferSize });
+         FirstMaterial->SetStructuredBuffer(
+             "g_SpriteData",
+             m_VertexAndPerDataBuffer,
+             RHI::SRVDesc{
+                 .View = RHI::SRVDesc::Buffer{
+                     .Count        = m_DrawCount,
+                     .SizeOfStruct = SpriteBatchConstants::PerObjectDataSize } });
 
-        FirstMaterial->SetConstantBuffer(
-            "g_FrameData",
-            m_CameraBuffer,
-            RHI::CBVDesc{
-                .Resource = m_CameraBuffer->GetHandle(),
-                .Size     = m_CameraBuffer->GetSize() });
+         FirstMaterial->SetConstantBuffer(
+             "g_FrameData",
+             m_CameraBuffer,
+             RHI::CBVDesc{
+                 .Resource = m_CameraBuffer->GetHandle(),
+                 .Size     = m_CameraBuffer->GetSize() });
 
         MatBinder.BindAll(m_CommandList);
 
         RHI::Views::Vertex VertexView;
         VertexView.Append(
-            m_VertexAndPerDataBuffer->GetHandle(),
+            m_VertexAndPerDataBuffer->GetHandle(SpriteBatchConstants::VertexBufferOffset),
             sizeof(SpriteBatchConstants::VertexInput),
             m_VertexAndPerDataBuffer->GetSize());
 
@@ -214,10 +215,9 @@ namespace Neon::Renderer
     {
         // Create vertex and per-object data buffer
         m_VertexAndPerDataBuffer.reset(RHI::IUploadBuffer::Create(
-            {
-                .Size = SpriteBatchConstants::VertexBufferSize +
-                        SpriteBatchConstants::PerObjectDataBufferSize,
-            }));
+            { .Size = SpriteBatchConstants::VertexBufferSize +
+                      SpriteBatchConstants::PerObjectDataBufferSize,
+              .Alignment = 256 }));
         m_VertexBufferPtr = m_VertexAndPerDataBuffer->Map();
 
         //

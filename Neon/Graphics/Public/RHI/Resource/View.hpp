@@ -9,8 +9,8 @@ namespace Neon::RHI
     struct ShaderComponentMapping
     {
     public:
-        static constexpr uint32_t c_ShfitCount = 3;
-        static constexpr uint32_t c_ShfitMask  = 0x7;
+        static constexpr uint32_t c_ShiftCount = 3;
+        static constexpr uint32_t c_ShiftMask  = 0x7;
 
         enum class Type : uint8_t
         {
@@ -28,16 +28,17 @@ namespace Neon::RHI
             Type Source2 = Type ::Blue,
             Type Source3 = Type::Alpha) noexcept
         {
-            m_Mapping = ((uint32_t(Source0) & c_ShfitMask)) |
-                        ((uint32_t(Source1) & c_ShfitMask) << c_ShfitCount) |
-                        ((uint32_t(Source2) & c_ShfitMask) << c_ShfitCount * 2) |
-                        ((uint32_t(Source3) & c_ShfitMask) << c_ShfitCount * 3);
+            m_Mapping = ((uint32_t(Source0) & c_ShiftMask)) |
+                        ((uint32_t(Source1) & c_ShiftMask) << c_ShiftCount) |
+                        ((uint32_t(Source2) & c_ShiftMask) << c_ShiftCount * 2) |
+                        ((uint32_t(Source3) & c_ShiftMask) << c_ShiftCount * 3) |
+                        ((1 & c_ShiftMask) << c_ShiftCount * 4);
         }
 
         constexpr Type Get(
             Type Component) noexcept
         {
-            return Type((m_Mapping >> (uint32_t(Component) * c_ShfitCount)) & c_ShfitMask);
+            return Type((m_Mapping >> (uint32_t(Component) * c_ShiftCount)) & c_ShiftMask);
         }
 
         constexpr operator uint32_t() const noexcept
