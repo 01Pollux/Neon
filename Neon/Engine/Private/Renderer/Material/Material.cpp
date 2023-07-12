@@ -108,7 +108,8 @@ namespace Neon::Renderer
 
                     // Shared resources are allocated in a limited descriptor space
                     // while unified resources are allocated in a per-material descriptor space
-                    const uint32_t DescriptorSize = IsUnbounded ? Material::UnboundedTableSize : View.ArraySize();
+                    const uint32_t DescriptorSize        = IsUnbounded ? Material::UnboundedTableSize : View.ArraySize();
+                    const uint32_t UnifiedDescriptorSize = (IsUnbounded || IsLocal) ? Material::UnboundedTableSize : View.ArraySize();
 
                     auto& DescriptorCount =
                         View.Type() == MaterialVarType::Sampler
@@ -117,6 +118,9 @@ namespace Neon::Renderer
 
                     DescriptorEntry.Offset = DescriptorCount;
                     DescriptorEntry.Count  = DescriptorSize;
+
+                    // If this is a local descriptor heap, we will allocate for each resource array's size
+                    // else we will allocate for the maximum array size if its unbounded or the array size if its bounded
                     DescriptorCount += DescriptorSize;
 
                     auto& LayoutEntry       = Mat->m_Descriptor->Entries[View.Name()];
@@ -127,7 +131,7 @@ namespace Neon::Renderer
                         BatchedDescriptorEntry{
                             .LayoutEntry = &LayoutEntry,
                             .Binding     = View.Binding(),
-                            .Size        = DescriptorSize });
+                            .Size        = UnifiedDescriptorSize });
 
                     break;
                 }
@@ -680,6 +684,8 @@ namespace Neon::Renderer
         };
 
         //
+
+        static std::mt19937 mt_engine;
 
         // Save shared descriptors
         m_Materials[0]->GetUsedDescriptors(false, ResourceDescriptors, SamplerDescriptors);

@@ -143,15 +143,15 @@ namespace Neon::Runtime
                 auto Sprite = m_Scene->entity();
 
                 Scene::Component::Transform TransformComponent;
-                TransformComponent.Local.SetPosition(Vector3(x, y, 1.f));
-                TransformComponent.World.SetPosition(Vector3(x, y, 1.f));
+                TransformComponent.Local.SetPosition(Vector3(x, y, 5.f));
+                TransformComponent.World.SetPosition(Vector3(x, y, 5.f));
                 Sprite.set(TransformComponent);
 
                 Scene::Component::Sprite SpriteComponent;
 
-                SpriteComponent.ModulationColor =
-                    Color4(0.0f, 1.0f, 0.3f, 1.0f) * (1.f - x) * (1.f - y) +
-                    Color4(0.2f, 0.1f, 1.0f, 1.0f) * x * y;
+                // SpriteComponent.ModulationColor =
+                //     Color4(0.0f, 1.0f, 0.3f, 1.0f) * (1.f - x) * (1.f - y) +
+                //     Color4(0.2f, 0.1f, 1.0f, 1.0f) * x * y;
 
                 SpriteComponent.Size             = Size2(Size, Size);
                 SpriteComponent.MaterialInstance = RandomInstances[std::rand() % std::size(RandomInstances)];

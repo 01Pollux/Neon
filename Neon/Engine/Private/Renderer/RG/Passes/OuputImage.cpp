@@ -12,7 +12,7 @@ namespace Neon::RG
         auto Desc = RHI::ResourceDesc::Tex2D(
             RHI::ISwapchain::Get()->GetFormat(),
             0, 0, 1, 1);
-        Desc.SetClearValue(Colors::Fuchsia);
+        Desc.SetClearValue(Colors::Green);
 
         Resolver.CreateTexture(
             RG::ResourceId(STR("OutputImage")),
