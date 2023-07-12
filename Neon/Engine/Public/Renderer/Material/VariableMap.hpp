@@ -15,10 +15,10 @@ namespace Neon::Renderer
     enum class EMaterialVarFlags : uint8_t
     {
         /// <summary>
-        /// Variable is shared between all instances of materials.
-        /// This assumes the resource won't be unified into global resource table.
+        /// This variable is instanced.
+        /// Each material instance will have its own local copy of this variable.
         /// </summary>
-        Shared,
+        Instanced,
 
         _Last_Enum
     };

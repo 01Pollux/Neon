@@ -10,7 +10,8 @@
         "Window": "Trace",
         "Resource": "Trace",
         "ShaderCompiler": "Trace",
-        "Graphics": "Trace"
+        "Graphics": "Trace",
+        "Material": "Trace"
       }
     },
     {

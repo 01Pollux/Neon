@@ -283,8 +283,7 @@ namespace Neon::RHI
         SamplerCountInDescriptor  = 0;
 
         BuildResult Result;
-
-        SHA256 Hash;
+        SHA256      Hash;
 
         auto Flags = CastRootSignatureFlags(Builder.GetFlags());
         Hash.Append(std::bit_cast<uint8_t*>(&Flags), sizeof(Flags));

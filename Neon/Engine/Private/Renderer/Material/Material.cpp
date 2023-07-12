@@ -64,9 +64,8 @@ namespace Neon::Renderer
         struct BatchedDescriptorEntry
         {
             Material::LayoutEntry* LayoutEntry;
-
-            ShaderBinding Binding;
-            uint32_t      Size;
+            ShaderBinding          Binding;
+            uint32_t               Size;
 
             auto operator<=>(const BatchedDescriptorEntry& Other) const noexcept
             {
@@ -100,26 +99,30 @@ namespace Neon::Renderer
                 case MaterialVarType::RWResource:
                 case MaterialVarType::Sampler:
                 {
-                    size_t BatchIndex = View.Type() == MaterialVarType::Sampler ? 1 : 0;
-
-                    auto& Descriptors = BatchedDescriptorEntries[BatchIndex][View.Visibility()][View.Type()];
+                    size_t BatchIndex  = View.Type() == MaterialVarType::Sampler ? 1 : 0;
+                    auto&  Descriptors = BatchedDescriptorEntries[BatchIndex][View.Visibility()][View.Type()];
 
                     Material::DescriptorEntry DescriptorEntry{};
 
                     DescriptorEntry.Descs.resize(View.ArraySize());
                     DescriptorEntry.Resources.resize(View.ArraySize());
 
-                    const bool IsShared = View.Flags().Test(EMaterialVarFlags::Shared);
+                    const bool IsShared        = View.Flags().Test(EMaterialVarFlags::Shared);
+                    const bool IsSharedUnified = View.Flags().Test(EMaterialVarFlags::SharedUnified);
+                    const bool IsSharedAny     = IsShared || IsSharedUnified;
+
+                    // Shared resources are allocated in a limited descriptor space
+                    // while unified resources are allocated in a per-material descriptor space
+                    const uint32_t EntrySize      = IsShared ? View.ArraySize() : Material::UnboundedTableSize;
+                    const uint32_t DescriptorSize = IsSharedUnified ? View.ArraySize() : Material::UnboundedTableSize;
 
                     auto& DescriptorCount =
                         View.Type() == MaterialVarType::Sampler
-                            ? (IsShared ? TableSharedSamplerCount : TableSamplerCount)
-                            : (IsShared ? TableSharedResourceCount : TableResourceCount);
+                            ? (IsSharedAny ? TableSharedSamplerCount : TableSamplerCount)
+                            : (IsSharedAny ? TableSharedResourceCount : TableResourceCount);
 
                     DescriptorEntry.Offset = DescriptorCount;
-                    DescriptorCount += View.ArraySize();
-
-                    const uint32_t EntrySize = IsShared ? View.ArraySize() : Material::UnboundedTableSize;
+                    DescriptorCount += DescriptorSize;
 
                     auto& LayoutEntry    = (*Mat->m_EntryMap)[View.Name()];
                     LayoutEntry.Entry    = std::move(DescriptorEntry);
@@ -428,36 +431,42 @@ namespace Neon::Renderer
             EntryDesc     = Desc;
             EntryResource = Resource;
 
+            uint32_t DescriptorOffset = ArrayIndex + DescriptorEntry->Offset;
             std::visit(
                 VariantVisitor{
                     [](const std::monostate&)
                     {
                         NEON_ASSERT(false, "Invalid view type");
                     },
-                    [&Handle, this, ArrayIndex](const RHI::CBVDesc& Desc)
+                    [&Handle, this, DescriptorOffset](
+                        const RHI::CBVDesc& Desc)
                     {
                         RHI::Views::ConstantBuffer View{ Handle };
-                        View.Bind(Desc, ArrayIndex);
+                        View.Bind(Desc, DescriptorOffset);
                     },
-                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::SRVDesc>& Desc)
+                    [&Handle, &Resource, this, DescriptorOffset](
+                        const std::optional<RHI::SRVDesc>& Desc)
                     {
                         RHI::Views::ShaderResource View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     },
-                    [&Handle, &Resource, &UavCounter, this, ArrayIndex](const std::optional<RHI::UAVDesc>& Desc)
+                    [&Handle, &Resource, &UavCounter, this, DescriptorOffset](
+                        const std::optional<RHI::UAVDesc>& Desc)
                     {
                         RHI::Views::UnorderedAccess View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), ArrayIndex);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
                     },
-                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::RTVDesc>& Desc)
+                    [&Handle, &Resource, this, DescriptorOffset](
+                        const std::optional<RHI::RTVDesc>& Desc)
                     {
                         RHI::Views::RenderTarget View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     },
-                    [&Handle, &Resource, this, ArrayIndex](const std::optional<RHI::DSVDesc>& Desc)
+                    [&Handle, &Resource, this, DescriptorOffset](
+                        const std::optional<RHI::DSVDesc>& Desc)
                     {
                         RHI::Views::DepthStencil View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, ArrayIndex);
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     } },
                 EntryDesc);
         }
@@ -465,6 +474,13 @@ namespace Neon::Renderer
         {
             NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
         }
+    }
+
+    void Material::SetSampler(
+        const std::string&      Name,
+        const RHI::SamplerDesc& Desc,
+        uint32_t                ArrayIndex)
+    {
     }
 
     //

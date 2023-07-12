@@ -64,6 +64,11 @@ namespace Neon::Renderer
             uint32_t                       ArrayIndex,
             const Ptr<RHI::IGpuResource>&  UavCounter) override;
 
+        void SetSampler(
+            const std::string&      Name,
+            const RHI::SamplerDesc& Desc,
+            uint32_t                ArrayIndex = 0) override;
+
     private:
         /// <summary>
         /// Create a default material instance.

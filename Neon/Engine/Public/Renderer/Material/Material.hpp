@@ -78,6 +78,16 @@ namespace Neon::Renderer
             const Ptr<RHI::IGpuResource>&  UavCounter = nullptr) = 0;
 
         /// <summary>
+        /// Set the material's resource as a sampler.
+        /// </summary>
+        virtual void SetSampler(
+            const std::string&      Name,
+            const RHI::SamplerDesc& Desc,
+            uint32_t                ArrayIndex = 0) = 0;
+
+        //
+
+        /// <summary>
         /// Set the material's resource as a constant buffer view.
         /// </summary>
         void SetConstantBuffer(

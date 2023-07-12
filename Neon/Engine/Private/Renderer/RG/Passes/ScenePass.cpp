@@ -71,7 +71,7 @@ namespace Neon::RG
         //
 
         m_SpriteBatch.reset(NEON_NEW SpriteBatch);
-        m_CameraBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(PerFrameData), 256) }));
+        m_CameraBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(PerFrameData), 256), .Alignment = 256 }));
     }
 
     void ScenePass::ResolveShaders(
