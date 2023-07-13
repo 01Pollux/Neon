@@ -40,7 +40,7 @@ struct VSOutput
 // --------------------
 
 ConstantBuffer<PerFrameData> g_FrameData : register(b0, space0);
-ConstantBuffer<PerObjectData> g_SpriteData[] : register(b0, space1);
+StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 
 // --------------------
 // Vertex Shader
@@ -50,8 +50,8 @@ VSOutput VS_Main(VSInput Input)
 {
 	VSOutput Output;
 	Output.Position = float4(Input.Position, 1.0f);
-	//Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
-	//Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
+	Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
+	Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
 	Output.TexCoord = Input.TexCoord;
 	Output.SpriteIndex = Input.SpriteIndex;
 	return Output;
@@ -72,8 +72,7 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
 float4 PS_Main(VSOutput Input) : SV_TARGET
 {
-	return float4(1.0, 1.0, 1.0, 1.0);
-	//int TextureIndex = g_SpriteData[Input.SpriteIndex].TextureIndex;
-	//float4 Color = p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Input.TexCoord);
-	//return Color * g_SpriteData[Input.SpriteIndex].Color;
+	int TextureIndex = g_SpriteData[Input.SpriteIndex].TextureIndex;
+	float4 Color = p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Input.TexCoord);
+	return Color * g_SpriteData[Input.SpriteIndex].Color;
 }
