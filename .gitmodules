@@ -1,10 +1,6 @@
 [submodule "Deps/Externals/Bullet3"]
 	path = Deps/Externals/Bullet3
 	url = https://github.com/01Pollux/bullet3
-[submodule "Deps/Externals/ImGui"]
-	path = Deps/Externals/ImGui
-	url = https://github.com/01Pollux/imgui
-	branch = docking
 [submodule "Deps/Externals/libogg-1.3.0"]
 	path = Deps/Externals/libogg-1.3.0
 	url = https://github.com/01Pollux/libogg-1.3.0
