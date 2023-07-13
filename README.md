@@ -37,8 +37,8 @@
 	* Scripting
 		- [ ] C# Support
 	* Concurrency
-		- [ ] Thread pooling
-		- [ ] Coroutines
+		- [x] Thread pooling
+		- [x] Coroutines
 	* Editor
 		- [ ] Compose Assets
 		- [ ] Prepare the runtime
@@ -56,9 +56,8 @@
 		- [ ] 3D
 		- [ ] 2.5D
 		* Render graph
-			- [ ] Automatic resource management
-			- [ ] Automatic nodes dependecy resolution
-			- [ ] Recompiles only when needed (Dependency change)
+			- [x] Automatic resource management
+			- [x] Automatic nodes dependecy resolution
 		- [ ] GUI
 		- [ ] Frustum culling
 			* GPU Side
