@@ -30,5 +30,5 @@
 	url = https://github.com/andreasbuhr/cppcoro.git
 [submodule "Deps/Externals/ImGui"]
 	path = Deps/Externals/ImGui
-	url = https://github.com/ocornut/imgui.git
+	url = https://github.com/01Pollux/imgui
 	branch = docking
