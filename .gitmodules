@@ -28,3 +28,7 @@
 [submodule "Deps/Externals/cppcoro"]
 	path = Deps/Externals/cppcoro
 	url = https://github.com/andreasbuhr/cppcoro.git
+[submodule "Deps/Externals/ImGui"]
+	path = Deps/Externals/ImGui
+	url = https://github.com/01Pollux/imgui.git
+	branch = docking
