@@ -21,7 +21,7 @@ NEON_MAIN(Argc, Argv)
             .Title      = STR("Test Engine"),
             .Windowed   = true,
             .Fullscreen = false },
-        .Renderer{ .Device = { .EnableGpuBasedValidation = true } }
+        //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
     return RunEngine<RuntimeSample>(Config);
 }

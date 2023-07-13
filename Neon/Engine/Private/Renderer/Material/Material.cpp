@@ -620,7 +620,7 @@ namespace Neon::Renderer
         if (auto ConstantEntry = std::get_if<Material::ConstantEntry>(&Layout->second.Entry))
         {
             auto& Handle = Layout->second.IsInstanced ? m_LocalDescriptors.SamplerDescriptors : m_SharedDescriptors->SamplerDescriptors;
-            std::copy_n(std::bit_cast<uint8_t*>(Data), Size, ConstantEntry->Data.data() + Offset);
+            std::copy_n(std::bit_cast<uint8_t*>(Data), Size, std::bit_cast<uint8_t*>(ConstantEntry->Data.data()) + Offset);
         }
         else
         {
