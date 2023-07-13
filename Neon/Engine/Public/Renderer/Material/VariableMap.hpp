@@ -139,7 +139,7 @@ namespace Neon::Renderer
         //
 
         /// <summary>
-        /// Set array size of the variable.
+        /// Set array size of the variable if it was not constant, else set array sizeof of uint32_t.
         /// </summary>
         View& ArraySize(
             uint32_t Count)
@@ -149,7 +149,7 @@ namespace Neon::Renderer
         }
 
         /// <summary>
-        /// Get array size of the variable.
+        /// Set array size of the variable if it was not constant, else set array sizeof of uint32_t.
         /// </summary>
         [[nodiscard]] uint32_t ArraySize() const
         {
@@ -158,6 +158,9 @@ namespace Neon::Renderer
 
         //
 
+        /// <summary>
+        /// Set binding of the variable.
+        /// </summary>
         View& Binding(
             ShaderBinding Binding)
         {

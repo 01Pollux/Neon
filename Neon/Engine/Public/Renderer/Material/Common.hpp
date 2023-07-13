@@ -19,29 +19,7 @@ namespace Neon::Renderer
 {
     enum class MaterialVarType : uint8_t
     {
-        _First_Constant,
-
-        Bool = _First_Constant,
-        Bool2,
-        Bool3,
-        Bool4,
-        Int,
-        Int2,
-        Int3,
-        Int4,
-        UInt,
-        UInt2,
-        UInt3,
-        UInt4,
-        Float,
-        Float2,
-        Float3,
-        Float4,
-        Color,
-        Matrix3x3,
-        Matrix4x4,
-
-        _Last_Constant = Matrix4x4,
+        Constant,
 
         Buffer,
         Resource,

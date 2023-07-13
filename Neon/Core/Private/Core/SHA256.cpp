@@ -105,7 +105,7 @@ namespace Neon
     }
 
     void SHA256::Append(
-        const std::string& Data)
+        const StringU8& Data)
     {
         Append(std::bit_cast<const uint8_t*>(Data.c_str()), Data.size());
     }

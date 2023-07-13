@@ -93,6 +93,15 @@ namespace Neon::Renderer
             uint32_t                ArrayIndex = 0) = 0;
 
         /// <summary>
+        /// Set the material's resource as a constant.
+        /// </summary>
+        virtual void SetConstant(
+            const std::string& Name,
+            const void*        Data,
+            size_t             Size,
+            uint32_t           Offset = 0) = 0;
+
+        /// <summary>
         /// Set the material's resource size.
         /// The materials mustn't be instanced nor have a bounded array size.
         /// </summary>

@@ -74,6 +74,12 @@ namespace Neon::Renderer
             const RHI::SamplerDesc& Desc,
             uint32_t                ArrayIndex = 0) override;
 
+        void SetConstant(
+            const std::string& Name,
+            const void*        Data,
+            size_t             Size,
+            uint32_t           Offset);
+
         void SetResourceSize(
             const StringU8& Name,
             uint32_t        Size) override;
@@ -81,11 +87,10 @@ namespace Neon::Renderer
     private:
         struct ConstantEntry
         {
-            std::vector<uint8_t> Data;
+            std::vector<uint32_t> Data;
             struct Root
             {
-                uint8_t* Data;
-                size_t   Num32Bits;
+                ConstantEntry* Entry;
             };
         };
 

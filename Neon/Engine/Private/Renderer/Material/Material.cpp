@@ -1,7 +1,6 @@
 #include <EnginePCH.hpp>
-
-#include <Renderer/Material/Builder.hpp>
 #include <Private/Renderer/Material/Material.hpp>
+#include <Renderer/Material/Builder.hpp>
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
@@ -50,6 +49,8 @@ namespace Neon::Renderer
         }
     }
 
+    //
+
     template<bool _Compute>
     void Material_CreateDescriptors(
         const GenericMaterialBuilder<_Compute>& Builder,
@@ -62,35 +63,37 @@ namespace Neon::Renderer
         uint32_t TableSamplerCount        = 0,
                  TableSharedSamplerCount  = 0;
 
-        struct BatchedDescriptorEntry
+        struct BatchedRootEntry
         {
             Material::LayoutEntry* LayoutEntry;
             ShaderBinding          Binding;
             uint32_t               Size;
 
-            auto operator<=>(const BatchedDescriptorEntry& Other) const noexcept
+            auto operator<=>(const BatchedRootEntry& Other) const noexcept
             {
                 return Binding <=> Other.Binding;
             }
         };
 
-        std::map<
-            RHI::ShaderVisibility,
-            std::map<MaterialVarType,
-                     std::set<BatchedDescriptorEntry>>>
-            BatchedDescriptorEntries[2];
+        using BatchedRootEntrySets    = std::set<BatchedRootEntry>;
+        using BatchedRootEntryVarType = std::map<MaterialVarType, BatchedRootEntrySets>;
+
+        using BatchedRootEntryVarTypeVisibility = std::map<RHI::ShaderVisibility, BatchedRootEntryVarType>;
+        using BatchedRootEntryVisibility        = std::map<RHI::ShaderVisibility, BatchedRootEntrySets>;
+
+        // First one is for resources, second one is for samplers
+        BatchedRootEntryVarTypeVisibility BatchedDescriptorEntries[2];
+        BatchedRootEntryVisibility        BatchedRootConsants;
 
         auto& VarMap = Builder.VarMap();
 
         VarMap.ForEachVariable(
-            [Mat,
-             &BatchedDescriptorEntries,
-             &TableResourceCount,
-             &TableSharedResourceCount,
-             &TableSamplerCount,
-             &TableSharedSamplerCount](
+            [&](
                 const MaterialVariableMap::View& View) mutable
             {
+                const bool IsLocal     = View.Flags().Test(EMaterialVarFlags::Instanced);
+                const bool IsUnbounded = View.Flags().Test(EMaterialVarFlags::Unbounded);
+
                 switch (View.Type())
                 {
                 case MaterialVarType::Buffer:
@@ -98,13 +101,9 @@ namespace Neon::Renderer
                 case MaterialVarType::RWResource:
                 case MaterialVarType::Sampler:
                 {
-                    size_t BatchIndex  = View.Type() == MaterialVarType::Sampler ? 1 : 0;
-                    auto&  Descriptors = BatchedDescriptorEntries[BatchIndex][View.Visibility()][View.Type()];
-
-                    Material::DescriptorEntry DescriptorEntry{};
-
-                    const bool IsLocal     = View.Flags().Test(EMaterialVarFlags::Instanced);
-                    const bool IsUnbounded = View.Flags().Test(EMaterialVarFlags::Unbounded);
+                    const bool IsSampler   = View.Type() == MaterialVarType::Sampler;
+                    size_t     BatchIndex  = IsSampler ? 1 : 0;
+                    auto&      Descriptors = BatchedDescriptorEntries[BatchIndex][View.Visibility()][View.Type()];
 
                     // Shared resources are allocated in a limited descriptor space
                     // while unified resources are allocated in a per-material descriptor space
@@ -112,23 +111,32 @@ namespace Neon::Renderer
                     const uint32_t UnifiedDescriptorSize = (IsUnbounded || IsLocal) ? Material::UnboundedTableSize : View.ArraySize();
 
                     auto& DescriptorCount =
-                        View.Type() == MaterialVarType::Sampler
-                            ? (IsLocal ? TableSamplerCount : TableSharedSamplerCount)
-                            : (IsLocal ? TableResourceCount : TableSharedResourceCount);
+                        IsSampler ? (IsLocal ? TableSamplerCount : TableSharedSamplerCount)
+                                  : (IsLocal ? TableResourceCount : TableSharedResourceCount);
 
-                    DescriptorEntry.Offset = DescriptorCount;
-                    DescriptorEntry.Count  = DescriptorSize;
+                    auto& LayoutEntry = Mat->m_Descriptor->Entries[View.Name()];
+                    if (IsSampler)
+                    {
+                        LayoutEntry.Entry = Material::SamplerEntry{
+                            .Offset = DescriptorCount,
+                            .Count  = DescriptorSize
+                        };
+                    }
+                    else
+                    {
+                        LayoutEntry.Entry = Material::DescriptorEntry{
+                            .Offset = DescriptorCount,
+                            .Count  = DescriptorSize
+                        };
+                    }
+                    LayoutEntry.IsInstanced = IsLocal;
 
                     // If this is a local descriptor heap, we will allocate for each resource array's size
                     // else we will allocate for the maximum array size if its unbounded or the array size if its bounded
                     DescriptorCount += DescriptorSize;
 
-                    auto& LayoutEntry       = Mat->m_Descriptor->Entries[View.Name()];
-                    LayoutEntry.Entry       = std::move(DescriptorEntry);
-                    LayoutEntry.IsInstanced = IsLocal;
-
                     Descriptors.insert(
-                        BatchedDescriptorEntry{
+                        BatchedRootEntry{
                             .LayoutEntry = &LayoutEntry,
                             .Binding     = View.Binding(),
                             .Size        = UnifiedDescriptorSize });
@@ -136,9 +144,25 @@ namespace Neon::Renderer
                     break;
                 }
 
-                default:
-                    NEON_ASSERT(false);
+                case MaterialVarType::Constant:
+                {
+                    auto& LayoutEntry       = Mat->m_Descriptor->Entries[View.Name()];
+                    LayoutEntry.IsInstanced = false;
+                    LayoutEntry.Entry       = Material::ConstantEntry{
+                              .Data = std::vector<uint32_t>(View.ArraySize(), 0)
+                    };
+
+                    BatchedRootConsants[View.Visibility()].insert(
+                        BatchedRootEntry{
+                            .LayoutEntry = &LayoutEntry,
+                            .Binding     = View.Binding(),
+                            .Size        = View.ArraySize() });
+                    break;
                 }
+
+                default:
+                    std::unreachable();
+                };
             });
 
         VarMap.ForEachStaticSampler(
@@ -147,6 +171,22 @@ namespace Neon::Renderer
             {
                 RootSigBuilder.AddSampler(Desc);
             });
+
+        //
+
+        // Merge batched root constants
+
+        // Per shader loop
+        for (auto& [Visibility, RootConstantSets] : BatchedRootConsants)
+        {
+            // Per root constant loop
+            for (auto& [Layout, Binding, Size] : RootConstantSets)
+            {
+                RootSigBuilder.Add32BitConstants(Binding.Register, Binding.Space, Size, Visibility);
+                Mat->m_Descriptor->RootParams.emplace_back(Material::ConstantEntry::Root{
+                    std::get_if<Material::ConstantEntry>(&Layout->Entry) });
+            }
+        }
 
         // We will be using a contiguous descriptor table for all resources across all shaders
         // so we need to merge all the descriptor entries into a single table
@@ -159,6 +199,7 @@ namespace Neon::Renderer
         for (auto& Entries : BatchedDescriptorEntries)
         {
             // Reset root param index for each batch
+            // The descriptor is contigious therefore we will accumulate the offset by the size of each entry
             DescriptorOffset = 0;
 
             // Per shader loop
@@ -179,7 +220,7 @@ namespace Neon::Renderer
                 for (auto& [Type, Descriptors] : DescriptorEntries)
                 {
                     // Per descriptor loop
-                    for (auto& [Entry, Binding, Size] : Descriptors)
+                    for (auto& [Layout, Binding, Size] : Descriptors)
                     {
                         RHI::MRootDescriptorTableFlags Flags;
                         Flags.Set(RHI::ERootDescriptorTableFlags::Descriptor_Volatile);
@@ -453,7 +494,8 @@ namespace Neon::Renderer
                 VariantVisitor{
                     [&](const Material::ConstantEntry::Root& Constant)
                     {
-                        CommandList->SetConstants(i, Constant.Data, Constant.Num32Bits);
+                        auto& Data = Constant.Entry->Data;
+                        CommandList->SetConstants(i, Data.data(), Data.size());
                     },
                     [&](const Material::DescriptorEntry::Root& Descriptor)
                     {
@@ -543,7 +585,7 @@ namespace Neon::Renderer
         auto Layout = m_Descriptor->Entries.find(Name);
         if (Layout == m_Descriptor->Entries.end())
         {
-            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
+            NEON_WARNING_TAG("Material", "Failed to find sampler: {}", Name);
             return;
         }
 
@@ -558,7 +600,31 @@ namespace Neon::Renderer
         }
         else
         {
-            NEON_WARNING_TAG("Material", "'{}' is not a resource nor sampler", Name);
+            NEON_WARNING_TAG("Material", "'{}' is not a sampler", Name);
+        }
+    }
+
+    void Material::SetConstant(
+        const std::string& Name,
+        const void*        Data,
+        size_t             Size,
+        uint32_t           Offset)
+    {
+        auto Layout = m_Descriptor->Entries.find(Name);
+        if (Layout == m_Descriptor->Entries.end())
+        {
+            NEON_WARNING_TAG("Material", "Failed to find constant: {}", Name);
+            return;
+        }
+
+        if (auto ConstantEntry = std::get_if<Material::ConstantEntry>(&Layout->second.Entry))
+        {
+            auto& Handle = Layout->second.IsInstanced ? m_LocalDescriptors.SamplerDescriptors : m_SharedDescriptors->SamplerDescriptors;
+            std::copy_n(std::bit_cast<uint8_t*>(Data), Size, ConstantEntry->Data.data() + Offset);
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a constant", Name);
         }
     }
 
