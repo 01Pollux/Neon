@@ -14,9 +14,11 @@ namespace Neon::AAsset
     {
         for (const auto& [Key, Value] : m_Tree)
         {
-            co_yield std::make_pair(
-                Handle::FromString(Key),
-                Value.get_value<std::string>());
+            co_yield PathHandleInfo{
+                .Handle      = Handle::FromString(Key),
+                .HandlerName = Value.get_child("Handler").get_value<StringU8>(),
+                .Path        = Value.get_child("Path").get_value<StringU8>()
+            };
         }
     }
 } // namespace Neon::AAsset

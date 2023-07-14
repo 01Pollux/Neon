@@ -30,6 +30,12 @@ namespace Neon::AAsset
         void UnregisterHandler(
             const StringU8& Name);
 
+        /// <summary>
+        /// Get an asset handler.
+        /// </summary>
+        IAssetHandler* GetHandler(
+            const StringU8& Name);
+
     public:
         /// <summary>
         /// Preload an asset from a handle.

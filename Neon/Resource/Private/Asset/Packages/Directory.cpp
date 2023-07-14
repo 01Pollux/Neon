@@ -35,15 +35,15 @@ namespace Neon::AAsset
         //
 
         PackageDescriptor Descriptor(std::ifstream(DirPath / "Descriptor.ini"));
-        for (auto& [Key, StrPath] : Descriptor.GetPaths())
+        for (auto& FileInfo : Descriptor.GetPaths())
         {
-            if (StrPath.empty() || StrPath.starts_with(".."))
+            if (FileInfo.Path.empty() || FileInfo.Path.starts_with(".."))
             {
                 NEON_ERROR_TAG("Asset", "Trying to mount a directory that is not valid");
                 return;
             }
 
-            std::filesystem::path Path(DirPath / std::move(StrPath));
+            std::filesystem::path Path(DirPath / std::move(FileInfo.Path));
             if (!std::filesystem::exists(Path))
             {
                 NEON_ERROR_TAG("Asset", "Trying to mount to a path that does not exist");
@@ -56,13 +56,16 @@ namespace Neon::AAsset
                 continue;
             }
 
-            if (m_HandleToFilePathMap.contains(Key))
+            if (m_HandleToFilePathMap.contains(FileInfo.Handle))
             {
                 NEON_ERROR_TAG("Asset", "Trying to insert an asset handle that already exists");
                 continue;
             }
 
-            m_HandleToFilePathMap.emplace(Key, Path.string());
+            m_HandleToFilePathMap.emplace(
+                std::piecewise_construct,
+                std::forward_as_tuple(FileInfo.Handle),
+                std::forward_as_tuple(Path.string(), std::move(FileInfo.HandlerName)));
         }
     }
 
@@ -91,20 +94,19 @@ namespace Neon::AAsset
         auto Iter = m_HandleToFilePathMap.find(Handle);
         if (Iter == m_HandleToFilePathMap.end())
         {
+            NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", Handle.ToString());
             return Ptr<IAsset>();
         }
 
-        std::ifstream File(Iter->second);
-        if (!File.is_open())
+        auto& HandleInfo = Iter->second;
+
+        IAssetHandler* Handler = AssetStorage->GetHandler(HandleInfo.HandlerName);
+        if (!Handler)
         {
-            NEON_ERROR_TAG("Asset", "Failed to open file: '{}'", Iter->second);
-            return Ptr<IAsset>();
+            NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing handler '{}'", Handle.ToString(), HandleInfo.HandlerName);
         }
 
-        boost::archive::polymorphic_text_iarchive Archive(File);
-        IO::InArchive2&                           Stream(Archive);
-
-        // AssetStorage->
+        auto Graph = Handler->BuildDependencyGraph(Handle);
 
         return Ptr<IAsset>();
     }

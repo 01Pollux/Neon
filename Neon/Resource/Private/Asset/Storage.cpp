@@ -28,6 +28,13 @@ namespace Neon::AAsset
         m_AssetHandlers.erase(Name);
     }
 
+    IAssetHandler* Storage::GetHandler(
+        const StringU8& Name)
+    {
+        auto Iter = m_AssetHandlers.find(Name);
+        return Iter != m_AssetHandlers.end() ? Iter->second.get() : nullptr;
+    }
+
     //
 
     void Storage::LoadAsync(

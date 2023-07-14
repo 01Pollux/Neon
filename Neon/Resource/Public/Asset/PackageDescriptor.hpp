@@ -10,7 +10,14 @@ namespace Neon::AAsset
     class PackageDescriptor
     {
     public:
-        using PathHandleGenerator = cppcoro::generator<std::pair<Handle, std::string>>;
+        struct PathHandleInfo
+        {
+            Handle   Handle;
+            StringU8 HandlerName;
+            StringU8 Path;
+        };
+
+        using PathHandleGenerator = cppcoro::generator<PathHandleInfo>;
 
         PackageDescriptor(
             std::ifstream Stream);

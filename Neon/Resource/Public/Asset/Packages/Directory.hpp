@@ -9,7 +9,13 @@ namespace Neon::AAsset
 {
     class PackageDirectory : public IPackage
     {
-        using HandleToFilePathMap = std::unordered_map<Handle, StringU8>;
+        struct HandleInfo
+        {
+            StringU8 FilePath;
+            StringU8 HandlerName;
+        };
+        using HandleToFilePathMap = std::unordered_map<
+            Handle, HandleInfo>;
 
     public:
         PackageDirectory(
