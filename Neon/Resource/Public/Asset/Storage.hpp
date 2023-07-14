@@ -6,6 +6,7 @@ namespace Neon::AAsset
 {
     class IPackage;
     class IAsset;
+    class IAssetHandler;
 
     //
 
@@ -13,6 +14,21 @@ namespace Neon::AAsset
     {
         using AssetMap          = std::unordered_map<Handle, Ptr<IAsset>>;
         using AssetMapInPackage = std::unordered_map<Handle, IPackage*>;
+        using AssetHandlerMap   = std::unordered_map<StringU8, UPtr<IAssetHandler>>;
+
+    public:
+        /// <summary>
+        /// Register an asset handler.
+        /// </summary>
+        void RegisterHandler(
+            const StringU8&     Name,
+            UPtr<IAssetHandler> Handler);
+
+        /// <summary>
+        /// Unregister an asset handler.
+        /// </summary>
+        void UnregisterHandler(
+            const StringU8& Name);
 
     public:
         /// <summary>
@@ -51,5 +67,6 @@ namespace Neon::AAsset
     private:
         AssetMap          m_AssetCache;
         AssetMapInPackage m_AssetsInPackage;
+        AssetHandlerMap   m_AssetHandlers;
     };
 } // namespace Neon::AAsset

@@ -37,6 +37,7 @@ namespace Neon::AAsset
         /// Load an asset from a handle.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAsset> Load(
+            Storage*      AssetStorage,
             const Handle& Handle) = 0;
     };
 } // namespace Neon::AAsset

@@ -22,6 +22,7 @@ namespace Neon::AAsset
             Storage* Storage) override;
 
         [[nodiscard]] Ptr<IAsset> Load(
+            Storage*      AssetStorage,
             const Handle& Handle) override;
 
     private:

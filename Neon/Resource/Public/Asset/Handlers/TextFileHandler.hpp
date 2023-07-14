@@ -1,10 +1,11 @@
 #pragma once
 
+#include <Asset/Handler.hpp>
+
 namespace Neon::AAsset
 {
-    class IAssetHandler
+    class TextFileHandler : public IAssetHandler
     {
     public:
-        virtual ~IAssetHandler() = default;
     };
 } // namespace Neon::AAsset

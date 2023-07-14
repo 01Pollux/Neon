@@ -3,6 +3,10 @@
 #include <Asset/PackageDescriptor.hpp>
 #include <Asset/Storage.hpp>
 
+#include <IO/Archive2.hpp>
+#include <boost/archive/polymorphic_text_iarchive.hpp>
+#include <boost/archive/polymorphic_text_oarchive.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
@@ -81,6 +85,7 @@ namespace Neon::AAsset
     }
 
     Ptr<IAsset> PackageDirectory::Load(
+        Storage*      AssetStorage,
         const Handle& Handle)
     {
         auto Iter = m_HandleToFilePathMap.find(Handle);
@@ -96,9 +101,10 @@ namespace Neon::AAsset
             return Ptr<IAsset>();
         }
 
-        std::stringstream Stream;
-        Stream << File.rdbuf();
-        printf("%s\n", Stream.str().c_str());
+        boost::archive::polymorphic_text_iarchive Archive(File);
+        IO::InArchive2&                           Stream(Archive);
+
+        // AssetStorage->
 
         return Ptr<IAsset>();
     }

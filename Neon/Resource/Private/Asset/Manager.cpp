@@ -3,6 +3,12 @@
 #include <Asset/Storage.hpp>
 #include <Asset/Packages/Directory.hpp>
 
+//
+
+#include <Asset/Handlers/TextFileHandler.hpp>
+
+//
+
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
@@ -10,6 +16,7 @@ namespace Neon::AAsset
     Manager::Manager() :
         m_Storage(std::make_unique<Storage>())
     {
+        RegisterStandardHandlers();
     }
 
     NEON_CLASS_MOVE_IMPL(Manager);
@@ -52,6 +59,21 @@ namespace Neon::AAsset
 
     //
 
+    void Manager::RegisterHandler(
+        const StringU8&     Name,
+        UPtr<IAssetHandler> Handler)
+    {
+        m_Storage->RegisterHandler(Name, std::move(Handler));
+    }
+
+    void Manager::UnregisterHandler(
+        const StringU8& Name)
+    {
+        m_Storage->UnregisterHandler(Name);
+    }
+
+    //
+
     void Manager::LoadAsync(
         const Handle& Handle)
     {
@@ -68,5 +90,12 @@ namespace Neon::AAsset
         const Handle& Handle)
     {
         return m_Storage->Unload(Handle);
+    }
+
+    //
+
+    void Manager::RegisterStandardHandlers()
+    {
+        RegisterHandler<TextFileHandler>("TextFile");
     }
 } // namespace Neon::AAsset

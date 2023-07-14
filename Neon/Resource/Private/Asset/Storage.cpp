@@ -1,11 +1,35 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Storage.hpp>
 #include <Asset/Package.hpp>
+#include <Asset/Handler.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
 {
+    void Storage::RegisterHandler(
+        const StringU8&     Name,
+        UPtr<IAssetHandler> Handler)
+    {
+        auto& OldHandler = m_AssetHandlers[Name];
+        if (OldHandler)
+        {
+            NEON_WARNING_TAG("Asset", "Trying to register an asset handler that already exists");
+        }
+        else
+        {
+            OldHandler = std::move(Handler);
+        }
+    }
+
+    void Storage::UnregisterHandler(
+        const StringU8& Name)
+    {
+        m_AssetHandlers.erase(Name);
+    }
+
+    //
+
     void Storage::LoadAsync(
         const Handle& Handle)
     {
@@ -21,7 +45,7 @@ namespace Neon::AAsset
 
         if (auto It = m_AssetsInPackage.find(Handle); It != m_AssetsInPackage.end())
         {
-            auto Asset           = It->second->Load(Handle);
+            auto Asset           = It->second->Load(this, Handle);
             m_AssetCache[Handle] = Asset;
         }
 
