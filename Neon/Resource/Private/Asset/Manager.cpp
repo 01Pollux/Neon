@@ -28,21 +28,12 @@ namespace Neon::AAsset
             Ref<IPackage> Package) = 0;
 
         /// <summary>
-        /// Preload an asset from a handle.
-        /// </summary>
-        virtual Ref<IAsset> LoadAsync(
-            const Handle& Handle) = 0;
-
-        /// <summary>
         /// Load an asset from a handle.
         /// </summary>
         virtual Ref<IAsset> Load(
-            const Handle& Handle) = 0;
-
-        /// <summary>
-        /// Unload an asset from a handle.
-        /// </summary>
-        virtual void Unload(
-            const Handle& Handle) = 0;
+            const Handle&   Handle,
+            const StringU8& Path,
+            const StringU8& Name,
+            const StringU8& Extension) = 0;
     };
 } // namespace Neon::AAsset
