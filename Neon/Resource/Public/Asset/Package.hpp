@@ -11,7 +11,7 @@ namespace Neon::AAsset
     class IPackage
     {
     public:
-        IPackage();
+        IPackage() = default;
         NEON_CLASS_NO_COPYMOVE(IPackage);
         virtual ~IPackage() = default;
     };
