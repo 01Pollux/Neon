@@ -3,7 +3,7 @@ include "neon-functions.lua"
 
 workspace "Neon"
     architecture "x64"
-    startproject "HelloWorld"
+    startproject "BasicAsset"
 
     configurations
     {
@@ -89,5 +89,6 @@ workspace "Neon"
     group ""
 
     group "Samples"
+        include "Samples/BasicAsset"
         include "Samples/HelloWorld"
     group ""
