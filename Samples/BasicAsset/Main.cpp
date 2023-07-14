@@ -32,6 +32,7 @@ NEON_MAIN(Argc, Argv)
 //
 
 #include <Asset/Manager.hpp>
+#include <Asset/Packages/Directory.hpp>
 
 //
 
@@ -41,8 +42,8 @@ void AssetPackSample::TestPacks()
 
     //
 
-    Manager->Mount("Test/Directory1", AAsset::Manager::MountType::Directory);
-    Manager->Mount("Test/Directory2", AAsset::Manager::MountType::Directory);
+    Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
+    Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory2"));
 
     //
 

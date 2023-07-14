@@ -6,12 +6,12 @@ namespace Neon::AAsset
 {
     /// <summary>
     /// A package is a collection of assets.
-    /// It can be a file, a folder, a zip file, a database, etc.
+    /// It can be a file, a folder, a zip file...
     /// </summary>
     class IPackage
     {
     public:
-        IPackage() = default;
+        IPackage();
         NEON_CLASS_NO_COPYMOVE(IPackage);
         virtual ~IPackage() = default;
     };

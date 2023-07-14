@@ -10,5 +10,7 @@ namespace Neon::AAsset
     public:
         PackageDirectory(
             const std::filesystem::path& Path);
+
+    private:
     };
 } // namespace Neon::AAsset
