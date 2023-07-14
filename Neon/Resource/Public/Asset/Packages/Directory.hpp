@@ -4,7 +4,7 @@
 
 namespace Neon::AAsset
 {
-    class FileSystem : public IPackage
+    class PackageDirectory : public IPackage
     {
     public:
     };

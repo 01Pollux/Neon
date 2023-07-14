@@ -9,5 +9,6 @@ namespace Neon::AAsset
     class IPackage
     {
     public:
+        virtual ~IPackage() = default;
     };
 } // namespace Neon::AAsset

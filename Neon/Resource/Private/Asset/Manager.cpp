@@ -1,39 +1,106 @@
-#pragma once
+#include <ResourcePCH.hpp>
+#include <Asset/Manager.hpp>
 
-#include <Core/Neon.hpp>
-#include <Core/String.hpp>
+#include <Asset/Packages/Directory.hpp>
 
-#include <Asset/Handle.hpp>
+#include <filesystem>
+
+#include <Log/Logger.hpp>
 
 namespace Neon::AAsset
 {
-    class IPackage;
-    class IAsset;
+    PackageHandle Manager::Mount(
+        const StringU8& Path,
+        MountType       Type)
+    {
+        size_t Hndl = StringUtils::Hash(Path);
+
+        auto& Package = m_Packages[Hndl];
+        if (!Package)
+        {
+            std::filesystem::path FsPath(Path);
+            if (!std::filesystem::exists(FsPath))
+            {
+                NEON_ERROR("Package '{}' does not exist", Path);
+                return 0;
+            }
+
+            switch (Type)
+            {
+            case Manager::MountType::Directory:
+                if (!std::filesystem::is_directory(FsPath))
+                {
+                    NEON_ERROR("Package '{}' is not a directory", Path);
+                    return 0;
+                }
+                Package = std::make_unique<PackageDirectory>(Path);
+                break;
+
+            case Manager::MountType::Zip:
+                if (!std::filesystem::is_regular_file(FsPath))
+                {
+                    NEON_ERROR("Package '{}' is not a file", Path);
+                    return 0;
+                }
+            case Manager::MountType::Database:
+                NEON_ASSERT(false, "Unimplemented");
+                break;
+            default:
+                NEON_ERROR("Package '{}' has an invalid mount type", Path);
+                break;
+            }
+
+            if (!std::filesystem::is_directory(FsPath))
+            {
+            }
+            else if (!std::filesystem::is_regular_file(FsPath))
+            {
+            }
+        }
+        else
+        {
+            NEON_WARNING("Package '{}' was already mounted", Path);
+        }
+
+        return Hndl;
+    }
+
+    void Manager::Unmount(
+        PackageHandle Package)
+    {
+        if (!m_Packages.erase(Package))
+        {
+            NEON_WARNING("Package '{}' was not mounted", Package);
+        }
+    }
+
+    Ref<IPackage> Manager::GetPackage(
+        PackageHandle Package)
+    {
+        auto Iter = m_Packages.find(Package);
+        if (Iter == m_Packages.end())
+        {
+            NEON_WARNING("Package '{}' was not mounted", Package);
+            return {};
+        }
+
+        return Iter->second;
+    }
 
     //
 
-    class IManager
+    void Manager::LoadAsync(
+        const Handle& Handle)
     {
-    public:
-        /// <summary>
-        /// Mount a package from a file path.
-        /// </summary>
-        virtual Ref<IPackage> Mount(
-            const StringU8& Path) = 0;
+    }
 
-        /// <summary>
-        /// Open a package from a file path.
-        /// </summary>
-        virtual void Unmount(
-            Ref<IPackage> Package) = 0;
+    Ref<IAsset> Manager::Load(
+        const Handle& Handle)
+    {
+    }
 
-        /// <summary>
-        /// Load an asset from a handle.
-        /// </summary>
-        virtual Ref<IAsset> Load(
-            const Handle&   Handle,
-            const StringU8& Path,
-            const StringU8& Name,
-            const StringU8& Extension) = 0;
-    };
+    void Manager::Unload(
+        const Handle& Handle)
+    {
+    }
 } // namespace Neon::AAsset

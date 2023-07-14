@@ -37,15 +37,22 @@ NEON_MAIN(Argc, Argv)
 
 void AssetPackSample::TestPacks()
 {
-    AAsset::IManager* Manager = nullptr;
+    auto Manager = std::make_unique<AAsset::Manager>();
+
+    //
+
     Manager->Mount("Test/Directory1");
     Manager->Mount("Test/Directory2");
 
     //
 
-    const auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
-    const auto Handle1 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000001");
-    const auto Handle2 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000002");
+    auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
+    auto Handle1 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000001");
+    auto Handle2 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000002");
+
+    Handle0.data[0] = 0x00;
+    Handle1.data[0] = 0x00;
+    Handle2.data[0] = 0x00;
 
     //
 
