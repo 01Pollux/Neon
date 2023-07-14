@@ -41,8 +41,8 @@ void AssetPackSample::TestPacks()
 
     //
 
-    Manager->Mount("Test/Directory1");
-    Manager->Mount("Test/Directory2");
+    Manager->Mount("Test/Directory1", AAsset::Manager::MountType::Directory);
+    Manager->Mount("Test/Directory2", AAsset::Manager::MountType::Directory);
 
     //
 

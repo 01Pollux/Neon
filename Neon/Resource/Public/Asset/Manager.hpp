@@ -27,7 +27,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Mount a package from a path.
         /// </summary>
-        [[nodiscrad]] PackageHandle Mount(
+        PackageHandle Mount(
             const StringU8& Path,
             MountType       Type);
 
@@ -40,7 +40,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Get a package from a handle.
         /// </summary>
-        Ref<IPackage> GetPackage(
+        [[nodiscard]] Ref<IPackage> GetPackage(
             PackageHandle Package);
 
         //
@@ -54,7 +54,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscrad]] Ref<IAsset> Load(
+        [[nodiscard]] Ref<IAsset> Load(
             const Handle& Handle);
 
         /// <summary>

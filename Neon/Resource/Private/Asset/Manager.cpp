@@ -97,6 +97,7 @@ namespace Neon::AAsset
     Ref<IAsset> Manager::Load(
         const Handle& Handle)
     {
+        return {};
     }
 
     void Manager::Unload(

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Neon.hpp>
+
 namespace Neon::AAsset
 {
     /// <summary>
@@ -9,6 +11,8 @@ namespace Neon::AAsset
     class IPackage
     {
     public:
+        IPackage() = default;
+        NEON_CLASS_NO_COPYMOVE(IPackage);
         virtual ~IPackage() = default;
     };
 } // namespace Neon::AAsset
