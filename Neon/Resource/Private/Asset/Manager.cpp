@@ -1,18 +1,29 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Manager.hpp>
-
+#include <Asset/Storage.hpp>
 #include <Asset/Packages/Directory.hpp>
-
-#include <filesystem>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
 {
+    Manager::Manager() :
+        m_Storage(std::make_unique<Storage>())
+    {
+    }
+
+    NEON_CLASS_MOVE_IMPL(Manager);
+
+    Manager::~Manager() = default;
+
+    //
+
     IPackage* Manager::Mount(
         UPtr<IPackage> Package)
     {
-        return m_Packages.emplace_back(std::move(Package)).get();
+        auto PackagePtr = m_Packages.emplace_back(std::move(Package)).get();
+        PackagePtr->Mount(m_Storage.get());
+        return PackagePtr;
     }
 
     void Manager::Unmount(
@@ -22,6 +33,7 @@ namespace Neon::AAsset
         {
             if (Iter->get() == Package)
             {
+                Package->Unmount(m_Storage.get());
                 m_Packages.erase(Iter);
                 return;
             }
@@ -43,16 +55,18 @@ namespace Neon::AAsset
     void Manager::LoadAsync(
         const Handle& Handle)
     {
+        return m_Storage->LoadAsync(Handle);
     }
 
     Ref<IAsset> Manager::Load(
         const Handle& Handle)
     {
-        return {};
+        return m_Storage->Load(Handle);
     }
 
     void Manager::Unload(
         const Handle& Handle)
     {
+        return m_Storage->Unload(Handle);
     }
 } // namespace Neon::AAsset

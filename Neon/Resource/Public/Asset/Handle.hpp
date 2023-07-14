@@ -33,3 +33,13 @@ namespace Neon::AAsset
         [[nodiscard]] static Handle Random();
     };
 } // namespace Neon::AAsset
+
+namespace std
+{
+    template<>
+    struct hash<Neon::AAsset::Handle>
+    {
+        size_t operator()(
+            const Neon::AAsset::Handle& Value) const noexcept;
+    };
+} // namespace std

@@ -4,6 +4,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_hash.hpp>
 
 namespace Neon::AAsset
 {
@@ -28,3 +29,12 @@ namespace Neon::AAsset
         return { boost::uuids::random_generator()() };
     }
 } // namespace Neon::AAsset
+
+namespace std
+{
+    size_t hash<Neon::AAsset::Handle>::operator()(
+        const Neon::AAsset::Handle& Value) const noexcept
+    {
+        return boost::uuids::hash_value(Value);
+    };
+} // namespace std

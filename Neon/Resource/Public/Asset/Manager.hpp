@@ -2,22 +2,26 @@
 
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
-
-#include <vector>
-#include <cppcoro/generator.hpp>
-
 #include <Asset/Handle.hpp>
+#include <cppcoro/generator.hpp>
+#include <vector>
 
 namespace Neon::AAsset
 {
     class IPackage;
     class IAsset;
+    class Storage;
 
     //
 
     class Manager
     {
     public:
+        Manager();
+        NEON_CLASS_NO_COPY(Manager);
+        NEON_CLASS_MOVE_DECL(Manager);
+        ~Manager();
+
         /// <summary>
         /// Mount a package from a path.
         /// </summary>
@@ -57,5 +61,6 @@ namespace Neon::AAsset
 
     private:
         std::vector<UPtr<IPackage>> m_Packages;
+        UPtr<Storage>               m_Storage;
     };
 } // namespace Neon::AAsset

@@ -50,10 +50,7 @@ void AssetPackSample::TestPacks()
     auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
     auto Handle1 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000001");
     auto Handle2 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000002");
-
-    Handle0.data[0] = 0x00;
-    Handle1.data[0] = 0x00;
-    Handle2.data[0] = 0x00;
+    auto Handle3 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000003");
 
     //
 
@@ -65,4 +62,7 @@ void AssetPackSample::TestPacks()
     auto Asset1 = Manager->Load(Handle1);
     auto Asset2 = Manager->Load(Handle2);
     auto Asset0 = Manager->Load(Handle0);
+    auto Asset3 = Manager->Load(Handle3);
+
+    Manager.reset();
 }
