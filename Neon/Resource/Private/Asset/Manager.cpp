@@ -9,82 +9,33 @@
 
 namespace Neon::AAsset
 {
-    PackageHandle Manager::Mount(
-        const StringU8& Path,
-        MountType       Type)
+    IPackage* Manager::Mount(
+        UPtr<IPackage> Package)
     {
-        size_t Hndl = StringUtils::Hash(Path);
-
-        auto& Package = m_Packages[Hndl];
-        if (!Package)
-        {
-            std::filesystem::path FsPath(Path);
-            if (!std::filesystem::exists(FsPath))
-            {
-                NEON_ERROR("Package '{}' does not exist", Path);
-                return 0;
-            }
-
-            switch (Type)
-            {
-            case Manager::MountType::Directory:
-                if (!std::filesystem::is_directory(FsPath))
-                {
-                    NEON_ERROR("Package '{}' is not a directory", Path);
-                    return 0;
-                }
-                Package = std::make_unique<PackageDirectory>(Path);
-                break;
-
-            case Manager::MountType::Zip:
-                if (!std::filesystem::is_regular_file(FsPath))
-                {
-                    NEON_ERROR("Package '{}' is not a file", Path);
-                    return 0;
-                }
-            case Manager::MountType::Database:
-                NEON_ASSERT(false, "Unimplemented");
-                break;
-            default:
-                NEON_ERROR("Package '{}' has an invalid mount type", Path);
-                break;
-            }
-
-            if (!std::filesystem::is_directory(FsPath))
-            {
-            }
-            else if (!std::filesystem::is_regular_file(FsPath))
-            {
-            }
-        }
-        else
-        {
-            NEON_WARNING("Package '{}' was already mounted", Path);
-        }
-
-        return Hndl;
+        return m_Packages.emplace_back(std::move(Package)).get();
     }
 
     void Manager::Unmount(
-        PackageHandle Package)
+        IPackage* Package)
     {
-        if (!m_Packages.erase(Package))
+        for (auto Iter = m_Packages.begin(); Iter != m_Packages.end(); ++Iter)
         {
-            NEON_WARNING("Package '{}' was not mounted", Package);
+            if (Iter->get() == Package)
+            {
+                m_Packages.erase(Iter);
+                return;
+            }
         }
+
+        NEON_WARNING_TAG("Asset", "Trying to unmount a package that was not mounted");
     }
 
-    Ref<IPackage> Manager::GetPackage(
-        PackageHandle Package)
+    cppcoro::generator<IPackage*> Manager::GetPackages() const noexcept
     {
-        auto Iter = m_Packages.find(Package);
-        if (Iter == m_Packages.end())
+        for (const auto& Package : m_Packages)
         {
-            NEON_WARNING("Package '{}' was not mounted", Package);
-            return {};
+            co_yield Package.get();
         }
-
-        return Iter->second;
     }
 
     //

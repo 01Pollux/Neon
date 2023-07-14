@@ -3,12 +3,13 @@
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
 
+#include <vector>
+#include <cppcoro/generator.hpp>
+
 #include <Asset/Handle.hpp>
 
 namespace Neon::AAsset
 {
-    using PackageHandle = size_t;
-
     class IPackage;
     class IAsset;
 
@@ -17,31 +18,22 @@ namespace Neon::AAsset
     class Manager
     {
     public:
-        enum class MountType : uint8_t
-        {
-            Directory,
-            Zip,
-            Database
-        };
-
         /// <summary>
         /// Mount a package from a path.
         /// </summary>
-        PackageHandle Mount(
-            const StringU8& Path,
-            MountType       Type);
+        IPackage* Mount(
+            UPtr<IPackage> Package);
 
         /// <summary>
         /// Unmount a package from a handle.
         /// </summary>
         void Unmount(
-            PackageHandle Package);
+            IPackage* Package);
 
         /// <summary>
         /// Get a package from a handle.
         /// </summary>
-        [[nodiscard]] Ref<IPackage> GetPackage(
-            PackageHandle Package);
+        [[nodiscard]] cppcoro::generator<IPackage*> GetPackages() const noexcept;
 
         //
 
@@ -64,6 +56,6 @@ namespace Neon::AAsset
             const Handle& Handle);
 
     private:
-        std::map<PackageHandle, Ptr<IPackage>> m_Packages;
+        std::vector<UPtr<IPackage>> m_Packages;
     };
 } // namespace Neon::AAsset
