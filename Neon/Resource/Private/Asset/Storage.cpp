@@ -3,6 +3,8 @@
 #include <Asset/Package.hpp>
 #include <Asset/Handler.hpp>
 
+#include <cppcoro/schedule_on.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
@@ -38,30 +40,39 @@ namespace Neon::AAsset
     //
 
     void Storage::LoadAsync(
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
     }
 
-    Ref<IAsset> Storage::Load(
-        const Handle& Handle)
+    cppcoro::task<Ref<IAsset>> Storage::Load(
+        const Handle& ResHandle)
     {
-        if (auto It = m_AssetCache.find(Handle); It != m_AssetCache.end())
         {
-            return It->second;
+            auto CacheLock = co_await m_AssetCacheMutex.scoped_lock_async();
+            if (auto It = m_AssetCache.find(ResHandle); It != m_AssetCache.end())
+            {
+                co_return It->second;
+            }
         }
 
-        if (auto It = m_AssetsInPackage.find(Handle); It != m_AssetsInPackage.end())
+        co_await m_ThreadPool.schedule();
+
         {
-            auto Asset           = It->second->Load(this, Handle);
-            m_AssetCache[Handle] = Asset;
+            auto PackageLock = co_await m_AssetsInPackageMutex.scoped_lock_async();
+            if (auto It = m_AssetsInPackage.find(ResHandle); It != m_AssetsInPackage.end())
+            {
+                auto Asset = co_await It->second->Load(this, ResHandle);
+                m_AssetCache.emplace(ResHandle, Asset);
+                co_return Asset;
+            }
         }
 
         NEON_ERROR_TAG("Asset", "Trying to load non-existing asset");
-        return {};
+        co_return Ref<IAsset>();
     }
 
     void Storage::Unload(
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
     }
 
@@ -69,16 +80,16 @@ namespace Neon::AAsset
 
     void Storage::Reference(
         IPackage*     Package,
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
-        m_AssetsInPackage[Handle] = Package;
+        m_AssetsInPackage[ResHandle] = Package;
     }
 
     void Storage::Unreference(
         IPackage*     Package,
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
-        m_AssetsInPackage.erase(Handle);
-        m_AssetCache.erase(Handle);
+        m_AssetsInPackage.erase(ResHandle);
+        m_AssetCache.erase(ResHandle);
     }
 } // namespace Neon::AAsset

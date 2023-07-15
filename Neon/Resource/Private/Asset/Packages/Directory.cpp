@@ -7,6 +7,8 @@
 #include <boost/archive/polymorphic_text_iarchive.hpp>
 #include <boost/archive/polymorphic_text_oarchive.hpp>
 
+#include <cppcoro/when_all.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
@@ -87,27 +89,53 @@ namespace Neon::AAsset
         }
     }
 
-    Ptr<IAsset> PackageDirectory::Load(
+    cppcoro::task<Ptr<IAsset>> PackageDirectory::Load(
         Storage*      AssetStorage,
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
-        auto Iter = m_HandleToFilePathMap.find(Handle);
+        auto Iter = m_HandleToFilePathMap.find(ResHandle);
         if (Iter == m_HandleToFilePathMap.end())
         {
-            NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", Handle.ToString());
-            return Ptr<IAsset>();
+            NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", ResHandle.ToString());
+            co_return nullptr;
         }
 
         auto& HandleInfo = Iter->second;
 
-        IAssetHandler* Handler = AssetStorage->GetHandler(HandleInfo.HandlerName);
-        if (!Handler)
+        std::ifstream File(HandleInfo.FilePath);
+        if (!File.is_open())
         {
-            NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing handler '{}'", Handle.ToString(), HandleInfo.HandlerName);
+            NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), HandleInfo.FilePath);
+            co_return nullptr;
         }
 
-        auto Graph = Handler->BuildDependencyGraph(Handle);
+        // boost::archive::polymorphic_text_iarchive TextArchive(File);
+        // IO::InArchive2&                           Archive(TextArchive);
 
-        return Ptr<IAsset>();
+        // for (auto& DepGroup : EnumerateDependencies(ResHandle))
+        //{
+        //     cppcoro::when_all(
+        //         DepGroup |
+        //         cppcoro::fmap([&](const Handle& DepHandle)
+        //                       { return AssetStorage->Load(DepHandle); }));
+        // }
+
+        // IAssetHandler* Handler = AssetStorage->GetHandler(HandleInfo.HandlerName);
+        // if (!Handler)
+        //{
+        //     NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing handler '{}'", Handle.ToString(), HandleInfo.HandlerName);
+        // }
+
+        // while (!ToLoad.empty())
+        //{
+        // }
+
+        // auto Graph = Handler->BuildDependencyGraph(Handle);
+        // for (auto& Entry : Graph.GetTasks())
+        //{
+        //     Handler->Load(Entry);
+        // }
+
+        // co_return Graph.Load();
     }
 } // namespace Neon::AAsset

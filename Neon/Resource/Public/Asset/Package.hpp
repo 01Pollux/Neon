@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <cppcoro/task.hpp>
 
 namespace Neon::AAsset
 {
@@ -36,8 +37,8 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] virtual Ptr<IAsset> Load(
+        [[nodiscard]] virtual cppcoro::task<Ptr<IAsset>> Load(
             Storage*      AssetStorage,
-            const Handle& Handle) = 0;
+            const Handle& ResHandle) = 0;
     };
 } // namespace Neon::AAsset

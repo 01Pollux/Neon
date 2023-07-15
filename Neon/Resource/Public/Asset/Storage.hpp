@@ -2,6 +2,10 @@
 
 #include <Asset/Handle.hpp>
 
+#include <cppcoro/task.hpp>
+#include <cppcoro/static_thread_pool.hpp>
+#include <cppcoro/async_mutex.hpp>
+
 namespace Neon::AAsset
 {
     class IPackage;
@@ -41,19 +45,19 @@ namespace Neon::AAsset
         /// Preload an asset from a handle.
         /// </summary>
         void LoadAsync(
-            const Handle& Handle);
+            const Handle& ResHandle);
 
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] Ref<IAsset> Load(
-            const Handle& Handle);
+        [[nodiscard]] cppcoro::task<Ref<IAsset>> Load(
+            const Handle& ResHandle);
 
         /// <summary>
         /// Unload an asset from a handle.
         /// </summary>
         void Unload(
-            const Handle& Handle);
+            const Handle& ResHandle);
 
     public:
         /// <summary>
@@ -61,18 +65,22 @@ namespace Neon::AAsset
         /// </summary>
         void Reference(
             IPackage*     Package,
-            const Handle& Handle);
+            const Handle& ResHandle);
 
         /// <summary>
         /// Reference an asset from a handle.
         /// </summary>
         void Unreference(
             IPackage*     Package,
-            const Handle& Handle);
+            const Handle& ResHandle);
 
     private:
         AssetMap          m_AssetCache;
         AssetMapInPackage m_AssetsInPackage;
         AssetHandlerMap   m_AssetHandlers;
+
+        cppcoro::static_thread_pool m_ThreadPool{ 2 };
+        cppcoro::async_mutex        m_AssetCacheMutex;
+        cppcoro::async_mutex        m_AssetsInPackageMutex;
     };
 } // namespace Neon::AAsset

@@ -54,11 +54,6 @@ void AssetPackSample::TestPacks()
 
     //
 
-    Manager->LoadAsync(Handle0);
-    Manager->LoadAsync(Handle1);
-
-    //
-
     auto Asset1 = Manager->Load(Handle1);
     auto Asset2 = Manager->Load(Handle2);
     auto Asset0 = Manager->Load(Handle0);

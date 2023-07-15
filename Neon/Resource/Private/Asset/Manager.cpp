@@ -74,22 +74,16 @@ namespace Neon::AAsset
 
     //
 
-    void Manager::LoadAsync(
-        const Handle& Handle)
+    cppcoro::task<Ref<IAsset>> Manager::Load(
+        const Handle& ResHandle)
     {
-        return m_Storage->LoadAsync(Handle);
-    }
-
-    Ref<IAsset> Manager::Load(
-        const Handle& Handle)
-    {
-        return m_Storage->Load(Handle);
+        return m_Storage->Load(ResHandle);
     }
 
     void Manager::Unload(
-        const Handle& Handle)
+        const Handle& ResHandle)
     {
-        return m_Storage->Unload(Handle);
+        return m_Storage->Unload(ResHandle);
     }
 
     //

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Asset/Graph.hpp>
+
 namespace Neon::AAsset
 {
     class IAssetHandler

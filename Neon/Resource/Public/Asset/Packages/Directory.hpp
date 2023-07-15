@@ -3,6 +3,8 @@
 #include <Core/String.hpp>
 #include <Asset/Package.hpp>
 #include <Asset/Handle.hpp>
+
+#include <cppcoro/generator.hpp>
 #include <filesystem>
 
 namespace Neon::AAsset
@@ -27,9 +29,16 @@ namespace Neon::AAsset
         void Unmount(
             Storage* Storage) override;
 
-        [[nodiscard]] Ptr<IAsset> Load(
+        [[nodiscard]] cppcoro::task<Ptr<IAsset>> Load(
             Storage*      AssetStorage,
-            const Handle& Handle) override;
+            const Handle& ResHandle) override;
+
+    private:
+        /// <summary>
+        /// Enumerate all dependencies of the given handle.
+        /// </summary>
+        [[nodiscard]] cppcoro::generator<std::vector<Handle>> EnumerateDependencies(
+            const Handle& ResHandle);
 
     private:
         HandleToFilePathMap m_HandleToFilePathMap;

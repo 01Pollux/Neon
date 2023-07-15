@@ -3,7 +3,9 @@
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
 #include <Asset/Handle.hpp>
+
 #include <cppcoro/generator.hpp>
+#include <cppcoro/task.hpp>
 #include <vector>
 
 namespace Neon::AAsset
@@ -67,22 +69,16 @@ namespace Neon::AAsset
 
     public:
         /// <summary>
-        /// Preload an asset from a handle.
-        /// </summary>
-        void LoadAsync(
-            const Handle& Handle);
-
-        /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] Ref<IAsset> Load(
-            const Handle& Handle);
+        [[nodiscard]] cppcoro::task<Ref<IAsset>> Load(
+            const Handle& ResHandle);
 
         /// <summary>
         /// Unload an asset from a handle.
         /// </summary>
         void Unload(
-            const Handle& Handle);
+            const Handle& ResHandle);
 
     private:
         /// <summary>
