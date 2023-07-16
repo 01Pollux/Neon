@@ -70,7 +70,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] std::future<Ref<IAsset>> Load(
+        std::future<Ref<IAsset>> Load(
             const Handle& ResHandle);
 
         /// <summary>

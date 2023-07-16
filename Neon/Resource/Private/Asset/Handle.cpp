@@ -5,9 +5,12 @@
 #include <boost/uuid/string_generator.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_hash.hpp>
+#include <boost/uuid/nil_generator.hpp>
 
 namespace Neon::AAsset
 {
+    static const Handle NullHandle = { boost::uuids::nil_uuid() };
+
     StringU8 Handle::ToString() const
     {
         return boost::uuids::to_string(*this);
@@ -26,7 +29,15 @@ namespace Neon::AAsset
 
     Handle Handle::Random()
     {
-        return { boost::uuids::random_generator()() };
+        while (true)
+        {
+            Handle Handle = { boost::uuids::random_generator()() };
+            if (Handle != NullHandle)
+            {
+                return Handle;
+            }
+        }
+        std::unreachable();
     }
 } // namespace Neon::AAsset
 

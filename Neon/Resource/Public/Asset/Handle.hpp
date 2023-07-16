@@ -3,11 +3,18 @@
 #include <Core/String.hpp>
 #include <boost/uuid/uuid.hpp>
 
+namespace boost::serialization
+{
+    class access;
+}
+
 namespace Neon::AAsset
 {
     class IAsset;
     struct Handle : boost::uuids::uuid
     {
+        static const Handle Null;
+
         /// <summary>
         /// Generate asset handle from string
         /// </summary>
@@ -32,6 +39,15 @@ namespace Neon::AAsset
         /// </summary>
         /// <returns></returns>
         [[nodiscard]] static Handle Random();
+
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        [[nodiscard]] void serialize(
+            _Archive& Archive,
+            uint32_t  Version)
+        {
+            Archive& data;
+        }
     };
 } // namespace Neon::AAsset
 
