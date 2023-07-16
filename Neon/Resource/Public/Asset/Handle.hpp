@@ -5,6 +5,7 @@
 
 namespace Neon::AAsset
 {
+    class IAsset;
     struct Handle : boost::uuids::uuid
     {
         /// <summary>

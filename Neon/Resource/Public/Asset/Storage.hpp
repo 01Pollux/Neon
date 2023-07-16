@@ -1,10 +1,8 @@
 #pragma once
 
 #include <Asset/Handle.hpp>
-
-#include <cppcoro/task.hpp>
-#include <cppcoro/static_thread_pool.hpp>
-#include <cppcoro/async_mutex.hpp>
+#include <Asio/ThreadPool.hpp>
+#include <future>
 
 namespace Neon::AAsset
 {
@@ -21,6 +19,10 @@ namespace Neon::AAsset
         using AssetHandlerMap   = std::unordered_map<StringU8, UPtr<IAssetHandler>>;
 
     public:
+        Storage() = default;
+        NEON_CLASS_NO_COPYMOVE(Storage);
+        ~Storage();
+
         /// <summary>
         /// Register an asset handler.
         /// </summary>
@@ -42,15 +44,9 @@ namespace Neon::AAsset
 
     public:
         /// <summary>
-        /// Preload an asset from a handle.
-        /// </summary>
-        void LoadAsync(
-            const Handle& ResHandle);
-
-        /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] cppcoro::task<Ref<IAsset>> Load(
+        [[nodiscard]] std::future<Ref<IAsset>> Load(
             const Handle& ResHandle);
 
         /// <summary>
@@ -79,8 +75,9 @@ namespace Neon::AAsset
         AssetMapInPackage m_AssetsInPackage;
         AssetHandlerMap   m_AssetHandlers;
 
-        cppcoro::static_thread_pool m_ThreadPool{ 2 };
-        cppcoro::async_mutex        m_AssetCacheMutex;
-        cppcoro::async_mutex        m_AssetsInPackageMutex;
+        std::mutex m_AssetCacheMutex;
+        std::mutex m_AssetsInPackageMutex;
+
+        Asio::ThreadPool<> m_ThreadPool = Asio::ThreadPool(2);
     };
 } // namespace Neon::AAsset

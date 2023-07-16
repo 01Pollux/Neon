@@ -36,6 +36,8 @@ NEON_MAIN(Argc, Argv)
 
 //
 
+//
+
 void AssetPackSample::TestPacks()
 {
     auto Manager = std::make_unique<AAsset::Manager>();
@@ -58,6 +60,4 @@ void AssetPackSample::TestPacks()
     auto Asset2 = Manager->Load(Handle2);
     auto Asset0 = Manager->Load(Handle0);
     auto Asset3 = Manager->Load(Handle3);
-
-    Manager.reset();
 }

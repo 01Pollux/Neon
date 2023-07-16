@@ -41,26 +41,26 @@ namespace Neon::AAsset
         {
             if (FileInfo.Path.empty() || FileInfo.Path.starts_with(".."))
             {
-                NEON_ERROR_TAG("Asset", "Trying to mount a directory that is not valid");
+                NEON_ERROR_TAG("Asset", "Asset file '{}' is not valid", FileInfo.Path);
                 return;
             }
 
             std::filesystem::path Path(DirPath / std::move(FileInfo.Path));
             if (!std::filesystem::exists(Path))
             {
-                NEON_ERROR_TAG("Asset", "Trying to mount to a path that does not exist");
+                NEON_ERROR_TAG("Asset", "Asset file '{}' does not exist", Path.string());
                 continue;
             }
 
             if (!std::filesystem::is_regular_file(Path))
             {
-                NEON_ERROR_TAG("Asset", "Trying to mount to a path that is not a file");
+                NEON_ERROR_TAG("Asset", "Asset file '{}' is not a regular file", Path.string());
                 continue;
             }
 
             if (m_HandleToFilePathMap.contains(FileInfo.Handle))
             {
-                NEON_ERROR_TAG("Asset", "Trying to insert an asset handle that already exists");
+                NEON_ERROR_TAG("Asset", "Asset file '{}' has a duplicate handle '{}'", Path.string(), FileInfo.Handle.ToString());
                 continue;
             }
 
@@ -89,7 +89,7 @@ namespace Neon::AAsset
         }
     }
 
-    cppcoro::task<Ptr<IAsset>> PackageDirectory::Load(
+    Ptr<IAsset> PackageDirectory::Load(
         Storage*      AssetStorage,
         const Handle& ResHandle)
     {
@@ -97,7 +97,7 @@ namespace Neon::AAsset
         if (Iter == m_HandleToFilePathMap.end())
         {
             NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", ResHandle.ToString());
-            co_return nullptr;
+            return nullptr;
         }
 
         auto& HandleInfo = Iter->second;
@@ -106,8 +106,10 @@ namespace Neon::AAsset
         if (!File.is_open())
         {
             NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), HandleInfo.FilePath);
-            co_return nullptr;
+            return nullptr;
         }
+
+        return nullptr;
 
         // boost::archive::polymorphic_text_iarchive TextArchive(File);
         // IO::InArchive2&                           Archive(TextArchive);

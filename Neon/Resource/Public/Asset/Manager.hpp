@@ -3,9 +3,8 @@
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
 #include <Asset/Handle.hpp>
-
-#include <cppcoro/generator.hpp>
-#include <cppcoro/task.hpp>
+#include <Asio/Coroutines.hpp>
+#include <future>
 #include <vector>
 
 namespace Neon::AAsset
@@ -40,7 +39,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Get a package from a handle.
         /// </summary>
-        [[nodiscard]] cppcoro::generator<IPackage*> GetPackages() const noexcept;
+        [[nodiscard]] Asio::CoGenerator<IPackage*> GetPackages() const noexcept;
 
     public:
         /// <summary>
@@ -71,7 +70,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] cppcoro::task<Ref<IAsset>> Load(
+        [[nodiscard]] std::future<Ref<IAsset>> Load(
             const Handle& ResHandle);
 
         /// <summary>

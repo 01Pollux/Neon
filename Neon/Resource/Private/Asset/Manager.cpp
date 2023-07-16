@@ -74,7 +74,7 @@ namespace Neon::AAsset
 
     //
 
-    cppcoro::task<Ref<IAsset>> Manager::Load(
+    std::future<Ref<IAsset>> Manager::Load(
         const Handle& ResHandle)
     {
         return m_Storage->Load(ResHandle);
