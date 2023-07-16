@@ -8,6 +8,7 @@ namespace Neon::AAsset
 {
     class IAsset;
     class Storage;
+    class Storage;
 
     //
 
@@ -17,11 +18,15 @@ namespace Neon::AAsset
     /// </summary>
     class IPackage
     {
+        friend class Storage;
+        friend class Manager;
+
     public:
         IPackage() = default;
         NEON_CLASS_NO_COPYMOVE(IPackage);
         virtual ~IPackage() = default;
 
+    protected:
         /// <summary>
         /// Mount the package into asset's storage.
         /// </summary>

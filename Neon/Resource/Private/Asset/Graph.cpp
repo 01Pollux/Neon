@@ -11,7 +11,7 @@ namespace Neon::AAsset
     Asio::CoLazy<> AssetDependencyGraph::BuildTask::Resolve(
         Storage* AssetStorage)
     {
-        AssetStorage->Load(this->AssetGuid).get();
+        TargetNode.Asset = AssetStorage->Load(TargetNode.InMap->first).get().lock();
         co_return;
     }
 
@@ -28,11 +28,10 @@ namespace Neon::AAsset
                 {
                     CurrentLevel.push(&NodeInfo);
                 }
-                co_yield BuildTask(PhaseGuid);
-                for (auto& Resolver : NodeInfo.Resolvers)
-                {
-                    std::invoke(std::move(Resolver));
-                }
+                co_yield BuildTask(NodeInfo);
+
+                printf("leaf-signaling event for %p\n", &NodeInfo);
+                NodeInfo.ResolvedEvent.set();
             }
         }
 
@@ -53,21 +52,19 @@ namespace Neon::AAsset
                         {
                             CurrentLevel.push(Dependent);
                         }
-                        co_yield BuildTask(Dependent->InMap->first);
-                        for (auto& Resolver : Dependent->Resolvers)
-                        {
-                            std::invoke(std::move(Resolver));
-                        }
+                        co_yield BuildTask(*Dependent);
+
+                        printf("node-signaling event for %p\n", Dependent);
+                        Dependent->ResolvedEvent.set();
                     }
                 }
             }
         }
     }
 
-    bool AssetDependencyGraph::Requires(
+    Asio::CoLazy<Ptr<IAsset>> AssetDependencyGraph::Requires(
         const Handle& Parent,
-        const Handle& Child,
-        Ptr<IAsset>&  Asset)
+        const Handle& Child)
     {
         auto ParentNode = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Parent), std::forward_as_tuple()).first;
         auto ChildNode  = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Child), std::forward_as_tuple()).first;
@@ -90,11 +87,7 @@ namespace Neon::AAsset
         ParentNodePtr->DependenciesCount++;
         ParentNodePtr->InMap = ParentNode;
 
-        // ParentNodePtr->Resolvers.emplace_back(
-        //     [&Asset, &Child](Storage* AssetStorage)
-        //     {
-        //         Asset = AssetStorage->Load(Child).get().lock();
-        //     });
-        return false;
+        co_await ChildNodePtr->ResolvedEvent;
+        co_return ChildNodePtr->Asset;
     }
 } // namespace Neon::AAsset

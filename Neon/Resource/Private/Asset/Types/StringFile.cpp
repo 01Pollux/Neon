@@ -4,12 +4,10 @@
 namespace Neon::AAsset
 {
     StringFileAsset::StringFileAsset(
-        const StringU8&             Text,
-        const Ptr<StringFileAsset>& Child,
-        const Handle&               Handle) :
+        const StringU8& Text,
+        const Handle&   Handle) :
         IAsset(Handle),
-        m_Text(Text),
-        m_Child(Child)
+        m_Text(Text)
     {
     }
 

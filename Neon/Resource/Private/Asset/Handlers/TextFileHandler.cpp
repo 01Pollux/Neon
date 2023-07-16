@@ -4,22 +4,11 @@
 
 namespace Neon::AAsset
 {
-    Ptr<IAsset> TextFileHandler::Load(
+    Asio::CoLazy<Ptr<IAsset>> TextFileHandler::Load(
         IO::InArchive2&       Archive,
+        const AAsset::Handle& AssetGuid,
         AssetDependencyGraph& Graph)
     {
-        Ptr<StringFileAsset> TextAsset;
-
-        Handle ThisGuid, ChildGuid;
-        Archive >> ThisGuid >> ChildGuid;
-
-        Ptr<IAsset> ChildAsset;
-
-        Graph.Requires(
-            ThisGuid,
-            ChildGuid,
-            ChildAsset);
-
-        return nullptr;
+        co_return nullptr;
     }
 } // namespace Neon::AAsset

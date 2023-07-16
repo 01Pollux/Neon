@@ -7,8 +7,9 @@ namespace Neon::AAsset
     class TextFileHandler : public IAssetHandler
     {
     public:
-        Ptr<IAsset> Load(
+        Asio::CoLazy<Ptr<IAsset>> Load(
             IO::InArchive2&       Archive,
-            AssetDependencyGraph& Graph);
+            const AAsset::Handle& AssetGuid,
+            AssetDependencyGraph& Graph) override;
     };
 } // namespace Neon::AAsset

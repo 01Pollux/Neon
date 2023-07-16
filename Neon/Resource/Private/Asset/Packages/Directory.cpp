@@ -117,14 +117,17 @@ namespace Neon::AAsset
 
         IO::InArchive2& Archive(TextArchive);
 
+        Handle AssetHandle;
+        Archive >> AssetHandle;
+
         AssetDependencyGraph Graph;
 
-        auto Asset = Handler->Load(Archive, Graph);
+        auto Asset = Handler->Load(Archive, AssetHandle, Graph);
         for (auto& Tasks : Graph.Compile())
         {
             co_await Tasks.Resolve(AssetStorage);
         }
 
-        co_return Asset;
+        co_return co_await Asset;
     }
 } // namespace Neon::AAsset

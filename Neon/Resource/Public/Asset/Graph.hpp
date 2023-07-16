@@ -2,6 +2,7 @@
 
 #include <Asset/Handle.hpp>
 #include <Asio/Coroutines.hpp>
+#include <cppcoro/async_manual_reset_event.hpp>
 #include <vector>
 #include <functional>
 
@@ -12,22 +13,8 @@ namespace Neon::AAsset
     class AssetDependencyGraph
     {
     public:
-        struct BuildTask
-        {
-            /// <summary>
-            /// Resolve the task by loading the asset.
-            /// </summary>
-            Asio::CoLazy<> Resolve(
-                Storage* AssetStorage);
-
-            BuildTask(
-                const Handle& AssetGuid) :
-                AssetGuid(AssetGuid)
-            {
-            }
-
-            const Handle& AssetGuid;
-        };
+        struct BuildNode;
+        struct BuildTask;
 
         /// <summary>
         /// Compile the graph and return a generator of build tasks.
@@ -37,24 +24,43 @@ namespace Neon::AAsset
         /// <summary>
         /// Add a dependency between two assets.
         /// </summary>
-        bool Requires(
+        Asio::CoLazy<Ptr<IAsset>> Requires(
             const Handle& Parent,
-            const Handle& Child,
-            Ptr<IAsset>&  Asset);
+            const Handle& Child);
 
     private:
-        using ResolverFunctions = std::vector<std::function<void()>>;
-
-        struct BuildNode;
         using BuildNodeMap = std::map<Handle, BuildNode>;
-        struct BuildNode
-        {
-            BuildNodeMap::iterator  InMap;
-            std::vector<BuildNode*> DependentNodes;
-            size_t                  DependenciesCount = 0;
-            ResolverFunctions       Resolvers;
-        };
+        struct BuildNode;
 
         BuildNodeMap m_BuildNodes;
+    };
+
+    struct AssetDependencyGraph::BuildTask
+    {
+    public:
+        /// <summary>
+        /// Resolve the task by loading the asset.
+        /// </summary>
+        Asio::CoLazy<> Resolve(
+            Storage* AssetStorage);
+
+        BuildTask(
+            BuildNode& TargetNode) :
+            TargetNode(TargetNode)
+        {
+        }
+
+    private:
+        BuildNode& TargetNode;
+    };
+
+    struct AssetDependencyGraph::BuildNode
+    {
+        BuildNodeMap::iterator  InMap;
+        std::vector<BuildNode*> DependentNodes;
+        size_t                  DependenciesCount = 0;
+
+        Ptr<IAsset>                       Asset;
+        cppcoro::async_manual_reset_event ResolvedEvent;
     };
 } // namespace Neon::AAsset

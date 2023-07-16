@@ -11,11 +11,16 @@ public:
     {
         DefaultGameEngine::Initialize(Config);
 
-        TestPacks();
+        SaveSimple();
+        LoadSimple();
     }
 
 private:
-    void TestPacks();
+    void SaveSimple();
+    void LoadSimple();
+
+private:
+    [[nodiscard]] UPtr<AAsset::Manager> LoadManager();
 };
 
 NEON_MAIN(Argc, Argv)
@@ -36,28 +41,89 @@ NEON_MAIN(Argc, Argv)
 
 //
 
-//
+#include <Asset/Asset.hpp>
+#include <Asset/Handler.hpp>
 
-void AssetPackSample::TestPacks()
+class StringAndChildAsset : public AAsset::IAsset
+{
+    friend class StringAndChildHandler;
+
+public:
+    StringAndChildAsset(
+        StringU8                   Text,
+        const AAsset::Handle&      Handle = AAsset::Handle::Random(),
+        const Ptr<AAsset::IAsset>& Child  = nullptr) :
+        IAsset(Handle),
+        m_Text(std::move(Text))
+    {
+    }
+
+    [[nodiscard]] const StringU8& GetText() const
+    {
+        return m_Text;
+    }
+
+    void SetText(
+        StringU8 Text)
+    {
+        m_Text = std::move(Text);
+    }
+
+private:
+    StringU8            m_Text;
+    Ptr<AAsset::IAsset> m_Child;
+};
+
+class StringAndChildHandler : public AAsset::IAssetHandler
+{
+public:
+    Asio::CoLazy<Ptr<AAsset::IAsset>> Load(
+        IO::InArchive2&               Archive,
+        const AAsset::Handle&         Handle,
+        AAsset::AssetDependencyGraph& Graph) override
+    {
+        AAsset::Handle ChildHandle;
+
+        StringU8 Text;
+        Archive >> Text;
+        Archive >> ChildHandle;
+
+        return std::make_shared<StringAndChildAsset>(std::move(Text), co_await Graph.Requires(Handle, ChildHandle));
+    }
+};
+
+UPtr<AAsset::Manager> AssetPackSample::LoadManager()
 {
     auto Manager = std::make_unique<AAsset::Manager>();
+    Manager->RegisterHandler<StringAndChildHandler>("StringAndChild");
 
-    //
+    return Manager;
+}
 
-    Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
-    Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory2"));
+//
 
-    //
+static const char* TextTest = R"(
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric
+ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam eu
+ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric
+)";
+
+void AssetPackSample::SaveSimple()
+{
+    auto Manager = LoadManager();
+    auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
     auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
-    auto Handle1 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000001");
-    auto Handle2 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000002");
-    auto Handle3 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000003");
 
-    //
+    auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
+}
 
-    auto Asset1 = Manager->Load(Handle1);
-    auto Asset2 = Manager->Load(Handle2);
-    auto Asset0 = Manager->Load(Handle0);
-    auto Asset3 = Manager->Load(Handle3);
+void AssetPackSample::LoadSimple()
+{
+    auto Manager = LoadManager();
+    auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
+
+    auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
+
+    auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
 }

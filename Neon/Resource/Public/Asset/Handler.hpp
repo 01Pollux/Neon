@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Core/Neon.hpp>
 #include <Asset/Graph.hpp>
+#include <Asio/Coroutines.hpp>
 #include <IO/Archive2.hpp>
 
 namespace Neon::AAsset
@@ -15,8 +15,9 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from an archive while building the dependency graph.
         /// </summary>
-        virtual Ptr<IAsset> Load(
+        virtual Asio::CoLazy<Ptr<IAsset>> Load(
             IO::InArchive2&       Archive,
+            const AAsset::Handle& AssetGuid,
             AssetDependencyGraph& Graph) = 0;
     };
 } // namespace Neon::AAsset
