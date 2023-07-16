@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Asset/Handle.hpp>
+#include <Asio/Coroutines.hpp>
 
 namespace Neon::AAsset
 {
@@ -25,18 +26,18 @@ namespace Neon::AAsset
         /// Mount the package into asset's storage.
         /// </summary>
         virtual void Mount(
-            Storage* Storage) = 0;
+            Storage* AssetStorage) = 0;
 
         /// <summary>
         /// Unmount the package from asset's storage.
         /// </summary>
         virtual void Unmount(
-            Storage* Storage) = 0;
+            Storage* AssetStorage) = 0;
 
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] virtual Ptr<IAsset> Load(
+        [[nodiscard]] virtual Asio::CoLazy<Ptr<IAsset>> Load(
             Storage*      AssetStorage,
             const Handle& ResHandle) = 0;
     };

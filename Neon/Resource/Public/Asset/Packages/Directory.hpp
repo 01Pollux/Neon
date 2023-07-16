@@ -22,12 +22,12 @@ namespace Neon::AAsset
             const std::filesystem::path& DirPath);
 
         void Mount(
-            Storage* Storage) override;
+            Storage* AssetStorage) override;
 
         void Unmount(
-            Storage* Storage) override;
+            Storage* AssetStorage) override;
 
-        [[nodiscard]] Ptr<IAsset> Load(
+        [[nodiscard]] Asio::CoLazy<Ptr<IAsset>> Load(
             Storage*      AssetStorage,
             const Handle& ResHandle) override;
 

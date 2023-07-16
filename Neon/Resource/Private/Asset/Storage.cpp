@@ -3,15 +3,12 @@
 #include <Asset/Package.hpp>
 #include <Asset/Handler.hpp>
 
+#include <cppcoro/sync_wait.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::AAsset
 {
-    Storage::~Storage()
-    {
-        printf("dtor\n");
-    }
-
     void Storage::RegisterHandler(
         const StringU8&     Name,
         UPtr<IAssetHandler> Handler)
@@ -60,7 +57,7 @@ namespace Neon::AAsset
                 std::scoped_lock PackageLock(m_AssetsInPackageMutex);
                 if (auto It = m_AssetsInPackage.find(ResHandle); It != m_AssetsInPackage.end())
                 {
-                    Asset = It->second->Load(this, ResHandle);
+                    Asset = cppcoro::sync_wait(It->second->Load(this, ResHandle));
                 }
             }
 

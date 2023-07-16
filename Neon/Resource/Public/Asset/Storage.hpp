@@ -19,10 +19,6 @@ namespace Neon::AAsset
         using AssetHandlerMap   = std::unordered_map<StringU8, UPtr<IAssetHandler>>;
 
     public:
-        Storage() = default;
-        NEON_CLASS_NO_COPYMOVE(Storage);
-        ~Storage();
-
         /// <summary>
         /// Register an asset handler.
         /// </summary>
