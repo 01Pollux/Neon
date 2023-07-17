@@ -12,7 +12,7 @@ namespace Neon::AAsset
         IPackage* Package,
         Storage*  AssetStorage)
     {
-        TargetNode.Asset = AssetStorage->Load(Package, TargetNode.InMap->first).get().lock();
+        TargetNode.Asset = AssetStorage->Load(Package, TargetNode.AssetHandle).get().lock();
         co_return;
     }
 
@@ -64,8 +64,8 @@ namespace Neon::AAsset
     }
 
     Asio::CoLazy<Ptr<IAsset>> AssetDependencyGraph::Requires(
-        const Handle& Parent,
-        const Handle& Child)
+        Handle Parent,
+        Handle Child)
     {
         auto ParentNode = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Parent), std::forward_as_tuple()).first;
         auto ChildNode  = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Child), std::forward_as_tuple()).first;
@@ -86,7 +86,7 @@ namespace Neon::AAsset
 
         ChildNodePtr->DependentNodes.push_back(ParentNodePtr);
         ParentNodePtr->DependenciesCount++;
-        ParentNodePtr->InMap = ParentNode;
+        ParentNodePtr->AssetHandle = Parent;
 
         co_await ChildNodePtr->ResolvedEvent;
         co_return ChildNodePtr->Asset;

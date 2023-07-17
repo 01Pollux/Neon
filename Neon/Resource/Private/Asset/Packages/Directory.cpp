@@ -8,6 +8,9 @@
 #include <boost/archive/polymorphic_text_iarchive.hpp>
 #include <boost/archive/polymorphic_text_oarchive.hpp>
 
+#include <cppcoro/sync_wait.hpp>
+#include <cppcoro/when_all_ready.hpp>
+
 #include <Log/Logger.hpp>
 
 //
@@ -159,16 +162,22 @@ namespace Neon::AAsset
 
         AssetDependencyGraph Graph;
 
-        auto Asset = Handler->Load(Archive, AssetHandle, Graph);
-        for (auto& Tasks : Graph.Compile())
-        {
-            co_await Tasks.Load(this, AssetStorage);
-        }
+        auto AssetTask = (cppcoro::when_all_ready(
+            [&]() -> Asio::CoLazy<Ptr<IAsset>>
+            {
+                co_return co_await Handler->Load(Archive, AssetHandle, Graph);
+            }(),
+            [&]() -> Asio::CoLazy<>
+            {
+                for (auto& Tasks : Graph.Compile())
+                {
+                    co_await Tasks.Load(this, AssetStorage);
+                }
+            }()));
 
-        auto AssetRes = co_await Asset;
-
-        m_AssetCache.emplace(AssetHandle, AssetRes);
-        co_return AssetRes;
+        auto Asset = std::get<0>(co_await AssetTask).result();
+        m_AssetCache.emplace(AssetHandle, Asset);
+        co_return Asset;
     }
 
     //

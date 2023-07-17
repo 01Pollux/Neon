@@ -31,8 +31,7 @@ namespace Neon::AAsset
     {
     public:
         Manager();
-        NEON_CLASS_NO_COPY(Manager);
-        NEON_CLASS_MOVE_DECL(Manager);
+        NEON_CLASS_NO_COPYMOVE(Manager);
         ~Manager();
 
         /// <summary>

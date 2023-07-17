@@ -97,7 +97,8 @@ public:
         Archive >> Text;
         Archive >> ChildHandle;
 
-        co_return std::make_shared<StringAndChildAsset>(std::move(Text), Handle, co_await Graph.Requires(Handle, ChildHandle));
+        auto Child = co_await Graph.Requires(Handle, ChildHandle);
+        co_return std::make_shared<StringAndChildAsset>(std::move(Text), Handle, Child);
     }
 
     void Save(
@@ -147,16 +148,17 @@ void AssetPackSample::LoadSimple()
     auto Manager = LoadManager();
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
-    std::vector<std::future<Ptr<AAsset::IAsset>>> LoadingAssets;
+    std::vector<std::future<Ref<AAsset::IAsset>>> LoadingAssets;
 
     for (auto& Asset : Manager->GetPackageAssets(Package))
     {
         LoadingAssets.emplace_back(Manager->Load(Package, Asset));
+        break;
     }
 
     auto LoadedAssets = LoadingAssets |
                         views::transform([](auto& Future)
-                                         { return Future.get(); }) |
+                                         { return Future.get().lock(); }) |
                         ranges::to<std::vector>();
 
     for (auto& Asset : LoadedAssets)

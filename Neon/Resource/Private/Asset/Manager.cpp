@@ -22,8 +22,6 @@ namespace Neon::AAsset
         RegisterStandardHandlers();
     }
 
-    NEON_CLASS_MOVE_IMPL(Manager);
-
     Manager::~Manager() = default;
 
     //

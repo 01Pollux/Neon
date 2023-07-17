@@ -26,8 +26,8 @@ namespace Neon::AAsset
         /// Add a dependency between two assets.
         /// </summary>
         Asio::CoLazy<Ptr<IAsset>> Requires(
-            const Handle& Parent,
-            const Handle& Child);
+            Handle Parent,
+            Handle Child);
 
     private:
         using BuildNodeMap = std::map<Handle, BuildNode>;
@@ -58,7 +58,8 @@ namespace Neon::AAsset
 
     struct AssetDependencyGraph::BuildNode
     {
-        BuildNodeMap::iterator  InMap;
+        Handle AssetHandle;
+
         std::vector<BuildNode*> DependentNodes;
         size_t                  DependenciesCount = 0;
 
