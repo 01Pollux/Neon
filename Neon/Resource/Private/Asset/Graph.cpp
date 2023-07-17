@@ -12,7 +12,7 @@ namespace Neon::AAsset
         IPackage* Package,
         Storage*  AssetStorage)
     {
-        TargetNode.Asset = AssetStorage->Load(Package, TargetNode.AssetHandle).get().lock();
+        TargetNode.Asset = AssetStorage->LoadImpl(Package, TargetNode.AssetHandle);
         co_return;
     }
 
@@ -67,6 +67,11 @@ namespace Neon::AAsset
         Handle Parent,
         Handle Child)
     {
+        if (Child == Handle::Null)
+        {
+            co_return nullptr;
+        }
+
         auto ParentNode = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Parent), std::forward_as_tuple()).first;
         auto ChildNode  = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Child), std::forward_as_tuple()).first;
 

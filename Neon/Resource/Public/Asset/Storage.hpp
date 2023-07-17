@@ -45,6 +45,13 @@ namespace Neon::AAsset
             const Handle& ResHandle);
 
         /// <summary>
+        /// Load an asset from a handle.
+        /// </summary>
+        Ptr<IAsset> LoadImpl(
+            IPackage*     Package,
+            const Handle& ResHandle);
+
+        /// <summary>
         /// Flush the package.
         /// </summary>
         std::future<void> Flush(

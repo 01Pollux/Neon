@@ -127,12 +127,16 @@ ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl
 ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric
 )";
 
+static constexpr uint32_t c_AssetCount = 100;
+
 void AssetPackSample::SaveSimple()
 {
+    auto t0 = std::chrono::high_resolution_clock::now();
+
     auto Manager = LoadManager();
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
-    for (size_t i = 0; i < 10; i++)
+    for (size_t i = 0; i < c_AssetCount; i++)
     {
         StringU8 Path  = StringUtils::Format("Assets/Test{}.txt", i);
         auto     Asset = Package->CreateAsset<StringAndChildAsset>(
@@ -141,10 +145,17 @@ void AssetPackSample::SaveSimple()
     }
 
     Manager->Flush(Package);
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    NEON_INFO("Saved simple {} assets in {}ms", c_AssetCount, dt);
 }
 
 void AssetPackSample::LoadSimple()
 {
+    auto t0 = std::chrono::high_resolution_clock::now();
+
     auto Manager = LoadManager();
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
@@ -153,7 +164,6 @@ void AssetPackSample::LoadSimple()
     for (auto& Asset : Manager->GetPackageAssets(Package))
     {
         LoadingAssets.emplace_back(Manager->Load(Package, Asset));
-        break;
     }
 
     auto LoadedAssets = LoadingAssets |
@@ -168,10 +178,8 @@ void AssetPackSample::LoadSimple()
         NEON_ASSERT(ThisAsset->GetText() == TextTest);
     }
 
-    /*  auto Manager = LoadManager();
-      auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
-      auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
-
-      auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);*/
+    NEON_INFO("Loaded simple {} assets in {}ms", c_AssetCount, dt);
 }
