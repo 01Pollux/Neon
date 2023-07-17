@@ -17,7 +17,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Gets the handle of the asset.
         /// </summary>
-        const Handle& GetHandle() const noexcept;
+        const Handle& GetGuid() const noexcept;
 
     private:
         Handle m_Handle;

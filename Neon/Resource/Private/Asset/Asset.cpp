@@ -9,7 +9,7 @@ namespace Neon::AAsset
     {
     }
 
-    const Handle& IAsset::GetHandle() const noexcept
+    const Handle& IAsset::GetGuid() const noexcept
     {
         return m_Handle;
     }

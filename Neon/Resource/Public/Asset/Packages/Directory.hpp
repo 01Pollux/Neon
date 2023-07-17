@@ -21,15 +21,19 @@ namespace Neon::AAsset
         PackageDirectory(
             const std::filesystem::path& DirPath);
 
-        void Mount(
-            Storage* AssetStorage) override;
+        void AddAsset(
+            const AssetAddDesc& Desc,
+            const Ptr<IAsset>&  Asset) override;
 
-        void Unmount(
-            Storage* AssetStorage) override;
+        void RemoveAsset(
+            const Handle& AssetHandle) override;
 
-        [[nodiscard]] Asio::CoLazy<Ptr<IAsset>> Load(
+    protected:
+        Asio::CoLazy<Ptr<IAsset>> Load(
             Storage*      AssetStorage,
             const Handle& ResHandle) override;
+
+        void Flush() override;
 
     private:
         HandleToFilePathMap m_HandleToFilePathMap;

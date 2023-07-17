@@ -8,7 +8,7 @@
 
 namespace Neon::AAsset
 {
-    Asio::CoLazy<> AssetDependencyGraph::BuildTask::Resolve(
+    Asio::CoLazy<> AssetDependencyGraph::BuildTask::Load(
         Storage* AssetStorage)
     {
         TargetNode.Asset = AssetStorage->Load(TargetNode.InMap->first).get().lock();

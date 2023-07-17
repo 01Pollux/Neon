@@ -41,7 +41,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Resolve the task by loading the asset.
         /// </summary>
-        Asio::CoLazy<> Resolve(
+        Asio::CoLazy<> Load(
             Storage* AssetStorage);
 
         BuildTask(

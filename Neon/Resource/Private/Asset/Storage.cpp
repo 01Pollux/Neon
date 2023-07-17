@@ -40,33 +40,18 @@ namespace Neon::AAsset
     //
 
     std::future<Ref<IAsset>> Storage::Load(
+        IPackage*     Package,
         const Handle& ResHandle)
     {
-        auto Task = [this, ResHandle]() -> Ref<IAsset>
+        auto Task = [this, Package, ResHandle]() -> Ref<IAsset>
         {
-            {
-                std::scoped_lock CacheLock(m_AssetCacheMutex);
-                if (auto It = m_AssetCache.find(ResHandle); It != m_AssetCache.end())
-                {
-                    return It->second;
-                }
-            }
-
             Ptr<IAsset> Asset;
             {
-                std::scoped_lock PackageLock(m_AssetsInPackageMutex);
-                if (auto It = m_AssetsInPackage.find(ResHandle); It != m_AssetsInPackage.end())
-                {
-                    Asset = cppcoro::sync_wait(It->second->Load(this, ResHandle));
-                }
+                std::scoped_lock PackageLock(Package->m_PackageMutex);
+                Asset = cppcoro::sync_wait(Package->Load(this, ResHandle));
             }
 
-            if (Asset)
-            {
-                std::scoped_lock CacheLock(m_AssetCacheMutex);
-                m_AssetCache.emplace(ResHandle, Asset);
-            }
-            else
+            if (!Asset)
             {
                 NEON_ERROR_TAG("Asset", "Asset '{}' does not exist", ResHandle.ToString());
             }
@@ -77,25 +62,19 @@ namespace Neon::AAsset
         return m_ThreadPool.enqueue(std::move(Task));
     }
 
+    std::future<void> Storage::Flush(
+        IPackage* Package)
+    {
+        auto Task = [Package]
+        {
+            std::scoped_lock PackageLock(Package->m_PackageMutex);
+            Package->Flush();
+        };
+        return m_ThreadPool.enqueue(std::move(Task));
+    }
+
     void Storage::Unload(
         const Handle& ResHandle)
     {
-    }
-
-    //
-
-    void Storage::Reference(
-        IPackage*     Package,
-        const Handle& ResHandle)
-    {
-        m_AssetsInPackage[ResHandle] = Package;
-    }
-
-    void Storage::Unreference(
-        IPackage*     Package,
-        const Handle& ResHandle)
-    {
-        m_AssetsInPackage.erase(ResHandle);
-        m_AssetCache.erase(ResHandle);
     }
 } // namespace Neon::AAsset

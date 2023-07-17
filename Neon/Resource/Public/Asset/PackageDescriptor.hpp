@@ -19,6 +19,8 @@ namespace Neon::AAsset
 
         using PathHandleGenerator = cppcoro::generator<PathHandleInfo>;
 
+        PackageDescriptor() = default;
+
         PackageDescriptor(
             std::ifstream Stream);
 

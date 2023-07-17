@@ -114,8 +114,13 @@ void AssetPackSample::SaveSimple()
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
     auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
+    auto Asset   = Package->CreateAsset<StringAndChildAsset>(
+        AAsset::IPackage::AssetAddDesc{ .Path = "File1/Asset0.txt" }, StringU8(TextTest), Handle0);
 
-    auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
+    Manager->Flush(Package);
+
+    // auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
+    // Manager->Save(Package, Asset);
 }
 
 void AssetPackSample::LoadSimple()

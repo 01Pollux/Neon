@@ -29,7 +29,6 @@ namespace Neon::AAsset
         UPtr<IPackage> Package)
     {
         auto PackagePtr = m_Packages.emplace_back(std::move(Package)).get();
-        PackagePtr->Mount(m_Storage.get());
         return PackagePtr;
     }
 
@@ -40,7 +39,6 @@ namespace Neon::AAsset
         {
             if (Iter->get() == Package)
             {
-                Package->Unmount(m_Storage.get());
                 m_Packages.erase(Iter);
                 return;
             }
@@ -78,6 +76,19 @@ namespace Neon::AAsset
         const Handle& ResHandle)
     {
         return m_Storage->Load(ResHandle);
+    }
+
+    std::future<Ref<IAsset>> Manager::Load(
+        IPackage*     Package,
+        const Handle& ResHandle)
+    {
+        return m_Storage->Load(Package, ResHandle);
+    }
+
+    std::future<void> Manager::Flush(
+        IPackage* Package)
+    {
+        return m_Storage->Flush(Package);
     }
 
     void Manager::Unload(

@@ -26,24 +26,28 @@ namespace Neon::AAsset
 
         /// <summary>
         /// Mount a package from a path.
+        /// Not thread-safe.
         /// </summary>
         IPackage* Mount(
             UPtr<IPackage> Package);
 
         /// <summary>
         /// Unmount a package from a handle.
+        /// Not thread-safe.
         /// </summary>
         void Unmount(
             IPackage* Package);
 
         /// <summary>
         /// Get a package from a handle.
+        /// Not thread-safe.
         /// </summary>
         [[nodiscard]] Asio::CoGenerator<IPackage*> GetPackages() const noexcept;
 
     public:
         /// <summary>
         /// Register an asset handler.
+        /// Not thread-safe.
         /// </summary>
         void RegisterHandler(
             const StringU8&     Name,
@@ -51,6 +55,7 @@ namespace Neon::AAsset
 
         /// <summary>
         /// Register an asset handler.
+        /// Not thread-safe.
         /// </summary>
         template<typename _Ty>
             requires std::is_base_of_v<IAssetHandler, _Ty>
@@ -62,6 +67,7 @@ namespace Neon::AAsset
 
         /// <summary>
         /// Unregister an asset handler.
+        /// Not thread-safe.
         /// </summary>
         void UnregisterHandler(
             const StringU8& Name);
@@ -72,6 +78,19 @@ namespace Neon::AAsset
         /// </summary>
         std::future<Ref<IAsset>> Load(
             const Handle& ResHandle);
+
+        /// <summary>
+        /// Load an asset from a handle.
+        /// </summary>
+        std::future<Ref<IAsset>> Load(
+            IPackage*     Package,
+            const Handle& ResHandle);
+
+        /// <summary>
+        /// Flush the package.
+        /// </summary>
+        std::future<void> Flush(
+            IPackage* Package);
 
         /// <summary>
         /// Unload an asset from a handle.
