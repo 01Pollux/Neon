@@ -10,6 +10,13 @@
 
 #include <Log/Logger.hpp>
 
+//
+
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
+//
+
 namespace Neon::AAsset
 {
     PackageDirectory::PackageDirectory(
@@ -184,13 +191,14 @@ namespace Neon::AAsset
         PackageDescriptor Descriptor;
         for (auto& [AssetHandle, Asset] : m_AssetCache)
         {
-            auto& Info = m_HandleToFilePathMap.at(AssetHandle);
-            auto  Path = std::filesystem::path(StringUtils::Format("{}/{}", m_PackagePath, Info.FilePath));
+            auto& Info       = m_HandleToFilePathMap.at(AssetHandle);
+            auto  Path       = std::filesystem::path(StringUtils::Format("{}/{}", m_PackagePath, Info.FilePath));
+            auto  ParentPath = Path.parent_path();
 
             // create path if it doesn't exist
-            if (!std::filesystem::exists(Path))
+            if (!std::filesystem::exists(ParentPath))
             {
-                std::filesystem::create_directories(Path.parent_path());
+                std::filesystem::create_directories(ParentPath);
             }
 
             std::ofstream AssetFile(Path, std::ios::trunc | std::ios::binary);
@@ -217,5 +225,10 @@ namespace Neon::AAsset
             Descriptor.Append(AssetHandle, Info.HandlerName, Info.FilePath);
         }
         Descriptor.Save(DescriptorFile);
+    }
+
+    std::vector<Handle> PackageDirectory::GetAssets() const
+    {
+        return m_HandleToFilePathMap | std::views::keys | ranges::to<std::vector>();
     }
 } // namespace Neon::AAsset

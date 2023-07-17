@@ -36,6 +36,8 @@ namespace Neon::AAsset
         void Flush(
             Storage* AssetStorage) override;
 
+        std::vector<Handle> GetAssets() const override;
+
     private:
         HandleToFilePathMap m_HandleToFilePathMap;
     };

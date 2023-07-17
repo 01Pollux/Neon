@@ -4,6 +4,7 @@
 #include <Core/String.hpp>
 #include <Asset/Handle.hpp>
 #include <Asio/Coroutines.hpp>
+#include <mutex>
 #include <future>
 #include <vector>
 
@@ -36,23 +37,26 @@ namespace Neon::AAsset
 
         /// <summary>
         /// Mount a package from a path.
-        /// Not thread-safe.
         /// </summary>
         IPackage* Mount(
             UPtr<IPackage> Package);
 
         /// <summary>
         /// Unmount a package from a handle.
-        /// Not thread-safe.
         /// </summary>
         void Unmount(
             IPackage* Package);
 
         /// <summary>
-        /// Get a package from a handle.
-        /// Not thread-safe.
+        /// Get loaded packages.
         /// </summary>
         [[nodiscard]] Asio::CoGenerator<IPackage*> GetPackages() const noexcept;
+
+        /// <summary>
+        /// Get loaded package assets.
+        /// </summary>
+        [[nodiscard]] Asio::CoGenerator<const AAsset::Handle&> GetPackageAssets(
+            IPackage* Package) const noexcept;
 
     public:
         /// <summary>
@@ -107,6 +111,7 @@ namespace Neon::AAsset
         void RegisterStandardHandlers();
 
     private:
+        mutable std::mutex          m_PackagesMutex;
         std::vector<UPtr<IPackage>> m_Packages;
         UPtr<Storage>               m_Storage;
     };

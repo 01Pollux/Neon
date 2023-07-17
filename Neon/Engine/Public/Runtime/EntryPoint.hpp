@@ -3,6 +3,7 @@
 #include <Config/Engine.hpp>
 #include <Runtime/GameEngine.hpp>
 #include <Log/Logger.hpp>
+#include <ranges>
 
 namespace Neon::Runtime
 {

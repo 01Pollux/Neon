@@ -11,6 +11,11 @@
 
 //
 
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
+//
+
 using namespace Neon;
 
 class AssetPackSample : public Runtime::DefaultGameEngine
@@ -126,16 +131,41 @@ void AssetPackSample::SaveSimple()
     auto Manager = LoadManager();
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
-    auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
-    auto Asset   = Package->CreateAsset<StringAndChildAsset>(
-        { .Path = "File1/Asset0.txt", .HandlerName = StringAndChildHandler::HandlerName },
-        StringU8(TextTest), Handle0);
+    for (size_t i = 0; i < 10; i++)
+    {
+        StringU8 Path  = StringUtils::Format("Assets/Test{}.txt", i);
+        auto     Asset = Package->CreateAsset<StringAndChildAsset>(
+            { .Path = std::move(Path), .HandlerName = StringAndChildHandler::HandlerName },
+            StringU8(TextTest));
+    }
 
     Manager->Flush(Package);
 }
 
 void AssetPackSample::LoadSimple()
 {
+    auto Manager = LoadManager();
+    auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
+
+    std::vector<std::future<Ptr<AAsset::IAsset>>> LoadingAssets;
+
+    for (auto& Asset : Manager->GetPackageAssets(Package))
+    {
+        LoadingAssets.emplace_back(Manager->Load(Package, Asset));
+    }
+
+    auto LoadedAssets = LoadingAssets |
+                        views::transform([](auto& Future)
+                                         { return Future.get(); }) |
+                        ranges::to<std::vector>();
+
+    for (auto& Asset : LoadedAssets)
+    {
+        auto ThisAsset = dynamic_cast<const StringAndChildAsset*>(Asset.get());
+        NEON_ASSERT(ThisAsset);
+        NEON_ASSERT(ThisAsset->GetText() == TextTest);
+    }
+
     /*  auto Manager = LoadManager();
       auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 

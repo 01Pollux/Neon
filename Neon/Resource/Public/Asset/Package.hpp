@@ -87,6 +87,11 @@ namespace Neon::AAsset
         virtual void Flush(
             Storage* AssetStorage) = 0;
 
+        /// <summary>
+        /// Get all assets.
+        /// </summary>
+        [[nodiscard]] virtual std::vector<Handle> GetAssets() const = 0;
+
     protected:
         AssetMap   m_AssetCache;
         StringU8   m_PackagePath;

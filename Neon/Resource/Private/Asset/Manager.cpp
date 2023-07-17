@@ -3,13 +3,16 @@
 #include <Asset/Storage.hpp>
 #include <Asset/Packages/Directory.hpp>
 
-//
-
 #include <Asset/Handlers/TextFileHandler.hpp>
 
+#include <Log/Logger.hpp>
+
 //
 
-#include <Log/Logger.hpp>
+namespace views  = std::views;
+namespace ranges = std::ranges;
+
+//
 
 namespace Neon::AAsset
 {
@@ -28,6 +31,17 @@ namespace Neon::AAsset
     IPackage* Manager::Mount(
         UPtr<IPackage> Package)
     {
+        std::scoped_lock Lock(m_PackagesMutex);
+
+        // verify if package exists in m_Packages
+#ifdef NEON_DEBUG
+        bool Found = false;
+        for (const auto& PackagePtr : m_Packages)
+        {
+            NEON_ASSERT(PackagePtr.get() != Package.get(), "Trying to mount a package that was already mounted");
+        }
+#endif
+
         auto PackagePtr = m_Packages.emplace_back(std::move(Package)).get();
         return PackagePtr;
     }
@@ -35,6 +49,22 @@ namespace Neon::AAsset
     void Manager::Unmount(
         IPackage* Package)
     {
+        std::scoped_lock Lock(m_PackagesMutex);
+
+        // verify if package exists in m_Packages
+#ifdef NEON_DEBUG
+        bool Found = false;
+        for (const auto& PackagePtr : m_Packages)
+        {
+            if (PackagePtr.get() == Package)
+            {
+                Found = true;
+                break;
+            }
+        }
+        NEON_ASSERT(Found, "Trying to get assets from a package that was not mounted");
+#endif
+
         for (auto Iter = m_Packages.begin(); Iter != m_Packages.end(); ++Iter)
         {
             if (Iter->get() == Package)
@@ -49,9 +79,50 @@ namespace Neon::AAsset
 
     cppcoro::generator<IPackage*> Manager::GetPackages() const noexcept
     {
-        for (const auto& Package : m_Packages)
+        std::unique_lock Lock(m_PackagesMutex);
+
+        auto PackagesCopy = m_Packages |
+                            views::transform([](const auto& Package)
+                                             { return Package.get(); }) |
+                            ranges::to<std::vector>();
+
+        Lock.unlock();
+
+        for (auto Package : PackagesCopy)
         {
-            co_yield Package.get();
+            co_yield Package;
+        }
+    }
+
+    cppcoro::generator<const AAsset::Handle&> Manager::GetPackageAssets(
+        IPackage* Package) const noexcept
+    {
+#ifdef NEON_DEBUG
+        {
+            // verify if package exists in m_Packages
+            std::scoped_lock Lock(m_PackagesMutex);
+            bool             Found = false;
+            for (const auto& PackagePtr : m_Packages)
+            {
+                if (PackagePtr.get() == Package)
+                {
+                    Found = true;
+                    break;
+                }
+            }
+            NEON_ASSERT(Found, "Trying to get assets from a package that was not mounted");
+        }
+#endif
+
+        std::unique_lock Lock(Package->m_PackageMutex);
+
+        auto AssetsCopy = Package->GetAssets();
+
+        Lock.unlock();
+
+        for (const auto& Asset : AssetsCopy)
+        {
+            co_yield Asset;
         }
     }
 
