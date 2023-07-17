@@ -14,9 +14,7 @@ namespace Neon::AAsset
 
     class Storage
     {
-        using AssetMap          = std::unordered_map<Handle, Ptr<IAsset>>;
-        using AssetMapInPackage = std::unordered_map<Handle, IPackage*>;
-        using AssetHandlerMap   = std::unordered_map<StringU8, UPtr<IAssetHandler>>;
+        using AssetHandlerMap = std::unordered_map<StringU8, UPtr<IAssetHandler>>;
 
     public:
         /// <summary>
@@ -39,18 +37,6 @@ namespace Neon::AAsset
             const StringU8& Name);
 
     public:
-        /// <summary>
-        /// Load an asset from a handle.
-        /// </summary>
-        std::future<Ref<IAsset>> Load(
-            const Handle& ResHandle);
-
-        /// <summary>
-        /// Load an asset from a handle.
-        /// </summary>
-        std::future<Ref<IAsset>> Load(
-            const Handle& ResHandle);
-
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>

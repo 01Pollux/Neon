@@ -22,9 +22,26 @@ namespace Neon::AAsset
         PackageDescriptor() = default;
 
         PackageDescriptor(
-            std::ifstream Stream);
+            std::ifstream& Stream);
 
-        PathHandleGenerator GetPaths() const noexcept;
+        /// <summary>
+        /// Get the paths of the assets in this package.
+        /// </summary>
+        [[nodiscard]] PathHandleGenerator GetPaths() const noexcept;
+
+        /// <summary>
+        /// Append a path to this package.
+        /// </summary>
+        void Append(
+            const Handle&   Handle,
+            const StringU8& HandlerName,
+            const StringU8& Path);
+
+        /// <summary>
+        /// Save the package descriptor to the file.
+        /// </summary>
+        void Save(
+            std::ofstream& Stream);
 
     private:
         boost::property_tree::ptree m_Tree;

@@ -10,8 +10,8 @@ namespace Neon::AAsset
     {
     public:
         StringFileAsset(
-            const StringU8& Text,
-            const Handle&   Handle = Handle::Random());
+            StringU8      Text,
+            const Handle& Handle = Handle::Random());
 
         /// <summary>
         /// Get the text from the asset.

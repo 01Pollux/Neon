@@ -9,7 +9,7 @@
 
 namespace Neon::AAsset
 {
-    static const Handle NullHandle = { boost::uuids::nil_uuid() };
+    const Handle Handle::Null = { boost::uuids::nil_uuid() };
 
     StringU8 Handle::ToString() const
     {
@@ -32,7 +32,7 @@ namespace Neon::AAsset
         while (true)
         {
             Handle Handle = { boost::uuids::random_generator()() };
-            if (Handle != NullHandle)
+            if (Handle != Null)
             {
                 return Handle;
             }

@@ -21,10 +21,12 @@ namespace Neon::AAsset
         friend class Storage;
         friend class Manager;
 
+        using AssetMap = std::unordered_map<Handle, Ptr<IAsset>>;
+
     public:
         IPackage(
-            const std::filesystem::path& Path) :
-            m_PackagePath(Path)
+            StringU8 Path) :
+            m_PackagePath(std::move(Path))
         {
         }
 
@@ -39,9 +41,9 @@ namespace Neon::AAsset
             StringU8 Path;
 
             /// <summary>
-            /// If empty, the handler will be chosen automatically.
+            /// The name of the asset handler.
             /// </summary>
-            StringU8 HandlerName = "";
+            StringU8 HandlerName;
         };
 
         /// <summary>
@@ -60,13 +62,14 @@ namespace Neon::AAsset
         /// <summary>
         /// Create an aaset from this package.
         /// </summary>
-        template<typename... _Args>
+        template<typename _Ty, typename... _Args>
+            requires std::is_base_of_v<IAsset, _Ty>
         [[nodiscard]] Ptr<IAsset> CreateAsset(
             const AssetAddDesc& Desc,
             _Args&&... Args)
         {
-            auto Asset = std::make_shared<IAsset>(std::forward<_Args>(Args)...);
-            CreateAsset(Desc, Asset);
+            auto Asset = std::make_shared<_Ty>(std::forward<_Args>(Args)...);
+            AddAsset(Desc, Asset);
             return Asset;
         }
 
@@ -81,10 +84,12 @@ namespace Neon::AAsset
         /// <summary>
         /// Flush the package.
         /// </summary>
-        virtual void Flush() = 0;
+        virtual void Flush(
+            Storage* AssetStorage) = 0;
 
     protected:
-        std::filesystem::path m_PackagePath;
-        std::mutex            m_PackageMutex;
+        AssetMap   m_AssetCache;
+        StringU8   m_PackagePath;
+        std::mutex m_PackageMutex;
     };
 } // namespace Neon::AAsset

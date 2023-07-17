@@ -8,6 +8,7 @@
 
 namespace Neon::AAsset
 {
+    class IPackage;
     class Storage;
 
     class AssetDependencyGraph
@@ -42,7 +43,8 @@ namespace Neon::AAsset
         /// Resolve the task by loading the asset.
         /// </summary>
         Asio::CoLazy<> Load(
-            Storage* AssetStorage);
+            IPackage* Packge,
+            Storage*  AssetStorage);
 
         BuildTask(
             BuildNode& TargetNode) :

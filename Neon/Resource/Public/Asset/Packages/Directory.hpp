@@ -33,7 +33,8 @@ namespace Neon::AAsset
             Storage*      AssetStorage,
             const Handle& ResHandle) override;
 
-        void Flush() override;
+        void Flush(
+            Storage* AssetStorage) override;
 
     private:
         HandleToFilePathMap m_HandleToFilePathMap;

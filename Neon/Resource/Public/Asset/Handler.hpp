@@ -19,5 +19,12 @@ namespace Neon::AAsset
             IO::InArchive2&       Archive,
             const AAsset::Handle& AssetGuid,
             AssetDependencyGraph& Graph) = 0;
+
+        /// <summary>
+        /// Save an asset
+        /// </summary>
+        virtual void Save(
+            IO::OutArchive2&   Archive,
+            const Ptr<IAsset>& Asset) = 0;
     };
 } // namespace Neon::AAsset

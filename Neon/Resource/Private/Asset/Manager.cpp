@@ -73,12 +73,6 @@ namespace Neon::AAsset
     //
 
     std::future<Ref<IAsset>> Manager::Load(
-        const Handle& ResHandle)
-    {
-        return m_Storage->Load(ResHandle);
-    }
-
-    std::future<Ref<IAsset>> Manager::Load(
         IPackage*     Package,
         const Handle& ResHandle)
     {
@@ -101,6 +95,6 @@ namespace Neon::AAsset
 
     void Manager::RegisterStandardHandlers()
     {
-        RegisterHandler<TextFileHandler>("TextFile");
+        RegisterHandler<TextFileHandler>();
     }
 } // namespace Neon::AAsset

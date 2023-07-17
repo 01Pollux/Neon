@@ -16,6 +16,16 @@ namespace Neon::AAsset
 
     //
 
+    // clang-format off
+    template<typename _Ty>
+    concept CustomAssetHandler = requires() {
+            std::is_base_of_v<IAssetHandler, _Ty>;
+            { _Ty::HandlerName } -> std::convertible_to<StringU8>;
+        };
+    // clang-format on
+
+    //
+
     class Manager
     {
     public:
@@ -57,12 +67,10 @@ namespace Neon::AAsset
         /// Register an asset handler.
         /// Not thread-safe.
         /// </summary>
-        template<typename _Ty>
-            requires std::is_base_of_v<IAssetHandler, _Ty>
-        void RegisterHandler(
-            const StringU8& Name)
+        template<CustomAssetHandler _Ty>
+        void RegisterHandler()
         {
-            RegisterHandler(Name, UPtr<IAssetHandler>{ std::make_unique<_Ty>() });
+            RegisterHandler(_Ty::HandlerName, UPtr<IAssetHandler>{ std::make_unique<_Ty>() });
         }
 
         /// <summary>
@@ -73,12 +81,6 @@ namespace Neon::AAsset
             const StringU8& Name);
 
     public:
-        /// <summary>
-        /// Load an asset from a handle.
-        /// </summary>
-        std::future<Ref<IAsset>> Load(
-            const Handle& ResHandle);
-
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>

@@ -14,7 +14,7 @@ namespace Neon::AAsset
 {
     PackageDirectory::PackageDirectory(
         const std::filesystem::path& DirPath) :
-        IPackage(DirPath)
+        IPackage(DirPath.string())
     {
         if (DirPath.empty() || DirPath.native().starts_with(STR("..")))
         {
@@ -37,7 +37,10 @@ namespace Neon::AAsset
 
         //
 
-        PackageDescriptor Descriptor(std::ifstream(DirPath / "Descriptor.ini"));
+        std::ifstream     DescriptorFile(DirPath / "Descriptor.ini");
+        PackageDescriptor Descriptor(DescriptorFile);
+        DescriptorFile.close();
+
         for (auto& FileInfo : Descriptor.GetPaths())
         {
             if (FileInfo.Path.empty() || FileInfo.Path.starts_with(".."))
@@ -94,6 +97,7 @@ namespace Neon::AAsset
             std::piecewise_construct,
             std::forward_as_tuple(Asset->GetGuid()),
             std::forward_as_tuple(Desc.Path, Desc.HandlerName));
+        m_AssetCache.emplace(Asset->GetGuid(), Asset);
     }
 
     void PackageDirectory::RemoveAsset(
@@ -101,6 +105,7 @@ namespace Neon::AAsset
     {
         std::scoped_lock AssetLock(m_PackageMutex);
         m_HandleToFilePathMap.erase(AssetHandle);
+        m_AssetCache.erase(AssetHandle);
     }
 
     //
@@ -109,6 +114,13 @@ namespace Neon::AAsset
         Storage*      AssetStorage,
         const Handle& ResHandle)
     {
+        // Asset was already loaded, so we don't need to load it again
+        auto AssetIter = m_AssetCache.find(ResHandle);
+        if (AssetIter != m_AssetCache.end())
+        {
+            co_return AssetIter->second;
+        }
+
         auto Iter = m_HandleToFilePathMap.find(ResHandle);
         if (Iter == m_HandleToFilePathMap.end())
         {
@@ -118,7 +130,7 @@ namespace Neon::AAsset
 
         auto& Info = Iter->second;
 
-        std::ifstream File(Info.FilePath);
+        std::ifstream File(Info.FilePath, std::ios::binary);
         if (!File.is_open())
         {
             NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), Info.FilePath);
@@ -143,48 +155,67 @@ namespace Neon::AAsset
         auto Asset = Handler->Load(Archive, AssetHandle, Graph);
         for (auto& Tasks : Graph.Compile())
         {
-            co_await Tasks.Load(AssetStorage);
+            co_await Tasks.Load(this, AssetStorage);
         }
 
-        co_return co_await Asset;
+        auto AssetRes = co_await Asset;
+
+        m_AssetCache.emplace(AssetHandle, AssetRes);
+        co_return AssetRes;
     }
 
     //
 
-    void PackageDirectory::Flush()
+    void PackageDirectory::Flush(
+        Storage* AssetStorage)
     {
-        PackageDescriptor Descriptor;
-        for (auto& FileInfo : Descriptor.GetPaths())
+        if (m_AssetCache.empty())
         {
-            if (FileInfo.Path.empty() || FileInfo.Path.starts_with(".."))
-            {
-                NEON_ERROR_TAG("Asset", "Asset file '{}' is not valid", FileInfo.Path);
-                return;
-            }
+            return;
+        }
 
-            std::filesystem::path Path(DirPath / std::move(FileInfo.Path));
+        std::ofstream DescriptorFile(StringUtils::Format("{}/Descriptor.ini", m_PackagePath), std::ios::trunc);
+        if (!DescriptorFile.is_open())
+        {
+            NEON_ERROR_TAG("Asset", "Failed to open file '{}/Descriptor.ini' for saving package descriptor", m_PackagePath);
+            return;
+        }
+
+        PackageDescriptor Descriptor;
+        for (auto& [AssetHandle, Asset] : m_AssetCache)
+        {
+            auto& Info = m_HandleToFilePathMap.at(AssetHandle);
+            auto  Path = std::filesystem::path(StringUtils::Format("{}/{}", m_PackagePath, Info.FilePath));
+
+            // create path if it doesn't exist
             if (!std::filesystem::exists(Path))
             {
-                NEON_ERROR_TAG("Asset", "Asset file '{}' does not exist", Path.string());
-                continue;
+                std::filesystem::create_directories(Path.parent_path());
             }
 
-            if (!std::filesystem::is_regular_file(Path))
+            std::ofstream AssetFile(Path, std::ios::trunc | std::ios::binary);
+            if (!AssetFile.is_open())
             {
-                NEON_ERROR_TAG("Asset", "Asset file '{}' is not a regular file", Path.string());
+                NEON_ERROR_TAG("Asset", "Failed to open file '{}' for saving asset '{}'", Path.string(), AssetHandle.ToString());
                 continue;
             }
 
-            if (m_HandleToFilePathMap.contains(FileInfo.Handle))
+            IAssetHandler* Handler = AssetStorage->GetHandler(Info.HandlerName);
+            if (!Handler)
             {
-                NEON_ERROR_TAG("Asset", "Asset file '{}' has a duplicate handle '{}'", Path.string(), FileInfo.Handle.ToString());
+                NEON_ERROR_TAG("Asset", "Trying to save asset '{}' with non-existing handler '{}'", AssetHandle.ToString(), Info.HandlerName);
                 continue;
             }
 
-            m_HandleToFilePathMap.emplace(
-                std::piecewise_construct,
-                std::forward_as_tuple(FileInfo.Handle),
-                std::forward_as_tuple(Path.string(), std::move(FileInfo.HandlerName)));
+            boost::archive::polymorphic_text_oarchive TextArchive(AssetFile);
+
+            IO::OutArchive2& Archive(TextArchive);
+
+            Archive << AssetHandle;
+            Handler->Save(Archive, Asset);
+
+            Descriptor.Append(AssetHandle, Info.HandlerName, Info.FilePath);
         }
+        Descriptor.Save(DescriptorFile);
     }
 } // namespace Neon::AAsset

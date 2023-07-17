@@ -4,10 +4,10 @@
 namespace Neon::AAsset
 {
     StringFileAsset::StringFileAsset(
-        const StringU8& Text,
-        const Handle&   Handle) :
+        StringU8      Text,
+        const Handle& Handle) :
         IAsset(Handle),
-        m_Text(Text)
+        m_Text(std::move(Text))
     {
     }
 

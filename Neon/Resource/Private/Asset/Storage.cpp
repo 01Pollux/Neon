@@ -65,10 +65,10 @@ namespace Neon::AAsset
     std::future<void> Storage::Flush(
         IPackage* Package)
     {
-        auto Task = [Package]
+        auto Task = [this, Package]
         {
             std::scoped_lock PackageLock(Package->m_PackageMutex);
-            Package->Flush();
+            Package->Flush(this);
         };
         return m_ThreadPool.enqueue(std::move(Task));
     }

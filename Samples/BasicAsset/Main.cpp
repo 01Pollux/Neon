@@ -1,6 +1,16 @@
 #include <Runtime/EntryPoint.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
+//
+
+#include <Asset/Manager.hpp>
+#include <Asset/Packages/Directory.hpp>
+
+#include <Asset/Asset.hpp>
+#include <Asset/Handler.hpp>
+
+//
+
 using namespace Neon;
 
 class AssetPackSample : public Runtime::DefaultGameEngine
@@ -36,14 +46,6 @@ NEON_MAIN(Argc, Argv)
 
 //
 
-#include <Asset/Manager.hpp>
-#include <Asset/Packages/Directory.hpp>
-
-//
-
-#include <Asset/Asset.hpp>
-#include <Asset/Handler.hpp>
-
 class StringAndChildAsset : public AAsset::IAsset
 {
     friend class StringAndChildHandler;
@@ -77,6 +79,8 @@ private:
 class StringAndChildHandler : public AAsset::IAssetHandler
 {
 public:
+    static constexpr const char* HandlerName = "StringAndChild";
+
     Asio::CoLazy<Ptr<AAsset::IAsset>> Load(
         IO::InArchive2&               Archive,
         const AAsset::Handle&         Handle,
@@ -88,15 +92,24 @@ public:
         Archive >> Text;
         Archive >> ChildHandle;
 
-        return std::make_shared<StringAndChildAsset>(std::move(Text), co_await Graph.Requires(Handle, ChildHandle));
+        co_return std::make_shared<StringAndChildAsset>(std::move(Text), Handle, co_await Graph.Requires(Handle, ChildHandle));
+    }
+
+    void Save(
+        IO::OutArchive2&           Archive,
+        const Ptr<AAsset::IAsset>& Asset) override
+    {
+        auto ThisAsset = static_cast<const StringAndChildAsset*>(Asset.get());
+
+        Archive << ThisAsset->GetText();
+        Archive << (ThisAsset->m_Child ? ThisAsset->m_Child->GetGuid() : AAsset::Handle::Null);
     }
 };
 
 UPtr<AAsset::Manager> AssetPackSample::LoadManager()
 {
     auto Manager = std::make_unique<AAsset::Manager>();
-    Manager->RegisterHandler<StringAndChildHandler>("StringAndChild");
-
+    Manager->RegisterHandler<StringAndChildHandler>();
     return Manager;
 }
 
@@ -115,20 +128,18 @@ void AssetPackSample::SaveSimple()
 
     auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
     auto Asset   = Package->CreateAsset<StringAndChildAsset>(
-        AAsset::IPackage::AssetAddDesc{ .Path = "File1/Asset0.txt" }, StringU8(TextTest), Handle0);
+        { .Path = "File1/Asset0.txt", .HandlerName = StringAndChildHandler::HandlerName },
+        StringU8(TextTest), Handle0);
 
     Manager->Flush(Package);
-
-    // auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
-    // Manager->Save(Package, Asset);
 }
 
 void AssetPackSample::LoadSimple()
 {
-    auto Manager = LoadManager();
-    auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
+    /*  auto Manager = LoadManager();
+      auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
-    auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
+      auto Handle0 = AAsset::Handle::FromString("00000000-0000-0000-0000-000000000000");
 
-    auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);
+      auto Asset = std::make_unique<StringAndChildAsset>(TextTest, Handle0);*/
 }
