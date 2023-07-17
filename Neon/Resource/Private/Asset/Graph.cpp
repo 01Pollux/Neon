@@ -64,8 +64,8 @@ namespace Neon::AAsset
     }
 
     Asio::CoLazy<Ptr<IAsset>> AssetDependencyGraph::Requires(
-        Handle Parent,
-        Handle Child)
+        const Handle& Parent,
+        const Handle& Child)
     {
         if (Child == Handle::Null)
         {

@@ -49,14 +49,14 @@ namespace Neon::AAsset
         /// <summary>
         /// Create an aaset from this package.
         /// </summary>
-        [[nodiscard]] virtual void AddAsset(
+        virtual void AddAsset(
             const AssetAddDesc& Desc,
             const Ptr<IAsset>&  Asset) = 0;
 
         /// <summary>
         /// Remove an asset from this package.
         /// </summary>
-        [[nodiscard]] virtual void RemoveAsset(
+        virtual void RemoveAsset(
             const Handle& AssetHandle) = 0;
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Neon::AAsset
         /// </summary>
         template<typename _Ty, typename... _Args>
             requires std::is_base_of_v<IAsset, _Ty>
-        [[nodiscard]] Ptr<IAsset> CreateAsset(
+        Ptr<_Ty> CreateAsset(
             const AssetAddDesc& Desc,
             _Args&&... Args)
         {

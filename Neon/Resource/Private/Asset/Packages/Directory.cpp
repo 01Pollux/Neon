@@ -177,6 +177,8 @@ namespace Neon::AAsset
 
         auto Asset = std::get<0>(co_await AssetTask).result();
         m_AssetCache.emplace(AssetHandle, Asset);
+
+        printf("Loaded asset %s\n", AssetHandle.ToString().c_str());
         co_return Asset;
     }
 
