@@ -1,6 +1,7 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Graph.hpp>
 #include <Asset/Storage.hpp>
+#include <Asset/Package.hpp>
 
 #include <queue>
 
@@ -9,56 +10,32 @@
 namespace Neon::AAsset
 {
     Asio::CoLazy<> AssetDependencyGraph::BuildTask::Load(
-        IPackage* Package,
-        Storage*  AssetStorage)
+        const std::function<Ptr<IAsset>(const Handle& AssetGuid)>& AssetLoadFunc)
     {
-        TargetNode.Asset = AssetStorage->LoadImpl(Package, TargetNode.AssetHandle);
+        Node.Asset = AssetLoadFunc(this->AssetGuid);
         co_return;
+    }
+
+    Ptr<IAsset> AssetDependencyGraph::Resolve()
+    {
     }
 
     auto AssetDependencyGraph::Compile() -> Asio::CoGenerator<BuildTask>
     {
-        std::queue<BuildNode*> CurrentLevel;
-
-        for (auto& [PhaseGuid, NodeInfo] : m_BuildNodes)
+        while (!m_RequiredTasks.empty())
         {
-            auto Iter = &m_BuildNodes[PhaseGuid];
-            if (!NodeInfo.DependenciesCount)
+            auto ToLoad = m_RequiredTasks.top();
+            m_RequiredTasks.pop();
+
+            auto& Node = m_LoadedTasks[ToLoad];
+
+            // If the asset is already loaded, skip it.
+            if (!Node.Asset)
             {
-                if (!NodeInfo.DependentNodes.empty())
-                {
-                    CurrentLevel.push(&NodeInfo);
-                }
-                co_yield BuildTask(NodeInfo);
+                NEON_TRACE_TAG("Asset", "AssetDependencyGraph::Compile: Loading: {}", ToLoad.ToString());
 
-                printf("leaf-signaling event for %p\n", &NodeInfo);
-                NodeInfo.ResolvedEvent.set();
-            }
-        }
-
-        while (!CurrentLevel.empty())
-        {
-            size_t Size = CurrentLevel.size();
-            for (size_t i = 0; i < Size; i++)
-            {
-                auto CurrentPhase = CurrentLevel.front();
-                CurrentLevel.pop();
-
-                for (auto& Dependent : CurrentPhase->DependentNodes)
-                {
-                    Dependent->DependenciesCount--;
-                    if (!Dependent->DependenciesCount)
-                    {
-                        if (!Dependent->DependentNodes.empty())
-                        {
-                            CurrentLevel.push(Dependent);
-                        }
-                        co_yield BuildTask(*Dependent);
-
-                        printf("node-signaling event for %p\n", Dependent);
-                        Dependent->ResolvedEvent.set();
-                    }
-                }
+                co_yield BuildTask(ToLoad, Node);
+                Node.Event.set();
             }
         }
     }
@@ -67,33 +44,29 @@ namespace Neon::AAsset
         const Handle& Parent,
         const Handle& Child)
     {
-        if (Child == Handle::Null)
+        NEON_TRACE_TAG("Asset", "AssetDependencyGraph::Requires: Parent: {}, Child: {}", Parent.ToString(), Child.ToString());
+
+        m_RequiredTasks.push(Parent);
+        m_RequiredTasks.push(Child);
+
+        auto& Node = m_LoadedTasks[Parent];
+        co_await Node.Event;
+        co_return Node.Asset;
+    }
+
+    Asio::CoLazy<Ptr<IAsset>> AssetDependencyGraph::Requires(
+        const Handle&           Parent,
+        std::span<const Handle> Children)
+    {
+        m_RequiredTasks.push(Parent);
+        for (const auto& Child : Children)
         {
-            co_return nullptr;
+            NEON_TRACE_TAG("Asset", "AssetDependencyGraph::Requires: Parent: {}, Child: {}", Parent.ToString(), Child.ToString());
+            m_RequiredTasks.push(Child);
         }
 
-        auto ParentNode = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Parent), std::forward_as_tuple()).first;
-        auto ChildNode  = m_BuildNodes.emplace(std::piecewise_construct, std::forward_as_tuple(Child), std::forward_as_tuple()).first;
-
-        auto ParentNodePtr = &ParentNode->second;
-        auto ChildNodePtr  = &ChildNode->second;
-
-        // Detect circular dependencies
-        auto PendingPhases = ParentNodePtr->DependentNodes;
-        while (!PendingPhases.empty())
-        {
-            auto CheckPhase = PendingPhases.back();
-            PendingPhases.pop_back();
-            NEON_VALIDATE(CheckPhase != ParentNodePtr, "Circular dependency detected between assets '{}' and '{}'", Parent.ToString(), Child.ToString());
-
-            PendingPhases.insert_range(PendingPhases.end(), CheckPhase->DependentNodes);
-        }
-
-        ChildNodePtr->DependentNodes.push_back(ParentNodePtr);
-        ParentNodePtr->DependenciesCount++;
-        ParentNodePtr->AssetHandle = Parent;
-
-        co_await ChildNodePtr->ResolvedEvent;
-        co_return ChildNodePtr->Asset;
+        auto& Node = m_LoadedTasks[Parent];
+        co_await Node.Event;
+        co_return Node.Asset;
     }
 } // namespace Neon::AAsset

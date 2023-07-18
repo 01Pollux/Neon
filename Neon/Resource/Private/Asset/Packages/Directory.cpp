@@ -96,7 +96,7 @@ namespace Neon::AAsset
             return;
         }
 #endif
-        std::scoped_lock AssetLock(m_PackageMutex);
+        std::unique_lock AssetLock(m_AssetsMutex);
         if (m_HandleToFilePathMap.contains(Asset->GetGuid()))
         {
             NEON_WARNING_TAG("Asset", "Trying to add an asset with a duplicate handle '{}'", Asset->GetGuid().ToString());
@@ -113,29 +113,36 @@ namespace Neon::AAsset
     void PackageDirectory::RemoveAsset(
         const Handle& AssetHandle)
     {
-        std::scoped_lock AssetLock(m_PackageMutex);
+        std::unique_lock AssetLock(m_AssetsMutex);
         m_HandleToFilePathMap.erase(AssetHandle);
         m_AssetCache.erase(AssetHandle);
     }
 
     //
 
-    Asio::CoLazy<Ptr<IAsset>> PackageDirectory::Load(
+    Ptr<IAsset> PackageDirectory::Load(
         Storage*      AssetStorage,
         const Handle& ResHandle)
     {
-        // Asset was already loaded, so we don't need to load it again
-        auto AssetIter = m_AssetCache.find(ResHandle);
-        if (AssetIter != m_AssetCache.end())
+        Ptr<IAsset> Asset;
+
+        NEON_TRACE_TAG("Asset", "Loading asset '{}'", ResHandle.ToString());
+
         {
-            co_return AssetIter->second;
+            std::shared_lock AssetLock(m_AssetsMutex);
+            auto             AssetIter = m_AssetCache.find(ResHandle);
+            if (AssetIter != m_AssetCache.end())
+            {
+                return AssetIter->second;
+            }
         }
+        std::unique_lock AssetLock(m_AssetsMutex);
 
         auto Iter = m_HandleToFilePathMap.find(ResHandle);
         if (Iter == m_HandleToFilePathMap.end())
         {
             NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", ResHandle.ToString());
-            co_return nullptr;
+            return nullptr;
         }
 
         auto& Info = Iter->second;
@@ -144,42 +151,44 @@ namespace Neon::AAsset
         if (!File.is_open())
         {
             NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), Info.FilePath);
-            co_return nullptr;
+            return nullptr;
         }
 
         IAssetHandler* Handler = AssetStorage->GetHandler(Info.HandlerName);
-        if (!Handler)
-        {
-            NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing handler '{}'", ResHandle.ToString(), Info.HandlerName);
-        }
 
         boost::archive::polymorphic_text_iarchive TextArchive(File);
 
         IO::InArchive2& Archive(TextArchive);
 
-        Handle AssetHandle;
-        Archive >> AssetHandle;
+        Handle AssetGuid;
+        Archive >> AssetGuid;
 
-        AssetDependencyGraph Graph;
+        if (AssetGuid != ResHandle)
+        {
+            NEON_ERROR_TAG("Asset", "Asset GUID mismatch for asset '{}'", ResHandle.ToString());
+            return nullptr;
+        }
 
-        auto AssetTask = (cppcoro::when_all_ready(
+        AssetDependencyGraph Graph(AssetGuid);
+
+        auto AssetTask = cppcoro::sync_wait(cppcoro::when_all_ready(
             [&]() -> Asio::CoLazy<Ptr<IAsset>>
             {
-                co_return co_await Handler->Load(Archive, AssetHandle, Graph);
+                co_return co_await Handler->Load(Archive, AssetGuid, Graph);
             }(),
             [&]() -> Asio::CoLazy<>
             {
                 for (auto& Tasks : Graph.Compile())
                 {
-                    co_await Tasks.Load(this, AssetStorage);
+                    co_await Tasks.Load(
+                        [&](const Handle& AssetGuid)
+                        {
+                            return LoadNoDep(Graph, AssetStorage, AssetGuid);
+                        });
                 }
             }()));
 
-        auto Asset = std::get<0>(co_await AssetTask).result();
-        m_AssetCache.emplace(AssetHandle, Asset);
-
-        printf("Loaded asset %s\n", AssetHandle.ToString().c_str());
-        co_return Asset;
+        return std::get<0>(AssetTask).result();
     }
 
     //
@@ -187,6 +196,8 @@ namespace Neon::AAsset
     void PackageDirectory::Flush(
         Storage* AssetStorage)
     {
+        std::shared_lock AssetLock(m_AssetsMutex);
+
         if (m_AssetCache.empty())
         {
             return;
@@ -241,5 +252,73 @@ namespace Neon::AAsset
     std::vector<Handle> PackageDirectory::GetAssets() const
     {
         return m_HandleToFilePathMap | std::views::keys | ranges::to<std::vector>();
+    }
+
+    //
+
+    Ptr<IAsset> PackageDirectory::LoadNoDep(
+        AssetDependencyGraph& Graph,
+        Storage*              AssetStorage,
+        const Handle&         ResHandle)
+    {
+        auto Iter = m_HandleToFilePathMap.find(ResHandle);
+        if (Iter == m_HandleToFilePathMap.end())
+        {
+            NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", ResHandle.ToString());
+            return nullptr;
+        }
+
+        auto& Info = Iter->second;
+
+        std::ifstream File(Info.FilePath, std::ios::binary);
+        if (!File.is_open())
+        {
+            NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), Info.FilePath);
+            return nullptr;
+        }
+
+        IAssetHandler* Handler = AssetStorage->GetHandler(Info.HandlerName);
+
+        boost::archive::polymorphic_text_iarchive TextArchive(File);
+
+        IO::InArchive2& Archive(TextArchive);
+
+        Handle AssetGuid;
+        Archive >> AssetGuid;
+
+        if (AssetGuid != ResHandle)
+        {
+            NEON_ERROR_TAG("Asset", "Asset GUID mismatch for asset '{}'", ResHandle.ToString());
+            return nullptr;
+        }
+
+        return nullptr;
+        /*    std::shared_lock AssetLock(m_AssetsMutex);
+            auto             AssetIter = m_AssetCache.find(ResHandle);
+
+            auto Iter = m_HandleToFilePathMap.find(ResHandle);
+            if (Iter == m_HandleToFilePathMap.end())
+            {
+                NEON_ERROR_TAG("Asset", "Trying to load non-existing asset '{}'", ResHandle.ToString());
+                return;
+            }
+
+            auto& Info = Iter->second;
+
+            std::ifstream File(Info.FilePath, std::ios::binary);
+            if (!File.is_open())
+            {
+                NEON_ERROR_TAG("Asset", "Trying to load asset '{}' with non-existing file '{}'", ResHandle.ToString(), Info.FilePath);
+                return;
+            }
+
+            IAssetHandler* Handler = AssetStorage->GetHandler(Info.HandlerName);
+
+            boost::archive::polymorphic_text_iarchive TextArchive(File);
+
+            IO::InArchive2& Archive(TextArchive);
+
+            Handle AssetGuid;
+            Archive >> AssetGuid;*/
     }
 } // namespace Neon::AAsset

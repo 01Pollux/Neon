@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <Core/BitMask.hpp>
 #include <Asset/Handle.hpp>
 #include <Asio/Coroutines.hpp>
+#include <shared_mutex>
 
 namespace Neon::AAsset
 {
@@ -12,6 +14,27 @@ namespace Neon::AAsset
 
     //
 
+    enum class EAssetFlags : uint8_t
+    {
+        /// <summary>
+        /// The asset is dirty and needs to be saved.
+        /// </summary>
+        Dirty,
+
+        /// <summary>
+        /// The asset is loaded in memory hence won't be saved.
+        /// </summary>
+        MemoryOnly,
+
+        /// <summary>
+        /// The asset is always saved regardless of its dirty state.
+        /// </summary>
+        AlwaysSave,
+
+        _Last_Enum
+    };
+    using MAAssetFlags = Bitmask<EAssetFlags>;
+
     /// <summary>
     /// A package is a collection of assets.
     /// It can be a file, a folder, a zip file...
@@ -20,8 +43,15 @@ namespace Neon::AAsset
     {
         friend class Storage;
         friend class Manager;
+        friend class AssetDependencyGraph;
 
-        using AssetMap = std::unordered_map<Handle, Ptr<IAsset>>;
+        struct AssetCache
+        {
+            Ptr<IAsset>  Asset;
+            MAAssetFlags Flags;
+        };
+
+        using AssetCacheMap = std::unordered_map<Handle, Ptr<IAsset>>;
 
     public:
         IPackage(
@@ -77,7 +107,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Load an asset from a handle.
         /// </summary>
-        [[nodiscard]] virtual Asio::CoLazy<Ptr<IAsset>> Load(
+        [[nodiscard]] virtual Ptr<IAsset> Load(
             Storage*      AssetStorage,
             const Handle& ResHandle) = 0;
 
@@ -93,8 +123,8 @@ namespace Neon::AAsset
         [[nodiscard]] virtual std::vector<Handle> GetAssets() const = 0;
 
     protected:
-        AssetMap   m_AssetCache;
-        StringU8   m_PackagePath;
-        std::mutex m_PackageMutex;
+        AssetCacheMap     m_AssetCache;
+        std::shared_mutex m_AssetsMutex;
+        StringU8          m_PackagePath;
     };
 } // namespace Neon::AAsset

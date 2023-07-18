@@ -112,12 +112,9 @@ namespace Neon::AAsset
         }
 #endif
 
-        std::unique_lock Lock(Package->m_PackageMutex);
+        std::shared_lock AssetLock(Package->m_AssetsMutex);
 
         auto AssetsCopy = Package->GetAssets();
-
-        Lock.unlock();
-
         for (const auto& Asset : AssetsCopy)
         {
             co_yield Asset;
@@ -142,7 +139,7 @@ namespace Neon::AAsset
     //
 
     std::future<Ref<IAsset>> Manager::Load(
-        IPackage*     Package,
+        IPackage*       Package,
         const Handle& ResHandle)
     {
         return m_Storage->Load(Package, ResHandle);

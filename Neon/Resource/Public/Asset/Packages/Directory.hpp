@@ -11,8 +11,9 @@ namespace Neon::AAsset
     {
         struct HandleInfo
         {
-            StringU8 FilePath;
-            StringU8 HandlerName;
+            StringU8   FilePath;
+            StringU8   HandlerName;
+            std::mutex Mutex;
         };
         using HandleToFilePathMap = std::unordered_map<
             Handle, HandleInfo>;
@@ -29,7 +30,7 @@ namespace Neon::AAsset
             const Handle& AssetHandle) override;
 
     protected:
-        Asio::CoLazy<Ptr<IAsset>> Load(
+        Ptr<IAsset> Load(
             Storage*      AssetStorage,
             const Handle& ResHandle) override;
 
@@ -37,6 +38,15 @@ namespace Neon::AAsset
             Storage* AssetStorage) override;
 
         std::vector<Handle> GetAssets() const override;
+
+    private:
+        /// <summary>
+        /// Loading assets without checking for dependencies.
+        /// </summary>
+        Ptr<IAsset> LoadNoDep(
+            AssetDependencyGraph& Graphg,
+            Storage*              AssetStorage,
+            const Handle&         ResHandle);
 
     private:
         HandleToFilePathMap m_HandleToFilePathMap;

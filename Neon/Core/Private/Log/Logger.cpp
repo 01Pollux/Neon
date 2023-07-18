@@ -83,42 +83,26 @@ namespace Neon::Logger
         const StringU8& Tag,
         const StringU8& Message)
     {
-#ifdef NEON_DIST
-        if (Severity < Logger::LogSeverity::Warning)
+        switch (Severity)
         {
-            return;
-        }
-#endif
-
-        bool ShouldLog = Severity >= LogSeverity::Error;
-        if (!ShouldLog)
-        {
-            auto& Detail = s_LogDetails[Tag];
-            ShouldLog    = Detail.Enabled && Detail.Severity <= Severity;
-        }
-        if (ShouldLog)
-        {
-            switch (Severity)
-            {
 #ifndef NEON_DIST
-            case Logger::LogSeverity::Trace:
-                s_EngineLogger->trace("[{0}] {1}", Tag, Message);
-                break;
-            case Logger::LogSeverity::Info:
-                s_EngineLogger->info("[{0}] {1}", Tag, Message);
-                break;
+        case Logger::LogSeverity::Trace:
+            s_EngineLogger->trace("[{0}] {1}", Tag, Message);
+            break;
+        case Logger::LogSeverity::Info:
+            s_EngineLogger->info("[{0}] {1}", Tag, Message);
+            break;
 #endif
-            case Logger::LogSeverity::Warning:
-                s_EngineLogger->warn("[{0}] {1}", Tag, Message);
-                break;
-            case Logger::LogSeverity::Error:
-                s_EngineLogger->error("[{0}] {1}", Tag, Message);
-                break;
-            case Logger::LogSeverity::Fatal:
-                s_EngineLogger->critical("[{0}] {1}", Tag, Message);
-                DumpBacktrace();
-                break;
-            }
+        case Logger::LogSeverity::Warning:
+            s_EngineLogger->warn("[{0}] {1}", Tag, Message);
+            break;
+        case Logger::LogSeverity::Error:
+            s_EngineLogger->error("[{0}] {1}", Tag, Message);
+            break;
+        case Logger::LogSeverity::Fatal:
+            s_EngineLogger->critical("[{0}] {1}", Tag, Message);
+            DumpBacktrace();
+            break;
         }
     }
 
@@ -126,42 +110,26 @@ namespace Neon::Logger
         LogSeverity     Severity,
         const StringU8& Message)
     {
-#ifdef NEON_DIST
-        if (Severity < Logger::LogSeverity::Warning)
+        switch (Severity)
         {
-            return;
-        }
-#endif
-
-        bool ShouldLog = Severity >= LogSeverity::Error;
-        if (!ShouldLog)
-        {
-            auto& Detail = s_LogDetails[""];
-            ShouldLog    = Detail.Enabled && Detail.Severity <= Severity;
-        }
-        if (ShouldLog)
-        {
-            switch (Severity)
-            {
 #ifndef NEON_DIST
-            case Logger::LogSeverity::Trace:
-                s_EngineLogger->trace(Message);
-                break;
-            case Logger::LogSeverity::Info:
-                s_EngineLogger->info(Message);
-                break;
+        case Logger::LogSeverity::Trace:
+            s_EngineLogger->trace(Message);
+            break;
+        case Logger::LogSeverity::Info:
+            s_EngineLogger->info(Message);
+            break;
 #endif
-            case Logger::LogSeverity::Warning:
-                s_EngineLogger->warn(Message);
-                break;
-            case Logger::LogSeverity::Error:
-                s_EngineLogger->error(Message);
-                break;
-            case Logger::LogSeverity::Fatal:
-                s_EngineLogger->critical(Message);
-                DumpBacktrace();
-                break;
-            }
+        case Logger::LogSeverity::Warning:
+            s_EngineLogger->warn(Message);
+            break;
+        case Logger::LogSeverity::Error:
+            s_EngineLogger->error(Message);
+            break;
+        case Logger::LogSeverity::Fatal:
+            s_EngineLogger->critical(Message);
+            DumpBacktrace();
+            break;
         }
     }
 
@@ -177,6 +145,25 @@ namespace Neon::Logger
     void Flush()
     {
         s_EngineLogger->flush();
+    }
+
+    bool ShouldLog(
+        LogSeverity Severity)
+    {
+#ifdef NEON_DIST
+        if (Severity < Logger::LogSeverity::Warning)
+        {
+            return;
+        }
+#else
+        bool ShouldLog = Severity >= LogSeverity::Error;
+        if (!ShouldLog)
+        {
+            auto& Detail = s_LogDetails[""];
+            ShouldLog = Detail.Enabled && Detail.Severity <= Severity;
+        }
+        return ShouldLog;
+#endif
     }
 
     void SetLogTag(

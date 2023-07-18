@@ -47,8 +47,7 @@ namespace Neon::AAsset
         {
             Ptr<IAsset> Asset;
             {
-                std::scoped_lock PackageLock(Package->m_PackageMutex);
-                Asset = LoadImpl(Package, ResHandle);
+                Asset = Package->Load(this, ResHandle);
             }
 
             if (!Asset)
@@ -62,19 +61,11 @@ namespace Neon::AAsset
         return m_ThreadPool.enqueue(std::move(Task));
     }
 
-    Ptr<IAsset> Storage::LoadImpl(
-        IPackage*     Package,
-        const Handle& ResHandle)
-    {
-        return cppcoro::sync_wait(Package->Load(this, ResHandle));
-    }
-
     std::future<void> Storage::Flush(
         IPackage* Package)
     {
         auto Task = [this, Package]
         {
-            std::scoped_lock PackageLock(Package->m_PackageMutex);
             Package->Flush(this);
         };
         return m_ThreadPool.enqueue(std::move(Task));

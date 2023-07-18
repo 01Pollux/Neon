@@ -26,8 +26,11 @@ public:
     {
         DefaultGameEngine::Initialize(Config);
 
-        SaveSimple();
-        LoadSimple();
+        // SaveSimple();
+        // LoadSimple();
+
+        // SaveDeps();
+        LoadDeps();
     }
 
 private:
@@ -219,7 +222,7 @@ auto GenDepsArray()
     std::array<AAsset::Handle, 10> Assets;
     for (auto& Asset : Assets)
     {
-        Asset = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-0000-000{}-000000000000", i));
+        Asset = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-0000-000{}-000000000000", i++));
     }
     return Assets;
 }
@@ -251,7 +254,8 @@ void AssetPackSample::SaveDeps()
     {
         StringU8 Path = StringUtils::Format("Assets/Test{}.txt", i);
 
-        std::array Chidren = { Assets[i * 2], Assets[i * 2 + 1] };
+        std::array Chidren = { Assets[i * 2 + 2],
+                               Assets[i * 2 + 3] };
 
         Assets[i] = Package->CreateAsset<StringAndChildAsset>(
             { .Path = std::move(Path), .HandlerName = StringAndChildHandler::HandlerName },
@@ -288,7 +292,7 @@ void AssetPackSample::LoadDeps()
 
     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
 
-    auto Asset = Manager->Load(Package, Deps[0]);
+    auto Asset = Manager->Load(Package, Deps[0]).get();
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

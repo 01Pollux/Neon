@@ -32,6 +32,12 @@ namespace Neon::Logger
     void Flush();
 
     /// <summary>
+    /// Test if a log severity should be logged.
+    /// </summary>
+    [[nodiscard]] bool ShouldLog(
+        LogSeverity Severity);
+
+    /// <summary>
     /// Enable or disable logging and the severity of the logs.
     /// </summary>
     void SetLogTag(
@@ -101,26 +107,35 @@ namespace Neon::Logger
 
 #else
 
-#define NEON_WARNING_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Warning, Tag, __VA_ARGS__)
-#define NEON_ERROR_TAG(Tag, ...)   Neon::Logger::LogTag(Neon::Logger::LogSeverity::Error, Tag, __VA_ARGS__)
-#define NEON_FATAL_TAG(Tag, ...)   Neon::Logger::LogTag(Neon::Logger::LogSeverity::Fatal, Tag, __VA_ARGS__)
+#define NEON_LOG_X_TAG(Type, Tag, ...)                    \
+    do                                                    \
+    {                                                     \
+        if (Neon::Logger::ShouldLog(Type))                \
+        {                                                 \
+            Neon::Logger::LogTag(Type, Tag, __VA_ARGS__); \
+        }                                                 \
+    } while (false)
 
-#define NEON_WARNING(...) Neon::Logger::Log(Neon::Logger::LogSeverity::Warning, __VA_ARGS__)
-#define NEON_ERROR(...)   Neon::Logger::Log(Neon::Logger::LogSeverity::Error, __VA_ARGS__)
-#define NEON_FATAL(...)   Neon::Logger::Log(Neon::Logger::LogSeverity::Fatal, __VA_ARGS__)
+#define NEON_WARNING_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Warning, Tag, __VA_ARGS__)
+#define NEON_ERROR_TAG(Tag, ...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Error, Tag, __VA_ARGS__)
+#define NEON_FATAL_TAG(Tag, ...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Fatal, Tag, __VA_ARGS__)
+
+#define NEON_WARNING(...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Warning, "", __VA_ARGS__)
+#define NEON_ERROR(...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Error, "", __VA_ARGS__)
+#define NEON_FATAL(...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Fatal, "", __VA_ARGS__)
 
 #ifndef NEON_DIST
 
 #ifdef NEON_DEBUG
-#define NEON_TRACE_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
+#define NEON_TRACE_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
+#define NEON_TRACE(...)          NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Trace, "", __VA_ARGS__)
 #else
 #define NEON_TRACE_TAG(Tag, ...)
+#define NEON_TRACE(...)
 #endif
 
-#define NEON_INFO_TAG(Tag, ...) Neon::Logger::LogTag(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
-
-#define NEON_TRACE(...) Neon::Logger::Log(Neon::Logger::LogSeverity::Trace, __VA_ARGS__)
-#define NEON_INFO(...)  Neon::Logger::Log(Neon::Logger::LogSeverity::Info, __VA_ARGS__)
+#define NEON_INFO_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Info, Tag, __VA_ARGS__)
+#define NEON_INFO(...)          NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Info, "", __VA_ARGS__)
 
 #define NEON_ASSERT(Expr, ...)                        \
     do                                                \
@@ -137,8 +152,8 @@ namespace Neon::Logger
 #define NEON_TRACE_TAG(Tag, ...)
 #define NEON_INFO_TAG(Tag, ...)
 
-#define NEON_TRACE(...) NEON_TRACE_TAG("", __VA_ARGS__)
-#define NEON_INFO(...)  NEON_INFO_TAG("", __VA_ARGS__)
+#define NEON_TRACE(...)
+#define NEON_INFO(...)
 
 #define NEON_ASSERT(Expr, ...) (void)(Expr)
 
