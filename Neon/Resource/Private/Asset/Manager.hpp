@@ -1,31 +1,44 @@
 #pragma once
 
-#include <Asset/Handle.hpp>
-#include <future>
+#include <Asset/Manager.hpp>
 
 namespace Neon::AAsset
 {
-    class IAsset;
-
-    class Manager
+    class ManagerImpl
     {
+    public:
+        /// <summary>
+        /// Initialize the asset manager.
+        /// </summary>
+        static void Initialize();
+
+        /// <summary>
+        /// Shutdown the asset manager.
+        /// </summary>
+        static void Shutdown();
+
+        /// <summary>
+        /// Get the asset manager.
+        /// </summary>
+        [[nodiscard]] static ManagerImpl* Get();
+
     public:
         /// <summary>
         /// Load asynchronously an asset from the storage system.
         /// </summary>
-        static std::future<Ptr<IAsset>> Load(
+        std::future<Ptr<IAsset>> Load(
             const Handle& AssetGuid);
 
         /// <summary>
         /// Load or reload asynchronously an asset from the storage system.
         /// </summary>
-        static std::future<Ptr<IAsset>> Reload(
+        std::future<Ptr<IAsset>> Reload(
             const Handle& AssetGuid);
 
         /// <summary>
         /// Unload an asset from the storage system.
         /// </summary>
-        static void Unload(
+        void Unload(
             const Handle& AssetGuid);
     };
 } // namespace Neon::AAsset

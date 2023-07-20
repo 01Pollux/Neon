@@ -1,7 +1,7 @@
 #include <Runtime/EntryPoint.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
-//
+#include <Asset/Storage.hpp>
 
 //
 
@@ -33,9 +33,6 @@ private:
 
     // void SaveDeps();
     // void LoadDeps();
-
-private:
-    [[nodiscard]] UPtr<AAsset::Manager> LoadManager();
 };
 
 NEON_MAIN(Argc, Argv)

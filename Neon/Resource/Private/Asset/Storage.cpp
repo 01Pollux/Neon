@@ -24,14 +24,23 @@ namespace Neon::AAsset
         s_Instance.reset();
     }
 
+    StorageImpl* StorageImpl::Get()
+    {
+        return s_Instance.get();
+    }
+
+    //
+
     void Storage::AddAsset(
         const AddDesc& Desc)
     {
+        s_Instance->AddAsset(Desc);
     }
 
     void Storage::RemoveAsset(
         const Handle& AssetGuid)
     {
+        s_Instance->RemoveAsset(AssetGuid);
     }
 
     IAssetPackage* Storage::Mount(
