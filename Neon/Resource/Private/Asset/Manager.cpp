@@ -1,5 +1,7 @@
 #include <ResourcePCH.hpp>
 #include <Private/Asset/Manager.hpp>
+#include <Asset/Storage.hpp>
+#include <Asset/Pack.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -31,13 +33,13 @@ namespace Neon::AAsset
     std::future<Ptr<IAsset>> Manager::Load(
         const Handle& AssetGuid)
     {
-        s_Instance->Load(AssetGuid);
+        return s_Instance->Load(AssetGuid);
     }
 
     std::future<Ptr<IAsset>> Manager::Reload(
         const Handle& AssetGuid)
     {
-        s_Instance->Reload(AssetGuid);
+        return s_Instance->Reload(AssetGuid);
     }
 
     void Manager::Unload(
@@ -51,17 +53,41 @@ namespace Neon::AAsset
     std::future<Ptr<IAsset>> ManagerImpl::Load(
         const Handle& AssetGuid)
     {
-        return std::future<Ptr<IAsset>>();
+        for (auto Package : Storage::GetPackages(true))
+        {
+            if (Package->ContainsAsset(AssetGuid))
+            {
+                return m_ThreadPool.enqueue(
+                    [Package, AssetGuid]()
+                    {
+                        return Package->LoadAsset(AssetGuid);
+                    });
+            }
+        }
+
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid);
+        return {};
     }
 
     std::future<Ptr<IAsset>> ManagerImpl::Reload(
         const Handle& AssetGuid)
     {
-        return std::future<Ptr<IAsset>>();
+        Unload(AssetGuid);
+        return Load(AssetGuid);
     }
 
-    void ManagerImpl::Unload(
+    bool ManagerImpl::Unload(
         const Handle& AssetGuid)
     {
+        for (auto Package : Storage::GetPackages(true))
+        {
+            if (Package->RemoveAsset(AssetGuid))
+            {
+                return true;
+            }
+        }
+
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid);
+        return false;
     }
 } // namespace Neon::AAsset

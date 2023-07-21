@@ -23,5 +23,12 @@ namespace Neon::AAsset
 
         bool RemoveAsset(
             const AAsset::Handle& AssetGuid) override;
+
+    protected:
+        Ptr<IAsset> LoadAsset(
+            const AAsset::Handle& AssetGuid) override;
+
+        bool UnloadAsset(
+            const AAsset::Handle& AssetGuid) override;
     };
 } // namespace Neon::AAsset

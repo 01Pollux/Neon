@@ -11,6 +11,7 @@ namespace Neon::AAsset
     class IAssetPackage
     {
         friend class StorageImpl;
+        friend class ManagerImpl;
 
     protected:
         using AssetCacheMap = std::unordered_map<AAsset::Handle, Ptr<IAsset>>;
@@ -49,6 +50,19 @@ namespace Neon::AAsset
         /// Remove an asset from this package.
         /// </summary>
         virtual bool RemoveAsset(
+            const AAsset::Handle& AssetGuid) = 0;
+
+    protected:
+        /// <summary>
+        /// Load an asset from this package.
+        /// </summary>
+        [[nodiscard]] virtual Ptr<IAsset> LoadAsset(
+            const AAsset::Handle& AssetGuid) = 0;
+
+        /// <summary>
+        /// Unload an asset from this package.
+        /// </summary>
+        virtual bool UnloadAsset(
             const AAsset::Handle& AssetGuid) = 0;
 
     protected:

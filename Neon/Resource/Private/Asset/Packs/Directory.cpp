@@ -135,6 +135,26 @@ namespace Neon::AAsset
         return m_Cache.erase(AssetGuid) > 0;
     }
 
+    Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
+        const AAsset::Handle& AssetGuid)
+    {
+        auto Iter = m_AssetMeta.find(AssetGuid);
+        if (Iter == m_AssetMeta.end())
+        {
+            return nullptr;
+        }
+
+        AssetMetaData MetaData(Iter->second);
+    }
+
+    bool DirectoryAssetPackage::UnloadAsset(
+        const AAsset::Handle& AssetGuid)
+    {
+        return false;
+    }
+
+    //
+
     Asio::CoGenerator<const std::filesystem::path&> DirectoryAssetPackage::GetFiles(
         const std::filesystem::path& Path)
     {

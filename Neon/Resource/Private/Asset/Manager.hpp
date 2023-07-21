@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Asset/Manager.hpp>
+#include <Asio/ThreadPool.hpp>
 
 namespace Neon::AAsset
 {
@@ -38,7 +39,10 @@ namespace Neon::AAsset
         /// <summary>
         /// Unload an asset from the storage system.
         /// </summary>
-        void Unload(
+        bool Unload(
             const Handle& AssetGuid);
+
+    private:
+        Asio::ThreadPool<> m_ThreadPool;
     };
 } // namespace Neon::AAsset

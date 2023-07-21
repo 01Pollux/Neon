@@ -32,4 +32,19 @@ namespace Neon::AAsset
         RWLock Lock(m_CacheMutex);
         return m_Cache.erase(AssetGuid) > 0;
     }
+
+    Ptr<IAsset> MemoryAssetPackage::LoadAsset(
+        const AAsset::Handle& AssetGuid)
+    {
+        RWLock Lock(m_CacheMutex);
+        auto   Iter = m_Cache.find(AssetGuid);
+        return Iter != m_Cache.end() ? Iter->second : nullptr;
+    }
+
+    bool MemoryAssetPackage::UnloadAsset(
+        const AAsset::Handle& AssetGuid)
+    {
+        RLock Lock(m_CacheMutex);
+        return m_Cache.contains(AssetGuid);
+    }
 } // namespace Neon::AAsset
