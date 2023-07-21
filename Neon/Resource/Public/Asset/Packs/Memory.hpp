@@ -17,9 +17,9 @@ namespace Neon::AAsset
         {
         }
 
-    protected:
-        void AddAsset(
-            Ptr<IAsset> Asset) override;
+        std::future<void> AddAsset(
+            Ptr<IAsset> Asset,
+            const StringU8&) override;
 
         bool RemoveAsset(
             const AAsset::Handle& AssetGuid) override;

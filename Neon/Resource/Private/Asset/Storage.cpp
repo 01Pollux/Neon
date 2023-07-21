@@ -2,6 +2,7 @@
 #include <Private/Asset/Storage.hpp>
 
 #include <Asset/Pack.hpp>
+#include <Asset/Handler.hpp>
 #include <Asset/Packs/Memory.hpp>
 
 #include <Log/Logger.hpp>
@@ -43,6 +44,28 @@ namespace Neon::AAsset
         s_Instance->RemoveAsset(AssetGuid);
     }
 
+    //
+
+    IAssetHandler* Storage::RegisterHandler(
+        UPtr<IAssetHandler> Handler)
+    {
+        return s_Instance->RegisterHandler(std::move(Handler));
+    }
+
+    void Storage::UnregisterHandler(
+        IAssetHandler* Handler)
+    {
+        s_Instance->UnregisterHandler(Handler);
+    }
+
+    IAssetHandler* Storage::GetHandler(
+        const Ptr<IAsset>& Asset)
+    {
+        return s_Instance->GetHandler(Asset);
+    }
+
+    //
+
     IAssetPackage* Storage::Mount(
         UPtr<IAssetPackage> Package)
     {
@@ -74,11 +97,18 @@ namespace Neon::AAsset
         Mount(UPtr<IAssetPackage>(NEON_NEW MemoryAssetPackage));
     }
 
-    void StorageImpl::AddAsset(
+    Asio::ThreadPool<>& StorageImpl::GetThreadPool()
+    {
+        return m_ThreadPool;
+    }
+
+    std::future<void> StorageImpl::AddAsset(
         const AddDesc& Desc)
     {
-        IAssetPackage* Package = Desc.PreferredPackage;
+        NEON_ASSERT(Desc.Asset, "Asset is null");
+        NEON_ASSERT(!Desc.Path.empty(), "Asset Path is empty");
 
+        IAssetPackage* Package = Desc.PreferredPackage;
         if (Desc.MemoryOnly)
         {
             Package = m_Packages.front().get();
@@ -88,8 +118,19 @@ namespace Neon::AAsset
             NEON_ASSERT(m_Packages.size() > 1, "No packages mounted");
             Package = std::next(m_Packages.begin())->get();
         }
+#if NEON_DEBUG
+        else
+        {
+            if (std::ranges::find_if(
+                    m_Packages, [Package](const auto& CurPackage)
+                    { return CurPackage.get() == Package; }) == m_Packages.end())
+            {
+                NEON_ASSERT(false, "Package not mounted");
+            }
+        }
+#endif
 
-        Package->AddAsset(Desc.Asset);
+        return Package->AddAsset(Desc.Asset, Desc.Path);
     }
 
     void StorageImpl::RemoveAsset(
@@ -103,7 +144,35 @@ namespace Neon::AAsset
             }
         }
 
-        NEON_WARNING_TAG("Asset", "Asset : '{}' not found", AssetGuid.ToString());
+        NEON_WARNING_TAG("Asset", "Asset '{}' not found", AssetGuid.ToString());
+    }
+
+    IAssetHandler* StorageImpl::RegisterHandler(
+        UPtr<IAssetHandler> Handler)
+    {
+        return m_Handlers.emplace_back(std::move(Handler)).get();
+    }
+
+    void StorageImpl::UnregisterHandler(
+        IAssetHandler* Handler)
+    {
+        std::erase_if(
+            m_Handlers, [Handler](const auto& CurHandler)
+            { return CurHandler.get() == Handler; });
+    }
+
+    IAssetHandler* StorageImpl::GetHandler(
+        const Ptr<IAsset>& Asset)
+    {
+        for (auto& Handler : m_Handlers)
+        {
+            if (Handler->CanHandle(Asset))
+            {
+                return Handler.get();
+            }
+        }
+
+        return nullptr;
     }
 
     IAssetPackage* StorageImpl::Mount(

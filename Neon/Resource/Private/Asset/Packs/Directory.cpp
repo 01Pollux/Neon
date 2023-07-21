@@ -1,7 +1,9 @@
 #include <ResourcePCH.hpp>
+#include <Private/Asset/Storage.hpp>
 #include <Asset/Packs/Directory.hpp>
-#include <Core/SHA256.hpp>
+#include <Asset/Handler.hpp>
 
+#include <Core/SHA256.hpp>
 #include <fstream>
 #include <boost/property_tree/ini_parser.hpp>
 
@@ -10,34 +12,35 @@
 namespace Neon::AAsset
 {
     DirectoryAssetPackage::DirectoryAssetPackage(
-        const std::filesystem::path& Path)
+        std::filesystem::path Path) :
+        m_RootPath(std::move(Path))
     {
-        if (Path.empty() || Path.native().starts_with(STR("..")))
+        if (m_RootPath.empty() || m_RootPath.native().starts_with(STR("..")))
         {
-            NEON_ERROR_TAG("Asset", "Path '{}' cannot be empty or start with '..'", Path.string());
+            NEON_ERROR_TAG("Asset", "Path '{}' cannot be empty or start with '..'", m_RootPath.string());
             return;
         }
 
-        if (!std::filesystem::exists(Path))
+        if (!std::filesystem::exists(m_RootPath))
         {
-            NEON_TRACE_TAG("Asset", "Path '{}' does not exist, creating a new one", Path.string());
-            std::filesystem::create_directories(Path);
+            NEON_TRACE_TAG("Asset", "Path '{}' does not exist, creating a new one", m_RootPath.string());
+            std::filesystem::create_directories(m_RootPath);
             return;
         }
 
-        if (!std::filesystem::is_directory(Path))
+        if (!std::filesystem::is_directory(m_RootPath))
         {
-            NEON_ERROR_TAG("Asset", "Trying to create a directory asset package from a file '{}'", Path.string());
+            NEON_ERROR_TAG("Asset", "Trying to create a directory asset package from a file '{}'", m_RootPath.string());
             return;
         }
 
-        NEON_TRACE_TAG("Asset", "Loading assets from directory '{}'", Path.string());
+        NEON_TRACE_TAG("Asset", "Loading assets from directory '{}'", m_RootPath.string());
 
         // First load all the meta files
-        for (auto& MetaFilePath : GetFiles(Path))
+        for (auto& MetaFilePath : GetFiles(m_RootPath))
         {
-            constexpr size_t MetaFileExtensionLength = sizeof(".namd") - 1;
-            if (!MetaFilePath.native().ends_with(STR(".namd")))
+            constexpr size_t MetaFileExtensionLength = sizeof(".nam") - 1;
+            if (!MetaFilePath.native().ends_with(STR(".nam")))
             {
                 continue;
             }
@@ -52,7 +55,7 @@ namespace Neon::AAsset
             {
                 boost::property_tree::ptree MetaFile;
                 boost::property_tree::read_ini(File, MetaFile);
-                AssetMetaData MetaData(MetaFile);
+                AssetMetaDataDef MetaData(MetaFile);
 
                 File.close();
 
@@ -95,7 +98,7 @@ namespace Neon::AAsset
                     continue;
                 }
 
-                m_AssetMeta.emplace(Guid, std::move(MetaFile));
+                m_AssetMeta.emplace(Guid, std::move(MetaData));
             }
         }
     }
@@ -103,7 +106,7 @@ namespace Neon::AAsset
     Asio::CoGenerator<const AAsset::Handle&> DirectoryAssetPackage::GetAssets()
     {
         RLock Lock(m_CacheMutex);
-        for (auto& Guid : m_Cache | std::views::keys)
+        for (auto& Guid : m_AssetMeta | std::views::keys)
         {
             co_yield Guid;
         }
@@ -119,32 +122,62 @@ namespace Neon::AAsset
     void DirectoryAssetPackage::Export(
         const StringU8& Path)
     {
+        for (auto& [Guid, Asset] : m_AssetMeta)
+        {
+        }
     }
 
-    void DirectoryAssetPackage::AddAsset(
-        Ptr<IAsset> Asset)
+    std::future<void> DirectoryAssetPackage::AddAsset(
+        Ptr<IAsset>     Asset,
+        const StringU8& Path)
     {
-        RWLock Lock(m_CacheMutex);
-        m_Cache[Asset->GetGuid()] = std::move(Asset);
+        if (Path.empty() || Path.starts_with(".."))
+        {
+            NEON_ERROR_TAG("Asset", "Path '{}' cannot be empty or start with '..'", Path);
+            return {};
+        }
+
+        return StorageImpl::Get()->GetThreadPool().enqueue(
+            [Asset = std::move(Asset),
+             Path,
+             this]
+            {
+                RWLock Lock(m_CacheMutex);
+                auto&  Guid = Asset->GetGuid();
+
+                AssetMetaDataDef MetaData;
+                MetaData.SetGuid(Guid);
+
+                m_Cache[Guid]     = std::move(Asset);
+                m_AssetMeta[Guid] = std::move(MetaData);
+            });
     }
 
     bool DirectoryAssetPackage::RemoveAsset(
         const AAsset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
-        return m_Cache.erase(AssetGuid) > 0;
+        return m_Cache.erase(AssetGuid) > 0 && m_AssetMeta.erase(AssetGuid) > 0;
     }
 
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
         const AAsset::Handle& AssetGuid)
     {
+        {
+            RLock Lock(m_CacheMutex);
+            if (auto Iter = m_Cache.find(AssetGuid); Iter != m_Cache.end())
+            {
+                return Iter->second;
+            }
+        }
+
         auto Iter = m_AssetMeta.find(AssetGuid);
         if (Iter == m_AssetMeta.end())
         {
             return nullptr;
         }
 
-        AssetMetaData MetaData(Iter->second);
+        return nullptr;
     }
 
     bool DirectoryAssetPackage::UnloadAsset(

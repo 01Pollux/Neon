@@ -1,19 +1,17 @@
 #pragma once
 
 #include <Asset/Pack.hpp>
-#include <Asset/Metadata.hpp>
 #include <filesystem>
-#include <unordered_map>
 
 namespace Neon::AAsset
 {
     class DirectoryAssetPackage : public IAssetPackage
     {
-        using AssetMetaMap = std::unordered_map<Handle, boost::property_tree::ptree>;
+        using AssetMetaMap = std::unordered_map<Handle, AssetMetaDataDef>;
 
     public:
         DirectoryAssetPackage(
-            const std::filesystem::path& Path);
+            std::filesystem::path Path);
 
         [[nodiscard]] Asio::CoGenerator<const AAsset::Handle&> GetAssets() override;
 
@@ -23,9 +21,9 @@ namespace Neon::AAsset
         void Export(
             const StringU8& Path) override;
 
-    protected:
-        void AddAsset(
-            Ptr<IAsset> Asset) override;
+        std::future<void> AddAsset(
+            Ptr<IAsset>     Asset,
+            const StringU8& Path) override;
 
         bool RemoveAsset(
             const AAsset::Handle& AssetGuid) override;
@@ -42,6 +40,7 @@ namespace Neon::AAsset
             const std::filesystem::path& Path);
 
     private:
-        AssetMetaMap m_AssetMeta;
+        std::filesystem::path m_RootPath;
+        AssetMetaMap          m_AssetMeta;
     };
 } // namespace Neon::AAsset

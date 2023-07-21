@@ -1,10 +1,12 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
+#include <Asset/Metadata.hpp>
 #include <Asio/Coroutines.hpp>
 
 #include <unordered_map>
 #include <shared_mutex>
+#include <future>
 
 namespace Neon::AAsset
 {
@@ -39,12 +41,12 @@ namespace Neon::AAsset
         virtual void Export(
             const StringU8& Path) = 0;
 
-    protected:
         /// <summary>
         /// Add an asset to this package.
         /// </summary>
-        virtual void AddAsset(
-            Ptr<IAsset> Asset) = 0;
+        virtual std::future<void> AddAsset(
+            Ptr<IAsset>     Asset,
+            const StringU8& Path) = 0;
 
         /// <summary>
         /// Remove an asset from this package.

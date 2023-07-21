@@ -5,15 +5,25 @@
 
 namespace Neon::AAsset
 {
-    struct AssetMetaData
+    using AssetMetaData = boost::property_tree::ptree;
+
+    struct AssetMetaDataDef
     {
-        AssetMetaData(
-            boost::property_tree::ptree& MetaData);
+        AssetMetaDataDef(
+            boost::property_tree::ptree MetaData);
+
+        AssetMetaDataDef();
 
         /// <summary>
         /// Get the asset's GUID.
         /// </summary>
         [[nodiscard]] Handle GetGuid() const noexcept;
+
+        /// <summary>
+        /// Set the asset's GUID.
+        /// </summary>
+        void SetGuid(
+            const Handle& Guid) noexcept;
 
         /// <summary>
         /// Get the asset's hash.
@@ -23,10 +33,22 @@ namespace Neon::AAsset
         /// <summary>
         /// Get the asset's hash.
         /// </summary>
-        [[nodiscard]] boost::property_tree::ptree& GetLoaderData() noexcept;
+        void SetHash(
+            StringU8 Hash) noexcept;
+
+        /// <summary>
+        /// Get the asset's hash.
+        /// </summary>
+        [[nodiscard]] AssetMetaData& GetLoaderData() noexcept;
+
+        /// <summary>
+        /// Get the asset's hash.
+        /// </summary>
+        [[nodiscard]] const AssetMetaData& GetLoaderData() const noexcept;
 
     private:
-        boost::property_tree::ptree& m_MetaData;
-        boost::property_tree::ptree* m_LoaderData = nullptr;
+        AssetMetaData  m_MetaData;
+        AssetMetaData* m_LoaderData = nullptr;
+        bool           m_IsDirty    = false;
     };
 } // namespace Neon::AAsset

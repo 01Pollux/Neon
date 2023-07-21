@@ -3,9 +3,9 @@
 
 namespace Neon::AAsset
 {
-    AssetMetaData::AssetMetaData(
-        boost::property_tree::ptree& MetaData) :
-        m_MetaData(MetaData)
+    AssetMetaDataDef::AssetMetaDataDef(
+        AssetMetaData MetaData) :
+        m_MetaData(std::move(MetaData))
     {
         auto Iter = m_MetaData.find("LoaderData");
         if (Iter != m_MetaData.not_found())
@@ -18,19 +18,41 @@ namespace Neon::AAsset
         }
     }
 
-    Handle AssetMetaData::GetGuid() const noexcept
+    AssetMetaDataDef::AssetMetaDataDef()
+    {
+        m_LoaderData = &m_MetaData.add_child("LoaderData", boost::property_tree::ptree());
+    }
+
+    Handle AssetMetaDataDef::GetGuid() const noexcept
     {
         auto Iter = m_MetaData.find("Guid");
         return Iter != m_MetaData.not_found() ? Handle::FromString(Iter->second.get_value<std::string>()) : Handle::Null;
     }
 
-    StringU8 AssetMetaData::GetHash() const noexcept
+    void AssetMetaDataDef::SetGuid(
+        const Handle& Guid) noexcept
+    {
+        m_MetaData.put("Guid", Guid.ToString());
+    }
+
+    StringU8 AssetMetaDataDef::GetHash() const noexcept
     {
         auto Iter = m_MetaData.find("Hash");
         return Iter != m_MetaData.not_found() ? Iter->second.get_value<std::string>() : StringU8();
     }
 
-    boost::property_tree::ptree& AssetMetaData::GetLoaderData() noexcept
+    void AssetMetaDataDef::SetHash(
+        StringU8 Hash) noexcept
+    {
+        m_MetaData.put("Hash", std::move(Hash));
+    }
+
+    AssetMetaData& AssetMetaDataDef::GetLoaderData() noexcept
+    {
+        return *m_LoaderData;
+    }
+
+    const AssetMetaData& AssetMetaDataDef::GetLoaderData() const noexcept
     {
         return *m_LoaderData;
     }

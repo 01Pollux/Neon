@@ -7,6 +7,7 @@ namespace Neon::AAsset
 {
     class IAsset;
     class IAssetPackage;
+    class IAssetHandler;
 
     struct AddDesc
     {
@@ -14,6 +15,11 @@ namespace Neon::AAsset
         /// The asset to add.
         /// </summary>
         Ptr<IAsset> Asset;
+
+        /// <summary>
+        /// The path to the asset.
+        /// </summary>
+        StringU8 Path;
 
         /// <summary>
         /// The package to add the asset to.
@@ -54,15 +60,37 @@ namespace Neon::AAsset
 
     public:
         /// <summary>
+        /// Registers an asset handler.
+        /// Not thread safe.
+        /// </summary>
+        static IAssetHandler* RegisterHandler(
+            UPtr<IAssetHandler> Handler);
+
+        /// <summary>
+        /// Unregisters an asset handler.
+        /// Not thread safe.
+        /// </summary>
+        static void UnregisterHandler(
+            IAssetHandler* Handler);
+
+        /// <summary>
+        /// Gets the asset handler for the specified asset.
+        /// Not thread safe.
+        /// </summary>
+        static IAssetHandler* GetHandler(
+            const Ptr<IAsset>& Asset);
+
+    public:
+        /// <summary>
         /// Mounts an asset package.
-        /// This function is not thread-safe.
+        /// Not thread safe.
         /// </summary>
         static IAssetPackage* Mount(
             UPtr<IAssetPackage> Package);
 
         /// <summary>
         /// Unmounts an asset package.
-        /// This function is not thread-safe.
+        /// Not thread safe.
         /// </summary>
         static void Unmount(
             IAssetPackage* Package);
@@ -70,6 +98,7 @@ namespace Neon::AAsset
     public:
         /// <summary>
         /// Gets the asset package with the specified name.
+        /// Not thread safe.
         /// </summary>
         [[nodiscard]] static Asio::CoGenerator<IAssetPackage*> GetPackages(
             bool IncludeMemoryOnly = false);
@@ -78,6 +107,7 @@ namespace Neon::AAsset
 
         /// <summary>
         /// Gets all assets in all packages.
+        /// Not thread safe.
         /// </summary>
         [[nodiscard]] static Asio::CoGenerator<PackageAndAsset> GetAllAssets(
             bool IncludeMemoryOnly = false);

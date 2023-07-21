@@ -1,6 +1,6 @@
 #include <ResourcePCH.hpp>
 #include <Private/Asset/Manager.hpp>
-#include <Asset/Storage.hpp>
+#include <Private/Asset/Storage.hpp>
 #include <Asset/Pack.hpp>
 
 #include <Log/Logger.hpp>
@@ -57,7 +57,7 @@ namespace Neon::AAsset
         {
             if (Package->ContainsAsset(AssetGuid))
             {
-                return m_ThreadPool.enqueue(
+                return StorageImpl::Get()->GetThreadPool().enqueue(
                     [Package, AssetGuid]()
                     {
                         return Package->LoadAsset(AssetGuid);
@@ -65,14 +65,20 @@ namespace Neon::AAsset
             }
         }
 
-        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid);
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid.ToString());
         return {};
     }
 
     std::future<Ptr<IAsset>> ManagerImpl::Reload(
         const Handle& AssetGuid)
     {
-        Unload(AssetGuid);
+        for (auto Package : Storage::GetPackages(true))
+        {
+            if (Package->RemoveAsset(AssetGuid))
+            {
+                break;
+            }
+        }
         return Load(AssetGuid);
     }
 
@@ -87,7 +93,7 @@ namespace Neon::AAsset
             }
         }
 
-        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid);
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid.ToString());
         return false;
     }
 } // namespace Neon::AAsset
