@@ -12,6 +12,11 @@ namespace Neon::AAsset
         bool ContainsAsset(
             const AAsset::Handle& AssetGuid) const override;
 
+        void Export(
+            const StringU8& Path) override
+        {
+        }
+
     protected:
         void AddAsset(
             Ptr<IAsset> Asset) override;

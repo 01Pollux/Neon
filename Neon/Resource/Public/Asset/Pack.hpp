@@ -32,6 +32,12 @@ namespace Neon::AAsset
         virtual bool ContainsAsset(
             const AAsset::Handle& AssetGuid) const = 0;
 
+        /// <summary>
+        /// Export this package to the filesystem.
+        /// </summary>
+        virtual void Export(
+            const StringU8& Path) = 0;
+
     protected:
         /// <summary>
         /// Add an asset to this package.

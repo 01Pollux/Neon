@@ -69,11 +69,6 @@ namespace Neon::AAsset
 
     //
 
-    StorageImpl* StorageImpl::Get()
-    {
-        return s_Instance.get();
-    }
-
     StorageImpl::StorageImpl()
     {
         Mount(UPtr<IAssetPackage>(NEON_NEW MemoryAssetPackage));
