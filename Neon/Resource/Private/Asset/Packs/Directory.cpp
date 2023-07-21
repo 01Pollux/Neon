@@ -142,14 +142,59 @@ namespace Neon::AAsset
              Path,
              this]
             {
-                RWLock Lock(m_CacheMutex);
-                auto&  Guid = Asset->GetGuid();
+                auto CheckForDuplicate = [&]()
+                {
+                    if (m_AssetMeta.contains(Asset->GetGuid()))
+                    {
+                        NEON_ERROR_TAG("Asset", "Asset with Guid '{}' already exists", Asset->GetGuid().ToString());
+                        return true;
+                    }
+
+                    return false;
+                };
+
+                {
+                    RLock Lock(m_CacheMutex);
+                    if (!CheckForDuplicate())
+                    {
+                        return;
+                    }
+                }
+
+                auto& Guid = Asset->GetGuid();
 
                 AssetMetaDataDef MetaData;
                 MetaData.SetGuid(Guid);
 
-                m_Cache[Guid]     = std::move(Asset);
-                m_AssetMeta[Guid] = std::move(MetaData);
+                IAssetHandler* Handler = Storage::GetHandler(Asset);
+                if (Handler == nullptr)
+                {
+                    NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", Guid.ToString());
+                    return;
+                }
+
+                auto AssetPath  = m_RootPath / Path;
+                auto ParentPath = AssetPath.parent_path();
+                if (!std::filesystem::exists(ParentPath))
+                {
+                    std::filesystem::create_directories(ParentPath);
+                }
+
+                std::ofstream AssetFile(AssetPath, std::ios::trunc | std::ios::binary);
+                if (!AssetFile.is_open())
+                {
+                    NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
+                    return;
+                }
+
+                Handler->Save(AssetFile, Asset, MetaData.GetLoaderData());
+
+                RWLock Lock(m_CacheMutex);
+                if (CheckForDuplicate())
+                {
+                    m_Cache[Guid]     = std::move(Asset);
+                    m_AssetMeta[Guid] = std::move(MetaData);
+                }
             });
     }
 

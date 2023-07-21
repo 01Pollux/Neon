@@ -7,25 +7,9 @@
 
 namespace Neon::AAsset
 {
-    static UPtr<ManagerImpl> s_Instance;
-
-    //
-
-    void ManagerImpl::Initialize()
-    {
-        NEON_ASSERT(!s_Instance, "Asset Manager already initialized");
-        s_Instance = std::make_unique<ManagerImpl>();
-    }
-
-    void ManagerImpl::Shutdown()
-    {
-        NEON_ASSERT(s_Instance, "Asset Manager not initialized");
-        s_Instance.reset();
-    }
-
     ManagerImpl* ManagerImpl::Get()
     {
-        return s_Instance.get();
+        return StorageImpl::Get()->GetManager();
     }
 
     //
@@ -33,19 +17,19 @@ namespace Neon::AAsset
     std::future<Ptr<IAsset>> Manager::Load(
         const Handle& AssetGuid)
     {
-        return s_Instance->Load(AssetGuid);
+        return ManagerImpl::Get()->Load(AssetGuid);
     }
 
     std::future<Ptr<IAsset>> Manager::Reload(
         const Handle& AssetGuid)
     {
-        return s_Instance->Reload(AssetGuid);
+        return ManagerImpl::Get()->Reload(AssetGuid);
     }
 
     void Manager::Unload(
         const Handle& AssetGuid)
     {
-        s_Instance->Unload(AssetGuid);
+        ManagerImpl::Get()->Unload(AssetGuid);
     }
 
     //

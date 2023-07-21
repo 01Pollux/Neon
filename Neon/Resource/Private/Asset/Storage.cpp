@@ -1,5 +1,6 @@
 #include <ResourcePCH.hpp>
 #include <Private/Asset/Storage.hpp>
+#include <Private/Asset/Manager.hpp>
 
 #include <Asset/Pack.hpp>
 #include <Asset/Handler.hpp>
@@ -32,10 +33,10 @@ namespace Neon::AAsset
 
     //
 
-    void Storage::AddAsset(
+    std::future<void> Storage::AddAsset(
         const AddDesc& Desc)
     {
-        s_Instance->AddAsset(Desc);
+        return s_Instance->AddAsset(Desc);
     }
 
     void Storage::RemoveAsset(
@@ -91,6 +92,11 @@ namespace Neon::AAsset
     }
 
     //
+
+    ManagerImpl* StorageImpl::GetManager()
+    {
+        return &m_Manager;
+    }
 
     StorageImpl::StorageImpl()
     {

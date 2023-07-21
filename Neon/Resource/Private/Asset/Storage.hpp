@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Asset/Storage.hpp>
+#include <Private/Asset/Manager.hpp>
 #include <Asio/ThreadPool.hpp>
 #include <mutex>
 
@@ -11,7 +12,15 @@ namespace Neon::AAsset
         using AssetPackageList = std::vector<UPtr<IAssetPackage>>;
 
     public:
+        /// <summary>
+        /// Gets the singleton instance of the storage system.
+        /// </summary>
         [[nodiscard]] static StorageImpl* Get();
+
+        /// <summary>
+        /// Gets the asset manager.
+        /// </summary>
+        [[nodiscard]] ManagerImpl* GetManager();
 
         StorageImpl();
 
@@ -87,7 +96,9 @@ namespace Neon::AAsset
 
     private:
         AssetPackageList                 m_Packages;
-        Asio::ThreadPool<>               m_ThreadPool;
         std::vector<UPtr<IAssetHandler>> m_Handlers;
+
+        ManagerImpl        m_Manager;
+        Asio::ThreadPool<> m_ThreadPool;
     };
 } // namespace Neon::AAsset

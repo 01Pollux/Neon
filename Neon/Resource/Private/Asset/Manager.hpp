@@ -8,16 +8,6 @@ namespace Neon::AAsset
     {
     public:
         /// <summary>
-        /// Initialize the asset manager.
-        /// </summary>
-        static void Initialize();
-
-        /// <summary>
-        /// Shutdown the asset manager.
-        /// </summary>
-        static void Shutdown();
-
-        /// <summary>
         /// Get the asset manager.
         /// </summary>
         [[nodiscard]] static ManagerImpl* Get();

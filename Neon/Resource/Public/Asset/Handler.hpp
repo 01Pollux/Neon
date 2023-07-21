@@ -2,6 +2,7 @@
 
 #include <Asset/Asset.hpp>
 #include <Asset/Metadata.hpp>
+#include <IO/Archive2.hpp>
 #include <fstream>
 
 namespace Neon::AAsset
@@ -27,8 +28,8 @@ namespace Neon::AAsset
         /// Save the asset to an output stream.
         /// </summary>
         virtual void Save(
-            std::ofstream&       Stream,
-            const Ptr<IAsset>&   Asset,
-            const AssetMetaData& LoaderData) = 0;
+            std::ofstream&     Stream,
+            const Ptr<IAsset>& Asset,
+            AssetMetaData&     LoaderData) = 0;
     };
 } // namespace Neon::AAsset

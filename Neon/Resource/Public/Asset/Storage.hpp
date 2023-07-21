@@ -2,6 +2,7 @@
 
 #include <Asset/Handle.hpp>
 #include <Asio/Coroutines.hpp>
+#include <future>
 
 namespace Neon::AAsset
 {
@@ -49,7 +50,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Adds an asset to the storage system.
         /// </summary>
-        static void AddAsset(
+        static std::future<void> AddAsset(
             const AddDesc& Desc);
 
         /// <summary>
@@ -65,6 +66,18 @@ namespace Neon::AAsset
         /// </summary>
         static IAssetHandler* RegisterHandler(
             UPtr<IAssetHandler> Handler);
+
+        /// <summary>
+        /// Registers an asset handler.
+        /// Not thread safe.
+        /// </summary>
+        template<typename _Ty, typename... _Args>
+            requires std::derived_from<_Ty, IAssetHandler>
+        static IAssetHandler* RegisterHandler(
+            _Args&&... Args)
+        {
+            return RegisterHandler(std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+        }
 
         /// <summary>
         /// Unregisters an asset handler.

@@ -2,6 +2,14 @@
 #include <Runtime/Types/WorldRuntime.hpp>
 
 #include <Asset/Storage.hpp>
+#include <Asset/Asset.hpp>
+#include <Asset/Handler.hpp>
+#include <Asset/Packs/Directory.hpp>
+
+//
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 //
 
@@ -20,14 +28,25 @@ public:
     {
         DefaultGameEngine::Initialize(Config);
 
+        AAsset::Storage::Initialize();
+
+        RegisterManager();
+
         SaveSimple();
         LoadSimple();
 
         // SaveDeps();
         // LoadDeps();
+
+        AAsset::Storage::Shutdown();
+
+        exit(0);
+        return;
     }
 
 private:
+    void RegisterManager();
+
     void SaveSimple();
     void LoadSimple();
 
@@ -46,91 +65,78 @@ NEON_MAIN(Argc, Argv)
     return RunEngine<AssetPackSample>(Config);
 }
 
-//
-//
-// class StringAndChildAsset : public AAsset::IAsset
-//{
-//    friend class StringAndChildHandler;
-//
-// public:
-//    StringAndChildAsset(
-//        StringU8                            Text,
-//        const AAsset::Handle&               Handle   = AAsset::Handle::Random(),
-//        std::span<Ptr<StringAndChildAsset>> Children = {}) :
-//        IAsset(Handle),
-//        m_Text(std::move(Text)),
-//        m_Children(Children.begin(), Children.end())
-//    {
-//    }
-//
-//    [[nodiscard]] const StringU8& GetText() const
-//    {
-//        return m_Text;
-//    }
-//
-//    void SetText(
-//        StringU8 Text)
-//    {
-//        m_Text = std::move(Text);
-//    }
-//
-// private:
-//    StringU8                              m_Text;
-//    std::vector<Ptr<StringAndChildAsset>> m_Children;
-//};
-//
-// class StringAndChildHandler : public AAsset::IAssetHandler
-//{
-// public:
-//    static constexpr const char* HandlerName = "StringAndChild";
-//
-//    Asio::CoLazy<Ptr<AAsset::IAsset>> Load(
-//        IO::InArchive2&               Archive,
-//        const AAsset::Handle&         Handle,
-//        AAsset::AssetDependencyGraph& Graph) override
-//    {
-//        StringU8 Text;
-//        Archive >> Text;
-//
-//        size_t ChildCount = 0;
-//        Archive >> ChildCount;
-//
-//        std::vector<Ptr<StringAndChildAsset>> Children;
-//        Children.reserve(ChildCount);
-//
-//        AAsset::Handle ChildHandle;
-//        for (size_t i = 0; i < ChildCount; i++)
-//        {
-//            Archive >> ChildHandle;
-//            Children.emplace_back(std::dynamic_pointer_cast<StringAndChildAsset>(co_await Graph.Requires(Handle, ChildHandle)));
-//        }
-//
-//        co_return std::make_shared<StringAndChildAsset>(std::move(Text), Handle, Children);
-//    }
-//
-//    void Save(
-//        IO::OutArchive2&           Archive,
-//        const Ptr<AAsset::IAsset>& Asset) override
-//    {
-//        auto ThisAsset = static_cast<const StringAndChildAsset*>(Asset.get());
-//
-//        Archive << ThisAsset->GetText();
-//        Archive << ThisAsset->m_Children.size();
-//        for (auto& Child : ThisAsset->m_Children)
-//        {
-//            Archive << Child->GetGuid();
-//        }
-//    }
-//};
-//
-// UPtr<AAsset::Manager> AssetPackSample::LoadManager()
-//{
-//    auto Manager = std::make_unique<AAsset::Manager>();
-//    Manager->RegisterHandler<StringAndChildHandler>();
-//    return Manager;
-//}
-//
-//
+class StringAndChildAsset : public AAsset::IAsset
+{
+    friend class StringAndChildHandler;
+
+public:
+    StringAndChildAsset(
+        StringU8                            Text,
+        const AAsset::Handle&               Handle   = AAsset::Handle::Random(),
+        std::span<Ptr<StringAndChildAsset>> Children = {}) :
+        IAsset(Handle),
+        m_Text(std::move(Text)),
+        m_Children(Children.begin(), Children.end())
+    {
+    }
+
+    [[nodiscard]] const StringU8& GetText() const
+    {
+        return m_Text;
+    }
+
+    void SetText(
+        StringU8 Text)
+    {
+        m_Text = std::move(Text);
+    }
+
+private:
+    StringU8                              m_Text;
+    std::vector<Ptr<StringAndChildAsset>> m_Children;
+};
+
+class StringAndChildHandler : public AAsset::IAssetHandler
+{
+public:
+    static constexpr const char* HandlerName = "StringAndChild";
+
+    bool CanHandle(
+        const Ptr<AAsset::IAsset>& Asset) override
+    {
+        return std::dynamic_pointer_cast<StringAndChildAsset>(Asset) != nullptr;
+    }
+
+    Ptr<AAsset::IAsset> Load(
+        std::ifstream&               Stream,
+        const AAsset::Handle&        AssetGuid,
+        const AAsset::AssetMetaData& LoaderData) override
+    {
+        return nullptr;
+    }
+
+    void Save(
+        std::ofstream&             Stream,
+        const Ptr<AAsset::IAsset>& Asset,
+        AAsset::AssetMetaData&     LoaderData) override
+    {
+        StringAndChildAsset* StringAndChild = static_cast<StringAndChildAsset*>(Asset.get());
+
+        boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
+        Archive << StringAndChild->GetText();
+
+        LoaderData.put("Archive", true);
+    }
+};
+
+void AssetPackSample::RegisterManager()
+{
+    AAsset::Storage::RegisterHandler<StringAndChildHandler>();
+
+    //
+
+    AAsset::Storage::Mount(std::make_unique<AAsset::DirectoryAssetPackage>("Test"));
+}
 
 static const char* TextTest = R"(
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric
@@ -142,7 +148,22 @@ static constexpr uint32_t c_AssetCount = 100;
 
 void AssetPackSample::SaveSimple()
 {
+    std::vector<std::future<void>> Tasks;
+    Tasks.reserve(c_AssetCount);
+
     auto t0 = std::chrono::high_resolution_clock::now();
+
+    for (uint32_t i = 0; i < c_AssetCount; ++i)
+    {
+        Tasks.emplace_back(AAsset::Storage::AddAsset(
+            { .Asset = std::make_shared<StringAndChildAsset>(TextTest),
+              .Path  = StringUtils::Format("File/{}.txt", i) }));
+    }
+
+    for (auto& Task : Tasks)
+    {
+        Task.wait();
+    }
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -156,6 +177,8 @@ void AssetPackSample::LoadSimple()
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    NEON_INFO("Loaded simple {} assets in {}ms", c_AssetCount, dt);
 }
 
 //
