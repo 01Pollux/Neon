@@ -24,9 +24,8 @@ namespace Neon::AAsset
 
         std::future<void> Export() override;
 
-        std::future<void> AddAsset(
-            Ptr<IAsset>     Asset,
-            const StringU8& Path) override;
+        std::future<void> SaveAsset(
+            Ptr<IAsset> Asset) override;
 
         bool RemoveAsset(
             const AAsset::Handle& AssetGuid) override;

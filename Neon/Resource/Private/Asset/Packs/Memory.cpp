@@ -19,9 +19,8 @@ namespace Neon::AAsset
         return m_Cache.contains(AssetGuid);
     }
 
-    std::future<void> MemoryAssetPackage::AddAsset(
-        Ptr<IAsset> Asset,
-        const StringU8&)
+    std::future<void> MemoryAssetPackage::SaveAsset(
+        Ptr<IAsset> Asset)
     {
         RWLock Lock(m_CacheMutex);
         m_Cache[Asset->GetGuid()] = std::move(Asset);

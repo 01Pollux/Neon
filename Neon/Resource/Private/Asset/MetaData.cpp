@@ -5,9 +5,7 @@
 namespace Neon::AAsset
 {
     AssetMetaDataDef::AssetMetaDataDef(
-        std::ifstream& Stream,
-        StringU8       Path) :
-        m_Path(std::move(Path))
+        std::ifstream& Stream)
     {
         boost::property_tree::read_ini(Stream, m_MetaData);
         auto Iter = m_MetaData.find("Loader");
@@ -24,10 +22,10 @@ namespace Neon::AAsset
     AssetMetaDataDef::AssetMetaDataDef(
         const Handle& AssetGuid,
         StringU8      Path) :
-        m_Path(std::move(Path)),
         m_IsDirty(true)
     {
         SetGuid(AssetGuid);
+        SetPath(std::move(Path));
         m_LoaderData = &m_MetaData.add_child("Loader", boost::property_tree::ptree());
     }
 
@@ -84,15 +82,20 @@ namespace Neon::AAsset
         return *m_LoaderData;
     }
 
-    const StringU8& AssetMetaDataDef::GetPath() const noexcept
+    std::filesystem::path AssetMetaDataDef::GetAssetPath() const
     {
-        return m_Path;
+        return std::filesystem::path(GetPath()).replace_extension("");
+    }
+
+    StringU8 AssetMetaDataDef::GetPath() const
+    {
+        return m_MetaData.get<StringU8>("Path");
     }
 
     void AssetMetaDataDef::SetPath(
-        StringU8 Path) noexcept
+        StringU8 Path)
     {
-        m_Path = std::move(Path);
+        m_MetaData.put("Path", std::move(Path));
     }
 
     bool AssetMetaDataDef::IsDirty() const noexcept

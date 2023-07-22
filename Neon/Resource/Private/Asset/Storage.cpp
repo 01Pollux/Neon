@@ -51,10 +51,10 @@ namespace Neon::AAsset
 
     //
 
-    std::future<void> Storage::AddAsset(
+    std::future<void> Storage::SaveAsset(
         const AddDesc& Desc)
     {
-        return s_Instance->AddAsset(Desc);
+        return s_Instance->SaveAsset(Desc);
     }
 
     void Storage::RemoveAsset(
@@ -138,11 +138,10 @@ namespace Neon::AAsset
         return m_ThreadPool;
     }
 
-    std::future<void> StorageImpl::AddAsset(
+    std::future<void> StorageImpl::SaveAsset(
         const AddDesc& Desc)
     {
         NEON_ASSERT(Desc.Asset, "Asset is null");
-        NEON_ASSERT(!Desc.Path.empty(), "Asset Path is empty");
 
         IAssetPackage* Package = Desc.PreferredPackage;
         if (Desc.MemoryOnly)
@@ -166,7 +165,7 @@ namespace Neon::AAsset
         }
 #endif
 
-        return Package->AddAsset(Desc.Asset, Desc.Path);
+        return Package->SaveAsset(Desc.Asset);
     }
 
     void StorageImpl::RemoveAsset(

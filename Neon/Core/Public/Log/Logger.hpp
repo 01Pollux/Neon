@@ -149,7 +149,7 @@ namespace Neon::Logger
 #define NEON_ASSERT(Expr, ...)                        \
     do                                                \
     {                                                 \
-        if (!(Expr))                                  \
+        if (!(Expr)) [[unlikely]]                     \
         {                                             \
             NEON_FATAL_TAG("Assertion", __VA_ARGS__); \
             __debugbreak();                           \
@@ -171,7 +171,7 @@ namespace Neon::Logger
 #define NEON_VALIDATE(Expr, ...)                       \
     do                                                 \
     {                                                  \
-        if (!(Expr))                                   \
+        if (!(Expr)) [[unlikely]]                      \
         {                                              \
             NEON_FATAL_TAG("Validation", __VA_ARGS__); \
             std::unreachable();                        \

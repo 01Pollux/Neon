@@ -35,7 +35,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Adds an asset to the storage system.
         /// </summary>
-        std::future<void> AddAsset(
+        std::future<void> SaveAsset(
             const AddDesc& Desc);
 
         /// <summary>

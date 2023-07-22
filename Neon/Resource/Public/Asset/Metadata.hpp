@@ -2,6 +2,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <Asset/Handle.hpp>
+#include <filesystem>
 
 namespace Neon::AAsset
 {
@@ -13,8 +14,7 @@ namespace Neon::AAsset
         /// Creating an asset's metadata from an input stream.
         /// </summary>
         AssetMetaDataDef(
-            std::ifstream& Stream,
-            StringU8       Path);
+            std::ifstream& Stream);
 
         /// <summary>
         /// Creating an empty asset's metadata.
@@ -73,15 +73,20 @@ namespace Neon::AAsset
         [[nodiscard]] const AssetMetaData& GetLoaderData() const noexcept;
 
         /// <summary>
+        /// Get the asset's path.
+        /// </summary>
+        [[nodiscard]] std::filesystem::path GetAssetPath() const;
+
+        /// <summary>
         /// Get the asset's metadata path.
         /// </summary>
-        [[nodiscard]] const StringU8& GetPath() const noexcept;
+        [[nodiscard]] StringU8 GetPath() const;
 
         /// <summary>
         /// Set the asset's metadata path.
         /// </summary>
         void SetPath(
-            StringU8 Path) noexcept;
+            StringU8 Path);
 
         /// <summary>
         /// Query if the asset is dirty.
@@ -97,7 +102,6 @@ namespace Neon::AAsset
     private:
         AssetMetaData  m_MetaData;
         AssetMetaData* m_LoaderData = nullptr;
-        StringU8       m_Path;
-        bool           m_IsDirty = false;
+        bool           m_IsDirty    = false;
     };
 } // namespace Neon::AAsset

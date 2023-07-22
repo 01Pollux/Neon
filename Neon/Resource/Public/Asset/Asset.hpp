@@ -8,22 +8,23 @@ namespace Neon::AAsset
     {
     public:
         IAsset(
-            const Handle& AssetGuid) :
-            m_AssetGuid(AssetGuid)
-        {
-        }
+            const Handle& AssetGuid,
+            StringU8      Path);
 
         virtual ~IAsset() = default;
 
         /// <summary>
         /// Gets the asset guid.
         /// </summary>
-        [[nodiscard]] const Handle& GetGuid() const noexcept
-        {
-            return m_AssetGuid;
-        }
+        [[nodiscard]] const Handle& GetGuid() const noexcept;
+
+        /// <summary>
+        /// Get the asset path.
+        /// </summary>
+        [[nodiscard]] const StringU8& GetPath() const noexcept;
 
     protected:
+        StringU8     m_AssetPath;
         const Handle m_AssetGuid;
     };
 } // namespace Neon::AAsset

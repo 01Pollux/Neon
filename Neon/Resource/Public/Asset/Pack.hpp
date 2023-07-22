@@ -43,9 +43,8 @@ namespace Neon::AAsset
         /// <summary>
         /// Add an asset to this package.
         /// </summary>
-        virtual std::future<void> AddAsset(
-            Ptr<IAsset>     Asset,
-            const StringU8& Path) = 0;
+        virtual std::future<void> SaveAsset(
+            Ptr<IAsset> Asset) = 0;
 
         /// <summary>
         /// Remove an asset from this package.

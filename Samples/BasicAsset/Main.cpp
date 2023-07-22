@@ -33,11 +33,11 @@ public:
 
         RegisterManager();
 
-        // SaveSimple();
-        LoadSimple();
+        SaveSimple();
+        // LoadSimple();
 
         // SaveDeps();
-        // LoadDeps();
+        //  LoadDeps();
 
         ShutdownStorage();
     }
@@ -48,7 +48,7 @@ private:
     void SaveSimple();
     void LoadSimple();
 
-    // void SaveDeps();
+    void SaveDeps();
     // void LoadDeps();
 
     void ShutdownStorage();
@@ -72,9 +72,10 @@ class StringAndChildAsset : public AAsset::IAsset
 public:
     StringAndChildAsset(
         StringU8                            Text,
+        StringU8                            Path,
         const AAsset::Handle&               Handle   = AAsset::Handle::Random(),
         std::span<Ptr<StringAndChildAsset>> Children = {}) :
-        IAsset(Handle),
+        IAsset(Handle, std::move(Path)),
         m_Text(std::move(Text)),
         m_Children(Children.begin(), Children.end())
     {
@@ -110,6 +111,7 @@ public:
     Ptr<AAsset::IAsset> Load(
         std::ifstream&               Stream,
         const AAsset::Handle&        AssetGuid,
+        StringU8                     Path,
         const AAsset::AssetMetaData& LoaderData) override
     {
         boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
@@ -117,11 +119,16 @@ public:
         StringU8 Text;
         Archive >> Text;
 
-        return std::make_shared<StringAndChildAsset>(std::move(Text), AssetGuid);
+        // std::vector<AAsset::Handle> Children;
+        // Archive >> Children;
+
+        // auto ChildrenAssets = DependencyReader.Read(Children);
+        return std::make_shared<StringAndChildAsset>(std::move(Text), std::move(Path), AssetGuid /*, ChildrenAssets*/);
     }
 
     void Save(
         std::fstream&              Stream,
+        AAsset::DependencyWriter&  DepWriter,
         const Ptr<AAsset::IAsset>& Asset,
         AAsset::AssetMetaData&     LoaderData) override
     {
@@ -130,7 +137,7 @@ public:
         auto StringAndChild = static_cast<StringAndChildAsset*>(Asset.get());
         Archive << StringAndChild->GetText();
 
-        LoaderData.put("Archive", true);
+        DepWriter.WriteMany(Archive, StringAndChild->m_Children);
     }
 };
 
@@ -159,10 +166,13 @@ void AssetPackSample::SaveSimple()
 
     for (uint32_t i = 1; i <= c_AssetCount; ++i)
     {
+        StringU8 Path = StringUtils::Format("File/{}.txt", i);
+
         auto AssetGuid = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
-        Tasks.emplace_back(AAsset::Storage::AddAsset(
-            { .Asset = std::make_shared<StringAndChildAsset>(TextTest, AssetGuid),
-              .Path  = StringUtils::Format("File/{}.txt", i) }));
+        auto Asset     = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuid);
+
+        Tasks.emplace_back(AAsset::Storage::SaveAsset(
+            { .Asset = std::move(Asset) }));
     }
 
     for (auto& Task : Tasks)
@@ -202,6 +212,78 @@ void AssetPackSample::LoadSimple()
     NEON_INFO("Loaded simple {} assets in {}ms", c_AssetCount, dt);
 }
 
+//
+
+auto GenDepsArray()
+{
+    std::array<AAsset::Handle, 10> Handles;
+
+    size_t i = 0;
+    for (auto& Handle : Handles)
+    {
+        Handle = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i++));
+    }
+
+    return Handles;
+}
+
+/*
+ We will build our asset graph like this:
+
+      0
+  1   2   3
+ 4 5 6 7 8 9
+*/
+void AssetPackSample::SaveDeps()
+{
+    auto AssetGuids = GenDepsArray();
+
+    std::array<Ptr<StringAndChildAsset>, 10> Assets;
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+
+    // create assets from 4 to 9
+    for (size_t i = 4; i < Assets.size(); i++)
+    {
+        StringU8 Path = StringUtils::Format("File/{}.txt", i);
+
+        Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
+        AAsset::Storage::SaveAsset(
+            { .Asset = Assets[i] })
+            .get();
+    }
+
+    // create assets from 4 to 9
+    for (size_t i = 1; i < 4; i++)
+    {
+        StringU8 Path = StringUtils::Format("File{}.txt", i);
+
+        std::array Chidren = { Assets[i * 2 + 2],
+                               Assets[i * 2 + 3] };
+
+        Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
+        AAsset::Storage::SaveAsset(
+            { .Asset = Assets[i] })
+            .get();
+    }
+
+    // create asset 0
+    StringU8   Path    = StringUtils::Format("File/{}.txt", 0);
+    std::array Chidren = { Assets[1], Assets[2], Assets[3] };
+
+    Assets[0] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[0], Chidren);
+    AAsset::Storage::SaveAsset(
+        { .Asset = Assets[0] })
+        .get();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    NEON_INFO("Saved deps {} assets in {}ms", Assets.size(), dt);
+}
+
+//
+
 void AssetPackSample::ShutdownStorage()
 {
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -216,26 +298,8 @@ void AssetPackSample::ShutdownStorage()
 
 //
 
-///*
-// We will build our asset graph like this:
 //
-//      0
-//  1   2   3
-// 4 5 6 7 8 9
-//
-//*/
-//
-// auto GenDepsArray()
-//{
-//     size_t i = 0;
-//
-//     std::array<AAsset::Handle, 10> Assets;
-//     for (auto& Asset : Assets)
-//     {
-//         Asset = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-0000-000{}-000000000000", i++));
-//     }
-//     return Assets;
-// }
+
 //
 // void AssetPackSample::SaveDeps()
 //{

@@ -17,9 +17,8 @@ namespace Neon::AAsset
             return std::async(std::launch::async, [] {});
         }
 
-        std::future<void> AddAsset(
-            Ptr<IAsset> Asset,
-            const StringU8&) override;
+        std::future<void> SaveAsset(
+            Ptr<IAsset> Asset) override;
 
         bool RemoveAsset(
             const AAsset::Handle& AssetGuid) override;

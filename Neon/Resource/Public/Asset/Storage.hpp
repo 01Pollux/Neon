@@ -18,11 +18,6 @@ namespace Neon::AAsset
         Ptr<IAsset> Asset;
 
         /// <summary>
-        /// The path to the asset.
-        /// </summary>
-        StringU8 Path;
-
-        /// <summary>
         /// The package to add the asset to.
         /// If null, the asset will be added to the first package.
         /// </summary>
@@ -50,7 +45,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Adds an asset to the storage system.
         /// </summary>
-        static std::future<void> AddAsset(
+        static std::future<void> SaveAsset(
             const AddDesc& Desc);
 
         /// <summary>
