@@ -37,42 +37,40 @@ namespace Neon::AAsset
         NEON_TRACE_TAG("Asset", "Loading assets from directory '{}'", m_RootPath.string());
 
         // First load all the meta files
-        for (auto& MetaFilePath : GetFiles(m_RootPath))
+        for (auto& MetafilePath : GetFiles(m_RootPath))
         {
-            constexpr size_t MetaFileExtensionLength = sizeof(".nam") - 1;
-            if (!MetaFilePath.native().ends_with(STR(".nam")))
+            if (!MetafilePath.native().ends_with(s_MetaFileExtensionW))
             {
                 continue;
             }
 
-            std::ifstream File(MetaFilePath);
+            std::ifstream File(MetafilePath);
             if (!File.is_open())
             {
-                NEON_ERROR_TAG("Asset", "Failed to open meta file '{}'", MetaFilePath.string());
+                NEON_ERROR_TAG("Asset", "Failed to open meta file '{}'", MetafilePath.string());
                 continue;
             }
 
             {
-                boost::property_tree::ptree MetaFile;
-                boost::property_tree::read_ini(File, MetaFile);
-                AssetMetaDataDef MetaData(MetaFile);
-
+                AssetMetaDataDef Metadata(File);
                 File.close();
 
-                auto Guid = MetaData.GetGuid();
+                auto Guid = Metadata.GetGuid();
                 if (Guid == Handle::Null)
                 {
-                    NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a Guid", MetaFilePath.string());
+                    NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a Guid", MetafilePath.string());
                     continue;
                 }
                 if (m_AssetMeta.contains(Guid))
                 {
-                    NEON_ERROR_TAG("Asset", "Meta file '{}' has a Guid that is already in use", MetaFilePath.string());
+                    NEON_ERROR_TAG("Asset", "Meta file '{}' has a Guid that is already in use", MetafilePath.string());
                     continue;
                 }
 
-                auto AssetFile = std::filesystem::path(MetaFilePath).replace_extension("");
-                File.open(std::move(AssetFile), std::ios::end);
+                auto AssetFile = std::filesystem::path(MetafilePath).replace_extension("");
+                File.open(std::move(AssetFile), std::ios::ate | std::ios::binary);
+                auto ap = File.rdstate();
+                auto p  = File.bad();
 
                 if (!File.is_open())
                 {
@@ -86,10 +84,10 @@ namespace Neon::AAsset
                 SHA256 Hash;
                 Hash.Append(File, FileSize);
 
-                auto ExpectedHash = MetaData.GetHash();
+                auto ExpectedHash = Metadata.GetHash();
                 if (ExpectedHash.empty())
                 {
-                    NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a hash", MetaFilePath.string());
+                    NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a hash", MetafilePath.string());
                     continue;
                 }
                 else if (Hash.Digest().ToString() != ExpectedHash)
@@ -98,7 +96,7 @@ namespace Neon::AAsset
                     continue;
                 }
 
-                m_AssetMeta.emplace(Guid, std::move(MetaData));
+                m_AssetMeta.emplace(Guid, std::move(Metadata));
             }
         }
     }
@@ -119,12 +117,27 @@ namespace Neon::AAsset
         return m_Cache.contains(AssetGuid);
     }
 
-    void DirectoryAssetPackage::Export(
-        const StringU8& Path)
+    std::future<void> DirectoryAssetPackage::Export()
     {
-        for (auto& [Guid, Asset] : m_AssetMeta)
+        auto ExportTask = [this]
         {
-        }
+            RLock Lock(m_CacheMutex);
+            for (auto& [Guid, Metadata] : m_AssetMeta)
+            {
+                if (!Metadata.IsDirty())
+                {
+                    continue;
+                }
+
+                std::filesystem::path AssetPath = Metadata.GetPath();
+                std::filesystem::create_directories(AssetPath.parent_path());
+
+                std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
+                Metadata.Export(Metafile);
+            }
+        };
+
+        return StorageImpl::Get()->GetThreadPool().enqueue(std::move(ExportTask));
     }
 
     std::future<void> DirectoryAssetPackage::AddAsset(
@@ -137,65 +150,79 @@ namespace Neon::AAsset
             return {};
         }
 
-        return StorageImpl::Get()->GetThreadPool().enqueue(
+        auto AddAssetTask =
             [Asset = std::move(Asset),
              Path,
              this]
+        {
+            auto DuplicateGuid = [&]()
             {
-                auto CheckForDuplicate = [&]()
+                if (m_AssetMeta.contains(Asset->GetGuid()))
                 {
-                    if (m_AssetMeta.contains(Asset->GetGuid()))
-                    {
-                        NEON_ERROR_TAG("Asset", "Asset with Guid '{}' already exists", Asset->GetGuid().ToString());
-                        return true;
-                    }
-
-                    return false;
-                };
-
-                {
-                    RLock Lock(m_CacheMutex);
-                    if (!CheckForDuplicate())
-                    {
-                        return;
-                    }
+                    NEON_ERROR_TAG("Asset", "Asset with Guid '{}' already exists", Asset->GetGuid().ToString());
+                    return true;
                 }
 
-                auto& Guid = Asset->GetGuid();
+                return false;
+            };
 
-                AssetMetaDataDef MetaData;
-                MetaData.SetGuid(Guid);
-
-                IAssetHandler* Handler = Storage::GetHandler(Asset);
-                if (Handler == nullptr)
+            {
+                RLock Lock(m_CacheMutex);
+                if (DuplicateGuid())
                 {
-                    NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", Guid.ToString());
                     return;
                 }
+            }
 
-                auto AssetPath  = m_RootPath / Path;
-                auto ParentPath = AssetPath.parent_path();
-                if (!std::filesystem::exists(ParentPath))
-                {
-                    std::filesystem::create_directories(ParentPath);
-                }
+            auto& Guid = Asset->GetGuid();
 
-                std::ofstream AssetFile(AssetPath, std::ios::trunc | std::ios::binary);
-                if (!AssetFile.is_open())
-                {
-                    NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
-                    return;
-                }
+            auto AssetPath = m_RootPath / Path;
+            std::filesystem::create_directories(AssetPath.parent_path());
 
-                Handler->Save(AssetFile, Asset, MetaData.GetLoaderData());
+            AssetMetaDataDef Metadata(Guid, AssetPath.string() + s_MetaFileExtension);
 
-                RWLock Lock(m_CacheMutex);
-                if (CheckForDuplicate())
-                {
-                    m_Cache[Guid]     = std::move(Asset);
-                    m_AssetMeta[Guid] = std::move(MetaData);
-                }
-            });
+            //
+            // Write asset file
+            //
+
+            IAssetHandler* Handler = Storage::GetHandler(Asset);
+            if (Handler == nullptr)
+            {
+                NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", Guid.ToString());
+                return;
+            }
+
+            std::fstream AssetFile(AssetPath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+            if (!AssetFile.is_open())
+            {
+                NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
+                return;
+            }
+
+            Handler->Save(AssetFile, Asset, Metadata.GetLoaderData());
+
+            //
+            // Write file's hash
+            //
+
+            size_t FileSize = AssetFile.tellp();
+            AssetFile.seekg(std::ios::beg);
+
+            SHA256 Hash;
+            Hash.Append(AssetFile, FileSize);
+            Metadata.SetHash(Hash.Digest().ToString());
+
+            //
+
+            RWLock Lock(m_CacheMutex);
+            if (!DuplicateGuid())
+            {
+                m_Cache[Guid] = Asset;
+                m_AssetMeta.emplace(Guid, std::move(Metadata));
+            }
+        };
+
+        return StorageImpl::Get()->GetThreadPool().enqueue(std::move(AddAssetTask));
     }
 
     bool DirectoryAssetPackage::RemoveAsset(

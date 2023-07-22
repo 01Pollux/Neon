@@ -38,8 +38,7 @@ namespace Neon::AAsset
         /// <summary>
         /// Export this package to the filesystem.
         /// </summary>
-        virtual void Export(
-            const StringU8& Path) = 0;
+        virtual std::future<void> Export() = 0;
 
         /// <summary>
         /// Add an asset to this package.

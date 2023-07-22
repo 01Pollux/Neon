@@ -12,9 +12,9 @@ namespace Neon::AAsset
         bool ContainsAsset(
             const AAsset::Handle& AssetGuid) const override;
 
-        void Export(
-            const StringU8& Path) override
+        std::future<void> Export() override
         {
+            return std::async(std::launch::async, [] {});
         }
 
         std::future<void> AddAsset(

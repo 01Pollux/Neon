@@ -22,6 +22,11 @@ namespace Neon::AAsset
 
     void Storage::Shutdown()
     {
+        for (auto& Package : StorageImpl::Get()->GetPackages(false))
+        {
+            Package->Export();
+        }
+
         NEON_ASSERT(s_Instance, "Storage not initialized");
         s_Instance.reset();
     }
@@ -101,6 +106,10 @@ namespace Neon::AAsset
     StorageImpl::StorageImpl()
     {
         Mount(UPtr<IAssetPackage>(NEON_NEW MemoryAssetPackage));
+    }
+
+    StorageImpl::~StorageImpl()
+    {
     }
 
     Asio::ThreadPool<>& StorageImpl::GetThreadPool()

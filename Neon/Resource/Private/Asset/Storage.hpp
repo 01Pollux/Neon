@@ -23,6 +23,8 @@ namespace Neon::AAsset
         [[nodiscard]] ManagerImpl* GetManager();
 
         StorageImpl();
+        NEON_CLASS_NO_COPYMOVE(StorageImpl);
+        ~StorageImpl();
 
         /// <summary>
         /// Gets the thread pool used by the storage system.

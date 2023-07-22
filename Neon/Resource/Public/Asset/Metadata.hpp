@@ -10,9 +10,17 @@ namespace Neon::AAsset
     struct AssetMetaDataDef
     {
         AssetMetaDataDef(
-            boost::property_tree::ptree MetaData);
+            std::ifstream& Stream);
 
-        AssetMetaDataDef();
+        AssetMetaDataDef(
+            const Handle& AssetGuid,
+            StringU8      Path);
+
+        /// <summary>
+        /// Export the asset's metadata.
+        /// </summary>
+        void Export(
+            std::ofstream& Stream);
 
         /// <summary>
         /// Get the asset's GUID.
@@ -37,18 +45,41 @@ namespace Neon::AAsset
             StringU8 Hash) noexcept;
 
         /// <summary>
-        /// Get the asset's hash.
+        /// Get the asset's loader data.
         /// </summary>
         [[nodiscard]] AssetMetaData& GetLoaderData() noexcept;
 
         /// <summary>
-        /// Get the asset's hash.
+        /// Get the asset's loader data.
         /// </summary>
         [[nodiscard]] const AssetMetaData& GetLoaderData() const noexcept;
+
+        /// <summary>
+        /// Get the asset's metadata path.
+        /// </summary>
+        [[nodiscard]] const StringU8& GetPath() const noexcept;
+
+        /// <summary>
+        /// Set the asset's metadata path.
+        /// </summary>
+        void SetPath(
+            StringU8 Path) noexcept;
+
+        /// <summary>
+        /// Query if the asset is dirty.
+        /// </summary>
+        [[nodiscard]] bool IsDirty() const noexcept;
+
+        /// <summary>
+        /// Set the asset's dirty state.
+        /// </summary>
+        void SetDirty(
+            bool IsDirty = true) noexcept;
 
     private:
         AssetMetaData  m_MetaData;
         AssetMetaData* m_LoaderData = nullptr;
-        bool           m_IsDirty    = false;
+        StringU8       m_Path;
+        bool           m_IsDirty = false;
     };
 } // namespace Neon::AAsset

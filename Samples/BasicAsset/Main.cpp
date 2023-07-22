@@ -38,10 +38,7 @@ public:
         // SaveDeps();
         // LoadDeps();
 
-        AAsset::Storage::Shutdown();
-
-        exit(0);
-        return;
+        ShutdownStorage();
     }
 
 private:
@@ -52,6 +49,8 @@ private:
 
     // void SaveDeps();
     // void LoadDeps();
+
+    void ShutdownStorage();
 };
 
 NEON_MAIN(Argc, Argv)
@@ -112,17 +111,22 @@ public:
         const AAsset::Handle&        AssetGuid,
         const AAsset::AssetMetaData& LoaderData) override
     {
-        return nullptr;
+        boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
+
+        StringU8 Text;
+        Archive >> Text;
+
+        return std::make_shared<StringAndChildAsset>(std::move(Text), AssetGuid);
     }
 
     void Save(
-        std::ofstream&             Stream,
+        std::fstream&              Stream,
         const Ptr<AAsset::IAsset>& Asset,
         AAsset::AssetMetaData&     LoaderData) override
     {
-        StringAndChildAsset* StringAndChild = static_cast<StringAndChildAsset*>(Asset.get());
-
         boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
+
+        auto StringAndChild = static_cast<StringAndChildAsset*>(Asset.get());
         Archive << StringAndChild->GetText();
 
         LoaderData.put("Archive", true);
@@ -138,11 +142,10 @@ void AssetPackSample::RegisterManager()
     AAsset::Storage::Mount(std::make_unique<AAsset::DirectoryAssetPackage>("Test"));
 }
 
-static const char* TextTest = R"(
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric
-ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam eu
-ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric
-)";
+static const char* TextTest =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric\n"
+    "ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam eu\n"
+    "ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric";
 
 static constexpr uint32_t c_AssetCount = 100;
 
@@ -153,10 +156,11 @@ void AssetPackSample::SaveSimple()
 
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    for (uint32_t i = 0; i < c_AssetCount; ++i)
+    for (uint32_t i = 1; i <= c_AssetCount; ++i)
     {
+        auto AssetGuid = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
         Tasks.emplace_back(AAsset::Storage::AddAsset(
-            { .Asset = std::make_shared<StringAndChildAsset>(TextTest),
+            { .Asset = std::make_shared<StringAndChildAsset>(TextTest, AssetGuid),
               .Path  = StringUtils::Format("File/{}.txt", i) }));
     }
 
@@ -173,12 +177,27 @@ void AssetPackSample::SaveSimple()
 
 void AssetPackSample::LoadSimple()
 {
+    std::vector<std::future<void>> Tasks;
+    Tasks.reserve(c_AssetCount);
+
     auto t0 = std::chrono::high_resolution_clock::now();
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     NEON_INFO("Loaded simple {} assets in {}ms", c_AssetCount, dt);
+}
+
+void AssetPackSample::ShutdownStorage()
+{
+    auto t0 = std::chrono::high_resolution_clock::now();
+
+    AAsset::Storage::Shutdown();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    NEON_INFO("Shutdown storage in {}ms", dt);
 }
 
 //

@@ -28,7 +28,7 @@ namespace Neon::AAsset
         /// Save the asset to an output stream.
         /// </summary>
         virtual void Save(
-            std::ofstream&     Stream,
+            std::fstream&      Stream,
             const Ptr<IAsset>& Asset,
             AssetMetaData&     LoaderData) = 0;
     };
