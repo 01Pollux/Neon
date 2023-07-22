@@ -64,7 +64,8 @@ namespace Neon::AAsset
         /// Registers an asset handler.
         /// Not thread safe.
         /// </summary>
-        static IAssetHandler* RegisterHandler(
+        static void RegisterHandler(
+            size_t              Id,
             UPtr<IAssetHandler> Handler);
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace Neon::AAsset
         static IAssetHandler* RegisterHandler(
             _Args&&... Args)
         {
-            return RegisterHandler(std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+            return RegisterHandler(typeid(_Ty), std::make_unique<_Ty>(std::forward<_Args>(Args)...));
         }
 
         /// <summary>
@@ -84,7 +85,7 @@ namespace Neon::AAsset
         /// Not thread safe.
         /// </summary>
         static void UnregisterHandler(
-            IAssetHandler* Handler);
+            size_t Id);
 
         /// <summary>
         /// Gets the asset handler for the specified asset.
@@ -92,6 +93,13 @@ namespace Neon::AAsset
         /// </summary>
         static IAssetHandler* GetHandler(
             const Ptr<IAsset>& Asset);
+
+        /// <summary>
+        /// Gets the asset handler for the specified asset.
+        /// Not thread safe.
+        /// </summary>
+        static IAssetHandler* GetHandler(
+            size_t Id);
 
     public:
         /// <summary>

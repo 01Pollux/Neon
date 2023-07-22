@@ -186,7 +186,7 @@ namespace Neon::AAsset
             //
 
             IAssetHandler* Handler = Storage::GetHandler(Asset);
-            if (Handler == nullptr)
+            if (!Handler)
             {
                 NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", Guid.ToString());
                 return;
@@ -235,21 +235,51 @@ namespace Neon::AAsset
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
         const AAsset::Handle& AssetGuid)
     {
+        AssetMetaDataDef* Metadata = nullptr;
+        // Check if asset is already loaded in cache
+        // If not, check if it exists in the package
         {
             RLock Lock(m_CacheMutex);
             if (auto Iter = m_Cache.find(AssetGuid); Iter != m_Cache.end())
             {
                 return Iter->second;
             }
+
+            auto Iter = m_AssetMeta.find(AssetGuid);
+            if (Iter == m_AssetMeta.end())
+            {
+                return nullptr;
+            }
+
+            Metadata = &Iter->second;
         }
 
-        auto Iter = m_AssetMeta.find(AssetGuid);
-        if (Iter == m_AssetMeta.end())
+        auto AssetPath = std::filesystem::path(Metadata->GetPath()).replace_extension("");
+        if (!std::filesystem::exists(AssetPath))
         {
+            NEON_ERROR_TAG("Asset", "Asset file '{}' of GUID '{}' does not exist", AssetPath.string(), AssetGuid.ToString());
             return nullptr;
         }
 
-        return nullptr;
+        //
+        // Read asset file
+        //
+
+        IAssetHandler* Handler = Storage::GetHandler(Metadata->GetLoaderId());
+        if (!Handler)
+        {
+            NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", AssetGuid.ToString());
+            return nullptr;
+        }
+
+        std::ifstream AssetFile(AssetPath, std::ios::in | std::ios::binary);
+        if (!AssetFile.is_open())
+        {
+            NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
+            return nullptr;
+        }
+
+        return Handler->Load(AssetFile, AssetGuid, Metadata->GetLoaderData());
     }
 
     bool DirectoryAssetPackage::UnloadAsset(

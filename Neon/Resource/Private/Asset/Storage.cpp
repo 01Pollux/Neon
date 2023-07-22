@@ -1,6 +1,5 @@
 #include <ResourcePCH.hpp>
 #include <Private/Asset/Storage.hpp>
-#include <Private/Asset/Manager.hpp>
 
 #include <Asset/Pack.hpp>
 #include <Asset/Handler.hpp>
@@ -52,22 +51,29 @@ namespace Neon::AAsset
 
     //
 
-    IAssetHandler* Storage::RegisterHandler(
+    void Storage::RegisterHandler(
+        size_t              Id,
         UPtr<IAssetHandler> Handler)
     {
-        return s_Instance->RegisterHandler(std::move(Handler));
+        s_Instance->RegisterHandler(Id, std::move(Handler));
     }
 
     void Storage::UnregisterHandler(
-        IAssetHandler* Handler)
+        size_t Id)
     {
-        s_Instance->UnregisterHandler(Handler);
+        s_Instance->UnregisterHandler(Id);
     }
 
     IAssetHandler* Storage::GetHandler(
         const Ptr<IAsset>& Asset)
     {
         return s_Instance->GetHandler(Asset);
+    }
+
+    IAssetHandler* Storage::GetHandler(
+        size_t Id)
+    {
+        return s_Instance->GetHandler(Id);
     }
 
     //
@@ -162,24 +168,28 @@ namespace Neon::AAsset
         NEON_WARNING_TAG("Asset", "Asset '{}' not found", AssetGuid.ToString());
     }
 
-    IAssetHandler* StorageImpl::RegisterHandler(
+    void StorageImpl::RegisterHandler(
+        size_t              Id,
         UPtr<IAssetHandler> Handler)
     {
-        return m_Handlers.emplace_back(std::move(Handler)).get();
+        NEON_ASSERT(Id, "Invalid handler id");
+        if (!m_Handlers.emplace(Id, std::move(Handler)).second)
+        {
+            NEON_ASSERT(false, "Handler already registered");
+        }
     }
 
     void StorageImpl::UnregisterHandler(
-        IAssetHandler* Handler)
+        size_t Id)
     {
-        std::erase_if(
-            m_Handlers, [Handler](const auto& CurHandler)
-            { return CurHandler.get() == Handler; });
+        NEON_ASSERT(Id, "Invalid handler id");
+        m_Handlers.erase(Id);
     }
 
     IAssetHandler* StorageImpl::GetHandler(
         const Ptr<IAsset>& Asset)
     {
-        for (auto& Handler : m_Handlers)
+        for (auto& Handler : m_Handlers | std::views::values)
         {
             if (Handler->CanHandle(Asset))
             {
@@ -188,6 +198,15 @@ namespace Neon::AAsset
         }
 
         return nullptr;
+    }
+
+    IAssetHandler* StorageImpl::GetHandler(
+        size_t Id)
+    {
+        NEON_ASSERT(Id, "Invalid handler id");
+
+        auto Iter = m_Handlers.find(Id);
+        return Iter != m_Handlers.end() ? Iter->second.get() : nullptr;
     }
 
     IAssetPackage* StorageImpl::Mount(

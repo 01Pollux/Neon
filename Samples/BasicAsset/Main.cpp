@@ -2,6 +2,7 @@
 #include <Runtime/Types/WorldRuntime.hpp>
 
 #include <Asset/Storage.hpp>
+#include <Asset/Manager.hpp>
 #include <Asset/Asset.hpp>
 #include <Asset/Handler.hpp>
 #include <Asset/Packs/Directory.hpp>
@@ -181,6 +182,17 @@ void AssetPackSample::LoadSimple()
     Tasks.reserve(c_AssetCount);
 
     auto t0 = std::chrono::high_resolution_clock::now();
+
+    for (uint32_t i = 1; i <= c_AssetCount; ++i)
+    {
+        auto AssetGuid = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
+        Tasks.emplace_back(AAsset::Manager::Load(AssetGuid));
+    }
+
+    for (auto& Task : Tasks)
+    {
+        Task.wait();
+    }
 
     auto t1 = std::chrono::high_resolution_clock::now();
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

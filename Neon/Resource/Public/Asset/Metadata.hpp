@@ -45,6 +45,17 @@ namespace Neon::AAsset
             StringU8 Hash) noexcept;
 
         /// <summary>
+        /// Get the asset's loader id.
+        /// </summary>
+        [[nodiscard]] size_t GetLoaderId() const noexcept;
+
+        /// <summary>
+        /// Set the asset's loader id.
+        /// </summary>
+        [[nodiscard]] void SetLoaderId(
+            size_t Id) noexcept;
+
+        /// <summary>
         /// Get the asset's loader data.
         /// </summary>
         [[nodiscard]] AssetMetaData& GetLoaderData() noexcept;

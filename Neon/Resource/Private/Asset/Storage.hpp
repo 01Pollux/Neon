@@ -49,7 +49,8 @@ namespace Neon::AAsset
         /// Registers an asset handler.
         /// Not thread safe.
         /// </summary>
-        IAssetHandler* RegisterHandler(
+        void RegisterHandler(
+            size_t              Id,
             UPtr<IAssetHandler> Handler);
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace Neon::AAsset
         /// Not thread safe.
         /// </summary>
         void UnregisterHandler(
-            IAssetHandler* Handler);
+            size_t Id);
 
         /// <summary>
         /// Gets the asset handler for the specified asset.
@@ -65,6 +66,13 @@ namespace Neon::AAsset
         /// </summary>
         IAssetHandler* GetHandler(
             const Ptr<IAsset>& Asset);
+
+        /// <summary>
+        /// Gets the asset handler for the specified asset.
+        /// Not thread safe.
+        /// </summary>
+        IAssetHandler* GetHandler(
+            size_t Id);
 
     public:
         /// <summary>
@@ -97,8 +105,8 @@ namespace Neon::AAsset
             bool IncludeMemoryOnly);
 
     private:
-        AssetPackageList                 m_Packages;
-        std::vector<UPtr<IAssetHandler>> m_Handlers;
+        AssetPackageList                      m_Packages;
+        std::map<size_t, UPtr<IAssetHandler>> m_Handlers;
 
         ManagerImpl        m_Manager;
         Asio::ThreadPool<> m_ThreadPool;

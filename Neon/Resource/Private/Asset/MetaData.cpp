@@ -61,6 +61,17 @@ namespace Neon::AAsset
         m_MetaData.put("Hash", std::move(Hash));
     }
 
+    size_t AssetMetaDataDef::GetLoaderId() const noexcept
+    {
+        return m_MetaData.get_optional<size_t>("Loader").value_or(0);
+    }
+
+    void AssetMetaDataDef::SetLoaderId(
+        size_t Id) noexcept
+    {
+        m_MetaData.put("Loader", Id);
+    }
+
     AssetMetaData& AssetMetaDataDef::GetLoaderData() noexcept
     {
         return *m_LoaderData;
