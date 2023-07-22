@@ -116,26 +116,35 @@ namespace Neon::Logger
         }                                                 \
     } while (false)
 
+#define NEON_LOG_TAG(Type, ...)                   \
+    do                                            \
+    {                                             \
+        if (Neon::Logger::ShouldLog(Type))        \
+        {                                         \
+            Neon::Logger::Log(Type, __VA_ARGS__); \
+        }                                         \
+    } while (false)
+
 #define NEON_WARNING_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Warning, Tag, __VA_ARGS__)
 #define NEON_ERROR_TAG(Tag, ...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Error, Tag, __VA_ARGS__)
 #define NEON_FATAL_TAG(Tag, ...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Fatal, Tag, __VA_ARGS__)
 
-#define NEON_WARNING(...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Warning, "", __VA_ARGS__)
-#define NEON_ERROR(...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Error, "", __VA_ARGS__)
-#define NEON_FATAL(...)   NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Fatal, "", __VA_ARGS__)
+#define NEON_WARNING(...) NEON_LOG_TAG(Neon::Logger::LogSeverity::Warning, __VA_ARGS__)
+#define NEON_ERROR(...)   NEON_LOG_TAG(Neon::Logger::LogSeverity::Error, __VA_ARGS__)
+#define NEON_FATAL(...)   NEON_LOG_TAG(Neon::Logger::LogSeverity::Fatal, __VA_ARGS__)
 
 #ifndef NEON_DIST
 
 #ifdef NEON_DEBUG
 #define NEON_TRACE_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Trace, Tag, __VA_ARGS__)
-#define NEON_TRACE(...)          NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Trace, "", __VA_ARGS__)
+#define NEON_TRACE(...)          NEON_LOG_TAG(Neon::Logger::LogSeverity::Trace, __VA_ARGS__)
 #else
 #define NEON_TRACE_TAG(Tag, ...)
 #define NEON_TRACE(...)
 #endif
 
 #define NEON_INFO_TAG(Tag, ...) NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Info, Tag, __VA_ARGS__)
-#define NEON_INFO(...)          NEON_LOG_X_TAG(Neon::Logger::LogSeverity::Info, "", __VA_ARGS__)
+#define NEON_INFO(...)          NEON_LOG_TAG(Neon::Logger::LogSeverity::Info, __VA_ARGS__)
 
 #define NEON_ASSERT(Expr, ...)                        \
     do                                                \

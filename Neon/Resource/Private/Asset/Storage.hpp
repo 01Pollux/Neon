@@ -65,7 +65,8 @@ namespace Neon::AAsset
         /// Not thread safe.
         /// </summary>
         IAssetHandler* GetHandler(
-            const Ptr<IAsset>& Asset);
+            const Ptr<IAsset>& Asset,
+            size_t*            Id);
 
         /// <summary>
         /// Gets the asset handler for the specified asset.

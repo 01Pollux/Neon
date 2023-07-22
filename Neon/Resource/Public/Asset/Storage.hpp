@@ -74,10 +74,10 @@ namespace Neon::AAsset
         /// </summary>
         template<typename _Ty, typename... _Args>
             requires std::derived_from<_Ty, IAssetHandler>
-        static IAssetHandler* RegisterHandler(
+        static void RegisterHandler(
             _Args&&... Args)
         {
-            return RegisterHandler(typeid(_Ty), std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+            RegisterHandler(typeid(_Ty).hash_code(), std::make_unique<_Ty>(std::forward<_Args>(Args)...));
         }
 
         /// <summary>
@@ -92,7 +92,8 @@ namespace Neon::AAsset
         /// Not thread safe.
         /// </summary>
         static IAssetHandler* GetHandler(
-            const Ptr<IAsset>& Asset);
+            const Ptr<IAsset>& Asset,
+            size_t*            Id = nullptr);
 
         /// <summary>
         /// Gets the asset handler for the specified asset.

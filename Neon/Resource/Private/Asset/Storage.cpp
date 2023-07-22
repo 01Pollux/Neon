@@ -21,9 +21,23 @@ namespace Neon::AAsset
 
     void Storage::Shutdown()
     {
+        std::vector<std::future<void>> Futures;
+
         for (auto& Package : StorageImpl::Get()->GetPackages(false))
         {
-            Package->Export();
+            Futures.emplace_back(Package->Export());
+        }
+
+        try
+        {
+            for (auto& Future : Futures)
+            {
+                Future.get();
+            }
+        }
+        catch (const std::exception& Exception)
+        {
+            NEON_ERROR_TAG("Asset", "Failed to export packages: {}", Exception.what());
         }
 
         NEON_ASSERT(s_Instance, "Storage not initialized");
@@ -65,9 +79,10 @@ namespace Neon::AAsset
     }
 
     IAssetHandler* Storage::GetHandler(
-        const Ptr<IAsset>& Asset)
+        const Ptr<IAsset>& Asset,
+        size_t*            Id)
     {
-        return s_Instance->GetHandler(Asset);
+        return s_Instance->GetHandler(Asset, Id);
     }
 
     IAssetHandler* Storage::GetHandler(
@@ -187,12 +202,17 @@ namespace Neon::AAsset
     }
 
     IAssetHandler* StorageImpl::GetHandler(
-        const Ptr<IAsset>& Asset)
+        const Ptr<IAsset>& Asset,
+        size_t*            Id)
     {
-        for (auto& Handler : m_Handlers | std::views::values)
+        for (auto& [HandlerId, Handler] : m_Handlers)
         {
             if (Handler->CanHandle(Asset))
             {
+                if (HandlerId)
+                {
+                    *Id = HandlerId;
+                }
                 return Handler.get();
             }
         }

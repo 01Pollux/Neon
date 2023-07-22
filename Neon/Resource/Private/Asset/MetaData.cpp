@@ -5,7 +5,9 @@
 namespace Neon::AAsset
 {
     AssetMetaDataDef::AssetMetaDataDef(
-        std::ifstream& Stream)
+        std::ifstream& Stream,
+        StringU8       Path) :
+        m_Path(std::move(Path))
     {
         boost::property_tree::read_ini(Stream, m_MetaData);
         auto Iter = m_MetaData.find("Loader");
@@ -63,13 +65,13 @@ namespace Neon::AAsset
 
     size_t AssetMetaDataDef::GetLoaderId() const noexcept
     {
-        return m_MetaData.get_optional<size_t>("Loader").value_or(0);
+        return m_MetaData.get_optional<size_t>("LoaderId").value_or(0);
     }
 
     void AssetMetaDataDef::SetLoaderId(
         size_t Id) noexcept
     {
-        m_MetaData.put("Loader", Id);
+        m_MetaData.put("LoaderId", Id);
     }
 
     AssetMetaData& AssetMetaDataDef::GetLoaderData() noexcept

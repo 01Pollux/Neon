@@ -52,7 +52,7 @@ namespace Neon::AAsset
             }
 
             {
-                AssetMetaDataDef Metadata(File);
+                AssetMetaDataDef Metadata(File, MetafilePath.string());
                 File.close();
 
                 auto Guid = Metadata.GetGuid();
@@ -114,7 +114,7 @@ namespace Neon::AAsset
         const AAsset::Handle& AssetGuid) const
     {
         RLock Lock(m_CacheMutex);
-        return m_Cache.contains(AssetGuid);
+        return m_AssetMeta.contains(AssetGuid);
     }
 
     std::future<void> DirectoryAssetPackage::Export()
@@ -185,7 +185,8 @@ namespace Neon::AAsset
             // Write asset file
             //
 
-            IAssetHandler* Handler = Storage::GetHandler(Asset);
+            size_t         HandlerId;
+            IAssetHandler* Handler = Storage::GetHandler(Asset, &HandlerId);
             if (!Handler)
             {
                 NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", Guid.ToString());
@@ -199,6 +200,7 @@ namespace Neon::AAsset
                 return;
             }
 
+            Metadata.SetLoaderId(HandlerId);
             Handler->Save(AssetFile, Asset, Metadata.GetLoaderData());
 
             //

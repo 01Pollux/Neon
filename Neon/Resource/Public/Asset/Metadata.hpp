@@ -9,9 +9,16 @@ namespace Neon::AAsset
 
     struct AssetMetaDataDef
     {
+        /// <summary>
+        /// Creating an asset's metadata from an input stream.
+        /// </summary>
         AssetMetaDataDef(
-            std::ifstream& Stream);
+            std::ifstream& Stream,
+            StringU8       Path);
 
+        /// <summary>
+        /// Creating an empty asset's metadata.
+        /// </summary>
         AssetMetaDataDef(
             const Handle& AssetGuid,
             StringU8      Path);

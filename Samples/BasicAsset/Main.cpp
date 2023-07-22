@@ -33,7 +33,7 @@ public:
 
         RegisterManager();
 
-        SaveSimple();
+        // SaveSimple();
         LoadSimple();
 
         // SaveDeps();
@@ -167,7 +167,7 @@ void AssetPackSample::SaveSimple()
 
     for (auto& Task : Tasks)
     {
-        Task.wait();
+        Task.get();
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -178,7 +178,7 @@ void AssetPackSample::SaveSimple()
 
 void AssetPackSample::LoadSimple()
 {
-    std::vector<std::future<void>> Tasks;
+    std::vector<std::future<Ptr<AAsset::IAsset>>> Tasks;
     Tasks.reserve(c_AssetCount);
 
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -191,7 +191,9 @@ void AssetPackSample::LoadSimple()
 
     for (auto& Task : Tasks)
     {
-        Task.wait();
+        auto Asset = Task.get();
+        NEON_ASSERT(Asset != nullptr, "Failed to load asset");
+        NEON_ASSERT(std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->GetText() == TextTest, "Asset handle mismatch");
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
