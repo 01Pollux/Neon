@@ -2,7 +2,6 @@
 
 #include <Asset/Asset.hpp>
 #include <Asset/Metadata.hpp>
-#include <IO/Archive2.hpp>
 
 #include <boost/serialization/vector.hpp>
 #include <unordered_set>
@@ -28,11 +27,11 @@ namespace Neon::Asset
         /// Load the asset from an input stream.
         /// </summary>
         virtual Ptr<IAsset> Load(
-            std::ifstream&                  Stream,
+            std::ifstream&                 Stream,
             const Asset::DependencyReader& DepReader,
-            const Handle&                   AssetGuid,
-            StringU8                        Path,
-            const AssetMetaData&            LoaderData) = 0;
+            const Handle&                  AssetGuid,
+            StringU8                       Path,
+            const AssetMetaData&           LoaderData) = 0;
 
         /// <summary>
         /// Save the asset to an output stream.

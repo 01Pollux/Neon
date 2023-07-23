@@ -111,10 +111,10 @@ namespace PakC
 
             auto ForceHandle = Element.find("Handle");
 
-            Neon::Asset::AssetHandle Handle =
+            Neon::Asset::Handle Handle =
                 ForceHandle != Element.end() && ForceHandle->value().is_string()
-                    ? Asset::AssetHandle::FromString(StringU8(ForceHandle->value().as_string()))
-                    : Asset::AssetHandle::Random();
+                    ? Asset::Handle::FromString(StringU8(ForceHandle->value().as_string()))
+                    : Asset::Handle::Random();
 
             auto Tag = Element.find("Tag");
             if (Tag != Element.end() && Tag->value().is_string())

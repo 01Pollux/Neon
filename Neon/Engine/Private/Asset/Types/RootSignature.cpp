@@ -36,7 +36,10 @@ namespace boost::serialization
 namespace Neon::Asset
 {
     RootSignatureAsset::RootSignatureAsset(
-        const Ptr<RHI::IRootSignature>& RootSignature) :
+        const Ptr<RHI::IRootSignature>& RootSignature,
+        const Handle&                   AssetGuid,
+        StringU8                        Path) :
+        IAsset(AssetGuid, std::move(Path)),
         m_RootSignature(RootSignature)
     {
     }
@@ -54,7 +57,7 @@ namespace Neon::Asset
 
     //
 
-    bool RootSignatureAsset::Handler::CanCastTo(
+    bool RootSignatureAsset::Handler::CanHandle(
         const Ptr<IAssetResource>& Resource)
     {
         return dynamic_cast<RootSignatureAsset*>(Resource.get());

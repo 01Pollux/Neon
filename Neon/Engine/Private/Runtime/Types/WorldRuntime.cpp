@@ -44,7 +44,7 @@ namespace Neon::Runtime
         auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder));
         auto MainPack = Engine->QueryInterface<Asset::IAssetManager>()->GetPack("__neon");
 
-        auto DefaultShaderLib = Asset::AssetHandle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
+        auto DefaultShaderLib = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
         auto ShaderLib        = MainPack->Load<Asset::ShaderLibraryAsset>(DefaultShaderLib);
 
         //

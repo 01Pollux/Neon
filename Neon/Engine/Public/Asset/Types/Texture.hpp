@@ -2,30 +2,30 @@
 
 #include <Resource/Asset.hpp>
 #include <Resource/Handler.hpp>
-
-namespace Neon::RHI
-{
-    class IRootSignature;
-}
+#include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Asset
 {
-    class RootSignatureAsset : public IAssetResource
+    class TextureAsset : public IAssetResource
     {
+        friend class Handler;
+
     public:
-        RootSignatureAsset(
-            const Ptr<RHI::IRootSignature>& RootSignature = nullptr);
+        TextureAsset(
+            const RHI::TextureRawImage& ImageInfo = {},
+            bool                        Owning    = false);
 
         /// <summary>
-        /// Get current root signature loaded in this asset.
+        /// Get texture image info.
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::IRootSignature>& GetRootSignature() const;
+        [[nodiscard]] const RHI::TextureRawImage& GetImageInfo() const;
 
         /// <summary>
-        /// Set root signature to this asset.
+        /// Set texture image info.
         /// </summary>
-        [[nodiscard]] void SetRootSignature(
-            const Ptr<RHI::IRootSignature>& RootSignature);
+        void SetImageInfo(
+            const RHI::TextureRawImage& ImageInfo,
+            bool                        Owning = false);
 
     public:
         class Handler : public IAssetResourceHandler
@@ -46,6 +46,7 @@ namespace Neon::Asset
         };
 
     private:
-        Ptr<RHI::IRootSignature> m_RootSignature;
+        RHI::TextureRawImage       m_ImageInfo;
+        std::unique_ptr<uint8_t[]> m_ImageData;
     };
 } // namespace Neon::Asset

@@ -14,6 +14,6 @@ namespace Neon::Config
         ResourceConfig Resource;
         RendererConfig Renderer;
 
-        std::optional<Asset::AssetHandle> LoggerAssetUid = Asset::AssetHandle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
+        std::optional<Asset::Handle> LoggerAssetUid = Asset::Handle::FromString("d0b50bba-f800-4c18-a595-fd5c4b380190");
     };
 } // namespace Neon::Config

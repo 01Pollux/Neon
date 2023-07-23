@@ -56,7 +56,7 @@ namespace Neon::RG
                         {
                             Storage.ImportRootSignature(Id, RootSig);
                         },
-                        [&Id, &Storage = m_Context.GetStorage()](const Asset::AssetHandle& RootSig) {} },
+                        [&Id, &Storage = m_Context.GetStorage()](const Asset::Handle& RootSig) {} },
                     Desc);
             }
         }
@@ -84,7 +84,7 @@ namespace Neon::RG
                         {
                             Storage.ImportShader(Id, Shader);
                         },
-                        [&Id, &Storage = m_Context.GetStorage()](const Asset::AssetHandle& Shader) {} },
+                        [&Id, &Storage = m_Context.GetStorage()](const Asset::Handle& Shader) {} },
                     Desc);
             }
         }

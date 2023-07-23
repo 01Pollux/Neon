@@ -2,7 +2,7 @@
 
 #include <Renderer/RG/Pass.hpp>
 
-#include <Resource/Handle.hpp>
+#include <Resource/Asset.hpp>
 
 #include <RHI/Shader.hpp>
 #include <RHI/RootSignature.hpp>
@@ -39,8 +39,8 @@ namespace Neon::RG
         /// Load a shader from an asset.
         /// </summary>
         void Load(
-            const ResourceId&         Id,
-            const Asset::AssetHandle& ShaderAsset);
+            const ResourceId&    Id,
+            const Asset::Handle& ShaderAsset);
 
     private:
         std::map<
@@ -48,7 +48,7 @@ namespace Neon::RG
             std::variant<
                 RHI::ShaderCompileDesc,
                 Ptr<RHI::IShader>,
-                Asset::AssetHandle>>
+                Asset::Handle>>
             m_ShadersToLoad;
     };
 
@@ -77,8 +77,8 @@ namespace Neon::RG
         /// Load a root signature from an asset.
         /// </summary>
         void Load(
-            const ResourceId&         Id,
-            const Asset::AssetHandle& RootSigAsset);
+            const ResourceId&    Id,
+            const Asset::Handle& RootSigAsset);
 
     private:
         std::map<
@@ -86,7 +86,7 @@ namespace Neon::RG
             std::variant<
                 RHI::RootSignatureBuilder,
                 Ptr<RHI::IRootSignature>,
-                Asset::AssetHandle>>
+                Asset::Handle>>
             m_RootSignaturesToLoad;
     };
 

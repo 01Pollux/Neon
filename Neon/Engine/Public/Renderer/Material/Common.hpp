@@ -2,10 +2,6 @@
 
 #include <Renderer/Material/States.hpp>
 
-#include <Resource/Asset.hpp>
-#include <Resource/Pack.hpp>
-#include <Resource/Manager.hpp>
-
 #include <Core/String.hpp>
 #include <Math/Vector.hpp>
 #include <Math/Colors.hpp>

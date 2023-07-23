@@ -25,7 +25,7 @@ namespace Neon::RG
 
     void IRenderPass::ShaderResolver::Load(
         const ResourceId&         Id,
-        const Asset::AssetHandle& ShaderAsset)
+        const Asset::Handle& ShaderAsset)
     {
         NEON_ASSERT(m_ShadersToLoad.emplace(Id, ShaderAsset).second, "Shader already exists");
     }
@@ -48,7 +48,7 @@ namespace Neon::RG
 
     void IRenderPass::RootSignatureResolver::Load(
         const ResourceId&         Id,
-        const Asset::AssetHandle& RootSigAsset)
+        const Asset::Handle& RootSigAsset)
     {
         NEON_ASSERT(m_RootSignaturesToLoad.emplace(Id, RootSigAsset).second, "Root signature already exists");
     }

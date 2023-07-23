@@ -1,20 +1,26 @@
 #pragma once
 
-#include <Core/String.hpp>
+#include <Asset/Asset.hpp>
 
-#include <Resource/Asset.hpp>
-#include <Resource/Handler.hpp>
+#include <Core/String.hpp>
+#include <optional>
 
 namespace Neon::Asset
 {
-    class TextFileAsset : public IAssetResource
+    class TextFileAsset : public IAsset
     {
+        class Handler;
+
     public:
         TextFileAsset(
-            String Text = L"");
+            String        Text,
+            const Handle& AssetGuid,
+            StringU8      Path);
 
         TextFileAsset(
-            StringU8 Text);
+            StringU8      Text,
+            const Handle& AssetGuid,
+            StringU8      Path);
 
         /// <summary>
         /// Load string as utf8
@@ -37,24 +43,6 @@ namespace Neon::Asset
         /// </summary>
         [[nodiscard]] void SetText(
             const String& Text);
-
-    public:
-        class Handler : public IAssetResourceHandler
-        {
-        public:
-            bool CanCastTo(
-                const Ptr<IAssetResource>& Resource) override;
-
-            Ptr<IAssetResource> Load(
-                IAssetPack*    Pack,
-                IO::InArchive& Archive,
-                size_t         DataSize) override;
-
-            void Save(
-                IAssetPack*                Pack,
-                const Ptr<IAssetResource>& Resource,
-                IO::OutArchive&            Archive) override;
-        };
 
     private:
         String                          m_Utf16Text;
