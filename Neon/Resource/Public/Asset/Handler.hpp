@@ -6,6 +6,7 @@
 
 #include <boost/serialization/vector.hpp>
 #include <unordered_set>
+#include <unordered_map>
 #include <fstream>
 #include <queue>
 
@@ -27,10 +28,11 @@ namespace Neon::AAsset
         /// Load the asset from an input stream.
         /// </summary>
         virtual Ptr<IAsset> Load(
-            std::ifstream&       Stream,
-            const Handle&        AssetGuid,
-            StringU8             Path,
-            const AssetMetaData& LoaderData) = 0;
+            std::ifstream&                  Stream,
+            const AAsset::DependencyReader& DepReader,
+            const Handle&                   AssetGuid,
+            StringU8                        Path,
+            const AssetMetaData&            LoaderData) = 0;
 
         /// <summary>
         /// Save the asset to an output stream.
@@ -48,6 +50,59 @@ namespace Neon::AAsset
     {
     public:
         /// <summary>
+        /// Read the dependencies of an asset.
+        /// </summary>
+        template<typename _Ty, typename _Archive>
+            requires std::is_base_of_v<IAsset, _Ty>
+        [[nodiscard]] Ptr<_Ty> ReadOne(
+            _Archive& Archive) const
+        {
+            Handle AssetGuid;
+            Archive >> AssetGuid;
+            if (AssetGuid != Handle::Null)
+            {
+                return std::dynamic_pointer_cast<_Ty>(m_Assets[AssetGuid]);
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
+        /// <summary>
+        /// Read the dependencies of an asset.
+        /// </summary>
+        template<typename _Ty, typename _Archive>
+            requires std::is_base_of_v<IAsset, _Ty>
+        [[nodiscard]] auto ReadMany(
+            _Archive& Archive) const
+        {
+            std::vector<Handle> ChildGuids;
+            Archive >> ChildGuids;
+
+            std::vector<Ptr<_Ty>> ChildAssets;
+            ChildAssets.reserve(ChildGuids.size());
+
+            for (const auto& ChildGuid : ChildGuids)
+            {
+                Ptr<_Ty> Asset;
+                if (ChildGuid != Handle::Null)
+                {
+                    auto AssetIter = m_Assets.find(ChildGuid);
+                    if (AssetIter != m_Assets.end())
+                    {
+                        Asset = std::dynamic_pointer_cast<_Ty>(AssetIter->second);
+                    }
+                }
+                ChildAssets.emplace_back(std::move(Asset));
+            }
+
+            return ChildAssets;
+        }
+
+    public:
+        /// <summary>
+        /// Internal use only.
         /// Link an asset for depdendency reading.
         /// </summary>
         void Link(
@@ -55,57 +110,6 @@ namespace Neon::AAsset
             const Ptr<IAsset>& Asset)
         {
             m_Assets.emplace(AssetGuid, Asset);
-        }
-
-        /// <summary>
-        /// Read the dependencies of an asset.
-        /// </summary>
-        [[nodiscard]] Ptr<IAsset> ReadOne(
-            const Handle& AssetGuid) const
-        {
-            auto Iter = m_Assets.find(AssetGuid);
-            return Iter != m_Assets.end() ? Iter->second : nullptr;
-        }
-
-        /// <summary>
-        /// Read the dependencies of an asset.
-        /// </summary>
-        template<typename _Archive>
-            requires requires(_Archive& Archive, Handle& Guid) { Archive >> Guid; }
-        [[nodiscard]] auto ReadOne(
-            _Archive& Archive) const
-        {
-            Handle AssetGuid;
-            Archive >> AssetGuid;
-            return ReadOne(AssetGuid);
-        }
-
-        /// <summary>
-        /// Read the dependencies of an asset.
-        /// </summary>
-        [[nodiscard]] std::vector<Ptr<IAsset>> ReadMany(
-            std::span<const Handle> AssetGuid) const
-        {
-            std::vector<Ptr<IAsset>> Assets;
-            Assets.reserve(AssetGuid.size());
-            for (const auto& Guid : AssetGuid)
-            {
-                Assets.push_back(ReadOne(Guid));
-            }
-            return Assets;
-        }
-
-        /// <summary>
-        /// Read the dependencies of an asset.
-        /// </summary>
-        template<typename _Archive>
-            requires requires(_Archive& Archive, std::vector<Handle>& Guids) { Archive >> Guids; }
-        [[nodiscard]] auto ReadMany(
-            _Archive& Archive) const
-        {
-            std::vector<Handle> Guids;
-            Archive >> Guids;
-            return ReadMany(Guids);
         }
 
     private:

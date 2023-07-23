@@ -1,7 +1,8 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
+#include <Asio/Coroutines.hpp>
 #include <Asset/Handle.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <filesystem>
 
 namespace Neon::AAsset
@@ -100,13 +101,18 @@ namespace Neon::AAsset
             bool IsDirty = true) noexcept;
 
         /// <summary>
+        /// Get the asset's dependencies.
+        /// </summary>
+        [[nodiscard]] Asio::CoGenerator<Handle> GetDependencies() const;
+
+        /// <summary>
         /// Set the asset's dependencies.
         /// </summary>
         void SetDependencies(
             std::list<StringU8> Dependencies);
 
     private:
-        AssetMetaData  m_MetaData;
-        bool           m_IsDirty    = false;
+        AssetMetaData m_MetaData;
+        bool          m_IsDirty = false;
     };
 } // namespace Neon::AAsset

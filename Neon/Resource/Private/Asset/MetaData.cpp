@@ -8,8 +8,14 @@ namespace Neon::AAsset
         std::ifstream& Stream)
     {
         boost::property_tree::read_json(Stream, m_MetaData);
-        m_MetaData.put_child("Loader", boost::property_tree::ptree());
-        m_MetaData.put_child("Dependencies", boost::property_tree::ptree());
+        if (m_MetaData.find("Loader") == m_MetaData.not_found())
+        {
+            m_MetaData.put_child("Loader", boost::property_tree::ptree());
+        }
+        if (m_MetaData.find("Dependencies") == m_MetaData.not_found())
+        {
+            m_MetaData.put_child("Dependencies", boost::property_tree::ptree());
+        }
     }
 
     AssetMetaDataDef::AssetMetaDataDef(
@@ -101,6 +107,14 @@ namespace Neon::AAsset
         bool IsDirty) noexcept
     {
         m_IsDirty = IsDirty;
+    }
+
+    Asio::CoGenerator<Handle> AssetMetaDataDef::GetDependencies() const
+    {
+        for (auto& Dependency : m_MetaData.get_child("Dependencies"))
+        {
+            co_yield Handle::FromString(Dependency.second.get_value<StringU8>());
+        }
     }
 
     void AssetMetaDataDef::SetDependencies(

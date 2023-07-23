@@ -5,6 +5,7 @@
 
 #include <Core/SHA256.hpp>
 #include <queue>
+#include <stack>
 #include <fstream>
 
 #include <Log/Logger.hpp>
@@ -252,59 +253,117 @@ namespace Neon::AAsset
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
         const AAsset::Handle& AssetGuid)
     {
-        AssetMetaDataDef* Metadata = nullptr;
-        // Check if asset is already loaded in cache
-        // If not, check if it exists in the package
+        auto LoadFromCache =
+            [this](const AAsset::Handle& AssetGuid) -> Ptr<IAsset>
         {
             RLock Lock(m_CacheMutex);
             if (auto Iter = m_Cache.find(AssetGuid); Iter != m_Cache.end())
             {
                 return Iter->second;
             }
+            return nullptr;
+        };
 
-            auto Iter = m_AssetMeta.find(AssetGuid);
-            if (Iter == m_AssetMeta.end())
+        // The reason for checking if the asset is already loaded in the cache
+        // is because we later will only load the asset if it's not already loaded
+        if (auto CacheAsset = LoadFromCache(AssetGuid))
+        {
+            return CacheAsset;
+        }
+
+        std::stack<Handle> ToLoad;
+        ToLoad.push(AssetGuid);
+
+        AAsset::DependencyReader DepReader;
+
+        while (!ToLoad.empty())
+        {
+            auto& CurrentGuid = ToLoad.top();
+
+            // Check if asset is already loaded in cache
+            // If not, check if it exists in the package
+            AssetMetaDataDef* Metadata = nullptr;
             {
+                RLock Lock(m_CacheMutex);
+                auto  Iter = m_AssetMeta.find(CurrentGuid);
+                if (Iter == m_AssetMeta.end())
+                {
+                    NEON_ERROR_TAG("Asset", "Loading '{}' that depends on '{}' failed: Asset does not exist", AssetGuid.ToString(), CurrentGuid.ToString());
+                    return nullptr;
+                }
+
+                Metadata = &Iter->second;
+            }
+
+            // If we need to load dependencies first, skip this asset and load the dependencies
+            bool NeedsToDependenciesFirst = false;
+
+            // Insert the assets that should be loaded first
+            {
+                RLock Lock(m_CacheMutex);
+                for (auto DepGuid : Metadata->GetDependencies())
+                {
+                    if (auto CacheAsset = LoadFromCache(DepGuid))
+                    {
+                        DepReader.Link(DepGuid, CacheAsset);
+                    }
+                    else
+                    {
+                        printf("%s -- Loading: %s\n", AssetGuid.ToString().c_str(), DepGuid.ToString().c_str());
+                        ToLoad.push(std::move(DepGuid));
+                        NeedsToDependenciesFirst = true;
+                    }
+                }
+            }
+            if (NeedsToDependenciesFirst)
+            {
+                continue;
+            }
+
+            auto AssetPath = Metadata->GetAssetPath();
+            if (!std::filesystem::exists(AssetPath))
+            {
+                NEON_ERROR_TAG("Asset", "Loading '{}' -- Asset file '{}' of GUID '{}' does not exist", AssetGuid.ToString(), AssetPath.string(), CurrentGuid.ToString());
                 return nullptr;
             }
 
-            Metadata = &Iter->second;
+            //
+            // Read asset file
+            //
+
+            IAssetHandler* Handler = Storage::GetHandler(Metadata->GetLoaderId());
+            if (!Handler)
+            {
+                NEON_ERROR_TAG("Asset", "Loading '{}' -- Failed to get handler for asset '{}'", AssetGuid.ToString(), CurrentGuid.ToString());
+                return nullptr;
+            }
+
+            std::ifstream AssetFile(AssetPath, std::ios::in | std::ios::binary);
+            if (!AssetFile.is_open())
+            {
+                NEON_ERROR_TAG("Asset", "Loading '{}' -- Failed to open asset file '{}'", AssetGuid.ToString(), AssetPath.string());
+                return nullptr;
+            }
+
+            auto Asset = Handler->Load(AssetFile, DepReader, CurrentGuid, AssetPath.string(), Metadata->GetLoaderData());
+            if (!Asset)
+            {
+                NEON_ERROR_TAG("Asset", "Loading '{}' -- Failed to load asset '{}'", AssetGuid.ToString(), CurrentGuid.ToString());
+                return nullptr;
+            }
+
+            Asset->MarkDirty(false);
+            DepReader.Link(CurrentGuid, Asset);
+
+            ToLoad.pop();
+
+            {
+                RWLock Lock(m_CacheMutex);
+                m_Cache.emplace(CurrentGuid, Asset);
+            }
         }
 
-        auto AssetPath = Metadata->GetAssetPath();
-        if (!std::filesystem::exists(AssetPath))
-        {
-            NEON_ERROR_TAG("Asset", "Asset file '{}' of GUID '{}' does not exist", AssetPath.string(), AssetGuid.ToString());
-            return nullptr;
-        }
-
-        //
-        // Read asset file
-        //
-
-        IAssetHandler* Handler = Storage::GetHandler(Metadata->GetLoaderId());
-        if (!Handler)
-        {
-            NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", AssetGuid.ToString());
-            return nullptr;
-        }
-
-        std::ifstream AssetFile(AssetPath, std::ios::in | std::ios::binary);
-        if (!AssetFile.is_open())
-        {
-            NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
-            return nullptr;
-        }
-
-        auto Asset = Handler->Load(AssetFile, AssetGuid, AssetPath.string(), Metadata->GetLoaderData());
-        if (!Asset)
-        {
-            NEON_ERROR_TAG("Asset", "Failed to load asset '{}'", AssetGuid.ToString());
-            return nullptr;
-        }
-
-        Asset->MarkDirty(false);
-        return Asset;
+        return LoadFromCache(AssetGuid);
     }
 
     bool DirectoryAssetPackage::UnloadAsset(

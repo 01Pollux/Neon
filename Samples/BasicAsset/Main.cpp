@@ -36,8 +36,8 @@ public:
         // SaveSimple();
         // LoadSimple();
 
-        SaveDeps();
-        //  LoadDeps();
+        // SaveDeps();
+        LoadDeps();
 
         ShutdownStorage();
     }
@@ -49,7 +49,7 @@ private:
     void LoadSimple();
 
     void SaveDeps();
-    // void LoadDeps();
+    void LoadDeps();
 
     void ShutdownStorage();
 };
@@ -64,6 +64,16 @@ NEON_MAIN(Argc, Argv)
     };
     return RunEngine<AssetPackSample>(Config);
 }
+
+//
+
+static constexpr uint32_t c_AssetCount = 100;
+static const char*        TextTest =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric\n"
+    "ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam eu\n"
+    "ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric";
+
+//
 
 class StringAndChildAsset : public AAsset::IAsset
 {
@@ -92,10 +102,48 @@ public:
         m_Text = std::move(Text);
     }
 
+    void Validate()
+    {
+        for (auto& Child : m_Children)
+        {
+            if (Child == nullptr)
+            {
+                continue;
+            }
+
+            Child->Validate();
+        }
+
+        NEON_ASSERT(GetText() == TextTest, "Asset text mismatch");
+    }
+
+    /// <summary>
+    /// Used for ::LoadDeps()
+    /// </summary>
+    void ValidateChildrenGraph(
+        size_t Count = 3)
+    {
+        if (Count > 0)
+        {
+            NEON_ASSERT(m_Children.size() == Count, "Invalid children count");
+            for (auto& Child : m_Children)
+            {
+                if (Child == nullptr)
+                {
+                    continue;
+                }
+
+                Child->ValidateChildrenGraph(Count == 2 ? 0 : 2);
+            }
+        }
+    }
+
 private:
     StringU8                              m_Text;
     std::vector<Ptr<StringAndChildAsset>> m_Children;
 };
+
+//
 
 class StringAndChildHandler : public AAsset::IAssetHandler
 {
@@ -109,21 +157,19 @@ public:
     }
 
     Ptr<AAsset::IAsset> Load(
-        std::ifstream&               Stream,
-        const AAsset::Handle&        AssetGuid,
-        StringU8                     Path,
-        const AAsset::AssetMetaData& LoaderData) override
+        std::ifstream&                  Stream,
+        const AAsset::DependencyReader& DepReader,
+        const AAsset::Handle&           AssetGuid,
+        StringU8                        Path,
+        const AAsset::AssetMetaData&    LoaderData) override
     {
         boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
 
         StringU8 Text;
         Archive >> Text;
 
-        // std::vector<AAsset::Handle> Children;
-        // Archive >> Children;
-
-        // auto ChildrenAssets = DependencyReader.Read(Children);
-        return std::make_shared<StringAndChildAsset>(std::move(Text), std::move(Path), AssetGuid /*, ChildrenAssets*/);
+        auto ChildrenAssets = DepReader.ReadMany<StringAndChildAsset>(Archive);
+        return std::make_shared<StringAndChildAsset>(std::move(Text), std::move(Path), AssetGuid, ChildrenAssets);
     }
 
     void Save(
@@ -141,6 +187,8 @@ public:
     }
 };
 
+//
+
 void AssetPackSample::RegisterManager()
 {
     AAsset::Storage::RegisterHandler<StringAndChildHandler>();
@@ -150,12 +198,7 @@ void AssetPackSample::RegisterManager()
     AAsset::Storage::Mount(std::make_unique<AAsset::DirectoryAssetPackage>("Test"));
 }
 
-static const char* TextTest =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultric\n"
-    "ies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam eu\n"
-    "ismod, nisl eget ultricies ultrices, nunc nisl ultricies nunc, quis ultricies nisl nisl eget nisl. Nullam euismod, nisl eget ultricies ultric";
-
-static constexpr uint32_t c_AssetCount = 100;
+//
 
 void AssetPackSample::SaveSimple()
 {
@@ -186,6 +229,8 @@ void AssetPackSample::SaveSimple()
     NEON_INFO("Saved simple {} assets in {}ms", c_AssetCount, dt);
 }
 
+//
+
 void AssetPackSample::LoadSimple()
 {
     std::vector<std::future<Ptr<AAsset::IAsset>>> Tasks;
@@ -203,7 +248,7 @@ void AssetPackSample::LoadSimple()
     {
         auto Asset = Task.get();
         NEON_ASSERT(Asset != nullptr, "Failed to load asset");
-        NEON_ASSERT(std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->GetText() == TextTest, "Asset handle mismatch");
+        std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->Validate();
     }
 
     auto t1 = std::chrono::high_resolution_clock::now();
@@ -226,6 +271,8 @@ auto GenDepsArray()
 
     return Handles;
 }
+
+//
 
 /*
  We will build our asset graph like this:
@@ -288,6 +335,25 @@ void AssetPackSample::SaveDeps()
 
 //
 
+void AssetPackSample::LoadDeps()
+{
+    auto Deps = GenDepsArray();
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+
+    auto Asset = AAsset::Manager::Load(Deps[0]).get();
+    NEON_ASSERT(Asset != nullptr, "Failed to load asset");
+    std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->Validate();
+    std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->ValidateChildrenGraph();
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+
+    NEON_INFO("Loaded deps asset in {}ms", dt);
+}
+
+//
+
 void AssetPackSample::ShutdownStorage()
 {
     auto t0 = std::chrono::high_resolution_clock::now();
@@ -299,25 +365,3 @@ void AssetPackSample::ShutdownStorage()
 
     NEON_INFO("Shutdown storage in {}ms", dt);
 }
-
-//
-
-//
-
-// void AssetPackSample::LoadDeps()
-//{
-//     auto Deps = GenDepsArray();
-//
-//     auto t0 = std::chrono::high_resolution_clock::now();
-//
-//     auto Manager = LoadManager();
-//
-//     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
-//
-//     auto Asset = Manager->Load(Package, Deps[0]).get();
-//
-//     auto t1 = std::chrono::high_resolution_clock::now();
-//     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-//
-//     NEON_INFO("Loaded deps asset in {}ms", dt);
-// }
