@@ -7,7 +7,7 @@
 
 #include <Log/Logger.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     static inline UPtr<StorageImpl> s_Instance;
 
@@ -276,4 +276,4 @@ namespace Neon::AAsset
             }
         }
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

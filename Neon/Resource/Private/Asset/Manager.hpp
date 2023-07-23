@@ -2,7 +2,7 @@
 
 #include <Asset/Manager.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class ManagerImpl
     {
@@ -31,4 +31,4 @@ namespace Neon::AAsset
         bool Unload(
             const Handle& AssetGuid);
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

@@ -2,7 +2,7 @@
 
 #include <Asset/Handle.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class IAsset
     {
@@ -39,4 +39,4 @@ namespace Neon::AAsset
         const Handle m_AssetGuid;
         bool         m_IsDirty = true;
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

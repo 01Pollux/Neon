@@ -30,9 +30,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
-        AAsset::Storage::Initialize();             \
+        Asset::Storage::Initialize();             \
         int Ret = Neon::Runtime::Main(argc, argv); \
-        AAsset::Storage::Shutdown();               \
+        Asset::Storage::Shutdown();               \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
@@ -48,9 +48,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
-        AAsset::Storage::Initialize();             \
+        Asset::Storage::Initialize();             \
         int Ret = Neon::Runtime::Main(argc, argv); \
-        AAsset::Storage::Shutdown();               \
+        Asset::Storage::Shutdown();               \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \

@@ -10,7 +10,7 @@
 
 #include <Log/Logger.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     DirectoryAssetPackage::DirectoryAssetPackage(
         std::filesystem::path Path) :
@@ -100,7 +100,7 @@ namespace Neon::AAsset
         }
     }
 
-    Asio::CoGenerator<const AAsset::Handle&> DirectoryAssetPackage::GetAssets()
+    Asio::CoGenerator<const Asset::Handle&> DirectoryAssetPackage::GetAssets()
     {
         RLock Lock(m_CacheMutex);
         for (auto& Guid : m_AssetMeta | std::views::keys)
@@ -110,7 +110,7 @@ namespace Neon::AAsset
     }
 
     bool DirectoryAssetPackage::ContainsAsset(
-        const AAsset::Handle& AssetGuid) const
+        const Asset::Handle& AssetGuid) const
     {
         RLock Lock(m_CacheMutex);
         return m_AssetMeta.contains(AssetGuid);
@@ -244,17 +244,17 @@ namespace Neon::AAsset
     }
 
     bool DirectoryAssetPackage::RemoveAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
         return m_Cache.erase(AssetGuid) > 0 && m_AssetMeta.erase(AssetGuid) > 0;
     }
 
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         auto LoadFromCache =
-            [this](const AAsset::Handle& AssetGuid) -> Ptr<IAsset>
+            [this](const Asset::Handle& AssetGuid) -> Ptr<IAsset>
         {
             RLock Lock(m_CacheMutex);
             if (auto Iter = m_Cache.find(AssetGuid); Iter != m_Cache.end())
@@ -274,7 +274,7 @@ namespace Neon::AAsset
         std::stack<Handle> ToLoad;
         ToLoad.push(AssetGuid);
 
-        AAsset::DependencyReader DepReader;
+        Asset::DependencyReader DepReader;
 
         while (!ToLoad.empty())
         {
@@ -367,7 +367,7 @@ namespace Neon::AAsset
     }
 
     bool DirectoryAssetPackage::UnloadAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
         return m_Cache.erase(AssetGuid) > 0;
@@ -386,4 +386,4 @@ namespace Neon::AAsset
             }
         }
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

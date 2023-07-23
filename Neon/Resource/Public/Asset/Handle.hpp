@@ -8,7 +8,7 @@ namespace boost::serialization
     class access;
 }
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class IAsset;
     struct Handle : boost::uuids::uuid
@@ -49,14 +49,14 @@ namespace Neon::AAsset
             Archive& data;
         }
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset
 
 namespace std
 {
     template<>
-    struct hash<Neon::AAsset::Handle>
+    struct hash<Neon::Asset::Handle>
     {
         size_t operator()(
-            const Neon::AAsset::Handle& Value) const noexcept;
+            const Neon::Asset::Handle& Value) const noexcept;
     };
 } // namespace std

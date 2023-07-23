@@ -3,7 +3,7 @@
 
 #include <Log/Logger.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     IAsset::IAsset(
         const Handle& AssetGuid,
@@ -34,4 +34,4 @@ namespace Neon::AAsset
     {
         return m_IsDirty;
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

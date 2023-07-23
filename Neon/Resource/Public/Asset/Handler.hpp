@@ -10,7 +10,7 @@
 #include <fstream>
 #include <queue>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class DependencyReader;
     class DependencyWriter;
@@ -29,7 +29,7 @@ namespace Neon::AAsset
         /// </summary>
         virtual Ptr<IAsset> Load(
             std::ifstream&                  Stream,
-            const AAsset::DependencyReader& DepReader,
+            const Asset::DependencyReader& DepReader,
             const Handle&                   AssetGuid,
             StringU8                        Path,
             const AssetMetaData&            LoaderData) = 0;
@@ -179,4 +179,4 @@ namespace Neon::AAsset
     private:
         std::unordered_set<Ptr<IAsset>> m_Assets;
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

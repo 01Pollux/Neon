@@ -4,7 +4,7 @@
 #include <Asio/Coroutines.hpp>
 #include <future>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class IAsset;
     class IAssetPackage;
@@ -134,4 +134,4 @@ namespace Neon::AAsset
         [[nodiscard]] static Asio::CoGenerator<PackageAndAsset> GetAllAssets(
             bool IncludeMemoryOnly = false);
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

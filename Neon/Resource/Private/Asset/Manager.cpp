@@ -5,7 +5,7 @@
 
 #include <Log/Logger.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     ManagerImpl* ManagerImpl::Get()
     {
@@ -80,4 +80,4 @@ namespace Neon::AAsset
         NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid.ToString());
         return false;
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

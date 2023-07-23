@@ -5,7 +5,7 @@
 #include <Asio/ThreadPool.hpp>
 #include <mutex>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class StorageImpl
     {
@@ -112,4 +112,4 @@ namespace Neon::AAsset
         ManagerImpl        m_Manager;
         Asio::ThreadPool<> m_ThreadPool;
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

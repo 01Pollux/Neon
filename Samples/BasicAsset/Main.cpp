@@ -68,7 +68,7 @@ static const char*        TextTest =
 
 //
 
-class StringAndChildAsset : public AAsset::IAsset
+class StringAndChildAsset : public Asset::IAsset
 {
     friend class StringAndChildHandler;
 
@@ -76,7 +76,7 @@ public:
     StringAndChildAsset(
         StringU8                            Text,
         StringU8                            Path,
-        const AAsset::Handle&               Handle   = AAsset::Handle::Random(),
+        const Asset::Handle&                Handle   = Asset::Handle::Random(),
         std::span<Ptr<StringAndChildAsset>> Children = {}) :
         IAsset(Handle, std::move(Path)),
         m_Text(std::move(Text)),
@@ -138,23 +138,23 @@ private:
 
 //
 
-class StringAndChildHandler : public AAsset::IAssetHandler
+class StringAndChildHandler : public Asset::IAssetHandler
 {
 public:
     static constexpr const char* HandlerName = "StringAndChild";
 
     bool CanHandle(
-        const Ptr<AAsset::IAsset>& Asset) override
+        const Ptr<Asset::IAsset>& Asset) override
     {
         return std::dynamic_pointer_cast<StringAndChildAsset>(Asset) != nullptr;
     }
 
-    Ptr<AAsset::IAsset> Load(
-        std::ifstream&                  Stream,
-        const AAsset::DependencyReader& DepReader,
-        const AAsset::Handle&           AssetGuid,
-        StringU8                        Path,
-        const AAsset::AssetMetaData&    LoaderData) override
+    Ptr<Asset::IAsset> Load(
+        std::ifstream&                 Stream,
+        const Asset::DependencyReader& DepReader,
+        const Asset::Handle&           AssetGuid,
+        StringU8                       Path,
+        const Asset::AssetMetaData&    LoaderData) override
     {
         boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
 
@@ -166,10 +166,10 @@ public:
     }
 
     void Save(
-        std::fstream&              Stream,
-        AAsset::DependencyWriter&  DepWriter,
-        const Ptr<AAsset::IAsset>& Asset,
-        AAsset::AssetMetaData&     LoaderData) override
+        std::fstream&             Stream,
+        Asset::DependencyWriter&  DepWriter,
+        const Ptr<Asset::IAsset>& Asset,
+        Asset::AssetMetaData&     LoaderData) override
     {
         boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
 
@@ -184,11 +184,11 @@ public:
 
 void AssetPackSample::RegisterManager()
 {
-    AAsset::Storage::RegisterHandler<StringAndChildHandler>();
+    Asset::Storage::RegisterHandler<StringAndChildHandler>();
 
     //
 
-    AAsset::Storage::Mount(std::make_unique<AAsset::DirectoryAssetPackage>("Test"));
+    Asset::Storage::Mount(std::make_unique<Asset::DirectoryAssetPackage>("Test"));
 }
 
 //
@@ -204,10 +204,10 @@ void AssetPackSample::SaveSimple()
     {
         StringU8 Path = StringUtils::Format("File/{}.txt", i);
 
-        auto AssetGuid = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
+        auto AssetGuid = Asset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
         auto Asset     = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuid);
 
-        Tasks.emplace_back(AAsset::Storage::SaveAsset(
+        Tasks.emplace_back(Asset::Storage::SaveAsset(
             { .Asset = std::move(Asset) }));
     }
 
@@ -220,22 +220,22 @@ void AssetPackSample::SaveSimple()
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     NEON_INFO("Saved simple {} assets in {}ms", c_AssetCount, dt);
-    AAsset::Storage::ExportAll();
+    Asset::Storage::ExportAll();
 }
 
 //
 
 void AssetPackSample::LoadSimple()
 {
-    std::vector<std::future<Ptr<AAsset::IAsset>>> Tasks;
+    std::vector<std::future<Ptr<Asset::IAsset>>> Tasks;
     Tasks.reserve(c_AssetCount);
 
     auto t0 = std::chrono::high_resolution_clock::now();
 
     for (uint32_t i = 1; i <= c_AssetCount; ++i)
     {
-        auto AssetGuid = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
-        Tasks.emplace_back(AAsset::Manager::Load(AssetGuid));
+        auto AssetGuid = Asset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i));
+        Tasks.emplace_back(Asset::Manager::Load(AssetGuid));
     }
 
     for (auto& Task : Tasks)
@@ -255,12 +255,12 @@ void AssetPackSample::LoadSimple()
 
 auto GenDepsArray()
 {
-    std::array<AAsset::Handle, 10> Handles;
+    std::array<Asset::Handle, 10> Handles;
 
     size_t i = 1;
     for (auto& Handle : Handles)
     {
-        Handle = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i++));
+        Handle = Asset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i++));
     }
 
     return Handles;
@@ -291,7 +291,7 @@ void AssetPackSample::SaveDeps()
         Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
 
         // Its not required to save asset right now, because we will save asset 0 later
-        AAsset::Storage::SaveAsset(
+        Asset::Storage::SaveAsset(
             { .Asset = Assets[i] })
             .get();
     }
@@ -307,7 +307,7 @@ void AssetPackSample::SaveDeps()
         Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i], Children);
 
         // Its not required to save asset right now, because we will save asset 0 later
-        AAsset::Storage::SaveAsset(
+        Asset::Storage::SaveAsset(
             { .Asset = Assets[i] })
             .get();
     }
@@ -317,7 +317,7 @@ void AssetPackSample::SaveDeps()
     std::array Children = { Assets[1], Assets[2], Assets[3] };
 
     Assets[0] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[0], Children);
-    AAsset::Storage::SaveAsset(
+    Asset::Storage::SaveAsset(
         { .Asset = Assets[0] })
         .get();
 
@@ -326,7 +326,7 @@ void AssetPackSample::SaveDeps()
 
     NEON_INFO("Saved deps {} assets in {}ms", Assets.size(), dt);
 
-    AAsset::Storage::ExportAll();
+    Asset::Storage::ExportAll();
 }
 
 //
@@ -337,7 +337,7 @@ void AssetPackSample::LoadDeps()
 
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    auto Asset = AAsset::Manager::Load(Deps[0]).get();
+    auto Asset = Asset::Manager::Load(Deps[0]).get();
     NEON_ASSERT(Asset != nullptr, "Failed to load asset");
     std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->Validate();
     std::dynamic_pointer_cast<StringAndChildAsset>(Asset)->ValidateChildrenGraph();

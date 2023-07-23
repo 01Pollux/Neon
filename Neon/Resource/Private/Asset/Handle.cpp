@@ -7,7 +7,7 @@
 #include <boost/uuid/uuid_hash.hpp>
 #include <boost/uuid/nil_generator.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     const Handle Handle::Null = { boost::uuids::nil_uuid() };
 
@@ -39,12 +39,12 @@ namespace Neon::AAsset
         }
         std::unreachable();
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset
 
 namespace std
 {
-    size_t hash<Neon::AAsset::Handle>::operator()(
-        const Neon::AAsset::Handle& Value) const noexcept
+    size_t hash<Neon::Asset::Handle>::operator()(
+        const Neon::Asset::Handle& Value) const noexcept
     {
         return boost::uuids::hash_value(Value);
     };

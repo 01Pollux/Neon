@@ -3,7 +3,7 @@
 #include <Asset/Handle.hpp>
 #include <future>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     class IAsset;
 
@@ -28,4 +28,4 @@ namespace Neon::AAsset
         static void Unload(
             const Handle& AssetGuid);
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

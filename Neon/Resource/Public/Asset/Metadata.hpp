@@ -5,7 +5,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <filesystem>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     using AssetMetaData = boost::property_tree::ptree;
 
@@ -115,4 +115,4 @@ namespace Neon::AAsset
         AssetMetaData m_MetaData;
         bool          m_IsDirty = false;
     };
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

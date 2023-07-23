@@ -2,7 +2,7 @@
 #include <Asset/Metadata.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
     AssetMetaDataDef::AssetMetaDataDef(
         std::ifstream& Stream)
@@ -127,4 +127,4 @@ namespace Neon::AAsset
             DepsNode.push_back({ "", boost::property_tree::ptree(std::move(Dependency)) });
         }
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset

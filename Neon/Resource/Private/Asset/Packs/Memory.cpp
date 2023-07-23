@@ -1,9 +1,9 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Packs/Memory.hpp>
 
-namespace Neon::AAsset
+namespace Neon::Asset
 {
-    Asio::CoGenerator<const AAsset::Handle&> MemoryAssetPackage::GetAssets()
+    Asio::CoGenerator<const Asset::Handle&> MemoryAssetPackage::GetAssets()
     {
         RLock Lock(m_CacheMutex);
         for (auto& Guid : m_Cache | std::views::keys)
@@ -13,7 +13,7 @@ namespace Neon::AAsset
     }
 
     bool MemoryAssetPackage::ContainsAsset(
-        const AAsset::Handle& AssetGuid) const
+        const Asset::Handle& AssetGuid) const
     {
         RLock Lock(m_CacheMutex);
         return m_Cache.contains(AssetGuid);
@@ -28,14 +28,14 @@ namespace Neon::AAsset
     }
 
     bool MemoryAssetPackage::RemoveAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
         return m_Cache.erase(AssetGuid) > 0;
     }
 
     Ptr<IAsset> MemoryAssetPackage::LoadAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
         auto   Iter = m_Cache.find(AssetGuid);
@@ -43,9 +43,9 @@ namespace Neon::AAsset
     }
 
     bool MemoryAssetPackage::UnloadAsset(
-        const AAsset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid)
     {
         RLock Lock(m_CacheMutex);
         return m_Cache.contains(AssetGuid);
     }
-} // namespace Neon::AAsset
+} // namespace Neon::Asset
