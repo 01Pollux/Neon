@@ -1,22 +1,16 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Metadata.hpp>
-#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <iostream>
 
 namespace Neon::AAsset
 {
     AssetMetaDataDef::AssetMetaDataDef(
         std::ifstream& Stream)
     {
-        boost::property_tree::read_ini(Stream, m_MetaData);
-        auto Iter = m_MetaData.find("Loader");
-        if (Iter != m_MetaData.not_found())
-        {
-            m_LoaderData = &Iter->second;
-        }
-        else
-        {
-            m_LoaderData = &m_MetaData.add_child("Loader", boost::property_tree::ptree());
-        }
+        boost::property_tree::read_json(Stream, m_MetaData);
+        m_MetaData.put_child("Loader", boost::property_tree::ptree());
+        m_MetaData.put_child("Dependencies", boost::property_tree::ptree());
     }
 
     AssetMetaDataDef::AssetMetaDataDef(
@@ -26,13 +20,14 @@ namespace Neon::AAsset
     {
         SetGuid(AssetGuid);
         SetPath(std::move(Path));
-        m_LoaderData = &m_MetaData.add_child("Loader", boost::property_tree::ptree());
+        m_MetaData.add_child("Loader", boost::property_tree::ptree());
+        m_MetaData.add_child("Dependencies", boost::property_tree::ptree());
     }
 
     void AssetMetaDataDef::Export(
         std::ofstream& Stream)
     {
-        boost::property_tree::write_ini(Stream, m_MetaData);
+        boost::property_tree::write_json(Stream, m_MetaData);
     }
 
     //
@@ -74,12 +69,12 @@ namespace Neon::AAsset
 
     AssetMetaData& AssetMetaDataDef::GetLoaderData() noexcept
     {
-        return *m_LoaderData;
+        return m_MetaData.get_child("Loader");
     }
 
     const AssetMetaData& AssetMetaDataDef::GetLoaderData() const noexcept
     {
-        return *m_LoaderData;
+        return m_MetaData.get_child("Loader");
     }
 
     std::filesystem::path AssetMetaDataDef::GetAssetPath() const
@@ -107,5 +102,16 @@ namespace Neon::AAsset
         bool IsDirty) noexcept
     {
         m_IsDirty = IsDirty;
+    }
+
+    void AssetMetaDataDef::SetDependencies(
+        std::list<StringU8> Dependencies)
+    {
+        auto& DepsNode = m_MetaData.get_child("Dependencies");
+        DepsNode.clear();
+        for (auto& Dependency : Dependencies)
+        {
+            DepsNode.push_back({ "", boost::property_tree::ptree(std::move(Dependency)) });
+        }
     }
 } // namespace Neon::AAsset

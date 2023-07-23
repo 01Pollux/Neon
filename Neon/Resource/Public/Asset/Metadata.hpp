@@ -99,9 +99,14 @@ namespace Neon::AAsset
         void SetDirty(
             bool IsDirty = true) noexcept;
 
+        /// <summary>
+        /// Set the asset's dependencies.
+        /// </summary>
+        void SetDependencies(
+            std::list<StringU8> Dependencies);
+
     private:
         AssetMetaData  m_MetaData;
-        AssetMetaData* m_LoaderData = nullptr;
         bool           m_IsDirty    = false;
     };
 } // namespace Neon::AAsset

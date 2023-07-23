@@ -33,10 +33,10 @@ public:
 
         RegisterManager();
 
-        SaveSimple();
+        // SaveSimple();
         // LoadSimple();
 
-        // SaveDeps();
+        SaveDeps();
         //  LoadDeps();
 
         ShutdownStorage();
@@ -236,6 +236,9 @@ auto GenDepsArray()
 */
 void AssetPackSample::SaveDeps()
 {
+    // If true, saving the root asset '0' will save all children recursively
+    constexpr bool Recursive = true;
+
     auto AssetGuids = GenDepsArray();
 
     std::array<Ptr<StringAndChildAsset>, 10> Assets;
@@ -248,30 +251,35 @@ void AssetPackSample::SaveDeps()
         StringU8 Path = StringUtils::Format("File/{}.txt", i);
 
         Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
-        AAsset::Storage::SaveAsset(
-            { .Asset = Assets[i] })
-            .get();
+        if (!Recursive)
+        {
+            AAsset::Storage::SaveAsset(
+                { .Asset = Assets[i] })
+                .get();
+        }
     }
 
-    // create assets from 4 to 9
+    // create assets from 1 to 3
     for (size_t i = 1; i < 4; i++)
     {
-        StringU8 Path = StringUtils::Format("File{}.txt", i);
+        StringU8 Path = StringUtils::Format("File/{}.txt", i);
 
-        std::array Chidren = { Assets[i * 2 + 2],
-                               Assets[i * 2 + 3] };
+        std::array Children = { Assets[i * 2 + 2],
+                                Assets[i * 2 + 3] };
 
-        Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
-        AAsset::Storage::SaveAsset(
-            { .Asset = Assets[i] })
-            .get();
+        Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i], Children);
+        if (!Recursive)
+        {
+            AAsset::Storage::SaveAsset(
+                { .Asset = Assets[i] })
+                .get();
+        }
     }
-
     // create asset 0
-    StringU8   Path    = StringUtils::Format("File/{}.txt", 0);
-    std::array Chidren = { Assets[1], Assets[2], Assets[3] };
+    StringU8   Path     = StringUtils::Format("File/{}.txt", 0);
+    std::array Children = { Assets[1], Assets[2], Assets[3] };
 
-    Assets[0] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[0], Chidren);
+    Assets[0] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[0], Children);
     AAsset::Storage::SaveAsset(
         { .Asset = Assets[0] })
         .get();

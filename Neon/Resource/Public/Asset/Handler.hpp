@@ -162,18 +162,14 @@ namespace Neon::AAsset
             Archive << ChildGuids;
         }
 
+    public:
         /// <summary>
-        /// Flush the assets into a queue
-        /// Function internal and should not be called by the user.
+        /// Internal use only.
+        /// Get the dependencies of an asset.
         /// </summary>
-        void FlushInto(
-            std::queue<Ptr<IAsset>>& Queue)
+        auto& GetDependencies() noexcept
         {
-            for (auto& Asset : m_Assets)
-            {
-                Queue.push(std::move(Asset));
-            }
-            m_Assets.clear();
+            return m_Assets;
         }
 
     private:

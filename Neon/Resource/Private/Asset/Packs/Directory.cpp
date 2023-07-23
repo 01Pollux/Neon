@@ -4,7 +4,6 @@
 #include <Asset/Handler.hpp>
 
 #include <Core/SHA256.hpp>
-#include <boost/property_tree/ini_parser.hpp>
 #include <queue>
 #include <fstream>
 
@@ -120,19 +119,30 @@ namespace Neon::AAsset
     {
         auto ExportTask = [this]
         {
-            RLock Lock(m_CacheMutex);
-            for (auto& [Guid, Metadata] : m_AssetMeta)
+            // Export all dirty assets
             {
-                if (!Metadata.IsDirty())
+                RLock Lock(m_CacheMutex);
+                for (auto& [Guid, Metadata] : m_AssetMeta)
                 {
-                    continue;
+                    if (!Metadata.IsDirty())
+                    {
+                        continue;
+                    }
+
+                    std::filesystem::path AssetPath = Metadata.GetPath();
+                    std::filesystem::create_directories(AssetPath.parent_path());
+
+                    std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
+                    Metadata.Export(Metafile);
                 }
-
-                std::filesystem::path AssetPath = Metadata.GetPath();
-                std::filesystem::create_directories(AssetPath.parent_path());
-
-                std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
-                Metadata.Export(Metafile);
+            }
+            // Unset dirty flag
+            {
+                RWLock Lock(m_CacheMutex);
+                for (auto& Metadata : m_AssetMeta | std::views::values)
+                {
+                    Metadata.SetDirty(false);
+                }
             }
         };
 
@@ -140,26 +150,25 @@ namespace Neon::AAsset
     }
 
     std::future<void> DirectoryAssetPackage::SaveAsset(
-        Ptr<IAsset> Asset)
+        Ptr<IAsset> FirstAsset)
     {
         auto SaveAssetTask =
             [this,
-             Asset]
+             FirstAsset]
         {
             std::queue<Ptr<IAsset>> ToSave;
-            ToSave.emplace(Asset);
+            ToSave.emplace(FirstAsset);
 
             while (!ToSave.empty())
             {
-                auto CurrentAsset = std::move(ToSave.back());
+                auto CurrentAsset = std::move(ToSave.front());
                 ToSave.pop();
 
                 auto& AssetGuid = CurrentAsset->GetGuid();
 
-                AssetMetaDataDef* Metadata = nullptr;
-
                 // Check if asset already exists in the package
                 // else add it to the package
+                AssetMetaDataDef* Metadata = nullptr;
                 {
                     RWLock Lock(m_CacheMutex);
                     auto   Iter = m_AssetMeta.find(AssetGuid);
@@ -168,7 +177,6 @@ namespace Neon::AAsset
                         Iter = m_AssetMeta.emplace(AssetGuid, AssetMetaDataDef(AssetGuid, CurrentAsset->GetPath())).first;
                         Iter->second.SetPath(StringUtils::Format("{}/{}{}", m_RootPath.string(), CurrentAsset->GetPath(), s_MetaFileExtension));
                     }
-
                     Metadata = &Iter->second;
                 }
 
@@ -177,25 +185,39 @@ namespace Neon::AAsset
                 //
 
                 size_t         HandlerId;
-                IAssetHandler* Handler = Storage::GetHandler(Asset, &HandlerId);
+                IAssetHandler* Handler = Storage::GetHandler(CurrentAsset, &HandlerId);
                 if (!Handler)
                 {
                     NEON_ERROR_TAG("Asset", "Failed to get handler for asset '{}'", AssetGuid.ToString());
-                    return;
+                    continue;
                 }
 
                 auto AssetPath = Metadata->GetAssetPath();
+                std::filesystem::create_directories(AssetPath.parent_path());
 
                 std::fstream AssetFile(AssetPath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
                 if (!AssetFile.is_open())
                 {
                     NEON_ERROR_TAG("Asset", "Failed to open asset file '{}'", AssetPath.string());
-                    return;
+                    continue;
                 }
 
                 DependencyWriter DepWriter;
-                Handler->Save(AssetFile, DepWriter, Asset, Metadata->GetLoaderData());
-                DepWriter.FlushInto(ToSave);
+                Handler->Save(AssetFile, DepWriter, CurrentAsset, Metadata->GetLoaderData());
+
+                // Write dependencies to metadata
+                {
+                    std::list<StringU8> DepsInsertInMetadata;
+
+                    auto& Dependencies = DepWriter.GetDependencies();
+                    for (auto& Dep : DepWriter.GetDependencies())
+                    {
+                        ToSave.push(Dep);
+                        DepsInsertInMetadata.emplace_back(Dep->GetGuid().ToString());
+                    }
+                    Dependencies.clear();
+                    Metadata->SetDependencies(std::move(DepsInsertInMetadata));
+                }
 
                 //
                 // Write file's hash
