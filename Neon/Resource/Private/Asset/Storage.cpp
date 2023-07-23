@@ -15,31 +15,13 @@ namespace Neon::AAsset
 
     void Storage::Initialize()
     {
-        NEON_ASSERT(!s_Instance, "Storage already initialized");
+        NEON_ASSERT(!s_Instance, "Asset storage already initialized");
         s_Instance = std::make_unique<StorageImpl>();
     }
 
     void Storage::Shutdown()
     {
-        std::vector<std::future<void>> Futures;
-
-        for (auto& Package : StorageImpl::Get()->GetPackages(false))
-        {
-            Futures.emplace_back(Package->Export());
-        }
-
-        try
-        {
-            for (auto& Future : Futures)
-            {
-                Future.get();
-            }
-        }
-        catch (const std::exception& Exception)
-        {
-            NEON_ERROR_TAG("Asset", "Failed to export packages: {}", Exception.what());
-        }
-
+        ExportAll();
         NEON_ASSERT(s_Instance, "Storage not initialized");
         s_Instance.reset();
     }
@@ -103,6 +85,28 @@ namespace Neon::AAsset
         IAssetPackage* Package)
     {
         s_Instance->Unmount(Package);
+    }
+
+    void Storage::ExportAll()
+    {
+        std::vector<std::future<void>> Futures;
+
+        for (auto& Package : StorageImpl::Get()->GetPackages(false))
+        {
+            Futures.emplace_back(Package->Export());
+        }
+
+        try
+        {
+            for (auto& Future : Futures)
+            {
+                Future.get();
+            }
+        }
+        catch (const std::exception& Exception)
+        {
+            NEON_ERROR_TAG("Asset", "Failed to export packages: {}", Exception.what());
+        }
     }
 
     Asio::CoGenerator<IAssetPackage*> Storage::GetPackages(

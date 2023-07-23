@@ -1,8 +1,6 @@
 #include <Runtime/EntryPoint.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
-#include <Asset/Storage.hpp>
-#include <Asset/Manager.hpp>
 #include <Asset/Asset.hpp>
 #include <Asset/Handler.hpp>
 #include <Asset/Packs/Directory.hpp>
@@ -29,17 +27,13 @@ public:
     {
         DefaultGameEngine::Initialize(Config);
 
-        AAsset::Storage::Initialize();
-
         RegisterManager();
 
         // SaveSimple();
-        // LoadSimple();
+        LoadSimple();
 
         // SaveDeps();
-        LoadDeps();
-
-        ShutdownStorage();
+        // LoadDeps();
     }
 
 private:
@@ -50,17 +44,16 @@ private:
 
     void SaveDeps();
     void LoadDeps();
-
-    void ShutdownStorage();
 };
 
 NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
         .Window = {
-            .Title      = STR("Test Engine"),
-            .Windowed   = true,
-            .Fullscreen = false },
+            .Title          = STR("Test Engine"),
+            .Windowed       = true,
+            .Fullscreen     = false,
+            .InitialVisible = false },
     };
     return RunEngine<AssetPackSample>(Config);
 }
@@ -227,6 +220,7 @@ void AssetPackSample::SaveSimple()
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     NEON_INFO("Saved simple {} assets in {}ms", c_AssetCount, dt);
+    AAsset::Storage::ExportAll();
 }
 
 //
@@ -331,6 +325,8 @@ void AssetPackSample::SaveDeps()
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     NEON_INFO("Saved deps {} assets in {}ms", Assets.size(), dt);
+
+    AAsset::Storage::ExportAll();
 }
 
 //
@@ -350,18 +346,4 @@ void AssetPackSample::LoadDeps()
     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
 
     NEON_INFO("Loaded deps asset in {}ms", dt);
-}
-
-//
-
-void AssetPackSample::ShutdownStorage()
-{
-    auto t0 = std::chrono::high_resolution_clock::now();
-
-    AAsset::Storage::Shutdown();
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-
-    NEON_INFO("Shutdown storage in {}ms", dt);
 }

@@ -1,9 +1,13 @@
 #pragma once
 
-#include <Config/Engine.hpp>
 #include <Runtime/GameEngine.hpp>
-#include <Log/Logger.hpp>
+#include <Config/Engine.hpp>
+#include <Asset/Manager.hpp>
+#include <Asset/Storage.hpp>
+
 #include <ranges>
+
+#include <Log/Logger.hpp>
 
 namespace Neon::Runtime
 {
@@ -26,7 +30,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
+        AAsset::Storage::Initialize();             \
         int Ret = Neon::Runtime::Main(argc, argv); \
+        AAsset::Storage::Shutdown();               \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
@@ -42,7 +48,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
+        AAsset::Storage::Initialize();             \
         int Ret = Neon::Runtime::Main(argc, argv); \
+        AAsset::Storage::Shutdown();               \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \

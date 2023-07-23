@@ -112,6 +112,11 @@ namespace Neon::AAsset
         static void Unmount(
             IAssetPackage* Package);
 
+        /// <summary>
+        /// Exports all packages to disk.
+        /// </summary>
+        static void ExportAll();
+
     public:
         /// <summary>
         /// Gets the asset package with the specified name.
