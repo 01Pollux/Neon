@@ -218,7 +218,7 @@ auto GenDepsArray()
 {
     std::array<AAsset::Handle, 10> Handles;
 
-    size_t i = 0;
+    size_t i = 1;
     for (auto& Handle : Handles)
     {
         Handle = AAsset::Handle::FromString(StringUtils::Format("00000000-0000-{:0>4}-0000-000000000000", i++));
@@ -236,9 +236,6 @@ auto GenDepsArray()
 */
 void AssetPackSample::SaveDeps()
 {
-    // If true, saving the root asset '0' will save all children recursively
-    constexpr bool Recursive = true;
-
     auto AssetGuids = GenDepsArray();
 
     std::array<Ptr<StringAndChildAsset>, 10> Assets;
@@ -251,12 +248,11 @@ void AssetPackSample::SaveDeps()
         StringU8 Path = StringUtils::Format("File/{}.txt", i);
 
         Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i]);
-        if (!Recursive)
-        {
-            AAsset::Storage::SaveAsset(
-                { .Asset = Assets[i] })
-                .get();
-        }
+
+        // Its not required to save asset right now, because we will save asset 0 later
+        AAsset::Storage::SaveAsset(
+            { .Asset = Assets[i] })
+            .get();
     }
 
     // create assets from 1 to 3
@@ -268,13 +264,13 @@ void AssetPackSample::SaveDeps()
                                 Assets[i * 2 + 3] };
 
         Assets[i] = std::make_shared<StringAndChildAsset>(TextTest, std::move(Path), AssetGuids[i], Children);
-        if (!Recursive)
-        {
-            AAsset::Storage::SaveAsset(
-                { .Asset = Assets[i] })
-                .get();
-        }
+
+        // Its not required to save asset right now, because we will save asset 0 later
+        AAsset::Storage::SaveAsset(
+            { .Asset = Assets[i] })
+            .get();
     }
+
     // create asset 0
     StringU8   Path     = StringUtils::Format("File/{}.txt", 0);
     std::array Children = { Assets[1], Assets[2], Assets[3] };
@@ -308,62 +304,6 @@ void AssetPackSample::ShutdownStorage()
 
 //
 
-//
-// void AssetPackSample::SaveDeps()
-//{
-//     auto Deps = GenDepsArray();
-//
-//     auto t0 = std::chrono::high_resolution_clock::now();
-//
-//     auto Manager = LoadManager();
-//     auto Package = Manager->Mount(std::make_unique<AAsset::PackageDirectory>("Test/Directory1"));
-//
-//     std::array<Ptr<StringAndChildAsset>, 10> Assets;
-//
-//     // create assets from 4 to 9
-//     for (size_t i = 4; i < Assets.size(); i++)
-//     {
-//         StringU8 Path = StringUtils::Format("Assets/Test{}.txt", i);
-//
-//         Assets[i] = Package->CreateAsset<StringAndChildAsset>(
-//             { .Path = std::move(Path), .HandlerName = StringAndChildHandler::HandlerName },
-//             StringU8(TextTest),
-//             Deps[i]);
-//     }
-//
-//     // create assets from 1 to 3
-//     for (size_t i = 1; i < 4; i++)
-//     {
-//         StringU8 Path = StringUtils::Format("Assets/Test{}.txt", i);
-//
-//         std::array Chidren = { Assets[i * 2 + 2],
-//                                Assets[i * 2 + 3] };
-//
-//         Assets[i] = Package->CreateAsset<StringAndChildAsset>(
-//             { .Path = std::move(Path), .HandlerName = StringAndChildHandler::HandlerName },
-//             StringU8(TextTest),
-//             Deps[i],
-//             Chidren);
-//     }
-//
-//     // create asset 0
-//     StringU8   Path    = StringUtils::Format("Assets/Test{}.txt", 0);
-//     std::array Chidren = { Assets[1], Assets[2], Assets[3] };
-//
-//     Assets[0] = Package->CreateAsset<StringAndChildAsset>(
-//         { .Path = std::move(Path), .HandlerName = StringAndChildHandler::HandlerName },
-//         StringU8(TextTest),
-//         Deps[0],
-//         Chidren);
-//
-//     Manager->Flush(Package);
-//
-//     auto t1 = std::chrono::high_resolution_clock::now();
-//     auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-//
-//     NEON_INFO("Saved deps {} assets in {}ms", Assets.size(), dt);
-// }
-//
 // void AssetPackSample::LoadDeps()
 //{
 //     auto Deps = GenDepsArray();

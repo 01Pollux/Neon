@@ -23,8 +23,20 @@ namespace Neon::AAsset
         /// </summary>
         [[nodiscard]] const StringU8& GetPath() const noexcept;
 
+        /// <summary>
+        /// Query if the asset is dirty.
+        /// </summary>
+        [[nodiscard]] bool IsDirty() const noexcept;
+
+        /// <summary>
+        /// Marks the asset as dirty.
+        /// </summary>
+        void MarkDirty(
+            bool IsDirty = true) noexcept;
+
     protected:
         StringU8     m_AssetPath;
         const Handle m_AssetGuid;
+        bool         m_IsDirty = true;
     };
 } // namespace Neon::AAsset

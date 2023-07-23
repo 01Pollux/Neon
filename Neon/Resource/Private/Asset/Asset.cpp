@@ -23,4 +23,15 @@ namespace Neon::AAsset
         NEON_VALIDATE(!(m_AssetPath.empty() || m_AssetPath.starts_with("..")), "Path '{}' cannot be empty or start with '..'", m_AssetPath);
         return m_AssetPath;
     }
+
+    void IAsset::MarkDirty(
+        bool IsDirty) noexcept
+    {
+        m_IsDirty = IsDirty;
+    }
+
+    bool IAsset::IsDirty() const noexcept
+    {
+        return m_IsDirty;
+    }
 } // namespace Neon::AAsset

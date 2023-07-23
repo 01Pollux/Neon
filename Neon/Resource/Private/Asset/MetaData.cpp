@@ -1,7 +1,6 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Metadata.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include <iostream>
 
 namespace Neon::AAsset
 {

@@ -212,7 +212,10 @@ namespace Neon::AAsset
                     auto& Dependencies = DepWriter.GetDependencies();
                     for (auto& Dep : DepWriter.GetDependencies())
                     {
-                        ToSave.push(Dep);
+                        if (Dep->IsDirty())
+                        {
+                            ToSave.push(Dep);
+                        }
                         DepsInsertInMetadata.emplace_back(Dep->GetGuid().ToString());
                     }
                     Dependencies.clear();
@@ -230,6 +233,8 @@ namespace Neon::AAsset
                 Hash.Append(AssetFile, FileSize);
                 Metadata->SetLoaderId(HandlerId);
                 Metadata->SetHash(Hash.Digest().ToString());
+
+                CurrentAsset->MarkDirty(false);
                 Metadata->SetDirty();
             }
         };
@@ -291,7 +296,15 @@ namespace Neon::AAsset
             return nullptr;
         }
 
-        return Handler->Load(AssetFile, AssetGuid, AssetPath.string(), Metadata->GetLoaderData());
+        auto Asset = Handler->Load(AssetFile, AssetGuid, AssetPath.string(), Metadata->GetLoaderData());
+        if (!Asset)
+        {
+            NEON_ERROR_TAG("Asset", "Failed to load asset '{}'", AssetGuid.ToString());
+            return nullptr;
+        }
+
+        Asset->MarkDirty(false);
+        return Asset;
     }
 
     bool DirectoryAssetPackage::UnloadAsset(
