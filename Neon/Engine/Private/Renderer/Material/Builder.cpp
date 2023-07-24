@@ -17,32 +17,23 @@ namespace Neon::Renderer
 
     //
 
-#define MATERIAL_SHADER_FUNC(MaterialClass, ShaderStage, Index)        \
-    MaterialClass& MaterialClass::ShaderStage(                         \
-        Asset::ShaderModuleId    Module,                               \
-        const RHI::ShaderMacros& Macros,                               \
-        RHI::ShaderProfile       Profile,                              \
-        RHI::MShaderCompileFlags Flags)                                \
-    {                                                                  \
-        m_ShaderModules[Index] = {                                     \
-            .ModuleId = Module,                                        \
-            .Macros   = Macros,                                        \
-            .Profile  = Profile,                                       \
-            .Flags    = Flags,                                         \
-            .Enabled  = true                                           \
-        };                                                             \
-        return *this;                                                  \
-    }                                                                  \
-                                                                       \
-    MaterialClass& MaterialClass::Remove##ShaderStage()                \
-    {                                                                  \
-        m_ShaderModules[Index].Enabled = false;                        \
-        return *this;                                                  \
-    }                                                                  \
-                                                                       \
-    auto MaterialClass::ShaderStage() const->const ShaderModuleHandle& \
-    {                                                                  \
-        return m_ShaderModules[Index];                                 \
+#define MATERIAL_SHADER_FUNC(MaterialClass, ShaderStage, Index)       \
+    MaterialClass& MaterialClass::ShaderStage(                        \
+        const Ptr<RHI::IShader>& Shader)                              \
+    {                                                                 \
+        m_ShaderModules[Index] = Shader;                              \
+        return *this;                                                 \
+    }                                                                 \
+                                                                      \
+    MaterialClass& MaterialClass::Remove##ShaderStage()               \
+    {                                                                 \
+        m_ShaderModules[Index] = nullptr;                             \
+        return *this;                                                 \
+    }                                                                 \
+                                                                      \
+    auto MaterialClass::ShaderStage() const->const Ptr<RHI::IShader>& \
+    {                                                                 \
+        return m_ShaderModules[Index];                                \
     }
 
     //

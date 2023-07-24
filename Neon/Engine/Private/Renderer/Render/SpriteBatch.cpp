@@ -4,10 +4,6 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
 
-#include <Resource/Pack.hpp>
-#include <Resource/Types/RootSignature.hpp>
-#include <Resource/Types/Shader.hpp>
-
 #include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Resource/State.hpp>

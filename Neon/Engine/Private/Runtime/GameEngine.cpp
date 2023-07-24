@@ -1,11 +1,13 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
-#include <Resource/Runtime/Manager.hpp>
-#include <Resource/Types/Logger.hpp>
-#include <Resource/Pack.hpp>
+#include <Asset/Types/Logger.hpp>
+#include <Asset/Manager.hpp>
+#include <Asset/Storage.hpp>
 
 #include <cppcoro/sync_wait.hpp>
+
+#include <Log/Logger.hpp>
 
 namespace Neon::Runtime
 {
@@ -29,20 +31,17 @@ namespace Neon::Runtime
     }
 
     void DefaultGameEngine::Initialize(
-        const Config::EngineConfig& Config)
+        Config::EngineConfig Config)
     {
-        auto ResourceManager = RegisterInterface<Asset::IAssetManager, Asset::RuntimeAssetManager>();
-        if (Config.LoggerAssetUid)
+        LoadPacks(Config);
+        if (Config.Resource.LoggerAssetUid)
         {
-            auto Pack = ResourceManager->LoadPack("__neon", "../../../Runtimes/neonrt.np");
             // Set global logger settings
-            if (auto Logger = Pack->Load<Asset::LoggerAsset>(*Config.LoggerAssetUid))
+            if (auto Logger = Asset::AssetTaskPtr<Asset::LoggerAsset>(Asset::Manager::Load(*Config.Resource.LoggerAssetUid)))
             {
                 Logger->SetGlobal();
             }
         }
-
-        LoadPacks(Config);
 
         //
 
@@ -85,14 +84,11 @@ namespace Neon::Runtime
     }
 
     void DefaultGameEngine::LoadPacks(
-        const Config::EngineConfig& Config)
+        Config::EngineConfig& Config)
     {
-        if (auto ResourceManager = QueryInterface<Asset::IAssetManager>())
+        for (auto& Pack : Config.Resource.AssetPackages)
         {
-            for (auto& [PackName, Path] : Config.Resource.Packs)
-            {
-                ResourceManager->LoadPack(PackName, Path);
-            }
+            Asset::Storage::Mount(std::move(Pack));
         }
     }
 } // namespace Neon::Runtime

@@ -30,9 +30,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
-        Asset::Storage::Initialize();             \
+        Asset::Storage::Initialize();              \
         int Ret = Neon::Runtime::Main(argc, argv); \
-        Asset::Storage::Shutdown();               \
+        Asset::Storage::Shutdown();                \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
@@ -48,9 +48,9 @@ namespace Neon::Runtime
     {                                              \
         Neon::Logger::Initialize();                \
         std::atexit(&Neon::Logger::Shutdown);      \
-        Asset::Storage::Initialize();             \
+        Asset::Storage::Initialize();              \
         int Ret = Neon::Runtime::Main(argc, argv); \
-        Asset::Storage::Shutdown();               \
+        Asset::Storage::Shutdown();                \
         return Ret;                                \
     }                                              \
     int Neon::Runtime::Main(                       \
@@ -64,10 +64,10 @@ namespace Neon::Runtime
     template<typename _Ty>
         requires std::is_base_of_v<DefaultGameEngine, _Ty>
     int RunEngine(
-        const Config::EngineConfig& Config)
+        Config::EngineConfig Config)
     {
         _Ty Engine{};
-        Engine.Initialize(Config);
+        Engine.Initialize(std::move(Config));
         return Engine.Run();
     }
 } // namespace Neon::Runtime

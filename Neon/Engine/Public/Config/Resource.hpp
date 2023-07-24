@@ -1,12 +1,13 @@
 #pragma once
 
-#include <Core/String.hpp>
-#include <map>
+#include <Asset/Pack.hpp>
+#include <Asset/Handle.hpp>
 
 namespace Neon::Config
 {
     struct ResourceConfig
     {
-        std::map<StringU8, StringU8> Packs;
+        std::vector<UPtr<Asset::IAssetPackage>> AssetPackages;
+        std::optional<Asset::Handle>            LoggerAssetUid;
     };
 } // namespace Neon::Config

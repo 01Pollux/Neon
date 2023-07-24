@@ -1,9 +1,6 @@
 #pragma once
 
-#include <Core/SHA256.hpp>
-
-#include <Resource/Asset.hpp>
-#include <Resource/Handler.hpp>
+#include <Asset/Asset.hpp>
 #include <RHI/Shader.hpp>
 
 #include <Asset/Asset.hpp>
@@ -12,31 +9,37 @@
 
 namespace Neon::Asset
 {
-    class TextureAsset : public IAsset
+    class ShaderAsset : public IAsset
     {
         class Handler;
 
     public:
-        TextureAsset(
-            const RHI::TextureRawImage& ImageInfo,
-            bool                        Owning,
-            const Handle&               AssetGuid,
-            StringU8                    Path);
+        ShaderAsset(
+            StringU8      ShaderCode,
+            const Handle& AssetGuid,
+            StringU8      Path);
 
         /// <summary>
-        /// Get texture image info.
+        /// Load the shader cache from settings
         /// </summary>
-        [[nodiscard]] const RHI::TextureRawImage& GetImageInfo() const;
+        UPtr<RHI::IShader> LoadShader(
+            const RHI::ShaderCompileDesc& Desc);
 
         /// <summary>
-        /// Set texture image info.
+        /// Clear the shader cache
         /// </summary>
-        void SetImageInfo(
-            const RHI::TextureRawImage& ImageInfo,
-            bool                        Owning = false);
+        void ClearCache();
 
     private:
-        RHI::TextureRawImage       m_ImageInfo;
-        std::unique_ptr<uint8_t[]> m_ImageData;
+        /// <summary>
+        /// Open the shader cache file
+        /// </summary>
+        void OpenCacheFile(
+            bool Reset = false);
+
+    private:
+        std::fstream m_ShaderCacheFile;
+        size_t       m_ShaderCacheSize = 0;
+        StringU8     m_ShaderCode;
     };
 } // namespace Neon::Asset

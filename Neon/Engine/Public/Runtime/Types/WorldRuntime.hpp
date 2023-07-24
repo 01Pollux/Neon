@@ -4,11 +4,6 @@
 #include <Renderer/RG/Graph.hpp>
 #include <Scene/Scene.hpp>
 
-namespace Neon::Asset
-{
-    class ShaderLibraryAsset;
-} // namespace Neon::Asset
-
 namespace Neon::Runtime
 {
     class EngineWorldRuntime : public IEngineRuntime

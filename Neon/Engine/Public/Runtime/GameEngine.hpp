@@ -37,7 +37,7 @@ namespace Neon::Runtime
         /// Called when the engine is initialized.
         /// </summary>
         virtual void Initialize(
-            const Config::EngineConfig& Config);
+            Config::EngineConfig Config);
 
         /// <summary>
         /// Called when the engine is shutdown.
@@ -73,7 +73,7 @@ namespace Neon::Runtime
         /// Load packs from config.
         /// </summary>
         void LoadPacks(
-            const Config::EngineConfig& Config);
+            Config::EngineConfig& Config);
 
     private:
         UPtr<EngineWindow>   m_Window;

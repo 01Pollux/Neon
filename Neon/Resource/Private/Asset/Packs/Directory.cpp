@@ -56,6 +56,12 @@ namespace Neon::Asset
                 AssetMetaDataDef Metadata(File);
                 File.close();
 
+                if (Metadata.GetPath() != MetafilePath)
+                {
+                    NEON_ERROR_TAG("Asset", "Meta file '{}' has a different path than the one in meta file", MetafilePath.string());
+                    continue;
+                }
+
                 auto Guid = Metadata.GetGuid();
                 if (Guid == Handle::Null)
                 {
@@ -68,7 +74,7 @@ namespace Neon::Asset
                     continue;
                 }
 
-                auto AssetFile = std::filesystem::path(MetafilePath).replace_extension("");
+                auto AssetFile = Metadata.GetAssetPath();
                 File.open(AssetFile, std::ios::ate | std::ios::binary);
 
                 if (!File.is_open())

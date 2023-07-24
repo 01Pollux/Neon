@@ -269,11 +269,11 @@ namespace Neon::Renderer
         {
             RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout, !Builder.NoVertexInput());
 
-            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyVSAccess, !Builder.VertexShader().Enabled);
-            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyHSAccess, !Builder.HullShader().Enabled);
-            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyDSAccess, !Builder.DomainShader().Enabled);
-            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyGSAccess, !Builder.GeometryShader().Enabled);
-            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyPSAccess, !Builder.PixelShader().Enabled);
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyVSAccess, !Builder.VertexShader());
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyHSAccess, !Builder.HullShader());
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyDSAccess, !Builder.DomainShader());
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyGSAccess, !Builder.GeometryShader());
+            RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyPSAccess, !Builder.PixelShader());
             RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyAmpAcess, true);
             RootSigBuilder.SetFlags(RHI::ERootSignatureBuilderFlags::DenyMeshAccess, true);
         }
@@ -293,35 +293,16 @@ namespace Neon::Renderer
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
-        auto LoadShader = [&Builder](const auto& ModuleHandle, RHI::ShaderStage Stage)
-        {
-            Ptr<RHI::IShader> Shader;
-            if (ModuleHandle.Enabled)
-            {
-                auto& ShaderLib = Builder.ShaderLibrary();
-                auto  Module    = ShaderLib->LoadModule(ModuleHandle.ModuleId);
-                if (Module)
-                {
-                    Shader = Module->LoadStage(Stage, ModuleHandle.Flags, ModuleHandle.Profile, ModuleHandle.Macros);
-                }
-                else
-                {
-                    NEON_WARNING_TAG("Material", "Failed to load shader module: {:X}", ModuleHandle.ModuleId);
-                }
-            }
-            return Shader;
-        };
-
         if constexpr (!_Compute)
         {
             RHI::PipelineStateBuilderG PipelineDesc{
                 .RootSignature = Mat->m_RootSignature,
 
-                .VertexShader   = LoadShader(Builder.VertexShader(), RHI::ShaderStage::Vertex),
-                .PixelShader    = LoadShader(Builder.PixelShader(), RHI::ShaderStage::Pixel),
-                .GeometryShader = LoadShader(Builder.GeometryShader(), RHI::ShaderStage::Geometry),
-                .HullShader     = LoadShader(Builder.HullShader(), RHI::ShaderStage::Hull),
-                .DomainShader   = LoadShader(Builder.DomainShader(), RHI::ShaderStage::Domain),
+                .VertexShader   = Builder.VertexShader(),
+                .PixelShader    = Builder.PixelShader(),
+                .GeometryShader = Builder.GeometryShader(),
+                .HullShader     = Builder.HullShader(),
+                .DomainShader   = Builder.DomainShader(),
 
                 .Blend        = Builder.Blend(),
                 .Rasterizer   = Builder.Rasterizer(),
@@ -359,7 +340,7 @@ namespace Neon::Renderer
         {
             RHI::PipelineStateBuilderC PipelineDesc{
                 .RootSignature = Mat->m_RootSignature,
-                .ComputeShader = LoadShader(Builder.ComputeShader(), RHI::ShaderStage::Compute)
+                .ComputeShader = Builder.ComputeShader()
             };
 
             Mat->m_PipelineState = RHI::IPipelineState::Create(PipelineDesc);

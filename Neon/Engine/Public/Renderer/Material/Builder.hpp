@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Renderer/Material/VariableMap.hpp>
-#include <Resource/Types/Shader.hpp>
+#include <Asset/Handle.hpp>
+#include <RHI/Shader.hpp>
 #include <RHI/PipelineState.hpp>
+#include <map>
 
 namespace Neon::Renderer
 {
@@ -11,15 +13,6 @@ namespace Neon::Renderer
     {
     public:
         static constexpr size_t ShaderCount = _ShaderCount;
-
-        struct ShaderModuleHandle
-        {
-            Asset::ShaderModuleId    ModuleId;
-            RHI::ShaderMacros        Macros;
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5;
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default;
-            bool                     Enabled = false;
-        };
 
     public:
         /// <summary>
@@ -38,33 +31,11 @@ namespace Neon::Renderer
             return m_VarMap;
         }
 
-        //
-
-        /// <summary>
-        /// Get the shader library.
-        /// </summary>
-        [[nodiscard]] const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary() const
-        {
-            return m_ShaderLibrary;
-        }
-
-        /// <summary>
-        /// Set the shader library.
-        /// </summary>
-        _Ty& ShaderLibrary(
-            const Ptr<Asset::ShaderLibraryAsset>& ShaderLibrary)
-        {
-            m_ShaderModules = {};
-            m_ShaderLibrary = ShaderLibrary;
-            return static_cast<_Ty&>(*this);
-        }
-
     protected:
-        std::array<ShaderModuleHandle, ShaderCount> m_ShaderModules;
+        std::array<Ptr<RHI::IShader>, ShaderCount> m_ShaderModules;
 
     private:
-        MaterialVariableMap            m_VarMap;
-        Ptr<Asset::ShaderLibraryAsset> m_ShaderLibrary;
+        MaterialVariableMap m_VarMap;
     };
 
     template<bool _IsCompute>
@@ -90,10 +61,7 @@ namespace Neon::Renderer
         /// Set the vertex shader.
         /// </summary>
         GenericMaterialBuilder& VertexShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the vertex shader.
@@ -103,16 +71,13 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the vertex shader.
         /// </summary>
-        [[nodiscard]] const ShaderModuleHandle& VertexShader() const;
+        [[nodiscard]] const Ptr<RHI::IShader>& VertexShader() const;
 
         /// <summary>
         /// Set the hull shader.
         /// </summary>
         GenericMaterialBuilder& HullShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the hull shader.
@@ -122,16 +87,13 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the hull shader.
         /// </summary>
-        [[nodiscard]] const ShaderModuleHandle& HullShader() const;
+        [[nodiscard]] const Ptr<RHI::IShader>& HullShader() const;
 
         /// <summary>
         /// Set the domain shader.
         /// </summary>
         GenericMaterialBuilder& DomainShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the domain shader.
@@ -141,16 +103,13 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the domain shader.
         /// </summary>
-        [[nodiscard]] const ShaderModuleHandle& DomainShader() const;
+        [[nodiscard]] const Ptr<RHI::IShader>& DomainShader() const;
 
         /// <summary>
         /// Set the geometry shader.
         /// </summary>
         GenericMaterialBuilder& GeometryShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the geometry shader.
@@ -160,16 +119,13 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the geometry shader.
         /// </summary>
-        [[nodiscard]] const ShaderModuleHandle& GeometryShader() const;
+        [[nodiscard]] const Ptr<RHI::IShader>& GeometryShader() const;
 
         /// <summary>
         /// Set the pixel shader.
         /// </summary>
         GenericMaterialBuilder& PixelShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the pixel shader.
@@ -179,7 +135,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the pixel shader.
         /// </summary>
-        [[nodiscard]] const ShaderModuleHandle& PixelShader() const;
+        [[nodiscard]] const Ptr<RHI::IShader>& PixelShader() const;
 
         //
 
@@ -355,10 +311,7 @@ namespace Neon::Renderer
         /// Set the compute shader.
         /// </summary>
         GenericMaterialBuilder& ComputeShader(
-            Asset::ShaderModuleId    Module,
-            const RHI::ShaderMacros& Macros  = {},
-            RHI::ShaderProfile       Profile = RHI::ShaderProfile::SP_6_5,
-            RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default);
+            const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
         /// Unset the compute shader.
@@ -368,7 +321,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the compute shader.
         /// </summary>
-        const ShaderModuleHandle& ComputeShader() const;
+        const Ptr<RHI::IShader>& ComputeShader() const;
     };
 
     using RenderMaterialBuilder  = GenericMaterialBuilder<false>;

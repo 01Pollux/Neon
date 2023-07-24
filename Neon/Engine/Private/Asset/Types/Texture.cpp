@@ -94,7 +94,7 @@ namespace Neon::Asset
                     std::bit_cast<char*>(ImageInfo.Data),
                     ImageInfo.Size);
 
-                return std::make_shared<TextureAsset>(ImageInfo, true);
+                return std::make_shared<TextureAsset>(std::move(ImageInfo), true, AssetGuid, std::move(Path));
             }
         }
         return nullptr;

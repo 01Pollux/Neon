@@ -14,11 +14,12 @@ namespace Neon::RHI
     }
 
     UPtr<IShader> IShader::Create(
+        StringU8View             SourceCode,
         const ShaderCompileDesc& Desc)
     {
         auto   ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
         size_t DataSize;
-        auto   Data = ShaderCompiler->Compile(Desc, DataSize);
+        auto   Data = ShaderCompiler->Compile(SourceCode, Desc, DataSize);
         return IShader::Create(std::move(Data), DataSize);
     }
 

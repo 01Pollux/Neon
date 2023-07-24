@@ -1,52 +1,25 @@
 #include <EnginePCH.hpp>
-#include <Resource/Types/Shader.hpp>
-#include <IO/Archive.hpp>
+#include <Asset/Handlers/Shader.hpp>
+#include <Core/SHA256.hpp>
 #include <RHI/Shader.hpp>
 
-#include <boost/iostreams/copy.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filtering_streambuf.hpp>
-
-#include <execution>
-#include <filesystem>
-#include <Core/SHA256.hpp>
 #include <Log/Logger.hpp>
 
 namespace ranges = std::ranges;
-namespace bio    = boost::iostreams;
 
 namespace Neon::Asset
 {
-    static StringU8 DecompressString(
-        StringU8 Data)
-    {
-        std::istringstream Stream(std::move(Data));
-
-        bio::filtering_istreambuf Filter;
-        Filter.push(bio::gzip_decompressor{});
-        Filter.push(Stream);
-
-        std::ostringstream Output;
-        bio::copy(Filter, Output);
-        return Output.str();
-    }
-
-    //
-
     /// <summary>
-    /// Get hash of shader
+    /// Get the shader hash from the shader compile description.
     /// </summary>
     [[nodiscard]] static SHA256::Bytes GetShaderHash(
-        RHI::ShaderStage               Stage,
-        const RHI::MShaderCompileFlags Flags   = RHI::MShaderCompileFlags_Default,
-        RHI::ShaderProfile             Profile = RHI::ShaderProfile::SP_6_5,
-        const RHI::ShaderMacros&       Macros  = {})
+        const RHI::ShaderCompileDesc& Desc)
     {
         SHA256 Hash;
-        Hash.Append(Stage);
-        Hash.Append(Flags.ToUllong());
-        Hash.Append(Profile);
-        for (auto& [Key, Value] : Macros.Defines)
+        Hash.Append(Desc.Stage);
+        Hash.Append(Desc.Flags.ToUllong());
+        Hash.Append(Desc.Profile);
+        for (auto& [Key, Value] : Desc.Macros.Defines)
         {
             Hash.Append(Key);
             Hash.Append(Value);
@@ -54,316 +27,156 @@ namespace Neon::Asset
         return Hash.Digest();
     }
 
-    Ptr<RHI::IShader> ShaderModule::LoadStage(
-        RHI::ShaderStage               Stage,
-        const RHI::MShaderCompileFlags Flags,
-        RHI::ShaderProfile             Profile,
-        const RHI::ShaderMacros&       Macros)
+    //
+
+    ShaderAsset::ShaderAsset(
+        StringU8      ShaderCode,
+        const Handle& AssetGuid,
+        StringU8      Path) :
+        IAsset(AssetGuid, std::move(Path)),
+        m_ShaderCode(std::move(ShaderCode))
     {
-        auto Hash = GetShaderHash(Stage, Flags, Profile, Macros);
-
-        std::scoped_lock Lock(m_ModuleAccessMutex);
-        auto             Iter = m_Binaries.find(Hash);
-        // Check if shader was already compiled and is in cache
-        if (Iter != m_Binaries.end())
-        {
-            return Iter->second;
-        }
-
-        std::unique_ptr<uint8_t[]> ShaderData;
-        size_t                     ShaderSize = 0;
-
-        // Check if shader was already compiled
-        if (SeekShader(
-                Hash,
-                &ShaderData,
-                &ShaderSize))
-        {
-            Ptr Shader = RHI::IShader::Create(std::move(ShaderData), ShaderSize);
-            m_Binaries.emplace(Hash, Shader);
-            return Shader;
-        }
-
-        Ptr Shader = RHI::IShader::Create(RHI::ShaderCompileDesc{
-            .Macros     = Macros,
-            .SourceCode = m_Code,
-            .Profile    = Profile,
-            .Stage      = Stage,
-            .Flags      = Flags,
-        });
-
-        if (Shader)
-        {
-            m_Binaries.emplace(Hash, Shader);
-            WriteCache(Hash, Shader.get());
-        }
-
-        return Shader;
+        OpenCacheFile(false);
     }
 
-    void ShaderModule::Optimize()
+    UPtr<RHI::IShader> ShaderAsset::LoadShader(
+        const RHI::ShaderCompileDesc& Desc)
     {
-        std::scoped_lock Lock(m_ModuleAccessMutex);
-        m_Binaries.clear();
-    }
+        auto          ShaderHash = GetShaderHash(Desc);
+        SHA256::Bytes Hash;
+        size_t        ShaderSize;
 
-    StringU8 ShaderModule::Decompress(
-        StringU8 Code,
-        bool     Compressed)
-    {
-        if (Compressed)
+        m_ShaderCacheFile.seekg(std::ios::beg);
+        // Skip the first hash, which is the header hash.
+        for (size_t i = sizeof(SHA256::Bytes); i < m_ShaderCacheSize; i++)
         {
-            std::istringstream Stream(std::move(Code));
+            m_ShaderCacheFile.read(std::bit_cast<char*>(Hash.data()), Hash.size());
+            m_ShaderCacheFile.read(std::bit_cast<char*>(&ShaderSize), sizeof(ShaderSize));
 
-            bio::filtering_istreambuf Filter;
-            Filter.push(bio::gzip_decompressor{});
-            Filter.push(Stream);
-
-            std::ostringstream Output;
-            bio::copy(Filter, Output);
-
-            Code = Output.str();
-        }
-        return std::move(Code);
-    }
-
-    ShaderModule::ShaderModule(
-        StringU8                ModName,
-        StringU8                ModCode,
-        bool                    Compressed,
-        Ptr<ShaderLibraryAsset> Library,
-        ShaderModuleId          Id) :
-        m_Library(std::move(Library)),
-        m_Id(Id),
-        m_Code(Decompress(std::move(ModCode), Compressed))
-    {
-        auto CachePath = StringUtils::Format("{}_{}.nsmc", std::filesystem::temp_directory_path().string(), ModName);
-        m_ShaderCache.open(CachePath, std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
-
-        NEON_ASSERT(m_ShaderCache.is_open(), "Failed to open shader cache file");
-        m_ShaderCache.seekg(0, std::ios::end);
-        m_FileSize = m_ShaderCache.tellg();
-
-        // Check if the current file will be used for caching
-        // The file is used for caching if it exists and has same code as the module
-        SHA256 Hash;
-        Hash.Append(m_Code);
-        auto ExpectedHash = Hash.Digest();
-
-        // File wasn't empty
-        if (m_FileSize)
-        {
-            m_ShaderCache.seekg(0, std::ios::beg);
-            SHA256::Bytes CurHash{};
-            m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
-
-            if (CurHash == ExpectedHash)
+            if (ShaderHash == Hash)
             {
-                return;
+                auto ShaderData = std::make_unique<uint8_t[]>(ShaderSize);
+                m_ShaderCacheFile.read(std::bit_cast<char*>(ShaderData.get()), ShaderSize);
+
+                return RHI::IShader::Create(std::move(ShaderData), ShaderSize);
             }
 
-            m_ShaderCache.close();
-            m_ShaderCache.open(CachePath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
+            m_ShaderCacheFile.seekg(ShaderSize, std::ios::cur);
         }
 
-        m_ShaderCache.write(std::bit_cast<char*>(ExpectedHash.data()), ExpectedHash.size());
-        m_FileSize = m_ShaderCache.tellg();
+        auto ShaderData     = RHI::IShader::Create(m_ShaderCode, Desc);
+        auto ShaderBytecode = ShaderData->GetByteCode();
+
+        m_ShaderCacheFile.seekp(std::ios::end);
+        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderHash.data()), Hash.size());
+        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Size), sizeof(ShaderBytecode.Size));
+        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Data), ShaderBytecode.Size);
+
+        return ShaderData;
     }
 
-    bool ShaderModule::SeekShader(
-        const SHA256::Bytes&,
-        std::unique_ptr<uint8_t[]>*,
-        size_t*)
+    void ShaderAsset::ClearCache()
     {
-        // TODO: Temporarily disabled
-#if 0
-        m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
-
-        for (size_t i = sizeof(SHA256::Bytes); i != m_FileSize; i = m_ShaderCache.tellg())
-        {
-            SHA256::Bytes CurHash;
-            m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
-
-            if (Hash == CurHash)
-            {
-                if (ShaderSize)
-                {
-                    m_ShaderCache.read(std::bit_cast<char*>(ShaderSize), sizeof(*ShaderSize));
-
-                    *ShaderData = std::make_unique<uint8_t[]>(*ShaderSize);
-                    m_ShaderCache.read(std::bit_cast<char*>(ShaderData->get()), *ShaderSize);
-
-                    return true;
-                }
-            }
-            else
-            {
-                uint64_t ShaderSize = 0;
-                m_ShaderCache.read(std::bit_cast<char*>(&ShaderSize), sizeof(ShaderSize));
-
-                m_ShaderCache.seekg(ShaderSize, std::ios::cur);
-            }
-        }
-#else
-
-        return false;
-#endif
+        OpenCacheFile(true);
     }
 
-    void ShaderModule::WriteCache(
-        const SHA256::Bytes& Hash,
-        RHI::IShader*        Shader)
+    void ShaderAsset::OpenCacheFile(
+        bool Reset)
     {
-#if 0
-        m_ShaderCache.seekg(sizeof(SHA256::Bytes), std::ios::beg);
-
-        auto WriteToFile =
-            [this, Shader]()
+        auto WriteHeaderDigest =
+            [this](const SHA256::Bytes& Digest)
         {
-            auto ByteCode = Shader->GetByteCode();
-            m_ShaderCache.write(std::bit_cast<char*>(&ByteCode.Size), sizeof(ByteCode.Size));
-            m_ShaderCache.write(std::bit_cast<char*>(ByteCode.Data), ByteCode.Size);
+            m_ShaderCacheFile.seekp(std::ios::beg);
+            m_ShaderCacheFile.write(std::bit_cast<const char*>(Digest.data()), Digest.size());
         };
 
-        for (size_t i = sizeof(SHA256::Bytes); i != m_FileSize; i = m_ShaderCache.tellg())
+        auto WriteHeaderDigestFromCode =
+            [this, WriteHeaderDigest]()
         {
-            SHA256::Bytes CurHash;
-            m_ShaderCache.read(std::bit_cast<char*>(CurHash.data()), CurHash.size());
+            SHA256 ExpectedHash;
+            ExpectedHash.Append(m_ShaderCode);
+            WriteHeaderDigest(ExpectedHash.Digest());
+        };
 
-            if (CurHash == Hash)
-            {
-                m_ShaderCache.seekp(i, std::ios::beg);
-                WriteToFile();
-                return;
-            }
-            else
-            {
-                uint64_t ShaderSize = 0;
-                m_ShaderCache.read(std::bit_cast<char*>(&ShaderSize), sizeof(ShaderSize));
-                m_ShaderCache.seekg(ShaderSize, std::ios::cur);
-            }
+        auto ReadHeaderDigest =
+            [this]()
+        {
+            SHA256::Bytes ShaderDigest{};
+            m_ShaderCacheFile.seekg(std::ios::beg);
+            m_ShaderCacheFile.read(std::bit_cast<char*>(ShaderDigest.data()), ShaderDigest.size());
+            return ShaderDigest;
+        };
+
+        //
+
+        if (m_ShaderCacheFile)
+        {
+            m_ShaderCacheFile.close();
         }
 
-        m_ShaderCache.seekp(0, std::ios::end);
-        m_ShaderCache.write(std::bit_cast<char*>(Hash.data()), Hash.size());
+        std::ios::openmode Flags = std::ios::in | std::ios::out | std::ios::ate | std::ios::binary;
+        if (Reset)
+        {
+            Flags |= std::ios::trunc;
+        }
 
-        WriteToFile();
-#endif
+        auto CachePath = StringUtils::Format("{}{}.nsc", std::filesystem::temp_directory_path().string(), GetGuid().ToString());
+        m_ShaderCacheFile.open(CachePath, Flags);
+
+        if (!Reset)
+        {
+            SHA256::Bytes ShaderDigest = ReadHeaderDigest();
+
+            SHA256 ExpectedHash;
+            ExpectedHash.Append(m_ShaderCode);
+            auto ExpectedDigest = ExpectedHash.Digest();
+            if (ExpectedDigest != ShaderDigest)
+            {
+                // Reset the cache file if the shader code has changed.
+                OpenCacheFile(true);
+                return;
+            }
+        }
+        else
+        {
+            WriteHeaderDigestFromCode();
+        }
+
+        m_ShaderCacheSize = m_ShaderCacheFile.tellg();
     }
 
     //
 
-    Ptr<ShaderModule> ShaderLibraryAsset::LoadModule(
-        ShaderModuleId Id)
+    bool ShaderAsset::Handler::CanHandle(
+        const Ptr<IAsset>& Resource)
     {
-        std::scoped_lock Lock(m_LibraryAccessMutex);
-
-        auto Iter = m_Modules.find(Id);
-        return Iter != m_Modules.end() ? Iter->second.Module : nullptr;
+        return dynamic_cast<ShaderAsset*>(Resource.get()) != nullptr;
     }
 
-    void ShaderLibraryAsset::SetModule(
-        ShaderModuleId Id,
-        StringU8       ModName,
-        StringU8       ModCode)
+    Ptr<IAsset> ShaderAsset::Handler::Load(
+        std::istream& Stream,
+        const Asset::DependencyReader&,
+        const Handle&        AssetGuid,
+        StringU8             Path,
+        const AssetMetaData& LoaderData)
     {
-        std::scoped_lock Lock(m_LibraryAccessMutex);
-        SetModule(Id, std::move(ModName), std::move(ModCode), false);
+        Stream.seekg(std::ios::end);
+        auto FileSize = Stream.tellg();
+        Stream.seekg(std::ios::beg);
+
+        StringU8 ShaderCode(FileSize, '\0');
+        Stream.read(ShaderCode.data(), FileSize);
+
+        return std::make_shared<ShaderAsset>(std::move(ShaderCode), AssetGuid, std::move(Path));
     }
 
-    void ShaderLibraryAsset::RemoveModule(
-        ShaderModuleId Id)
+    void ShaderAsset::Handler::Save(
+        std::iostream& Stream,
+        DependencyWriter&,
+        const Ptr<IAsset>& Asset,
+        AssetMetaData&     LoaderData)
     {
-        std::scoped_lock Lock(m_LibraryAccessMutex);
-        m_Modules.erase(Id);
-    }
-
-    void ShaderLibraryAsset::SetModule(
-        ShaderModuleId Id,
-        StringU8       ModName,
-        StringU8       ModCode,
-        bool           Compressed)
-    {
-        m_Modules.erase(Id);
-        m_Modules.emplace(
-            std::piecewise_construct,
-            std::forward_as_tuple(Id),
-            std::forward_as_tuple(
-                Id,
-                std::move(ModName),
-                std::move(ModCode),
-                Compressed,
-                std::static_pointer_cast<ShaderLibraryAsset>(shared_from_this())));
-    }
-
-    //
-
-    bool ShaderLibraryAsset::Handler::CanCastTo(
-        const Ptr<IAssetResource>& Resource)
-    {
-        return dynamic_cast<ShaderLibraryAsset*>(Resource.get());
-    }
-
-    Ptr<IAssetResource> ShaderLibraryAsset::Handler::Load(
-        IAssetPack*,
-        IO::InArchive& Archive,
-        size_t)
-    {
-        auto ShaderLib = std::make_shared<ShaderLibraryAsset>();
-
-        size_t NumModules = 0;
-        Archive >> NumModules;
-
-        for (size_t i = 0; i < NumModules; i++)
-        {
-            ShaderModuleId Id;
-            Archive >> Id;
-
-            StringU8 ModName;
-            Archive >> ModName;
-
-            StringU8 ModCode;
-            Archive >> ModCode;
-
-            ShaderLib->SetModule(Id, std::move(ModName), std::move(ModCode), true);
-        }
-
-        return ShaderLib;
-    }
-
-    void ShaderLibraryAsset::Handler::Save(
-        IAssetPack*,
-        const Ptr<IAssetResource>& Resource,
-        IO::OutArchive&            Archive)
-    {
-        auto ShaderLib = std::static_pointer_cast<ShaderLibraryAsset>(Resource);
-        Archive << ShaderLib->m_Modules.size();
-
-        std::istringstream Stream;
-        std::ostringstream CompressedStream;
-
-        bio::filtering_istreambuf Filter;
-        Filter.push(bio::gzip_compressor{});
-        Filter.push(Stream);
-
-        auto ResetStream = [](auto& Stream)
-        {
-            Stream.str("");
-            Stream.clear();
-        };
-
-        for (auto& [ModId, ModData] : ShaderLib->m_Modules)
-        {
-            Archive << ModId;
-            Archive << ModData.ModName;
-
-            ResetStream(Stream);
-            ResetStream(CompressedStream);
-
-            Stream.str(ModData.Module->m_Code);
-            bio::copy(Filter, CompressedStream);
-
-            Archive << CompressedStream.str();
-        }
+        auto Shader = static_cast<ShaderAsset*>(Asset.get());
+        Stream.write(Shader->m_ShaderCode.data(), Shader->m_ShaderCode.size());
     }
 } // namespace Neon::Asset

@@ -79,12 +79,11 @@ namespace Neon::RHI
     struct ShaderCompileDesc
     {
         ShaderMacros Macros;
-        StringU8View SourceCode;
 
         ShaderProfile Profile = ShaderProfile::SP_6_5;
         ShaderStage   Stage   = ShaderStage::Unknown;
 
-        MShaderCompileFlags Flags;
+        MShaderCompileFlags Flags = MShaderCompileFlags_Default;
     };
 
     class IShader
@@ -101,6 +100,7 @@ namespace Neon::RHI
             size_t                     DataSize);
 
         [[nodiscard]] static UPtr<IShader> Create(
+            StringU8View             SourceCode,
             const ShaderCompileDesc& Desc);
 
         virtual ~IShader() = default;

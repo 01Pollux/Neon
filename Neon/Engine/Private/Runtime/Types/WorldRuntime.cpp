@@ -1,8 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
-#include <Resource/Manager.hpp>
-#include <Resource/Pack.hpp>
+#include <Asset/Manager.hpp>
+#include <Asset/Types/Shader.hpp>
 
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Pipeline.hpp>
@@ -42,10 +42,9 @@ namespace Neon::Runtime
         //
 
         auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder));
-        auto MainPack = Engine->QueryInterface<Asset::IAssetManager>()->GetPack("__neon");
 
-        auto DefaultShaderLib = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
-        auto ShaderLib        = MainPack->Load<Asset::ShaderLibraryAsset>(DefaultShaderLib);
+        auto TestShaderId = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
+        auto ShaderAsset  = Asset::AssetTaskPtr<Asset::ShaderAsset>(Asset::Manager::Load(TestShaderId));
 
         //
 
@@ -87,9 +86,9 @@ namespace Neon::Runtime
 
         RenderMaterialBuilder MatBuilder;
 
-        MatBuilder.ShaderLibrary(ShaderLib)
-            .VertexShader(Asset::ShaderModuleId(0))
-            .PixelShader(Asset::ShaderModuleId(0))
+        MatBuilder
+            .VertexShader(nullptr)
+            .PixelShader(nullptr)
             .Rasterizer(MaterialStates::Rasterizer::CullNone)
             .DepthStencil(MaterialStates::DepthStencil::None)
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)

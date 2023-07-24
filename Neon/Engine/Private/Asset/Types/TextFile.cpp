@@ -64,11 +64,11 @@ namespace Neon::Asset
     }
 
     Ptr<IAsset> TextFileAsset::Handler::Load(
-        std::ifstream& Stream,
-        const Asset::DependencyReader&,
-        const Handle&        AssetGuid,
-        StringU8             Path,
-        const AssetMetaData& LoaderData)
+        std::istream&                  Stream,
+        const Asset::DependencyReader& DepReader,
+        const Handle&                  AssetGuid,
+        StringU8                       Path,
+        const AssetMetaData&           LoaderData)
     {
         boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
 
@@ -79,7 +79,7 @@ namespace Neon::Asset
     }
 
     void TextFileAsset::Handler::Save(
-        std::fstream& Stream,
+        std::iostream& Stream,
         DependencyWriter&,
         const Ptr<IAsset>& Asset,
         AssetMetaData&     LoaderData)

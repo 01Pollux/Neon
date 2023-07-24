@@ -86,13 +86,14 @@ namespace Neon::RHI
     //
 
     std::unique_ptr<uint8_t[]> Dx12ShaderCompiler::Compile(
+        StringU8View             SourceCode,
         const ShaderCompileDesc& Desc,
         size_t&                  DataSize)
     {
         WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
-            Desc.SourceCode.data(),
-            uint32_t(Desc.SourceCode.size()),
+            SourceCode.data(),
+            uint32_t(SourceCode.size()),
             DXC_CP_ACP,
             &ShaderCodeBlob));
 

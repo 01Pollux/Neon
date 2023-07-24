@@ -7,9 +7,9 @@ class RuntimeSample : public Runtime::DefaultGameEngine
 {
 public:
     void Initialize(
-        const Config::EngineConfig& Config) override
+        Config::EngineConfig Config) override
     {
-        DefaultGameEngine::Initialize(Config);
+        DefaultGameEngine::Initialize(std::move(Config));
         RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
     }
 };
@@ -23,5 +23,5 @@ NEON_MAIN(Argc, Argv)
             .Fullscreen = false },
         //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
-    return RunEngine<RuntimeSample>(Config);
+    return RunEngine<RuntimeSample>(std::move(Config));
 }
