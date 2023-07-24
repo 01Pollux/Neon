@@ -9,9 +9,9 @@ namespace Neon::Asset
 {
     class LoggerAsset : public IAsset
     {
+    public:
         class Handler;
 
-    public:
         using IAsset::IAsset;
 
         /// <summary>

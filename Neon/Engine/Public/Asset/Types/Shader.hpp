@@ -11,9 +11,9 @@ namespace Neon::Asset
 {
     class ShaderAsset : public IAsset
     {
+    public:
         class Handler;
 
-    public:
         ShaderAsset(
             StringU8      ShaderCode,
             const Handle& AssetGuid,

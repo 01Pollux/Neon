@@ -8,9 +8,9 @@ namespace Neon::Asset
 {
     class TextureAsset : public IAsset
     {
+    public:
         class Handler;
 
-    public:
         TextureAsset(
             const RHI::TextureRawImage& ImageInfo,
             bool                        Owning,

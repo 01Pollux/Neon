@@ -9,9 +9,9 @@ namespace Neon::Asset
 {
     class TextFileAsset : public IAsset
     {
+    public:
         class Handler;
 
-    public:
         TextFileAsset(
             String        Text,
             const Handle& AssetGuid,

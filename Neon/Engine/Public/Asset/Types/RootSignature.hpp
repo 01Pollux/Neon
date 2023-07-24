@@ -12,9 +12,9 @@ namespace Neon::Asset
 {
     class RootSignatureAsset : public IAsset
     {
+    public:
         class Handler;
 
-    public:
         RootSignatureAsset(
             const Ptr<RHI::IRootSignature>& RootSignature,
             const Handle&                   AssetGuid,

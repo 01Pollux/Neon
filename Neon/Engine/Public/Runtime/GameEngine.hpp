@@ -75,6 +75,12 @@ namespace Neon::Runtime
         void LoadPacks(
             Config::EngineConfig& Config);
 
+        /// <summary>
+        /// Initialize assets system.
+        /// </summary>
+        void InitializeAssetSystem(
+            Config::EngineConfig& Config);
+
     private:
         UPtr<EngineWindow>   m_Window;
         UPtr<EnginePipeline> m_Pipeline;

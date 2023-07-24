@@ -128,7 +128,7 @@ namespace Neon::Asset
         {
             // Export all dirty assets
             {
-                RLock Lock(m_CacheMutex);
+                RWLock Lock(m_CacheMutex);
                 for (auto& [Guid, Metadata] : m_AssetMeta)
                 {
                     if (!Metadata.IsDirty())
@@ -141,13 +141,6 @@ namespace Neon::Asset
 
                     std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
                     Metadata.Export(Metafile);
-                }
-            }
-            // Unset dirty flag
-            {
-                RWLock Lock(m_CacheMutex);
-                for (auto& Metadata : m_AssetMeta | std::views::values)
-                {
                     Metadata.SetDirty(false);
                 }
             }

@@ -1,9 +1,15 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
 
-#include <Asset/Types/Logger.hpp>
 #include <Asset/Manager.hpp>
 #include <Asset/Storage.hpp>
+
+#include <Asset/Types/Logger.hpp>
+#include <Asset/Handlers/TextFile.hpp>
+#include <Asset/Handlers/Texture.hpp>
+#include <Asset/Handlers/Logger.hpp>
+#include <Asset/Handlers/RootSignature.hpp>
+#include <Asset/Handlers/Shader.hpp>
 
 #include <cppcoro/sync_wait.hpp>
 
@@ -33,15 +39,7 @@ namespace Neon::Runtime
     void DefaultGameEngine::Initialize(
         Config::EngineConfig Config)
     {
-        LoadPacks(Config);
-        if (Config.Resource.LoggerAssetUid)
-        {
-            // Set global logger settings
-            if (auto Logger = Asset::AssetTaskPtr<Asset::LoggerAsset>(Asset::Manager::Load(*Config.Resource.LoggerAssetUid)))
-            {
-                Logger->SetGlobal();
-            }
-        }
+        InitializeAssetSystem(Config);
 
         //
 
@@ -89,6 +87,28 @@ namespace Neon::Runtime
         for (auto& Pack : Config.Resource.AssetPackages)
         {
             Asset::Storage::Mount(std::move(Pack));
+        }
+    }
+
+    void DefaultGameEngine::InitializeAssetSystem(
+        Config::EngineConfig& Config)
+    {
+        Asset::Storage::RegisterHandler<Asset::TextFileAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::TextureAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::LoggerAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::RootSignatureAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::ShaderAsset::Handler>();
+
+        //
+
+        LoadPacks(Config);
+        if (Config.Resource.LoggerAssetUid)
+        {
+            // Set global logger settings
+            if (auto Logger = Asset::AssetTaskPtr<Asset::LoggerAsset>(Asset::Manager::Load(*Config.Resource.LoggerAssetUid)))
+            {
+                Logger->SetGlobal();
+            }
         }
     }
 } // namespace Neon::Runtime
