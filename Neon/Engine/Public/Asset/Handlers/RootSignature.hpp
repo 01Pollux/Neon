@@ -14,16 +14,19 @@ namespace Neon::Asset
     {
     public:
         bool CanHandle(
-            const Ptr<IAssetResource>& Resource) override;
+            const Ptr<IAsset>& Resource) override;
 
-        Ptr<IAssetResource> Load(
-            IAssetPack*    Pack,
-            IO::InArchive& Archive,
-            size_t         DataSize) override;
+        Ptr<IAsset> Load(
+            std::istream& Stream,
+            const Asset::DependencyReader&,
+            const Handle&        AssetGuid,
+            StringU8             Path,
+            const AssetMetaData& LoaderData) override;
 
         void Save(
-            IAssetPack*                Pack,
-            const Ptr<IAssetResource>& Resource,
-            IO::OutArchive&            Archive) override;
+            std::iostream& Stream,
+            DependencyWriter&,
+            const Ptr<IAsset>& Asset,
+            AssetMetaData&     LoaderData) override;
     };
 } // namespace Neon::Asset

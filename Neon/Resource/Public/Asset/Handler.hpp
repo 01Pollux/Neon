@@ -27,7 +27,7 @@ namespace Neon::Asset
         /// Load the asset from an input stream.
         /// </summary>
         virtual Ptr<IAsset> Load(
-            std::ifstream&                 Stream,
+            std::istream&                  Stream,
             const Asset::DependencyReader& DepReader,
             const Handle&                  AssetGuid,
             StringU8                       Path,
@@ -37,7 +37,7 @@ namespace Neon::Asset
         /// Save the asset to an output stream.
         /// </summary>
         virtual void Save(
-            std::fstream&      Stream,
+            std::iostream&     Stream,
             DependencyWriter&  DepWriter,
             const Ptr<IAsset>& Asset,
             AssetMetaData&     LoaderData) = 0;

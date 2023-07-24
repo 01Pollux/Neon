@@ -1,5 +1,4 @@
 #include <EnginePCH.hpp>
-#include <Asset/Types/Logger.hpp>
 #include <Asset/Handlers/Logger.hpp>
 
 #include <boost/serialization/map.hpp>
@@ -33,7 +32,7 @@ namespace Neon::Asset
     }
 
     Ptr<IAsset> LoggerAsset::Handler::Load(
-        std::ifstream& Stream,
+        std::istream& Stream,
         const Asset::DependencyReader&,
         const Handle&        AssetGuid,
         StringU8             Path,
@@ -48,7 +47,7 @@ namespace Neon::Asset
     }
 
     void LoggerAsset::Handler::Save(
-        std::fstream& Stream,
+        std::iostream& Stream,
         DependencyWriter&,
         const Ptr<IAsset>& Asset,
         AssetMetaData&     LoaderData)

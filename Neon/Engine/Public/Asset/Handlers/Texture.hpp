@@ -1,52 +1,29 @@
 #pragma once
 
-#include <Resource/Asset.hpp>
-#include <Resource/Handler.hpp>
-#include <RHI/Resource/Resource.hpp>
+#include <Asset/Handler.hpp>
+#include <Asset/Types/Texture.hpp>
 
 namespace Neon::Asset
 {
-    class TextureAsset : public IAssetResource
+    class TextureAsset::Handler : public IAssetHandler
     {
         friend class Handler;
 
     public:
-        TextureAsset(
-            const RHI::TextureRawImage& ImageInfo = {},
-            bool                        Owning    = false);
+        bool CanHandle(
+            const Ptr<IAsset>& Resource) override;
 
-        /// <summary>
-        /// Get texture image info.
-        /// </summary>
-        [[nodiscard]] const RHI::TextureRawImage& GetImageInfo() const;
+        Ptr<IAsset> Load(
+            std::istream& Stream,
+            const Asset::DependencyReader&,
+            const Handle&        AssetGuid,
+            StringU8             Path,
+            const AssetMetaData& LoaderData) override;
 
-        /// <summary>
-        /// Set texture image info.
-        /// </summary>
-        void SetImageInfo(
-            const RHI::TextureRawImage& ImageInfo,
-            bool                        Owning = false);
-
-    public:
-        class Handler : public IAssetResourceHandler
-        {
-        public:
-            bool CanCastTo(
-                const Ptr<IAssetResource>& Resource) override;
-
-            Ptr<IAssetResource> Load(
-                IAssetPack*    Pack,
-                IO::InArchive& Archive,
-                size_t         DataSize) override;
-
-            void Save(
-                IAssetPack*                Pack,
-                const Ptr<IAssetResource>& Resource,
-                IO::OutArchive&            Archive) override;
-        };
-
-    private:
-        RHI::TextureRawImage       m_ImageInfo;
-        std::unique_ptr<uint8_t[]> m_ImageData;
+        void Save(
+            std::iostream& Stream,
+            DependencyWriter&,
+            const Ptr<IAsset>& Asset,
+            AssetMetaData&     LoaderData) override;
     };
 } // namespace Neon::Asset

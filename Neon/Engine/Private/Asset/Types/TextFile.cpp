@@ -1,5 +1,4 @@
 #include <EnginePCH.hpp>
-#include <Asset/Types/TextFile.hpp>
 #include <Asset/Handlers/TextFile.hpp>
 
 #include <boost/archive/text_iarchive.hpp>

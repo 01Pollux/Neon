@@ -1,10 +1,12 @@
 #include <EnginePCH.hpp>
-#include <Resource/Types/RootSignature.hpp>
+#include <Asset/Handlers/RootSignature.hpp>
 #include <RHI/RootSignature.hpp>
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>
-#include <IO/Archive.hpp>
+
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 namespace boost::serialization
 {
@@ -58,27 +60,37 @@ namespace Neon::Asset
     //
 
     bool RootSignatureAsset::Handler::CanHandle(
-        const Ptr<IAssetResource>& Resource)
+        const Ptr<IAsset>& Resource)
     {
         return dynamic_cast<RootSignatureAsset*>(Resource.get());
     }
 
-    Ptr<IAssetResource> RootSignatureAsset::Handler::Load(
-        IAssetPack*,
-        IO::InArchive& Archive,
-        size_t)
+    Ptr<IAsset> RootSignatureAsset::Handler::Load(
+        std::istream& Stream,
+        const Asset::DependencyReader&,
+        const Handle&        AssetGuid,
+        StringU8             Path,
+        const AssetMetaData& LoaderData)
     {
+        std::istream& xx = Stream;
+
         RHI::RootSignatureBuilder RootSig;
+
+        boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
         Archive >> RootSig;
-        return std::make_shared<RootSignatureAsset>(RHI::IRootSignature::Create(RootSig));
+
+        return std::make_shared<RootSignatureAsset>(RHI::IRootSignature::Create(RootSig), AssetGuid, std::move(Path));
     }
 
     void RootSignatureAsset::Handler::Save(
-        IAssetPack*,
-        const Ptr<IAssetResource>& Resource,
-        IO::OutArchive&            Archive)
+        std::iostream& Stream,
+        DependencyWriter&,
+        const Ptr<IAsset>& Asset,
+        AssetMetaData&     LoaderData)
     {
-        auto RootSig = std::dynamic_pointer_cast<RootSignatureAsset>(Resource);
+        auto RootSig = static_cast<RootSignatureAsset*>(Asset.get());
+
+        boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
         Archive << RootSig->GetRootSignature()->GetBuilder();
     }
 } // namespace Neon::Asset

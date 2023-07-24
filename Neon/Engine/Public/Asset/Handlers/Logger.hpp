@@ -12,14 +12,14 @@ namespace Neon::Asset
             const Ptr<IAsset>& Asset) override;
 
         Ptr<IAsset> Load(
-            std::ifstream&                 Stream,
+            std::istream&                  Stream,
             const Asset::DependencyReader& DepReader,
             const Handle&                  AssetGuid,
             StringU8                       Path,
             const AssetMetaData&           LoaderData) override;
 
         void Save(
-            std::fstream&      Stream,
+            std::iostream&     Stream,
             DependencyWriter&  DepWriter,
             const Ptr<IAsset>& Asset,
             AssetMetaData&     LoaderData) override;

@@ -1,55 +1,16 @@
 #include <EnginePCH.hpp>
-#include <Resource/Types/Texture.hpp>
+#include <Asset/Handlers/Texture.hpp>
+
 #include <boost/serialization/access.hpp>
-
-#include <IO/Archive.hpp>
-
-namespace boost::serialization
-{
-    template<typename _Archive>
-    void load(
-        _Archive&                   Archive,
-        Neon::RHI::TextureRawImage& ImageInfo,
-        boost::serialization::version_type)
-    {
-        std::underlying_type_t<Neon::RHI::TextureRawImage::Format> Format;
-
-        Archive >> Format;
-        Archive >> ImageInfo.Size;
-        if (ImageInfo.Size)
-        {
-            ImageInfo.Data = NEON_NEW uint8_t[ImageInfo.Size];
-            Archive.load_binary(
-                ImageInfo.Data,
-                ImageInfo.Size);
-        }
-
-        ImageInfo.Type = static_cast<Neon::RHI::TextureRawImage::Format>(Format);
-    }
-
-    template<typename _Archive>
-    void save(
-        _Archive&                         Archive,
-        const Neon::RHI::TextureRawImage& ImageInfo,
-        boost::serialization::version_type)
-    {
-        Archive << std::to_underlying(ImageInfo.Type);
-        Archive << ImageInfo.Size;
-        if (ImageInfo.Size)
-        {
-            Archive.save_binary(
-                ImageInfo.Data,
-                ImageInfo.Size);
-        }
-    }
-} // namespace boost::serialization
-BOOST_SERIALIZATION_SPLIT_FREE(Neon::RHI::TextureRawImage);
 
 namespace Neon::Asset
 {
     TextureAsset::TextureAsset(
         const RHI::TextureRawImage& ImageInfo,
-        bool                        Owning)
+        bool                        Owning,
+        const Handle&               AssetGuid,
+        StringU8                    Path) :
+        IAsset(AssetGuid, std::move(Path))
     {
         SetImageInfo(ImageInfo, Owning);
     }
@@ -85,31 +46,71 @@ namespace Neon::Asset
 
     //
 
-    bool TextureAsset::Handler::CanCastTo(
-        const Ptr<IAssetResource>& Resource)
+    bool TextureAsset::Handler::CanHandle(
+        const Ptr<IAsset>& Resource)
     {
         return dynamic_cast<TextureAsset*>(Resource.get());
     }
 
-    Ptr<IAssetResource> TextureAsset::Handler::Load(
-        IAssetPack*,
-        IO::InArchive& Archive,
-        size_t)
+    Ptr<IAsset> TextureAsset::Handler::Load(
+        std::istream& Stream,
+        const Asset::DependencyReader&,
+        const Handle&        AssetGuid,
+        StringU8             Path,
+        const AssetMetaData& LoaderData)
     {
-        RHI::TextureRawImage ImageInfo;
+        using ImageFormat = RHI::TextureRawImage::Format;
 
-        Archive& ImageInfo;
-        return std::make_shared<TextureAsset>(ImageInfo, true);
+        constexpr std::array Extensions = {
+            std::pair{ ".dds", ImageFormat::Dds },
+            std::pair{ ".ico", ImageFormat::Ico },
+            std::pair{ ".bmp", ImageFormat::Bmp },
+            std::pair{ ".png", ImageFormat::Png },
+            std::pair{ ".jpeg", ImageFormat::Jpeg },
+            std::pair{ ".jpg", ImageFormat::Jpeg },
+            std::pair{ ".jxr", ImageFormat::Jxr },
+            std::pair{ ".tiff", ImageFormat::Tiff }
+        };
+
+        for (const auto& [Extension, Type] : Extensions)
+        {
+            if (Path.ends_with(Extension))
+            {
+                RHI::TextureRawImage ImageInfo{
+                    .Type = Type
+                };
+
+                Stream.seekg(std::ios::end);
+                ImageInfo.Size = Stream.tellg();
+                if (!ImageInfo.Size)
+                {
+                    break;
+                }
+
+                Stream.seekg(std::ios::beg);
+                ImageInfo.Data = NEON_NEW uint8_t[ImageInfo.Size];
+
+                Stream.read(
+                    std::bit_cast<char*>(ImageInfo.Data),
+                    ImageInfo.Size);
+
+                return std::make_shared<TextureAsset>(ImageInfo, true);
+            }
+        }
+        return nullptr;
     }
 
     void TextureAsset::Handler::Save(
-        IAssetPack*,
-        const Ptr<IAssetResource>& Resource,
-        IO::OutArchive&            Archive)
+        std::iostream& Stream,
+        DependencyWriter&,
+        const Ptr<IAsset>& Asset,
+        AssetMetaData&     LoaderData)
     {
-        auto  Texture   = static_cast<TextureAsset*>(Resource.get());
+        auto  Texture   = static_cast<TextureAsset*>(Asset.get());
         auto& ImageInfo = Texture->GetImageInfo();
 
-        Archive& ImageInfo;
+        Stream.write(
+            std::bit_cast<const char*>(ImageInfo.Data),
+            ImageInfo.Size);
     }
 } // namespace Neon::Asset

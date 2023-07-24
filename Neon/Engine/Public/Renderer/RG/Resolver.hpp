@@ -2,7 +2,7 @@
 
 #include <Renderer/RG/Pass.hpp>
 
-#include <Resource/Asset.hpp>
+#include <Asset/Asset.hpp>
 
 #include <RHI/Shader.hpp>
 #include <RHI/RootSignature.hpp>

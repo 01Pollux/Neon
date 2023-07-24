@@ -1,19 +1,21 @@
 #pragma once
 
-#include <Resource/Asset.hpp>
-#include <Resource/Handler.hpp>
+#include <Asset/Asset.hpp>
+#include <Asset/Handler.hpp>
 #include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Asset
 {
-    class TextureAsset : public IAssetResource
+    class TextureAsset : public IAsset
     {
-        friend class Handler;
+        class Handler;
 
     public:
         TextureAsset(
-            const RHI::TextureRawImage& ImageInfo = {},
-            bool                        Owning    = false);
+            const RHI::TextureRawImage& ImageInfo,
+            bool                        Owning,
+            const Handle&               AssetGuid,
+            StringU8                    Path);
 
         /// <summary>
         /// Get texture image info.
@@ -26,24 +28,6 @@ namespace Neon::Asset
         void SetImageInfo(
             const RHI::TextureRawImage& ImageInfo,
             bool                        Owning = false);
-
-    public:
-        class Handler : public IAssetResourceHandler
-        {
-        public:
-            bool CanCastTo(
-                const Ptr<IAssetResource>& Resource) override;
-
-            Ptr<IAssetResource> Load(
-                IAssetPack*    Pack,
-                IO::InArchive& Archive,
-                size_t         DataSize) override;
-
-            void Save(
-                IAssetPack*                Pack,
-                const Ptr<IAssetResource>& Resource,
-                IO::OutArchive&            Archive) override;
-        };
 
     private:
         RHI::TextureRawImage       m_ImageInfo;
