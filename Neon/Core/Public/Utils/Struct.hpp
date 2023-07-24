@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <Core/SHA256.hpp>
+#include <Crypto/SHA256.hpp>
 
 #include <string>
 #include <vector>
@@ -203,7 +203,7 @@ namespace Neon::Structured
             /// Get hash code of the layout
             /// </summary>
             [[nodiscard]] void GetHashCode(
-                SHA256& Sha256) const;
+                Crypto::Sha256& Sha256) const;
 
         private:
             Element* m_Element;
@@ -269,7 +269,7 @@ namespace Neon::Structured
         /// <summary>
         /// Serialize layout
         /// </summary>
-        [[nodiscard]] SHA256::Bytes GetHashCode(
+        [[nodiscard]] Crypto::Sha256::Bytes GetHashCode(
             bool GPULayout) const;
 
     private:

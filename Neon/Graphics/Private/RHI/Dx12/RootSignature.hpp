@@ -1,7 +1,7 @@
 #pragma once
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <RHI/RootSignature.hpp>
-#include <Core/SHA256.hpp>
+#include <Crypto/SHA256.hpp>
 
 namespace Neon::RHI
 {
@@ -55,7 +55,7 @@ namespace Neon::RHI
             uint32_t                                     ResourceCountInDescriptor,
             uint32_t                                     SamplerCountInDescriptor,
             const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
-            SHA256::Bytes&&                              Hash);
+            Crypto::Sha256::Bytes&&                      Hash);
 
         uint32_t GetResourceCountInDescriptor() override;
 
@@ -69,11 +69,11 @@ namespace Neon::RHI
         /// <summary>
         /// Get the root signature hash digest
         /// </summary>
-        [[nodiscard]] const SHA256::Bytes& GetHash() const;
+        [[nodiscard]] const Crypto::Sha256::Bytes& GetHash() const;
 
     private:
         WinAPI::ComPtr<ID3D12RootSignature> m_RootSignature;
-        SHA256::Bytes                      m_Hash;
+        Crypto::Sha256::Bytes               m_Hash;
 
         uint32_t m_ResourceCountInDescriptor = 0,
                  m_SamplerCountInDescriptor  = 0;
@@ -96,7 +96,7 @@ namespace Neon::RHI
     private:
         struct BuildResult
         {
-            SHA256::Bytes                                     Digest;
+            Crypto::Sha256::Bytes                             Digest;
             std::list<std::vector<CD3DX12_DESCRIPTOR_RANGE1>> RangesList;
             std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
             std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;

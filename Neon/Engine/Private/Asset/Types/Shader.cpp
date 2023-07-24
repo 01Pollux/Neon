@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/Shader.hpp>
-#include <Core/SHA256.hpp>
+#include <Crypto/SHA256.hpp>
 #include <RHI/Shader.hpp>
 
 #include <Log/Logger.hpp>
@@ -12,17 +12,14 @@ namespace Neon::Asset
     /// <summary>
     /// Get the shader hash from the shader compile description.
     /// </summary>
-    [[nodiscard]] static SHA256::Bytes GetShaderHash(
+    [[nodiscard]] static Crypto::Sha256::Bytes GetShaderHash(
         const RHI::ShaderCompileDesc& Desc)
     {
-        SHA256 Hash;
-        Hash.Append(Desc.Stage);
-        Hash.Append(Desc.Flags.ToUllong());
-        Hash.Append(Desc.Profile);
+        Crypto::Sha256 Hash;
+        Hash << Desc.Stage << Desc.Flags.ToUllong() << Desc.Profile;
         for (auto& [Key, Value] : Desc.Macros.Defines)
         {
-            Hash.Append(Key);
-            Hash.Append(Value);
+            Hash << Key << Value;
         }
         return Hash.Digest();
     }
@@ -42,13 +39,14 @@ namespace Neon::Asset
     UPtr<RHI::IShader> ShaderAsset::LoadShader(
         const RHI::ShaderCompileDesc& Desc)
     {
-        auto          ShaderHash = GetShaderHash(Desc);
-        SHA256::Bytes Hash;
-        size_t        ShaderSize;
+        Crypto::Sha256::Bytes Hash;
+
+        auto   ShaderHash = GetShaderHash(Desc);
+        size_t ShaderSize;
 
         m_ShaderCacheFile.seekg(std::ios::beg);
         // Skip the first hash, which is the header hash.
-        for (size_t i = sizeof(SHA256::Bytes); i < m_ShaderCacheSize; i++)
+        for (size_t i = sizeof(Crypto::Sha256::Bytes); i < m_ShaderCacheSize; i++)
         {
             m_ShaderCacheFile.read(std::bit_cast<char*>(Hash.data()), Hash.size());
             m_ShaderCacheFile.read(std::bit_cast<char*>(&ShaderSize), sizeof(ShaderSize));
@@ -84,24 +82,31 @@ namespace Neon::Asset
         bool Reset)
     {
         auto WriteHeaderDigest =
-            [this](const SHA256::Bytes& Digest)
+            [this](const Crypto::Sha256::Bytes& Digest)
         {
             m_ShaderCacheFile.seekp(std::ios::beg);
             m_ShaderCacheFile.write(std::bit_cast<const char*>(Digest.data()), Digest.size());
         };
 
-        auto WriteHeaderDigestFromCode =
-            [this, WriteHeaderDigest]()
+        auto GetShaderCodeDigest = [this]
         {
-            SHA256 ExpectedHash;
-            ExpectedHash.Append(m_ShaderCode);
-            WriteHeaderDigest(ExpectedHash.Digest());
+            Crypto::Sha256 ExpectedHash;
+            ExpectedHash << m_ShaderCode;
+            return ExpectedHash.Digest();
+        };
+
+        auto WriteHeaderDigestFromCode =
+            [this,
+             WriteHeaderDigest,
+             GetShaderCodeDigest]()
+        {
+            WriteHeaderDigest(GetShaderCodeDigest());
         };
 
         auto ReadHeaderDigest =
             [this]()
         {
-            SHA256::Bytes ShaderDigest{};
+            Crypto::Sha256::Bytes ShaderDigest{};
             m_ShaderCacheFile.seekg(std::ios::beg);
             m_ShaderCacheFile.read(std::bit_cast<char*>(ShaderDigest.data()), ShaderDigest.size());
             return ShaderDigest;
@@ -125,11 +130,8 @@ namespace Neon::Asset
 
         if (!Reset)
         {
-            SHA256::Bytes ShaderDigest = ReadHeaderDigest();
-
-            SHA256 ExpectedHash;
-            ExpectedHash.Append(m_ShaderCode);
-            auto ExpectedDigest = ExpectedHash.Digest();
+            auto ShaderDigest   = ReadHeaderDigest();
+            auto ExpectedDigest = GetShaderCodeDigest();
             if (ExpectedDigest != ShaderDigest)
             {
                 // Reset the cache file if the shader code has changed.

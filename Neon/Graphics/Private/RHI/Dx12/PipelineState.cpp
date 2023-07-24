@@ -10,8 +10,8 @@ namespace ranges = std::ranges;
 
 namespace Neon::RHI
 {
-    std::mutex                                   s_PipelineStateCacheMutex;
-    std::map<SHA256::Bytes, Ptr<IPipelineState>> s_PipelineStateCache;
+    std::mutex                                           s_PipelineStateCacheMutex;
+    std::map<Crypto::Sha256::Bytes, Ptr<IPipelineState>> s_PipelineStateCache;
 
     //
 
@@ -281,7 +281,7 @@ namespace Neon::RHI
     {
         GraphicsBuildResult Result;
 
-        SHA256 Hash;
+        Crypto::Sha256 Hash;
 
         // Root signature
         {
@@ -314,7 +314,7 @@ namespace Neon::RHI
                     *TargetShader = {};
                 }
 
-                Hash.Append(0xCC0139);
+                Hash << 0xCC0139;
             }
         }
 
@@ -353,7 +353,7 @@ namespace Neon::RHI
         // Sample mask
         {
             Result.Desc.SampleMask = Builder.SampleMask;
-            Hash.Append(Builder.SampleMask);
+            Hash << Builder.SampleMask;
         }
 
         // Rasterizer state
@@ -425,8 +425,7 @@ namespace Neon::RHI
                 Dst.InputSlotClass       = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
                 Dst.InstanceDataStepRate = 0;
 
-                Hash.Append(Name);
-                Hash.Append(Element);
+                Hash << Name << Element;
             }
 
             if (!Result.InputElements.empty())
@@ -451,7 +450,7 @@ namespace Neon::RHI
                 break;
             }
 
-            Hash.Append(uint32_t(Result.Desc.IBStripCutValue));
+            Hash << Result.Desc.IBStripCutValue;
         }
 
         // Primitive topology
@@ -474,7 +473,8 @@ namespace Neon::RHI
                 Result.Desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
                 break;
             }
-            Hash.Append(uint32_t(Result.Desc.PrimitiveTopologyType));
+
+            Hash << Result.Desc.PrimitiveTopologyType;
         }
 
         // Render target formats + depth stencil format
@@ -487,7 +487,7 @@ namespace Neon::RHI
                 Result.Desc.NumRenderTargets * sizeof(Result.Desc.RTVFormats[0]));
 
             Result.Desc.DSVFormat = CastFormat(Builder.DSFormat);
-            Hash.Append(uint32_t(Result.Desc.DSVFormat));
+            Hash << Result.Desc.DSVFormat;
         }
 
         {
@@ -511,7 +511,7 @@ namespace Neon::RHI
     {
         ComputeBuildResult Result;
 
-        SHA256 Hash;
+        Crypto::Sha256 Hash;
 
         // Root signature
         {

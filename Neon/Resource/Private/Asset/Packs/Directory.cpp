@@ -3,7 +3,7 @@
 #include <Asset/Packs/Directory.hpp>
 #include <Asset/Handler.hpp>
 
-#include <Core/SHA256.hpp>
+#include <Crypto/Sha256.hpp>
 #include <queue>
 #include <stack>
 #include <fstream>
@@ -86,7 +86,7 @@ namespace Neon::Asset
                 size_t FileSize = File.tellg();
                 File.seekg(std::ios::beg);
 
-                SHA256 Hash;
+                Crypto::Sha256 Hash;
                 Hash.Append(File, FileSize);
 
                 auto ExpectedHash = Metadata.GetHash();
@@ -228,9 +228,11 @@ namespace Neon::Asset
 
                 size_t FileSize = AssetFile.tellp();
                 AssetFile.seekg(std::ios::beg);
+                std::vector<uint8_t> Buffer(FileSize);
+                AssetFile.read(reinterpret_cast<char*>(Buffer.data()), FileSize);
 
-                SHA256 Hash;
-                Hash.Append(AssetFile, FileSize);
+                Crypto::Sha256 Hash;
+                Hash.Append(Buffer.data(), FileSize);
                 Metadata->SetLoaderId(HandlerId);
                 Metadata->SetHash(Hash.Digest().ToString());
 

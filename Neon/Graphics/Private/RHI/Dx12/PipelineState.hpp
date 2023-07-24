@@ -1,7 +1,7 @@
 #pragma once
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <RHI/PipelineState.hpp>
-#include <Core/SHA256.hpp>
+#include <Crypto/Sha256.hpp>
 
 namespace Neon::RHI
 {
@@ -46,7 +46,7 @@ namespace Neon::RHI
     private:
         struct GraphicsBuildResult
         {
-            SHA256::Bytes                         Digest;
+            Crypto::Sha256::Bytes                 Digest;
             D3D12_GRAPHICS_PIPELINE_STATE_DESC    Desc{};
             std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
             ShaderInputLayout                     InputLayout;
@@ -58,7 +58,7 @@ namespace Neon::RHI
         };
         struct ComputeBuildResult
         {
-            SHA256::Bytes                     Digest;
+            Crypto::Sha256::Bytes             Digest;
             D3D12_COMPUTE_PIPELINE_STATE_DESC Desc{};
 
             ComputeBuildResult() = default;

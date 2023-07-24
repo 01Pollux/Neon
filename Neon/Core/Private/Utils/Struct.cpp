@@ -147,22 +147,22 @@ namespace Neon::Structured
     }
 
     void RawLayout::ElementView::GetHashCode(
-        SHA256& Sha256) const
+        Crypto::Sha256& Hash) const
     {
         auto NestedType = m_Element->GetType();
-        Sha256.Append(std::bit_cast<uint8_t*>(&NestedType), sizeof(NestedType));
+        Hash.Append(&NestedType, sizeof(NestedType));
 
         if (auto Struct = m_Element->AsStruct())
         {
             for (auto& NestedElement : Struct->NestedElements)
             {
-                ElementView(&NestedElement.second).GetHashCode(Sha256);
+                ElementView(&NestedElement.second).GetHashCode(Hash);
             }
         }
         else if (auto Array = m_Element->AsArray())
         {
-            Sha256.Append(Array->ArrayCount);
-            ElementView(Array->NestedElement.get()).GetHashCode(Sha256);
+            Hash << Array->ArrayCount;
+            ElementView(Array->NestedElement.get()).GetHashCode(Hash);
         }
     }
 
@@ -209,16 +209,14 @@ namespace Neon::Structured
         return CookedLayout(GPULayout, GetAlignement(), m_Element);
     }
 
-    SHA256::Bytes RawLayout::GetHashCode(
+    Crypto::Sha256::Bytes RawLayout::GetHashCode(
         bool GPULayout) const
     {
-        SHA256 Sha256;
+        Crypto::Sha256 Hash;
+        Hash << GPULayout << m_Alignement;
 
-        Sha256.Append(GPULayout);
-        Sha256.Append(m_Alignement);
-
-        ElementView(const_cast<Element*>(&m_Element)).GetHashCode(Sha256);
-        return Sha256.Digest();
+        ElementView(const_cast<Element*>(&m_Element)).GetHashCode(Hash);
+        return Hash.Digest();
     }
 
     //

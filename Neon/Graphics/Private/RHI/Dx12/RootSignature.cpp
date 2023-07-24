@@ -3,14 +3,12 @@
 #include <Private/RHI/Dx12/RootSignature.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
 
-#include <Core/SHA256.hpp>
-
 #include <Log/Logger.hpp>
 
 namespace Neon::RHI
 {
-    std::mutex                                   s_RootSignatureCacheMutex;
-    std::map<SHA256::Bytes, Ptr<IRootSignature>> s_RootSignatureCache;
+    std::mutex                                           s_RootSignatureCacheMutex;
+    std::map<Crypto::Sha256::Bytes, Ptr<IRootSignature>> s_RootSignatureCache;
 
     //
 
@@ -191,7 +189,7 @@ namespace Neon::RHI
         uint32_t                                     ResourceCountInDescriptor,
         uint32_t                                     SamplerCountInDescriptor,
         const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
-        SHA256::Bytes&&                              Hash) :
+        Crypto::Sha256::Bytes&&                      Hash) :
         IRootSignature(std::move(Builder)),
         m_Hash(std::move(Hash))
     {
@@ -234,7 +232,7 @@ namespace Neon::RHI
         return m_RootSignature.Get();
     }
 
-    const SHA256::Bytes& Dx12RootSignature::GetHash() const
+    const Crypto::Sha256::Bytes& Dx12RootSignature::GetHash() const
     {
         return m_Hash;
     }
@@ -282,11 +280,11 @@ namespace Neon::RHI
         ResourceCountInDescriptor = 0;
         SamplerCountInDescriptor  = 0;
 
-        BuildResult Result;
-        SHA256      Hash;
+        BuildResult    Result;
+        Crypto::Sha256 Hash;
 
         auto Flags = CastRootSignatureFlags(Builder.GetFlags());
-        Hash.Append(std::bit_cast<uint8_t*>(&Flags), sizeof(Flags));
+        Hash << Flags;
 
         auto& NParameters = Builder.GetParameters();
         Result.Parameters.reserve(NParameters.size());
