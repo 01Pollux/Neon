@@ -11,7 +11,7 @@ public:
         Config::EngineConfig Config) override
     {
         DefaultGameEngine::Initialize(std::move(Config));
-        // RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
+        RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
     }
 };
 

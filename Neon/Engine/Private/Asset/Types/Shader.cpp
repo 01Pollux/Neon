@@ -44,9 +44,9 @@ namespace Neon::Asset
         auto   ShaderHash = GetShaderHash(Desc);
         size_t ShaderSize;
 
-        m_ShaderCacheFile.seekg(std::ios::beg);
+        m_ShaderCacheFile.seekg(sizeof(Crypto::Sha256::Bytes), std::ios::beg);
         // Skip the first hash, which is the header hash.
-        for (size_t i = sizeof(Crypto::Sha256::Bytes); i < m_ShaderCacheSize; i++)
+        for (size_t i = sizeof(Crypto::Sha256::Bytes); i < m_ShaderCacheSize; i = m_ShaderCacheFile.tellg())
         {
             m_ShaderCacheFile.read(std::bit_cast<char*>(Hash.data()), Hash.size());
             m_ShaderCacheFile.read(std::bit_cast<char*>(&ShaderSize), sizeof(ShaderSize));
@@ -65,10 +65,11 @@ namespace Neon::Asset
         auto ShaderData     = RHI::IShader::Create(m_ShaderCode, Desc);
         auto ShaderBytecode = ShaderData->GetByteCode();
 
-        m_ShaderCacheFile.seekp(std::ios::end);
+        m_ShaderCacheFile.seekp(0, std::ios::end);
         m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderHash.data()), Hash.size());
-        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Size), sizeof(ShaderBytecode.Size));
+        m_ShaderCacheFile.write(std::bit_cast<const char*>(&ShaderBytecode.Size), sizeof(ShaderBytecode.Size));
         m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Data), ShaderBytecode.Size);
+        m_ShaderCacheSize = m_ShaderCacheFile.tellp();
 
         return ShaderData;
     }
@@ -114,29 +115,33 @@ namespace Neon::Asset
 
         //
 
-        if (m_ShaderCacheFile)
+        if (m_ShaderCacheFile.is_open())
         {
             m_ShaderCacheFile.close();
         }
 
-        std::ios::openmode Flags = std::ios::in | std::ios::out | std::ios::ate | std::ios::binary;
-        if (Reset)
+        std::filesystem::path CachePath = StringUtils::Format("{}{}.nsc", std::filesystem::temp_directory_path().string(), GetGuid().ToString());
+        std::ios::openmode    Flags     = std::ios::in | std::ios::out | std::ios::binary;
+
+        bool FileExists = std::filesystem::exists(CachePath);
+
+        if (Reset || !FileExists)
         {
             Flags |= std::ios::trunc;
+            FileExists = false;
         }
 
-        auto CachePath = StringUtils::Format("{}{}.nsc", std::filesystem::temp_directory_path().string(), GetGuid().ToString());
         m_ShaderCacheFile.open(CachePath, Flags);
 
-        if (!Reset)
+        if (FileExists)
         {
             auto ShaderDigest   = ReadHeaderDigest();
             auto ExpectedDigest = GetShaderCodeDigest();
             if (ExpectedDigest != ShaderDigest)
             {
-                // Reset the cache file if the shader code has changed.
-                OpenCacheFile(true);
-                return;
+                m_ShaderCacheFile.close();
+                m_ShaderCacheFile.open(CachePath, Flags | std::ios::trunc);
+                WriteHeaderDigestFromCode();
             }
         }
         else
@@ -144,6 +149,7 @@ namespace Neon::Asset
             WriteHeaderDigestFromCode();
         }
 
+        m_ShaderCacheFile.seekg(0, std::ios::end);
         m_ShaderCacheSize = m_ShaderCacheFile.tellg();
     }
 
@@ -162,7 +168,7 @@ namespace Neon::Asset
         StringU8             Path,
         const AssetMetaData& LoaderData)
     {
-        Stream.seekg(std::ios::end);
+        Stream.seekg(0, std::ios::end);
         auto FileSize = Stream.tellg();
         Stream.seekg(std::ios::beg);
 

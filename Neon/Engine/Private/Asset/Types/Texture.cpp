@@ -80,7 +80,7 @@ namespace Neon::Asset
                     .Type = Type
                 };
 
-                Stream.seekg(std::ios::end);
+                Stream.seekg(0, std::ios::end);
                 ImageInfo.Size = Stream.tellg();
                 if (!ImageInfo.Size)
                 {
