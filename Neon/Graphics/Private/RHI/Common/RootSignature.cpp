@@ -98,8 +98,8 @@ namespace Neon::RHI
         m_Parameters.emplace_back(
             RootParameter::Constants{
                 .ShaderRegister = ShaderRegister,
-                .Num32BitValues = Num32BitValues,
-                .RegisterSpace  = RegisterSpace },
+                .RegisterSpace  = RegisterSpace,
+                .Num32BitValues = Num32BitValues },
             Visibility);
         return *this;
     }

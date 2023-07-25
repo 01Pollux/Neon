@@ -31,7 +31,7 @@ void FlappyBirdClone::PreloadMaterials()
             .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
             .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
-            .Topology(RHI::PrimitiveTopologyCategory::Point);
+            .Topology(RHI::PrimitiveTopologyCategory::Triangle);
 
         auto& VarMap = BaseSpriteMaterial.VarMap();
 

@@ -157,8 +157,8 @@ namespace Neon::RHI
         struct Constants
         {
             uint32_t ShaderRegister;
-            uint32_t Num32BitValues;
             uint32_t RegisterSpace;
+            uint32_t Num32BitValues;
 
         private:
             friend class boost::serialization::access;

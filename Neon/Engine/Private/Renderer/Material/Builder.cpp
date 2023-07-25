@@ -25,12 +25,6 @@ namespace Neon::Renderer
         return *this;                                                 \
     }                                                                 \
                                                                       \
-    MaterialClass& MaterialClass::Remove##ShaderStage()               \
-    {                                                                 \
-        m_ShaderModules[Index] = nullptr;                             \
-        return *this;                                                 \
-    }                                                                 \
-                                                                      \
     auto MaterialClass::ShaderStage() const->const Ptr<RHI::IShader>& \
     {                                                                 \
         return m_ShaderModules[Index];                                \

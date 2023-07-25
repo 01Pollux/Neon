@@ -64,12 +64,24 @@ namespace Neon::Scene
                Component::Transform& Transform,
                Component::Camera&    Camera)
             {
+                auto Size = RHI::ISwapchain::Get()->GetSize();
+
+                if (Camera.Viewport.ClientWidth)
+                {
+                    Camera.Viewport.Width = float(Size.Width());
+                }
+                if (Camera.Viewport.ClientHeight)
+                {
+                    Camera.Viewport.Height = float(Size.Height());
+                }
+
                 if (Camera.RenderGraph)
                 {
                     Camera.RenderGraph->Run();
                 }
             });
 
+        // Rendering to back buffer for main camera
         auto MainCamera = m_World->get<Component::MainCamera>();
         if (MainCamera)
         {

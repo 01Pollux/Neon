@@ -64,11 +64,6 @@ namespace Neon::Renderer
             const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
-        /// Unset the vertex shader.
-        /// </summary>
-        GenericMaterialBuilder& RemoveVertexShader();
-
-        /// <summary>
         /// Get the vertex shader.
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IShader>& VertexShader() const;
@@ -78,11 +73,6 @@ namespace Neon::Renderer
         /// </summary>
         GenericMaterialBuilder& HullShader(
             const Ptr<RHI::IShader>& Shader);
-
-        /// <summary>
-        /// Unset the hull shader.
-        /// </summary>
-        GenericMaterialBuilder& RemoveHullShader();
 
         /// <summary>
         /// Get the hull shader.
@@ -96,11 +86,6 @@ namespace Neon::Renderer
             const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
-        /// Unset the domain shader.
-        /// </summary>
-        GenericMaterialBuilder& RemoveDomainShader();
-
-        /// <summary>
         /// Get the domain shader.
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IShader>& DomainShader() const;
@@ -112,11 +97,6 @@ namespace Neon::Renderer
             const Ptr<RHI::IShader>& Shader);
 
         /// <summary>
-        /// Unset the geometry shader.
-        /// </summary>
-        GenericMaterialBuilder& RemoveGeometryShader();
-
-        /// <summary>
         /// Get the geometry shader.
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IShader>& GeometryShader() const;
@@ -126,11 +106,6 @@ namespace Neon::Renderer
         /// </summary>
         GenericMaterialBuilder& PixelShader(
             const Ptr<RHI::IShader>& Shader);
-
-        /// <summary>
-        /// Unset the pixel shader.
-        /// </summary>
-        GenericMaterialBuilder& RemovePixelShader();
 
         /// <summary>
         /// Get the pixel shader.
@@ -312,11 +287,6 @@ namespace Neon::Renderer
         /// </summary>
         GenericMaterialBuilder& ComputeShader(
             const Ptr<RHI::IShader>& Shader);
-
-        /// <summary>
-        /// Unset the compute shader.
-        /// </summary>
-        GenericMaterialBuilder& RemoveComputeShader();
 
         /// <summary>
         /// Get the compute shader.
