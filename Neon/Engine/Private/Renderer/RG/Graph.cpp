@@ -4,11 +4,6 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/Resource/State.hpp>
 
-#include <cppcoro/sync_wait.hpp>
-#include <cppcoro/async_mutex.hpp>
-#include <cppcoro/schedule_on.hpp>
-#include <cppcoro/when_all.hpp>
-
 #include <Log/Logger.hpp>
 
 namespace Neon::RG
@@ -39,7 +34,7 @@ namespace Neon::RG
 
         for (auto& Level : m_Levels)
         {
-            Level.Execute(m_ThreadPool);
+            Level.Execute();
         }
 
         RHI::IResourceStateManager::Get()->FlushBarriers();
@@ -81,8 +76,7 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::Execute(
-        cppcoro::static_thread_pool& ThreadPool) const
+    void RenderGraphDepdencyLevel::Execute() const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -94,7 +88,7 @@ namespace Neon::RG
         }
 
         ExecuteBarriers();
-        ExecutePasses(ThreadPool);
+        ExecutePasses();
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -122,16 +116,13 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphDepdencyLevel::ExecutePasses(
-        cppcoro::static_thread_pool& ThreadPool) const
+    void RenderGraphDepdencyLevel::ExecutePasses() const
     {
-        cppcoro::async_mutex RenderMutex, ComputeMutex;
-
         RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext;
         RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext;
 
-        std::vector<cppcoro::task<void>> Tasks;
-        Tasks.reserve(m_Passes.size());
+        std::vector<std::future<void>> Futures;
+        Futures.reserve(m_Passes.size());
 
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
@@ -140,9 +131,12 @@ namespace Neon::RG
                 continue;
             }
 
-            auto Task = [&, &Storage = m_Context.GetStorage()](size_t PassIndex) -> cppcoro::task<void>
+            auto Task = [this,
+                         &RenderContext,
+                         &ComputeContext](size_t PassIndex)
             {
                 auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
+                auto& Storage                                   = m_Context.GetStorage();
 
                 RHI::ICommandList* CommandList = nullptr;
 
@@ -152,10 +146,10 @@ namespace Neon::RG
                 {
                     RHI::IGraphicsCommandList* RenderCommandList;
                     {
-                        auto Lock         = co_await RenderMutex.scoped_lock_async();
+                        std::scoped_lock Lock(m_Context.m_RenderMutex);
                         RenderCommandList = RenderContext.Append();
-                        CommandList       = RenderCommandList;
                     }
+                    CommandList = RenderCommandList;
 
                     std::vector<RHI::CpuDescriptorHandle> RtvHandles;
                     RtvHandles.reserve(RenderTargets.size());
@@ -256,7 +250,7 @@ namespace Neon::RG
                 case PassQueueType::Compute:
                 {
                     {
-                        auto Lock   = co_await ComputeMutex.scoped_lock_async();
+                        std::scoped_lock Lock(m_Context.m_ComputeMutex);
                         CommandList = ComputeContext.Append();
                     }
                     break;
@@ -264,13 +258,14 @@ namespace Neon::RG
                 }
 
                 RenderPass->Dispatch(Storage, CommandList);
-
-                co_return;
             };
 
-            Tasks.emplace_back(cppcoro::schedule_on(ThreadPool, Task(i)));
+            Futures.emplace_back(m_Context.m_ThreadPool.enqueue(std::move(Task), i));
         }
 
-        cppcoro::sync_wait(cppcoro::when_all(std::move(Tasks)));
+        for (auto& Future : Futures)
+        {
+            Future.get();
+        }
     }
 } // namespace Neon::RG
