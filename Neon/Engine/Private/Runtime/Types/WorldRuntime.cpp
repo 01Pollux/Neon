@@ -1,22 +1,11 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
-
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Pipeline.hpp>
 
 #include <Window/Window.hpp>
 #include <RHI/Swapchain.hpp>
-
-//
-
-#include <Scene/Component/Camera.hpp>
-
-#include <Scene/Component/Transform.hpp>
-#include <Scene/Component/Sprite.hpp>
-#include <Renderer/Material/Builder.hpp>
 
 namespace Neon::Runtime
 {

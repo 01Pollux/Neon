@@ -1,19 +1,19 @@
 #include "Engine.hpp"
-
 #include <Asset/Manager.hpp>
+
+#include <Scene/Component/Sprite.hpp>
 
 using namespace Neon;
 
-namespace AssetGuids
+void FlappyBirdClone::Initialize(
+    Config::EngineConfig Config)
 {
-    auto SpriteGuid()
-    {
-        return Asset::Handle::FromString("c01a7257-18ac-4cb3-ae8f-e989a824d9f2");
-    }
-} // namespace AssetGuids
+    DefaultGameEngine::Initialize(std::move(Config));
+    m_Runtime = RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
 
-void FlappyBirdClone::PreloadSprite()
-{
-    // Preload the sprite texture
-    m_Sprite = Asset::Manager::Load(AssetGuids::SpriteGuid());
+    PreloadSprite();
+
+    PreloadMaterials();
+
+    LoadScene();
 }

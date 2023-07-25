@@ -3,20 +3,18 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/Types/WorldRuntime.hpp>
 
+#include <Renderer/Material/Material.hpp>
 #include <Asset/Types/Texture.hpp>
 
 class FlappyBirdClone : public Neon::Runtime::DefaultGameEngine
 {
+    using EngineWorldRuntimePtr = Neon::Ptr<Neon::Runtime::EngineWorldRuntime>;
+    using MaterialMap           = std::unordered_map<Neon::String, Ptr<Neon::Renderer::IMaterial>>;
+    using SpriteAssetPtr        = Neon::Asset::AssetTaskPtr<Neon::Asset::TextureAsset>;
+
 public:
     void Initialize(
-        Neon::Config::EngineConfig Config) override
-    {
-        DefaultGameEngine::Initialize(std::move(Config));
-        m_Runtime = RegisterInterface<Neon::Runtime::IEngineRuntime, Neon::Runtime::EngineWorldRuntime>();
-
-        // Preload the sprite
-        PreloadSprite();
-    }
+        Neon::Config::EngineConfig Config) override;
 
 private:
     /// <summary>
@@ -24,8 +22,18 @@ private:
     /// </summary>
     void PreloadSprite();
 
-private:
-    Neon::Ptr<Neon::Runtime::EngineWorldRuntime> m_Runtime;
+    /// <summary>
+    /// Preload the materials used in the scene.
+    /// </summary>
+    void PreloadMaterials();
 
-    Neon::Asset::AssetTaskPtr<Neon::Asset::TextureAsset> m_Sprite;
+    /// <summary>
+    /// Load the scene
+    /// </summary>
+    void LoadScene();
+
+private:
+    EngineWorldRuntimePtr m_Runtime;
+    MaterialMap           m_Materials;
+    SpriteAssetPtr        m_Sprite;
 };
