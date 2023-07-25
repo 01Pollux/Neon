@@ -9,4 +9,4 @@ project "HelloWorld"
     common_neon()
 
     link_engine_library()
-    copy_engine_resources()
+    copy_engine_resources("HelloWorld")

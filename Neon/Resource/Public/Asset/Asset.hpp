@@ -55,9 +55,12 @@ namespace Neon::Asset
     struct AssetPtr
     {
     public:
-        AssetPtr() = default;
+        AssetPtr(std::nullptr_t) noexcept
+        {
+        }
+
         AssetPtr(
-            Ptr<_Ty> Asset) :
+            Ptr<_Ty> Asset = nullptr) :
             m_Asset(std::move(Asset))
         {
         }
@@ -108,6 +111,8 @@ namespace Neon::Asset
         requires std::is_base_of_v<IAsset, _Ty>
     struct AssetTaskPtr
     {
+        AssetTaskPtr() = default;
+
         AssetTaskPtr(
             std::future<Ptr<IAsset>> Asset) :
             m_Asset(std::move(Asset))

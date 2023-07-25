@@ -23,6 +23,6 @@ NEON_MAIN(Argc, Argv)
             .Fullscreen = false },
         //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
-    Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
+    Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents/HelloWorld"));
     return RunEngine<RuntimeSample>(std::move(Config));
 }

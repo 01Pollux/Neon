@@ -2,8 +2,6 @@
 
 #include <Renderer/RG/Pass.hpp>
 
-#include <Asset/Asset.hpp>
-
 #include <RHI/Shader.hpp>
 #include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>

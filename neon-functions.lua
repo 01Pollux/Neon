@@ -1,30 +1,32 @@
-function copy_to_targetdir(from_dir, folder, name)
+function copy_file_to_target_dir(from_dir, folder, name)
     postbuildcommands
     {
+        string.format('if not exist "$(targetdir)%s" mkdir "$(targetdir)%s"', folder, folder),
         string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
     }
 end
-function move_to_targetdir(from_dir, folder, name)
+function copy_directory_to_target_dir(from_dir, to_dir)
     postbuildcommands
     {
-        string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
+        string.format('if not exist "$(targetdir)%s" mkdir "$(targetdir)%s"', to_dir, to_dir),
+        string.format("{COPY} %s $(targetdir)%s", from_dir, to_dir)
     }
 end
 
-function copy_engine_resources()
-    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
-    copy_to_targetdir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
-    postbuildcommands
-    {
-        'if not exist "$(targetdir)D3D12" mkdir "$(targetdir)D3D12"'
-    }
-    move_to_targetdir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.dll")
-    move_to_targetdir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.dll")
+function copy_engine_resources(content_name)
+    if content_name ~= nil then
+        content_name = "%{wks.location}Contents/"..content_name;
+        copy_directory_to_target_dir(content_name, "Contents/");
+	end
+
+    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
+    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
+    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.dll")
+    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.dll")
     filter "configurations:not Dist"
-        move_to_targetdir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
-        move_to_targetdir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
     filter {}
-
 end
 
 function common_dir_setup()

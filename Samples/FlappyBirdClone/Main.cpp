@@ -1,18 +1,8 @@
 #include <Runtime/EntryPoint.hpp>
-#include <Runtime/Types/WorldRuntime.hpp>
 #include <Asset/Packs/Directory.hpp>
+#include "Engine.hpp"
 
 using namespace Neon;
-
-class FlappyBirdClone : public Runtime::DefaultGameEngine
-{
-public:
-    void Initialize(
-        Config::EngineConfig Config) override
-    {
-        DefaultGameEngine::Initialize(std::move(Config));
-    }
-};
 
 NEON_MAIN(Argc, Argv)
 {

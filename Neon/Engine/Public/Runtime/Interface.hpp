@@ -37,12 +37,12 @@ namespace Neon::Runtime
         /// </summary>
         template<typename _Interface, typename _Ty, typename... _Args>
             requires std::is_base_of_v<_Interface, _Ty>
-        Ptr<_Interface> RegisterInterface(
+        Ptr<_Ty> RegisterInterface(
             _Args&&... Args)
         {
-            return RegisterInterface<_Interface>(
+            return std::static_pointer_cast<_Ty>(RegisterInterface<_Interface>(
                 [&]
-                { return std::make_shared<_Ty>(std::forward<_Args>(Args)...); });
+                { return std::make_shared<_Ty>(std::forward<_Args>(Args)...); }));
         }
 
         /// <summary>
