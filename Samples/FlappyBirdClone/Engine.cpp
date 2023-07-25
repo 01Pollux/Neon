@@ -1,7 +1,4 @@
 #include "Engine.hpp"
-#include <Asset/Manager.hpp>
-
-#include <Scene/Component/Sprite.hpp>
 
 using namespace Neon;
 
@@ -16,4 +13,11 @@ void FlappyBirdClone::Initialize(
     PreloadMaterials();
 
     LoadScene();
+}
+
+Ptr<Neon::Renderer::IMaterial> FlappyBirdClone::GetMaterial(
+    const StringU8& Name)
+{
+    auto Iter = m_Materials.find(Name);
+    return Iter == m_Materials.end() ? nullptr : Iter->second;
 }

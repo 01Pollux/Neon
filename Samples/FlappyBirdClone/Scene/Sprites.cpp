@@ -1,4 +1,5 @@
 #include "Engine.hpp"
+#include <Asset/Manager.hpp>
 
 //
 
@@ -16,6 +17,10 @@ namespace AssetGuids
 
 void FlappyBirdClone::PreloadSprite()
 {
+    using SpriteAssetPtr = Neon::Asset::AssetTaskPtr<Neon::Asset::TextureAsset>;
+
     // Preload the sprite texture
-    m_Sprite = Asset::Manager::Load(AssetGuids::SpriteGuid());
+    SpriteAssetPtr SpriteTexture = Asset::Manager::Load(AssetGuids::SpriteGuid());
+
+    m_Sprite = RHI::PendingResource(SpriteTexture->GetImageInfo()).Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
 }

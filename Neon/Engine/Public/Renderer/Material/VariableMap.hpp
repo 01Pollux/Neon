@@ -17,12 +17,14 @@ namespace Neon::Renderer
         /// <summary>
         /// This variable is instanced.
         /// Each material instance will have its own local copy of this variable.
+        /// instanced uniforms are private to each material instance unlike unbounded uniforms.
         /// </summary>
         Instanced,
 
         /// <summary>
         /// This variable is an unbounded array.
         /// Cannot be combined with 'Instanced' flag.
+        /// Unbounded uniforms are shared unlike instanced uniforms.
         /// </summary>
         Unbounded,
 
