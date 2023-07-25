@@ -43,11 +43,6 @@ namespace Neon::Runtime
 
         auto Pipeline = std::make_unique<EnginePipeline>(std::move(Builder));
 
-        auto TestShaderId = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
-        auto ShaderAsset  = Asset::AssetTaskPtr<Asset::ShaderAsset>(Asset::Manager::Load(TestShaderId));
-
-        //
-
         Pipeline->Attach(
             "Update",
             [this]
@@ -79,97 +74,6 @@ namespace Neon::Runtime
             });
 
         Engine->SetPipeline(std::move(Pipeline));
-
-        //
-
-        using namespace Renderer;
-
-        RenderMaterialBuilder MatBuilder;
-
-        MatBuilder
-            .VertexShader(ShaderAsset->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
-            .PixelShader(ShaderAsset->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
-            .Rasterizer(MaterialStates::Rasterizer::CullNone)
-            .DepthStencil(MaterialStates::DepthStencil::None)
-            .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
-            .Topology(RHI::PrimitiveTopologyCategory::Triangle);
-
-        {
-            auto& VarMap = MatBuilder.VarMap();
-
-            VarMap.Add("g_FrameData", { 0, 0 }, MaterialVarType::Buffer)
-                .Visibility(RHI::ShaderVisibility::All);
-
-            VarMap.Add("g_SpriteData", { 0, 1 }, MaterialVarType::Resource)
-                .Visibility(RHI::ShaderVisibility::All);
-
-            VarMap.Add("p_SpriteTextures", { 0, 0 }, MaterialVarType::Resource)
-                .Visibility(RHI::ShaderVisibility::Pixel)
-                .Flags(EMaterialVarFlags::Instanced, true);
-
-            //
-
-            for (uint32_t i : std::ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
-            {
-                auto Name = StringUtils::Format("p_StaticSampler_{}", i);
-                VarMap.AddStaticSampler(Name, { i, 0 }, RHI::ShaderVisibility::Pixel, MaterialStates::Sampler(i));
-            }
-        }
-
-        auto Material = IMaterial::Create(MatBuilder);
-
-        //
-
-        Ptr<IMaterial> RandomInstances[]{
-            Material->CreateInstance(),
-            Material->CreateInstance(),
-            Material->CreateInstance(),
-            Material->CreateInstance(),
-            Material
-        };
-
-        Ptr<RHI::ITexture> RandomTextures[]{
-            RHI::ITexture::GetDefault(RHI::DefaultTextures::Magenta_2D),
-            RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D),
-        };
-
-        //
-
-        for (float y = -1.f; y < 1.f; y += .2f)
-        {
-            for (float x = -1.f; x < 1.f; x += .2f)
-            {
-                constexpr float Size = 0.2f;
-
-                auto Sprite = m_Scene->entity();
-
-                Scene::Component::Transform TransformComponent;
-                TransformComponent.Local.SetPosition(Vector3(x, y, 5.f));
-                TransformComponent.World.SetPosition(Vector3(x, y, 5.f));
-                Sprite.set(TransformComponent);
-
-                Scene::Component::Sprite SpriteComponent;
-
-                // SpriteComponent.ModulationColor =
-                //     Color4(0.0f, 1.0f, 0.3f, 1.0f) * (1.f - x) * (1.f - y) +
-                //     Color4(0.2f, 0.1f, 1.0f, 1.0f) * x * y;
-
-                SpriteComponent.Size             = Size2(Size, Size);
-                SpriteComponent.MaterialInstance = RandomInstances[std::rand() % std::size(RandomInstances)];
-
-                SpriteComponent.MaterialInstance->SetTexture("p_SpriteTextures", RandomTextures[std::rand() % std::size(RandomTextures)]);
-
-                Sprite.set(SpriteComponent);
-            }
-        }
-
-        //
-
-        auto CameraActor        = m_Scene.CreateEntity(Scene::EntityType::Camera3D, "Main Camera");
-        auto CameraComponent    = CameraActor.get_mut<Scene::Component::Camera>();
-        CameraComponent->LookAt = Vector3(0.f, 0.f, 5.f);
-
-        m_Scene->set<Scene::Component::MainCamera>({ CameraActor });
     }
 
     Scene::GameScene& EngineWorldRuntime::GetScene()
