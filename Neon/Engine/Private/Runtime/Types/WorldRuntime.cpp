@@ -86,17 +86,9 @@ namespace Neon::Runtime
 
         RenderMaterialBuilder MatBuilder;
 
-        auto t0 = std::chrono::high_resolution_clock::now();
-
         MatBuilder
             .VertexShader(ShaderAsset->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
-            .PixelShader(ShaderAsset->LoadShader({ .Stage = RHI::ShaderStage::Pixel }));
-
-        auto t1 = std::chrono::high_resolution_clock::now();
-        auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-        printf(" MaterialBuilder: %lld ms\n", dt);
-
-        MatBuilder
+            .PixelShader(ShaderAsset->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
             .Rasterizer(MaterialStates::Rasterizer::CullNone)
             .DepthStencil(MaterialStates::DepthStencil::None)
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)

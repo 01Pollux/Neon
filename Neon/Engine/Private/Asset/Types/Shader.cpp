@@ -66,9 +66,12 @@ namespace Neon::Asset
         auto ShaderBytecode = ShaderData->GetByteCode();
 
         m_ShaderCacheFile.seekp(0, std::ios::end);
+
         m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderHash.data()), Hash.size());
         m_ShaderCacheFile.write(std::bit_cast<const char*>(&ShaderBytecode.Size), sizeof(ShaderBytecode.Size));
         m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Data), ShaderBytecode.Size);
+
+        m_ShaderCacheFile.flush();
         m_ShaderCacheSize = m_ShaderCacheFile.tellp();
 
         return ShaderData;
