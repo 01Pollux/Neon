@@ -15,9 +15,6 @@ namespace Neon::RG
     class IRenderPass
     {
     public:
-        class ShaderResolver;
-        class RootSignatureResolver;
-        class PipelineStateResolver;
         class ResourceResolver;
 
         IRenderPass(
@@ -27,30 +24,6 @@ namespace Neon::RG
         }
 
         virtual ~IRenderPass() = default;
-
-        /// <summary>
-        /// Called when the render pass wans to load shaders.
-        /// </summary>
-        virtual void ResolveShaders(
-            ShaderResolver&)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wans to load shaders.
-        /// </summary>
-        virtual void ResolveRootSignature(
-            RootSignatureResolver&)
-        {
-        }
-
-        /// <summary>
-        /// Called when the render pass wants to create pipelines.
-        /// </summary>
-        virtual void ResolvePipelineStates(
-            PipelineStateResolver&)
-        {
-        }
 
         /// <summary>
         /// Called when the render pass wants to resolve the dependencies of resources.

@@ -109,10 +109,6 @@ namespace Neon::Runtime
 
             //
 
-            VarMap.Add("s_test_constant", { 0, 10 }, MaterialVarType::Constant)
-                .ArraySize((sizeof(int[3]) + sizeof(float[2])) / sizeof(uint32_t))
-                .Visibility(RHI::ShaderVisibility::All);
-
             for (uint32_t i : std::ranges::iota_view(0u, uint32_t(MaterialStates::Sampler::_Last)))
             {
                 auto Name = StringUtils::Format("p_StaticSampler_{}", i);

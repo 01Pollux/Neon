@@ -15,11 +15,7 @@ namespace Neon::RG
 
         struct BuilderInfo
         {
-            IRenderPass::ShaderResolver        Shaders;
-            IRenderPass::RootSignatureResolver RootSignatures;
-            IRenderPass::PipelineStateResolver PipelineStates;
-            IRenderPass::ResourceResolver      Resources;
-
+            IRenderPass::ResourceResolver Resources;
             BuilderInfo(
                 GraphStorage& Storage);
         };
@@ -48,25 +44,6 @@ namespace Neon::RG
         {
             return static_cast<_Ty&>(AppendPass(std::make_unique<_Ty>(std::forward<_Args>(Args)...)));
         }
-
-    private:
-        /// <summary>
-        /// Build root signatures from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchRootSignatureJobs(
-            BuildersListType& Builders) -> void;
-
-        /// <summary>
-        /// Build shaders from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchShaderJobs(
-            BuildersListType& Builders) const -> void;
-
-        /// <summary>
-        /// Build pipeline states from builders
-        /// </summary>
-        [[nodiscard]] auto LaunchPipelineJobs(
-            BuildersListType& Builders) -> void;
 
     private:
         /// <summary>

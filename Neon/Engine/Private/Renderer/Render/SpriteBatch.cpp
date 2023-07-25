@@ -164,15 +164,6 @@ namespace Neon::Renderer
         auto           FirstMaterial = m_MaterialTable.GetMaterial(0);
         MaterialBinder MatBinder(m_MaterialTable.GetMaterials());
 
-        struct TestData
-        {
-            Vector3I s_resolution = { 1, 2, 3 };
-            float    s_bounded    = 4;
-            float    s_time       = 5;
-        };
-        TestData Data;
-        FirstMaterial->SetConstant("s_test_constant", &Data, sizeof(Data));
-
         FirstMaterial->SetStructuredBuffer(
             "g_SpriteData",
             m_PerDataBuffer,

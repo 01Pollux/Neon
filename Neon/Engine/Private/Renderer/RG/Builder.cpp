@@ -23,8 +23,6 @@ namespace Neon::RG
             Builders.emplace_back(m_Context.GetStorage());
         }
 
-        LaunchPipelineJobs(Builders);
-
         auto& Storage = m_Context.GetStorage();
         for (size_t i = 0; i < m_Passes.size(); i++)
         {
@@ -32,95 +30,6 @@ namespace Neon::RG
             m_Passes[i]->ResolveResources(Builder.Resources);
         }
         m_Context.Build(BuildPasses(Builders));
-    }
-
-    auto RenderGraphBuilder::LaunchRootSignatureJobs(
-        BuildersListType& Builders) -> void
-    {
-        for (size_t i = 0; i < Builders.size(); i++)
-        {
-            auto& Builder = Builders[i];
-            m_Passes[i]->ResolveRootSignature(Builder.RootSignatures);
-        }
-        for (auto& Builder : Builders)
-        {
-            for (auto& [Id, Desc] : Builder.RootSignatures.m_RootSignaturesToLoad)
-            {
-                std::visit(
-                    VariantVisitor{
-                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
-                        {
-                            Storage.ImportRootSignature(Id, RHI::IRootSignature::Create(Builder));
-                        },
-                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IRootSignature>& RootSig)
-                        {
-                            Storage.ImportRootSignature(Id, RootSig);
-                        },
-                        [&Id, &Storage = m_Context.GetStorage()](const Asset::Handle& RootSig) {} },
-                    Desc);
-            }
-        }
-    }
-
-    auto RenderGraphBuilder::LaunchShaderJobs(
-        BuildersListType& Builders) const -> void
-    {
-        // TODO
-        for (size_t i = 0; i < Builders.size(); i++)
-        {
-            auto& Builder = Builders[i];
-            m_Passes[i]->ResolveShaders(Builder.Shaders);
-        }
-        for (auto& Builder : Builders)
-        {
-            for (auto& [Id, Desc] : Builder.Shaders.m_ShadersToLoad)
-            {
-                std::visit(
-                    VariantVisitor{
-                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
-                        {
-                            // Storage.ImportShader(Id, Ptr<RHI::IShader>(RHI::IShader::Create(Builder)));
-                        },
-                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IShader>& Shader)
-                        {
-                            Storage.ImportShader(Id, Shader);
-                        },
-                        [&Id, &Storage = m_Context.GetStorage()](const Asset::Handle& Shader) {} },
-                    Desc);
-            }
-        }
-    }
-
-    auto RenderGraphBuilder::LaunchPipelineJobs(
-        BuildersListType& Builders) -> void
-    {
-        LaunchShaderJobs(Builders);
-        LaunchRootSignatureJobs(Builders);
-
-        for (size_t i = 0; i < Builders.size(); i++)
-        {
-            auto& Builder = Builders[i];
-            m_Passes[i]->ResolvePipelineStates(Builder.PipelineStates);
-        }
-
-        for (auto& Builder : Builders)
-        {
-            for (auto& [Id, Desc] : Builder.PipelineStates.m_PipelinesToLoad)
-            {
-                std::visit(
-                    VariantVisitor{
-                        [&Id, &Storage = m_Context.GetStorage()](const auto& Builder)
-                        {
-                            Storage.ImportPipelineState(Id, RHI::IPipelineState::Create(Builder));
-                        },
-                        [&Id, &Storage = m_Context.GetStorage()](const Ptr<RHI::IPipelineState>& PipelineState)
-                        {
-                            Storage.ImportPipelineState(Id, PipelineState);
-                        },
-                    },
-                    Desc);
-            }
-        }
     }
 
     auto RenderGraphBuilder::BuildPasses(
@@ -287,8 +196,7 @@ namespace Neon::RG
 
     RenderGraphBuilder::BuilderInfo::BuilderInfo(
         GraphStorage& Storage) :
-        Resources(Storage),
-        PipelineStates(Storage)
+        Resources(Storage)
     {
     }
 } // namespace Neon::RG

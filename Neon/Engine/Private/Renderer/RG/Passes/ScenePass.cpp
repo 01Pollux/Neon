@@ -74,21 +74,6 @@ namespace Neon::RG
         m_CameraBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(PerFrameData), 256), .Alignment = 256 }));
     }
 
-    void ScenePass::ResolveShaders(
-        ShaderResolver&)
-    {
-    }
-
-    void ScenePass::ResolveRootSignature(
-        RootSignatureResolver&)
-    {
-    }
-
-    void ScenePass::ResolvePipelineStates(
-        PipelineStateResolver&)
-    {
-    }
-
     void ScenePass::ResolveResources(
         ResourceResolver& Resolver)
     {

@@ -18,15 +18,6 @@ namespace Neon::RG
             Scene::GameScene&   Scene,
             Scene::Actor        Camera);
 
-        void ResolveShaders(
-            ShaderResolver& Resolver) override;
-
-        void ResolveRootSignature(
-            RootSignatureResolver& Resolver) override;
-
-        void ResolvePipelineStates(
-            PipelineStateResolver& Resolver) override;
-
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
