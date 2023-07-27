@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Renderer/Material/VariableMap.hpp>
 #include <Asset/Handle.hpp>
 #include <RHI/Shader.hpp>
 #include <RHI/PipelineState.hpp>
@@ -16,26 +15,28 @@ namespace Neon::Renderer
 
     public:
         /// <summary>
-        /// Get the variable map.
+        /// Get root signature.
         /// </summary>
-        [[nodiscard]] MaterialVariableMap& VarMap()
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& RootSignature()
         {
-            return m_VarMap;
+            return m_RootSignatuer;
         }
 
         /// <summary>
-        /// Get the variable map.
+        /// Set root signature.
         /// </summary>
-        [[nodiscard]] const MaterialVariableMap& VarMap() const
+        [[nodiscard]] _Ty& RootSignature(
+            const Ptr<RHI::IRootSignature>& RootSig)
         {
-            return m_VarMap;
+            m_RootSignatuer = RootSig;
+            return static_cast<_Ty&>(*this);
         }
 
     protected:
         std::array<Ptr<RHI::IShader>, ShaderCount> m_ShaderModules;
 
     private:
-        MaterialVariableMap m_VarMap;
+        Ptr<RHI::IRootSignature> m_RootSignatuer;
     };
 
     template<bool _IsCompute>

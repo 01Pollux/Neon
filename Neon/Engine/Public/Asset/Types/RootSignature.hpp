@@ -2,11 +2,7 @@
 
 #include <Asset/Asset.hpp>
 #include <Asset/Handler.hpp>
-
-namespace Neon::RHI
-{
-    class IRootSignature;
-}
+#include <RHI/RootSignature.hpp>
 
 namespace Neon::Asset
 {
@@ -16,22 +12,22 @@ namespace Neon::Asset
         class Handler;
 
         RootSignatureAsset(
-            const Ptr<RHI::IRootSignature>& RootSignature,
-            const Handle&                   AssetGuid,
-            StringU8                        Path);
+            RHI::RootSignatureBuilder RootSignatureBuilder,
+            const Handle&             AssetGuid,
+            StringU8                  Path);
+
+        /// <summary>
+        /// Get current root signature loaded in this asset.
+        /// </summary>
+        [[nodiscard]] const RHI::RootSignatureBuilder& GetRootSignatureBuilder() const;
 
         /// <summary>
         /// Get current root signature loaded in this asset.
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IRootSignature>& GetRootSignature() const;
 
-        /// <summary>
-        /// Set root signature to this asset.
-        /// </summary>
-        [[nodiscard]] void SetRootSignature(
-            const Ptr<RHI::IRootSignature>& RootSignature);
-
     private:
-        Ptr<RHI::IRootSignature> m_RootSignature;
+        RHI::RootSignatureBuilder m_RootSignatureBuilder;
+        Ptr<RHI::IRootSignature>  m_RootSignature;
     };
 } // namespace Neon::Asset

@@ -185,12 +185,9 @@ namespace Neon::RHI
     //
 
     Dx12RootSignature::Dx12RootSignature(
-        RootSignatureBuilder                         Builder,
-        uint32_t                                     ResourceCountInDescriptor,
-        uint32_t                                     SamplerCountInDescriptor,
+        const RootSignatureBuilder&                  Builder,
         const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
         Crypto::Sha256::Bytes&&                      Hash) :
-        IRootSignature(std::move(Builder)),
         m_Hash(std::move(Hash))
     {
         WinAPI::ComPtr<ID3DBlob> SignatureBlob;
@@ -213,18 +210,68 @@ namespace Neon::RHI
             SignatureBlob->GetBufferSize(),
             IID_PPV_ARGS(&m_RootSignature)));
 
-        m_ResourceCountInDescriptor = ResourceCountInDescriptor;
-        m_SamplerCountInDescriptor  = SamplerCountInDescriptor;
-    }
+        //
 
-    uint32_t Dx12RootSignature::GetResourceCountInDescriptor()
-    {
-        return m_ResourceCountInDescriptor;
-    }
+        int RoomIndex = 0;
+        for (auto& Param : Builder.GetParameters())
+        {
+            boost::apply_visitor(
+                VariantVisitor{
+                    [this, &RoomIndex](const RootParameter::DescriptorTable& Table)
+                    {
+                        for (auto& [Name, Range] : Table.GetRanges())
+                        {
+                            auto& FinalParam                = m_Params.emplace_back();
+                            FinalParam.Index                = RoomIndex;
+                            FinalParam.Type                 = IRootSignature::ParamType::DescriptorTable;
+                            FinalParam.Descriptor.Size      = Range.DescriptorCount;
+                            FinalParam.Descriptor.Type      = Range.Type;
+                            FinalParam.Descriptor.Instanced = Range.Instanced;
 
-    uint32_t Dx12RootSignature::GetSamplerCountInDescriptor()
-    {
-        return m_SamplerCountInDescriptor;
+                            if (m_ParamMap.contains(Name))
+                            {
+                                NEON_WARNING_TAG("Root signature parameter name is not unique: {}", Name);
+                            }
+                            else
+                            {
+                                m_ParamMap[Name] = m_Params.size() - 1;
+                            }
+                        }
+                    },
+                    [this, &RoomIndex](const RootParameter::Constants& Constants)
+                    {
+                        auto& FinalParam                    = m_Params.emplace_back();
+                        FinalParam.Index                    = RoomIndex;
+                        FinalParam.Type                     = IRootSignature::ParamType::Constants;
+                        FinalParam.Constants.Num32BitValues = Constants.Num32BitValues;
+
+                        if (m_ParamMap.contains(Constants.Name))
+                        {
+                            NEON_WARNING_TAG("Root signature parameter name is not unique: {}", Constants.Name);
+                        }
+                        else
+                        {
+                            m_ParamMap[Constants.Name] = m_Params.size() - 1;
+                        }
+                    },
+                    [this, &RoomIndex](const RootParameter::Root& Descriptor)
+                    {
+                        auto& FinalParam = m_Params.emplace_back();
+                        FinalParam.Index = RoomIndex;
+                        FinalParam.Type  = IRootSignature::ParamType::Root;
+
+                        if (m_ParamMap.contains(Descriptor.Name))
+                        {
+                            NEON_WARNING_TAG("Root signature parameter name is not unique: {}", Descriptor.Name);
+                        }
+                        else
+                        {
+                            m_ParamMap[Descriptor.Name] = m_Params.size() - 1;
+                        }
+                    } },
+                Param.GetParameter());
+            RoomIndex++;
+        }
     }
 
     ID3D12RootSignature* Dx12RootSignature::Get()
@@ -248,9 +295,7 @@ namespace Neon::RHI
     Ptr<IRootSignature> Dx12RootSignatureCache::Load(
         const RootSignatureBuilder& Builder)
     {
-        uint32_t ResourceCountInDescriptor;
-        uint32_t SamplerCountInDescriptor;
-        auto     Result = Dx12RootSignatureCache::Build(Builder, ResourceCountInDescriptor, SamplerCountInDescriptor);
+        auto Result = Dx12RootSignatureCache::Build(Builder);
 
         std::scoped_lock Lock(s_RootSignatureCacheMutex);
 
@@ -264,7 +309,7 @@ namespace Neon::RHI
                 Result.StaticSamplers.data(),
                 Result.Flags);
 
-            Cache = std::make_shared<Dx12RootSignature>(Builder, ResourceCountInDescriptor, SamplerCountInDescriptor, Desc, std::move(Result.Digest));
+            Cache = std::make_shared<Dx12RootSignature>(Builder, Desc, std::move(Result.Digest));
         }
 
         return Cache;
@@ -273,13 +318,8 @@ namespace Neon::RHI
     //
 
     auto Dx12RootSignatureCache::Build(
-        const RootSignatureBuilder& Builder,
-        uint32_t&                   ResourceCountInDescriptor,
-        uint32_t&                   SamplerCountInDescriptor) -> BuildResult
+        const RootSignatureBuilder& Builder) -> BuildResult
     {
-        ResourceCountInDescriptor = 0;
-        SamplerCountInDescriptor  = 0;
-
         BuildResult    Result;
         Crypto::Sha256 Hash;
 
@@ -290,37 +330,32 @@ namespace Neon::RHI
         Result.Parameters.reserve(NParameters.size());
         for (auto& Param : NParameters)
         {
-            auto Visibility = CastShaderVisibility(Param.GetVisibility());
+            auto Visibility = CastShaderVisibility(Param.Visibility());
 
             boost::apply_visitor(
                 VariantVisitor{
-                    [&Hash, &Result, Visibility,
-                     &ResourceCountInDescriptor,
-                     &SamplerCountInDescriptor](const RootParameter::DescriptorTable& Table)
+                    [&Hash, &Result, Visibility](const RootParameter::DescriptorTable& Table)
                     {
                         auto& Ranges = Result.RangesList.emplace_back();
 
                         auto& NRanges = Table.GetRanges();
                         Ranges.reserve(NRanges.size());
-                        for (auto& Range : NRanges)
+                        for (auto& Range : NRanges | std::views::values)
                         {
                             D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
-                            auto& ViewCount = Range.Type != RootParameter::DescriptorType::Sampler ? ResourceCountInDescriptor : SamplerCountInDescriptor;
-                            ViewCount += Range.DescriptorCount;
-
                             switch (Range.Type)
                             {
-                            case RootParameter::DescriptorType::ConstantBuffer:
+                            case DescriptorTableParam::ConstantBuffer:
                                 Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
                                 break;
-                            case RootParameter::DescriptorType::ShaderResource:
+                            case DescriptorTableParam::ShaderResource:
                                 Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
                                 break;
-                            case RootParameter::DescriptorType::UnorderedAccess:
+                            case DescriptorTableParam::UnorderedAccess:
                                 Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
                                 break;
-                            case RootParameter::DescriptorType::Sampler:
+                            case DescriptorTableParam::Sampler:
                                 Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
                                 break;
                             default:
@@ -340,30 +375,32 @@ namespace Neon::RHI
                     },
                     [&Hash, &Result, Visibility](const RootParameter::Constants& Constants)
                     {
-                        Hash.Append(std::bit_cast<uint8_t*>(&Constants), sizeof(Constants));
+                        Hash << Constants.ShaderRegister << Constants.RegisterSpace << Constants.Num32BitValues;
                         Result.Parameters.emplace_back().InitAsConstants(
                             Constants.Num32BitValues,
                             Constants.ShaderRegister,
                             Constants.RegisterSpace,
                             Visibility);
                     },
-                    [&Hash, &Result, Visibility](const RootParameter::Descriptor& Descriptor)
+                    [&Hash, &Result, Visibility](const RootParameter::Root& Descriptor)
                     {
-                        Hash.Append(std::bit_cast<uint8_t*>(&Descriptor), sizeof(Descriptor));
+                        Hash << Descriptor.ShaderRegister << Descriptor.RegisterSpace << Descriptor.Type << Descriptor.Flags;
                         auto& Param            = Result.Parameters.emplace_back();
                         Param.ShaderVisibility = Visibility;
 
                         switch (Descriptor.Type)
                         {
-                        case RootParameter::DescriptorType::ConstantBuffer:
+                        case RootParameter::RootType::ConstantBuffer:
                             Param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
                             break;
-                        case RootParameter::DescriptorType::ShaderResource:
+                        case RootParameter::RootType::ShaderResource:
                             Param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
                             break;
-                        case RootParameter::DescriptorType::UnorderedAccess:
+                        case RootParameter::RootType::UnorderedAccess:
                             Param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
                             break;
+                        default:
+                            std::unreachable();
                         }
 
                         CD3DX12_ROOT_DESCRIPTOR1::Init(
@@ -377,7 +414,7 @@ namespace Neon::RHI
 
         auto& Nsamplers = Builder.GetSamplers();
         Result.StaticSamplers.reserve(Nsamplers.size());
-        for (auto& Sampler : Nsamplers)
+        for (auto& Sampler : Nsamplers | std::views::values)
         {
             Hash.Append(std::bit_cast<uint8_t*>(&Sampler), sizeof(Sampler));
 

@@ -1,15 +1,42 @@
 #pragma once
 
-#include <RHI/Resource/View.hpp>
 #include <Core/Neon.hpp>
+#include <RHI/Resource/View.hpp>
+
+#include <list>
 #include <vector>
 #include <variant>
 
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/list.hpp>
 #include <boost/serialization/variant.hpp>
 
 namespace Neon::RHI
 {
+    /**
+     * To allow dynamic material system to manage any kind of resources and batch descriptors together
+     * We need to have a way to describe the root signature of a material aswell as take some compromises
+     *
+     * - A root signature can query a descriptor table, a constant buffer or a root descriptor by name
+     * - A root signature can reserve the space needed for its entries individually so we can seperate local and shared resources across materials
+     * - Using shared resources will allow us to batch draw calls together, meaning one must know in advance the indices of the resources that'll be used,
+     * to allow such thing, we need to also insert a structured buffer that'll contain the indices of the resources used by the material
+     *
+     * * Suppose we have a material that does the following:
+     * - Uses a buffer named "PerFrame" as a constant buffer (vertex + pixel)
+     * - Uses a group of textures named "Textures[]" of size 4 as a shader resource, these are instanced (pixel)
+     * - Uses a structured buffer named "Buffer", this is also instanced (vertex + pixel)
+     *
+     * Normally to resolve such thing, we'd need to have a root signature that looks like this:
+     * - | CBV [1] (b0, s1)      | SRV [1] (t0, s1) INST |  <--- PerFrame + Buffer
+     * - | SRV [4] (t0, s2) INST |                          <--- Textures
+     *
+     * Internally, it will be transformed into this:
+     * - | CBV [1] (b0, s1) | SRV [] (t0, s1) | <--- PerFrame + Buffer
+     * - | SRV [] (t0, s2)  |                   <--- Textures
+     *
+     */
+
     enum class ERootDescriptorTableFlags : uint8_t
     {
         Descriptor_Volatile,
@@ -65,7 +92,8 @@ namespace Neon::RHI
         uint32_t                  RegisterSpace;
         uint32_t                  DescriptorCount;
         MRootDescriptorTableFlags Flags;
-        DescriptorTableParam      Type;
+        DescriptorTableParam      Type{};
+        bool                      Instanced = false;
 
         template<typename _Archive>
         void serialize(
@@ -76,10 +104,10 @@ namespace Neon::RHI
             Archive& RegisterSpace;
             Archive& DescriptorCount;
             Archive& Flags;
-
             auto     DType = std::to_underlying(Type);
             Archive& DType;
             Type = static_cast<Neon::RHI::DescriptorTableParam>(DType);
+            Archive& Instanced;
         }
     };
 
@@ -87,50 +115,64 @@ namespace Neon::RHI
     {
     public:
         RootDescriptorTable() = default;
-        RootDescriptorTable(
-            size_t Reserve);
 
         /// <summary>
         /// Add srv descriptor entries
         /// </summary>
         RootDescriptorTable& AddSrvRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add uav descriptor entries
         /// </summary>
         RootDescriptorTable& AddUavRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add cbv descriptor entries
         /// </summary>
         RootDescriptorTable& AddCbvRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            MRootDescriptorTableFlags Flags = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Static_While_Execute));
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Static_While_Execute));
 
         /// <summary>
         /// Add sampler descriptor entries
         /// </summary>
         RootDescriptorTable& AddSamplerRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            MRootDescriptorTableFlags Flags = {});
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = {});
 
     public:
         /// <summary>
         /// Get the descriptor ranges of this table
         /// </summary>
         [[nodiscard]] const auto& GetRanges() const noexcept
+        {
+            return m_DescriptorRanges;
+        }
+
+        /// <summary>
+        /// Get the descriptor ranges of this table
+        /// </summary>
+        [[nodiscard]] auto& GetRanges() noexcept
         {
             return m_DescriptorRanges;
         }
@@ -146,7 +188,7 @@ namespace Neon::RHI
         }
 
     private:
-        std::vector<RootDescriptorTableParam> m_DescriptorRanges;
+        std::list<std::pair<StringU8, RootDescriptorTableParam>> m_DescriptorRanges;
     };
 
     class RootParameter
@@ -156,6 +198,7 @@ namespace Neon::RHI
 
         struct Constants
         {
+            StringU8 Name;
             uint32_t ShaderRegister;
             uint32_t RegisterSpace;
             uint32_t Num32BitValues;
@@ -167,18 +210,20 @@ namespace Neon::RHI
                 _Archive& Archive,
                 uint32_t)
             {
+                Archive& Name;
                 Archive& ShaderRegister;
                 Archive& Num32BitValues;
                 Archive& RegisterSpace;
             }
         };
 
-        using DescriptorType = DescriptorTableParam;
-        struct Descriptor
+        using RootType = DescriptorTableParam;
+        struct Root
         {
+            StringU8             Name;
             uint32_t             ShaderRegister;
             uint32_t             RegisterSpace;
-            DescriptorType       Type;
+            RootType             Type;
             MRootDescriptorFlags Flags;
 
         private:
@@ -188,16 +233,17 @@ namespace Neon::RHI
                 _Archive& Archive,
                 uint32_t)
             {
+                Archive& Name;
                 Archive& ShaderRegister;
                 Archive& RegisterSpace;
                 auto     DType = std::to_underlying(Type);
                 Archive& DType;
-                Type = static_cast<DescriptorType>(DType);
+                Type = static_cast<RootType>(DType);
                 Archive& Flags;
             }
         };
 
-        using Variant = boost::variant<DescriptorTable, Constants, Descriptor>;
+        using Variant = boost::variant<DescriptorTable, Constants, Root>;
 
         RootParameter() = default;
 
@@ -214,11 +260,29 @@ namespace Neon::RHI
         }
 
         /// <summary>
+        /// Get the parameter variant
+        /// </summary>
+        [[nodiscard]] auto& GetParameter() noexcept
+        {
+            return m_Parameter;
+        }
+
+        /// <summary>
         /// Get the visibility of this parameter
         /// </summary>
-        [[nodiscard]] auto GetVisibility() const noexcept
+        [[nodiscard]] auto Visibility() const noexcept
         {
             return m_Visibility;
+        }
+
+        /// <summary>
+        /// Get the visibility of this parameter
+        /// </summary>
+        auto& Visibility(
+            ShaderVisibility Visibility) noexcept
+        {
+            m_Visibility = Visibility;
+            return *this;
         }
 
     private:
@@ -271,18 +335,20 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
         RootSignatureBuilder& Add32BitConstants(
+            StringU8         Name,
             uint32_t         ShaderRegister,
             uint32_t         RegisterSpace,
             ShaderVisibility Visibility = ShaderVisibility::All)
         {
             static_assert(sizeof(_Ty) % 4 == 0);
-            return Add32BitConstants(ShaderRegister, RegisterSpace, sizeof(_Ty) / 4, Visibility);
+            return Add32BitConstants(std::move(Name), ShaderRegister, RegisterSpace, sizeof(_Ty) / 4, Visibility);
         }
 
         /// <summary>
         /// Add 32 bit root constants
         /// </summary>
         RootSignatureBuilder& Add32BitConstants(
+            StringU8         Name,
             uint32_t         ShaderRegister,
             uint32_t         RegisterSpace,
             uint32_t         Num32BitValues,
@@ -292,6 +358,7 @@ namespace Neon::RHI
         /// Add cbv root
         /// </summary>
         RootSignatureBuilder& AddConstantBufferView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
@@ -301,6 +368,7 @@ namespace Neon::RHI
         /// Add srv root
         /// </summary>
         RootSignatureBuilder& AddShaderResourceView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
@@ -310,24 +378,17 @@ namespace Neon::RHI
         /// Add uav root
         /// </summary>
         RootSignatureBuilder& AddUnorderedAccessView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
             MRootDescriptorFlags Flags      = {});
 
         /// <summary>
-        /// Add uav with counter root
-        /// </summary>
-        RootSignatureBuilder& AddUnorderedAccessViewWithCounter(
-            uint32_t                  ShaderRegister,
-            uint32_t                  RegisterSpace,
-            ShaderVisibility          Visibility = ShaderVisibility::All,
-            MRootDescriptorTableFlags Flags      = {});
-
-        /// <summary>
         /// Add static sampler
         /// </summary>
         RootSignatureBuilder& AddSampler(
+            StringU8                 Name,
             const StaticSamplerDesc& Desc);
 
         /// <summary>
@@ -338,6 +399,18 @@ namespace Neon::RHI
             bool                       Value = true);
 
     public:
+        /// <summary>
+        /// Remove parameter from root signature
+        /// </summary>
+        void RemoveParameter(
+            const StringU8& Name);
+
+        /// <summary>
+        /// Remove static sampler from root signature
+        /// </summary>
+        void RemoveStaticSampler(
+            const StringU8& Name);
+
         /// <summary>
         /// Get parameters of root signature
         /// </summary>
@@ -376,9 +449,9 @@ namespace Neon::RHI
         }
 
     private:
-        std::vector<RootParameter>     m_Parameters;
-        std::vector<StaticSamplerDesc> m_StaticSamplers;
-        MRootSignatureBuilderFlags     m_Flags;
+        std::list<RootParameter>                          m_Parameters;
+        std::list<std::pair<StringU8, StaticSamplerDesc>> m_StaticSamplers;
+        MRootSignatureBuilderFlags                        m_Flags;
     };
 
     class IRootSignature
@@ -387,34 +460,57 @@ namespace Neon::RHI
         [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);
 
-        IRootSignature(
-            RootSignatureBuilder Builder) :
-            m_Builder(std::move(Builder))
-        {
-        }
-
         virtual ~IRootSignature() = default;
 
-        /// <summary>
-        /// Get the number of resources in descriptor
-        /// </summary>
-        [[nodiscard]] virtual uint32_t GetResourceCountInDescriptor() = 0;
-
-        /// <summary>
-        /// Get the number of samplers in descriptor
-        /// </summary>
-        [[nodiscard]] virtual uint32_t GetSamplerCountInDescriptor() = 0;
-
-    public:
-        /// <summary>
-        /// Get the builder of root signature
-        /// </summary>
-        [[nodiscard]] const RootSignatureBuilder& GetBuilder() const noexcept
+        enum class ParamType : uint8_t
         {
-            return m_Builder;
+            Constants,
+            Root,
+            DescriptorTable
+        };
+
+        struct QueryResult
+        {
+            int Index;
+            union {
+                struct
+                {
+                    uint32_t Num32BitValues;
+                } Constants;
+                struct
+                {
+                    RootParameter::RootType Type;
+                } Root;
+                struct
+                {
+                    uint32_t             Size;
+                    DescriptorTableParam Type;
+                    bool                 Instanced;
+                } Descriptor;
+            };
+            ParamType Type;
+        };
+
+        /// <summary>
+        /// Query parameter by name
+        /// </summary>
+        [[nodiscard]] std::optional<const QueryResult*> QueryParam(
+            const StringU8& Name) const
+        {
+            auto Iter = m_ParamMap.find(Name);
+            return Iter != m_ParamMap.end() ? std::make_optional(&m_Params[Iter->second]) : std::nullopt;
         }
 
-    private:
-        RootSignatureBuilder m_Builder;
+        /// <summary>
+        /// Get all parameters of root signature
+        /// </summary>
+        [[nodiscard]] const auto& GetParams() const
+        {
+            return m_Params;
+        }
+
+    protected:
+        std::vector<QueryResult>             m_Params;
+        std::unordered_map<StringU8, size_t> m_ParamMap;
     };
 } // namespace Neon::RHI

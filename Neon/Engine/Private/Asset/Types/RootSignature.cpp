@@ -38,23 +38,23 @@ namespace boost::serialization
 namespace Neon::Asset
 {
     RootSignatureAsset::RootSignatureAsset(
-        const Ptr<RHI::IRootSignature>& RootSignature,
-        const Handle&                   AssetGuid,
-        StringU8                        Path) :
+        RHI::RootSignatureBuilder RootSignatureBuilder,
+        const Handle&             AssetGuid,
+        StringU8                  Path) :
         IAsset(AssetGuid, std::move(Path)),
-        m_RootSignature(RootSignature)
+        m_RootSignatureBuilder(std::move(RootSignatureBuilder)),
+        m_RootSignature(RHI::IRootSignature::Create(m_RootSignatureBuilder))
     {
+    }
+
+    const RHI::RootSignatureBuilder& RootSignatureAsset::GetRootSignatureBuilder() const
+    {
+        return m_RootSignatureBuilder;
     }
 
     const Ptr<RHI::IRootSignature>& RootSignatureAsset::GetRootSignature() const
     {
         return m_RootSignature;
-    }
-
-    void RootSignatureAsset::SetRootSignature(
-        const Ptr<RHI::IRootSignature>& RootSignature)
-    {
-        m_RootSignature = RootSignature;
     }
 
     //
@@ -72,14 +72,12 @@ namespace Neon::Asset
         StringU8             Path,
         const AssetMetaData& LoaderData)
     {
-        std::istream& xx = Stream;
-
         RHI::RootSignatureBuilder RootSig;
 
         boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
         Archive >> RootSig;
 
-        return std::make_shared<RootSignatureAsset>(RHI::IRootSignature::Create(RootSig), AssetGuid, std::move(Path));
+        return std::make_shared<RootSignatureAsset>(std::move(RootSig), AssetGuid, std::move(Path));
     }
 
     void RootSignatureAsset::Handler::Save(
@@ -91,6 +89,6 @@ namespace Neon::Asset
         auto RootSig = static_cast<RootSignatureAsset*>(Asset.get());
 
         boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
-        Archive << RootSig->GetRootSignature()->GetBuilder();
+        Archive << RootSig->GetRootSignatureBuilder();
     }
 } // namespace Neon::Asset
