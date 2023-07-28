@@ -36,20 +36,33 @@ namespace Neon::Scene::Component
         switch (Type)
         {
         case CameraType::Perspective:
+        {
             return glm::perspectiveFov(
                 FieldOfView,
                 Width,
                 Height,
                 NearPlane,
                 FarPlane);
+        }
         case CameraType::Orthographic:
+        {
+            float XAxisMultiplier = 1.f;
+            float YAxisMultiplier = 1.f / AspectRatio();
+
+            if (!MaintainXFov)
+            {
+                std::swap(XAxisMultiplier, YAxisMultiplier);
+            }
+
+            float HalfSize = OrthographicSize / 2.f;
             return glm::ortho(
-                -Width / 2.0f,
-                Width / 2.0f,
-                -Height / 2.0f,
-                Height / 2.0f,
+                -HalfSize * XAxisMultiplier,
+                HalfSize * XAxisMultiplier,
+                -HalfSize * YAxisMultiplier,
+                HalfSize * YAxisMultiplier,
                 NearPlane,
                 FarPlane);
+        }
         default:
             return Mat::Identity<Matrix4x4>;
         }

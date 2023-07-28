@@ -50,8 +50,8 @@ VSOutput VS_Main(VSInput Input)
 {
 	VSOutput Output;
 	Output.Position = float4(Input.Position, 1.0f);
-	//Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
-	//Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
+	Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
+	Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
 	Output.TexCoord = Input.TexCoord;
 	Output.SpriteIndex = Input.SpriteIndex;
 	return Output;
