@@ -1,6 +1,5 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/RootSignature.hpp>
-#include <RHI/RootSignature.hpp>
 
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/vector.hpp>

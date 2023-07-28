@@ -80,7 +80,7 @@ namespace Neon::Renderer
         uint32_t m_VerticesCount = 0;
         uint32_t m_DrawCount     = 0;
 
-        MaterialTable        m_MaterialTable;
         RHI::IPipelineState* m_PipelineState = nullptr;
+        MaterialTable        m_MaterialInstances;
     };
 } // namespace Neon::Renderer

@@ -212,21 +212,24 @@ namespace Neon::RHI
 
         //
 
-        int RoomIndex = 0;
+        int RootIndex = 0;
+        m_Params.reserve(Builder.GetParameters().size());
         for (auto& Param : Builder.GetParameters())
         {
             boost::apply_visitor(
                 VariantVisitor{
-                    [this, &RoomIndex](const RootParameter::DescriptorTable& Table)
+                    [this, &RootIndex](const RootParameter::DescriptorTable& Table)
                     {
+                        m_Params.reserve(m_Params.size() + Table.GetRanges().size());
                         for (auto& [Name, Range] : Table.GetRanges())
                         {
                             auto& FinalParam                = m_Params.emplace_back();
-                            FinalParam.Index                = RoomIndex;
+                            FinalParam.RootIndex            = RootIndex;
+                            FinalParam.Name                 = Name;
                             FinalParam.Type                 = IRootSignature::ParamType::DescriptorTable;
                             FinalParam.Descriptor.Size      = Range.DescriptorCount;
                             FinalParam.Descriptor.Type      = Range.Type;
-                            FinalParam.Descriptor.Instanced = Range.Instanced;
+                            FinalParam.Descriptor.Instanced = Table.IsInstanced();
 
                             if (m_ParamMap.contains(Name))
                             {
@@ -238,10 +241,11 @@ namespace Neon::RHI
                             }
                         }
                     },
-                    [this, &RoomIndex](const RootParameter::Constants& Constants)
+                    [this, &RootIndex](const RootParameter::Constants& Constants)
                     {
                         auto& FinalParam                    = m_Params.emplace_back();
-                        FinalParam.Index                    = RoomIndex;
+                        FinalParam.RootIndex                = RootIndex;
+                        FinalParam.Name                     = Constants.Name;
                         FinalParam.Type                     = IRootSignature::ParamType::Constants;
                         FinalParam.Constants.Num32BitValues = Constants.Num32BitValues;
 
@@ -254,23 +258,24 @@ namespace Neon::RHI
                             m_ParamMap[Constants.Name] = m_Params.size() - 1;
                         }
                     },
-                    [this, &RoomIndex](const RootParameter::Root& Descriptor)
+                    [this, &RootIndex](const RootParameter::Root& RootParam)
                     {
-                        auto& FinalParam = m_Params.emplace_back();
-                        FinalParam.Index = RoomIndex;
-                        FinalParam.Type  = IRootSignature::ParamType::Root;
+                        auto& FinalParam     = m_Params.emplace_back();
+                        FinalParam.RootIndex = RootIndex;
+                        FinalParam.Name      = RootParam.Name;
+                        FinalParam.Type      = IRootSignature::ParamType::Root;
 
-                        if (m_ParamMap.contains(Descriptor.Name))
+                        if (m_ParamMap.contains(RootParam.Name))
                         {
-                            NEON_WARNING_TAG("Root signature parameter name is not unique: {}", Descriptor.Name);
+                            NEON_WARNING_TAG("Root signature parameter name is not unique: {}", RootParam.Name);
                         }
                         else
                         {
-                            m_ParamMap[Descriptor.Name] = m_Params.size() - 1;
+                            m_ParamMap[RootParam.Name] = m_Params.size() - 1;
                         }
                     } },
                 Param.GetParameter());
-            RoomIndex++;
+            RootIndex++;
         }
     }
 

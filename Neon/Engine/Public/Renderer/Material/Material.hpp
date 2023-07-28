@@ -9,7 +9,7 @@
 namespace Neon::RHI
 {
     class ISwapchain;
-    class IGraphicsCommandList;
+    class ICommonCommandList;
     class IPipelineState;
     class IRootSignature;
 } // namespace Neon::RHI
@@ -38,20 +38,10 @@ namespace Neon::Renderer
         [[nodiscard]] virtual Ptr<IMaterial> CreateInstance() = 0;
 
         /// <summary>
-        /// Get descriptor table.
+        /// Get material's descriptor for a given parameter.
         /// </summary>
-        [[nodiscard]] virtual void GetDescriptorTable(
-            bool                       Local,
-            RHI::DescriptorHeapHandle* OutResourceDescriptor,
-            RHI::DescriptorHeapHandle* OutSamplerDescriptor) const = 0;
-
-        /// <summary>
-        /// Get used descriptors.
-        /// </summary>
-        [[nodiscard]] virtual void GetUsedDescriptors(
-            bool                                         Local,
-            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutResourceDescriptors,
-            std::vector<RHI::IDescriptorHeap::CopyInfo>& OutSamplerDescriptors) const = 0;
+        [[nodiscard]] virtual RHI::IDescriptorHeap::CopyInfo GetDescriptorParam(
+            const StringU8& ParamName) const = 0;
 
         /// <summary>
         /// Get the root signature.
@@ -62,16 +52,6 @@ namespace Neon::Renderer
         /// Get pipeline state.
         /// </summary>
         const Ptr<RHI::IPipelineState>& GetPipelineState() const noexcept;
-
-        /// <summary>
-        /// Apply all the material's resources.
-        /// ResourceDescriptor and SamplerDescriptor are expected to hold the correct descriptors.
-        /// They are also expected to be in the correct heap as well as the shared and local descriptors for the material.
-        /// </summary>
-        virtual void ApplyAll(
-            RHI::IGraphicsCommandList*       CommandList,
-            const RHI::DescriptorHeapHandle& ResourceDescriptor,
-            const RHI::DescriptorHeapHandle& SamplerDescriptor) const = 0;
 
     public:
         /// <summary>
@@ -204,41 +184,6 @@ namespace Neon::Renderer
     //
 
     /// <summary>
-    /// Helper class to bind a material to a command list.
-    /// All materials must share the same root signature and pipeline state.
-    /// This class is not thread safe nor does it handle lifetime of the materials.
-    /// </summary>
-    class MaterialBinder
-    {
-    public:
-        MaterialBinder(
-            std::span<IMaterial*> Materials);
-
-        /// <summary>
-        /// Bind the material's pipeline state and root signature to the command list.
-        /// </summary>
-        void Bind(
-            RHI::IGraphicsCommandList* CommandList);
-
-        /// <summary>
-        /// Bind the material's parameters to the command list.
-        /// </summary>
-        void BindParams(
-            RHI::IGraphicsCommandList* CommandList);
-
-        /// <summary>
-        /// Bind all the material's resources to the command list as well as the pipeline state and root signature.
-        /// </summary>
-        void BindAll(
-            RHI::IGraphicsCommandList* CommandList);
-
-    private:
-        std::span<IMaterial*> m_Materials;
-    };
-
-    //
-
-    /// <summary>
     /// Helper class to manage a table of materials for batching.
     /// This class is not thread safe nor does it handle lifetime of the materials.
     /// </summary>
@@ -253,7 +198,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Append a material to the table.
         /// </summary>
-        [[nodiscard]] int Append(
+        [[nodiscard]] void Append(
             IMaterial* Material);
 
         /// <summary>
@@ -288,6 +233,12 @@ namespace Neon::Renderer
         {
             return m_Materials;
         }
+
+        /// <summary>
+        /// Bind the materials into the command list.
+        /// </summary>
+        void Bind(
+            RHI::ICommonCommandList* CommandList);
 
     private:
         std::vector<IMaterial*> m_Materials;

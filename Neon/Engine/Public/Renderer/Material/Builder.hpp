@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Asset/Handle.hpp>
+#include <Renderer/Material/Common.hpp>
 #include <RHI/Shader.hpp>
+#include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>
 #include <map>
 
@@ -17,7 +19,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Get root signature.
         /// </summary>
-        [[nodiscard]] const Ptr<RHI::IRootSignature>& RootSignature()
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& RootSignature() const noexcept
         {
             return m_RootSignatuer;
         }
@@ -297,4 +299,21 @@ namespace Neon::Renderer
 
     using RenderMaterialBuilder  = GenericMaterialBuilder<false>;
     using ComputeMaterialBuilder = GenericMaterialBuilder<true>;
+
+    //
+
+    /// <summary>
+    /// Get the sampler description based on the type.
+    /// </summary>
+    [[nodiscard]] RHI::SamplerDesc GetSamplerDesc(
+        MaterialStates::Sampler Type);
+
+    /// <summary>
+    /// Get the static sampler description based on the type.
+    /// </summary>
+    [[nodiscard]] RHI::StaticSamplerDesc GetStaticSamplerDesc(
+        MaterialStates::Sampler Type,
+        uint16_t                Register,
+        uint16_t                Space,
+        RHI::ShaderVisibility   Visibility);
 } // namespace Neon::Renderer

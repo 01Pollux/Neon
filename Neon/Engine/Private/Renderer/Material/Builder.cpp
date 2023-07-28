@@ -245,4 +245,56 @@ namespace Neon::Renderer
     {
         return m_DepthStencilFormat;
     }
+
+    //
+
+    RHI::SamplerDesc GetSamplerDesc(
+        MaterialStates::Sampler Type)
+    {
+        RHI::SamplerDesc Desc;
+        switch (Type)
+        {
+        case MaterialStates::Sampler::PointWrap:
+            Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+            break;
+        case MaterialStates::Sampler::PointClamp:
+            Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+            break;
+        case MaterialStates::Sampler::LinearWrap:
+            Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+            break;
+        case MaterialStates::Sampler::LinearClamp:
+            Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+            break;
+        case MaterialStates::Sampler::AnisotropicWrap:
+            Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+            break;
+        case MaterialStates::Sampler::AnisotropicClamp:
+            Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
+            Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+            break;
+        default:
+            std::unreachable();
+            break;
+        }
+        return Desc;
+    }
+
+    RHI::StaticSamplerDesc GetStaticSamplerDesc(
+        MaterialStates::Sampler Type,
+        uint16_t                Register,
+        uint16_t                Space,
+        RHI::ShaderVisibility   Visibility)
+    {
+        auto Desc           = RHI::StaticSamplerDesc(GetSamplerDesc(Type));
+        Desc.ShaderRegister = Register;
+        Desc.RegisterSpace  = Space;
+        Desc.Visibility     = Visibility;
+        return Desc;
+    }
 } // namespace Neon::Renderer

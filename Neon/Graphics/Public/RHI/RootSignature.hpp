@@ -7,9 +7,9 @@
 #include <vector>
 #include <variant>
 
-#include <boost/serialization/vector.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/serialization/utility.hpp>
 
 namespace Neon::RHI
 {
@@ -36,6 +36,8 @@ namespace Neon::RHI
      * - | SRV [] (t0, s2)  |                   <--- Textures
      *
      */
+
+    class IRootSignature;
 
     enum class ERootDescriptorTableFlags : uint8_t
     {
@@ -93,7 +95,6 @@ namespace Neon::RHI
         uint32_t                  DescriptorCount;
         MRootDescriptorTableFlags Flags;
         DescriptorTableParam      Type{};
-        bool                      Instanced = false;
 
         template<typename _Archive>
         void serialize(
@@ -107,14 +108,17 @@ namespace Neon::RHI
             auto     DType = std::to_underlying(Type);
             Archive& DType;
             Type = static_cast<Neon::RHI::DescriptorTableParam>(DType);
-            Archive& Instanced;
         }
     };
 
     class RootDescriptorTable
     {
     public:
-        RootDescriptorTable() = default;
+        RootDescriptorTable(
+            bool Instanced = false) :
+            m_Instanced(Instanced)
+        {
+        }
 
         /// <summary>
         /// Add srv descriptor entries
@@ -124,8 +128,7 @@ namespace Neon::RHI
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile, ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add uav descriptor entries
@@ -135,8 +138,7 @@ namespace Neon::RHI
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile, ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add cbv descriptor entries
@@ -146,8 +148,7 @@ namespace Neon::RHI
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = MRootDescriptorTableFlags::FromEnum(ERootDescriptorTableFlags::Data_Static_While_Execute));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile, ERootDescriptorTableFlags::Data_Volatile));
 
         /// <summary>
         /// Add sampler descriptor entries
@@ -157,8 +158,7 @@ namespace Neon::RHI
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = {});
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile, ERootDescriptorTableFlags::Data_Volatile));
 
     public:
         /// <summary>
@@ -177,6 +177,23 @@ namespace Neon::RHI
             return m_DescriptorRanges;
         }
 
+        /// <summary>
+        /// Set instancing for this table
+        /// </summary>
+        void SetInstanced(
+            bool Instanced)
+        {
+            m_Instanced = Instanced;
+        }
+
+        /// <summary>
+        /// Check if this table is instanced
+        /// </summary>
+        [[nodiscard]] bool IsInstanced() const noexcept
+        {
+            return m_Instanced;
+        }
+
     private:
         friend class boost::serialization::access;
         template<typename _Archive>
@@ -185,10 +202,12 @@ namespace Neon::RHI
             uint32_t  Version)
         {
             Archive& m_DescriptorRanges;
+            Archive& m_Instanced;
         }
 
     private:
         std::list<std::pair<StringU8, RootDescriptorTableParam>> m_DescriptorRanges;
+        bool                                                     m_Instanced;
     };
 
     class RootParameter
@@ -436,6 +455,11 @@ namespace Neon::RHI
             return m_Flags;
         }
 
+        /// <summary>
+        /// Build root signature from builder
+        /// </summary>
+        [[nodiscard]] Ptr<IRootSignature> Build() const;
+
     private:
         friend class boost::serialization::access;
         template<typename _Archive>
@@ -471,11 +495,12 @@ namespace Neon::RHI
 
         struct QueryResult
         {
-            int Index;
+            StringU8 Name;
+            uint32_t RootIndex;
             union {
                 struct
                 {
-                    uint32_t Num32BitValues;
+                    uint8_t Num32BitValues;
                 } Constants;
                 struct
                 {
@@ -507,6 +532,14 @@ namespace Neon::RHI
         [[nodiscard]] const auto& GetParams() const
         {
             return m_Params;
+        }
+
+        /// <summary>
+        /// Get all parameters of root signature in map
+        /// </summary>
+        [[nodiscard]] const auto& GetParamMap() const
+        {
+            return m_ParamMap;
         }
 
     protected:

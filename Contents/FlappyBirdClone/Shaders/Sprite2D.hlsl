@@ -40,7 +40,7 @@ struct VSOutput
 // Global
 // --------------------
 
-ConstantBuffer<PerFrameData> g_FrameData : register(b0, space0);
+ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
 StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 
 // --------------------
@@ -62,7 +62,7 @@ VSOutput VS_Main(VSInput Input)
 // Pixel Shader
 // --------------------
 
-Texture2D p_SpriteTextures[] : register(t0, space0);
+Texture2D p_SpriteTextures[] : register(t0, space2);
 
 SamplerState p_Sampler_PointWrap : register(s0, space0);
 SamplerState p_Sampler_PointClamp : register(s1, space0);

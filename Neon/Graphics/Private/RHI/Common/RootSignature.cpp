@@ -10,7 +10,6 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
-        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -20,8 +19,7 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::ShaderResource,
-                .Instanced       = Instanced });
+                .Type            = DescriptorTableParam::ShaderResource });
         return *this;
     }
 
@@ -30,7 +28,6 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
-        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -40,8 +37,7 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::UnorderedAccess,
-                .Instanced       = Instanced });
+                .Type            = DescriptorTableParam::UnorderedAccess });
         return *this;
     }
 
@@ -50,7 +46,6 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
-        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -60,8 +55,7 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::ConstantBuffer,
-                .Instanced       = Instanced });
+                .Type            = DescriptorTableParam::ConstantBuffer });
         return *this;
     }
 
@@ -70,7 +64,6 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
-        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -80,8 +73,7 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::Sampler,
-                .Instanced       = Instanced });
+                .Type            = DescriptorTableParam::Sampler });
         return *this;
     }
 
@@ -252,5 +244,10 @@ namespace Neon::RHI
         }
 
         NEON_WARNING("Graphics", "Root signature static sampler '{}' not found", Name);
+    }
+
+    Ptr<IRootSignature> RootSignatureBuilder::Build() const
+    {
+        return IRootSignature::Create(*this);
     }
 } // namespace Neon::RHI

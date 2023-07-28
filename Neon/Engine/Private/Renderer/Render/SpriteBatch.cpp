@@ -133,7 +133,7 @@ namespace Neon::Renderer
             Transform.World.GetPosition() + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
         };
 
-        int MaterialIndex = m_MaterialTable.Append(Sprite.MaterialInstance.get());
+        m_MaterialInstances.Append(Sprite.MaterialInstance.get());
 
         // Write vertices to the vertex buffer
         for (size_t i = 0; i < SpriteBatchConstants::VerticesCount; ++i, ++m_VerticesCount)
@@ -149,7 +149,7 @@ namespace Neon::Renderer
 
         PerObjectDataBuffer->World        = glm::transpose(Transform.World.ToMat4x4());
         PerObjectDataBuffer->Color        = Sprite.ModulationColor;
-        PerObjectDataBuffer->TextureIndex = MaterialIndex;
+        PerObjectDataBuffer->TextureIndex = m_DrawCount;
 
         m_DrawCount++;
     }
@@ -161,8 +161,7 @@ namespace Neon::Renderer
             return;
         }
 
-        auto           FirstMaterial = m_MaterialTable.GetMaterial(0);
-        MaterialBinder MatBinder(m_MaterialTable.GetMaterials());
+        auto FirstMaterial = m_MaterialInstances.GetMaterial(0);
 
         FirstMaterial->SetStructuredBuffer(
             "g_SpriteData",
@@ -179,7 +178,7 @@ namespace Neon::Renderer
                 .Resource = m_CameraBuffer->GetHandle(),
                 .Size     = m_CameraBuffer->GetSize() });
 
-        MatBinder.BindAll(m_CommandList);
+        m_MaterialInstances.Bind(m_CommandList);
 
         RHI::Views::Vertex VertexView;
         VertexView.Append(

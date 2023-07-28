@@ -17,6 +17,16 @@ namespace Neon
 #define NEON_NEW new (_NORMAL_BLOCK, __FILE__, __LINE__)
 #endif
 
+template<typename _To, typename _From>
+[[nodiscard]] _To validate_cast(_From* From)
+{
+#ifdef NEON_DEBUG
+    return dynamic_cast<_To>(From);
+#else
+    return static_cast<_To>(From);
+#endif
+}
+
 // #define NEON_NO_LOG
 
 //

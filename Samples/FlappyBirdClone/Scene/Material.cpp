@@ -33,21 +33,34 @@ void FlappyBirdClone::PreloadMaterials()
             .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
             .Topology(RHI::PrimitiveTopologyCategory::Triangle);
 
-        auto& VarMap = BaseSpriteMaterial.VarMap();
+        auto Builder = RHI::RootSignatureBuilder()
+                           .AddDescriptorTable(
+                               RHI::RootDescriptorTable()
+                                   .AddCbvRange("g_FrameData", 0, 1, 1),
+                               RHI::ShaderVisibility::All)
+                           .AddDescriptorTable(
+                               RHI::RootDescriptorTable(true)
+                                   .AddSrvRange("g_SpriteData", 0, 1, 1),
+                               RHI::ShaderVisibility::All)
+                           .AddDescriptorTable(
+                               RHI::RootDescriptorTable(true)
+                                   .AddSrvRange("p_SpriteTextures", 0, 2, 1),
+                               RHI::ShaderVisibility::Pixel)
+                           .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
 
-        VarMap.Add("p_SpriteTextures", { 0, 0 }, Renderer::MaterialVarType::Resource)
-            .Flags(Renderer::EMaterialVarFlags::Instanced, true);
-        VarMap.Add("g_FrameData", { 0, 0 }, Renderer::MaterialVarType::Buffer);
-        VarMap.Add("g_SpriteData", { 0, 1 }, Renderer::MaterialVarType::Resource);
-
+        uint16_t Register = 0;
         for (auto Type : std::ranges::iota_view(0ul, size_t(Renderer::MaterialStates::Sampler::_Last)))
         {
-            VarMap.AddStaticSampler(
-                StringUtils::Format("p_SpriteSamplers{}", Type),
-                { Type, 0 },
-                RHI::ShaderVisibility::Pixel,
-                Renderer::MaterialStates::Sampler(Type));
+            Builder.AddSampler(
+                StringUtils::Format("g_Sampler{}", Register),
+                Renderer::GetStaticSamplerDesc(
+                    Renderer::MaterialStates::Sampler(Type),
+                    Register++,
+                    0,
+                    RHI::ShaderVisibility::Pixel));
         }
+
+        BaseSpriteMaterial.RootSignature(Builder.Build());
 
         BaseSpriteMaterial
             .VertexShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
