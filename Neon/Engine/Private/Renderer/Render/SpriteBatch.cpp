@@ -197,6 +197,7 @@ namespace Neon::Renderer
                 .IndexCountPerInstance = m_DrawCount * SpriteBatchConstants::IndicesCount });
 
         m_CommandList = nullptr;
+        m_MaterialInstances.Reset();
     }
 
     //

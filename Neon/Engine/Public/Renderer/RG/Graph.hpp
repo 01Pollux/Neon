@@ -2,6 +2,7 @@
 
 #include <Renderer/RG/Storage.hpp>
 #include <Renderer/RG/Pass.hpp>
+#include <RHI/Commands/Context.hpp>
 
 #include <Asio/ThreadPool.hpp>
 
@@ -17,6 +18,9 @@ namespace Neon::RG
 
         friend class RenderGraphBuilder;
         using DepdencyLevelList = std::vector<RenderGraphDepdencyLevel>;
+
+        using RenderCommandContext  = RHI::TCommandContext<RHI::CommandQueueType::Graphics>;
+        using ComputeCommandContext = RHI::TCommandContext<RHI::CommandQueueType::Compute>;
 
     public:
         /// <summary>
@@ -82,18 +86,24 @@ namespace Neon::RG
         /// <summary>
         /// Execute render passes
         /// </summary>
-        void Execute() const;
+        void Execute(
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
-        void ExecuteBarriers() const;
+        void ExecuteBarriers(
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
         /// <summary>
         /// Execute render passes
         /// </summary>
-        void ExecutePasses() const;
+        void ExecutePasses(
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
     private:
         struct RenderPassInfo

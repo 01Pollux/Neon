@@ -77,4 +77,9 @@ namespace Neon::RHI
             Queue->Reset(m_Type, m_CommandLists);
         }
     }
+
+    size_t CommandContext::Size() const noexcept
+    {
+        return m_CommandLists.size();
+    }
 } // namespace Neon::RHI

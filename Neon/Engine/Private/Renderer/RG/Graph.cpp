@@ -31,14 +31,21 @@ namespace Neon::RG
             auto& Handle = m_Storage.GetResourceMut(ImportedResource);
             m_Storage.CreateViews(Handle);
         }
-
-        for (auto& Level : m_Levels)
         {
-            Level.Execute();
+            RenderCommandContext  RenderContext;
+            ComputeCommandContext ComputeContext;
+
+            for (auto& Level : m_Levels)
+            {
+                Level.Execute(RenderContext, ComputeContext);
+            }
+
+            if (!RenderContext.Size())
+            {
+                RenderContext.Append();
+            }
+            RHI::IResourceStateManager::Get()->FlushBarriers(RenderContext[0]);
         }
-
-        RHI::IResourceStateManager::Get()->FlushBarriers();
-
         m_Storage.FlushResources();
     }
 
@@ -76,7 +83,9 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::Execute() const
+    void RenderGraphDepdencyLevel::Execute(
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -87,8 +96,8 @@ namespace Neon::RG
             Storage.CreateViews(Handle);
         }
 
-        ExecuteBarriers();
-        ExecutePasses();
+        ExecuteBarriers(RenderContext, ComputeContext);
+        ExecutePasses(RenderContext, ComputeContext);
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -97,7 +106,9 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::ExecuteBarriers() const
+    void RenderGraphDepdencyLevel::ExecuteBarriers(
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
@@ -111,15 +122,27 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        StateManager->FlushBarriers();
+        if (!RenderContext.Size())
+        {
+            RenderContext.Append();
+        }
+        StateManager->FlushBarriers(RenderContext[0]);
     }
 
     //
 
-    void RenderGraphDepdencyLevel::ExecutePasses() const
+    void RenderGraphDepdencyLevel::ExecutePasses(
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
-        RHI::TCommandContext<RHI::CommandQueueType::Graphics> RenderContext;
-        RHI::TCommandContext<RHI::CommandQueueType::Compute>  ComputeContext;
+        // If we have more than one pass, we need to synchronize them
+        // therefore we need to flush the chained command list we previously created
+
+        bool ShouldFlush = m_Passes.empty() && (m_Passes.size() > 1 || m_Passes[0].Pass->GetQueueType() == PassQueueType::Compute);
+        if (RenderContext.Size() && ShouldFlush)
+        {
+            RenderContext.Upload();
+        }
 
         std::vector<std::future<void>> Futures;
         Futures.reserve(m_Passes.size());
@@ -266,6 +289,11 @@ namespace Neon::RG
         for (auto& Future : Futures)
         {
             Future.get();
+        }
+
+        if (ShouldFlush)
+        {
+            RenderContext.Upload();
         }
     }
 } // namespace Neon::RG

@@ -52,6 +52,11 @@ namespace Neon::RHI
         /// </summary>
         void Reset();
 
+        /// <summary>
+        /// Get the number of command lists in the batch.
+        /// </summary>
+        [[nodiscard]] size_t Size() const noexcept;
+
     private:
         std::vector<ICommandList*> m_CommandLists;
 
