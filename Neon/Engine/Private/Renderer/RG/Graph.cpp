@@ -32,6 +32,7 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
         {
+            // We will cache the command contexts to avoid submitting single command list per pass + barrier flush
             RenderCommandContext  RenderContext;
             ComputeCommandContext ComputeContext;
 
@@ -137,7 +138,6 @@ namespace Neon::RG
     {
         // If we have more than one pass, we need to synchronize them
         // therefore we need to flush the chained command list we previously created
-
         bool ShouldFlush = m_Passes.empty() && (m_Passes.size() > 1 || m_Passes[0].Pass->GetQueueType() == PassQueueType::Compute);
         if (RenderContext.Size() && ShouldFlush)
         {
