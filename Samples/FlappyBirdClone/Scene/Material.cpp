@@ -39,12 +39,12 @@ void FlappyBirdClone::PreloadMaterials()
                                    .AddCbvRange("g_FrameData", 0, 1, 1),
                                RHI::ShaderVisibility::All)
                            .AddDescriptorTable(
-                               RHI::RootDescriptorTable(true)
-                                   .AddSrvRange("g_SpriteData", 0, 1, 1),
+                               RHI::RootDescriptorTable()
+                                   .AddSrvRange("g_SpriteData", 0, 1, 1, true),
                                RHI::ShaderVisibility::All)
                            .AddDescriptorTable(
-                               RHI::RootDescriptorTable(true)
-                                   .AddSrvRange("p_SpriteTextures", 0, 2, 1),
+                               RHI::RootDescriptorTable()
+                                   .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
                                RHI::ShaderVisibility::Pixel)
                            .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
 

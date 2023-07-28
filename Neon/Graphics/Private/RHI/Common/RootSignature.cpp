@@ -10,6 +10,7 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -19,7 +20,8 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::ShaderResource });
+                .Type            = DescriptorTableParam::ShaderResource,
+                .Instanced       = Instanced });
         return *this;
     }
 
@@ -28,6 +30,7 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -37,7 +40,8 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::UnorderedAccess });
+                .Type            = DescriptorTableParam::UnorderedAccess,
+                .Instanced       = Instanced });
         return *this;
     }
 
@@ -46,6 +50,7 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -55,7 +60,8 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::ConstantBuffer });
+                .Type            = DescriptorTableParam::ConstantBuffer,
+                .Instanced       = Instanced });
         return *this;
     }
 
@@ -64,6 +70,7 @@ namespace Neon::RHI
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
         m_DescriptorRanges.emplace_back(
@@ -73,7 +80,8 @@ namespace Neon::RHI
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
                 .Flags           = Flags,
-                .Type            = DescriptorTableParam::Sampler });
+                .Type            = DescriptorTableParam::Sampler,
+                .Instanced       = Instanced });
         return *this;
     }
 

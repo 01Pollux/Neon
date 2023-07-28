@@ -103,8 +103,7 @@ namespace Neon::Renderer
 
         struct DescriptorEntry
         {
-            std::vector<Ptr<RHI::IGpuResource>>  Resources;
-            std::vector<RHI::DescriptorViewDesc> Descs;
+            std::vector<Ptr<RHI::IGpuResource>> Resources;
 
             uint32_t Offset;
             uint32_t Count;

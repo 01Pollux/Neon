@@ -229,7 +229,7 @@ namespace Neon::RHI
                             FinalParam.Type                 = IRootSignature::ParamType::DescriptorTable;
                             FinalParam.Descriptor.Size      = Range.DescriptorCount;
                             FinalParam.Descriptor.Type      = Range.Type;
-                            FinalParam.Descriptor.Instanced = Table.IsInstanced();
+                            FinalParam.Descriptor.Instanced = Range.Instanced;
 
                             if (m_ParamMap.contains(Name))
                             {
@@ -367,12 +367,27 @@ namespace Neon::RHI
                                 std::unreachable();
                             }
 
+                            // Instanced will allocate unbounded descriptors
+                            auto Flags = CastRootDescriptorTableFlags(Range.Flags);
+
+                            uint32_t DescriptorCount;
+                            if (Range.Instanced)
+                            {
+                                DescriptorCount = UINT32_MAX;
+                                Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+                                Flags &= ~D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_STATIC_KEEPING_BUFFER_BOUNDS_CHECKS;
+                            }
+                            else
+                            {
+                                DescriptorCount = Range.DescriptorCount;
+                            }
+
                             Ranges.emplace_back().Init(
                                 Type,
-                                Range.DescriptorCount,
+                                DescriptorCount,
                                 Range.ShaderRegister,
                                 Range.RegisterSpace,
-                                CastRootDescriptorTableFlags(Range.Flags));
+                                Flags);
                         }
 
                         Hash.Append(std::bit_cast<uint8_t*>(Ranges.data()), sizeof(Ranges[0]) * Ranges.size());

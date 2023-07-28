@@ -5,10 +5,6 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 
-#include <RHI/RootSignature.hpp>
-#include <RHI/PipelineState.hpp>
-#include <RHI/Commands/List.hpp>
-
 #include <RHI/Resource/Views/ConstantBuffer.hpp>
 #include <RHI/Resource/Views/ShaderResource.hpp>
 #include <RHI/Resource/Views/UnorderedAccess.hpp>
@@ -120,7 +116,7 @@ namespace Neon::Renderer
                 auto& Descriptor = Param.Descriptor;
                 if (Descriptor.Type == RHI::DescriptorTableParam::Sampler)
                 {
-                    auto DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
+                    auto& DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
 
                     Material::SamplerEntry Entry{
                         .Offset    = DescriptorCount,
@@ -135,7 +131,7 @@ namespace Neon::Renderer
                 }
                 else
                 {
-                    auto DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
+                    auto& DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
 
                     Material::DescriptorEntry Entry{
                         .Offset    = DescriptorCount,
@@ -145,7 +141,6 @@ namespace Neon::Renderer
                     };
 
                     DescriptorCount += Entry.Count;
-                    Entry.Descs.resize(Descriptor.Size);
                     Entry.Resources.resize(Descriptor.Size);
 
                     Mat->m_Parameters->Entries.emplace(Param.Name, std::move(Entry));
@@ -395,7 +390,7 @@ namespace Neon::Renderer
 
             uint32_t DescriptorOffset = ArrayIndex + Descriptor->Offset;
 
-            Descriptor->Resources[DescriptorOffset] = Resource;
+            Descriptor->Resources[ArrayIndex] = Resource;
             std::visit(
                 VariantVisitor{
                     [](const std::monostate&)
@@ -585,9 +580,9 @@ namespace Neon::Renderer
         // Function helper to upload descriptor to descriptor heap and return handle
         auto UploadDescriptor =
             [&ResourceDescriptors,
-             ResourceDescriptorSize,
+             &ResourceDescriptorSize,
              &SamplerDescriptors,
-             SamplerDescriptorSize](bool IsSampler) -> RHI::DescriptorHeapHandle
+             &SamplerDescriptorSize](bool IsSampler) -> RHI::DescriptorHeapHandle
         {
             auto& SourceDescriptors = IsSampler ? SamplerDescriptors : ResourceDescriptors;
             auto  SourceSize        = IsSampler ? SamplerDescriptorSize : ResourceDescriptorSize;
@@ -611,7 +606,7 @@ namespace Neon::Renderer
 
         // Function helper to upload all descriptors and return handles
         auto UploadDescriptors =
-            [&]() -> std::pair<RHI::DescriptorHeapHandle, RHI::DescriptorHeapHandle>
+            [&UploadDescriptor]() -> std::pair<RHI::DescriptorHeapHandle, RHI::DescriptorHeapHandle>
         {
             return { UploadDescriptor(false), UploadDescriptor(true) };
         };
