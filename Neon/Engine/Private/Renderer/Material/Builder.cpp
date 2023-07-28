@@ -211,10 +211,9 @@ namespace Neon::Renderer
 
     RenderMaterialBuilder& RenderMaterialBuilder::RenderTarget(
         uint32_t             Index,
-        const StringU8&      Name,
         RHI::EResourceFormat Format)
     {
-        m_RenderTargetFormats[Index] = { Name, Format };
+        m_RenderTargetFormats[Index] = Format;
         return *this;
     }
 

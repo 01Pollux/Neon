@@ -28,25 +28,27 @@ void FlappyBirdClone::PreloadMaterials()
         Renderer::RenderMaterialBuilder BaseSpriteMaterial;
 
         BaseSpriteMaterial
+            .RenderTarget(0, RHI::EResourceFormat::R8G8B8A8_UNorm)
+            .Blend(0, Renderer::MaterialStates::Blend::AlphaBlend)
             .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
             .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
-            .RenderTarget(0, "Base Color", RHI::EResourceFormat::R8G8B8A8_UNorm)
             .Topology(RHI::PrimitiveTopologyCategory::Triangle);
 
-        auto Builder = RHI::RootSignatureBuilder()
-                           .AddDescriptorTable(
-                               RHI::RootDescriptorTable()
-                                   .AddCbvRange("g_FrameData", 0, 1, 1),
-                               RHI::ShaderVisibility::All)
-                           .AddDescriptorTable(
-                               RHI::RootDescriptorTable()
-                                   .AddSrvRange("g_SpriteData", 0, 1, 1, true),
-                               RHI::ShaderVisibility::All)
-                           .AddDescriptorTable(
-                               RHI::RootDescriptorTable()
-                                   .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
-                               RHI::ShaderVisibility::Pixel)
-                           .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
+        RHI::RootSignatureBuilder Builder;
+        Builder
+            .AddDescriptorTable(
+                RHI::RootDescriptorTable()
+                    .AddCbvRange("g_FrameData", 0, 1, 1),
+                RHI::ShaderVisibility::All)
+            .AddDescriptorTable(
+                RHI::RootDescriptorTable()
+                    .AddSrvRange("g_SpriteData", 0, 1, 1, true),
+                RHI::ShaderVisibility::All)
+            .AddDescriptorTable(
+                RHI::RootDescriptorTable()
+                    .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
+                RHI::ShaderVisibility::Pixel)
+            .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
 
         uint16_t Register = 0;
         for (auto Type : std::ranges::iota_view(0ul, size_t(Renderer::MaterialStates::Sampler::_Last)))

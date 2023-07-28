@@ -27,7 +27,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Set root signature.
         /// </summary>
-        [[nodiscard]] _Ty& RootSignature(
+        _Ty& RootSignature(
             const Ptr<RHI::IRootSignature>& RootSig)
         {
             m_RootSignatuer = RootSig;
@@ -226,7 +226,6 @@ namespace Neon::Renderer
         /// </summary>
         GenericMaterialBuilder& RenderTarget(
             uint32_t             Index,
-            const StringU8&      Name,
             RHI::EResourceFormat Format);
 
         /// <summary>
@@ -273,7 +272,7 @@ namespace Neon::Renderer
 
         std::optional<RHI::ShaderInputLayout> m_InputLayout;
 
-        std::map<uint32_t, std::pair<StringU8, RHI::EResourceFormat>> m_RenderTargetFormats;
+        std::map<uint32_t, RHI::EResourceFormat> m_RenderTargetFormats;
 
         RHI::PipelineStateBuilderG::StripCutType m_StripCut           = RHI::PipelineStateBuilderG::StripCutType::None;
         RHI::PrimitiveTopologyCategory           m_Topology           = RHI::PrimitiveTopologyCategory::Undefined;

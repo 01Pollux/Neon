@@ -27,7 +27,6 @@ namespace Neon::Renderer
         {
             Matrix4x4 World;
             Vector4   Color;
-            int       TextureIndex;
         };
 
         struct VertexInput
@@ -147,9 +146,8 @@ namespace Neon::Renderer
 
         auto PerObjectDataBuffer = std::bit_cast<SpriteBatchConstants::PerObjectData*>(m_PerDataBufferPtr) + m_DrawCount;
 
-        PerObjectDataBuffer->World        = glm::transpose(Transform.World.ToMat4x4());
-        PerObjectDataBuffer->Color        = Sprite.ModulationColor;
-        PerObjectDataBuffer->TextureIndex = m_DrawCount;
+        PerObjectDataBuffer->World = glm::transpose(Transform.World.ToMat4x4());
+        PerObjectDataBuffer->Color = Sprite.ModulationColor;
 
         m_DrawCount++;
     }

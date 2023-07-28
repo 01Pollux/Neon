@@ -68,6 +68,7 @@ namespace Neon::Asset
                     NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a Guid", MetafilePath.string());
                     continue;
                 }
+
                 if (m_AssetMeta.contains(Guid))
                 {
                     NEON_ERROR_TAG("Asset", "Meta file '{}' has a Guid that is already in use", MetafilePath.string());
@@ -98,7 +99,9 @@ namespace Neon::Asset
                 else if (Hash.Digest().ToString() != ExpectedHash)
                 {
                     NEON_ERROR_TAG("Asset", "Asset file '{}' has a different hash than the one in meta file", AssetFile.string());
+#ifndef NEON_ASSET_MGR_DISABLE_HASH_VALIDATION
                     continue;
+#endif
                 }
 
                 m_AssetMeta.emplace(Guid, std::move(Metadata));

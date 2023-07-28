@@ -183,7 +183,7 @@ namespace Neon::Renderer
 
                 .RTFormats = Builder.RenderTargets() |
                              views::transform([](auto& RenderTarget)
-                                              { return RenderTarget.second.second; }) |
+                                              { return RenderTarget.second; }) |
                              ranges::to<std::vector>(),
 
                 .SampleMask    = Builder.SampleMask(),

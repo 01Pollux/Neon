@@ -9,6 +9,8 @@ project "NeonResource"
     common_add_pch("ResourcePCH")
     common_neon()
 
+    defines "NEON_ASSET_MGR_DISABLE_HASH_VALIDATION"
+
     links
     {
         "NeonCore",

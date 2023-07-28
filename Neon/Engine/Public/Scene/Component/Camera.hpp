@@ -56,12 +56,12 @@ namespace Neon::Scene::Component
             /// <summary>
             /// Whether the viewport is using client width and height.
             /// </summary>
-            bool ClientWidth = false;
+            bool ClientWidth = true;
 
             /// <summary>
             /// Whether the viewport is using client width and height.
             /// </summary>
-            bool ClientHeight = false;
+            bool ClientHeight = true;
 
             /// <summary>
             /// Get the aspect ratio of the viewport.
