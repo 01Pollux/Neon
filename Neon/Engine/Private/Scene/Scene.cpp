@@ -120,4 +120,9 @@ namespace Neon::Scene
             StateManager->FlushBarriers(CommandContext[0]);
         }
     }
+
+    void GameScene::Update()
+    {
+        m_EntityWorld->progress();
+    }
 } // namespace Neon::Scene

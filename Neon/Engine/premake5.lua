@@ -11,6 +11,17 @@ project "NeonEngine"
 
     links
     {
+        "Bullet3Common",
+        "Bullet3Collision",
+        "Bullet3Dynamics",
+        "Bullet3Geometry",
+        "Bullet3Serialize",
+        "BulletCollision",
+        "BulletDynamics",
+        "BulletInverseDynamics",
+        "BulletSoftBody",
+        "BulletLinearMath",
+
         "NeonCore",
         "NeonCoroutines",
         "NeonResource",
@@ -25,5 +36,7 @@ project "NeonEngine"
         "%{CommonDir.Neon.Resource}",
         "%{CommonDir.Neon.Windowing}",
         "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Engine}"
+        "%{CommonDir.Neon.Engine}",
+
+        "%{CommonDir.Deps.Inc}/Bullet3"
     }

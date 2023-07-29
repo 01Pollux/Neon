@@ -103,6 +103,7 @@ end
 
 function common_neon()
     defines "flecs_STATIC"
+    defines "BT_USE_DOUBLE_PRECISION"
     defines "GLM_FORCE_LEFT_HANDED"
 
     libdirs "%{CommonDir.Deps.Libs}"

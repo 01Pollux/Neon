@@ -7,6 +7,7 @@ project "Bullet3Geometry"
 	cppdialect "C++17"
 	
 	common_dir_setup()
+    defines "BT_USE_DOUBLE_PRECISION"
 
     disablewarnings
     {

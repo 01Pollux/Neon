@@ -48,6 +48,23 @@ namespace Neon::Scene
 
     public:
         /// <summary>
+        /// Get the physics world.
+        /// </summary>
+        [[nodiscard]] PhysicsWorld* GetPhysicsWorld() const
+        {
+            return m_PhysicsWorld.get();
+        }
+
+        /// <summary>
+        /// Get the entity world.
+        /// </summary>
+        [[nodiscard]] flecs::world* GetEntityWorld() const
+        {
+            return m_EntityWorld.get();
+        }
+
+    public:
+        /// <summary>
         /// Create a new entity.
         /// </summary>
         Actor CreateEntity(

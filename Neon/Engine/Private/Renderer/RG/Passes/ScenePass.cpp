@@ -46,9 +46,7 @@ namespace Neon::RG
         m_Camera(Camera)
     {
         m_SpriteQuery =
-            m_Scene->query_builder<
-                       Component::Transform,
-                       Component::Sprite>()
+            m_Scene.GetEntityWorld()->query_builder<Component::Transform, Component::Sprite>()
                 // Order by material root signature
                 .order_by(
                     +[](flecs::entity_t,

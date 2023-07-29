@@ -36,7 +36,7 @@ namespace Neon::Runtime
             "Update",
             [this]
             {
-                m_Scene->progress();
+                m_Scene.Update();
             });
 
         //

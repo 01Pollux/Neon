@@ -29,7 +29,7 @@ void FlappyBirdClone::LoadScene()
     // Player camera
     auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
     {
-        Scene->set<Scene::Component::MainCamera>({ Camera });
+        Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
         auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
         {
