@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Scene/Component/Component.hpp>
+#include <Scene/GameTimer.hpp>
 #include <Core/Neon.hpp>
 #include <flecs/flecs.h>
 
@@ -74,6 +75,8 @@ namespace Neon::Scene
     private:
         UPtr<PhysicsWorld> m_PhysicsWorld;
         UPtr<flecs::world> m_EntityWorld;
+
+        GameTimer m_GameTimer;
 
         flecs::query<
             Component::Transform,

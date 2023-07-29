@@ -123,6 +123,9 @@ namespace Neon::Scene
 
     void GameScene::Update()
     {
-        m_EntityWorld->progress();
+        m_GameTimer.Tick();
+
+        m_PhysicsWorld->Update(m_GameTimer.GetDeltaTime());
+        m_EntityWorld->progress(m_GameTimer.GetDeltaTime());
     }
 } // namespace Neon::Scene
