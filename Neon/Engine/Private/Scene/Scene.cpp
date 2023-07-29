@@ -33,6 +33,14 @@ namespace Neon::Scene
         m_EntityWorld->import <flecs::monitor>();
 #endif
 
+        m_EntityWorld->system("PhysicsUpdate")
+            .kind(flecs::PreUpdate)
+            .iter(
+                [this](flecs::iter It)
+                {
+                    m_PhysicsWorld->Update(It.delta_time());
+                });
+
         //
 
         m_CameraQuery =
@@ -124,8 +132,6 @@ namespace Neon::Scene
     void GameScene::Update()
     {
         m_GameTimer.Tick();
-
-        m_PhysicsWorld->Update(m_GameTimer.GetDeltaTime());
         m_EntityWorld->progress(m_GameTimer.GetDeltaTime());
     }
 } // namespace Neon::Scene
