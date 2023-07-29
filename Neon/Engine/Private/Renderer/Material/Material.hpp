@@ -85,6 +85,10 @@ namespace Neon::Renderer
             size_t             Size,
             uint32_t           Offset);
 
+        void SetResourceView(
+            const std::string&            Name,
+            const Ptr<RHI::IGpuResource>& Resource);
+
         void SetResourceSize(
             const StringU8& Name,
             uint32_t        Size) override;
@@ -106,6 +110,10 @@ namespace Neon::Renderer
             std::vector<Ptr<RHI::IGpuResource>> Resources;
 
             uint32_t Offset;
+
+            /// <summary>
+            /// Resizable array of resource descriptors.
+            /// </summary>
             uint32_t Count;
 
             RHI::DescriptorTableParam Type      : 7;
@@ -117,6 +125,10 @@ namespace Neon::Renderer
             std::vector<RHI::SamplerDesc> Descs;
 
             uint32_t Offset;
+
+            /// <summary>
+            /// Resizable array of sampler descriptors.
+            /// </summary>
             uint32_t Count;
 
             bool Instanced;

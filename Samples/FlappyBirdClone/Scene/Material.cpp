@@ -36,10 +36,7 @@ void FlappyBirdClone::PreloadMaterials()
 
         RHI::RootSignatureBuilder Builder;
         Builder
-            .AddDescriptorTable(
-                RHI::RootDescriptorTable()
-                    .AddCbvRange("g_FrameData", 0, 1, 1),
-                RHI::ShaderVisibility::All)
+            .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
             .AddDescriptorTable(
                 RHI::RootDescriptorTable()
                     .AddSrvRange("g_SpriteData", 0, 1, 1, true),

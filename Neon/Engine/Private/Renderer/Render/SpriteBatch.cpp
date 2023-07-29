@@ -169,12 +169,9 @@ namespace Neon::Renderer
                     .Count        = m_DrawCount,
                     .SizeOfStruct = SpriteBatchConstants::PerObjectDataSize } });
 
-        FirstMaterial->SetConstantBuffer(
+        FirstMaterial->SetResourceView(
             "g_FrameData",
-            m_CameraBuffer,
-            RHI::CBVDesc{
-                .Resource = m_CameraBuffer->GetHandle(),
-                .Size     = m_CameraBuffer->GetSize() });
+            m_CameraBuffer);
 
         m_MaterialInstances.Bind(m_CommandList);
 

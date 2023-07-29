@@ -485,6 +485,27 @@ namespace Neon::Renderer
         }
     }
 
+    void Material::SetResourceView(
+        const std::string&            Name,
+        const Ptr<RHI::IGpuResource>& Resource)
+    {
+        auto Layout = m_Parameters->Entries.find(Name);
+        if (Layout == m_Parameters->Entries.end())
+        {
+            NEON_WARNING_TAG("Material", "Failed to find constant: {}", Name);
+            return;
+        }
+
+        if (auto Root = std::get_if<RootEntry>(&Layout->second))
+        {
+            Root->Resource = Resource;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a constant", Name);
+        }
+    }
+
     void Material::SetResourceSize(
         const StringU8& Name,
         uint32_t        Size)
