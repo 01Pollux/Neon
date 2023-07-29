@@ -12,9 +12,9 @@ namespace Neon::Scene::Component
 
 namespace Neon::Scene
 {
-    //
+    class PhysicsWorld;
 
-    enum class EntityType
+    enum class EntityType : uint8_t
     {
         Empty,
 
@@ -37,25 +37,14 @@ namespace Neon::Scene
         ~GameScene();
 
         /// <summary>
-        /// Get the flecs world.
-        /// </summary>
-        [[nodiscard]] auto operator->() const noexcept
-        {
-            return m_World.get();
-        }
-
-        /// <summary>
-        /// Get the flecs world.
-        /// </summary>
-        [[nodiscard]] auto Get() const noexcept
-        {
-            return m_World.get();
-        }
-
-        /// <summary>
         /// Render the scene to all active cameras.
         /// </summary>
         void Render();
+
+        /// <summary>
+        /// Update the scene physics.
+        /// </summary>
+        void Update();
 
     public:
         /// <summary>
@@ -66,7 +55,8 @@ namespace Neon::Scene
             const char* Name = nullptr);
 
     private:
-        UPtr<flecs::world> m_World;
+        UPtr<PhysicsWorld> m_PhysicsWorld;
+        UPtr<flecs::world> m_EntityWorld;
 
         flecs::query<
             Component::Transform,

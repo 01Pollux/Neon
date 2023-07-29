@@ -23,11 +23,11 @@ namespace Neon::Scene
         {
         case EntityType::Empty:
         {
-            return m_World->entity(Name);
+            return m_EntityWorld->entity(Name);
         }
         case EntityType::Camera2D:
         {
-            auto Actor       = m_World->entity(Name);
+            auto Actor       = m_EntityWorld->entity(Name);
             auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Orthographic);
@@ -39,7 +39,7 @@ namespace Neon::Scene
         case EntityType::Camera3D:
         {
             // TODO: change to 3D render graph
-            auto Actor       = m_World->entity(Name);
+            auto Actor       = m_EntityWorld->entity(Name);
             auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Perspective);
@@ -50,7 +50,7 @@ namespace Neon::Scene
         }
         case EntityType::Sprite:
         {
-            auto Actor = m_World->entity(Name);
+            auto Actor = m_EntityWorld->entity(Name);
 
             Actor.set(Transform{});
             Actor.set(Sprite{});

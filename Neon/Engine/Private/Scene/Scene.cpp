@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Scene/Scene.hpp>
 #include <Scene/Exports/Export.hpp>
+#include <Scene/Physics/GamePhysics.hpp>
 
 //
 
@@ -17,24 +18,27 @@ namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
 
-    GameScene::GameScene()
+    GameScene::GameScene() :
+        m_PhysicsWorld(std::make_unique<PhysicsWorld>())
     {
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
-            m_World = std::make_unique<flecs::world>();
+            m_EntityWorld = std::make_unique<flecs::world>();
         }
 
-        Exports::RegisterComponents(*m_World);
+        Exports::RegisterComponents(*m_EntityWorld);
 
 #if NEON_DEBUG
-        m_World->set<flecs::Rest>({});
-        m_World->import <flecs::monitor>();
+        m_EntityWorld->set<flecs::Rest>({});
+        m_EntityWorld->import <flecs::monitor>();
 #endif
 
+        //
+
         m_CameraQuery =
-            m_World->query_builder<
-                       Component::Transform,
-                       Component::Camera>()
+            m_EntityWorld->query_builder<
+                             Component::Transform,
+                             Component::Camera>()
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Camera* LhsCamera,
@@ -48,10 +52,10 @@ namespace Neon::Scene
 
     GameScene::~GameScene()
     {
-        if (m_World)
+        if (m_EntityWorld)
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
-            m_World.reset();
+            m_EntityWorld.reset();
         }
     }
 
@@ -82,7 +86,7 @@ namespace Neon::Scene
             });
 
         // Rendering to back buffer for main camera
-        auto MainCamera = m_World->get<Component::MainCamera>();
+        auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
         if (MainCamera)
         {
             auto& RenderGraph = MainCamera->Target.get<Component::Camera>()->RenderGraph;
