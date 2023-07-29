@@ -64,33 +64,101 @@ namespace Neon::RHI
 
     Dx12Buffer::Dx12Buffer(
         const BufferDesc&  Desc,
-        GraphicsBufferType Type)
+        GraphicsBufferType Type) :
+        m_Alignement(Desc.Alignment),
+        m_Type(Type)
     {
         auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
-        m_Buffer       = Allocator->AllocateBuffer(Type, Desc.Size, size_t(Desc.Alignment), CastResourceFlags(Desc.Flags));
-        m_Resource     = m_Buffer.Resource;
-        m_Alignement   = Desc.Alignment;
+        if (Desc.UsePool)
+        {
+            auto Buffer = Allocator->AllocateBuffer(Type, Desc.Size, size_t(m_Alignement), CastResourceFlags(Desc.Flags));
+            m_Resource  = Buffer.Resource;
+            m_Size      = Desc.Size;
+            m_Offset    = Buffer.Offset;
+            m_Flags     = Buffer.Flags;
+        }
+        else
+        {
+            D3D12_RESOURCE_STATES    InitialState;
+            D3D12MA::ALLOCATION_DESC AllocDesc{};
+
+            auto Flags = CastResourceFlags(Desc.Flags);
+            switch (Type)
+            {
+            case GraphicsBufferType::Default:
+                InitialState       = D3D12_RESOURCE_STATE_COMMON;
+                AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+                break;
+            case GraphicsBufferType::Upload:
+                InitialState       = D3D12_RESOURCE_STATE_GENERIC_READ;
+                AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+                break;
+            case GraphicsBufferType::Readback:
+                InitialState       = D3D12_RESOURCE_STATE_COPY_DEST;
+                AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+                Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+                break;
+            default:
+                std::unreachable();
+            }
+
+            auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Desc.Size, Flags);
+            ThrowIfFailed(Allocator->GetMA()->CreateResource(
+                &AllocDesc,
+                &Dx12Desc,
+                InitialState,
+                nullptr,
+                &m_Allocation,
+                IID_PPV_ARGS(&m_Resource)));
+
+            Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
+        }
     }
 
     Dx12Buffer::~Dx12Buffer()
     {
-        Dx12Swapchain::Get()->SafeRelease(m_Buffer);
+        if (!m_Allocation) [[likely]]
+        {
+            Handle Buffer{
+                .Resource = std::move(m_Resource),
+                .Offset   = m_Offset,
+                .Size     = m_Size,
+                .Type     = m_Type,
+                .Flags    = m_Flags
+            };
+            Dx12Swapchain::Get()->SafeRelease(Buffer);
+        }
+        else
+        {
+            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
+            Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
+        }
     }
 
     ResourceDesc Dx12Buffer::GetDesc() const
     {
-        return ResourceDesc::Buffer(m_Buffer.Size, m_Alignement, CastResourceFlags(m_Buffer.Flags));
+        return ResourceDesc::Buffer(m_Size, m_Alignement, CastResourceFlags(m_Flags));
     }
 
     size_t Dx12Buffer::GetSize() const
     {
-        return m_Buffer.Size;
+        return m_Size;
     }
 
     GpuResourceHandle Dx12Buffer::GetHandle(
         size_t Offset) const
     {
-        return { m_Resource->GetGPUVirtualAddress() + m_Buffer.Offset + Offset };
+        return { m_Resource->GetGPUVirtualAddress() + GetOffset() + Offset };
+    }
+
+    size_t Dx12Buffer::GetOffset() const
+    {
+        return IsUsingPool() ? m_Offset : 0;
+    }
+
+    bool Dx12Buffer::IsUsingPool() const
+    {
+        return m_Allocation == nullptr;
     }
     //
 
@@ -110,7 +178,7 @@ namespace Neon::RHI
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + m_Buffer.Offset;
+        return std::bit_cast<uint8_t*>(MappedData) + GetOffset();
     }
 
     void Dx12UploadBuffer::Unmap()
@@ -136,7 +204,7 @@ namespace Neon::RHI
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + m_Buffer.Offset;
+        return std::bit_cast<uint8_t*>(MappedData) + GetOffset();
     }
 
     void Dx12ReadbackBuffer::Unmap()

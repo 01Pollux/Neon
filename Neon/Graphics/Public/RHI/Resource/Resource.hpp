@@ -74,6 +74,7 @@ namespace Neon::RHI
         size_t         Size;
         uint32_t       Alignment = 1;
         MResourceFlags Flags;
+        bool           UsePool : 1 = true;
     };
 
     class IBuffer : public virtual IGpuResource

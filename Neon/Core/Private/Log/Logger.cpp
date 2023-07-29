@@ -153,17 +153,16 @@ namespace Neon::Logger
 #ifdef NEON_DIST
         if (Severity < Logger::LogSeverity::Warning)
         {
-            return;
+            return false;
         }
-#else
-        bool ShouldLog = Severity >= LogSeverity::Error;
-        if (!ShouldLog)
+#endif
+        bool Enable = Severity >= LogSeverity::Error;
+        if (!Enable)
         {
             auto& Detail = s_LogDetails[""];
-            ShouldLog = Detail.Enabled && Detail.Severity <= Severity;
+            Enable       = Detail.Enabled && Detail.Severity <= Severity;
         }
-        return ShouldLog;
-#endif
+        return Enable;
     }
 
     void SetLogTag(

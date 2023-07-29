@@ -66,8 +66,23 @@ namespace Neon::RHI
             size_t Offset) const override;
 
     protected:
-        Handle   m_Buffer;
-        uint32_t m_Alignement;
+        /// <summary>
+        /// Get the offset of the buffer in the allocation.
+        /// </summary>
+        [[nodiscard]] size_t GetOffset() const;
+
+        /// <summary>
+        /// Check if the buffer was created using a pool.
+        /// </summary>
+        bool IsUsingPool() const;
+
+    protected:
+        size_t m_Size   = 0;
+        size_t m_Offset = 0;
+
+        uint32_t             m_Alignement = 0;
+        D3D12_RESOURCE_FLAGS m_Flags{};
+        GraphicsBufferType   m_Type{};
     };
 
     //

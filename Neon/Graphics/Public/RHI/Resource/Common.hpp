@@ -20,7 +20,7 @@ namespace Neon::RHI
 #if !NEON_DIST
     void RenameObject(IRootSignature* Object, const wchar_t* Name);
 #else
-    void RenameObject(IRootSignature*, const wchar_t*)
+    inline void RenameObject(IRootSignature*, const wchar_t*)
     {
     }
 #endif
@@ -31,7 +31,7 @@ namespace Neon::RHI
 #if !NEON_DIST
     void RenameObject(IPipelineState* PipelienState, const wchar_t* Name);
 #else
-    void RenameObject(IPipelineState*, const wchar_t*)
+    inline void RenameObject(IPipelineState*, const wchar_t*)
     {
     }
 #endif
@@ -42,7 +42,7 @@ namespace Neon::RHI
 #if !NEON_DIST
     void RenameObject(IGpuResource* Object, const wchar_t* Name);
 #else
-    void RenameObject(IGpuResource*, const wchar_t*)
+    inline void RenameObject(IGpuResource*, const wchar_t*)
     {
     }
 #endif
@@ -53,7 +53,7 @@ namespace Neon::RHI
 #if !NEON_DIST
     void RenameObject(IDescriptorHeap* Heap, const wchar_t* Name);
 #else
-    void RenameObject(IDescriptorHeap*, const wchar_t*)
+    inline void RenameObject(IDescriptorHeap*, const wchar_t*)
     {
     }
 #endif

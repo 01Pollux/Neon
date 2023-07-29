@@ -348,7 +348,7 @@ namespace Neon::Renderer
             {
                 auto& Root = std::get<RootEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
 
-                CommandList->SetResourceView(Root.ViewType, LastRootIndex, validate_cast<RHI::IBuffer*>(Root.Resource.get()));
+                CommandList->SetResourceView(Root.ViewType, LastRootIndex, dynamic_cast<RHI::IBuffer*>(Root.Resource.get()));
                 break;
             }
 

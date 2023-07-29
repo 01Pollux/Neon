@@ -21,22 +21,22 @@ namespace Neon::Runtime
 
 #if defined(NEON_PLATFORM_WINDOWS) && defined(NEON_DIST)
 
-#define NEON_MAIN(Argc, Argv)                      \
-    int __stdcall wWinMain(                        \
-        void*,                                     \
-        void*,                                     \
-        const wchar_t*,                            \
-        int)                                       \
-    {                                              \
-        Neon::Logger::Initialize();                \
-        std::atexit(&Neon::Logger::Shutdown);      \
-        Asset::Storage::Initialize();              \
-        int Ret = Neon::Runtime::Main(argc, argv); \
-        Asset::Storage::Shutdown();                \
-        return Ret;                                \
-    }                                              \
-    int Neon::Runtime::Main(                       \
-        int       Argc,                            \
+#define NEON_MAIN(Argc, Argv)                           \
+    int __stdcall wWinMain(                             \
+        void*,                                          \
+        void*,                                          \
+        const wchar_t*,                                 \
+        int)                                            \
+    {                                                   \
+        Neon::Logger::Initialize();                     \
+        std::atexit(&Neon::Logger::Shutdown);           \
+        Asset::Storage::Initialize();                   \
+        int Ret = Neon::Runtime::Main(__argc, __wargv); \
+        Asset::Storage::Shutdown();                     \
+        return Ret;                                     \
+    }                                                   \
+    int Neon::Runtime::Main(                            \
+        int       Argc,                                 \
         wchar_t** Argv)
 
 #else

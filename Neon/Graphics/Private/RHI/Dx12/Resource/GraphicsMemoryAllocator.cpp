@@ -37,7 +37,7 @@ namespace Neon::RHI
             std::unreachable();
         }
 
-        CD3DX12_RESOURCE_DESC ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
+        auto ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
             SizeOfBuffer,
             Flags);
 
