@@ -11,9 +11,13 @@ namespace Neon::Scene::Component
     struct Camera;
 } // namespace Neon::Scene::Component
 
+namespace Neon::Physics
+{
+    class World;
+} // namespace Neon::Physics
+
 namespace Neon::Scene
 {
-    class PhysicsWorld;
 
     enum class EntityType : uint8_t
     {
@@ -51,7 +55,7 @@ namespace Neon::Scene
         /// <summary>
         /// Get the physics world.
         /// </summary>
-        [[nodiscard]] PhysicsWorld* GetPhysicsWorld() const
+        [[nodiscard]] Physics::World* GetPhysicsWorld() const
         {
             return m_PhysicsWorld.get();
         }
@@ -73,8 +77,8 @@ namespace Neon::Scene
             const char* Name = nullptr);
 
     private:
-        UPtr<PhysicsWorld> m_PhysicsWorld;
-        UPtr<flecs::world> m_EntityWorld;
+        UPtr<Physics::World> m_PhysicsWorld;
+        UPtr<flecs::world>   m_EntityWorld;
 
         GameTimer m_GameTimer;
 

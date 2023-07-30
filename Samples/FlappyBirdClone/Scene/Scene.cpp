@@ -4,6 +4,11 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Camera.hpp>
 
+#include <Physics/World.hpp>
+#include <Physics/MotionState.hpp>
+#include <Bullet3/btBulletCollisionCommon.h>
+#include <Bullet3/btBulletDynamicsCommon.h>
+
 using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
@@ -23,6 +28,18 @@ void FlappyBirdClone::LoadScene()
         {
             TransformComponent->World.SetPosition(Vec::Forward<Vector3> * 2.5f);
             TransformComponent->Local = TransformComponent->World;
+        }
+
+        {
+            auto BoxShape    = new btBoxShape(btVector3(5.f, 5.f, 5.f));
+            auto MotionState = new Physics::ActorMotionState(PlayerSprite);
+
+            btVector3 LocalInertia;
+            BoxShape->calculateLocalInertia(10.f, LocalInertia);
+
+            auto RigidBody = new btRigidBody(10.f, MotionState, BoxShape, LocalInertia);
+
+            Scene.GetPhysicsWorld()->TmpAddRigidBody(RigidBody);
         }
     }
 

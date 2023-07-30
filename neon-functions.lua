@@ -49,10 +49,29 @@ end
 function link_engine_library()
     links
     {
+        "Bullet3Common",
+        "Bullet3Collision",
+        "Bullet3Dynamics",
+        "Bullet3Geometry",
+        "Bullet3Serialize",
+        "BulletCollision",
+        "BulletDynamics",
+        "BulletInverseDynamics",
+        "BulletSoftBody",
+        "BulletLinearMath",
+
+        "NeonCore",
+        "NeonCoroutines",
+        "NeonResource",
+        "NeonWindowing",
+        "NeonGraphics",
+
         "NeonEngine"
     }
     includedirs
     {
+        "%{CommonDir.Deps.Inc}/Bullet3",
+
         "%{CommonDir.Neon.Core}",
         "%{CommonDir.Neon.Coroutines}",
         "%{CommonDir.Neon.Windowing}",

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <Physics/Bullet3.hpp>
 
 #include <Bullet3/btBulletCollisionCommon.h>
 #include <Bullet3/btBulletDynamicsCommon.h>
@@ -8,23 +9,34 @@
 #include <Bullet3/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <Bullet3/BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
-namespace Neon::Scene
+namespace Neon::Physics
 {
-    class PhysicsWorld
+    class World
     {
     public:
-        PhysicsWorld();
+        World();
 
-        NEON_CLASS_NO_COPY(PhysicsWorld);
-        NEON_CLASS_NO_MOVE(PhysicsWorld);
+        NEON_CLASS_NO_COPY(World);
+        NEON_CLASS_NO_MOVE(World);
 
-        ~PhysicsWorld();
+        ~World();
 
         /// <summary>
         /// Update the physics world.
         /// </summary>
         void Update(
             double DeltaTime);
+
+    public:
+        /// <summary>
+        /// Add a rigid body to the physics world.
+        /// </summary>
+        /// <param name="RigidBody"></param>
+        void TmpAddRigidBody(
+            btRigidBody* RigidBody)
+        {
+            m_DynamicsWorld.addRigidBody(RigidBody);
+        }
 
     public:
         /// <summary>
@@ -71,4 +83,4 @@ namespace Neon::Scene
         double m_FixedTimeStep = 1.0 / 60.0;
         int    m_MaxSubSteps   = 4;
     };
-} // namespace Neon::Scene
+} // namespace Neon::Physics

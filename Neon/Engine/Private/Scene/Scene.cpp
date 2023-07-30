@@ -1,7 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Scene/Scene.hpp>
 #include <Scene/Exports/Export.hpp>
-#include <Scene/Physics/GamePhysics.hpp>
+#include <Physics/World.hpp>
 
 //
 
@@ -19,7 +19,7 @@ namespace Neon::Scene
     static std::mutex s_FlecsWorldMutex;
 
     GameScene::GameScene() :
-        m_PhysicsWorld(std::make_unique<PhysicsWorld>())
+        m_PhysicsWorld(std::make_unique<Physics::World>())
     {
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
@@ -36,9 +36,9 @@ namespace Neon::Scene
         m_EntityWorld->system("PhysicsUpdate")
             .kind(flecs::PreUpdate)
             .iter(
-                [this](flecs::iter It)
+                [this](flecs::iter)
                 {
-                    m_PhysicsWorld->Update(It.delta_time());
+                    m_PhysicsWorld->Update(m_GameTimer.GetDeltaTime());
                 });
 
         //
@@ -132,6 +132,6 @@ namespace Neon::Scene
     void GameScene::Update()
     {
         m_GameTimer.Tick();
-        m_EntityWorld->progress(m_GameTimer.GetDeltaTime());
+        m_EntityWorld->progress(float(m_GameTimer.GetDeltaTime()));
     }
 } // namespace Neon::Scene

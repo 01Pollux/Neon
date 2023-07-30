@@ -1,19 +1,20 @@
 #include <EnginePCH.hpp>
-#include <Scene/Physics/GamePhysics.hpp>
+#include <Physics/World.hpp>
 
-namespace Neon::Scene
+namespace Neon::Physics
 {
-    PhysicsWorld::PhysicsWorld() :
+    World::World() :
         m_Dispatcher(&m_CollisionConfiguration),
         m_DynamicsWorld(&m_Dispatcher, &m_Broadphase, &m_Solver, &m_CollisionConfiguration)
     {
+        m_DynamicsWorld.setGravity(btVector3(0.0f, -1.1f, 0.0f));
     }
 
-    PhysicsWorld::~PhysicsWorld()
+    World::~World()
     {
     }
 
-    void PhysicsWorld::Update(
+    void World::Update(
         double DeltaTime)
     {
         m_DynamicsWorld.stepSimulation(btScalar(DeltaTime), m_MaxSubSteps, m_FixedTimeStep);
@@ -21,37 +22,36 @@ namespace Neon::Scene
 
     //
 
-    Vector3 PhysicsWorld::GetGravity()
+    Vector3 World::GetGravity()
     {
-        auto Vec = m_DynamicsWorld.getGravity();
-        return Vector3(Vec.x(), Vec.y(), Vec.z());
+        return FromBullet3(m_DynamicsWorld.getGravity());
     }
 
-    void PhysicsWorld::SetGravity(
+    void World::SetGravity(
         const Vector3& Gravity)
     {
-        m_DynamicsWorld.setGravity(btVector3(Gravity.x, Gravity.y, Gravity.z));
+        m_DynamicsWorld.setGravity(ToBullet3(Gravity));
     }
 
-    double PhysicsWorld::GetFixedTimeStep()
+    double World::GetFixedTimeStep()
     {
         return m_FixedTimeStep;
     }
 
-    void PhysicsWorld::SetFixedTimeStep(
+    void World::SetFixedTimeStep(
         double FixedTimeStep)
     {
         m_FixedTimeStep = FixedTimeStep;
     }
 
-    int PhysicsWorld::SetMaxSubSteps()
+    int World::SetMaxSubSteps()
     {
         return m_MaxSubSteps;
     }
 
-    void PhysicsWorld::SetMaxSubSteps(
+    void World::SetMaxSubSteps(
         int MaxSubSteps)
     {
         m_MaxSubSteps = MaxSubSteps;
     }
-} // namespace Neon::Scene
+} // namespace Neon::Physics
