@@ -4,6 +4,7 @@
 
 #include <queue>
 
+#include <Asio/Coroutines.hpp>
 #include <cppcoro/sync_wait.hpp>
 #include <cppcoro/schedule_on.hpp>
 #include <cppcoro/async_scope.hpp>
@@ -63,58 +64,62 @@ namespace Neon::Runtime
         }
     }
 
-    cppcoro::task<void> EnginePipeline::Dispatch()
+    void EnginePipeline::Dispatch()
     {
-        for (auto& Passes : m_Levels)
+        auto DispatchTask = [&]() -> Asio::CoLazy<>
         {
-            std::vector<cppcoro::task<void>> Tasks;
-            Tasks.reserve(Passes.size());
-
-            for (size_t i = 0; i < Passes.size(); i++)
+            for (auto& Passes : m_Levels)
             {
-                auto Phase = Passes[i];
+                std::vector<cppcoro::task<void>> Tasks;
+                Tasks.reserve(Passes.size());
 
-                if (!Phase->Flags.Test(EPipelineFlags::Disabled))
+                for (size_t i = 0; i < Passes.size(); i++)
                 {
-                    size_t ListenerCount;
-                    {
-                        std::scoped_lock Lock(Phase->Mutex);
-                        ListenerCount = Phase->Signal.GetListenersCount();
-                    }
-                    if (!ListenerCount)
-                    {
-                        continue;
-                    }
+                    auto Phase = Passes[i];
 
-                    if (Phase->Flags.Test(EPipelineFlags::DontParallelize) || ((i == Passes.size() - 1) && m_NonAsyncPhases.empty()))
+                    if (!Phase->Flags.Test(EPipelineFlags::Disabled))
                     {
-                        m_NonAsyncPhases.emplace_back(Phase);
-                    }
-                    else
-                    {
-                        auto Task = [this](PipelinePhase* Phase) -> cppcoro::task<>
+                        size_t ListenerCount;
                         {
                             std::scoped_lock Lock(Phase->Mutex);
-                            Phase->Signal.Broadcast();
-                            co_return;
-                        };
-                        Tasks.emplace_back(cppcoro::schedule_on(m_ThreadPool, Task(Phase)));
+                            ListenerCount = Phase->Signal.GetListenersCount();
+                        }
+                        if (!ListenerCount)
+                        {
+                            continue;
+                        }
+
+                        if (Phase->Flags.Test(EPipelineFlags::DontParallelize) || ((i == Passes.size() - 1) && m_NonAsyncPhases.empty()))
+                        {
+                            m_NonAsyncPhases.emplace_back(Phase);
+                        }
+                        else
+                        {
+                            auto Task = [this](PipelinePhase* Phase) -> cppcoro::task<>
+                            {
+                                std::scoped_lock Lock(Phase->Mutex);
+                                Phase->Signal.Broadcast();
+                                co_return;
+                            };
+                            Tasks.emplace_back(cppcoro::schedule_on(m_ThreadPool, Task(Phase)));
+                        }
                     }
                 }
-            }
 
-            if (!Tasks.empty())
-            {
-                co_await cppcoro::when_all(std::move(Tasks));
-            }
+                if (!Tasks.empty())
+                {
+                    co_await cppcoro::when_all(std::move(Tasks));
+                }
 
-            for (auto Phase : m_NonAsyncPhases)
-            {
-                std::scoped_lock Lock(Phase->Mutex);
-                Phase->Signal.Broadcast();
+                for (auto Phase : m_NonAsyncPhases)
+                {
+                    std::scoped_lock Lock(Phase->Mutex);
+                    Phase->Signal.Broadcast();
+                }
+                m_NonAsyncPhases.clear();
             }
-            m_NonAsyncPhases.clear();
-        }
+        };
+        cppcoro::sync_wait(DispatchTask());
     }
 
     void EnginePipeline::SetPhaseEnable(

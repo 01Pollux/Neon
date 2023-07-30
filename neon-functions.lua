@@ -60,6 +60,8 @@ function link_engine_library()
         "BulletSoftBody",
         "BulletLinearMath",
 
+        "ImGui",
+
         "NeonCore",
         "NeonCoroutines",
         "NeonResource",

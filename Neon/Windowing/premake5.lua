@@ -18,6 +18,7 @@ project "NeonWindowing"
 
     links
     {
+        "ImGui",
         "NeonCore",
         "NeonCoroutines"
     }

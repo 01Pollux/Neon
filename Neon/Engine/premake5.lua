@@ -22,6 +22,8 @@ project "NeonEngine"
         "BulletSoftBody",
         "BulletLinearMath",
 
+        "ImGui",
+
         "NeonCore",
         "NeonCoroutines",
         "NeonResource",

@@ -4,7 +4,6 @@
 #include <Core/BitMask.hpp>
 #include <Runtime/PipelineBuilder.hpp>
 
-#include <cppcoro/task.hpp>
 #include <cppcoro/static_thread_pool.hpp>
 #include <cppcoro/async_auto_reset_event.hpp>
 
@@ -36,7 +35,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Execute the phases in the pipeline
         /// </summary>
-        cppcoro::task<void> Dispatch();
+        void Dispatch();
 
     public:
         /// <summary>

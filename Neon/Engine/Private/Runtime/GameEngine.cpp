@@ -11,7 +11,7 @@
 #include <Asset/Handlers/RootSignature.hpp>
 #include <Asset/Handlers/Shader.hpp>
 
-#include <cppcoro/sync_wait.hpp>
+#include <Input/System.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -58,7 +58,7 @@ namespace Neon::Runtime
             }
             if (auto Pipeline = m_Pipeline.get())
             {
-                cppcoro::sync_wait(Pipeline->Dispatch());
+                Pipeline->Dispatch();
             }
         }
         Shutdown();

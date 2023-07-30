@@ -129,16 +129,17 @@ namespace Neon::Input
         KeypadAdd,
         KeypadEnter,
 
-        _Enum_Count
+        _Last = KeypadEnter
     };
 
     enum class EMouseInput : unsigned char
     {
         None,
+
         Left,
         Right,
         Middle,
         X1,
-        X2
+        X2,
     };
 } // namespace Neon::Input

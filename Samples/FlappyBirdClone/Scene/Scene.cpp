@@ -6,6 +6,7 @@
 #include <Scene/Component/Physics.hpp>
 
 #include <Input/Table.hpp>
+#include <Input/System.hpp>
 
 using namespace Neon;
 
