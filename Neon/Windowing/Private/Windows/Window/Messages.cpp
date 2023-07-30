@@ -36,45 +36,46 @@ namespace Neon::Windowing
         LPARAM lParam)
     {
         auto Window = std::bit_cast<WindowApp*>(GetWindowLongPtr(Handle, GWLP_USERDATA));
-        switch (Message)
+        if (Window) [[likely]]
         {
-        [[likely]] default:
-        {
-            if (auto Ret = Window->ProcessMessage(Message, wParam, lParam))
+            switch (Message)
             {
-                return *Ret;
+            [[likely]] default:
+            {
+                if (auto Ret = Window->ProcessMessage(Message, wParam, lParam))
+                {
+                    return *Ret;
+                }
+                break;
             }
-            break;
-        }
 
-        case WM_USER_TASK_PENDING:
-        {
-            Window->m_TaskQueue.PopExecute();
-            return 0;
-        }
+            case WM_USER_TASK_PENDING:
+            {
+                Window->m_TaskQueue.PopExecute();
+                return 0;
+            }
 
-        case WM_DESTROY:
-        {
-            NEON_TRACE_TAG(
-                "Window", "Destroying Window: {}",
-                StringUtils::Transform<StringU8>(Window->GetWindowTitle()));
-            Window->m_Handle = nullptr;
-            PostQuitMessage(0);
-            return 0;
-        }
+            case WM_DESTROY:
+            {
+                NEON_TRACE_TAG(
+                    "Window", "Destroying Window: {}",
+                    StringUtils::Transform<StringU8>(Window->GetWindowTitle()));
+                Window->m_Handle = nullptr;
+                PostQuitMessage(0);
+                return 0;
+            }
 
-        case WM_CREATE:
+            case WM_CLOSE:
+            {
+                Window->m_IsRunning = false;
+                return 0;
+            }
+            }
+        }
+        else if (Message == WM_CREATE)
         {
             CREATESTRUCT* CreateInfo = std::bit_cast<CREATESTRUCT*>(lParam);
             SetWindowLongPtr(Handle, GWLP_USERDATA, std::bit_cast<LONG_PTR>(CreateInfo->lpCreateParams));
-            break;
-        }
-
-        case WM_CLOSE:
-        {
-            Window->m_IsRunning = false;
-            return 0;
-        }
         }
 
         return DefWindowProc(Handle, Message, wParam, lParam);
