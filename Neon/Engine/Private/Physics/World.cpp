@@ -54,4 +54,40 @@ namespace Neon::Physics
     {
         m_MaxSubSteps = MaxSubSteps;
     }
+
+    void World::AddPhysicsObject(
+        btCollisionObject* PhysicsObject,
+        uint32_t           Group,
+        uint32_t           Mask)
+    {
+        if (auto SoftBody = btSoftBody::upcast(PhysicsObject))
+        {
+            m_DynamicsWorld.addSoftBody(SoftBody, Group, Mask);
+        }
+        else if (auto RigidBody = btRigidBody::upcast(PhysicsObject))
+        {
+            m_DynamicsWorld.addRigidBody(RigidBody, Group, Mask);
+        }
+        else
+        {
+            m_DynamicsWorld.addCollisionObject(PhysicsObject, Group, Mask);
+        }
+    }
+
+    void World::RemovePhysicsObject(
+        btCollisionObject* PhysicsObject)
+    {
+        if (auto SoftBody = btSoftBody::upcast(PhysicsObject))
+        {
+            m_DynamicsWorld.removeSoftBody(SoftBody);
+        }
+        else if (auto RigidBody = btRigidBody::upcast(PhysicsObject))
+        {
+            m_DynamicsWorld.removeRigidBody(RigidBody);
+        }
+        else
+        {
+            m_DynamicsWorld.removeCollisionObject(PhysicsObject);
+        }
+    }
 } // namespace Neon::Physics

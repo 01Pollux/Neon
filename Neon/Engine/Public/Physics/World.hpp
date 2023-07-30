@@ -33,9 +33,9 @@ namespace Neon::Physics
         /// </summary>
         /// <param name="RigidBody"></param>
         void TmpAddRigidBody(
-            btRigidBody* RigidBody)
+            btCollisionObject* RigidBody)
         {
-            m_DynamicsWorld.addRigidBody(RigidBody);
+            m_DynamicsWorld.addRigidBody(static_cast<btRigidBody*>(RigidBody));
         }
 
     public:
@@ -71,6 +71,21 @@ namespace Neon::Physics
         /// </summary>
         void SetMaxSubSteps(
             int MaxSubSteps);
+
+    public:
+        /// <summary>
+        /// Add a physics object to the physics world.
+        /// </summary>
+        void AddPhysicsObject(
+            btCollisionObject* PhysicsObject,
+            uint32_t           Group,
+            uint32_t           Mask);
+
+        /// <summary>
+        /// Remove a physics object from the physics world.
+        /// </summary>
+        void RemovePhysicsObject(
+            btCollisionObject* PhysicsObject);
 
     private:
         btSoftBodyRigidBodyCollisionConfiguration m_CollisionConfiguration;

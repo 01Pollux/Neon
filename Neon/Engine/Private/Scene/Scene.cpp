@@ -7,6 +7,7 @@
 
 #include <Renderer/RG/RG.hpp>
 #include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
 
 //
@@ -41,6 +42,24 @@ namespace Neon::Scene
                     m_PhysicsWorld->Update(m_GameTimer.GetDeltaTime());
                 });
 
+        m_EntityWorld->observer<Component::CollisionObject>("PhysicsAdd")
+            .with<Component::CollisionShape>()
+            .event(flecs::OnAdd)
+            .event(flecs::OnRemove)
+            .event(flecs::OnSet)
+            .each(
+                [this](flecs::iter& Iter, size_t, Component::CollisionObject& Object)
+                {
+                    if (Iter.event() == flecs::OnRemove)
+                    {
+                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject);
+                    }
+                    else if (Iter.event() == flecs::OnSet)
+                    {
+                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject);
+                        m_PhysicsWorld->AddPhysicsObject(Object.BulletObject, Object.Group, Object.Mask);
+                    }
+                });
         //
 
         m_CameraQuery =

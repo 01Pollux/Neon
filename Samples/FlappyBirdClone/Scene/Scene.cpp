@@ -3,17 +3,14 @@
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Camera.hpp>
-
-#include <Physics/World.hpp>
-#include <Physics/MotionState.hpp>
-#include <Bullet3/btBulletCollisionCommon.h>
-#include <Bullet3/btBulletDynamicsCommon.h>
+#include <Scene/Component/Physics.hpp>
 
 using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
 {
     auto& Scene = m_Runtime->GetScene();
+    Scene.SetTimeScale(.2f);
 
     // Player instance
     auto PlayerSprite = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -30,17 +27,10 @@ void FlappyBirdClone::LoadScene()
             TransformComponent->Local = TransformComponent->World;
         }
 
-        Scene.SetTimeScale(.1f);
         {
-            auto BoxShape    = new btBoxShape(btVector3(5.f, 5.f, 5.f));
-            auto MotionState = new Physics::ActorMotionState(PlayerSprite);
-
-            btVector3 LocalInertia;
-            BoxShape->calculateLocalInertia(10.f, LocalInertia);
-
-            auto RigidBody = new btRigidBody(10.f, MotionState, BoxShape, LocalInertia);
-
-            Scene.GetPhysicsWorld()->TmpAddRigidBody(RigidBody);
+            PlayerSprite.set(Scene::Component::CollisionShape{
+                new btBoxShape(btVector3(5.f, 5.f, 5.f)) });
+            Scene::Component::CollisionObject::AddRigidBody(PlayerSprite, 10.f);
         }
     }
 
