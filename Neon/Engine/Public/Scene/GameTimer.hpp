@@ -9,7 +9,7 @@ namespace Neon::Scene
     public:
         GameTimer()
         {
-            Start();
+            SetTimeScale(1.f);
         }
 
         using steady_clock = std::chrono::steady_clock;
@@ -32,34 +32,34 @@ namespace Neon::Scene
         [[nodiscard]] double GetDeltaTime() const;
 
         /// <summary>
+        /// Get time scale
+        /// </summary>
+        [[nodiscard]] float GetTimeScale() const;
+
+        /// <summary>
+        /// Set time scale
+        /// </summary>
+        void SetTimeScale(
+            float TimeScale);
+
+        /// <summary>
         /// Reset game timer
         /// </summary>
         void Reset();
 
         /// <summary>
-        /// Start game timer
+        /// Update game timer, returns true if game is running else false
         /// </summary>
-        void Start();
-
-        /// <summary>
-        /// Stop game timer
-        /// </summary>
-        void Stop();
-
-        /// <summary>
-        /// Update game timer
-        /// </summary>
-        void Tick();
+        [[nodiscard]] bool Tick();
 
     private:
         double m_DeltaTime  = 0;
         double m_GameTime   = 0;
         double m_EngineTime = 0;
+        float  m_TimeScale  = 1.0f;
 
         time_point m_BaseTime;
         time_point m_PrevTime;
         time_point m_CurrTime;
-
-        bool m_Stopped = true;
     };
 } // namespace Neon::Scene

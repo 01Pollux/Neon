@@ -20,44 +20,48 @@ namespace Neon::Scene
         return m_DeltaTime;
     }
 
+    float GameTimer::GetTimeScale() const
+    {
+        return m_TimeScale;
+    }
+
+    void GameTimer::SetTimeScale(
+        float TimeScale)
+    {
+        // We were paused and now we are unpaused
+        if (m_TimeScale <= std::numeric_limits<float>::epsilon() && TimeScale > std::numeric_limits<float>::epsilon())
+        {
+            m_PrevTime = steady_clock::now();
+        }
+        m_TimeScale = TimeScale;
+    }
+
     void GameTimer::Reset()
     {
-        m_PrevTime = steady_clock::now();
-        m_BaseTime = m_PrevTime;
-        m_Stopped  = false;
+        m_PrevTime  = steady_clock::now();
+        m_BaseTime  = m_PrevTime;
+        m_TimeScale = 1.f;
 
         m_GameTime = 0.0;
     }
 
-    void GameTimer::Start()
+    bool GameTimer::Tick()
     {
-        if (m_Stopped)
+        if (m_TimeScale <= std::numeric_limits<float>::epsilon())
         {
-            m_PrevTime = steady_clock::now();
-            m_Stopped  = false;
-        }
-    }
-
-    void GameTimer::Stop()
-    {
-        m_Stopped = true;
-    }
-
-    void GameTimer::Tick()
-    {
-        if (m_Stopped)
-        {
-            m_DeltaTime = 0.0;
-            return;
+            return false;
         }
 
         m_CurrTime  = steady_clock::now();
         m_DeltaTime = std::max(
-            std::chrono::duration_cast<fmilliseconds>(m_CurrTime - m_PrevTime).count() * .001,
-            0.0);
+                          std::chrono::duration_cast<fmilliseconds>(m_CurrTime - m_PrevTime).count() * .001,
+                          0.0) *
+                      m_TimeScale;
         m_PrevTime = m_CurrTime;
 
         m_GameTime += m_DeltaTime;
         m_EngineTime += m_DeltaTime;
+
+        return true;
     }
 } // namespace Neon::Scene

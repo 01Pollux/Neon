@@ -131,7 +131,37 @@ namespace Neon::Scene
 
     void GameScene::Update()
     {
-        m_GameTimer.Tick();
-        m_EntityWorld->progress(float(m_GameTimer.GetDeltaTime()));
+        if (m_GameTimer.Tick())
+        {
+            m_EntityWorld->progress(float(m_GameTimer.GetDeltaTime()));
+        }
+    }
+
+    //
+
+    double GameScene::GetGameTime() const
+    {
+        return m_GameTimer.GetGameTime();
+    }
+
+    double GameScene::GetEngineTime() const
+    {
+        return m_GameTimer.GetEngineTime();
+    }
+
+    double GameScene::GetDeltaTime() const
+    {
+        return m_GameTimer.GetDeltaTime();
+    }
+
+    float GameScene::GetTimeScale() const
+    {
+        return m_GameTimer.GetTimeScale();
+    }
+
+    void GameScene::SetTimeScale(
+        float TimeScale)
+    {
+        m_GameTimer.SetTimeScale(TimeScale);
     }
 } // namespace Neon::Scene

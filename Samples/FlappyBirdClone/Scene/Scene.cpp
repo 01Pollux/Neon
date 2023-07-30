@@ -30,6 +30,7 @@ void FlappyBirdClone::LoadScene()
             TransformComponent->Local = TransformComponent->World;
         }
 
+        Scene.SetTimeScale(.1f);
         {
             auto BoxShape    = new btBoxShape(btVector3(5.f, 5.f, 5.f));
             auto MotionState = new Physics::ActorMotionState(PlayerSprite);

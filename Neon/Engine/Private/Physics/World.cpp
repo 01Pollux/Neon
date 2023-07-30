@@ -7,7 +7,7 @@ namespace Neon::Physics
         m_Dispatcher(&m_CollisionConfiguration),
         m_DynamicsWorld(&m_Dispatcher, &m_Broadphase, &m_Solver, &m_CollisionConfiguration)
     {
-        m_DynamicsWorld.setGravity(btVector3(0.0f, -1.1f, 0.0f));
+        m_DynamicsWorld.setGravity(btVector3(0.0f, -9.8f, 0.0f));
     }
 
     World::~World()
