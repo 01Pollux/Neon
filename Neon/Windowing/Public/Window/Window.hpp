@@ -160,19 +160,18 @@ namespace Neon::Windowing
         /// Enable input table for the window to receive input events
         /// </summary>
         void PushInputTable(
-            const Ptr<Input::IInputDataTable>& InputTable)
-        {
-            m_InputTables.insert(InputTable);
-        }
+            const Ptr<Input::IInputDataTable>& InputTable);
 
         /// <summary>
         /// Disable input table for the window
         /// </summary>
         void PopInputTable(
-            const Ptr<Input::IInputDataTable>& InputTable)
-        {
-            m_InputTables.erase(InputTable);
-        }
+            const Ptr<Input::IInputDataTable>& InputTable);
+
+        /// <summary>
+        /// Process input events
+        /// </summary>
+        void ProcessInputs();
 
     protected:
         std::unordered_set<Ptr<Input::IInputDataTable>> m_InputTables;

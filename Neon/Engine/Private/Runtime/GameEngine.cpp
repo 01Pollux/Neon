@@ -50,6 +50,7 @@ namespace Neon::Runtime
     {
         while (m_Window->Run())
         {
+            m_Window->ProcessInputs();
             if (m_PendingPipeline)
             {
                 m_Pipeline = std::move(m_PendingPipeline.value());

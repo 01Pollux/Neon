@@ -5,7 +5,7 @@
 
 namespace Neon::Input
 {
-    void IInputAction::Requires(
+    void InputAction::Requires(
         EKeyboardInput SysInput,
         bool           State)
     {
@@ -13,33 +13,34 @@ namespace Neon::Input
         m_RequiredSysInputs.SetSysControlState(SysInput, State);
     }
 
-    uint64_t IInputAction::Bind(
+    uint64_t InputAction::Bind(
         BindType                           Type,
         InputDelegateHandler::DelegateType Delegate)
     {
         return LoadHandler(Type)->Listen(Delegate);
     }
 
-    void IInputAction::Unbind(
+    void InputAction::Unbind(
         BindType Type,
         uint64_t Handle)
     {
         LoadHandler(Type)->Drop(Handle);
     }
 
-    void IInputAction::UnbindAll(
+    void InputAction::UnbindAll(
         BindType Type)
     {
         LoadHandler(Type)->DropAll();
     }
 
-    size_t IInputAction::GetListenersCount(
+    size_t InputAction::GetListenersCount(
         BindType Type) const
     {
-        return GetHandler(Type)->GetListenersCount();
+        auto Handler = GetHandler(Type);
+        return Handler ? Handler->GetListenersCount() : 0;
     }
 
-    void IInputAction::Dispatch(
+    void InputAction::Dispatch(
         BindType                Type,
         const InputSysKeyState& SysKeyState)
     {
@@ -49,18 +50,18 @@ namespace Neon::Input
         }
     }
 
-    auto IInputAction::LoadHandler(BindType Type) -> InputDelegateHandler*
+    auto InputAction::LoadHandler(BindType Type) -> InputDelegateHandler*
     {
         std::unique_ptr<InputDelegateHandler>* Handler = nullptr;
         switch (Type)
         {
-        case IInputAction::BindType::Press:
+        case InputAction::BindType::Press:
             Handler = &m_OnActionDown;
             break;
-        case IInputAction::BindType::Release:
+        case InputAction::BindType::Release:
             Handler = &m_OnActionUp;
             break;
-        case IInputAction::BindType::Tick:
+        case InputAction::BindType::Tick:
             Handler = &m_OnActionTick;
             break;
         }
@@ -72,38 +73,38 @@ namespace Neon::Input
         return Handler->get();
     }
 
-    auto IInputAction::GetHandler(
+    auto InputAction::GetHandler(
         BindType Type) const -> const InputDelegateHandler*
     {
         const InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputAction::BindType::Press:
+        case InputAction::BindType::Press:
             Handler = m_OnActionDown.get();
             break;
-        case IInputAction::BindType::Release:
+        case InputAction::BindType::Release:
             Handler = m_OnActionUp.get();
             break;
-        case IInputAction::BindType::Tick:
+        case InputAction::BindType::Tick:
             Handler = m_OnActionTick.get();
             break;
         }
         return Handler;
     }
 
-    auto IInputAction::GetHandler(
+    auto InputAction::GetHandler(
         BindType Type) -> InputDelegateHandler*
     {
         InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputAction::BindType::Press:
+        case InputAction::BindType::Press:
             Handler = m_OnActionDown.get();
             break;
-        case IInputAction::BindType::Release:
+        case InputAction::BindType::Release:
             Handler = m_OnActionUp.get();
             break;
-        case IInputAction::BindType::Tick:
+        case InputAction::BindType::Tick:
             Handler = m_OnActionTick.get();
             break;
         }
@@ -111,9 +112,9 @@ namespace Neon::Input
     }
 
     InputActionDataEvent::InputActionDataEvent(
-        Ref<IInputAction>      Action,
-        InputSysKeyState       SysKeyState,
-        IInputAction::BindType Type) :
+        Ref<InputAction>      Action,
+        InputSysKeyState      SysKeyState,
+        InputAction::BindType Type) :
         m_InputAction(std::move(Action)),
         m_SysKeyState(SysKeyState),
         m_InputType(Type)

@@ -12,7 +12,7 @@
 class FlappyBirdClone : public Neon::Runtime::DefaultGameEngine
 {
     using EngineWorldRuntimePtr = Neon::Ptr<Neon::Runtime::EngineWorldRuntime>;
-    using MaterialMap           = std::unordered_map<std::string, Neon::Ptr<Neon::Renderer::IMaterial>>;
+    using MaterialMap           = std::unordered_map<Neon::StringU8, Neon::Ptr<Neon::Renderer::IMaterial>>;
     using TextureAssetPtr       = Neon::Ptr<Neon::RHI::ITexture>;
 
 public:
@@ -35,6 +35,11 @@ private:
     /// </summary>
     void LoadScene();
 
+    /// <summary>
+    /// Attach the inputs
+    /// </summary>
+    void AttachInputs();
+
 private:
     /// <summary>
     /// Get the material by name
@@ -46,4 +51,6 @@ private:
     EngineWorldRuntimePtr m_Runtime;
     MaterialMap           m_Materials;
     TextureAssetPtr       m_Sprite;
+
+    Neon::Scene::Actor m_Player;
 };

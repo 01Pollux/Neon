@@ -22,16 +22,16 @@ namespace Neon::Input
             return false;
         }
 
-        IInputAction::BindType Type;
+        InputAction::BindType Type;
         switch (Message)
         {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
-            Type = !(HIWORD(lParam) & KF_REPEAT) ? IInputAction::BindType::Press : IInputAction::BindType::Tick;
+            Type = !(HIWORD(lParam) & KF_REPEAT) ? InputAction::BindType::Press : InputAction::BindType::Tick;
             break;
         case WM_KEYUP:
         case WM_SYSKEYUP:
-            Type = IInputAction::BindType::Release;
+            Type = InputAction::BindType::Release;
             break;
         default:
             return false;
@@ -44,7 +44,7 @@ namespace Neon::Input
         }
 
         bool Processed = false;
-        m_SysKeyState.SetSysControlState(InputType, Type != IInputAction::BindType::Release);
+        m_SysKeyState.SetSysControlState(InputType, Type != InputAction::BindType::Release);
         for (const auto& Input : m_InputDatas)
         {
             if (Input->GetListenersCount(Type) && Input->GetInput() == InputType)

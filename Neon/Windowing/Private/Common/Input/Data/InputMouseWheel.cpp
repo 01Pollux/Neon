@@ -3,34 +3,34 @@
 
 namespace Neon::Input
 {
-    auto IInputMouseWheel::Bind(
+    auto InputMouseWheel::Bind(
         BindType                           Type,
         InputDelegateHandler::DelegateType Delegate) -> uint64_t
     {
         return LoadHandler(Type)->Listen(std::move(Delegate));
     }
 
-    void IInputMouseWheel::Unbind(
+    void InputMouseWheel::Unbind(
         BindType Type,
         uint64_t Handle)
     {
         LoadHandler(Type)->Drop(Handle);
     }
 
-    void IInputMouseWheel::UnbindAll(
+    void InputMouseWheel::UnbindAll(
         BindType Type)
     {
         LoadHandler(Type)->DropAll();
     }
 
-    size_t IInputMouseWheel::GetListenersCount(
+    size_t InputMouseWheel::GetListenersCount(
         BindType Type) const
     {
         const InputDelegateHandler* Handler = GetHandler(Type);
         return Handler ? Handler->GetListenersCount() : 0;
     }
 
-    void IInputMouseWheel::Dispatch(
+    void InputMouseWheel::Dispatch(
         BindType   Type,
         float      Factor,
         MotionType Motion)
@@ -41,15 +41,15 @@ namespace Neon::Input
         }
     }
 
-    auto IInputMouseWheel::LoadHandler(BindType Type) -> InputDelegateHandler*
+    auto InputMouseWheel::LoadHandler(BindType Type) -> InputDelegateHandler*
     {
         std::unique_ptr<InputDelegateHandler>* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouseWheel::BindType::Horizontal:
+        case InputMouseWheel::BindType::Horizontal:
             Handler = &m_OnWheelHorizontal;
             break;
-        case IInputMouseWheel::BindType::Vertical:
+        case InputMouseWheel::BindType::Vertical:
             Handler = &m_OnWheelVertical;
             break;
         }
@@ -61,31 +61,31 @@ namespace Neon::Input
         return Handler->get();
     }
 
-    auto IInputMouseWheel::GetHandler(BindType Type) const -> const InputDelegateHandler*
+    auto InputMouseWheel::GetHandler(BindType Type) const -> const InputDelegateHandler*
     {
         const InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouseWheel::BindType::Horizontal:
+        case InputMouseWheel::BindType::Horizontal:
             Handler = m_OnWheelHorizontal.get();
             break;
-        case IInputMouseWheel::BindType::Vertical:
+        case InputMouseWheel::BindType::Vertical:
             Handler = m_OnWheelVertical.get();
             break;
         }
         return Handler;
     }
 
-    auto IInputMouseWheel::GetHandler(
+    auto InputMouseWheel::GetHandler(
         BindType Type) -> InputDelegateHandler*
     {
         InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouseWheel::BindType::Horizontal:
+        case InputMouseWheel::BindType::Horizontal:
             Handler = m_OnWheelHorizontal.get();
             break;
-        case IInputMouseWheel::BindType::Vertical:
+        case InputMouseWheel::BindType::Vertical:
             Handler = m_OnWheelVertical.get();
             break;
         }
@@ -93,10 +93,10 @@ namespace Neon::Input
     }
 
     InputMouseWheelDataEvent::InputMouseWheelDataEvent(
-        Ref<IInputMouseWheel>        Mouse,
+        Ref<InputMouseWheel>        Mouse,
         float                        Factor,
-        IInputMouseWheel::BindType   Type,
-        IInputMouseWheel::MotionType Motion) :
+        InputMouseWheel::BindType   Type,
+        InputMouseWheel::MotionType Motion) :
         m_InputAxis(std::move(Mouse)),
         m_Factor(Factor),
         m_InputType(Type),

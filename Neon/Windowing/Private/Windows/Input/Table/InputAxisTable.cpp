@@ -22,16 +22,16 @@ namespace Neon::Input
             return false;
         }
 
-        IInputAxis::BindType Type;
+        InputAxis::BindType Type;
         switch (Message)
         {
         case WM_KEYDOWN:
         case WM_SYSKEYDOWN:
-            Type = !(HIWORD(lParam) & KF_REPEAT) ? IInputAxis::BindType::Press : IInputAxis::BindType::Tick;
+            Type = !(HIWORD(lParam) & KF_REPEAT) ? InputAxis::BindType::Press : InputAxis::BindType::Tick;
             break;
         case WM_KEYUP:
         case WM_SYSKEYUP:
-            Type = IInputAxis::BindType::Release;
+            Type = InputAxis::BindType::Release;
             break;
         default:
             return false;

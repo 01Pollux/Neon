@@ -5,7 +5,7 @@
 
 namespace Neon::Input
 {
-    class IInputMouseWheel
+    class InputMouseWheel
     {
     public:
         enum class MotionType : uint8_t
@@ -90,17 +90,17 @@ namespace Neon::Input
     {
     public:
         InputMouseWheelDataEvent(
-            Ref<IInputMouseWheel>        Mouse,
+            Ref<InputMouseWheel>        Mouse,
             float                        Factor,
-            IInputMouseWheel::BindType   Type,
-            IInputMouseWheel::MotionType Motion);
+            InputMouseWheel::BindType   Type,
+            InputMouseWheel::MotionType Motion);
 
         void DispatchInput();
 
     private:
-        Ref<IInputMouseWheel>        m_InputAxis;
+        Ref<InputMouseWheel>        m_InputAxis;
         float                        m_Factor;
-        IInputMouseWheel::BindType   m_InputType;
-        IInputMouseWheel::MotionType m_Motion;
+        InputMouseWheel::BindType   m_InputType;
+        InputMouseWheel::MotionType m_Motion;
     };
 } // namespace Neon::Input

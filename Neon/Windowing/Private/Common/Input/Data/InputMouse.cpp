@@ -3,34 +3,34 @@
 
 namespace Neon::Input
 {
-    uint64_t IInputMouse::Bind(
+    uint64_t InputMouse::Bind(
         BindType                           Type,
         InputDelegateHandler::DelegateType Delegate)
     {
         return LoadHandler(Type)->Listen(std::move(Delegate));
     }
 
-    void IInputMouse::Unbind(
+    void InputMouse::Unbind(
         BindType Type,
         uint64_t Handle)
     {
         return LoadHandler(Type)->Drop(Handle);
     }
 
-    void IInputMouse::UnbindAll(
+    void InputMouse::UnbindAll(
         BindType Type)
     {
         LoadHandler(Type)->DropAll();
     }
 
-    size_t IInputMouse::GetListenersCount(
+    size_t InputMouse::GetListenersCount(
         BindType Type) const
     {
         const InputDelegateHandler* Handler = GetHandler(Type);
         return Handler ? Handler->GetListenersCount() : 0;
     }
 
-    void IInputMouse::Dispatch(
+    void InputMouse::Dispatch(
         BindType       Type,
         const Vector2& MoveDelta)
     {
@@ -40,22 +40,22 @@ namespace Neon::Input
         }
     }
 
-    auto IInputMouse::LoadHandler(
+    auto InputMouse::LoadHandler(
         BindType Type) -> InputDelegateHandler*
     {
         std::unique_ptr<InputDelegateHandler>* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouse::BindType::Click:
+        case InputMouse::BindType::Click:
             Handler = &m_OnMouseClick;
             break;
-        case IInputMouse::BindType::DoubleClick:
+        case InputMouse::BindType::DoubleClick:
             Handler = &m_OnMouseDoubleClick;
             break;
-        case IInputMouse::BindType::Release:
+        case InputMouse::BindType::Release:
             Handler = &m_OnMouseRelease;
             break;
-        case IInputMouse::BindType::Move:
+        case InputMouse::BindType::Move:
             Handler = &m_OnMouseMove;
             break;
         }
@@ -67,44 +67,44 @@ namespace Neon::Input
         return Handler->get();
     }
 
-    auto IInputMouse::GetHandler(
+    auto InputMouse::GetHandler(
         BindType Type) const -> const InputDelegateHandler*
     {
         const InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouse::BindType::Click:
+        case InputMouse::BindType::Click:
             Handler = m_OnMouseClick.get();
             break;
-        case IInputMouse::BindType::DoubleClick:
+        case InputMouse::BindType::DoubleClick:
             Handler = m_OnMouseDoubleClick.get();
             break;
-        case IInputMouse::BindType::Release:
+        case InputMouse::BindType::Release:
             Handler = m_OnMouseRelease.get();
             break;
-        case IInputMouse::BindType::Move:
+        case InputMouse::BindType::Move:
             Handler = m_OnMouseMove.get();
             break;
         }
         return Handler;
     }
 
-    auto IInputMouse::GetHandler(
+    auto InputMouse::GetHandler(
         BindType Type) -> InputDelegateHandler*
     {
         InputDelegateHandler* Handler = nullptr;
         switch (Type)
         {
-        case IInputMouse::BindType::Click:
+        case InputMouse::BindType::Click:
             Handler = m_OnMouseClick.get();
             break;
-        case IInputMouse::BindType::DoubleClick:
+        case InputMouse::BindType::DoubleClick:
             Handler = m_OnMouseDoubleClick.get();
             break;
-        case IInputMouse::BindType::Release:
+        case InputMouse::BindType::Release:
             Handler = m_OnMouseRelease.get();
             break;
-        case IInputMouse::BindType::Move:
+        case InputMouse::BindType::Move:
             Handler = m_OnMouseMove.get();
             break;
         }
@@ -112,9 +112,9 @@ namespace Neon::Input
     }
 
     InputMouseDataEvent::InputMouseDataEvent(
-        Ref<IInputMouse>      Mouse,
+        Ref<InputMouse>      Mouse,
         const Vector2&        MoveDelta,
-        IInputMouse::BindType Type) :
+        InputMouse::BindType Type) :
         m_InputAxis(std::move(Mouse)),
         m_MoveDelta(MoveDelta),
         m_InputType(Type)

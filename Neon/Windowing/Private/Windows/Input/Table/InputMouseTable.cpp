@@ -26,9 +26,9 @@ namespace Neon::Input
             return false;
         }
 
-        EMouseInput           InputType;
-        IInputMouse::BindType Type;
-        Vector2               MoveDelta;
+        EMouseInput          InputType;
+        InputMouse::BindType Type;
+        Vector2              MoveDelta;
 
         if (!ReadMouseInput(
                 WindowHandle,
@@ -55,13 +55,13 @@ namespace Neon::Input
     }
 
     bool InputMouseTableImpl::ReadMouseInput(
-        HWND                   WindowHandle,
-        UINT                   Message,
-        WPARAM                 wParam,
-        LPARAM                 lParam,
-        Vector2&               MoveDelta,
-        EMouseInput&           InputType,
-        IInputMouse::BindType& Type)
+        HWND                  WindowHandle,
+        UINT                  Message,
+        WPARAM                wParam,
+        LPARAM                lParam,
+        Vector2&              MoveDelta,
+        EMouseInput&          InputType,
+        InputMouse::BindType& Type)
     {
         switch (Message)
         {
@@ -103,7 +103,7 @@ namespace Neon::Input
                 if (MoveDelta != Vec::Zero<Vector2>)
                 {
                     InputType = EMouseInput::None;
-                    Type      = IInputMouse::BindType::Move;
+                    Type      = InputMouse::BindType::Move;
                     return true;
                 }
             }
@@ -113,62 +113,62 @@ namespace Neon::Input
 
         case WM_LBUTTONDBLCLK:
             InputType = EMouseInput::Left;
-            Type      = IInputMouse::BindType::DoubleClick;
+            Type      = InputMouse::BindType::DoubleClick;
             return true;
 
         case WM_LBUTTONDOWN:
             InputType = EMouseInput::Left;
-            Type      = IInputMouse::BindType::Click;
+            Type      = InputMouse::BindType::Click;
             return true;
 
         case WM_LBUTTONUP:
             InputType = EMouseInput::Left;
-            Type      = IInputMouse::BindType::Release;
+            Type      = InputMouse::BindType::Release;
             return true;
 
         case WM_RBUTTONDBLCLK:
             InputType = EMouseInput::Right;
-            Type      = IInputMouse::BindType::DoubleClick;
+            Type      = InputMouse::BindType::DoubleClick;
             return true;
 
         case WM_RBUTTONDOWN:
             InputType = EMouseInput::Right;
-            Type      = IInputMouse::BindType::Click;
+            Type      = InputMouse::BindType::Click;
             return true;
 
         case WM_RBUTTONUP:
             InputType = EMouseInput::Right;
-            Type      = IInputMouse::BindType::Release;
+            Type      = InputMouse::BindType::Release;
             return true;
 
         case WM_MBUTTONDBLCLK:
             InputType = EMouseInput::Middle;
-            Type      = IInputMouse::BindType::DoubleClick;
+            Type      = InputMouse::BindType::DoubleClick;
             return true;
 
         case WM_MBUTTONDOWN:
             InputType = EMouseInput::Middle;
-            Type      = IInputMouse::BindType::Click;
+            Type      = InputMouse::BindType::Click;
             return true;
 
         case WM_MBUTTONUP:
             InputType = EMouseInput::Middle;
-            Type      = IInputMouse::BindType::Release;
+            Type      = InputMouse::BindType::Release;
             return true;
 
         case WM_XBUTTONDBLCLK:
             InputType = (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) ? EMouseInput::X1 : EMouseInput::X2;
-            Type      = IInputMouse::BindType::DoubleClick;
+            Type      = InputMouse::BindType::DoubleClick;
             return true;
 
         case WM_XBUTTONDOWN:
             InputType = (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) ? EMouseInput::X1 : EMouseInput::X2;
-            Type      = IInputMouse::BindType::Click;
+            Type      = InputMouse::BindType::Click;
             return true;
 
         case WM_XBUTTONUP:
             InputType = (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) ? EMouseInput::X1 : EMouseInput::X2;
-            Type      = IInputMouse::BindType::Release;
+            Type      = InputMouse::BindType::Release;
             return true;
         }
         return false;

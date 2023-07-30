@@ -18,7 +18,6 @@ namespace Neon::Physics
 
 namespace Neon::Scene
 {
-
     enum class EntityType : uint8_t
     {
         Empty,

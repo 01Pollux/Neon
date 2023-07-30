@@ -5,7 +5,7 @@
 
 namespace Neon::Input
 {
-    class IInputAxisTable : public IInputTable<IInputAxis>
+    class IInputAxisTable : public IInputTable<InputAxis>
     {
     public:
         /// <summary>
@@ -16,39 +16,27 @@ namespace Neon::Input
         /// <summary>
         /// Add input data to the table.
         /// </summary>
-        [[nodiscard]] IInputAxis* AddMouse()
+        [[nodiscard]] const Ptr<InputAxis>& AddAxis()
         {
-            auto Action    = std::make_unique<IInputAxis>();
-            auto ActionPtr = Action.get();
-            m_InputDatas.emplace_back(std::move(Action));
-            return ActionPtr;
+            return m_InputDatas.emplace_back(std::make_shared<InputAxis>());
         }
 
         /// <summary>
         /// Remove input data from the table.
         /// </summary>
-        void RemoveMouse(
-            IInputAxis* Action)
+        void RemoveAxis(
+            const Ptr<InputAxis>& Axis)
         {
-            std::erase_if(m_InputDatas, [Action](auto& Data)
-                          { return Data.get() == Action; });
+            std::erase_if(m_InputDatas, [&Axis](auto& Data)
+                          { return Data == Axis; });
         }
 
         /// <summary>
-        /// Get the number of input data in the table.
+        /// Get axis inputs in the table.
         /// </summary>
-        [[nodiscard]] size_t GetMouseCount() const
+        [[nodiscard]] auto& GetAxis() const noexcept
         {
-            return m_InputDatas.size();
-        }
-
-        /// <summary>
-        /// Get input data from the table.
-        /// </summary>
-        [[nodiscard]] IInputAxis* GetMouse(
-            size_t ActionIndex)
-        {
-            return m_InputDatas[ActionIndex].get();
+            return m_InputDatas;
         }
     };
 } // namespace Neon::Input

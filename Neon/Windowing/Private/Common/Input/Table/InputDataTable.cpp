@@ -8,7 +8,7 @@ namespace Neon::Input
         m_EventQueue.Dispatch();
     }
 
-    Ref<IInputActionTable> IInputDataTable::LoadActionTable(
+    Ptr<IInputActionTable> IInputDataTable::LoadActionTable(
         const StringU8& ActionName)
     {
         auto& Action = m_InputActionMap[ActionName];
@@ -19,7 +19,7 @@ namespace Neon::Input
         return Action;
     }
 
-    Ref<IInputActionTable> IInputDataTable::GetActionTable(
+    Ptr<IInputActionTable> IInputDataTable::GetActionTable(
         const StringU8& ActionName) const
     {
         auto Iter = m_InputActionMap.find(ActionName);
@@ -34,7 +34,7 @@ namespace Neon::Input
 
     //
 
-    Ref<IInputAxisTable> IInputDataTable::LoadAxisTable(
+    Ptr<IInputAxisTable> IInputDataTable::LoadAxisTable(
         const StringU8& AxisName)
     {
         auto& Axis = m_InputAxisMap[AxisName];
@@ -45,7 +45,7 @@ namespace Neon::Input
         return Axis;
     }
 
-    Ref<IInputAxisTable> IInputDataTable::GetAxisTable(
+    Ptr<IInputAxisTable> IInputDataTable::GetAxisTable(
         const StringU8& AxisName) const
     {
         auto Iter = m_InputAxisMap.find(AxisName);
@@ -60,7 +60,7 @@ namespace Neon::Input
 
     //
 
-    Ref<IInputMouseTable> IInputDataTable::LoadMouseTable(
+    Ptr<IInputMouseTable> IInputDataTable::LoadMouseTable(
         const StringU8& MouseName)
     {
         auto& Mouse = m_InputMouseMap[MouseName];
@@ -71,7 +71,7 @@ namespace Neon::Input
         return Mouse;
     }
 
-    Ref<IInputMouseTable> IInputDataTable::GetMouseTable(
+    Ptr<IInputMouseTable> IInputDataTable::GetMouseTable(
         const StringU8& MouseName) const
     {
         auto Iter = m_InputMouseMap.find(MouseName);
@@ -86,7 +86,7 @@ namespace Neon::Input
 
     //
 
-    Ref<IInputMouseWheelTable> IInputDataTable::LoadMouseWheelTable(
+    Ptr<IInputMouseWheelTable> IInputDataTable::LoadMouseWheelTable(
         const StringU8& MouseWheelName)
     {
         auto& MouseWheel = m_InputMouseWheelMap[MouseWheelName];
@@ -97,7 +97,7 @@ namespace Neon::Input
         return MouseWheel;
     }
 
-    Ref<IInputMouseWheelTable> IInputDataTable::GetMouseWheelTable(
+    Ptr<IInputMouseWheelTable> IInputDataTable::GetMouseWheelTable(
         const StringU8& MouseWheelName) const
     {
         auto Iter = m_InputMouseWheelMap.find(MouseWheelName);

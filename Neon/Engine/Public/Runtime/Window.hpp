@@ -37,6 +37,11 @@ namespace Neon::Runtime
         /// </summary>
         bool Run();
 
+        /// <summary>
+        /// Process the window inputs.
+        /// </summary>
+        void ProcessInputs();
+
     public:
         NEON_SIGNAL_INST(OnWindowSizeChanged);
 

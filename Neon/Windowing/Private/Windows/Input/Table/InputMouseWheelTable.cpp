@@ -24,26 +24,26 @@ namespace Neon::Input
             return false;
         }
 
-        IInputMouseWheel::BindType   Type;
-        IInputMouseWheel::MotionType Motion;
+        InputMouseWheel::BindType   Type;
+        InputMouseWheel::MotionType Motion;
 
         switch (Message)
         {
         case WM_MOUSEHWHEEL:
         {
-            Type = IInputMouseWheel::BindType::Horizontal;
+            Type = InputMouseWheel::BindType::Horizontal;
 
             short MotionVal = short(HIWORD(wParam));
-            Motion          = MotionVal > 0 ? IInputMouseWheel::MotionType::Right : IInputMouseWheel::MotionType::Left;
+            Motion          = MotionVal > 0 ? InputMouseWheel::MotionType::Right : InputMouseWheel::MotionType::Left;
             break;
         }
 
         case WM_MOUSEWHEEL:
         {
-            Type = IInputMouseWheel::BindType::Vertical;
+            Type = InputMouseWheel::BindType::Vertical;
 
             short MotionVal = short(HIWORD(wParam));
-            Motion          = MotionVal > 0 ? IInputMouseWheel::MotionType::Up : IInputMouseWheel::MotionType::Down;
+            Motion          = MotionVal > 0 ? InputMouseWheel::MotionType::Up : InputMouseWheel::MotionType::Down;
             break;
         }
 

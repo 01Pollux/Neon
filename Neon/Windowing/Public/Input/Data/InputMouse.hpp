@@ -7,7 +7,7 @@
 
 namespace Neon::Input
 {
-    class IInputMouse
+    class InputMouse
     {
         friend class InputMouseDataEvent;
         using InputDelegateHandler = Utils::Signal<const Vector2&>;
@@ -104,15 +104,15 @@ namespace Neon::Input
     {
     public:
         InputMouseDataEvent(
-            Ref<IInputMouse>      Mouse,
-            const Vector2&        MoveDelta,
-            IInputMouse::BindType Type);
+            Ref<InputMouse>      Mouse,
+            const Vector2&       MoveDelta,
+            InputMouse::BindType Type);
 
         void DispatchInput();
 
     private:
-        Ref<IInputMouse>      m_InputAxis;
-        Vector2               m_MoveDelta;
-        IInputMouse::BindType m_InputType;
+        Ref<InputMouse>      m_InputAxis;
+        Vector2              m_MoveDelta;
+        InputMouse::BindType m_InputType;
     };
 } // namespace Neon::Input

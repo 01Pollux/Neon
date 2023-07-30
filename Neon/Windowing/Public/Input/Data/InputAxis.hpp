@@ -5,7 +5,7 @@
 
 namespace Neon::Input
 {
-    class IInputAxis
+    class InputAxis
     {
         friend class InputAxisDataEvent;
         using InputDelegateHandler = Utils::Signal<>;
@@ -111,13 +111,13 @@ namespace Neon::Input
     {
     public:
         InputAxisDataEvent(
-            Ref<IInputAxis>      Axis,
-            IInputAxis::BindType Type);
+            Ref<InputAxis>      Axis,
+            InputAxis::BindType Type);
 
         void DispatchInput();
 
     private:
-        Ref<IInputAxis>      m_InputAxis;
-        IInputAxis::BindType m_InputType;
+        Ref<InputAxis>      m_InputAxis;
+        InputAxis::BindType m_InputType;
     };
 } // namespace Neon::Input

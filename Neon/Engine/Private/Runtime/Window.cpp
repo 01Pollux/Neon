@@ -75,4 +75,9 @@ namespace Neon::Runtime
         }
         return m_Window->IsRunning();
     }
+
+    void EngineWindow::ProcessInputs()
+    {
+        m_Window->ProcessInputs();
+    }
 } // namespace Neon::Runtime

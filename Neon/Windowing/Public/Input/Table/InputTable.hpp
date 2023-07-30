@@ -9,7 +9,7 @@ namespace Neon::Input
     template<typename _Ty>
     class IInputTable
     {
-        using InputDataList = std::vector<Ptr<_Ty>>;
+        using InputDataList = std::list<Ptr<_Ty>>;
 
     public:
         IInputTable() = default;

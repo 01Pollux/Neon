@@ -2,8 +2,14 @@
 
 #include <flecs/flecs.h>
 #include <Scene/Component/Component.hpp>
+#include <Physics/Bullet3.hpp>
 
+#include <Bullet3/btBulletDynamicsCommon.h>
 #include <Bullet3/btBulletCollisionCommon.h>
+
+#include <Bullet3/BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <Bullet3/BulletDynamics/Dynamics/btRigidBody.h>
+#include <Bullet3/BulletSoftBody/btSoftBody.h>
 
 #include <Bullet3/BulletCollision/CollisionShapes/btBox2dShape.h>
 #include <Bullet3/BulletCollision/CollisionShapes/btBoxShape.h>

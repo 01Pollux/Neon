@@ -28,7 +28,7 @@ namespace Neon::Input
             LPARAM                 lParam,
             Vector2&               MousePosition,
             EMouseInput&           InputType,
-            IInputMouse::BindType& Type);
+            InputMouse::BindType& Type);
 
     private:
         /// <summary>

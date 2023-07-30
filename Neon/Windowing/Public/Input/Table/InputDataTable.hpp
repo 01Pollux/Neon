@@ -88,14 +88,16 @@ namespace Neon::Input
     public:
         /// <summary>
         /// Get or create an action table.
+        /// An action table is a collection of keyboard and gamepad inputs.
         /// </summary>
-        Ref<IInputActionTable> LoadActionTable(
+        Ptr<IInputActionTable> LoadActionTable(
             const StringU8& ActionName);
 
         /// <summary>
         /// Get an action table.
+        /// An action table is a collection of keyboard and gamepad inputs.
         /// </summary>
-        Ref<IInputActionTable> GetActionTable(
+        Ptr<IInputActionTable> GetActionTable(
             const StringU8& ActionName) const;
 
         /// <summary>
@@ -108,14 +110,16 @@ namespace Neon::Input
 
         /// <summary>
         /// Get or create an axis table.
+        /// An axis table is a collection of keyboard and gamepad press/hold/release inputs.
         /// </summary>
-        Ref<IInputAxisTable> LoadAxisTable(
+        Ptr<IInputAxisTable> LoadAxisTable(
             const StringU8& AxisName);
 
         /// <summary>
         /// Get an axis table.
+        /// An axis table is a collection of keyboard and gamepad press/hold/release inputs.
         /// </summary>
-        Ref<IInputAxisTable> GetAxisTable(
+        Ptr<IInputAxisTable> GetAxisTable(
             const StringU8& ActionName) const;
 
         /// <summary>
@@ -128,14 +132,16 @@ namespace Neon::Input
 
         /// <summary>
         /// Get or create an mouse table.
+        /// A mouse table is a collection of mouse inputs.
         /// </summary>
-        Ref<IInputMouseTable> LoadMouseTable(
+        Ptr<IInputMouseTable> LoadMouseTable(
             const StringU8& MouseName);
 
         /// <summary>
         /// Get an mouse table.
+        /// A mouse table is a collection of mouse inputs.
         /// </summary>
-        Ref<IInputMouseTable> GetMouseTable(
+        Ptr<IInputMouseTable> GetMouseTable(
             const StringU8& MouseName) const;
 
         /// <summary>
@@ -148,14 +154,16 @@ namespace Neon::Input
 
         /// <summary>
         /// Get or create an mouse wheel table.
+        /// A mouse wheel table is a collection of mouse wheel inputs.
         /// </summary>
-        Ref<IInputMouseWheelTable> LoadMouseWheelTable(
+        Ptr<IInputMouseWheelTable> LoadMouseWheelTable(
             const StringU8& MouseWheelName);
 
         /// <summary>
         /// Get an mouse wheel table.
+        /// A mouse wheel table is a collection of mouse wheel inputs.
         /// </summary>
-        Ref<IInputMouseWheelTable> GetMouseWheelTable(
+        Ptr<IInputMouseWheelTable> GetMouseWheelTable(
             const StringU8& MouseWheelName) const;
 
         /// <summary>

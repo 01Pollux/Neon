@@ -5,7 +5,7 @@
 
 namespace Neon::Input
 {
-    class IInputAction
+    class InputAction
     {
         friend class InputActionDataEvent;
         using InputDelegateHandler = Utils::Signal<>;
@@ -105,15 +105,15 @@ namespace Neon::Input
     {
     public:
         InputActionDataEvent(
-            Ref<IInputAction>      Action,
-            InputSysKeyState       SysKeyState,
-            IInputAction::BindType Type);
+            Ref<InputAction>      Action,
+            InputSysKeyState      SysKeyState,
+            InputAction::BindType Type);
 
         void DispatchInput();
 
     private:
-        Ref<IInputAction>      m_InputAction;
-        InputSysKeyState       m_SysKeyState;
-        IInputAction::BindType m_InputType;
+        Ref<InputAction>      m_InputAction;
+        InputSysKeyState      m_SysKeyState;
+        InputAction::BindType m_InputType;
     };
 } // namespace Neon::Input
