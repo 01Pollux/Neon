@@ -4,6 +4,12 @@
 #include <Core/Bitmask.hpp>
 #include <Utils/Signal.hpp>
 #include <future>
+#include <unordered_set>
+
+namespace Neon::Input
+{
+    class IInputDataTable;
+} // namespace Neon::Input
 
 namespace Neon::Windowing
 {
@@ -149,5 +155,26 @@ namespace Neon::Windowing
         /// </summary>
         [[nodiscard]] virtual bool PeekEvent(
             Event& Message) = 0;
+
+        /// <summary>
+        /// Enable input table for the window to receive input events
+        /// </summary>
+        void PushInputTable(
+            const Ptr<Input::IInputDataTable>& InputTable)
+        {
+            m_InputTables.insert(InputTable);
+        }
+
+        /// <summary>
+        /// Disable input table for the window
+        /// </summary>
+        void PopInputTable(
+            const Ptr<Input::IInputDataTable>& InputTable)
+        {
+            m_InputTables.erase(InputTable);
+        }
+
+    protected:
+        std::unordered_set<Ptr<Input::IInputDataTable>> m_InputTables;
     };
 } // namespace Neon::Windowing

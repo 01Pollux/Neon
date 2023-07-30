@@ -79,7 +79,7 @@ namespace Neon::Runtime
                     size_t ListenerCount;
                     {
                         std::scoped_lock Lock(Phase->Mutex);
-                        ListenerCount = Phase->Signal.GetListenerCount();
+                        ListenerCount = Phase->Signal.GetListenersCount();
                     }
                     if (!ListenerCount)
                     {

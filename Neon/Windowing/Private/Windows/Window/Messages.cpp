@@ -1,5 +1,6 @@
 #include <WindowPCH.hpp>
 #include <Private/Windows/Window/Window.hpp>
+#include <Private/Windows/Input/Table.hpp>
 
 #include <CommCtrl.h>
 
@@ -39,7 +40,10 @@ namespace Neon::Windowing
         {
         [[likely]] default:
         {
-            Window->ProcessMessage(Message, wParam, lParam);
+            if (auto Ret = Window->ProcessMessage(Message, wParam, lParam))
+            {
+                return *Ret;
+            }
             break;
         }
 
@@ -85,11 +89,13 @@ namespace Neon::Windowing
         m_PendingEvents.emplace(std::move(Msg));
     }
 
-    void WindowApp::ProcessMessage(
+    std::optional<LRESULT> WindowApp::ProcessMessage(
         UINT   Message,
         WPARAM wParam,
         LPARAM lParam)
     {
+        std::optional<LRESULT> FinalRet;
+
         switch (Message)
         {
         case WM_SIZE:
@@ -97,6 +103,7 @@ namespace Neon::Windowing
             UINT   Width  = LOWORD(lParam);
             UINT   Height = HIWORD(lParam);
             Size2I Size{ int(Width), int(Height) };
+
             if (wParam != SIZE_MINIMIZED &&
                 !m_WindowFlags.Test(EWindowFlags::Resizing) &&
                 m_WindowSize != Size)
@@ -149,6 +156,18 @@ namespace Neon::Windowing
             break;
         }
         }
+
+        for (auto& InputTable : m_InputTables)
+        {
+            bool ProcessInput = false;
+            auto Ret          = validate_cast<Input::InputDataTableImpl*>(InputTable.get())->PushMessage(this->m_Handle, Message, wParam, lParam, ProcessInput);
+            if (ProcessInput)
+            {
+                FinalRet = Ret;
+            }
+        }
+
+        return FinalRet;
     }
 
     Size2I WindowApp::GetWindowSize() const

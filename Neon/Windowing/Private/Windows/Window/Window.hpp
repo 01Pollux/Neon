@@ -134,7 +134,7 @@ namespace Neon::Windowing
         /// <summary>
         /// Process a message sent to the window.
         /// </summary>
-        void ProcessMessage(
+        [[nodiscard]] std::optional<LRESULT> ProcessMessage(
             UINT   Message,
             WPARAM wParam,
             LPARAM lParam);

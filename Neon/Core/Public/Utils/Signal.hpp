@@ -39,10 +39,18 @@ namespace Neon::Utils
         }
 
         /// <summary>
+        /// Remove all listeners from the delegate list
+        /// </summary>
+        void DropAll()
+        {
+            m_Listeners.clear();
+        }
+
+        /// <summary>
         /// Invoke the listeners with the given arguments
         /// </summary>
         void Broadcast(
-            _Args&&... Args)
+            _Args... Args)
         {
             for (const auto& Listener : m_Listeners)
             {
@@ -53,7 +61,7 @@ namespace Neon::Utils
         /// <summary>
         /// Get the number of listeners
         /// </summary>
-        [[nodiscard]] size_t GetListenerCount() const noexcept
+        [[nodiscard]] size_t GetListenersCount() const noexcept
         {
             return m_Listeners.size();
         }
