@@ -63,7 +63,7 @@ void FlappyBirdClone::AttachInputs()
     ActionTable->Enable();
 
     auto SpaceAction = ActionTable->AddAction();
-    SpaceAction->SetInput(Input::EKeyboardInput::Space);
+    SpaceAction->SetInput(Input::EKeyboardInput::K);
     SpaceAction->Bind(
         Input::InputAction::BindType::Press,
         [this]()

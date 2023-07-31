@@ -42,6 +42,9 @@ namespace Neon::RHI
         /// </summary>
         EResourceFormat BackbufferFormat = EResourceFormat::R8G8B8A8_UNorm;
 
-        // TODO: Add more swapchain settings. such as format, vsync, etc.
+        /// <summary>
+        /// Enable vertical sync.
+        /// </summary>
+        bool VSync : 1 = true;
     };
 } // namespace Neon::RHI

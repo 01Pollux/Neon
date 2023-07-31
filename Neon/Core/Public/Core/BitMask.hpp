@@ -81,23 +81,23 @@ namespace Neon
             m_Bitset.set(static_cast<size_t>(Pos), Val);
             return *this;
         }
-        [[nodiscard]] Bitmask& Flip() noexcept
+        Bitmask& Flip() noexcept
         {
             m_Bitset.flip();
             return *this;
         }
-        [[nodiscard]] Bitmask& Flip(
+        Bitmask& Flip(
             type Pos)
         {
             m_Bitset.flip(static_cast<size_t>(Pos));
             return *this;
         }
-        [[nodiscard]] Bitmask& Reset() noexcept
+        Bitmask& Reset() noexcept
         {
             m_Bitset.reset();
             return *this;
         }
-        [[nodiscard]] Bitmask& Reset(
+        Bitmask& Reset(
             type Pos)
         {
             m_Bitset.reset(static_cast<size_t>(Pos));

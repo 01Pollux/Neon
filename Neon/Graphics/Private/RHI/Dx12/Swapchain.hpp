@@ -23,7 +23,8 @@ namespace Neon::RHI
 
         void PrepareFrame() override;
 
-        void Present() override;
+        void Present(
+            float FrameTime) override;
 
         const Size2I& GetSize() override;
 

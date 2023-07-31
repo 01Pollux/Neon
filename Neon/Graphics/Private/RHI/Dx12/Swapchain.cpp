@@ -40,6 +40,8 @@ namespace Neon::RHI
         m_BackbufferFormat(Desc.BackbufferFormat),
         m_Size(m_WindowApp->GetSize().get())
     {
+        m_IsVSyncEnabled = Desc.VSync;
+
         m_FrameManager = std::make_unique<FrameManager>();
         CreateSwapchain(Desc);
     }
@@ -51,10 +53,13 @@ namespace Neon::RHI
         m_FrameManager->NewFrame();
     }
 
-    void Dx12Swapchain::Present()
+    void Dx12Swapchain::Present(
+        float FrameTime)
     {
         m_FrameManager->EndFrame();
-        ThrowIfFailed(m_Swapchain->Present(1, 0));
+
+        UINT SyncInterval = m_IsVSyncEnabled ? std::min(4, int(std::roundf(FrameTime * 60.f))) : 0;
+        ThrowIfFailed(m_Swapchain->Present(SyncInterval, 0));
     }
 
     const Size2I& Dx12Swapchain::GetSize()
@@ -143,6 +148,8 @@ namespace Neon::RHI
         WinAPI::ComPtr<IDXGIFactory2> DxgiFactory2;
 
         auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
+        auto WindowStyle   = m_WindowApp->GetStyle().get();
+        bool IsFullscreen  = WindowStyle.Test(Windowing::EWindowStyle::Fullscreen) && !WindowStyle.Test(Windowing::EWindowStyle::Windowed);
 
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
@@ -159,7 +166,7 @@ namespace Neon::RHI
                 .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount = Desc.FramesInFlight,
                 .SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-                .Flags       = 0
+                .Flags       = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
             };
 
             DXGI_SWAP_CHAIN_FULLSCREEN_DESC FullscreenDesc{
@@ -167,7 +174,7 @@ namespace Neon::RHI
                     .Numerator   = Desc.RefreshRate.Numerator,
                     .Denominator = Desc.RefreshRate.Denominator,
                 },
-                .Windowed = TRUE,
+                .Windowed = !IsFullscreen,
             };
 
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
@@ -200,9 +207,9 @@ namespace Neon::RHI
                 .BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount  = Desc.FramesInFlight,
                 .OutputWindow = HWND(m_WindowApp->GetPlatformHandle()),
-                .Windowed     = TRUE,
+                .Windowed     = !IsFullscreen,
                 .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-                .Flags        = DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT
+                .Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
             };
 
             DxgiFactory->CreateSwapChain(

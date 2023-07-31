@@ -37,7 +37,8 @@ namespace Neon::RHI
         /// <summary>
         /// Render frame and present it to the swapchain.
         /// </summary>
-        virtual void Present() = 0;
+        virtual void Present(
+            float FrameTime) = 0;
 
         /// <summary>
         /// Get the swapchain's window size.
@@ -98,5 +99,26 @@ namespace Neon::RHI
         /// </summary>
         virtual uint64_t EnqueueRequestCopy(
             std::function<void(ICopyCommandList*)> Task) = 0;
+
+    public:
+        /// <summary>
+        /// Check if VSync is enabled.
+        /// </summary>
+        [[nodiscard]] bool IsVSyncEnabled() const noexcept
+        {
+            return m_IsVSyncEnabled;
+        }
+
+        /// <summary>
+        /// Set VSync enabled.
+        /// </summary>
+        void SetVSyncEnabled(
+            bool IsEnabled) noexcept
+        {
+            m_IsVSyncEnabled = IsEnabled;
+        }
+
+    protected:
+        bool m_IsVSyncEnabled : 1 = false;
     };
 } // namespace Neon::RHI

@@ -59,7 +59,7 @@ namespace Neon::Runtime
             "PostRender",
             [this]
             {
-                RHI::ISwapchain::Get()->Present();
+                RHI::ISwapchain::Get()->Present(float(m_Scene.GetDeltaTime()));
             });
 
         Engine->SetPipeline(std::move(Pipeline));

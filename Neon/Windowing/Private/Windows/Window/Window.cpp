@@ -121,17 +121,22 @@ namespace Neon::Windowing
                     Left = (GetDeviceCaps(WindowDC, HORZRES) - FinalSize.Width()) / 2;
                     Top  = (GetDeviceCaps(WindowDC, VERTRES) - FinalSize.Height()) / 2;
                 }
+
                 m_BitsPerPixel = GetDeviceCaps(WindowDC, BITSPIXEL);
+
+                m_FullscreenSize.Width(GetDeviceCaps(WindowDC, DESKTOPHORZRES));
+                m_FullscreenSize.Height(GetDeviceCaps(WindowDC, DESKTOPVERTRES));
+
                 ReleaseDC(nullptr, WindowDC);
 
                 DWORD WinStyle = GetWindowStyle(Style);
 
+                m_WindowRect = { 0, 0, FinalSize.Width(), FinalSize.Height() };
                 if (!Style.Test(EWindowStyle::Fullscreen))
                 {
-                    RECT Rect = { 0, 0, FinalSize.Width(), FinalSize.Height() };
-                    AdjustWindowRect(&Rect, WinStyle, false);
-                    FinalSize.Width(Rect.right - Rect.left);
-                    FinalSize.Height(Rect.bottom - Rect.top);
+                    AdjustWindowRect(&m_WindowRect, WinStyle, false);
+                    FinalSize.Width(m_WindowRect.right - m_WindowRect.left);
+                    FinalSize.Height(m_WindowRect.bottom - m_WindowRect.top);
                 }
 
                 if (!InitialVisible)
@@ -233,16 +238,13 @@ namespace Neon::Windowing
                 }
                 else
                 {
-                    RECT Rect;
-                    GetClientRect(m_Handle, &Rect);
-
                     SetWindowPos(
                         m_Handle,
                         HWND_NOTOPMOST,
-                        Rect.left,
-                        Rect.top,
-                        Rect.right - Rect.left,
-                        Rect.bottom - Rect.top,
+                        m_WindowRect.left,
+                        m_WindowRect.top,
+                        m_WindowRect.right - m_WindowRect.left,
+                        m_WindowRect.bottom - m_WindowRect.top,
                         SWP_FRAMECHANGED | SWP_NOACTIVATE);
 
                     ShowWindow(m_Handle, SW_NORMAL);
@@ -457,17 +459,16 @@ namespace Neon::Windowing
 
     void WindowApp::SwitchToFullscreen()
     {
-        if (m_WindowStyle.Test(EWindowStyle::Windowed))
+        if (!m_WindowStyle.Test(EWindowStyle::Windowed))
         {
-            ShowWindow(m_Handle, SW_MAXIMIZE);
-            return;
+            GetWindowRect(m_Handle, &m_WindowRect);
+
+            constexpr DWORD Flags = WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+            SetWindowLongPtr(m_Handle, GWL_STYLE, LONG_PTR(Flags));
+            SetWindowLongPtr(m_Handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
+
+            SetWindowPos(m_Handle, HWND_TOPMOST, 0, 0, m_FullscreenSize.Width(), m_FullscreenSize.Height(), SWP_FRAMECHANGED | SWP_NOACTIVATE);
         }
-
-        constexpr DWORD Flags = WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-        SetWindowLongPtr(m_Handle, GWL_STYLE, LONG_PTR(Flags));
-        SetWindowLongPtr(m_Handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
-
-        SetWindowPos(m_Handle, HWND_TOP, 0, 0, m_WindowSize.Width(), m_WindowSize.Height(), SWP_FRAMECHANGED);
-        ShowWindow(m_Handle, SW_SHOW);
+        ShowWindow(m_Handle, SW_MAXIMIZE);
     }
 } // namespace Neon::Windowing

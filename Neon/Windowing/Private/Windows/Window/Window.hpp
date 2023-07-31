@@ -154,7 +154,8 @@ namespace Neon::Windowing
         HICON m_Icon   = nullptr;
 
         Size2I m_WindowSize;
-        Size2I m_UncappedWindowSize;
+        Size2I m_FullscreenSize;
+        RECT   m_WindowRect;
         int    m_BitsPerPixel = 0;
 
         std::queue<Event> m_PendingEvents;
