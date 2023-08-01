@@ -77,9 +77,17 @@ namespace Neon::Runtime
     }
 
     void DefaultGameEngine::SetPipeline(
-        UPtr<EnginePipeline> Pipeline)
+        UPtr<EnginePipeline> Pipeline,
+        bool                 Immediate)
     {
-        m_PendingPipeline = std::move(Pipeline);
+        if (Immediate)
+        {
+            m_Pipeline = std::move(Pipeline);
+        }
+        else
+        {
+            m_PendingPipeline = std::move(Pipeline);
+        }
     }
 
     void DefaultGameEngine::LoadPacks(

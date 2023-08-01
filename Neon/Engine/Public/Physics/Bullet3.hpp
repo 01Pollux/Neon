@@ -16,7 +16,7 @@ namespace Neon::Physics
     [[nodiscard]] inline btVector3 ToBullet3(
         const Vector3& Vec) noexcept
     {
-        return btVector3(Vec.x, Vec.y, Vec.z);
+        return btVector3(Vec.x, Vec.y, -Vec.z);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ namespace Neon::Physics
     [[nodiscard]] inline Vector3 FromBullet3(
         const btVector3& Vec) noexcept
     {
-        return Vector3(Vec.x(), Vec.y(), Vec.z());
+        return Vector3(Vec.x(), Vec.y(), -Vec.z());
     }
 
     //
@@ -36,7 +36,7 @@ namespace Neon::Physics
     [[nodiscard]] inline btVector4 ToBullet3(
         const Vector4& Vec) noexcept
     {
-        return btVector4(Vec.x, Vec.y, Vec.z, Vec.w);
+        return btVector4(Vec.x, Vec.y, -Vec.z, Vec.w);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ namespace Neon::Physics
     [[nodiscard]] inline Vector4 FromBullet3(
         const btVector4& Vec) noexcept
     {
-        return Vector4(Vec.x(), Vec.y(), Vec.z(), Vec.w());
+        return Vector4(Vec.x(), Vec.y(), -Vec.z(), Vec.w());
     }
 
     //
@@ -57,9 +57,9 @@ namespace Neon::Physics
         const Matrix3x3& Mat) noexcept
     {
         return btMatrix3x3(
-            ToBullet3(Mat[0]),
-            ToBullet3(Mat[1]),
-            ToBullet3(Mat[2]));
+            Mat[0].x, Mat[0].y, Mat[0].z,
+            Mat[1].x, Mat[1].y, Mat[1].z,
+            Mat[2].x, Mat[2].y, Mat[2].z);
     }
 
     /// <summary>
@@ -69,9 +69,9 @@ namespace Neon::Physics
         const btMatrix3x3& Mat) noexcept
     {
         return Matrix3x3(
-            FromBullet3(Mat[0]),
-            FromBullet3(Mat[1]),
-            FromBullet3(Mat[2]));
+            Mat[0].x(), Mat[0].y(), Mat[0].z(),
+            Mat[1].x(), Mat[1].y(), Mat[1].z(),
+            Mat[2].x(), Mat[2].y(), Mat[2].z());
     }
 
     //

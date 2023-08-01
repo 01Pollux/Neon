@@ -40,6 +40,11 @@ private:
     /// </summary>
     void AttachInputs();
 
+    /// <summary>
+    /// Called by pipeline on update
+    /// </summary>
+    void OnUpdate();
+
 private:
     /// <summary>
     /// Get the material by name
@@ -53,4 +58,18 @@ private:
     TextureAssetPtr       m_Sprite;
 
     Neon::Scene::Actor m_Player;
+
+    /// <summary>
+    /// Pointer to player's rigid body
+    /// </summary>
+    class btRigidBody* m_RigidBody = nullptr;
+
+    float m_VelocityAccum = 0.f;
+
+    float m_EnginePower = 2.5f;
+
+    /// <summary>
+    /// Temporary flag to check if the player is jumping until we have imgui
+    /// </summary>
+    bool m_IsJumping = false;
 };

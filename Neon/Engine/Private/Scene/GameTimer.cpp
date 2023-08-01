@@ -52,12 +52,12 @@ namespace Neon::Scene
             return false;
         }
 
-        m_CurrTime  = steady_clock::now();
-        m_DeltaTime = std::max(
-                          std::chrono::duration_cast<fmilliseconds>(m_CurrTime - m_PrevTime).count() * .001,
-                          0.0) *
-                      m_TimeScale;
-        m_PrevTime = m_CurrTime;
+        m_CurrTime     = steady_clock::now();
+        auto DeltaTime = std::max(
+            std::chrono::duration_cast<fmilliseconds>(m_CurrTime - m_PrevTime).count() * .001,
+            0.0);
+        m_DeltaTime = std::min(DeltaTime, 0.2) * m_TimeScale;
+        m_PrevTime  = m_CurrTime;
 
         m_GameTime += m_DeltaTime;
         m_EngineTime += m_DeltaTime;

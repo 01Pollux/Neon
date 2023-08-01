@@ -52,12 +52,12 @@ namespace Neon::Scene
                 {
                     if (Iter.event() == flecs::OnRemove)
                     {
-                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject);
+                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject.get());
                     }
                     else if (Iter.event() == flecs::OnSet)
                     {
-                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject);
-                        m_PhysicsWorld->AddPhysicsObject(Object.BulletObject, Object.Group, Object.Mask);
+                        m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject.get());
+                        m_PhysicsWorld->AddPhysicsObject(Object.BulletObject.get(), Object.Group, Object.Mask);
                     }
                 });
         //

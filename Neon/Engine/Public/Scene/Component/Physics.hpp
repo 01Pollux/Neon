@@ -32,7 +32,7 @@ namespace Neon::Scene::Component
 {
     struct CollisionShape
     {
-        btCollisionShape* BulletShape = nullptr;
+        UPtr<btCollisionShape> BulletShape = nullptr;
     };
 
     struct CollisionObject
@@ -41,7 +41,7 @@ namespace Neon::Scene::Component
 
         NEON_EXPORT_COMPONENT();
 
-        btCollisionObject* BulletObject = nullptr;
+        UPtr<btCollisionObject> BulletObject = nullptr;
 
         uint32_t Group = 1;
         uint32_t Mask  = MaskAll;

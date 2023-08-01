@@ -66,7 +66,8 @@ namespace Neon::Runtime
         /// Set the pipeline associated with the engine.
         /// </summary>
         void SetPipeline(
-            UPtr<EnginePipeline> Pipeline);
+            UPtr<EnginePipeline> Pipeline,
+            bool                 Immediate = true);
 
     protected:
         /// <summary>

@@ -13,6 +13,7 @@ using namespace Neon;
 void FlappyBirdClone::LoadScene()
 {
     auto& Scene = m_Runtime->GetScene();
+    Scene.SetTimeScale(1.f);
 
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -26,13 +27,18 @@ void FlappyBirdClone::LoadScene()
         auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
         {
             TransformComponent->World.SetPosition(Vec::Forward<Vector3> * 2.5f);
+
             TransformComponent->Local = TransformComponent->World;
         }
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                new btBoxShape(btVector3(5.f, 5.f, 5.f)) });
+                std::make_unique<btCapsuleShape>(8.f, 15.f) });
             Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
+
+            m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
+            m_RigidBody->setAngularFactor(Physics::ToBullet3(Vec::Forward<Vector3>));
+            m_RigidBody->setLinearFactor(Physics::ToBullet3(Vec::Up<Vector3>));
         }
     }
 
@@ -52,6 +58,12 @@ void FlappyBirdClone::LoadScene()
     }
 
     AttachInputs();
+
+    //
+
+    GetPipeline()->Attach(
+        "Update",
+        std::bind(&FlappyBirdClone::OnUpdate, this));
 }
 
 void FlappyBirdClone::AttachInputs()
@@ -63,15 +75,42 @@ void FlappyBirdClone::AttachInputs()
     ActionTable->Enable();
 
     auto SpaceAction = ActionTable->AddAction();
-    SpaceAction->SetInput(Input::EKeyboardInput::K);
+    SpaceAction->SetInput(Input::EKeyboardInput::Space);
     SpaceAction->Bind(
         Input::InputAction::BindType::Press,
-        [this]()
+        [this]
         {
-            auto CollisionObject = m_Player.get<Scene::Component::CollisionObject>()->BulletObject;
-            if (auto RigidBody = btRigidBody::upcast(CollisionObject))
-            {
-                RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * 5.f));
-            }
+            m_IsJumping = true;
         });
+    SpaceAction->Bind(
+        Input::InputAction::BindType::Release,
+        [this]
+        {
+            m_IsJumping = false;
+        });
+}
+
+void FlappyBirdClone::OnUpdate()
+{
+    float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
+    float EnginePower = m_EnginePower * Mult;
+
+    if (m_IsJumping)
+    {
+        EnginePower *= 1.6f;
+        if (m_VelocityAccum < 0.f)
+        {
+            EnginePower *= 3;
+        }
+    }
+    else
+    {
+        EnginePower *= -1.3f;
+    }
+
+    m_VelocityAccum += EnginePower;
+
+    m_VelocityAccum = std::clamp(m_VelocityAccum, -m_EnginePower * 2, m_EnginePower * 2);
+
+    m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
 }
