@@ -9,6 +9,7 @@
 #include <Renderer/Material/Builder.hpp>
 #include <Renderer/Material/Material.hpp>
 
+#include <RHI/Swapchain.hpp>
 #include <RHI/Commands/List.hpp>
 #include <RHI/Resource/Resource.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
@@ -105,9 +106,8 @@ namespace Neon::Runtime
         if (m_LineBuffer.ShouldDraw())
         {
             m_LineBuffer.Draw(CommandList, PerFrameData);
-
-            FlushBuffers();
         }
+        FlushBuffers();
     }
 
     void DefaultEngineDebugOverlay::DrawLine_Impl(
@@ -201,11 +201,13 @@ namespace Neon::Runtime
                 .RootSignature(
                     RHI::IRootSignature::Create(
                         RHI::RootSignatureBuilder()
-                            .AddConstantBufferView("g_FrameData", 0, 0)))
+                            .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+                            .AddConstantBufferView("g_FrameData", 0, 1)))
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
                 .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
                 .PixelShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+                .RenderTarget(0, RHI::ISwapchain::Get()->GetFormat())
                 .Build();
 
         Asset::Manager::Unload(DebugShader->GetGuid());

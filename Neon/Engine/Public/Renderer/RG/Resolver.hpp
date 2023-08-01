@@ -65,6 +65,22 @@ namespace Neon::RG
         void ReadSrcResource(
             const ResourceViewId& ViewId);
 
+        /// <summary>
+        /// import buffer to be used later when dispatching passes
+        /// </summary>
+        void ImportBuffer(
+            const ResourceId&        Id,
+            const Ptr<RHI::IBuffer>& Resource,
+            RHI::GraphicsBufferType  BufferType);
+
+        /// <summary>
+        /// import texture to be used later when dispatching passes
+        /// </summary>
+        void ImportTexture(
+            const ResourceId&             Id,
+            const Ptr<RHI::ITexture>&     Resource,
+            const RHI::ClearOperationOpt& ClearValue = std::nullopt);
+
     private:
         /// <summary>
         /// Initialize resource to the default state

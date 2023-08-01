@@ -2,6 +2,7 @@
 #include <Scene/Scene.hpp>
 #include <Scene/Exports/Export.hpp>
 #include <Physics/World.hpp>
+#include <Runtime/DebugOverlay.hpp>
 
 //
 
@@ -22,6 +23,8 @@ namespace Neon::Scene
     GameScene::GameScene() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
+        Runtime::DebugOverlay::Create();
+
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_EntityWorld = std::make_unique<flecs::world>();
@@ -79,6 +82,8 @@ namespace Neon::Scene
 
     GameScene::~GameScene()
     {
+        Runtime::DebugOverlay::Destroy();
+
         if (m_EntityWorld)
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
@@ -116,10 +121,13 @@ namespace Neon::Scene
         auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
         if (MainCamera)
         {
-            auto& RenderGraph = MainCamera->Target.get<Component::Camera>()->RenderGraph;
+            auto CameraComponent = MainCamera->Target.get<Component::Camera>();
+
+            auto& RenderGraph = CameraComponent->RenderGraph;
             auto& Storage     = RenderGraph->GetStorage();
 
-            auto OutputImage  = Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+            auto OutputImage = Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+
             auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
             auto StateManager = RHI::IResourceStateManager::Get();
 
@@ -139,6 +147,7 @@ namespace Neon::Scene
             auto CommandContext = StateManager->FlushBarriers();
 
             CommandContext[0]->CopyResources(Backbuffer, OutputImage.get());
+            Runtime::DebugOverlay::Render(dynamic_cast<RHI::IGraphicsCommandList*>(CommandContext[0]), CameraComponent->GraphicsBuffer.get());
 
             StateManager->TransitionResource(
                 Backbuffer,

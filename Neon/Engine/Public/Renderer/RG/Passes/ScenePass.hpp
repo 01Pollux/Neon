@@ -29,11 +29,10 @@ namespace Neon::RG
         /// <summary>
         /// Update camera buffer.
         /// </summary>
-        void UpdateCameraBuffer();
+        [[nodiscard]] Ptr<RHI::IUploadBuffer> UpdateCameraBuffer();
 
     private:
         UPtr<Renderer::SpriteBatch> m_SpriteBatch;
-        Ptr<RHI::IUploadBuffer>     m_CameraBuffer;
 
         Scene::GameScene& m_Scene;
         Scene::Actor      m_Camera;

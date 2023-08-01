@@ -1,16 +1,11 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
-
-//
-
-#include <Scene/Scene.hpp>
 #include <Scene/Component/Camera.hpp>
 
 //
 
 #include <RHI/Swapchain.hpp>
-#include <RHI/Resource/Resource.hpp>
 #include <RHI/Commands/List.hpp>
 
 //
@@ -21,21 +16,6 @@ namespace Neon::RG
 {
     using namespace Scene;
     using namespace Renderer;
-
-    struct PerFrameData
-    {
-        alignas(16) Matrix4x4 View;
-        alignas(16) Matrix4x4 Projection;
-        alignas(16) Matrix4x4 ViewProjection;
-
-        alignas(16) Matrix4x4 ViewInverse;
-        alignas(16) Matrix4x4 ProjectionInverse;
-        alignas(16) Matrix4x4 ViewProjectionInverse;
-
-        alignas(16) Vector3 CameraPosition;
-        alignas(16) Vector3 CameraDirection;
-        alignas(16) Vector3 CameraUp;
-    };
 
     ScenePass::ScenePass(
         const GraphStorage&,
@@ -69,7 +49,6 @@ namespace Neon::RG
         //
 
         m_SpriteBatch.reset(NEON_NEW SpriteBatch);
-        m_CameraBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(PerFrameData), 256), .Alignment = 256 }));
     }
 
     void ScenePass::ResolveResources(
@@ -82,21 +61,19 @@ namespace Neon::RG
                 .ClearType = RHI::ERTClearType::Color,
                 .Format    = RHI::ISwapchain::Get()->GetFormat(),
             });
-
-        //
     }
 
     void ScenePass::Dispatch(
-        const GraphStorage&,
-        RHI::ICommandList* CommandList)
+        const GraphStorage& Storage,
+        RHI::ICommandList*  CommandList)
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
         if (m_SpriteQuery.is_true())
         {
-            UpdateCameraBuffer();
+            auto CameraStorage = UpdateCameraBuffer();
 
-            m_SpriteBatch->SetCameraBuffer(m_CameraBuffer);
+            m_SpriteBatch->SetCameraBuffer(CameraStorage);
             m_SpriteBatch->Begin(RenderCommandList);
             m_SpriteQuery.each(
                 [this](const Component::Transform& Transform,
@@ -108,10 +85,11 @@ namespace Neon::RG
         }
     }
 
-    void ScenePass::UpdateCameraBuffer()
+    Ptr<RHI::IUploadBuffer> ScenePass::UpdateCameraBuffer()
     {
-        auto CameraBuffer    = m_CameraBuffer->Map<PerFrameData>();
         auto CameraComponent = m_Camera.get<Component::Camera>();
+        auto CameraTransform = m_Camera.get<Component::Transform>();
+        auto CameraBuffer    = CameraComponent->GraphicsBuffer->Map<Component::CameraFrameData>();
 
         CameraBuffer->View           = glm::transpose(CameraComponent->ViewMatrix(m_Camera));
         CameraBuffer->Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
@@ -121,10 +99,12 @@ namespace Neon::RG
         CameraBuffer->ProjectionInverse     = glm::inverse(CameraBuffer->Projection);
         CameraBuffer->ViewProjectionInverse = glm::inverse(CameraBuffer->ViewProjection);
 
-        // CameraBuffer->CameraPosition  = CameraComponent->GetPosition();
+        CameraBuffer->CameraPosition = CameraTransform->World.GetPosition();
+        // TODO
         // CameraBuffer->CameraDirection = CameraComponent->GetDirection();
         // CameraBuffer->CameraUp        = CameraComponent->GetUp();
 
-        m_CameraBuffer->Unmap();
+        CameraComponent->GraphicsBuffer->Unmap();
+        return CameraComponent->GraphicsBuffer;
     }
 } // namespace Neon::RG

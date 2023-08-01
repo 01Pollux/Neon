@@ -142,6 +142,22 @@ namespace Neon::RG
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
     }
 
+    void IRenderPass::ResourceResolver::ImportBuffer(
+        const ResourceId&        Id,
+        const Ptr<RHI::IBuffer>& Resource,
+        RHI::GraphicsBufferType  BufferType)
+    {
+        m_Storage.ImportBuffer(Id, Resource, BufferType);
+    }
+
+    void IRenderPass::ResourceResolver::ImportTexture(
+        const ResourceId&             Id,
+        const Ptr<RHI::ITexture>&     Resource,
+        const RHI::ClearOperationOpt& ClearValue)
+    {
+        m_Storage.ImportTexture(Id, Resource, ClearValue);
+    }
+
     void IRenderPass::ResourceResolver::SetResourceState(
         const ResourceViewId& ViewId,
         RHI::MResourceState   State,

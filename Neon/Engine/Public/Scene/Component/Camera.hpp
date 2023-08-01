@@ -11,8 +11,28 @@ namespace Neon::RG
     class RenderGraph;
 } // namespace Neon::RG
 
+namespace Neon::RHI
+{
+    class IUploadBuffer;
+} // namespace Neon::RHI
+
 namespace Neon::Scene::Component
 {
+    struct CameraFrameData
+    {
+        alignas(16) Matrix4x4 View;
+        alignas(16) Matrix4x4 Projection;
+        alignas(16) Matrix4x4 ViewProjection;
+
+        alignas(16) Matrix4x4 ViewInverse;
+        alignas(16) Matrix4x4 ProjectionInverse;
+        alignas(16) Matrix4x4 ViewProjectionInverse;
+
+        alignas(16) Vector3 CameraPosition;
+        alignas(16) Vector3 CameraDirection;
+        alignas(16) Vector3 CameraUp;
+    };
+
     enum class CameraType : uint8_t
     {
         Perspective,
@@ -138,6 +158,14 @@ namespace Neon::Scene::Component
         /// The type of the camera.
         /// </summary>
         CameraType Type = CameraType::Perspective;
+
+        //
+
+        /// <summary>
+        /// The graphics buffer of the camera.
+        /// Structured as CameraFrameData.
+        /// </summary>
+        Ptr<RHI::IUploadBuffer> GraphicsBuffer;
     };
 
     struct MainCamera

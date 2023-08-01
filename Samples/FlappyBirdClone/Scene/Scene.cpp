@@ -8,6 +8,7 @@
 #include <Input/Table.hpp>
 #include <Input/System.hpp>
 
+#include <Runtime/DebugOverlay.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 using namespace Neon;
@@ -97,7 +98,13 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    Runtime::DebugOverlay::DrawCuboidLine(
+        Physics::FromBullet3(m_RigidBody->getWorldTransform().getOrigin()),
+        Vector3(8.f, 15.f, 1.f),
+        Colors::Red);
+
     return;
+
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 

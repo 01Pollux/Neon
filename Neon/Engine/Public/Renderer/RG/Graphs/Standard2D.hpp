@@ -11,6 +11,7 @@ namespace Neon::RG
     ///
     /// This render graph contains the following passes:
     /// - ScenePass
+    /// - DebugOverlay
     /// </summary>
     [[nodiscard]] UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
         Scene::GameScene& Scene,

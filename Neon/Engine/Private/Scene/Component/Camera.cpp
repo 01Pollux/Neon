@@ -1,7 +1,9 @@
 #include <EnginePCH.hpp>
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
+
 #include <Renderer/RG/RG.hpp>
+#include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Scene::Component
 {
@@ -11,7 +13,8 @@ namespace Neon::Scene::Component
         UPtr<RG::RenderGraph> RenderGraph,
         CameraType            Type) :
         RenderGraph(std::move(RenderGraph)),
-        Type(Type)
+        Type(Type),
+        GraphicsBuffer(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 256), .Alignment = 256 }))
     {
         if (Type == CameraType::Orthographic)
         {

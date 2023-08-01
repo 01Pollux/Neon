@@ -68,11 +68,12 @@ namespace Neon::RHI
             });
     }
 
-    CommandContext Dx12ResourceStateManager::FlushBarriers()
+    CommandContext Dx12ResourceStateManager::FlushBarriers(
+        CommandQueueType Type)
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            TCommandContext<CommandQueueType::Graphics> CtxBatch;
+            CommandContext CtxBatch(Type);
 
             auto CommandList = CtxBatch.Append();
 

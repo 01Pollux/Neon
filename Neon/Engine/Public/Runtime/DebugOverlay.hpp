@@ -27,7 +27,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Flush all draw calls into ommand list.
         /// </summary>
-        static void VRender(
+        static void Render(
             RHI::IGraphicsCommandList* CommandList,
             RHI::IBuffer*              PerFrameData)
         {
@@ -39,7 +39,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Draw a line in world space.
         /// </summary>
-        static void VDrawLine(
+        static void DrawLine(
             const Vector3& StartPosition,
             const Vector3& EndPosition,
             const Color4&  StartColor,
@@ -53,7 +53,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Draw a cuboid line in world space.
         /// </summary>
-        static void VDrawCuboidLine(
+        static void DrawCuboidLine(
             const Vector3& CenterPosition,
             const Vector3& Size,
             const Color4&  Color)
