@@ -112,3 +112,69 @@ namespace Neon
     template<typename _Ty, typename _Dx = std::default_delete<_Ty>>
     using UPtr = std::unique_ptr<_Ty, _Dx>;
 } // namespace Neon
+
+//
+
+// Pure virtual on debug, disabled on release+dist
+#if NEON_DEBUG
+#define NEON_M_DEBUG_ONLY_PV(...) virtual __VA_ARGS__ = 0
+#else
+#define NEON_M_DEBUG_ONLY_PV(...) \
+    void __VA_ARGS__ noexcept     \
+    {                             \
+    }
+#endif
+
+// Pure virtual on debug+dist, disabled on release
+#if NEON_DEBUG
+#define NEON_M_NODIST_PV(...) virtual __VA_ARGS__ = 0
+#else
+#define NEON_M_NODIST_PV(...) \
+    void __VA_ARGS__ noexcept \
+    {                         \
+    }
+#endif
+
+//
+
+// Virtual on debug, disabled on release+dist
+#if NEON_DEBUG
+#define NEON_M_DEBUG_ONLY_V(...) virtual __VA_ARGS__
+#else
+#define NEON_M_DEBUG_ONLY_V(...) \
+    void __VA_ARGS__ noexcept    \
+    {                            \
+    }
+#endif
+
+// Virtual on debug+dist, disabled on release
+#if NEON_DEBUG
+#define NEON_M_NODIST_V(...) virtual __VA_ARGS__
+#else
+#define NEON_M_NODIST_V(...)  \
+    void __VA_ARGS__ noexcept \
+    {                         \
+    }
+#endif
+
+//
+
+// Enabled on debug, disabled on release+dist
+#if NEON_DEBUG
+#define NEON_M_DEBUG_ONLY(...) __VA_ARGS__
+#else
+#define NEON_M_DEBUG_ONLY(...) \
+    void __VA_ARGS__ noexcept  \
+    {                          \
+    }
+#endif
+
+// Enabled on debug+dist, disabled on release
+#if NEON_DEBUG
+#define NEON_M_NODIST(...) __VA_ARGS__
+#else
+#define NEON_M_NODIST(...)    \
+    void __VA_ARGS__ noexcept \
+    {                         \
+    }
+#endif

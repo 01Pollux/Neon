@@ -1,4 +1,7 @@
 
+// --------------------
+// Structures
+// --------------------
 struct PerFrameData
 {
 	matrix View;
@@ -28,7 +31,7 @@ struct VSInput
 	int SpriteIndex : SPRITE_INDEX;
 };
 
-struct VSOutput
+struct PSInput
 {
 	float4 Position : SV_POSITION;
 	float2 TexCoord : TEX_COORD;
@@ -46,15 +49,15 @@ StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 // Vertex Shader
 // --------------------
 
-VSOutput VS_Main(VSInput Input)
+PSInput VS_Main(VSInput Vs)
 {
-	VSOutput Output;
-	Output.Position = float4(Input.Position, 1.0f);
-	Output.Position = mul(Output.Position, g_SpriteData[Input.SpriteIndex].World);
-	Output.Position = mul(Output.Position, g_FrameData.ViewProjection);
-	Output.TexCoord = Input.TexCoord;
-	Output.SpriteIndex = Input.SpriteIndex;
-	return Output;
+	PSInput Ps;
+	Ps.Position = float4(Vs.Position, 1.0f);
+	Ps.Position = mul(Ps.Position, g_SpriteData[Vs.SpriteIndex].World);
+	Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
+	Ps.TexCoord = Vs.TexCoord;
+	Ps.SpriteIndex = Vs.SpriteIndex;
+	return Ps;
 }
 
 // --------------------
@@ -70,9 +73,9 @@ SamplerState p_Sampler_LinearClamp : register(s3, space0);
 SamplerState p_Sampler_AnisotropicWrap : register(s4, space0);
 SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
-float4 PS_Main(VSOutput Input) : SV_TARGET
+float4 PS_Main(PSInput Ps) : SV_TARGET
 {
-	float4 Color = p_SpriteTextures[Input.SpriteIndex].Sample(p_Sampler_PointWrap, Input.TexCoord);
+	float4 Color = p_SpriteTextures[Ps.SpriteIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
 	clip(Color.a - 0.1f);
-	return g_SpriteData[Input.SpriteIndex].Color * Color;
+	return g_SpriteData[Ps.SpriteIndex].Color * Color;
 }

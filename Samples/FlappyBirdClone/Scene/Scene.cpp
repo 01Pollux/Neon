@@ -8,12 +8,14 @@
 #include <Input/Table.hpp>
 #include <Input/System.hpp>
 
+#include <glm/gtx/quaternion.hpp>
+
 using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
 {
     auto& Scene = m_Runtime->GetScene();
-    Scene.SetTimeScale(1.f);
+    Scene.SetTimeScale(0.1f);
 
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -28,6 +30,8 @@ void FlappyBirdClone::LoadScene()
         {
             TransformComponent->World.SetPosition(Vec::Forward<Vector3> * 2.5f);
 
+            // Quaternion Rot = glm::angleAxis(glm::radians(45.f), Vec::Forward<Vector3>);
+            // TransformComponent->World.SetBasis(glm::toMat3(Rot));
             TransformComponent->Local = TransformComponent->World;
         }
 
@@ -37,8 +41,9 @@ void FlappyBirdClone::LoadScene()
             Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
 
             m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
-            m_RigidBody->setAngularFactor(Physics::ToBullet3(Vec::Forward<Vector3>));
-            m_RigidBody->setLinearFactor(Physics::ToBullet3(Vec::Up<Vector3>));
+            m_RigidBody->setActivationState(DISABLE_DEACTIVATION);
+            // m_RigidBody->setAngularFactor(Physics::ToBullet3(Vec::Forward<Vector3>));
+            // m_RigidBody->setLinearFactor(Physics::ToBullet3(Vec::Up<Vector3>));
         }
     }
 
@@ -92,6 +97,7 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    return;
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 

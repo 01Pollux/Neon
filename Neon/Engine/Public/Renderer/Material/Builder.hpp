@@ -9,6 +9,8 @@
 
 namespace Neon::Renderer
 {
+    class IMaterial;
+
     template<typename _Ty, size_t _ShaderCount>
     class GenericMaterialBuilderImpl
     {
@@ -48,6 +50,11 @@ namespace Neon::Renderer
     class GenericMaterialBuilder<false> : public GenericMaterialBuilderImpl<GenericMaterialBuilder<false>, 5>
     {
     public:
+        /// <summary>
+        /// Build material.
+        /// </summary>
+        Ptr<IMaterial> Build();
+
         /// <summary>
         /// Disable or enable vertex input.
         /// </summary>
@@ -284,6 +291,11 @@ namespace Neon::Renderer
     class GenericMaterialBuilder<true> : public GenericMaterialBuilderImpl<GenericMaterialBuilder<true>, 1>
     {
     public:
+        /// <summary>
+        /// Build material.
+        /// </summary>
+        Ptr<IMaterial> Build();
+
         /// <summary>
         /// Set the compute shader.
         /// </summary>

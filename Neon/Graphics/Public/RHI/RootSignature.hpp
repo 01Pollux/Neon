@@ -523,6 +523,16 @@ namespace Neon::RHI
             return m_ParamMap;
         }
 
+        /// <summary>
+        /// Get parameter by name else return nullptr
+        /// </summary>
+        [[nodiscard]] const auto GetParam(
+            const StringU8& Name) const
+        {
+            auto Iter = m_ParamMap.find(Name);
+            return Iter != m_ParamMap.end() ? &m_Params[Iter->second] : nullptr;
+        }
+
     protected:
         std::vector<QueryResult>             m_Params;
         std::unordered_map<StringU8, size_t> m_ParamMap;

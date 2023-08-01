@@ -1,8 +1,21 @@
 #include <EnginePCH.hpp>
 #include <Renderer/Material/Builder.hpp>
+#include <Renderer/Material/Material.hpp>
 
 namespace Neon::Renderer
 {
+    Ptr<IMaterial> RenderMaterialBuilder::Build()
+    {
+        return IMaterial::Create(*this);
+    }
+
+    Ptr<IMaterial> ComputeMaterialBuilder::Build()
+    {
+        return IMaterial::Create(*this);
+    }
+
+    //
+
     RenderMaterialBuilder& RenderMaterialBuilder::NoVertexInput(
         bool NoInput)
     {
