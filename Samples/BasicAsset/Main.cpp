@@ -23,9 +23,9 @@ class AssetPackSample : public Runtime::DefaultGameEngine
 {
 public:
     void Initialize(
-        const Config::EngineConfig& Config) override
+        Config::EngineConfig Config) override
     {
-        DefaultGameEngine::Initialize(Config);
+        DefaultGameEngine::Initialize(std::move(Config));
 
         RegisterManager();
 
@@ -55,7 +55,7 @@ NEON_MAIN(Argc, Argv)
             .Fullscreen     = false,
             .InitialVisible = false },
     };
-    return RunEngine<AssetPackSample>(Config);
+    return RunEngine<AssetPackSample>(std::move(Config));
 }
 
 //
@@ -150,7 +150,7 @@ public:
     }
 
     Ptr<Asset::IAsset> Load(
-        std::ifstream&                 Stream,
+        std::istream&                  Stream,
         const Asset::DependencyReader& DepReader,
         const Asset::Handle&           AssetGuid,
         StringU8                       Path,
@@ -166,7 +166,7 @@ public:
     }
 
     void Save(
-        std::fstream&             Stream,
+        std::iostream&            Stream,
         Asset::DependencyWriter&  DepWriter,
         const Ptr<Asset::IAsset>& Asset,
         Asset::AssetMetaData&     LoaderData) override

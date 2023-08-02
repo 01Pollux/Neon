@@ -2,6 +2,7 @@
 
 #include <Asset/Pack.hpp>
 #include <Asset/Handle.hpp>
+#include <vector>
 
 namespace Neon::Config
 {
