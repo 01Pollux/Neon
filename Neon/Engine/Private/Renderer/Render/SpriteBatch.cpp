@@ -31,7 +31,7 @@ namespace Neon::Renderer
 
         struct VertexInput
         {
-            Vector3 Position;
+            Vector2 Position;
             Vector2 TexCoord;
             int     SpriteIndex;
         };
@@ -125,11 +125,11 @@ namespace Neon::Renderer
         };
 
         Vector2 HalfSize = Sprite.Size * 0.5f;
-        Vector3 QuadPositions[]{
-            Transform.World.GetPosition() + Vector3(-HalfSize.x, HalfSize.y, 0.f),
-            Transform.World.GetPosition() + Vector3(HalfSize.x, HalfSize.y, 0.f),
-            Transform.World.GetPosition() + Vector3(HalfSize.x, -HalfSize.y, 0.f),
-            Transform.World.GetPosition() + Vector3(-HalfSize.x, -HalfSize.y, 0.f)
+        Vector2 QuadPositions[]{
+            Vector2(-HalfSize.x, HalfSize.y),
+            Vector2(HalfSize.x, HalfSize.y),
+            Vector2(HalfSize.x, -HalfSize.y),
+            Vector2(-HalfSize.x, -HalfSize.y)
         };
 
         m_MaterialInstances.Append(Sprite.MaterialInstance.get());

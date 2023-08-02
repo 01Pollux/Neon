@@ -1,5 +1,6 @@
 #include <CorePCH.hpp>
 #include <Math/Transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Neon
 {
@@ -27,7 +28,12 @@ namespace Neon
 
     Matrix4x4 TransformMatrix::ToMat4x4() const noexcept
     {
-        return glm::translate(Matrix4x4(m_Basis), m_Position);
+        return {
+            Vector4(m_Basis[0], 0.f),
+            Vector4(m_Basis[1], 0.f),
+            Vector4(m_Basis[2], 0.f),
+            Vector4(m_Position, 1.f)
+        };
     }
 
     TransformMatrix TransformMatrix::operator*(

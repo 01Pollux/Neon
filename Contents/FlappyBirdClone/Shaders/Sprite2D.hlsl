@@ -26,7 +26,7 @@ struct PerObjectData
 
 struct VSInput
 {
-	float3 Position : POSITION;
+	float2 Position : POSITION;
 	float2 TexCoord : TEX_COORD;
 	int SpriteIndex : SPRITE_INDEX;
 };
@@ -52,9 +52,10 @@ StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 PSInput VS_Main(VSInput Vs)
 {
 	PSInput Ps;
-	Ps.Position = float4(Vs.Position, 1.0f);
+	Ps.Position = float4(Vs.Position, 0.f, 1.f);
 	Ps.Position = mul(Ps.Position, g_SpriteData[Vs.SpriteIndex].World);
 	Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
+	Ps.Position.z = 0.f;
 	Ps.TexCoord = Vs.TexCoord;
 	Ps.SpriteIndex = Vs.SpriteIndex;
 	return Ps;
@@ -76,6 +77,6 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 float4 PS_Main(PSInput Ps) : SV_TARGET
 {
 	float4 Color = p_SpriteTextures[Ps.SpriteIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
-	clip(Color.a - 0.1f);
+	//clip(Color.a - 0.1f);
 	return g_SpriteData[Ps.SpriteIndex].Color * Color;
 }
