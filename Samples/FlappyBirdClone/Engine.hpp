@@ -66,7 +66,7 @@ private:
 
     float m_VelocityAccum = 0.f;
 
-    float m_EnginePower = 2.5f;
+    float m_EnginePower = 4.0f;
 
     /// <summary>
     /// Temporary flag to check if the player is jumping until we have imgui

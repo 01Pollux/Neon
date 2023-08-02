@@ -31,8 +31,6 @@ void FlappyBirdClone::LoadScene()
         {
             TransformComponent->World.SetPosition(Vec::Forward<Vector3> * 2.5f);
 
-            // Simple rotation 45 degrees in z axis
-
             Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
             TransformComponent->World.SetBasis(glm::toMat3(Rot));
             TransformComponent->Local = TransformComponent->World;
@@ -94,19 +92,13 @@ void FlappyBirdClone::AttachInputs()
         Input::InputAction::BindType::Release,
         [this]
         {
+            m_RigidBody->setLinearVelocity({});
             m_IsJumping = false;
         });
 }
 
 void FlappyBirdClone::OnUpdate()
 {
-    return;
-
-    // Runtime::DebugOverlay::DrawCuboidLine(
-    //     Physics::FromBullet3(m_RigidBody->getWorldTransform().getOrigin()),
-    //     Vector3(8.f, 15.f, 1.f),
-    //     Colors::Red);
-
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
@@ -128,4 +120,13 @@ void FlappyBirdClone::OnUpdate()
     m_VelocityAccum = std::clamp(m_VelocityAccum, -m_EnginePower * 2, m_EnginePower * 2);
 
     m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
+
+    //
+
+    float Angle = std::lerp(180.f, 0.f, (m_VelocityAccum + m_EnginePower * 2) / (m_EnginePower * 4));
+
+    auto Transform = m_RigidBody->getWorldTransform();
+    Transform.setRotation(btQuaternion(btVector3(0, 0, 1), glm::radians(Angle)));
+    m_RigidBody->setWorldTransform(Transform);
+    m_RigidBody->setInterpolationWorldTransform(Transform);
 }
