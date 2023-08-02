@@ -120,17 +120,17 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY_PV(...) virtual __VA_ARGS__ = 0
 #else
 #define NEON_M_DEBUG_ONLY_PV(...) \
-    void __VA_ARGS__ noexcept     \
+    __VA_ARGS__                   \
     {                             \
     }
 #endif
 
 // Pure virtual on debug+dist, disabled on release
-#if NEON_DEBUG
+#ifndef NEON_DIST
 #define NEON_M_NODIST_PV(...) virtual __VA_ARGS__ = 0
 #else
 #define NEON_M_NODIST_PV(...) \
-    void __VA_ARGS__ noexcept \
+    __VA_ARGS__               \
     {                         \
     }
 #endif
@@ -142,18 +142,18 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY_V(...) virtual __VA_ARGS__
 #else
 #define NEON_M_DEBUG_ONLY_V(...) \
-    void __VA_ARGS__ noexcept    \
+    __VA_ARGS__                  \
     {                            \
     }
 #endif
 
 // Virtual on debug+dist, disabled on release
-#if NEON_DEBUG
+#ifndef NEON_DIST
 #define NEON_M_NODIST_V(...) virtual __VA_ARGS__
 #else
-#define NEON_M_NODIST_V(...)  \
-    void __VA_ARGS__ noexcept \
-    {                         \
+#define NEON_M_NODIST_V(...) \
+    __VA_ARGS__              \
+    {                        \
     }
 #endif
 
@@ -164,17 +164,17 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY(...) __VA_ARGS__
 #else
 #define NEON_M_DEBUG_ONLY(...) \
-    void __VA_ARGS__ noexcept  \
+    __VA_ARGS__                \
     {                          \
     }
 #endif
 
 // Enabled on debug+dist, disabled on release
-#if NEON_DEBUG
+#ifndef NEON_DIST
 #define NEON_M_NODIST(...) __VA_ARGS__
 #else
-#define NEON_M_NODIST(...)    \
-    void __VA_ARGS__ noexcept \
-    {                         \
+#define NEON_M_NODIST(...) \
+    __VA_ARGS__            \
+    {                      \
     }
 #endif

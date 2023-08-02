@@ -3,9 +3,7 @@
 #include <Utils/Signal.hpp>
 #include <Core/BitMask.hpp>
 #include <Runtime/PipelineBuilder.hpp>
-
-#include <cppcoro/static_thread_pool.hpp>
-#include <cppcoro/async_auto_reset_event.hpp>
+#include <Asio/ThreadPool.hpp>
 
 namespace Neon::Runtime
 {
@@ -112,7 +110,8 @@ namespace Neon::Runtime
         PhaseMapType       m_Phases;
         PhaseLevelListType m_Levels;
 
-        cppcoro::static_thread_pool m_ThreadPool;
-        std::vector<PipelinePhase*> m_NonAsyncPhases;
+        Asio::ThreadPool<>             m_ThreadPool;
+        std::vector<PipelinePhase*>    m_NonAsyncPhases;
+        std::vector<std::future<void>> m_AsyncPhases;
     };
 } // namespace Neon::Runtime

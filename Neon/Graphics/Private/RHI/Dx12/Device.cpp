@@ -171,7 +171,7 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::LoadPixRuntime()
     {
-#if !NEON_DIST
+#ifndef NEON_DIST
         if (GetModuleHandleW(STR("WinPixGpuCapturer.dll")))
         {
             return;
@@ -233,7 +233,7 @@ namespace Neon::RHI
     void Dx12RenderDevice::EnableDebugLayerIfNeeded(
         const DeviceCreateDesc& DeviceDesc)
     {
-#if !NEON_DIST
+#ifndef NEON_DIST
         WinAPI::ComPtr<ID3D12Debug1> DebugController;
         ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&DebugController)));
         if (DeviceDesc.EnableDebugLayer)

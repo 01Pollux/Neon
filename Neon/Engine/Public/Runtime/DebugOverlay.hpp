@@ -15,8 +15,8 @@ namespace Neon::Runtime
     class DebugOverlay
     {
     public:
-        [[nodiscard]] NEON_M_DEBUG_ONLY(static void Create());
-        [[nodiscard]] NEON_M_DEBUG_ONLY(static void Destroy());
+        NEON_M_NODIST(static void Create());
+        NEON_M_NODIST(static void Destroy());
 
         DebugOverlay() = default;
 
@@ -64,17 +64,17 @@ namespace Neon::Runtime
         }
 
     protected:
-        NEON_M_DEBUG_ONLY_PV(void Render_Impl(
+        NEON_M_NODIST_PV(void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
             RHI::IBuffer*              PerFrameData));
 
-        NEON_M_DEBUG_ONLY_PV(void DrawLine_Impl(
+        NEON_M_NODIST_PV(void DrawLine_Impl(
             const Vector3& StartPosition,
             const Vector3& EndPosition,
             const Color4&  StartColor,
             const Color4&  EndColor));
 
-        NEON_M_DEBUG_ONLY_PV(void DrawCuboidLine_Impl(
+        NEON_M_NODIST_PV(void DrawCuboidLine_Impl(
             const Vector3& CenterPosition,
             const Vector3& Size,
             const Color4&  Color));
