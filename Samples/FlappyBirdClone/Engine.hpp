@@ -55,7 +55,9 @@ private:
 private:
     EngineWorldRuntimePtr m_Runtime;
     MaterialMap           m_Materials;
-    TextureAssetPtr       m_Sprite;
+
+    TextureAssetPtr m_Sprite;
+    TextureAssetPtr m_HdrTriangle;
 
     Neon::Scene::Actor m_Player;
 
