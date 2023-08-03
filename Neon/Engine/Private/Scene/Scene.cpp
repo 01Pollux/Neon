@@ -133,6 +133,32 @@ namespace Neon::Scene
 
             //
 
+            RHI::TCommandContext<RHI::CommandQueueType::Graphics> CommandContext;
+
+            auto RenderCommandList = CommandContext.Append();
+
+#ifndef NEON_DIST
+            if (Runtime::DebugOverlay::ShouldRender())
+            {
+                // Transition the output image to a render target.
+                StateManager->TransitionResource(
+                    OutputImage.get(),
+                    RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
+
+                // Prepare the command list.
+                StateManager->FlushBarriers(RenderCommandList);
+
+                auto& Size = OutputImage->GetDimensions();
+
+                // Set viewport and scissor rect.
+                RenderCommandList->SetViewport(ViewportF{ .Width = float(Size.x), .Height = float(Size.y) });
+                RenderCommandList->SetScissorRect(RectF({}, Size));
+
+                // Render debug overlay.
+                Runtime::DebugOverlay::Render(RenderCommandList, CameraComponent->GraphicsBuffer.get());
+            }
+#endif
+
             // Transition the backbuffer to a copy destination.
             StateManager->TransitionResource(
                 Backbuffer,
@@ -144,16 +170,15 @@ namespace Neon::Scene
                 RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
 
             // Prepare the command list.
-            auto CommandContext = StateManager->FlushBarriers();
+            StateManager->FlushBarriers(RenderCommandList);
+            RenderCommandList->CopyResources(Backbuffer, OutputImage.get());
 
-            CommandContext[0]->CopyResources(Backbuffer, OutputImage.get());
-            Runtime::DebugOverlay::Render(dynamic_cast<RHI::IGraphicsCommandList*>(CommandContext[0]), CameraComponent->GraphicsBuffer.get());
-
+            // Transition the backbuffer to a present state.
             StateManager->TransitionResource(
                 Backbuffer,
                 RHI::MResourceState_Present);
 
-            StateManager->FlushBarriers(CommandContext[0]);
+            StateManager->FlushBarriers(RenderCommandList);
         }
     }
 

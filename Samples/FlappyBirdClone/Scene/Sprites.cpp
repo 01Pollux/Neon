@@ -1,5 +1,6 @@
 #include "Engine.hpp"
 #include <Asset/Manager.hpp>
+#include <RHI/Resource/State.hpp>
 
 //
 
@@ -29,4 +30,12 @@ void FlappyBirdClone::PreloadSprite()
 
     m_Sprite      = RHI::PendingResource(SpriteTexture->GetImageInfo()).Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
     m_HdrTriangle = RHI::PendingResource(HdrTriangleTexture->GetImageInfo()).Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
+
+    RHI::IResourceStateManager::Get()->TransitionResource(
+        m_Sprite.get(),
+        RHI::EResourceState::PixelShaderResource);
+
+    RHI::IResourceStateManager::Get()->TransitionResource(
+        m_HdrTriangle.get(),
+        RHI::EResourceState::PixelShaderResource);
 }

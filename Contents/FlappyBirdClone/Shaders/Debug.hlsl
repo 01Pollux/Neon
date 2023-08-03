@@ -4,16 +4,15 @@
 // --------------------
 struct PerFrameData
 {
+	matrix World;
+	
 	matrix View;
 	matrix Projection;
 	matrix ViewProjection;
+	
 	matrix ViewInverse;
 	matrix ProjectionInverse;
 	matrix ViewProjectionInverse;
-	
-	float3 CameraPosition;
-	float3 CameraDirection;
-	float3 CameraUp;
 };
 
 
@@ -23,7 +22,7 @@ struct VSInput
 {
 	float3 Position : Position;
 	float4 Color : Color;
-	int NeedsProjection : NeedsProjection;
+	uint NeedsProjection : NeedsProjection;
 };
 
 
@@ -50,6 +49,7 @@ PSInput VS_Main(VSInput Vs)
 	Ps.Position = float4(Vs.Position, 1.0f);
 	if (Vs.NeedsProjection)
 	{
+		Ps.Position = mul(Ps.Position, g_FrameData.World);
 		Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
 	}
 	Ps.Color = Vs.Color;
@@ -63,5 +63,6 @@ PSInput VS_Main(VSInput Vs)
 
 float4 PS_Main(PSInput Ps) : SV_TARGET
 {
-	return Ps.Color;
+	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	//return Ps.Color;
 }

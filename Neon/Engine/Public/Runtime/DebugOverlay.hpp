@@ -25,6 +25,16 @@ namespace Neon::Runtime
         virtual ~DebugOverlay() = default;
 
         /// <summary>
+        /// Check if debug overlay should be drawn.
+        /// </summary>
+        [[nodiscard]] static bool ShouldRender()
+        {
+#ifndef NEON_DIST
+            return s_DebugOverlay->ShouldRender_Impl();
+#endif
+        }
+
+        /// <summary>
         /// Flush all draw calls into ommand list.
         /// </summary>
         static void Render(
@@ -64,6 +74,8 @@ namespace Neon::Runtime
         }
 
     protected:
+        NEON_M_NODIST_PV(bool ShouldRender_Impl());
+
         NEON_M_NODIST_PV(void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
             RHI::IBuffer*              PerFrameData));

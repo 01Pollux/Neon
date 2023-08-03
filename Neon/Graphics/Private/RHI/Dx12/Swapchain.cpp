@@ -219,6 +219,9 @@ namespace Neon::RHI
 
             ThrowIfFailed(Swapchain.As(&m_Swapchain));
         }
+
+        ThrowIfFailed(Dx12RenderDevice::Get()->GetDxgiFactory()->MakeWindowAssociation(
+            HWND(m_WindowApp->GetPlatformHandle()), DXGI_MWA_NO_ALT_ENTER));
     }
 
     void Dx12Swapchain::ResizeBackbuffers(

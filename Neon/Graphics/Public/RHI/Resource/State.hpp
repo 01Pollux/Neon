@@ -31,6 +31,17 @@ namespace Neon::RHI
         /// <summary>
         /// Transition a resource to a new state.
         /// </summary>
+        void TransitionResource(
+            IGpuResource*  Resource,
+            EResourceState NewState,
+            uint32_t       SubresourceIndex = Resource_AllSubresources)
+        {
+            return TransitionResource(Resource, BitMask_Or(NewState), SubresourceIndex);
+        }
+
+        /// <summary>
+        /// Transition a resource to a new state.
+        /// </summary>
         virtual void TransitionResource(
             IGpuResource*            Resource,
             const SubresourceStates& NewStates) = 0;

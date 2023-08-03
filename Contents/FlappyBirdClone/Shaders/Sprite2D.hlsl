@@ -4,16 +4,15 @@
 // --------------------
 struct PerFrameData
 {
+	matrix World;
+	
 	matrix View;
 	matrix Projection;
 	matrix ViewProjection;
+	
 	matrix ViewInverse;
 	matrix ProjectionInverse;
 	matrix ViewProjectionInverse;
-	
-	float3 CameraPosition;
-	float3 CameraDirection;
-	float3 CameraUp;
 };
 
 struct PerObjectData

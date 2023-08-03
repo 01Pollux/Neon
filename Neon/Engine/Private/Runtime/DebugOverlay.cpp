@@ -34,7 +34,7 @@ namespace Neon::Runtime
             {
                 Vector3  Position;
                 Color4U8 Color;
-                char     NeedsProjection;
+                int      NeedsProjection;
             };
 
             static constexpr uint32_t VerticesCount = 2;
@@ -62,6 +62,8 @@ namespace Neon::Runtime
         };
 
     public:
+        bool ShouldRender_Impl() override;
+
         void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
             RHI::IBuffer*              PerFrameData) override;
@@ -99,14 +101,16 @@ namespace Neon::Runtime
 
     //
 
+    bool DefaultEngineDebugOverlay::ShouldRender_Impl()
+    {
+        return m_LineBuffer.ShouldDraw();
+    }
+
     void DefaultEngineDebugOverlay::Render_Impl(
         RHI::IGraphicsCommandList* CommandList,
         RHI::IBuffer*              PerFrameData)
     {
-        if (m_LineBuffer.ShouldDraw())
-        {
-            m_LineBuffer.Draw(CommandList, PerFrameData);
-        }
+        m_LineBuffer.Draw(CommandList, PerFrameData);
         FlushBuffers();
     }
 
@@ -126,11 +130,11 @@ namespace Neon::Runtime
         m_LineBuffer.DrawCount += Overlay_Debug_Line::VerticesCount;
 
         CurVertex[0].Position        = StartPosition;
-        CurVertex[0].Color           = StartColor;
+        CurVertex[0].Color           = (StartColor * 255.f);
         CurVertex[0].NeedsProjection = 1;
 
         CurVertex[1].Position        = EndPosition;
-        CurVertex[1].Color           = EndColor;
+        CurVertex[1].Color           = (EndColor * 255.f);
         CurVertex[1].NeedsProjection = 1;
     }
 
@@ -196,6 +200,11 @@ namespace Neon::Runtime
 
         ShaderAssetTaskPtr DebugShader = Asset::Manager::Load(AssetGuids::DebugOverlayGuid());
 
+        RHI::ShaderInputLayout VertexInput;
+        VertexInput.emplace_back("Position", RHI::EResourceFormat::R32G32B32_Float);
+        VertexInput.emplace_back("Color", RHI::EResourceFormat::R8G8B8A8_UNorm);
+        VertexInput.emplace_back("NeedsProjection", RHI::EResourceFormat::R32_UInt);
+
         Material =
             Renderer::RenderMaterialBuilder()
                 .RootSignature(
@@ -204,15 +213,17 @@ namespace Neon::Runtime
                             .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                             .AddConstantBufferView("g_FrameData", 0, 1)))
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
+                .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
                 .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
+                .InputLayout(std::move(VertexInput))
                 .PixelShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
-                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+                .Topology(RHI::PrimitiveTopologyCategory::Line)
                 .RenderTarget(0, RHI::ISwapchain::Get()->GetFormat())
                 .Build();
 
         Asset::Manager::Unload(DebugShader->GetGuid());
 
-        VertexBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Overlay_Debug_Line::VerticesCount * sizeof(Overlay_Debug_Line::Vertex) }));
+        VertexBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
         VertexBufferPtr = static_cast<Overlay_Debug_Line::Vertex*>(VertexBuffer->Map<Overlay_Debug_Line::Vertex>());
     }
 
@@ -239,7 +250,7 @@ namespace Neon::Runtime
         CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData);
 
         CommandList->SetPipelineState(Material->GetPipelineState());
-        CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleList);
+        CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);
 
         RHI::Views::Vertex VtxView;
         VtxView.Append(VertexBuffer.get(), 0, sizeof(Overlay_Debug_Line::Vertex), VertexBuffer->GetSize());

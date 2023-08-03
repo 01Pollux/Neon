@@ -26,15 +26,15 @@ void FlappyBirdClone::LoadScene()
             SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
             SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
         }
+        m_Player.modified<Scene::Component::Sprite>();
 
         auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
         {
-            TransformComponent->World.SetPosition(Vec::Forward<Vector3> * 2.5f);
-
             Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
             TransformComponent->World.SetBasis(glm::toMat3(Rot));
             TransformComponent->Local = TransformComponent->World;
         }
+        m_Player.modified<Scene::Component::Transform>();
 
         {
             m_Player.set(Scene::Component::CollisionShape{
@@ -49,7 +49,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
+    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera3D, "PlayerCamera");
     {
         Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
@@ -61,6 +61,14 @@ void FlappyBirdClone::LoadScene()
 
             CameraComponent->LookAt = m_Player.get<Scene::Component::Transform>()->World.GetPosition();
         }
+        Camera.modified<Scene::Component::Camera>();
+
+        auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
+        {
+            TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
+            TransformComponent->Local = TransformComponent->World;
+        }
+        Camera.modified<Scene::Component::Transform>();
     }
 
     AttachInputs();
@@ -99,6 +107,11 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    // Runtime::DebugOverlay::DrawCuboidLine(
+    //     Vec::Forward<Vector3> * 10.f,
+    //     Vec::One<Vector3> * 1.f,
+    //     Colors::Red);
+
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 

@@ -210,7 +210,7 @@ namespace Neon::Renderer
 
         // Create per-object data buffer
         m_PerDataBuffer.reset(RHI::IUploadBuffer::Create(
-            { .Size = SpriteBatchConstants::PerObjectDataBufferSize }));
+            { .Size = SpriteBatchConstants::PerObjectDataBufferSize, .UsePool = false }));
         m_PerDataBufferPtr = m_PerDataBuffer->Map();
         //
 

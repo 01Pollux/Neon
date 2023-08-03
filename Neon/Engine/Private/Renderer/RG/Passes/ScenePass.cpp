@@ -91,6 +91,8 @@ namespace Neon::RG
         auto CameraTransform = m_Camera.get<Component::Transform>();
         auto CameraBuffer    = CameraComponent->GraphicsBuffer->Map<Component::CameraFrameData>();
 
+        CameraBuffer->World = glm::transpose(CameraTransform->World.ToMat4x4());
+
         CameraBuffer->View           = glm::transpose(CameraComponent->ViewMatrix(m_Camera));
         CameraBuffer->Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
         CameraBuffer->ViewProjection = CameraBuffer->View * CameraBuffer->Projection;
@@ -98,11 +100,6 @@ namespace Neon::RG
         CameraBuffer->ViewInverse           = glm::inverse(CameraBuffer->View);
         CameraBuffer->ProjectionInverse     = glm::inverse(CameraBuffer->Projection);
         CameraBuffer->ViewProjectionInverse = glm::inverse(CameraBuffer->ViewProjection);
-
-        CameraBuffer->CameraPosition = CameraTransform->World.GetPosition();
-        // TODO
-        // CameraBuffer->CameraDirection = CameraComponent->GetDirection();
-        // CameraBuffer->CameraUp        = CameraComponent->GetUp();
 
         CameraComponent->GraphicsBuffer->Unmap();
         return CameraComponent->GraphicsBuffer;

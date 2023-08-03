@@ -20,6 +20,8 @@ namespace Neon::Scene::Component
 {
     struct CameraFrameData
     {
+        alignas(16) Matrix4x4 World;
+
         alignas(16) Matrix4x4 View;
         alignas(16) Matrix4x4 Projection;
         alignas(16) Matrix4x4 ViewProjection;
@@ -27,10 +29,6 @@ namespace Neon::Scene::Component
         alignas(16) Matrix4x4 ViewInverse;
         alignas(16) Matrix4x4 ProjectionInverse;
         alignas(16) Matrix4x4 ViewProjectionInverse;
-
-        alignas(16) Vector3 CameraPosition;
-        alignas(16) Vector3 CameraDirection;
-        alignas(16) Vector3 CameraUp;
     };
 
     enum class CameraType : uint8_t
