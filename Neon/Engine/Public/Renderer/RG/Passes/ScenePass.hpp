@@ -3,6 +3,7 @@
 #include <Renderer/RG/Pass.hpp>
 #include <Renderer/RG/Graph.hpp>
 #include <Renderer/Render/SpriteBatch.hpp>
+#include <Renderer/Render/PrimitiveBatch.hpp>
 
 #include <Scene/Component/Sprite.hpp>
 #include <Scene/Component/Transform.hpp>

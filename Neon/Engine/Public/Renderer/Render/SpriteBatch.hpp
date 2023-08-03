@@ -1,8 +1,7 @@
 #pragma once
 
-#include <RHI/Resource/Resource.hpp>
-#include <RHI/Resource/Views/ShaderResource.hpp>
 #include <Renderer/Material/Material.hpp>
+#include <Renderer/Render/PrimitiveBatch.hpp>
 
 #include <Math/Vector.hpp>
 #include <Math/Rect.hpp>
@@ -30,6 +29,76 @@ namespace Neon
 
 namespace Neon::Renderer
 {
+#if 0
+    class SpriteBatcher : public Impl::PrimitiveBatch
+    {
+        struct SpriteVertex
+        {
+            Vector2 Position;
+            Vector2 TexCoord;
+            int     SpriteIndex;
+        };
+
+    public:
+        /// <summary>
+        /// Called before final drawing.
+        /// </summary>
+        static constexpr size_t VertexStride = sizeof(SpriteVertex);
+        static constexpr size_t IndexStride  = sizeof(uint16_t);
+
+        static constexpr size_t MaxVerticesCount = 4096;
+
+        SpriteBatcher(
+            uint32_t VerticesCount = MaxVerticesCount,
+            uint32_t IndexCount    = MaxVerticesCount * 3) :
+            Impl::PrimitiveBatch(
+                VertexStride,
+                VerticesCount,
+                IndexStride,
+                IndexCount)
+        {
+        }
+
+        /// <summary>
+        /// Begin drawing.
+        /// </summary>
+        void Begin(
+            RHI::IGraphicsCommandList* CommandList,
+            RHI::PrimitiveTopology     Topology)
+        {
+            return Impl::PrimitiveBatch::Begin(
+                CommandList,
+                Topology,
+                true);
+        }
+
+        /// <summary>
+        /// Called before final drawing.
+        /// </summary>
+        void OnDraw() override;
+
+        /// <summary>
+        /// End drawing.
+        /// </summary>
+        void End()
+        {
+            Impl::PrimitiveBatch::End();
+        }
+
+    public:
+        /// <summary>
+        /// Draw a rectangle.
+        /// </summary>
+        void DrawSprite(
+            const Scene::Component::Transform& Transform,
+            const Scene::Component::Sprite&    Sprite);
+
+    private:
+        Ptr<RHI::IUploadBuffer> m_PerDataBuffer;
+        MaterialTable           m_MaterialInstances;
+    };
+#endif
+
     class SpriteBatch
     {
     public:

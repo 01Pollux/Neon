@@ -34,12 +34,12 @@ namespace Neon::Renderer::Impl
         uint32_t IndexStride,
         uint32_t IndexCount) :
         m_VertexStride(VertexStride),
-        m_VertexMaxCount(VetexCount),
-        m_IndexMaxCount(IndexCount),
+        m_VertexBuffer(VertexStride * VetexCount),
+        m_IndexBuffer(IndexStride * IndexCount),
         m_Is32BitIndex(IndexStride == sizeof(uint32_t))
     {
-        NEON_ASSERT(m_VertexStride > 0, "Vertex stride is 0");
-        NEON_ASSERT(m_VertexCount > 0, "Vertex count is 0");
+        NEON_ASSERT(VertexStride > 0, "Vertex stride is 0");
+        NEON_ASSERT(VetexCount > 0, "Vertex count is 0");
     }
 
     void PrimitiveBatch::Begin(
@@ -55,112 +55,57 @@ namespace Neon::Renderer::Impl
     }
 
     void PrimitiveBatch::Draw(
-        uint32_t VertexCount,
+        uint32_t VertexSize,
         void**   OutVertices,
-        uint32_t IndexCount,
+        uint32_t IndexSize,
         void**   OutIndices)
     {
-        NEON_ASSERT(!m_DrawingIndexed || (m_DrawingIndexed && OutIndices && OutIndices), "Drawing indexed without index buffer");
+        NEON_ASSERT(!m_DrawingIndexed || (m_DrawingIndexed && IndexSize && OutIndices && m_IndexBuffer), "Drawing indexed without index buffer");
 
-        bool Overflow = false;
-        // Check if we already have a vertex buffer
-        if (m_VertexBuffer)
-        {
-            // Check if we have enough space in the vertex buffer
-            const size_t MaxPossibleVertices = m_VertexMaxCount - m_VertexOffset;
-
-            const size_t MaxVerticesSize = GetVertexBufferSize(MaxPossibleVertices, m_VertexStride);
-            const size_t MaxRequiredSize = GetVertexBufferSize(m_VertexCount, m_VertexStride);
-
-            Overflow = (MaxRequiredSize > MaxVerticesSize);
-            // If we do have enough space, check if we have enough space in the index buffer if possible
-            if (!Overflow && m_DrawingIndexed)
-            {
-                const size_t MaxPossibleIndices = m_IndexMaxCount - m_IndexOffset;
-
-                const size_t MaxIndicesSize     = GetIndexBufferSize(MaxPossibleIndices, m_Is32BitIndex);
-                const size_t MaxRequiredIdxSize = GetIndexBufferSize(m_IndexCount, m_Is32BitIndex);
-
-                Overflow = MaxRequiredIdxSize > MaxIndicesSize;
-            }
-        }
-
-        // Reset on overflow
-        if (Overflow)
+        if (!m_VertexBuffer.Reserve(VertexSize) || (m_IndexBuffer && !m_IndexBuffer.Reserve(IndexSize)))
         {
             End();
 
-            // Unmap buffers
-            m_VertexBuffer->Unmap();
-            if (m_IndexBuffer)
-            {
-                m_IndexBuffer->Unmap();
-            }
-
-            m_VertexBuffer = nullptr;
-            m_IndexBuffer  = nullptr;
+            m_VertexBuffer.Reset();
+            m_IndexBuffer.Reset();
 
             Begin(m_CommandList, m_Topology, m_DrawingIndexed);
         }
 
-        // Reallocate vertex buffer if needed.
-        if (!m_VertexBuffer)
+        *OutVertices = m_VertexBuffer.AllocateData(VertexSize);
+        m_VerticesSize += VertexSize;
+        if (m_DrawingIndexed)
         {
-            m_VertexBuffer.reset(RHI::IUploadBuffer::Create({ .Size = GetVertexBufferSize(m_VertexMaxCount, m_VertexStride) }));
-            m_VertexOffset   = 0;
-            m_MappedVertices = m_VertexBuffer->Map();
-        }
 
-        // Reallocate index buffer if needed.
-        if (m_DrawingIndexed && !m_IndexBuffer)
-        {
-            m_IndexBuffer.reset(RHI::IUploadBuffer::Create({ .Size = GetIndexBufferSize(m_IndexMaxCount, m_Is32BitIndex) }));
-            m_IndexOffset   = 0;
-            m_MappedIndices = m_IndexBuffer->Map();
-        }
-
-        // Load address of the vertex buffer.
-        {
-            *OutVertices = static_cast<uint8_t*>(m_MappedVertices) + GetVertexBufferSize(m_VertexOffset, m_VertexStride);
-            m_VertexOffset += VertexCount;
-        }
-
-        // Load address of the index buffer.
-        if (m_IndexBuffer && OutIndices)
-        {
-            NEON_ASSERT(IndexCount, "Index count is 0");
-            *OutIndices = static_cast<uint8_t*>(m_MappedIndices) + GetIndexBufferSize(m_IndexOffset, m_Is32BitIndex);
-            m_IndexOffset += IndexCount;
+            *OutIndices = m_IndexBuffer.AllocateData(IndexSize);
+            m_IndicesSize += IndexSize;
         }
     }
 
     void PrimitiveBatch::End()
     {
+        OnDraw();
+
         m_CommandList->SetPrimitiveTopology(m_Topology);
 
         RHI::Views::Vertex VtxView;
-        VtxView.Append(m_VertexBuffer->GetHandle(), m_VertexStride, m_VertexCount);
+        VtxView.Append(m_VertexBuffer.GetHandleFor(m_VerticesSize), m_VertexStride, m_VerticesSize);
 
         m_CommandList->SetVertexBuffer(0, VtxView);
 
         if (m_DrawingIndexed)
         {
-            RHI::Views::Index IdxView(m_IndexBuffer->GetHandle(), m_IndexCount, m_Is32BitIndex);
+            RHI::Views::Index IdxView(m_IndexBuffer.GetHandleFor(m_IndicesSize), m_IndicesSize, m_Is32BitIndex);
 
             m_CommandList->SetIndexBuffer(IdxView);
-            m_CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = m_IndexCount });
+            m_CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = m_IndicesSize / m_VertexStride });
         }
         else
         {
-            m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = m_VertexCount });
+            m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = m_VerticesSize / m_VertexStride });
         }
 
-        // Reusing the same buffers, so we need to offset the next draw call.
-        m_VertexOffset += m_VertexCount;
-        m_IndexOffset += m_IndexCount;
-
-        // Reset the vertex and index count.
-        m_VertexCount = 0;
-        m_IndexCount  = 0;
+        m_VerticesSize = 0;
+        m_IndicesSize  = 0;
     }
 } // namespace Neon::Renderer::Impl

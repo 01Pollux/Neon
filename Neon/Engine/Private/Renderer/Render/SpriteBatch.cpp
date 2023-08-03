@@ -179,11 +179,11 @@ namespace Neon::Renderer
         VertexView.Append(
             m_VertexBuffer->GetHandle(),
             sizeof(SpriteBatchConstants::VertexInput),
-            m_DrawCount * SpriteBatchConstants::VerticesCount);
+            m_DrawCount * SpriteBatchConstants::VerticesCount * sizeof(SpriteBatchConstants::VertexInput));
 
         RHI::Views::Index IndexView(
             m_IndexBuffer->GetHandle(),
-            m_DrawCount * SpriteBatchConstants::IndicesCount);
+            m_DrawCount * SpriteBatchConstants::IndicesCount * sizeof(SpriteBatchConstants::IndexType));
 
         m_CommandList->SetVertexBuffer(0, VertexView);
         m_CommandList->SetIndexBuffer(IndexView);
@@ -231,4 +231,55 @@ namespace Neon::Renderer
 
         m_IndexBuffer->Unmap();
     }
+
+#if 0
+    void SpriteBatcher::OnDraw()
+    {
+        m_MaterialInstances.Reset();
+    }
+
+    void SpriteBatcher::DrawSprite(
+        const Scene::Component::Transform& Transform,
+        const Scene::Component::Sprite&    Sprite)
+    {
+        if (!Sprite.MaterialInstance)
+        {
+            return;
+        }
+
+        SpriteVertex* Vertices;
+        uint16_t*     Indices;
+
+        Impl::PrimitiveBatch::Draw(
+            4,
+            std::bit_cast<void**>(&Vertices),
+            6,
+            std::bit_cast<void**>(&Indices));
+
+        Vector2 TexCoords[]{
+            Sprite.TextureRect.TopLeft(),
+            Sprite.TextureRect.TopRight(),
+            Sprite.TextureRect.BottomRight(),
+            Sprite.TextureRect.BottomLeft()
+        };
+
+        Vector2 HalfSize = Sprite.Size * 0.5f;
+        Vector2 QuadPositions[]{
+            Vector2(-HalfSize.x, HalfSize.y),
+            Vector2(HalfSize.x, HalfSize.y),
+            Vector2(HalfSize.x, -HalfSize.y),
+            Vector2(-HalfSize.x, -HalfSize.y)
+        };
+
+        m_MaterialInstances.Append(Sprite.MaterialInstance.get());
+
+        // Write vertices to the vertex buffer
+        for (size_t i = 0; i < 4; ++i)
+        {
+            Vertices[i].Position    = QuadPositions[i];
+            Vertices[i].TexCoord    = TexCoords[i];
+            Vertices[i].SpriteIndex = m_DrawCount;
+        }
+    }
+#endif
 } // namespace Neon::Renderer
