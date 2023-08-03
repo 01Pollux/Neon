@@ -12,7 +12,7 @@ namespace Neon::RHI::Views
         {
             GpuResourceHandle Handle;
             uint32_t          Stride;
-            uint32_t          Size;
+            uint32_t          Count;
         };
 
         Vertex() = default;
@@ -24,9 +24,9 @@ namespace Neon::RHI::Views
             IBuffer* Buffer,
             size_t   Offset,
             size_t   Stride,
-            size_t   Size)
+            size_t   Count)
         {
-            Append({ Buffer->GetHandle().Value + Offset }, Stride, Size);
+            Append({ Buffer->GetHandle().Value + Offset }, Stride, Count);
         }
 
         /// <summary>
@@ -35,9 +35,9 @@ namespace Neon::RHI::Views
         void Append(
             GpuResourceHandle Handle,
             size_t            Stride,
-            size_t            Size)
+            size_t            Count)
         {
-            m_Views.emplace_back(Handle, uint32_t(Stride), uint32_t(Size));
+            m_Views.emplace_back(Handle, uint32_t(Stride), uint32_t(Count));
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Neon::RHI::Views
         struct View
         {
             GpuResourceHandle Handle{};
-            uint32_t          Size{};
+            uint32_t          Count{};
             bool              Is32Bit = false;
         };
 
@@ -67,17 +67,17 @@ namespace Neon::RHI::Views
         Index(
             IBuffer* Buffer,
             size_t   Offset,
-            size_t   Size,
+            size_t   Count,
             bool     Is32Bit = false) :
-            Index({ Buffer->GetHandle().Value + Offset }, Size, Is32Bit)
+            Index({ Buffer->GetHandle().Value + Offset }, Count, Is32Bit)
         {
         }
 
         Index(
             GpuResourceHandle Handle,
-            size_t            Size,
+            size_t            Count,
             bool              Is32Bit = false) :
-            m_View{ Handle, uint32_t(Size), Is32Bit }
+            m_View{ Handle, uint32_t(Count), Is32Bit }
         {
         }
 

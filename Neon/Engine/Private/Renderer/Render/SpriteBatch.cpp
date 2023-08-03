@@ -179,11 +179,11 @@ namespace Neon::Renderer
         VertexView.Append(
             m_VertexBuffer->GetHandle(),
             sizeof(SpriteBatchConstants::VertexInput),
-            m_VertexBuffer->GetSize());
+            m_DrawCount * SpriteBatchConstants::VerticesCount);
 
         RHI::Views::Index IndexView(
             m_IndexBuffer->GetHandle(),
-            m_IndexBuffer->GetSize());
+            m_DrawCount * SpriteBatchConstants::IndicesCount);
 
         m_CommandList->SetVertexBuffer(0, VertexView);
         m_CommandList->SetIndexBuffer(IndexView);

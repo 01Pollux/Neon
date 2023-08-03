@@ -153,14 +153,14 @@ namespace Neon::Runtime
         <----------> == half size
         */
         const Vector3 Positions[]{
-            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z },
-            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z },
-            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z },
-            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z },
-            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z },
-            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z },
-            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z },
-            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z }
+            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z }, // 0 -- back -- top left
+            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z }, // 1 -- back -- top right
+            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z }, // 2 -- back -- bottom right
+            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z }, // 3 -- back -- bottom left
+            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z }, // 4 -- front -- top left
+            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z }, // 5 -- front -- top right
+            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z }, // 6 -- front -- bottom right
+            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z }  // 7 -- front -- bottom left
         };
 
         constexpr uint8_t Indices[]{
@@ -176,13 +176,16 @@ namespace Neon::Runtime
 
             0, 4,
             1, 5,
-            3, 7,
-            2, 6
+            2, 6,
+            3, 7
         };
 
         for (size_t i = 0; i < std::size(Indices); i += 2)
         {
-            DrawLine_Impl(Positions[Indices[i]], Positions[Indices[i + 1]], Color, Color);
+            const Vector3& P1 = Positions[Indices[i]];
+            const Vector3& P2 = Positions[Indices[i + 1]];
+
+            DrawLine_Impl(P1, P2, Color, Color);
         }
     }
 

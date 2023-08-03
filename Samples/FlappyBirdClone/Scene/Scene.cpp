@@ -48,6 +48,35 @@ void FlappyBirdClone::LoadScene()
         }
     }
 
+    // Stress test: create 500 sprites, each seperated by 1 unit in both x and y
+    {
+        uint32_t Count = 500;
+
+        // Start position is 50 units in the negative x direction and 25 units in the negative y direction
+        Vector3 StartPosition = Vec::Left<Vector3> * 25.f + Vec::Down<Vector3> * 5.f;
+
+        for (uint32_t i = 0; i < Count; ++i)
+        {
+            auto Name   = "Sprite" + std::to_string(i);
+            auto Entity = Scene.CreateEntity(Scene::EntityType::Sprite, Name.c_str());
+            {
+                auto SpriteComponent = Entity.get_mut<Scene::Component::Sprite>();
+                {
+                    SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
+                    SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
+                }
+                Entity.modified<Scene::Component::Sprite>();
+
+                // Seperated in both x and y, for each 50 units move to the next row
+                auto TransformComponent = Entity.get_mut<Scene::Component::Transform>();
+                {
+                    TransformComponent->World.SetPosition((Vec::Right<Vector3> * float(i % 50) + Vec::Up<Vector3> * float(i / 50)) + StartPosition);
+                    TransformComponent->Local = TransformComponent->World;
+                }
+            }
+        }
+    }
+
     // Player camera
     auto Camera = Scene.CreateEntity(Scene::EntityType::Camera3D, "PlayerCamera");
     {
@@ -107,10 +136,10 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
-    // Runtime::DebugOverlay::DrawCuboidLine(
-    //     Vec::Forward<Vector3> * 10.f,
-    //     Vec::One<Vector3> * 1.f,
-    //     Colors::Red);
+    /* Runtime::DebugOverlay::DrawCuboidLine(
+         Vec::Forward<Vector3> * 5.f,
+         Vec::One<Vector3> * 1.f,
+         Colors::White);*/
 
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
