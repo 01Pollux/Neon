@@ -171,7 +171,7 @@ namespace Neon::Renderer
 
         FirstMaterial->SetResourceView(
             "g_FrameData",
-            m_CameraBuffer);
+            m_CameraBuffer->GetHandle());
 
         m_MaterialInstances.Bind(m_CommandList);
 
@@ -232,13 +232,38 @@ namespace Neon::Renderer
         m_IndexBuffer->Unmap();
     }
 
-#if 0
+    //
+
+    void SpriteBatcher::SetCameraBuffer(
+        const Ptr<RHI::IUploadBuffer>& Buffer)
+    {
+        m_CameraBuffer = Buffer;
+    }
+
     void SpriteBatcher::OnDraw()
     {
+        BatchBaseClass::OnDraw();
+
+        auto FirstMaterial = m_MaterialInstances.GetMaterial(0);
+
+        FirstMaterial->SetResourceView(
+            "g_SpriteData",
+            m_PerObjectBuffer.GetHandleFor(uint32_t(m_MaterialInstances.GetMaterialCount() * sizeof(PerObjectData))));
+
+        FirstMaterial->SetResourceView(
+            "g_FrameData",
+            m_CameraBuffer->GetHandle());
+
+        m_MaterialInstances.Bind(m_CommandList);
+    }
+
+    void SpriteBatcher::OnReset()
+    {
+        m_PerObjectBuffer.Reset();
         m_MaterialInstances.Reset();
     }
 
-    void SpriteBatcher::DrawSprite(
+    void SpriteBatcher::Draw(
         const Scene::Component::Transform& Transform,
         const Scene::Component::Sprite&    Sprite)
     {
@@ -247,39 +272,20 @@ namespace Neon::Renderer
             return;
         }
 
-        SpriteVertex* Vertices;
-        uint16_t*     Indices;
+        if (!m_PerObjectBuffer.Reserve(sizeof(PerObjectData)))
+        {
+            Reset();
+        }
 
-        Impl::PrimitiveBatch::Draw(
-            4,
-            std::bit_cast<void**>(&Vertices),
-            6,
-            std::bit_cast<void**>(&Indices));
-
-        Vector2 TexCoords[]{
-            Sprite.TextureRect.TopLeft(),
-            Sprite.TextureRect.TopRight(),
-            Sprite.TextureRect.BottomRight(),
-            Sprite.TextureRect.BottomLeft()
-        };
-
-        Vector2 HalfSize = Sprite.Size * 0.5f;
-        Vector2 QuadPositions[]{
-            Vector2(-HalfSize.x, HalfSize.y),
-            Vector2(HalfSize.x, HalfSize.y),
-            Vector2(HalfSize.x, -HalfSize.y),
-            Vector2(-HalfSize.x, -HalfSize.y)
+        Vector2    HalfSize = Sprite.Size * 0.5f;
+        std::array Vertices = {
+            BatchSpriteVertex{ .Position = Vector2(-HalfSize.x, HalfSize.y), .TexCoord = Sprite.TextureRect.TopLeft(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() },
+            BatchSpriteVertex{ .Position = Vector2(HalfSize.x, HalfSize.y), .TexCoord = Sprite.TextureRect.TopRight(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() },
+            BatchSpriteVertex{ .Position = Vector2(HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomRight(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() },
+            BatchSpriteVertex{ .Position = Vector2(-HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomLeft(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() }
         };
 
         m_MaterialInstances.Append(Sprite.MaterialInstance.get());
-
-        // Write vertices to the vertex buffer
-        for (size_t i = 0; i < 4; ++i)
-        {
-            Vertices[i].Position    = QuadPositions[i];
-            Vertices[i].TexCoord    = TexCoords[i];
-            Vertices[i].SpriteIndex = m_DrawCount;
-        }
+        DrawQuad<>(Vertices);
     }
-#endif
 } // namespace Neon::Renderer

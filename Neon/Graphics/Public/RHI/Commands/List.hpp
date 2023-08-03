@@ -154,9 +154,9 @@ namespace Neon::RHI
         /// Set resource view in root signature
         /// </summary>
         virtual void SetResourceView(
-            ViewType Type,
-            uint32_t RootIndex,
-            IBuffer* Resource) = 0;
+            ViewType          Type,
+            uint32_t          RootIndex,
+            GpuResourceHandle Handle) = 0;
 
         /// <summary>
         /// Allocate from dynamic buffer and set resource view in root signature

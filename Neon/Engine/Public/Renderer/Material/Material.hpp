@@ -76,8 +76,8 @@ namespace Neon::Renderer
         /// Set the material's resource as a sampler.
         /// </summary>
         virtual void SetResourceView(
-            const std::string&            Name,
-            const Ptr<RHI::IGpuResource>& Resource) = 0;
+            const std::string&     Name,
+            RHI::GpuResourceHandle Handle) = 0;
 
         /// <summary>
         /// Set the material's resource as a constant.

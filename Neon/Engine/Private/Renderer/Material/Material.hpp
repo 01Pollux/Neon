@@ -83,11 +83,11 @@ namespace Neon::Renderer
             const std::string& Name,
             const void*        Data,
             size_t             Size,
-            uint32_t           Offset);
+            uint32_t           Offset) override;
 
         void SetResourceView(
-            const std::string&            Name,
-            const Ptr<RHI::IGpuResource>& Resource);
+            const std::string&     Name,
+            RHI::GpuResourceHandle Handle) override;
 
         void SetResourceSize(
             const StringU8& Name,
@@ -101,7 +101,7 @@ namespace Neon::Renderer
 
         struct RootEntry
         {
-            Ptr<RHI::IGpuResource>            Resource;
+            RHI::GpuResourceHandle            Handle{};
             RHI::ICommonCommandList::ViewType ViewType;
         };
 

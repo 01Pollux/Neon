@@ -34,6 +34,7 @@ namespace Neon::RG
 
     private:
         UPtr<Renderer::SpriteBatch> m_SpriteBatch;
+        Renderer::SpriteBatcher     m_SpriteBatch2;
 
         Scene::GameScene& m_Scene;
         Scene::Actor      m_Camera;

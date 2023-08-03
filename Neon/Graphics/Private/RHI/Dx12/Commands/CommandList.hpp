@@ -70,10 +70,6 @@ namespace Neon::RHI
         Ptr<IRootSignature> m_RootSignature;
 
         bool m_DescriptorDirty = true;
-
-        UPtr<Dx12DescriptorHeapBuddyAllocator>
-            m_ResourceViewAllocator,
-            m_SamplerViewAllocator;
     };
 
     class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
@@ -112,9 +108,9 @@ namespace Neon::RHI
             size_t      DestOffset = 0) override;
 
         void SetResourceView(
-            ViewType Type,
-            uint32_t RootIndex,
-            IBuffer* Resource) override;
+            ViewType          Type,
+            uint32_t          RootIndex,
+            GpuResourceHandle Handle) override;
 
         void SetDescriptorTable(
             uint32_t            RootIndex,
@@ -164,9 +160,9 @@ namespace Neon::RHI
             size_t      DestOffset = 0) override;
 
         void SetResourceView(
-            ViewType Type,
-            uint32_t RootIndex,
-            IBuffer* Resource) override;
+            ViewType          Type,
+            uint32_t          RootIndex,
+            GpuResourceHandle Handle) override;
 
         void SetDescriptorTable(
             uint32_t            RootIndex,

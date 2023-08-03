@@ -42,6 +42,16 @@ namespace Neon::Renderer::Impl
         NEON_ASSERT(VetexCount > 0, "Vertex count is 0");
     }
 
+    void PrimitiveBatch::Reset()
+    {
+        End();
+
+        m_VertexBuffer.Reset();
+        m_IndexBuffer.Reset();
+
+        Begin(m_CommandList, m_Topology, m_DrawingIndexed);
+    }
+
     void PrimitiveBatch::Begin(
         RHI::IGraphicsCommandList* CommandList,
         RHI::PrimitiveTopology     Topology,
@@ -64,12 +74,7 @@ namespace Neon::Renderer::Impl
 
         if (!m_VertexBuffer.Reserve(VertexSize) || (m_IndexBuffer && !m_IndexBuffer.Reserve(IndexSize)))
         {
-            End();
-
-            m_VertexBuffer.Reset();
-            m_IndexBuffer.Reset();
-
-            Begin(m_CommandList, m_Topology, m_DrawingIndexed);
+            Reset();
         }
 
         *OutVertices = m_VertexBuffer.AllocateData(VertexSize);
@@ -84,27 +89,27 @@ namespace Neon::Renderer::Impl
 
     void PrimitiveBatch::End()
     {
-        OnDraw();
-
         m_CommandList->SetPrimitiveTopology(m_Topology);
 
         RHI::Views::Vertex VtxView;
         VtxView.Append(m_VertexBuffer.GetHandleFor(m_VerticesSize), m_VertexStride, m_VerticesSize);
-
         m_CommandList->SetVertexBuffer(0, VtxView);
 
         if (m_DrawingIndexed)
         {
             RHI::Views::Index IdxView(m_IndexBuffer.GetHandleFor(m_IndicesSize), m_IndicesSize, m_Is32BitIndex);
-
             m_CommandList->SetIndexBuffer(IdxView);
+
+            OnDraw();
             m_CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = m_IndicesSize / m_VertexStride });
         }
         else
         {
+            OnDraw();
             m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = m_VerticesSize / m_VertexStride });
         }
 
+        OnReset();
         m_VerticesSize = 0;
         m_IndicesSize  = 0;
     }

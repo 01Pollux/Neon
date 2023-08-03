@@ -177,7 +177,7 @@ namespace Neon::RHI
         SetResourceView(
             Type,
             RootIndex,
-            Buffer.get());
+            Buffer->GetHandle());
     }
 
     //
@@ -205,27 +205,27 @@ namespace Neon::RHI
     }
 
     void Dx12GraphicsCommandList::SetResourceView(
-        ViewType Type,
-        uint32_t RootIndex,
-        IBuffer* Resource)
+        ViewType          Type,
+        uint32_t          RootIndex,
+        GpuResourceHandle Handle)
     {
-        D3D12_GPU_VIRTUAL_ADDRESS Handle{ Resource->GetHandle().Value };
+        D3D12_GPU_VIRTUAL_ADDRESS Dx12Handle{ Handle.Value };
         switch (Type)
         {
         case ViewType::Cbv:
             m_CommandList->SetGraphicsRootConstantBufferView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         case ViewType::Srv:
             m_CommandList->SetGraphicsRootShaderResourceView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         case ViewType::Uav:
             m_CommandList->SetGraphicsRootUnorderedAccessView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         }
     }
@@ -444,27 +444,27 @@ namespace Neon::RHI
     }
 
     void Dx12ComputeCommandList::SetResourceView(
-        ViewType Type,
-        uint32_t RootIndex,
-        IBuffer* Resource)
+        ViewType          Type,
+        uint32_t          RootIndex,
+        GpuResourceHandle Handle)
     {
-        D3D12_GPU_VIRTUAL_ADDRESS Handle{ Resource->GetHandle().Value };
+        D3D12_GPU_VIRTUAL_ADDRESS Dx12Handle{ Handle.Value };
         switch (Type)
         {
         case ViewType::Cbv:
             m_CommandList->SetComputeRootConstantBufferView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         case ViewType::Srv:
             m_CommandList->SetComputeRootShaderResourceView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         case ViewType::Uav:
             m_CommandList->SetComputeRootUnorderedAccessView(
                 RootIndex,
-                Handle);
+                Dx12Handle);
             break;
         }
     }

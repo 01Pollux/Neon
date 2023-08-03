@@ -29,53 +29,61 @@ namespace Neon
 
 namespace Neon::Renderer
 {
-#if 0
-    class SpriteBatcher : public Impl::PrimitiveBatch
+    struct BatchSpriteVertex
     {
-        struct SpriteVertex
+        Vector2  Position;
+        Vector2  TexCoord;
+        uint32_t SpriteIndex;
+    };
+
+    class SpriteBatcher : protected PrimitiveBatch16<BatchSpriteVertex>
+    {
+        struct PerObjectData
         {
-            Vector2 Position;
-            Vector2 TexCoord;
-            int     SpriteIndex;
+            Matrix4x4 World;
+            Vector4   Color;
         };
 
-    public:
-        /// <summary>
-        /// Called before final drawing.
-        /// </summary>
-        static constexpr size_t VertexStride = sizeof(SpriteVertex);
-        static constexpr size_t IndexStride  = sizeof(uint16_t);
+        using BatchBaseClass = PrimitiveBatch16<BatchSpriteVertex>;
 
-        static constexpr size_t MaxVerticesCount = 4096;
+    public:
+        static constexpr size_t MaxSpritesCount = 4096;
 
         SpriteBatcher(
-            uint32_t VerticesCount = MaxVerticesCount,
-            uint32_t IndexCount    = MaxVerticesCount * 3) :
-            Impl::PrimitiveBatch(
-                VertexStride,
-                VerticesCount,
-                IndexStride,
-                IndexCount)
+            uint32_t SpritesCount = MaxSpritesCount) :
+            BatchBaseClass(
+                SpritesCount,
+                SpritesCount * 6),
+            m_PerObjectBuffer(SpritesCount * sizeof(PerObjectData))
         {
         }
 
         /// <summary>
-        /// Begin drawing.
+        /// Update camera buffer.
         /// </summary>
-        void Begin(
-            RHI::IGraphicsCommandList* CommandList,
-            RHI::PrimitiveTopology     Topology)
-        {
-            return Impl::PrimitiveBatch::Begin(
-                CommandList,
-                Topology,
-                true);
-        }
+        void SetCameraBuffer(
+            const Ptr<RHI::IUploadBuffer>& Buffer);
 
+    protected:
         /// <summary>
         /// Called before final drawing.
         /// </summary>
         void OnDraw() override;
+
+        /// <summary>
+        /// Called after drawing.
+        /// </summary>
+        void OnReset() override;
+
+    public:
+        /// <summary>
+        /// Begin drawing.
+        /// </summary>
+        void Begin(
+            RHI::IGraphicsCommandList* CommandList)
+        {
+            Impl::PrimitiveBatch::Begin(CommandList, RHI::PrimitiveTopology::TriangleList, true);
+        }
 
         /// <summary>
         /// End drawing.
@@ -89,15 +97,16 @@ namespace Neon::Renderer
         /// <summary>
         /// Draw a rectangle.
         /// </summary>
-        void DrawSprite(
+        void Draw(
             const Scene::Component::Transform& Transform,
             const Scene::Component::Sprite&    Sprite);
 
     private:
-        Ptr<RHI::IUploadBuffer> m_PerDataBuffer;
-        MaterialTable           m_MaterialInstances;
+        FrameBuffer   m_PerObjectBuffer;
+        MaterialTable m_MaterialInstances;
+
+        Ptr<RHI::IUploadBuffer> m_CameraBuffer;
     };
-#endif
 
     class SpriteBatch
     {

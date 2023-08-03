@@ -348,7 +348,7 @@ namespace Neon::Renderer
             {
                 auto& Root = std::get<RootEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
 
-                CommandList->SetResourceView(Root.ViewType, LastRootIndex, dynamic_cast<RHI::IBuffer*>(Root.Resource.get()));
+                CommandList->SetResourceView(Root.ViewType, LastRootIndex, Root.Handle);
                 break;
             }
 
@@ -486,8 +486,8 @@ namespace Neon::Renderer
     }
 
     void Material::SetResourceView(
-        const std::string&            Name,
-        const Ptr<RHI::IGpuResource>& Resource)
+        const std::string&     Name,
+        RHI::GpuResourceHandle Handle)
     {
         auto Layout = m_Parameters->Entries.find(Name);
         if (Layout == m_Parameters->Entries.end())
@@ -498,7 +498,7 @@ namespace Neon::Renderer
 
         if (auto Root = std::get_if<RootEntry>(&Layout->second))
         {
-            Root->Resource = Resource;
+            Root->Handle = Handle;
         }
         else
         {

@@ -250,7 +250,7 @@ namespace Neon::Runtime
         }
 
         CommandList->SetRootSignature(Material->GetRootSignature());
-        CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData);
+        CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData->GetHandle());
 
         CommandList->SetPipelineState(Material->GetPipelineState());
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);

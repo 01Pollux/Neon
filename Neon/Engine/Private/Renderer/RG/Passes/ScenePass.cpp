@@ -82,6 +82,8 @@ namespace Neon::RG
                     m_SpriteBatch->Draw(Transform, Sprite);
                 });
             m_SpriteBatch->End();
+
+            //
         }
     }
 

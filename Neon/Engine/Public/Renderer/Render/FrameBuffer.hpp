@@ -95,6 +95,11 @@ namespace Neon::Renderer
             return std::bit_cast<uint8_t*>(BufferData) + Offset;
         }
 
+        /// <summary>
+        /// Get a handle for the data by subtracting the offset in bytes from the current size.
+        /// </summary>
+        /// <param name="Offset"></param>
+        /// <returns></returns>
         [[nodiscard]] auto GetHandleFor(
             uint32_t Offset) const
         {
