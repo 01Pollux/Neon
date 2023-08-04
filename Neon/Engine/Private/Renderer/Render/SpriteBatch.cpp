@@ -248,7 +248,7 @@ namespace Neon::Renderer
 
         FirstMaterial->SetResourceView(
             "g_SpriteData",
-            m_PerObjectBuffer.GetHandleFor(uint32_t(m_MaterialInstances.GetMaterialCount() * sizeof(PerObjectData))));
+            m_PerObjectBuffer.GetHandleForSize(uint32_t(m_MaterialInstances.GetMaterialCount() * sizeof(PerObjectData))));
 
         FirstMaterial->SetResourceView(
             "g_FrameData",
@@ -284,8 +284,13 @@ namespace Neon::Renderer
             BatchSpriteVertex{ .Position = Vector2(HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomRight(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() },
             BatchSpriteVertex{ .Position = Vector2(-HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomLeft(), .SpriteIndex = m_MaterialInstances.GetMaterialCount() }
         };
+        DrawQuad<>(Vertices);
+
+        auto ObjectData = m_PerObjectBuffer.AllocateData<PerObjectData>(1);
+
+        ObjectData->World = glm::transpose(Transform.World.ToMat4x4());
+        ObjectData->Color = Sprite.ModulationColor;
 
         m_MaterialInstances.Append(Sprite.MaterialInstance.get());
-        DrawQuad<>(Vertices);
     }
 } // namespace Neon::Renderer

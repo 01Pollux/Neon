@@ -48,9 +48,9 @@ void FlappyBirdClone::LoadScene()
         }
     }
 
-    // Stress test: create 500 sprites, each seperated by 1 unit in both x and y
+    // Stress test: create 1024 sprites, each seperated by 1 unit in both x and y
     {
-        uint32_t Count = 500;
+        constexpr uint32_t Count = 1024 * 4 - 1;
 
         // Start position is 50 units in the negative x direction and 25 units in the negative y direction
         Vector3 StartPosition = Vec::Left<Vector3> * 25.f + Vec::Down<Vector3> * 5.f;

@@ -47,12 +47,12 @@ namespace Neon::Renderer
         using BatchBaseClass = PrimitiveBatch16<BatchSpriteVertex>;
 
     public:
-        static constexpr size_t MaxSpritesCount = 4096;
+        static constexpr size_t MaxSpritesCount = 2048;
 
         SpriteBatcher(
             uint32_t SpritesCount = MaxSpritesCount) :
             BatchBaseClass(
-                SpritesCount,
+                SpritesCount * 4,
                 SpritesCount * 6),
             m_PerObjectBuffer(SpritesCount * sizeof(PerObjectData))
         {

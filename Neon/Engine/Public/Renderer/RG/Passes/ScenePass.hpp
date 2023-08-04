@@ -33,8 +33,7 @@ namespace Neon::RG
         [[nodiscard]] Ptr<RHI::IUploadBuffer> UpdateCameraBuffer();
 
     private:
-        UPtr<Renderer::SpriteBatch> m_SpriteBatch;
-        Renderer::SpriteBatcher     m_SpriteBatch2;
+        Renderer::SpriteBatcher m_SpriteBatch;
 
         Scene::GameScene& m_Scene;
         Scene::Actor      m_Camera;

@@ -6,28 +6,6 @@
 
 namespace Neon::Renderer::Impl
 {
-    /// <summary>
-    /// Get the size of an index buffer.
-    /// </summary>
-    [[nodiscard]] size_t GetIndexBufferSize(
-        size_t Count,
-        bool   Is32Bit)
-    {
-        return Count * (Is32Bit ? sizeof(uint32_t) : sizeof(uint16_t));
-    }
-
-    /// <summary>
-    /// Get the size of an vertex buffer.
-    /// </summary>
-    [[nodiscard]] size_t GetVertexBufferSize(
-        size_t Count,
-        size_t Stride)
-    {
-        return Count * Stride;
-    }
-
-    //
-
     PrimitiveBatch::PrimitiveBatch(
         uint32_t VertexStride,
         uint32_t VetexCount,
@@ -58,59 +36,72 @@ namespace Neon::Renderer::Impl
         bool                       Indexed)
     {
         NEON_ASSERT(CommandList != nullptr, "CommandList is null");
+        NEON_ASSERT(Topology != RHI::PrimitiveTopology::Undefined, "Topology is undefined");
 
         m_DrawingIndexed = Indexed;
         m_CommandList    = CommandList;
         m_Topology       = Topology;
     }
 
-    void PrimitiveBatch::Draw(
+    uint32_t PrimitiveBatch::Draw(
         uint32_t VertexSize,
         void**   OutVertices,
         uint32_t IndexSize,
         void**   OutIndices)
     {
         NEON_ASSERT(!m_DrawingIndexed || (m_DrawingIndexed && IndexSize && OutIndices && m_IndexBuffer), "Drawing indexed without index buffer");
+        NEON_ASSERT(VertexSize && OutVertices && m_VertexBuffer, "Drawing without vertex buffer");
+        NEON_ASSERT((VertexSize % m_VertexStride) == 0, "VertexSize is not aligned to m_VertexStride");
 
         if (!m_VertexBuffer.Reserve(VertexSize) || (m_IndexBuffer && !m_IndexBuffer.Reserve(IndexSize)))
         {
             Reset();
         }
 
+        uint32_t VertexOffset = m_VerticesSize;
+
         *OutVertices = m_VertexBuffer.AllocateData(VertexSize);
         m_VerticesSize += VertexSize;
         if (m_DrawingIndexed)
         {
-
             *OutIndices = m_IndexBuffer.AllocateData(IndexSize);
             m_IndicesSize += IndexSize;
         }
+
+        return VertexOffset / m_VertexStride;
     }
 
     void PrimitiveBatch::End()
     {
-        m_CommandList->SetPrimitiveTopology(m_Topology);
-
-        RHI::Views::Vertex VtxView;
-        VtxView.Append(m_VertexBuffer.GetHandleFor(m_VerticesSize), m_VertexStride, m_VerticesSize);
-        m_CommandList->SetVertexBuffer(0, VtxView);
-
-        if (m_DrawingIndexed)
+        if (m_VerticesSize)
         {
-            RHI::Views::Index IdxView(m_IndexBuffer.GetHandleFor(m_IndicesSize), m_IndicesSize, m_Is32BitIndex);
-            m_CommandList->SetIndexBuffer(IdxView);
+            m_CommandList->SetPrimitiveTopology(m_Topology);
 
-            OnDraw();
-            m_CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = m_IndicesSize / m_VertexStride });
-        }
-        else
-        {
-            OnDraw();
-            m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = m_VerticesSize / m_VertexStride });
-        }
+            RHI::Views::Vertex VtxView;
+            VtxView.Append(m_VertexBuffer.GetHandleForSize(m_VerticesSize), m_VertexStride, m_VerticesSize);
+            m_CommandList->SetVertexBuffer(0, VtxView);
 
-        OnReset();
-        m_VerticesSize = 0;
-        m_IndicesSize  = 0;
+            if (m_DrawingIndexed)
+            {
+                RHI::Views::Index IdxView(m_IndexBuffer.GetHandleForSize(m_IndicesSize), m_IndicesSize, m_Is32BitIndex);
+                m_CommandList->SetIndexBuffer(IdxView);
+
+                OnDraw();
+
+                uint32_t IndexCount = m_IndicesSize / (m_Is32BitIndex ? sizeof(uint32_t) : sizeof(uint16_t));
+                m_CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = IndexCount });
+            }
+            else
+            {
+                OnDraw();
+
+                uint32_t VertexCount = m_VerticesSize / m_VertexStride;
+                m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = VertexCount });
+            }
+
+            OnReset();
+            m_VerticesSize = 0;
+            m_IndicesSize  = 0;
+        }
     }
 } // namespace Neon::Renderer::Impl

@@ -11,7 +11,7 @@ NEON_MAIN(Argc, Argv)
             .Title      = STR("Flappy Bird"),
             .Windowed   = true,
             .Fullscreen = false },
-        .Renderer{ .Device = { .EnableDebugLayer = false } }
+        //.Renderer{ .Device = { .EnableDebugLayer = false } }
         //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
     Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));

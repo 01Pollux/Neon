@@ -48,8 +48,9 @@ namespace Neon::Renderer
 
             /// <summary>
             /// Draw a primitive.
+            /// Returns index of the first vertex to draw to.
             /// </summary>
-            void Draw(
+            [[nodiscard]] uint32_t Draw(
                 uint32_t VertexSize,
                 void**   OutVertices,
                 uint32_t IndexSize,
@@ -80,7 +81,7 @@ namespace Neon::Renderer
             uint32_t m_VerticesSize = 0;
             uint32_t m_IndicesSize  = 0;
 
-            RHI::PrimitiveTopology m_Topology;
+            RHI::PrimitiveTopology m_Topology = RHI::PrimitiveTopology::Undefined;
 
             bool m_DrawingIndexed : 1 = false;
             bool m_Is32BitIndex   : 1 = false;
@@ -104,7 +105,7 @@ namespace Neon::Renderer
 
         PrimitiveBatch(
             uint32_t VerticesCount = MaxVerticesCount,
-            uint32_t IndicesCount  = MaxVerticesCount * 3) :
+            uint32_t IndicesCount  = MaxVerticesCount * 4) :
             Impl::PrimitiveBatch(
                 VertexStride,
                 VerticesCount,
@@ -167,18 +168,18 @@ namespace Neon::Renderer
                 PtrIndices = nullptr;
             }
 
-            Impl::PrimitiveBatch::Draw(
-                2,
+            uint32_t VtxIndex = Impl::PrimitiveBatch::Draw(
+                VertexStride * 2,
                 std::bit_cast<void**>(&Vertices),
-                2,
+                IndexStride * 2,
                 std::bit_cast<void**>(PtrIndices));
 
             std::copy_n(Line.data(), 2, Vertices);
 
             if constexpr (_ForceIndexed)
             {
-                Indices[0] = 0;
-                Indices[1] = 1;
+                Indices[0] = VtxIndex + 0;
+                Indices[1] = VtxIndex + 1;
             }
         }
 
@@ -214,19 +215,19 @@ namespace Neon::Renderer
                 PtrIndices = nullptr;
             }
 
-            Impl::PrimitiveBatch::Draw(
-                3,
+            uint32_t VtxIndex = Impl::PrimitiveBatch::Draw(
+                VertexStride * 3,
                 std::bit_cast<void**>(&Vertices),
-                3,
+                IndexStride * 3,
                 std::bit_cast<void**>(PtrIndices));
 
             std::copy_n(Tri.begin(), 3, Vertices);
 
             if constexpr (_ForceIndexed)
             {
-                Indices[0] = 0;
-                Indices[1] = 1;
-                Indices[2] = 2;
+                Indices[0] = VtxIndex + 0;
+                Indices[1] = VtxIndex + 1;
+                Indices[2] = VtxIndex + 2;
             }
         }
 
@@ -263,22 +264,22 @@ namespace Neon::Renderer
                 PtrIndices = nullptr;
             }
 
-            Impl::PrimitiveBatch::Draw(
-                4,
+            uint32_t VtxIndex = Impl::PrimitiveBatch::Draw(
+                VertexStride * 4,
                 std::bit_cast<void**>(&Vertices),
-                6,
+                IndexStride * 6,
                 std::bit_cast<void**>(PtrIndices));
 
             std::copy_n(Quad.data(), 4, Vertices);
 
             if constexpr (_ForceIndexed)
             {
-                Indices[0] = 0;
-                Indices[1] = 1;
-                Indices[2] = 2;
-                Indices[3] = 0;
-                Indices[4] = 2;
-                Indices[5] = 3;
+                Indices[0] = VtxIndex + 0;
+                Indices[1] = VtxIndex + 1;
+                Indices[2] = VtxIndex + 2;
+                Indices[3] = VtxIndex + 0;
+                Indices[4] = VtxIndex + 2;
+                Indices[5] = VtxIndex + 3;
             }
         }
     };

@@ -54,6 +54,7 @@ namespace Neon::Renderer
         void Reset()
         {
             Buffer = nullptr;
+            CurSize = 0;
         }
 
         /// <summary>
@@ -96,14 +97,31 @@ namespace Neon::Renderer
         }
 
         /// <summary>
-        /// Get a handle for the data by subtracting the offset in bytes from the current size.
+        /// Allocate pair of offseted data and whether was there a reallocation
         /// </summary>
-        /// <param name="Offset"></param>
-        /// <returns></returns>
-        [[nodiscard]] auto GetHandleFor(
+        template<typename _Ty>
+        [[nodiscard]] _Ty* AllocateData(
+            uint32_t Count = 1)
+        {
+            return std::bit_cast<_Ty*>(AllocateData(sizeof(_Ty) * Count));
+        }
+
+        /// <summary>
+        /// Get a handle for the data by subtracting the size in bytes from the current size.
+        /// </summary>
+        [[nodiscard]] auto GetHandleForSize(
+            uint32_t Size) const
+        {
+            return Buffer->GetHandle(CurSize - Size);
+        }
+
+        /// <summary>
+        /// Get a handle for the data by subtracting the size in bytes from the current size.
+        /// </summary>
+        [[nodiscard]] auto GetHandle(
             uint32_t Offset) const
         {
-            return Buffer->GetHandle(CurSize - Offset);
+            return Buffer->GetHandle(Offset);
         }
     };
 } // namespace Neon::Renderer

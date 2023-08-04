@@ -109,6 +109,7 @@ namespace Neon::Renderer
                 }
                 }
                 Mat->m_Parameters->Entries.emplace(Param.Name, Material::RootEntry{ .ViewType = ViewType });
+                break;
             }
 
             case RHI::IRootSignature::ParamType::DescriptorTable:
@@ -492,7 +493,7 @@ namespace Neon::Renderer
         auto Layout = m_Parameters->Entries.find(Name);
         if (Layout == m_Parameters->Entries.end())
         {
-            NEON_WARNING_TAG("Material", "Failed to find constant: {}", Name);
+            NEON_WARNING_TAG("Material", "Failed to find resource view: {}", Name);
             return;
         }
 
@@ -502,7 +503,7 @@ namespace Neon::Renderer
         }
         else
         {
-            NEON_WARNING_TAG("Material", "'{}' is not a constant", Name);
+            NEON_WARNING_TAG("Material", "'{}' is not a resource view", Name);
         }
     }
 

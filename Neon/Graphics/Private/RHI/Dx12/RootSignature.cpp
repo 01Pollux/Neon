@@ -223,10 +223,11 @@ namespace Neon::RHI
                         m_Params.reserve(m_Params.size() + Table.GetRanges().size());
                         for (auto& [Name, Range] : Table.GetRanges())
                         {
-                            auto& FinalParam                = m_Params.emplace_back();
-                            FinalParam.RootIndex            = RootIndex;
-                            FinalParam.Name                 = Name;
-                            FinalParam.Type                 = IRootSignature::ParamType::DescriptorTable;
+                            auto& FinalParam     = m_Params.emplace_back();
+                            FinalParam.RootIndex = RootIndex;
+                            FinalParam.Name      = Name;
+                            FinalParam.Type      = IRootSignature::ParamType::DescriptorTable;
+
                             FinalParam.Descriptor.Size      = Range.DescriptorCount;
                             FinalParam.Descriptor.Type      = Range.Type;
                             FinalParam.Descriptor.Instanced = Range.Instanced;
@@ -243,10 +244,11 @@ namespace Neon::RHI
                     },
                     [this, &RootIndex](const RootParameter::Constants& Constants)
                     {
-                        auto& FinalParam                    = m_Params.emplace_back();
-                        FinalParam.RootIndex                = RootIndex;
-                        FinalParam.Name                     = Constants.Name;
-                        FinalParam.Type                     = IRootSignature::ParamType::Constants;
+                        auto& FinalParam     = m_Params.emplace_back();
+                        FinalParam.RootIndex = RootIndex;
+                        FinalParam.Name      = Constants.Name;
+                        FinalParam.Type      = IRootSignature::ParamType::Constants;
+
                         FinalParam.Constants.Num32BitValues = Constants.Num32BitValues;
 
                         if (m_ParamMap.contains(Constants.Name))
@@ -264,6 +266,8 @@ namespace Neon::RHI
                         FinalParam.RootIndex = RootIndex;
                         FinalParam.Name      = RootParam.Name;
                         FinalParam.Type      = IRootSignature::ParamType::Root;
+
+                        FinalParam.Root.Type = RootParam.Type;
 
                         if (m_ParamMap.contains(RootParam.Name))
                         {

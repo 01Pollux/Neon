@@ -8,7 +8,8 @@ end
 function copy_directory_to_target_dir(from_dir, to_dir)
     postbuildcommands
     {
-        string.format('if not exist "$(targetdir)%s" mkdir "$(targetdir)%s"', to_dir, to_dir),
+        string.format("{DELETE} $(targetdir)%s", from_dir, to_dir),
+        string.format('mkdir "$(targetdir)%s"', to_dir, to_dir),
         string.format("{COPY} %s $(targetdir)%s", from_dir, to_dir)
     }
 end

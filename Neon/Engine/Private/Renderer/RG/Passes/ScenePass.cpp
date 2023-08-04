@@ -47,8 +47,6 @@ namespace Neon::RG
                     })
                 .build();
         //
-
-        m_SpriteBatch.reset(NEON_NEW SpriteBatch);
     }
 
     void ScenePass::ResolveResources(
@@ -73,15 +71,15 @@ namespace Neon::RG
         {
             auto CameraStorage = UpdateCameraBuffer();
 
-            m_SpriteBatch->SetCameraBuffer(CameraStorage);
-            m_SpriteBatch->Begin(RenderCommandList);
+            m_SpriteBatch.SetCameraBuffer(CameraStorage);
+            m_SpriteBatch.Begin(RenderCommandList);
             m_SpriteQuery.each(
                 [this](const Component::Transform& Transform,
                        const Component::Sprite&    Sprite)
                 {
-                    m_SpriteBatch->Draw(Transform, Sprite);
+                    m_SpriteBatch.Draw(Transform, Sprite);
                 });
-            m_SpriteBatch->End();
+            m_SpriteBatch.End();
 
             //
         }

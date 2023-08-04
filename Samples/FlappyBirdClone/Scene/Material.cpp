@@ -32,34 +32,18 @@ void FlappyBirdClone::PreloadMaterials()
             .Blend(0, Renderer::MaterialStates::Blend::AlphaBlend)
             .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
             .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
-            .Topology(RHI::PrimitiveTopologyCategory::Triangle);
-
-        RHI::RootSignatureBuilder Builder;
-        Builder
-            .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
-            .AddDescriptorTable(
-                RHI::RootDescriptorTable()
-                    .AddSrvRange("g_SpriteData", 0, 1, 1, true),
-                RHI::ShaderVisibility::All)
-            .AddDescriptorTable(
-                RHI::RootDescriptorTable()
-                    .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
-                RHI::ShaderVisibility::Pixel)
-            .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
-
-        uint16_t Register = 0;
-        for (auto Type : std::ranges::iota_view(0ul, size_t(Renderer::MaterialStates::Sampler::_Last)))
-        {
-            Builder.AddSampler(
-                StringUtils::Format("g_Sampler{}", Register),
-                Renderer::GetStaticSamplerDesc(
-                    Renderer::MaterialStates::Sampler(Type),
-                    Register++,
-                    0,
-                    RHI::ShaderVisibility::Pixel));
-        }
-
-        BaseSpriteMaterial.RootSignature(Builder.Build());
+            .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+            .RootSignature(
+                RHI::RootSignatureBuilder()
+                    .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
+                    .AddShaderResourceView("g_SpriteData", 0, 1, RHI::ShaderVisibility::All)
+                    .AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
+                        RHI::ShaderVisibility::Pixel)
+                    .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+                    .AddStandardSamplers()
+                    .Build());
 
         BaseSpriteMaterial
             .VertexShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))

@@ -392,6 +392,13 @@ namespace Neon::RHI
             const StaticSamplerDesc& Desc);
 
         /// <summary>
+        /// Add standard static sampler
+        /// </summary>
+        RootSignatureBuilder& AddStandardSamplers(
+            uint32_t         RegisterSpace = 0,
+            ShaderVisibility Visibility    = ShaderVisibility::Pixel);
+
+        /// <summary>
         /// Set flags for root signature
         /// </summary>
         RootSignatureBuilder& SetFlags(

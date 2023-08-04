@@ -184,6 +184,64 @@ namespace Neon::RHI
         return *this;
     }
 
+    RootSignatureBuilder& RootSignatureBuilder::AddStandardSamplers(
+        uint32_t         RegisterSpace,
+        ShaderVisibility Visibility)
+    {
+        StaticSamplerDesc Desc;
+        Desc.RegisterSpace = RegisterSpace;
+        Desc.Visibility    = Visibility;
+
+        enum class StandardSamplerType : uint8_t
+        {
+            PointWrap,
+            PointClamp,
+            LinearWrap,
+            LinearClamp,
+            AnisotropicWrap,
+            AnisotropicClamp,
+
+            _Count
+        };
+
+        for (uint32_t i = 0; i < uint32_t(StandardSamplerType::_Count); i++)
+        {
+            Desc.ShaderRegister = i;
+
+            switch (StandardSamplerType(i))
+            {
+            case StandardSamplerType::PointWrap:
+                Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+                break;
+            case StandardSamplerType::PointClamp:
+                Desc.Filter   = RHI::ESamplerFilter::MinMagMipPoint;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+                break;
+            case StandardSamplerType::LinearWrap:
+                Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+                break;
+            case StandardSamplerType::LinearClamp:
+                Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+                break;
+            case StandardSamplerType::AnisotropicWrap:
+                Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Wrap;
+                break;
+            case StandardSamplerType::AnisotropicClamp:
+                Desc.Filter   = RHI::ESamplerFilter::Anisotropic;
+                Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Clamp;
+                break;
+            }
+
+            AddSampler(StringUtils::Format("StandardSampler_{}", i), Desc);
+        }
+
+        return *this;
+    }
+
     RootSignatureBuilder& RootSignatureBuilder::SetFlags(
         ERootSignatureBuilderFlags Flag,
         bool                       Value)
