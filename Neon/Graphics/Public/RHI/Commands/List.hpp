@@ -82,7 +82,7 @@ namespace Neon::RHI
         /// <summary>
         /// Copy Resource into the buffer
         /// </summary>
-        virtual void CopyResources(
+        virtual void CopyResource(
             IGpuResource* DstResource,
             IGpuResource* SrcResource) = 0;
 

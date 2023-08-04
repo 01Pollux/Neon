@@ -19,7 +19,7 @@ namespace Neon::RHI
             uint32_t                         FirstSubresource,
             std::span<const SubresourceDesc> SubResources) override;
 
-        void CopyResources(
+        void CopyResource(
             IGpuResource* DstResource,
             IGpuResource* SrcResource) override;
 

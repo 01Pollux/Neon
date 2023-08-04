@@ -1,12 +1,12 @@
 #pragma once
 
+#include <RHI/Resource/Common.hpp>
 #include <Core/Neon.hpp>
 #include <Math/Matrix.hpp>
 #include <Math/Colors.hpp>
 
 namespace Neon::RHI
 {
-    class IBuffer;
     class IGraphicsCommandList;
 } // namespace Neon::RHI
 
@@ -39,7 +39,7 @@ namespace Neon::Runtime
         /// </summary>
         static void Render(
             RHI::IGraphicsCommandList* CommandList,
-            RHI::IBuffer*              PerFrameData)
+            RHI::GpuResourceHandle     PerFrameData)
         {
 #ifndef NEON_DIST
             s_DebugOverlay->Render_Impl(CommandList, PerFrameData);
@@ -78,7 +78,7 @@ namespace Neon::Runtime
 
         NEON_M_NODIST_PV(void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
-            RHI::IBuffer*              PerFrameData));
+            RHI::GpuResourceHandle     PerFrameData));
 
         NEON_M_NODIST_PV(void DrawLine_Impl(
             const Vector3& StartPosition,

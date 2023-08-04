@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
+#include <Runtime/DebugOverlay.hpp>
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/Resource/State.hpp>
@@ -24,7 +25,9 @@ namespace Neon::RG
         return m_Storage;
     }
 
-    void RenderGraph::Run()
+    void RenderGraph::Run(
+        RHI::GpuResourceHandle CameraBuffer,
+        bool                   CopyToBackBuffer)
     {
         for (auto& ImportedResource : m_Storage.m_ImportedResources)
         {
@@ -45,7 +48,11 @@ namespace Neon::RG
             {
                 RenderContext.Append();
             }
-            RHI::IResourceStateManager::Get()->FlushBarriers(RenderContext[0]);
+
+            if (CopyToBackBuffer)
+            {
+                SubmitToBackBuffer(RenderContext[0], CameraBuffer);
+            }
         }
         m_Storage.FlushResources();
     }
@@ -54,6 +61,63 @@ namespace Neon::RG
         std::vector<RenderGraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
+    }
+
+    void RenderGraph::SubmitToBackBuffer(
+        RHI::IGraphicsCommandList* CommandList,
+        RHI::GpuResourceHandle     CameraBuffer)
+    {
+        auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+
+        auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
+        auto StateManager = RHI::IResourceStateManager::Get();
+
+        //
+
+        RHI::TCommandContext<RHI::CommandQueueType::Graphics> CommandContext;
+
+#ifndef NEON_DIST
+        if (Runtime::DebugOverlay::ShouldRender())
+        {
+            // Transition the output image to a render target.
+            StateManager->TransitionResource(
+                OutputImage.get(),
+                RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
+
+            // Prepare the command list.
+            StateManager->FlushBarriers(CommandList);
+
+            auto& Size = OutputImage->GetDimensions();
+
+            // Set viewport and scissor rect.
+            CommandList->SetViewport(ViewportF{ .Width = float(Size.x), .Height = float(Size.y) });
+            CommandList->SetScissorRect(RectF({}, Size));
+
+            // Render debug overlay.
+            Runtime::DebugOverlay::Render(CommandList, CameraBuffer);
+        }
+#endif
+
+        // Transition the backbuffer to a copy destination.
+        StateManager->TransitionResource(
+            Backbuffer,
+            RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest));
+
+        // Transition the output image to a copy source.
+        StateManager->TransitionResource(
+            OutputImage.get(),
+            RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
+
+        // Prepare the command list.
+        StateManager->FlushBarriers(CommandList);
+        CommandList->CopyResource(Backbuffer, OutputImage.get());
+
+        // Transition the backbuffer to a present state.
+        StateManager->TransitionResource(
+            Backbuffer,
+            RHI::MResourceState_Present);
+
+        StateManager->FlushBarriers(CommandList);
     }
 
     //

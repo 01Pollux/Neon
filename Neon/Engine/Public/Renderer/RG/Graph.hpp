@@ -41,7 +41,9 @@ namespace Neon::RG
         /// <summary>
         /// Run the graph
         /// </summary>
-        void Run();
+        void Run(
+            RHI::GpuResourceHandle CameraBuffer,
+            bool                   CopyToBackBuffer);
 
     private:
         /// <summary>
@@ -49,6 +51,13 @@ namespace Neon::RG
         /// </summary>
         void Build(
             DepdencyLevelList&& Levels);
+
+        /// <summary>
+        /// Submit to back buffer by copying the output image aswell as the debug overlay
+        /// </summary>
+        void SubmitToBackBuffer(
+            RHI::IGraphicsCommandList* CommandList,
+            RHI::GpuResourceHandle     CameraBuffer);
 
     private:
         GraphStorage      m_Storage;

@@ -1,8 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Scene/Scene.hpp>
-#include <Scene/Exports/Export.hpp>
 #include <Physics/World.hpp>
 #include <Runtime/DebugOverlay.hpp>
+#include <Scene/Exports/Export.hpp>
 
 //
 
@@ -69,6 +69,10 @@ namespace Neon::Scene
             m_EntityWorld->query_builder<
                              Component::Transform,
                              Component::Camera>()
+                .term<Component::Transform>()
+                .read()
+                .term<Component::Camera>()
+                .read_write()
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Camera* LhsCamera,
@@ -95,10 +99,11 @@ namespace Neon::Scene
 
     void GameScene::Render()
     {
+        auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
         m_CameraQuery.each(
-            [](Actor                 Entity,
-               Component::Transform& Transform,
-               Component::Camera&    Camera)
+            [MainCamera](Actor                 Entity,
+                         Component::Transform& Transform,
+                         Component::Camera&    Camera)
             {
                 auto Size = RHI::ISwapchain::Get()->GetSize();
 
@@ -113,73 +118,9 @@ namespace Neon::Scene
 
                 if (Camera.RenderGraph)
                 {
-                    Camera.RenderGraph->Run();
+                    Camera.RenderGraph->Run(Camera.GraphicsBuffer->GetHandle(), MainCamera->Target == Entity);
                 }
             });
-
-        // Rendering to back buffer for main camera
-        auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
-        if (MainCamera)
-        {
-            auto CameraComponent = MainCamera->Target.get<Component::Camera>();
-
-            auto& RenderGraph = CameraComponent->RenderGraph;
-            auto& Storage     = RenderGraph->GetStorage();
-
-            auto OutputImage = Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
-
-            auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
-            auto StateManager = RHI::IResourceStateManager::Get();
-
-            //
-
-            RHI::TCommandContext<RHI::CommandQueueType::Graphics> CommandContext;
-
-            auto RenderCommandList = CommandContext.Append();
-
-#ifndef NEON_DIST
-            if (Runtime::DebugOverlay::ShouldRender())
-            {
-                // Transition the output image to a render target.
-                StateManager->TransitionResource(
-                    OutputImage.get(),
-                    RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
-
-                // Prepare the command list.
-                StateManager->FlushBarriers(RenderCommandList);
-
-                auto& Size = OutputImage->GetDimensions();
-
-                // Set viewport and scissor rect.
-                RenderCommandList->SetViewport(ViewportF{ .Width = float(Size.x), .Height = float(Size.y) });
-                RenderCommandList->SetScissorRect(RectF({}, Size));
-
-                // Render debug overlay.
-                Runtime::DebugOverlay::Render(RenderCommandList, CameraComponent->GraphicsBuffer.get());
-            }
-#endif
-
-            // Transition the backbuffer to a copy destination.
-            StateManager->TransitionResource(
-                Backbuffer,
-                RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest));
-
-            // Transition the output image to a copy source.
-            StateManager->TransitionResource(
-                OutputImage.get(),
-                RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
-
-            // Prepare the command list.
-            StateManager->FlushBarriers(RenderCommandList);
-            RenderCommandList->CopyResources(Backbuffer, OutputImage.get());
-
-            // Transition the backbuffer to a present state.
-            StateManager->TransitionResource(
-                Backbuffer,
-                RHI::MResourceState_Present);
-
-            StateManager->FlushBarriers(RenderCommandList);
-        }
     }
 
     void GameScene::Update()

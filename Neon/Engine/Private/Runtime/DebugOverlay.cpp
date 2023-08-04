@@ -58,7 +58,7 @@ namespace Neon::Runtime
             bool ShouldDraw() const;
             void Draw(
                 RHI::IGraphicsCommandList* CommandList,
-                RHI::IBuffer*              PerFrameData);
+                RHI::GpuResourceHandle     PerFrameData);
         };
 
     public:
@@ -66,7 +66,7 @@ namespace Neon::Runtime
 
         void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
-            RHI::IBuffer*              PerFrameData) override;
+            RHI::GpuResourceHandle     PerFrameData) override;
 
         void DrawLine_Impl(
             const Vector3& StartPosition,
@@ -108,7 +108,7 @@ namespace Neon::Runtime
 
     void DefaultEngineDebugOverlay::Render_Impl(
         RHI::IGraphicsCommandList* CommandList,
-        RHI::IBuffer*              PerFrameData)
+        RHI::GpuResourceHandle     PerFrameData)
     {
         m_LineBuffer.Draw(CommandList, PerFrameData);
         FlushBuffers();
@@ -242,7 +242,7 @@ namespace Neon::Runtime
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Draw(
         RHI::IGraphicsCommandList* CommandList,
-        RHI::IBuffer*              PerFrameData)
+        RHI::GpuResourceHandle     PerFrameData)
     {
         if (!ShouldDraw())
         {
@@ -250,7 +250,7 @@ namespace Neon::Runtime
         }
 
         CommandList->SetRootSignature(Material->GetRootSignature());
-        CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData->GetHandle());
+        CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData);
 
         CommandList->SetPipelineState(Material->GetPipelineState());
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);

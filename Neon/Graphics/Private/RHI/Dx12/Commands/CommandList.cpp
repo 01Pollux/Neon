@@ -53,7 +53,7 @@ namespace Neon::RHI
             Dx12Subresources.data());
     }
 
-    void Dx12CommandList::CopyResources(
+    void Dx12CommandList::CopyResource(
         IGpuResource* DstResource,
         IGpuResource* SrcResource)
     {
