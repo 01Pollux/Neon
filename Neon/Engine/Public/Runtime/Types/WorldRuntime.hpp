@@ -11,6 +11,8 @@ namespace Neon::Runtime
     public:
         EngineWorldRuntime();
 
+        void Run() override;
+
         /// <summary>
         /// Get the current scene.
         /// </summary>
@@ -23,5 +25,6 @@ namespace Neon::Runtime
 
     private:
         Scene::GameScene m_Scene;
+        bool             m_IsRendering = false;
     };
 } // namespace Neon::Runtime

@@ -58,6 +58,8 @@ namespace Neon::RHI
     {
         m_FrameManager->EndFrame();
 
+        printf("---\n");
+
         UINT SyncInterval = m_IsVSyncEnabled ? std::min(4, int(std::roundf(FrameTime * 60.f))) : 0;
         ThrowIfFailed(m_Swapchain->Present(SyncInterval, 0));
     }

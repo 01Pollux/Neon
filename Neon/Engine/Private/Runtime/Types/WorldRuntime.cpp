@@ -45,21 +45,31 @@ namespace Neon::Runtime
             "PreRender",
             [this]
             {
-                RHI::ISwapchain::Get()->PrepareFrame();
+                m_IsRendering = DefaultGameEngine::Get()->GetWindow()->IsVisible().get();
+                if (m_IsRendering)
+                {
+                    RHI::ISwapchain::Get()->PrepareFrame();
+                }
             });
 
         Pipeline->Attach(
             "Render",
             [this]
             {
-                m_Scene.Render();
+                if (m_IsRendering)
+                {
+                    m_Scene.Render();
+                }
             });
 
         Pipeline->Attach(
             "PostRender",
             [this]
             {
-                RHI::ISwapchain::Get()->Present(float(m_Scene.GetDeltaTime()));
+                if (m_IsRendering)
+                {
+                    RHI::ISwapchain::Get()->Present(float(m_Scene.GetDeltaTime()));
+                }
             });
 
         Engine->SetPipeline(std::move(Pipeline));

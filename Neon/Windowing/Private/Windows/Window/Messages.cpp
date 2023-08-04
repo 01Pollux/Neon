@@ -105,8 +105,6 @@ namespace Neon::Windowing
             UINT   Height = HIWORD(lParam);
             Size2I Size{ int(Width), int(Height) };
 
-            NEON_TRACE("{},{}", Width, Height);
-
             if (wParam != SIZE_MINIMIZED &&
                 !m_WindowFlags.Test(EWindowFlags::Resizing) &&
                 m_WindowSize != Size)

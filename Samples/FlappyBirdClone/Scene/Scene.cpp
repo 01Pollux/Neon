@@ -16,7 +16,7 @@ using namespace Neon;
 void FlappyBirdClone::LoadScene()
 {
     auto& Scene = m_Runtime->GetScene();
-    Scene.SetTimeScale(1.f);
+    Scene.SetTimeScale(.1f);
 
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -71,6 +71,38 @@ void FlappyBirdClone::LoadScene()
         Camera.modified<Scene::Component::Transform>();
     }
 
+    // Floor and ceiling as sprite
+    {
+        auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
+
+        auto WorldTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+        WorldMaterial->SetTexture("p_SpriteTextures", WorldTexture);
+
+        auto Floor = Scene.CreateEntity(Scene::EntityType::Sprite, "Floor");
+        {
+            auto SpriteComponent = Floor.get_mut<Scene::Component::Sprite>();
+            {
+                SpriteComponent->MaterialInstance = WorldMaterial;
+            }
+            Floor.modified<Scene::Component::Sprite>();
+
+            auto TransformComponent = Floor.get_mut<Scene::Component::Transform>();
+            {
+                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 5.f);
+                TransformComponent->Local = TransformComponent->World;
+            }
+            Floor.modified<Scene::Component::Transform>();
+
+            {
+                Floor.set(Scene::Component::CollisionShape{
+                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
+                Scene::Component::CollisionObject::AddStaticBody(Floor);
+            }
+        }
+    }
+
+    //
+
     AttachInputs();
 
     //
@@ -107,6 +139,8 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    return;
+
     float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
