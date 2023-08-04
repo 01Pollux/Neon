@@ -6,7 +6,6 @@ void FlappyBirdClone::Initialize(
     Config::EngineConfig Config)
 {
     DefaultGameEngine::Initialize(std::move(Config));
-    m_Runtime = RegisterInterface<Runtime::IEngineRuntime, Runtime::EngineWorldRuntime>();
 
     PreloadSprite();
 

@@ -1,8 +1,6 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
-#include <Runtime/Types/WorldRuntime.hpp>
-
 #include <Renderer/Material/Material.hpp>
 #include <RHI/Resource/Resource.hpp>
 #include <Asset/Types/Texture.hpp>
@@ -11,9 +9,8 @@
 
 class FlappyBirdClone : public Neon::Runtime::DefaultGameEngine
 {
-    using EngineWorldRuntimePtr = Neon::Ptr<Neon::Runtime::EngineWorldRuntime>;
-    using MaterialMap           = std::unordered_map<Neon::StringU8, Neon::Ptr<Neon::Renderer::IMaterial>>;
-    using TextureAssetPtr       = Neon::Ptr<Neon::RHI::ITexture>;
+    using MaterialMap     = std::unordered_map<Neon::StringU8, Neon::Ptr<Neon::Renderer::IMaterial>>;
+    using TextureAssetPtr = Neon::Ptr<Neon::RHI::ITexture>;
 
 public:
     void Initialize(
@@ -53,8 +50,7 @@ private:
         const Neon::StringU8& Name);
 
 private:
-    EngineWorldRuntimePtr m_Runtime;
-    MaterialMap           m_Materials;
+    MaterialMap m_Materials;
 
     TextureAssetPtr m_Sprite;
     TextureAssetPtr m_HdrTriangle;
@@ -66,8 +62,14 @@ private:
     /// </summary>
     class btRigidBody* m_RigidBody = nullptr;
 
+    /// <summary>
+    /// Accumulated velocity of the player
+    /// </summary>
     float m_VelocityAccum = 0.f;
 
+    /// <summary>
+    /// Engine power of the player
+    /// </summary>
     float m_EnginePower = 4.0f;
 
     /// <summary>

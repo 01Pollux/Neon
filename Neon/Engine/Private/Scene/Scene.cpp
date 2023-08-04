@@ -23,8 +23,6 @@ namespace Neon::Scene
     GameScene::GameScene() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
-        Runtime::DebugOverlay::Create();
-
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_EntityWorld = std::make_unique<flecs::world>();
@@ -85,8 +83,6 @@ namespace Neon::Scene
 
     GameScene::~GameScene()
     {
-        Runtime::DebugOverlay::Destroy();
-
         if (m_EntityWorld)
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);

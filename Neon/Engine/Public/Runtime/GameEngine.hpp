@@ -4,15 +4,17 @@
 
 #include <Runtime/Interface.hpp>
 #include <Runtime/Window.hpp>
-#include <Runtime/Pipeline.hpp>
-
-#include <optional>
 
 namespace Neon
 {
     namespace Windowing
     {
         class IWindowApp;
+    }
+
+    namespace Scene
+    {
+        class GameScene;
     }
 } // namespace Neon
 
@@ -58,16 +60,15 @@ namespace Neon::Runtime
         [[nodiscard]] Windowing::IWindowApp* GetWindow() const;
 
         /// <summary>
-        /// Get the pipeline associated with the engine.
+        /// Get the current scene.
         /// </summary>
-        [[nodiscard]] EnginePipeline* GetPipeline() const;
+        [[nodiscard]] Scene::GameScene& GetScene() const noexcept;
 
         /// <summary>
-        /// Set the pipeline associated with the engine.
+        /// Set the current scene.
         /// </summary>
-        void SetPipeline(
-            UPtr<EnginePipeline> Pipeline,
-            bool                 Immediate = true);
+        void SetScene(
+            UPtr<Scene::GameScene> Scene);
 
     protected:
         /// <summary>
@@ -83,9 +84,7 @@ namespace Neon::Runtime
             Config::EngineConfig& Config);
 
     private:
-        UPtr<EngineWindow>   m_Window;
-        UPtr<EnginePipeline> m_Pipeline;
-
-        std::optional<UPtr<EnginePipeline>> m_PendingPipeline;
+        UPtr<EngineWindow>     m_Window;
+        UPtr<Scene::GameScene> m_Scene;
     };
 } // namespace Neon::Runtime

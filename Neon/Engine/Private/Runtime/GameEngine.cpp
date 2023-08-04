@@ -11,7 +11,8 @@
 #include <Asset/Handlers/RootSignature.hpp>
 #include <Asset/Handlers/Shader.hpp>
 
-#include <Input/System.hpp>
+#include <Scene/Scene.hpp>
+#include <RHI/Swapchain.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -44,6 +45,7 @@ namespace Neon::Runtime
         //
 
         m_Window.reset(NEON_NEW EngineWindow(Config));
+        SetScene(std::move(Config.FirstScene));
     }
 
     int DefaultGameEngine::Run()
@@ -51,14 +53,18 @@ namespace Neon::Runtime
         while (m_Window->Run())
         {
             m_Window->ProcessInputs();
-            if (m_PendingPipeline)
+            if (m_Scene)
             {
-                m_Pipeline = std::move(m_PendingPipeline.value());
-                m_PendingPipeline.reset();
-            }
-            if (auto Pipeline = m_Pipeline.get())
-            {
-                Pipeline->Dispatch();
+                auto IsScreenVisible = GetWindow()->IsVisible();
+
+                m_Scene->Update();
+
+                if (IsScreenVisible.get())
+                {
+                    RHI::ISwapchain::Get()->PrepareFrame();
+                    m_Scene->Render();
+                    RHI::ISwapchain::Get()->Present(float(m_Scene->GetDeltaTime()));
+                }
             }
         }
         Shutdown();
@@ -71,23 +77,16 @@ namespace Neon::Runtime
         return m_Window->GetWindow();
     }
 
-    EnginePipeline* DefaultGameEngine::GetPipeline() const
+    Scene::GameScene& DefaultGameEngine::GetScene() const noexcept
     {
-        return m_Pipeline.get();
+        NEON_ASSERT(m_Scene);
+        return *m_Scene;
     }
 
-    void DefaultGameEngine::SetPipeline(
-        UPtr<EnginePipeline> Pipeline,
-        bool                 Immediate)
+    void DefaultGameEngine::SetScene(
+        UPtr<Scene::GameScene> Scene)
     {
-        if (Immediate)
-        {
-            m_Pipeline = std::move(Pipeline);
-        }
-        else
-        {
-            m_PendingPipeline = std::move(Pipeline);
-        }
+        m_Scene = std::move(Scene);
     }
 
     void DefaultGameEngine::LoadPacks(

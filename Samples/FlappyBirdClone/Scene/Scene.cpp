@@ -15,7 +15,7 @@ using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
 {
-    auto& Scene = m_Runtime->GetScene();
+    auto& Scene = GetScene();
     Scene.SetTimeScale(.1f);
 
     // Player instance
@@ -107,9 +107,9 @@ void FlappyBirdClone::LoadScene()
 
     //
 
-    GetPipeline()->Attach(
-        "Update",
-        std::bind(&FlappyBirdClone::OnUpdate, this));
+    // GetPipeline()->Attach(
+    //     "Update",
+    //     std::bind(&FlappyBirdClone::OnUpdate, this));
 }
 
 void FlappyBirdClone::AttachInputs()
@@ -141,7 +141,7 @@ void FlappyBirdClone::OnUpdate()
 {
     return;
 
-    float Mult        = float(m_Runtime->GetScene().GetDeltaTime());
+    float Mult        = float(GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
     if (m_IsJumping)
