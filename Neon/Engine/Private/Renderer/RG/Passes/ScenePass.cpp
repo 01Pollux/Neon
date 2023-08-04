@@ -26,24 +26,22 @@ namespace Neon::RG
         m_Camera(Camera)
     {
         m_SpriteQuery =
-            m_Scene.GetEntityWorld()->query_builder<Component::Transform, Component::Sprite>()
-                // Order by material root signature
+            m_Scene.GetEntityWorld()
+                ->query_builder<Component::Transform, Component::Sprite>()
+                .term<Component::Sprite>()
+                .in()
+                .term<Component::Transform>()
+                .in()
+                // Order by material root signature & pipeline state
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Sprite* LhsSprite,
                         flecs::entity_t,
                         const Component::Sprite* RhsSprite) -> int
                     {
-                        return int(LhsSprite->MaterialInstance->GetRootSignature().get() - RhsSprite->MaterialInstance->GetRootSignature().get());
-                    })
-                // Order by material pipeline state
-                .order_by(
-                    +[](flecs::entity_t,
-                        const Component::Sprite* LhsSprite,
-                        flecs::entity_t,
-                        const Component::Sprite* RhsSprite) -> int
-                    {
-                        return int(LhsSprite->MaterialInstance->GetPipelineState().get() - RhsSprite->MaterialInstance->GetPipelineState().get());
+                        // Order by material root signature and pipeline state, this is like qsort compare function, pipeline state and root signature!
+                        return int((intptr_t(LhsSprite->MaterialInstance->GetRootSignature().get()) - intptr_t(RhsSprite->MaterialInstance->GetRootSignature().get()))) * 1000 +
+                               int((intptr_t(LhsSprite->MaterialInstance->GetPipelineState().get()) - intptr_t(RhsSprite->MaterialInstance->GetPipelineState().get())));
                     })
                 .build();
         //

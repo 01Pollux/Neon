@@ -66,13 +66,12 @@ namespace Neon::Scene
         //
 
         m_CameraQuery =
-            m_EntityWorld->query_builder<
-                             Component::Transform,
-                             Component::Camera>()
+            m_EntityWorld
+                ->query_builder<Component::Transform, Component::Camera>()
                 .term<Component::Transform>()
-                .read()
+                .in()
                 .term<Component::Camera>()
-                .read_write()
+                .inout()
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Camera* LhsCamera,
@@ -101,9 +100,9 @@ namespace Neon::Scene
     {
         auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
         m_CameraQuery.each(
-            [MainCamera](Actor                 Entity,
-                         Component::Transform& Transform,
-                         Component::Camera&    Camera)
+            [MainCamera](Actor                       Entity,
+                         const Component::Transform& Transform,
+                         Component::Camera&          Camera)
             {
                 auto Size = RHI::ISwapchain::Get()->GetSize();
 
