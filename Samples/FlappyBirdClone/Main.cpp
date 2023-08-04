@@ -12,7 +12,7 @@ NEON_MAIN(Argc, Argv)
             .Windowed   = true,
             .Fullscreen = false },
         //.Renderer{ .Device = { .EnableDebugLayer = false } }
-        //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
+        .Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
     Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
     return RunEngine<FlappyBirdClone>(std::move(Config));

@@ -154,8 +154,8 @@ namespace Neon::RG
         {
             auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
 
-            Desc.Width  = WindowSize.Width();
-            Desc.Height = WindowSize.Height();
+            Desc.Width  = std::max(1, WindowSize.Width());
+            Desc.Height = std::max(1, WindowSize.Height());
         }
 
         auto Iter = std::ranges::find_if(
