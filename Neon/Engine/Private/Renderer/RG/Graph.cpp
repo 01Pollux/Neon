@@ -36,22 +36,16 @@ namespace Neon::RG
         }
         {
             // We will cache the command contexts to avoid submitting single command list per pass + barrier flush
-            RenderCommandContext  RenderContext;
-            ComputeCommandContext ComputeContext;
+            ChainedCommandList ChainedCommandList;
 
             for (auto& Level : m_Levels)
             {
-                Level.Execute(RenderContext, ComputeContext);
-            }
-
-            if (!RenderContext.Size() && !ComputeContext.Size())
-            {
-                RenderContext.Append();
+                Level.Execute(ChainedCommandList);
             }
 
             if (CopyToBackBuffer)
             {
-                SubmitToBackBuffer(RenderContext[0], CameraBuffer);
+                SubmitToBackBuffer(ChainedCommandList.Load(), CameraBuffer);
             }
         }
         m_Storage.FlushResources();
@@ -64,8 +58,8 @@ namespace Neon::RG
     }
 
     void RenderGraph::SubmitToBackBuffer(
-        RHI::IGraphicsCommandList* CommandList,
-        RHI::GpuResourceHandle     CameraBuffer)
+        RHI::ICommonCommandList* CommandList,
+        RHI::GpuResourceHandle   CameraBuffer)
     {
         auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
 
@@ -73,30 +67,6 @@ namespace Neon::RG
         auto StateManager = RHI::IResourceStateManager::Get();
 
         //
-
-        RHI::TCommandContext<RHI::CommandQueueType::Graphics> CommandContext;
-
-#ifndef NEON_DIST
-        if (Runtime::DebugOverlay::ShouldRender())
-        {
-            // Transition the output image to a render target.
-            StateManager->TransitionResource(
-                OutputImage.get(),
-                RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
-
-            // Prepare the command list.
-            StateManager->FlushBarriers(CommandList);
-
-            auto& Size = OutputImage->GetDimensions();
-
-            // Set viewport and scissor rect.
-            CommandList->SetViewport(ViewportF{ .Width = float(Size.x), .Height = float(Size.y) });
-            CommandList->SetScissorRect(RectF({}, Size));
-
-            // Render debug overlay.
-            Runtime::DebugOverlay::Render(CommandList, CameraBuffer);
-        }
-#endif
 
         // Transition the backbuffer to a copy destination.
         StateManager->TransitionResource(
@@ -149,8 +119,7 @@ namespace Neon::RG
     }
 
     void RenderGraphDepdencyLevel::Execute(
-        RenderGraph::RenderCommandContext&  RenderContext,
-        RenderGraph::ComputeCommandContext& ComputeContext) const
+        RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -161,8 +130,8 @@ namespace Neon::RG
             Storage.CreateViews(Handle);
         }
 
-        ExecuteBarriers(RenderContext, ComputeContext);
-        ExecutePasses(RenderContext, ComputeContext);
+        ExecuteBarriers(ChainedCommandList);
+        ExecutePasses(ChainedCommandList);
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -172,8 +141,7 @@ namespace Neon::RG
     }
 
     void RenderGraphDepdencyLevel::ExecuteBarriers(
-        RenderGraph::RenderCommandContext&  RenderContext,
-        RenderGraph::ComputeCommandContext& ComputeContext) const
+        RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
@@ -187,22 +155,18 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        if (!RenderContext.Size())
-        {
-            RenderContext.Append();
-        }
-        StateManager->FlushBarriers(RenderContext[0]);
+        StateManager->FlushBarriers(ChainedCommandList.Load());
     }
 
     //
 
     void RenderGraphDepdencyLevel::ExecutePasses(
-        RenderGraph::RenderCommandContext&  RenderContext,
-        RenderGraph::ComputeCommandContext& ComputeContext) const
+        RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
-        auto DispatchTask = [this,
-                             &RenderContext,
-                             &ComputeContext](size_t PassIndex)
+        auto DispatchTask =
+            [this, &ChainedCommandList](
+                size_t PassIndex,
+                bool   Threaded)
         {
             auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
             auto& Storage                                   = m_Context.GetStorage();
@@ -214,9 +178,14 @@ namespace Neon::RG
             case PassQueueType::Direct:
             {
                 RHI::IGraphicsCommandList* RenderCommandList;
+                if (Threaded)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    RenderCommandList = RenderContext.Append();
+                    RenderCommandList = ChainedCommandList.RenderContext.Append();
+                }
+                else
+                {
+                    RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(ChainedCommandList.Load());
                 }
                 CommandList = RenderCommandList;
 
@@ -318,9 +287,14 @@ namespace Neon::RG
 
             case PassQueueType::Compute:
             {
+                if (Threaded)
                 {
-                    std::scoped_lock Lock(m_Context.m_ComputeMutex);
-                    CommandList = ComputeContext.Append();
+                    std::scoped_lock Lock(m_Context.m_RenderMutex);
+                    CommandList = ChainedCommandList.RenderContext.Append();
+                }
+                else
+                {
+                    CommandList = ChainedCommandList.Load();
                 }
                 break;
             }
@@ -331,14 +305,15 @@ namespace Neon::RG
 
         // If we have more than one pass, we need to synchronize them
         // therefore we need to flush the chained command list we previously created
-        bool ShouldFlush = m_Passes.size() > 1 || m_Passes[0].Pass->GetQueueType() == PassQueueType::Compute;
+        const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
+        const bool ShouldFlush = m_Passes.size() > 1 || (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect);
         if (ShouldFlush)
         {
-            if (RenderContext.Size())
-            {
-                RenderContext.Upload();
-            }
+            ChainedCommandList.Flush();
+        }
 
+        if (m_Passes.size())
+        {
             std::vector<std::future<void>> Futures;
             Futures.reserve(m_Passes.size());
 
@@ -349,7 +324,7 @@ namespace Neon::RG
                     continue;
                 }
 
-                Futures.emplace_back(m_Context.m_ThreadPool.enqueue(DispatchTask, i));
+                Futures.emplace_back(m_Context.m_ThreadPool.enqueue(DispatchTask, i, true));
             }
 
             for (auto& Future : Futures)
@@ -357,19 +332,45 @@ namespace Neon::RG
                 Future.get();
             }
 
-            if (RenderContext.Size())
-            {
-                RenderContext.Upload();
-            }
-            if (ComputeContext.Size())
-            {
-                ComputeContext.Upload();
-            }
+            ChainedCommandList.Flush();
         }
         // Here we can just execute in the current thread rather than spawning a new one
         else
         {
-            DispatchTask(0);
+            ChainedCommandList.Preload(IsDirect);
+            DispatchTask(0, false);
         }
+    }
+
+    RHI::ICommonCommandList* RenderGraph::ChainedCommandList::Load()
+    {
+        if (CommandList) [[likely]]
+        {
+            return CommandList;
+        }
+
+        IsDirect           = true;
+        return CommandList = RenderContext.Append();
+    }
+
+    void RenderGraph::ChainedCommandList::Preload(
+        bool IsDirect)
+    {
+        if (IsDirect)
+        {
+            CommandList = RenderContext.Append();
+        }
+        else
+        {
+            CommandList = ComputeContext.Append();
+        }
+        this->IsDirect = IsDirect;
+    }
+
+    void RenderGraph::ChainedCommandList::Flush()
+    {
+        CommandList = nullptr;
+        RenderContext.Upload();
+        ComputeContext.Upload();
     }
 } // namespace Neon::RG

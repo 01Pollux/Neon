@@ -123,10 +123,7 @@ void FlappyBirdClone::OnUpdate()
         EnginePower *= -1.3f;
     }
 
-    m_VelocityAccum += EnginePower;
-
-    m_VelocityAccum = std::clamp(m_VelocityAccum, -m_EnginePower * 2, m_EnginePower * 2);
-
+    m_VelocityAccum = std::clamp(m_VelocityAccum + EnginePower, -m_EnginePower * 2, m_EnginePower * 2);
     m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
 
     //
