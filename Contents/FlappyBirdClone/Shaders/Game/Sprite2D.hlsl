@@ -52,8 +52,8 @@ PSInput VS_Main(VSInput Vs)
 {
 	PSInput Ps;
 	Ps.Position = float4(Vs.Position, 0.f, 1.f);
-	//Ps.Position = mul(Ps.Position, g_SpriteData[Vs.SpriteIndex].World);
-	//Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
+	Ps.Position = mul(Ps.Position, g_SpriteData[Vs.SpriteIndex].World);
+	Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
 	Ps.Position.z = 0.f;
 	Ps.TexCoord = Vs.TexCoord;
 	Ps.SpriteIndex = Vs.SpriteIndex;
@@ -75,8 +75,7 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
 float4 PS_Main(PSInput Ps) : SV_TARGET
 {
-	return float4(1.f, 1.f, 1.f, 1.f);
-	//float4 Color = p_SpriteTextures[Ps.SpriteIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
-	//clip(Color.a - 0.1f);
-	//return g_SpriteData[Ps.SpriteIndex].Color * Color;
+	float4 Color = p_SpriteTextures[Ps.SpriteIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
+	clip(Color.a - 0.1f);
+	return g_SpriteData[Ps.SpriteIndex].Color * Color;
 }

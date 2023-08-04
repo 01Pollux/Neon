@@ -154,7 +154,11 @@ namespace Neon::RHI
     void Dx12CommonCommandList::SetPipelineState(
         const Ptr<IPipelineState>& State)
     {
-        m_CommandList->SetPipelineState(static_cast<Dx12PipelineState*>(State.get())->Get());
+        if (m_PipelineState != State)
+        {
+            m_CommandList->SetPipelineState(static_cast<Dx12PipelineState*>(State.get())->Get());
+            m_PipelineState = State;
+        }
     }
 
     //
@@ -180,13 +184,22 @@ namespace Neon::RHI
             Buffer->GetHandle());
     }
 
+    void Dx12CommonCommandList::Reset()
+    {
+        m_PipelineState = nullptr;
+        m_RootSignature = nullptr;
+    }
+
     //
 
     void Dx12GraphicsCommandList::SetRootSignature(
         const Ptr<IRootSignature>& RootSig)
     {
-        m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
-        m_RootSignature = RootSig;
+        if (m_RootSignature != RootSig)
+        {
+            m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            m_RootSignature = RootSig;
+        }
     }
 
     //
@@ -426,8 +439,11 @@ namespace Neon::RHI
     void Dx12ComputeCommandList::SetRootSignature(
         const Ptr<IRootSignature>& RootSig)
     {
-        m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
-        m_RootSignature = RootSig;
+        if (m_RootSignature != RootSig)
+        {
+            m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            m_RootSignature = RootSig;
+        }
     }
 
     void Dx12ComputeCommandList::SetConstants(

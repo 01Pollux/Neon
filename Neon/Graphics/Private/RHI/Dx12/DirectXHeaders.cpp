@@ -194,6 +194,7 @@ namespace Neon::RHI
                 std::stringstream ErrorBuffer;
 
                 auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+                Result = Dx12Device->GetDeviceRemovedReason();
 
                 ErrorBuffer << ("Dx12 device removed, Dumping DRED information:\n");
 

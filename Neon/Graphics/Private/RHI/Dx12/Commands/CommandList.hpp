@@ -66,7 +66,14 @@ namespace Neon::RHI
             const void* Data,
             size_t      Size) override;
 
+    public:
+        /// <summary>
+        /// Reset pipeline state and root signature.
+        /// </summary>
+        void Reset();
+
     protected:
+        Ptr<IPipelineState> m_PipelineState;
         Ptr<IRootSignature> m_RootSignature;
 
         bool m_DescriptorDirty = true;
