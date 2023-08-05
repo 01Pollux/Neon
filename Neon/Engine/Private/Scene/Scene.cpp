@@ -1,20 +1,16 @@
 #include <EnginePCH.hpp>
 #include <Scene/Scene.hpp>
 #include <Physics/World.hpp>
-#include <Runtime/DebugOverlay.hpp>
+#include <Runtime/GameEngine.hpp>
 #include <Scene/Exports/Export.hpp>
 
 //
 
+#include <RHI/Swapchain.hpp>
 #include <Renderer/RG/RG.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
-
-//
-
-#include <RHI/Resource/State.hpp>
-#include <RHI/Swapchain.hpp>
 
 namespace Neon::Scene
 {
@@ -40,7 +36,8 @@ namespace Neon::Scene
             .iter(
                 [this](flecs::iter)
                 {
-                    m_PhysicsWorld->Update(m_GameTimer.GetDeltaTime());
+                    double DeltaTime = Runtime::DefaultGameEngine::Get()->GetDeltaTime();
+                    m_PhysicsWorld->Update(DeltaTime);
                 });
 
         m_EntityWorld->observer<Component::CollisionObject>("PhysicsAdd")
@@ -120,37 +117,7 @@ namespace Neon::Scene
 
     void GameScene::Update()
     {
-        if (m_GameTimer.Tick())
-        {
-            m_EntityWorld->progress(float(m_GameTimer.GetDeltaTime()));
-        }
-    }
-
-    //
-
-    double GameScene::GetGameTime() const
-    {
-        return m_GameTimer.GetGameTime();
-    }
-
-    double GameScene::GetEngineTime() const
-    {
-        return m_GameTimer.GetEngineTime();
-    }
-
-    double GameScene::GetDeltaTime() const
-    {
-        return m_GameTimer.GetDeltaTime();
-    }
-
-    float GameScene::GetTimeScale() const
-    {
-        return m_GameTimer.GetTimeScale();
-    }
-
-    void GameScene::SetTimeScale(
-        float TimeScale)
-    {
-        m_GameTimer.SetTimeScale(TimeScale);
+        float DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+        m_EntityWorld->progress(DeltaTime);
     }
 } // namespace Neon::Scene

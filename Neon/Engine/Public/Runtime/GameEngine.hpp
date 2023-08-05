@@ -2,8 +2,11 @@
 
 #include <Config/Engine.hpp>
 
+#include <Runtime/GameTimer.hpp>
 #include <Runtime/Interface.hpp>
 #include <Runtime/Window.hpp>
+
+#include <Asio/ThreadPool.hpp>
 
 namespace Neon
 {
@@ -20,7 +23,7 @@ namespace Neon
 
 namespace Neon::Runtime
 {
-    class DefaultGameEngine : public InterfaceContainer
+    class DefaultGameEngine
     {
     public:
         DefaultGameEngine();
@@ -55,6 +58,33 @@ namespace Neon::Runtime
 
     public:
         /// <summary>
+        /// Get total elapsed time for the current level
+        /// </summary>
+        [[nodiscard]] double GetGameTime() const;
+
+        /// <summary>
+        /// Get total elapsed time for the current engine
+        /// </summary>
+        [[nodiscard]] double GetEngineTime() const;
+
+        /// <summary>
+        /// Get delta time
+        /// </summary>
+        [[nodiscard]] double GetDeltaTime() const;
+
+        /// <summary>
+        /// Get time scale
+        /// </summary>
+        [[nodiscard]] float GetTimeScale() const;
+
+        /// <summary>
+        /// Set time scale
+        /// </summary>
+        void SetTimeScale(
+            float TimeScale);
+
+    public:
+        /// <summary>
         /// Get the window associated with the engine.
         /// </summary>
         [[nodiscard]] Windowing::IWindowApp* GetWindow() const;
@@ -64,11 +94,14 @@ namespace Neon::Runtime
         /// </summary>
         [[nodiscard]] Scene::GameScene& GetScene() const noexcept;
 
+    public:
         /// <summary>
-        /// Set the current scene.
+        /// Get the thread pool associated with the engine.
         /// </summary>
-        void SetScene(
-            UPtr<Scene::GameScene> Scene);
+        auto GetThreadPool() const noexcept
+        {
+            return m_ThreadPool.get();
+        }
 
     protected:
         /// <summary>
@@ -84,7 +117,9 @@ namespace Neon::Runtime
             Config::EngineConfig& Config);
 
     private:
-        UPtr<EngineWindow>     m_Window;
-        UPtr<Scene::GameScene> m_Scene;
+        GameTimer                m_GameTimer;
+        UPtr<EngineWindow>       m_Window;
+        UPtr<Scene::GameScene>   m_Scene;
+        UPtr<Asio::ThreadPool<>> m_ThreadPool;
     };
 } // namespace Neon::Runtime

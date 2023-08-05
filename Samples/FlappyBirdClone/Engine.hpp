@@ -1,9 +1,12 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
-#include <Renderer/Material/Material.hpp>
+#include <Scene/Scene.hpp>
+
 #include <RHI/Resource/Resource.hpp>
 #include <Asset/Types/Texture.hpp>
+
+#include <Renderer/Material/Material.hpp>
 
 #include <unordered_map>
 

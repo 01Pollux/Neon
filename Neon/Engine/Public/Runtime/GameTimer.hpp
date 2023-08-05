@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace Neon::Scene
+namespace Neon::Runtime
 {
     class GameTimer
     {
@@ -62,4 +62,4 @@ namespace Neon::Scene
         time_point m_PrevTime;
         time_point m_CurrTime;
     };
-} // namespace Neon::Scene
+} // namespace Neon::Runtime

@@ -1,7 +1,7 @@
 #include <EnginePCH.hpp>
-#include <Scene/GameTimer.hpp>
+#include <Runtime/GameTimer.hpp>
 
-namespace Neon::Scene
+namespace Neon::Runtime
 {
     using fmilliseconds = std::chrono::duration<double, std::milli>;
 
@@ -64,4 +64,4 @@ namespace Neon::Scene
 
         return true;
     }
-} // namespace Neon::Scene
+} // namespace Neon::Runtime

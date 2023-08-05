@@ -20,7 +20,9 @@ namespace Neon::Runtime
 {
     static DefaultGameEngine* s_GameEngine = nullptr;
 
-    DefaultGameEngine::DefaultGameEngine()
+    DefaultGameEngine::DefaultGameEngine() :
+        m_Scene(std::make_unique<Scene::GameScene>()),
+        m_ThreadPool(std::make_unique<Asio::ThreadPool<>>(4))
     {
         NEON_ASSERT(!s_GameEngine);
         s_GameEngine = this;
@@ -45,32 +47,33 @@ namespace Neon::Runtime
         //
 
         m_Window.reset(NEON_NEW EngineWindow(Config));
-        SetScene(std::move(Config.FirstScene));
     }
 
     int DefaultGameEngine::Run()
     {
+        // Reset the timer before entering the loop to avoid a large delta time on the first frame
+        m_GameTimer.Reset();
         while (m_Window->Run())
         {
             m_Window->ProcessInputs();
-            if (m_Scene)
+            if (m_GameTimer.Tick())
             {
                 auto IsScreenVisible = GetWindow()->IsVisible();
 
                 m_Scene->Update();
-
                 if (IsScreenVisible.get())
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
                     m_Scene->Render();
-                    RHI::ISwapchain::Get()->Present(float(m_Scene->GetDeltaTime()));
+                    RHI::ISwapchain::Get()->Present(float(m_GameTimer.GetDeltaTime()));
                 }
             }
         }
         Shutdown();
-        UnregisterAllInterfaces();
         return m_Window->GetExitCode();
     }
+
+    //
 
     Windowing::IWindowApp* DefaultGameEngine::GetWindow() const
     {
@@ -79,14 +82,7 @@ namespace Neon::Runtime
 
     Scene::GameScene& DefaultGameEngine::GetScene() const noexcept
     {
-        NEON_ASSERT(m_Scene);
         return *m_Scene;
-    }
-
-    void DefaultGameEngine::SetScene(
-        UPtr<Scene::GameScene> Scene)
-    {
-        m_Scene = std::move(Scene);
     }
 
     void DefaultGameEngine::LoadPacks(
@@ -118,5 +114,33 @@ namespace Neon::Runtime
                 Logger->SetGlobal();
             }
         }
+    }
+
+    //
+
+    double DefaultGameEngine::GetGameTime() const
+    {
+        return m_GameTimer.GetGameTime();
+    }
+
+    double DefaultGameEngine::GetEngineTime() const
+    {
+        return m_GameTimer.GetEngineTime();
+    }
+
+    double DefaultGameEngine::GetDeltaTime() const
+    {
+        return m_GameTimer.GetDeltaTime();
+    }
+
+    float DefaultGameEngine::GetTimeScale() const
+    {
+        return m_GameTimer.GetTimeScale();
+    }
+
+    void DefaultGameEngine::SetTimeScale(
+        float TimeScale)
+    {
+        m_GameTimer.SetTimeScale(TimeScale);
     }
 } // namespace Neon::Runtime

@@ -15,8 +15,8 @@ using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
 {
+    Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
-    Scene.SetTimeScale(1.f);
 
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -191,7 +191,7 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
-    float Mult        = float(GetScene().GetDeltaTime());
+    float Mult        = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
     bool UpdateVelocity;
