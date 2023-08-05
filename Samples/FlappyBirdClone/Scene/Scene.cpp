@@ -16,7 +16,7 @@ using namespace Neon;
 void FlappyBirdClone::LoadScene()
 {
     auto& Scene = GetScene();
-    Scene.SetTimeScale(.1f);
+    Scene.SetTimeScale(1.f);
 
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
@@ -38,7 +38,7 @@ void FlappyBirdClone::LoadScene()
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(8.f, 15.f) });
+                std::make_unique<btCapsuleShape>(2.f, 2.f) });
             Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
 
             m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
@@ -49,7 +49,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera3D, "PlayerCamera");
+    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
     {
         Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
@@ -82,20 +82,21 @@ void FlappyBirdClone::LoadScene()
         {
             auto SpriteComponent = Floor.get_mut<Scene::Component::Sprite>();
             {
+                SpriteComponent->Size             = { 100.f, 5.35f };
                 SpriteComponent->MaterialInstance = WorldMaterial;
             }
             Floor.modified<Scene::Component::Sprite>();
 
             auto TransformComponent = Floor.get_mut<Scene::Component::Transform>();
             {
-                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 5.f);
+                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 6.5f);
                 TransformComponent->Local = TransformComponent->World;
             }
             Floor.modified<Scene::Component::Transform>();
 
             {
                 Floor.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
+                    std::make_unique<btBoxShape>(btVector3(100.f, 1.f, 100.f)) });
                 Scene::Component::CollisionObject::AddStaticBody(Floor);
             }
         }
@@ -135,12 +136,36 @@ void FlappyBirdClone::AttachInputs()
             m_RigidBody->setLinearVelocity({});
             m_IsJumping = false;
         });
+    {
+        auto AddAction = ActionTable->AddAction();
+        AddAction->SetInput(Input::EKeyboardInput::A);
+        AddAction->Bind(
+            Input::InputAction::BindType::Press,
+            [this]
+            {
+                // Find entity by name
+                auto Floor  = GetScene().GetEntityWorld()->entity("Floor");
+                auto Sprite = Floor.get_mut<Scene::Component::Sprite>();
+                Sprite->Size.y += 0.05f;
+                m_Player.modified<Scene::Component::Sprite>();
+            });
+
+        auto RemAction = ActionTable->AddAction();
+        RemAction->SetInput(Input::EKeyboardInput::R);
+        RemAction->Bind(
+            Input::InputAction::BindType::Press,
+            [this]
+            {
+                auto Floor  = GetScene().GetEntityWorld()->entity("Floor");
+                auto Sprite = Floor.get_mut<Scene::Component::Sprite>();
+                Sprite->Size.y -= 0.05f;
+                m_Player.modified<Scene::Component::Sprite>();
+            });
+    }
 }
 
 void FlappyBirdClone::OnUpdate()
 {
-    return;
-
     float Mult        = float(GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
