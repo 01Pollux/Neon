@@ -38,7 +38,7 @@ void FlappyBirdClone::LoadScene()
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(2.f, 2.f) });
+                std::make_unique<btCapsuleShape>(1.2f, 1.2f) });
             Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
 
             m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
@@ -96,8 +96,31 @@ void FlappyBirdClone::LoadScene()
 
             {
                 Floor.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(100.f, 1.f, 100.f)) });
+                    std::make_unique<btBoxShape>(btVector3(100.f, 1.32f, 100.f)) });
                 Scene::Component::CollisionObject::AddStaticBody(Floor);
+            }
+        }
+
+        auto Ceiling = Scene.CreateEntity(Scene::EntityType::Sprite, "Ceiling");
+        {
+            auto SpriteComponent = Ceiling.get_mut<Scene::Component::Sprite>();
+            {
+                SpriteComponent->Size             = { 100.f, 5.35f };
+                SpriteComponent->MaterialInstance = WorldMaterial;
+            }
+            Ceiling.modified<Scene::Component::Sprite>();
+
+            auto TransformComponent = Ceiling.get_mut<Scene::Component::Transform>();
+            {
+                TransformComponent->World.SetPosition(Vec::Up<Vector3> * 6.5f);
+                TransformComponent->Local = TransformComponent->World;
+            }
+            Ceiling.modified<Scene::Component::Transform>();
+
+            {
+                Ceiling.set(Scene::Component::CollisionShape{
+                    std::make_unique<btBoxShape>(btVector3(100.f, 1.32f, 100.f)) });
+                Scene::Component::CollisionObject::AddStaticBody(Ceiling);
             }
         }
     }
@@ -108,9 +131,11 @@ void FlappyBirdClone::LoadScene()
 
     //
 
-    // GetPipeline()->Attach(
-    //     "Update",
-    //     std::bind(&FlappyBirdClone::OnUpdate, this));
+    Scene.GetEntityWorld()
+        ->system()
+        .kind(flecs::OnUpdate)
+        .iter([this](flecs::iter)
+              { OnUpdate(); });
 }
 
 void FlappyBirdClone::AttachInputs()
@@ -169,21 +194,28 @@ void FlappyBirdClone::OnUpdate()
     float Mult        = float(GetScene().GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
+    bool UpdateVelocity;
     if (m_IsJumping)
     {
-        EnginePower *= 1.6f;
+        EnginePower *= 2.6f;
         if (m_VelocityAccum < 0.f)
         {
-            EnginePower *= 3;
+            EnginePower *= 3.5f;
         }
+        UpdateVelocity = true;
     }
     else
     {
-        EnginePower *= -1.3f;
+        UpdateVelocity = false;
+        EnginePower *= -5.6f;
     }
 
     m_VelocityAccum = std::clamp(m_VelocityAccum + EnginePower, -m_EnginePower * 2, m_EnginePower * 2);
-    m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
+
+    if (UpdateVelocity)
+    {
+        m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
+    }
 
     //
 
