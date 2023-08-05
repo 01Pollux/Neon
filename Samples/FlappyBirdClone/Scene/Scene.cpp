@@ -133,6 +133,7 @@ void FlappyBirdClone::LoadScene()
 
     Scene.GetEntityWorld()
         ->system()
+        .multi_threaded()
         .kind(flecs::OnUpdate)
         .iter([this](flecs::iter)
               { OnUpdate(); });

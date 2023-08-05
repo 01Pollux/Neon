@@ -22,6 +22,7 @@ namespace Neon::Scene
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_EntityWorld = std::make_unique<flecs::world>();
+            m_EntityWorld->set_threads(3);
         }
 
         Exports::RegisterComponents(*m_EntityWorld);
@@ -40,7 +41,7 @@ namespace Neon::Scene
                     m_PhysicsWorld->Update(DeltaTime);
                 });
 
-        m_EntityWorld->observer<Component::CollisionObject>("PhysicsAdd")
+        m_EntityWorld->observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
             .event(flecs::OnAdd)
             .event(flecs::OnRemove)
