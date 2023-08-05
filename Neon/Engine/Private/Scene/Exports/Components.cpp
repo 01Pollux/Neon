@@ -8,28 +8,25 @@
 
 #include <Scene/Component/Camera.hpp>
 
+#include <Scene/Component/Physics.hpp>
+
 namespace Neon::Scene::Component
 {
     NEON_IMPLEMENT_COMPONENT(Transform)
     {
-        World.component<Transform>("Neon::Scene::Transform")
-            .member<TransformMatrix>("Local")
-            .member<TransformMatrix>("World");
+        World.component<Transform>("Neon::Scene::Transform");
     }
 
     //
 
     NEON_IMPLEMENT_COMPONENT(CanvasItem)
     {
-        World.component<CanvasItem>("Neon::Scene::CanvasItem")
-            .member<Color4>("ModulationColor")
-            .member<RectI>("TextureRect");
+        World.component<CanvasItem>("Neon::Scene::CanvasItem");
     }
 
     NEON_IMPLEMENT_COMPONENT(Sprite)
     {
-        World.component<Sprite>("Neon::Scene::Sprite")
-            .is_a<CanvasItem>();
+        World.component<Sprite>("Neon::Scene::Sprite");
     }
 
     //
@@ -37,6 +34,43 @@ namespace Neon::Scene::Component
     NEON_IMPLEMENT_COMPONENT(Camera)
     {
         World.component<Camera>("Neon::Scene::Camera");
-        // TODO: Export Camera component
+    }
+
+    //
+
+    NEON_IMPLEMENT_COMPONENT(CollisionEnter)
+    {
+        World.component<CollisionEnter>("Neon::Scene::CollisionEnter");
+    }
+    NEON_IMPLEMENT_COMPONENT(CollisionStay)
+    {
+        World.component<CollisionStay>("Neon::Scene::CollisionStay");
+    }
+    NEON_IMPLEMENT_COMPONENT(CollisionExit)
+    {
+        World.component<CollisionExit>("Neon::Scene::CollisionExit");
+    }
+    NEON_IMPLEMENT_COMPONENT(TriggerEnter)
+    {
+        World.component<TriggerEnter>("Neon::Scene::TriggerEnter");
+    }
+    NEON_IMPLEMENT_COMPONENT(TriggerStay)
+    {
+        World.component<TriggerStay>("Neon::Scene::TriggerStay");
+    }
+    NEON_IMPLEMENT_COMPONENT(TriggerExit)
+    {
+        World.component<TriggerExit>("Neon::Scene::TriggerExit");
+    }
+
+    //
+
+    NEON_IMPLEMENT_COMPONENT(CollisionShape)
+    {
+        World.component<CollisionShape>("Neon::Scene::CollisionShape");
+    }
+    NEON_IMPLEMENT_COMPONENT(CollisionObject)
+    {
+        World.component<CollisionObject>("Neon::Scene::CollisionObject");
     }
 } // namespace Neon::Scene::Component

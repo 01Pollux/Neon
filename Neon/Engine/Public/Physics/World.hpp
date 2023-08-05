@@ -9,10 +9,24 @@
 #include <Bullet3/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <Bullet3/BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
+#include <unordered_set>
+
 namespace Neon::Physics
 {
     class World
     {
+        using CollisionData = std::tuple<const btCollisionObject*, const btCollisionObject*, btPersistentManifold*>;
+        struct CollisionDataHash
+        {
+            std::size_t operator()(
+                const CollisionData& Data) const
+            {
+                return std::hash<const btCollisionObject*>()(std::get<0>(Data)) ^
+                       std::hash<const btCollisionObject*>()(std::get<1>(Data));
+            }
+        };
+        using CollisionDataSet = std::unordered_set<CollisionData, CollisionDataHash>;
+
     public:
         World();
 
@@ -88,11 +102,22 @@ namespace Neon::Physics
             btCollisionObject* PhysicsObject);
 
     private:
+        /// <summary>
+        /// Callback for when the physics world ticks.
+        /// </summary>
+        static void WorldPostTickCallback(
+            btDynamicsWorld* World,
+            btScalar         DeltaTimeStep);
+
+    private:
         btSoftBodyRigidBodyCollisionConfiguration m_CollisionConfiguration;
         btCollisionDispatcher                     m_Dispatcher;
         btDbvtBroadphase                          m_Broadphase;
         btSequentialImpulseConstraintSolver       m_Solver;
         btSoftRigidDynamicsWorld                  m_DynamicsWorld;
+
+    private:
+        CollisionDataSet m_PreviousTickCollisions;
 
     private:
         double m_FixedTimeStep = 1.0 / 60.0;

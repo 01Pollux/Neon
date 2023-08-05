@@ -45,6 +45,12 @@ private:
     /// </summary>
     void OnUpdate();
 
+    /// <summary>
+    /// Called when the player collides with something
+    /// </summary>
+    void OnCollisionEnter(
+        class btPersistentManifold* Manifold);
+
 private:
     /// <summary>
     /// Get the material by name

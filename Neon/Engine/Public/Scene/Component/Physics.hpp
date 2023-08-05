@@ -28,18 +28,78 @@
 #include <Bullet3/BulletCollision/CollisionShapes/btTriangleMesh.h>
 #include <Bullet3/BulletCollision/CollisionShapes/btUniformScalingShape.h>
 
+#include <functional>
+
 namespace Neon::Scene::Component
 {
+    using CollisionCallback = std::move_only_function<void(btPersistentManifold* Manifold)>;
+
+    /// <summary>
+    /// Called when a collision occurs.
+    /// </summary>
+    struct CollisionEnter
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    /// <summary>
+    /// Called when a collision is ongoing.
+    /// </summary>
+    struct CollisionStay
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    /// <summary>
+    /// Called when a collision ends.
+    /// </summary>
+    struct CollisionExit
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    /// <summary>
+    /// Called when a trigger is entered.
+    /// </summary>
+    struct TriggerEnter
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    /// <summary>
+    /// Called when a trigger is ongoing.
+    /// </summary>
+    struct TriggerStay
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    /// <summary>
+    /// Called when a trigger ends.
+    /// </summary>
+    struct TriggerExit
+    {
+        NEON_EXPORT_COMPONENT();
+        mutable CollisionCallback Callback;
+    };
+
+    //
+
     struct CollisionShape
     {
+        NEON_EXPORT_COMPONENT();
         UPtr<btCollisionShape> BulletShape = nullptr;
     };
 
     struct CollisionObject
     {
-        static constexpr auto MaskAll = std::numeric_limits<uint32_t>::max();
-
         NEON_EXPORT_COMPONENT();
+        static constexpr auto MaskAll = std::numeric_limits<uint32_t>::max();
 
         UPtr<btCollisionObject> BulletObject = nullptr;
 

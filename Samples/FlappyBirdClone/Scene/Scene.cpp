@@ -38,14 +38,17 @@ void FlappyBirdClone::LoadScene()
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(1.2f, 1.2f) });
+                std::make_unique<btCapsuleShape>(1.0f, 1.4f) });
             Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
 
             m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
 
-            m_RigidBody->setAngularFactor(Physics::ToBullet3(Vec::Forward<Vector3>));
-            m_RigidBody->setLinearFactor(Physics::ToBullet3(Vec::Up<Vector3>));
+            m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
+            m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
+
+            m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
         }
+        m_Player.modified<Scene::Component::CollisionEnter>();
     }
 
     // Player camera
@@ -96,7 +99,7 @@ void FlappyBirdClone::LoadScene()
 
             {
                 Floor.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(100.f, 1.32f, 100.f)) });
+                    std::make_unique<btBoxShape>(btVector3(100.f, 1.45f, 100.f)) });
                 Scene::Component::CollisionObject::AddStaticBody(Floor);
             }
         }
@@ -192,6 +195,12 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    // Player lost
+    if (!m_RigidBody->getActivationState())
+    {
+        return;
+    }
+
     float Mult        = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
@@ -215,7 +224,7 @@ void FlappyBirdClone::OnUpdate()
 
     if (UpdateVelocity)
     {
-        m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
+        m_RigidBody->setLinearVelocity(Physics::ToBullet3<true>(Vec::Up<Vector3> * m_VelocityAccum));
     }
 
     //
@@ -225,4 +234,16 @@ void FlappyBirdClone::OnUpdate()
     auto& Transform = m_RigidBody->getWorldTransform();
     Transform.setRotation(btQuaternion(btVector3(0, 0, 1), glm::radians(Angle)));
     m_RigidBody->setInterpolationWorldTransform(Transform);
+}
+
+void FlappyBirdClone::OnCollisionEnter(
+    btPersistentManifold* Manifold)
+{
+    m_RigidBody->setActivationState(0);
+
+    //
+
+    auto Sprite             = m_Player.get_mut<Scene::Component::Sprite>();
+    Sprite->ModulationColor = Colors::Red;
+    m_Player.modified<Scene::Component::Sprite>();
 }

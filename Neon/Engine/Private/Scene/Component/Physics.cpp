@@ -14,6 +14,7 @@ namespace Neon::Scene::Component
         auto MotionState = new Physics::ActorMotionState(Target);
 
         auto Object = std::make_unique<btRigidBody>(0., MotionState, Shape->BulletShape.get());
+        Object->setUserPointer(std::bit_cast<void*>(Target.id()));
         Object->setCollisionFlags(Object->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 
         return Target.set(CollisionObject{
@@ -38,6 +39,7 @@ namespace Neon::Scene::Component
         }
 
         auto Object = std::make_unique<btRigidBody>(Mass, MotionState, Shape->BulletShape.get(), LocalInertia);
+        Object->setUserPointer(std::bit_cast<void*>(Target.id()));
 
         return Target.set(CollisionObject{
             .BulletObject = std::move(Object),
@@ -61,7 +63,8 @@ namespace Neon::Scene::Component
         }
 
         auto Object = std::make_unique<btRigidBody>(Mass, MotionState, Shape->BulletShape.get(), LocalInertia);
-        Object->setCollisionFlags(Object->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
+        Object->setUserPointer(std::bit_cast<void*>(Target.id()));
+        Object->setCollisionFlags(Object->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 
         return Target.set(CollisionObject{
             .BulletObject = std::move(Object),

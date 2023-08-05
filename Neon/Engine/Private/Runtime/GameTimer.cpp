@@ -38,9 +38,8 @@ namespace Neon::Runtime
 
     void GameTimer::Reset()
     {
-        m_PrevTime  = steady_clock::now();
-        m_BaseTime  = m_PrevTime;
-        m_TimeScale = 1.f;
+        m_PrevTime = steady_clock::now();
+        m_BaseTime = m_PrevTime;
 
         m_GameTime = 0.0;
     }

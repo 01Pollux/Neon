@@ -8,6 +8,8 @@
 
 #include <Scene/Component/Camera.hpp>
 
+#include <Scene/Component/Physics.hpp>
+
 namespace Neon::Scene::Exports
 {
     void RegisterActorComponents(
@@ -19,5 +21,16 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_COMPONENT(Component::Sprite);
 
         NEON_REGISTER_COMPONENT(Component::Camera);
+
+        NEON_REGISTER_COMPONENT(Component::CollisionEnter);
+        NEON_REGISTER_COMPONENT(Component::CollisionStay);
+        NEON_REGISTER_COMPONENT(Component::CollisionExit);
+
+        NEON_REGISTER_COMPONENT(Component::TriggerEnter);
+        NEON_REGISTER_COMPONENT(Component::TriggerStay);
+        NEON_REGISTER_COMPONENT(Component::TriggerExit);
+
+        NEON_REGISTER_COMPONENT(Component::CollisionShape);
+        NEON_REGISTER_COMPONENT(Component::CollisionObject);
     }
 } // namespace Neon::Scene::Exports

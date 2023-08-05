@@ -56,7 +56,7 @@ namespace Neon::Runtime
         double m_DeltaTime  = 0;
         double m_GameTime   = 0;
         double m_EngineTime = 0;
-        float  m_TimeScale  = 1.0f;
+        float  m_TimeScale  = 1.f;
 
         time_point m_BaseTime;
         time_point m_PrevTime;
