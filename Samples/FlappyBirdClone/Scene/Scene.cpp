@@ -74,6 +74,52 @@ void FlappyBirdClone::LoadScene()
         Camera.modified<Scene::Component::Transform>();
     }
 
+    // Stress test: Create 20'000 sprites
+    if (1)
+    {
+        std::vector<Ptr<Renderer::IMaterial>> MaterialInstances;
+        // Random 1000 material instances
+        auto MaterialInstance = GetMaterial("BaseSprite");
+        auto WorldTexture     = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+        for (int i = 0; i < 1000; ++i)
+        {
+            auto Copy = MaterialInstance->CreateInstance();
+            Copy->SetTexture("p_SpriteTextures", WorldTexture);
+            MaterialInstances.emplace_back(Copy);
+        }
+
+        for (int i = 0; i < 200; ++i)
+        {
+            for (int j = 0; j < 1000; ++j)
+            {
+                auto Sprite = Scene.CreateEntity(Scene::EntityType::Sprite, StringUtils::Format("StressTestSprite{}{}", i, j).c_str());
+                {
+                    auto SpriteComponent = Sprite.get_mut<Scene::Component::Sprite>();
+                    {
+                        // Select random material instance
+                        SpriteComponent->MaterialInstance = MaterialInstances[j];
+                        // Random color based on i and j
+                        SpriteComponent->ModulationColor = Color4(
+                            ((i * 1000 + j) % 255) / 255.f,
+                            ((i * 1000 + j) % 255) / 255.f,
+                            ((i * 1000 + j) % 255) / 255.f,
+                            1.f);
+                        SpriteComponent->Size = { 1.f, 1.f };
+                    }
+                    Sprite.modified<Scene::Component::Sprite>();
+
+                    auto TransformComponent = Sprite.get_mut<Scene::Component::Transform>();
+                    {
+                        TransformComponent->World.SetPosition(Vec::Right<Vector3> * (i * 1.1f));
+                        TransformComponent->Local = TransformComponent->World;
+                    }
+                    Sprite.modified<Scene::Component::Transform>();
+                }
+            }
+            break;
+        }
+    }
+
     // Floor and ceiling as sprite
     {
         auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
@@ -165,32 +211,6 @@ void FlappyBirdClone::AttachInputs()
             m_RigidBody->setLinearVelocity({});
             m_IsJumping = false;
         });
-    {
-        auto AddAction = ActionTable->AddAction();
-        AddAction->SetInput(Input::EKeyboardInput::A);
-        AddAction->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
-            {
-                // Find entity by name
-                auto Floor  = GetScene().GetEntityWorld()->entity("Floor");
-                auto Sprite = Floor.get_mut<Scene::Component::Sprite>();
-                Sprite->Size.y += 0.05f;
-                m_Player.modified<Scene::Component::Sprite>();
-            });
-
-        auto RemAction = ActionTable->AddAction();
-        RemAction->SetInput(Input::EKeyboardInput::R);
-        RemAction->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
-            {
-                auto Floor  = GetScene().GetEntityWorld()->entity("Floor");
-                auto Sprite = Floor.get_mut<Scene::Component::Sprite>();
-                Sprite->Size.y -= 0.05f;
-                m_Player.modified<Scene::Component::Sprite>();
-            });
-    }
 }
 
 void FlappyBirdClone::OnUpdate()

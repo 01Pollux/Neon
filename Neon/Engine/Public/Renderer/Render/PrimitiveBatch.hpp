@@ -18,6 +18,13 @@ namespace Neon::Renderer
             virtual ~PrimitiveBatch() = default;
 
             /// <summary>
+            /// Called before drawing.
+            /// </summary>
+            virtual void OnBegin()
+            {
+            }
+
+            /// <summary>
             /// Called before final drawing.
             /// </summary>
             virtual void OnDraw()
@@ -28,6 +35,10 @@ namespace Neon::Renderer
             /// Called after drawing.
             /// </summary>
             virtual void OnReset()
+            {
+            }
+
+            virtual void OnEnd()
             {
             }
 

@@ -171,8 +171,7 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::LoadPixRuntime()
     {
-#if 1
-        // #ifndef NEON_DIST
+#ifndef NEON_DIST
         if (GetModuleHandleW(STR("WinPixGpuCapturer.dll")))
         {
             return;

@@ -42,12 +42,13 @@ namespace Neon::Renderer
         {
             Matrix4x4 World;
             Vector4   Color;
+            int       TextureIndex;
         };
 
         using BatchBaseClass = PrimitiveBatch16<BatchSpriteVertex>;
 
     public:
-        static constexpr size_t MaxSpritesCount = 2048;
+        static constexpr size_t MaxSpritesCount = 50'000;
 
         SpriteBatcher(
             uint32_t SpritesCount = MaxSpritesCount) :
@@ -66,9 +67,19 @@ namespace Neon::Renderer
 
     protected:
         /// <summary>
+        /// Called before drawing.
+        /// </summary>
+        void OnBegin() override;
+
+        /// <summary>
         /// Called before final drawing.
         /// </summary>
         void OnDraw() override;
+
+        /// <summary>
+        /// Called after drawing.
+        /// </summary>
+        void OnEnd() override;
 
         /// <summary>
         /// Called after drawing.
@@ -106,59 +117,5 @@ namespace Neon::Renderer
         MaterialTable m_MaterialInstances;
 
         Ptr<RHI::IUploadBuffer> m_CameraBuffer;
-    };
-
-    class SpriteBatch
-    {
-    public:
-        SpriteBatch();
-
-        /// <summary>
-        /// Update camera buffer.
-        /// </summary>
-        void SetCameraBuffer(
-            const Ptr<RHI::IUploadBuffer>& Buffer);
-
-        /// <summary>
-        /// Begins drawing.
-        /// </summary>
-        void Begin(
-            RHI::IGraphicsCommandList* CommandList);
-
-        /// <summary>
-        /// Enqueues a quad to be drawn.
-        /// </summary>
-        void Draw(
-            const Scene::Component::Transform& Transform,
-            const Scene::Component::Sprite&    Sprite);
-
-        /// <summary>
-        /// Ends drawing.
-        /// </summary>
-        void End();
-
-    private:
-        /// <summary>
-        /// Creates the vertex, per object and index buffers.
-        /// </summary>
-        void CreateBuffers();
-
-    private:
-        RHI::IGraphicsCommandList* m_CommandList = nullptr;
-
-        Ptr<RHI::IUploadBuffer> m_CameraBuffer;
-
-        Ptr<RHI::IUploadBuffer> m_PerDataBuffer;
-        Ptr<RHI::IUploadBuffer> m_VertexBuffer;
-        Ptr<RHI::IUploadBuffer> m_IndexBuffer;
-
-        uint8_t* m_VertexBufferPtr  = nullptr;
-        uint8_t* m_PerDataBufferPtr = nullptr;
-
-        uint32_t m_VerticesCount = 0;
-        uint32_t m_DrawCount     = 0;
-
-        RHI::IPipelineState* m_PipelineState = nullptr;
-        MaterialTable        m_MaterialInstances;
     };
 } // namespace Neon::Renderer

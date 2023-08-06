@@ -23,6 +23,7 @@ namespace Neon::Renderer::Impl
     void PrimitiveBatch::Reset()
     {
         End();
+        OnReset();
 
         m_VertexBuffer.Reset();
         m_IndexBuffer.Reset();
@@ -41,6 +42,13 @@ namespace Neon::Renderer::Impl
         m_DrawingIndexed = Indexed;
         m_CommandList    = CommandList;
         m_Topology       = Topology;
+
+        m_VertexBuffer.Map();
+        if (m_IndexBuffer)
+        {
+            m_IndexBuffer.Map();
+        }
+        OnBegin();
     }
 
     uint32_t PrimitiveBatch::Draw(
@@ -98,10 +106,16 @@ namespace Neon::Renderer::Impl
                 uint32_t VertexCount = m_VerticesSize / m_VertexStride;
                 m_CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = VertexCount });
             }
-
-            OnReset();
-            m_VerticesSize = 0;
-            m_IndicesSize  = 0;
         }
+
+        OnEnd();
+        m_VertexBuffer.Unmap();
+        if (m_IndexBuffer)
+        {
+            m_IndexBuffer.Unmap();
+        }
+
+        m_VerticesSize = 0;
+        m_IndicesSize  = 0;
     }
 } // namespace Neon::Renderer::Impl

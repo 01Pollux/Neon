@@ -19,6 +19,7 @@ struct PerObjectData
 {
 	matrix World;
 	float4 Color;
+	int TextureIndex;
 };
 
 //
@@ -75,7 +76,9 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
 float4 PS_Main(PSInput Ps) : SV_TARGET
 {
-	float4 Color = p_SpriteTextures[Ps.SpriteIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
+	int TextureIndex = g_SpriteData[Ps.SpriteIndex].TextureIndex;
+	float4 Color = g_SpriteData[Ps.SpriteIndex].Color;
+	Color *= p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
 	clip(Color.a - 0.1f);
-	return g_SpriteData[Ps.SpriteIndex].Color * Color;
+	return Color;
 }

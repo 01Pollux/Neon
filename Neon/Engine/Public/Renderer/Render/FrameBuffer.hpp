@@ -53,7 +53,7 @@ namespace Neon::Renderer
         /// </summary>
         void Reset()
         {
-            Buffer = nullptr;
+            Buffer  = nullptr;
             CurSize = 0;
         }
 
@@ -72,16 +72,7 @@ namespace Neon::Renderer
         [[nodiscard]] uint32_t Allocate(
             uint32_t Size)
         {
-            uint32_t Offset = 0;
-            if (!Buffer)
-            {
-                Buffer.reset(RHI::IUploadBuffer::Create({ .Size = MaxSize }));
-                BufferData = Buffer->Map();
-
-                CurSize = 0;
-            }
-
-            Offset = CurSize;
+            uint32_t Offset = CurSize;
             CurSize += Size;
             return Offset;
         }
@@ -122,6 +113,27 @@ namespace Neon::Renderer
             uint32_t Offset) const
         {
             return Buffer->GetHandle(Offset);
+        }
+
+        /// <summary>
+        /// Map the buffer to system memory.
+        /// </summary>
+        void Map()
+        {
+            if (!Buffer)
+            {
+                Buffer.reset(RHI::IUploadBuffer::Create({ .Size = MaxSize }));
+            }
+            BufferData = Buffer->Map();
+        }
+
+        /// <summary>
+        /// Unmap the buffer from system memory.
+        /// </summary>
+        void Unmap()
+        {
+            Buffer->Unmap();
+            BufferData = nullptr;
         }
     };
 } // namespace Neon::Renderer
