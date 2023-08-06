@@ -86,12 +86,12 @@ namespace Neon::RHI
     {
         NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
 
-        if (DeviceDesc.EnableGPUDebugger)
+        // if (DeviceDesc.EnableGPUDebugger)
         {
             LoadPixRuntime();
         }
         EnableDebugLayerIfNeeded(DeviceDesc);
-        CreateFactory();
+        CreateFactory(DeviceDesc);
         CreateDevice();
         CheckDeviceFeatures();
         FillInDescriptorSizes();
@@ -171,7 +171,8 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::LoadPixRuntime()
     {
-#ifndef NEON_DIST
+#if 1
+        // #ifndef NEON_DIST
         if (GetModuleHandleW(STR("WinPixGpuCapturer.dll")))
         {
             return;
@@ -265,9 +266,17 @@ namespace Neon::RHI
 #endif
     }
 
-    void Dx12RenderDevice::CreateFactory()
+    void Dx12RenderDevice::CreateFactory(
+        const DeviceCreateDesc& DeviceDesc)
     {
-        ThrowIfFailed(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG, IID_PPV_ARGS(&m_DxgiFactory)));
+        int Flags = 0;
+#ifndef NEON_DIST
+        if (DeviceDesc.EnableDebugLayer)
+        {
+            Flags |= DXGI_CREATE_FACTORY_DEBUG;
+        }
+#endif
+        ThrowIfFailed(CreateDXGIFactory2(Flags, IID_PPV_ARGS(&m_DxgiFactory)));
     }
 
     void Dx12RenderDevice::CreateDevice()

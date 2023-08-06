@@ -99,7 +99,8 @@ namespace Neon::RHI
         /// <summary>
         /// Create dxgi factory.
         /// </summary>
-        void CreateFactory();
+        void CreateFactory(
+            const DeviceCreateDesc& DeviceDesc);
 
         /// <summary>
         /// Create dx12 device.
