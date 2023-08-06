@@ -43,6 +43,7 @@ namespace Neon::Renderer
             Matrix4x4 World;
             Vector4   Color;
             int       TextureIndex;
+            int       _Pad;
         };
 
         using BatchBaseClass = PrimitiveBatch16<BatchSpriteVertex>;

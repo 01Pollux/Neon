@@ -14,7 +14,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Maximum number of vertices in the buffer.
         /// </summary>
-        const uint32_t MaxSize;
+        uint32_t MaxSize;
 
         /// <summary>
         /// Upload buffer to hold data.
@@ -33,13 +33,34 @@ namespace Neon::Renderer
         }
 
         NEON_CLASS_NO_COPY(FrameBuffer);
-        NEON_CLASS_MOVE(FrameBuffer);
+
+        FrameBuffer(
+            FrameBuffer&& Other) noexcept :
+            CurSize(Other.CurSize),
+            MaxSize(Other.MaxSize),
+            Buffer(std::move(Other.Buffer)),
+            BufferData(std::exchange(Other.BufferData, nullptr))
+        {
+        }
+
+        FrameBuffer& operator=(
+            FrameBuffer&& Other) noexcept
+        {
+            if (this == &Other)
+            {
+                CurSize    = Other.CurSize;
+                MaxSize    = Other.MaxSize;
+                Buffer     = std::move(Other.Buffer);
+                BufferData = std::exchange(Other.BufferData, nullptr);
+            }
+            return *this;
+        }
 
         ~FrameBuffer()
         {
-            if (Buffer)
+            if (BufferData)
             {
-                Buffer->Unmap();
+                Unmap();
             }
         }
 
