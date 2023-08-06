@@ -86,7 +86,7 @@ namespace Neon::RHI
     {
         NEON_INFO_TAG("Graphics", "Creating DirectX 12 Render Device");
 
-        // if (DeviceDesc.EnableGPUDebugger)
+        if (DeviceDesc.EnableGPUDebugger)
         {
             LoadPixRuntime();
         }
