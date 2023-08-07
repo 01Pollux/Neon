@@ -4,7 +4,6 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Sprite.hpp>
 
-#include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Resource/State.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
@@ -19,6 +18,8 @@ namespace Neon::Renderer
 
     void SpriteBatcher::OnBegin()
     {
+        BatchBaseClass::OnBegin();
+
         m_PerObjectBuffer.Map();
     }
 
@@ -26,7 +27,7 @@ namespace Neon::Renderer
     {
         BatchBaseClass::OnDraw();
 
-        auto FirstMaterial = m_MaterialInstances.GetMaterial(0);
+        auto FirstMaterial = m_MaterialInstances.GetFirstMaterial();
 
         FirstMaterial->SetResourceView(
             "g_SpriteData",
@@ -41,11 +42,15 @@ namespace Neon::Renderer
 
     void SpriteBatcher::OnReset()
     {
+        BatchBaseClass::OnReset();
+
         m_PerObjectBuffer.Reset();
     }
 
     void SpriteBatcher::OnEnd()
     {
+        BatchBaseClass::OnEnd();
+
         m_PerObjectBuffer.Unmap();
         m_MaterialInstances.Reset();
     }
@@ -77,25 +82,8 @@ namespace Neon::Renderer
 
         auto ObjectData = m_PerObjectBuffer.AllocateData<PerObjectData>(1);
 
-        int TextureIndex = -1;
-        {
-            for (int i = 0; i < int(m_MaterialInstances.GetMaterialCount()); ++i)
-            {
-                if (m_MaterialInstances.GetMaterial(i) == Sprite.MaterialInstance.get())
-                {
-                    TextureIndex = i;
-                    break;
-                }
-            }
-            if (TextureIndex == -1)
-            {
-                TextureIndex = m_MaterialInstances.GetMaterialCount();
-                m_MaterialInstances.Append(Sprite.MaterialInstance.get());
-            }
-        }
-
         ObjectData->World        = glm::transpose(Transform.World.ToMat4x4());
         ObjectData->Color        = Sprite.ModulationColor;
-        ObjectData->TextureIndex = TextureIndex;
+        ObjectData->TextureIndex = m_MaterialInstances.Append(Sprite.MaterialInstance.get());
     }
 } // namespace Neon::Renderer

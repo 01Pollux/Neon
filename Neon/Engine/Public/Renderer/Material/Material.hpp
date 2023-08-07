@@ -205,40 +205,15 @@ namespace Neon::Renderer
         /// <summary>
         /// Append a material to the table.
         /// </summary>
-        [[nodiscard]] void Append(
+        [[nodiscard]] uint32_t Append(
             IMaterial* Material);
 
         /// <summary>
         /// Get the material at the specified index.
         /// </summary>
-        [[nodiscard]] IMaterial* GetMaterial(
-            size_t Index) const
+        [[nodiscard]] IMaterial* GetFirstMaterial() const
         {
-            return m_Materials[Index];
-        }
-
-        /// <summary>
-        /// Get the number of materials.
-        /// </summary>
-        [[nodiscard]] uint32_t GetMaterialCount() const noexcept
-        {
-            return uint32_t(m_Materials.size());
-        }
-
-        /// <summary>
-        /// Get the materials.
-        /// </summary>
-        [[nodiscard]] const auto& GetMaterials() const noexcept
-        {
-            return m_Materials;
-        }
-
-        /// <summary>
-        /// Get the materials.
-        /// </summary>
-        [[nodiscard]] auto& GetMaterials() noexcept
-        {
-            return m_Materials;
+            return m_Materials.begin()->first;
         }
 
         /// <summary>
@@ -248,7 +223,8 @@ namespace Neon::Renderer
             RHI::ICommonCommandList* CommandList);
 
     private:
-        std::vector<IMaterial*> m_Materials;
+        std::unordered_map<IMaterial*, uint32_t> m_Materials;
+        uint32_t                                 m_HighestId = 0;
     };
 
 } // namespace Neon::Renderer

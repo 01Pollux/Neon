@@ -564,14 +564,22 @@ namespace Neon::Renderer
     void MaterialTable::Reset()
     {
         m_Materials.clear();
+        m_HighestId = 0;
     }
 
-    void MaterialTable::Append(
+    uint32_t MaterialTable::Append(
         IMaterial* Material)
     {
+#if NEON_DEBUG
         NEON_ASSERT(Material, "Material cannot be null");
-        NEON_ASSERT(m_Materials.empty() || m_Materials[0]->GetPipelineState() == Material->GetPipelineState(), "Material must have the same pipeline state");
-        m_Materials.push_back(Material);
+        NEON_ASSERT(m_Materials.empty() || GetFirstMaterial()->GetPipelineState() == Material->GetPipelineState(), "Material must have the same pipeline state");
+#endif
+        auto [Iter, WasInserted] = m_Materials.emplace(Material, m_HighestId);
+        if (WasInserted)
+        {
+            m_HighestId++;
+        }
+        return Iter->second;
     }
 
     void MaterialTable::Bind(
@@ -581,7 +589,7 @@ namespace Neon::Renderer
         std::vector<uint32_t>                       DescriptorOffsets;
 
         uint32_t ResourceDescriptorSize = 0, SamplerDescriptorSize = 0;
-        auto     FirstMaterial = m_Materials[0];
+        auto     FirstMaterial = GetFirstMaterial();
 
         // Function helper to insert descriptor to batch and accumulate size
         auto InsertToDescriptorBatch =
@@ -662,7 +670,7 @@ namespace Neon::Renderer
             {
                 for (auto& CurMaterial : m_Materials)
                 {
-                    InsertToDescriptorBatch(CurMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
+                    InsertToDescriptorBatch(CurMaterial.first->GetDescriptorParam(ParamName), Param.Descriptor.Type);
                 }
             }
             else

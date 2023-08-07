@@ -52,7 +52,7 @@ namespace Neon::Renderer
     public:
         static constexpr size_t MaxSpritesCount = 50'000;
 
-        SpriteBatcher(
+        explicit SpriteBatcher(
             uint32_t SpritesCount = MaxSpritesCount) :
             BatchBaseClass(
                 SpritesCount * 4,

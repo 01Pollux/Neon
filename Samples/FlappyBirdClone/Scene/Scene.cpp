@@ -74,7 +74,7 @@ void FlappyBirdClone::LoadScene()
         Camera.modified<Scene::Component::Transform>();
     }
 
-    // Stress test: Create 20'000 sprites
+    // Stress test: Create 200'000 sprites
     if (1)
     {
         std::vector<Ptr<Renderer::IMaterial>> MaterialInstances;
@@ -116,7 +116,6 @@ void FlappyBirdClone::LoadScene()
                     Sprite.modified<Scene::Component::Transform>();
                 }
             }
-            break;
         }
     }
 
