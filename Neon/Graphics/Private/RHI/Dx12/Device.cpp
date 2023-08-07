@@ -293,6 +293,49 @@ namespace Neon::RHI
         NEON_TRACE_TAG("Graphics", "Description: {}", StringUtils::Transform<StringU8>(Desc.Description));
 
         ThrowIfFailed(D3D12CreateDevice(m_Adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_Device)));
+
+#ifndef NEON_DIST
+        WinAPI::ComPtr<ID3D12InfoQueue> InfoQueue;
+        if (SUCCEEDED(m_Device.As(&InfoQueue)))
+        {
+            InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
+            InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
+            InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
+
+            WinAPI::ComPtr<ID3D12InfoQueue1> InfoQueue1;
+            if (InfoQueue.As(&InfoQueue))
+            {
+                auto MessageCallback =
+                    [](D3D12_MESSAGE_CATEGORY Category,
+                       D3D12_MESSAGE_SEVERITY Severity,
+                       D3D12_MESSAGE_ID       ID,
+                       LPCSTR                 Description,
+                       void*                  Context)
+                {
+                    switch (Severity)
+                    {
+                    case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+                        NEON_FATAL_TAG("Graphics", "ID: {} -- {}", uint32_t(ID), Description);
+                        break;
+                    case D3D12_MESSAGE_SEVERITY_ERROR:
+                        NEON_ERROR_TAG("Graphics", "ID: {} -- {}", uint32_t(ID), Description);
+                        break;
+                    case D3D12_MESSAGE_SEVERITY_WARNING:
+                        NEON_WARNING_TAG("Graphics", "ID: {} -- {}", uint32_t(ID), Description);
+                        break;
+                    case D3D12_MESSAGE_SEVERITY_INFO:
+                        NEON_INFO_TAG("Graphics", "ID: {} -- {}", uint32_t(ID), Description);
+                        break;
+                    case D3D12_MESSAGE_SEVERITY_MESSAGE:
+                        NEON_TRACE_TAG("Graphics", "ID: {} -- {}", uint32_t(ID), Description);
+                        break;
+                    }
+                };
+                DWORD MessageCookie = 0;
+                InfoQueue1->RegisterMessageCallback(MessageCallback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr, &MessageCookie);
+            }
+        }
+#endif
     }
 
     const Dx12DeviceFeatures& Dx12RenderDevice::GetFeatures() const
