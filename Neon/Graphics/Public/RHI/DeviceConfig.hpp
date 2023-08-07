@@ -10,10 +10,10 @@ namespace Neon::RHI
             /// A static descriptor heap is CPU only heap that is a descriptor heap that is persistent and can be used by multiple threads
             /// It is used for resources that are not frequently created and destroyed
             /// </summary>
-            uint32_t Static_Resource = 65'536;
+            uint32_t Static_Resource = 32'768;
             uint32_t Static_Sampler  = 256;
-            uint32_t Static_Rtv      = 4'096;
-            uint32_t Static_Dsv      = 1'024;
+            uint32_t Static_Rtv      = 256;
+            uint32_t Static_Dsv      = 64;
 
             /// <summary>
             /// A staged descriptor heap is a CPU only heap that is a descriptor heap that persists for a single frame and can be used by multiple threads
@@ -28,8 +28,8 @@ namespace Neon::RHI
             /// A frame descriptor heap is a GPU-CPU heap that is a descriptor heap that persists for a single frame and can be used by multiple threads
             /// It is used for uploading resources to the GPU
             /// </summary>
-            uint32_t Frame_Resource = 524'288;
-            uint32_t Frame_Sampler  = 512;
+            uint32_t Frame_Resource = 131'072;
+            uint32_t Frame_Sampler  = 16;
         };
 
         DescriptorSize Descriptors;
