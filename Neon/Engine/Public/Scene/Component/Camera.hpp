@@ -29,6 +29,10 @@ namespace Neon::Scene::Component
         alignas(16) Matrix4x4 ViewInverse;
         alignas(16) Matrix4x4 ProjectionInverse;
         alignas(16) Matrix4x4 ViewProjectionInverse;
+
+        float EngineTime;
+        float GameTime;
+        float DeltaTime;
     };
 
     enum class CameraType : uint8_t

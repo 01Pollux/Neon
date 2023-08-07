@@ -2,6 +2,7 @@
 #include <Renderer/RG/RG.hpp>
 #include <Renderer/RG/Passes/ScenePass.hpp>
 #include <Scene/Component/Camera.hpp>
+#include <Runtime/GameEngine.hpp>
 
 //
 
@@ -98,6 +99,10 @@ namespace Neon::RG
         CameraBuffer->ViewInverse           = glm::inverse(CameraBuffer->View);
         CameraBuffer->ProjectionInverse     = glm::inverse(CameraBuffer->Projection);
         CameraBuffer->ViewProjectionInverse = glm::inverse(CameraBuffer->ViewProjection);
+
+        CameraBuffer->EngineTime = float(Runtime::DefaultGameEngine::Get()->GetEngineTime());
+        CameraBuffer->GameTime   = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
+        CameraBuffer->DeltaTime  = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
 
         CameraComponent->GraphicsBuffer->Unmap();
         return CameraComponent->GraphicsBuffer;

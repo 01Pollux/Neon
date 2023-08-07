@@ -13,6 +13,10 @@ struct PerFrameData
 	matrix ViewInverse;
 	matrix ProjectionInverse;
 	matrix ViewProjectionInverse;
+	
+	float EngineTime;
+	float GameTime;
+	float DeltaTime;
 };
 
 struct PerObjectData
