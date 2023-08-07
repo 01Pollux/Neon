@@ -99,11 +99,7 @@ namespace Neon::RHI
 
         std::vector<const wchar_t*> Options;
 #ifndef NEON_DIST
-#ifdef NEON_DEBUG
-        if constexpr (true)
-#else
         if (Desc.Flags.Test(EShaderCompileFlags::Debug))
-#endif
         {
             Options.emplace_back(DXC_ARG_DEBUG);
             Options.emplace_back(STR("-Qembed_debug"));

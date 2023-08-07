@@ -43,9 +43,10 @@ namespace Neon::Renderer
             Matrix4x4 World;
             Vector4   Color;
             int       TextureIndex;
-            int       _Pad;
+            int       _Padding[3];
         };
 
+        static_assert(!(sizeof(PerObjectData) % 16), "PerObjectData size must be a multiple of 16");
         using BatchBaseClass = PrimitiveBatch16<BatchSpriteVertex>;
 
     public:

@@ -22,7 +22,6 @@ namespace Neon::Scene
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_EntityWorld = std::make_unique<flecs::world>();
-            m_EntityWorld->set_threads(3);
         }
 
         Exports::RegisterComponents(*m_EntityWorld);

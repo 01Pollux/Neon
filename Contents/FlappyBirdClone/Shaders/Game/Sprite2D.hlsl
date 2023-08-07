@@ -20,7 +20,7 @@ struct PerObjectData
 	matrix World;
 	float4 Color;
 	int TextureIndex;
-	int _Pad;
+	int3 _Pad;
 };
 
 //
