@@ -22,8 +22,8 @@ void FlappyBirdClone::LoadScene()
     constexpr uint32_t Player_CollisionGroup = 1 << 0;
     constexpr uint32_t Wall_CollisionGroup   = 1 << 1;
 
-    constexpr uint32_t Player_CollisionMask = uint32_t(-1) & ~Player_CollisionGroup;
-    constexpr uint32_t Wall_CollisionMask   = uint32_t(-1) & ~Wall_CollisionGroup;
+    constexpr uint32_t Player_CollisionMask = Wall_CollisionGroup;
+    constexpr uint32_t Wall_CollisionMask   = Player_CollisionGroup;
 
     //
 
@@ -191,6 +191,20 @@ void FlappyBirdClone::LoadScene()
 
     // Create triangle in top and bottom (seperated by 3.5f)
     {
+        auto CreatePhysicsBody = [](flecs::entity Triangle)
+        {
+            std::array<btVector3, 3> Vertices = {
+                btVector3(-1.f, -1.f, 100.f),
+                btVector3(0.f, 1.f, 100.f),
+                btVector3(1.f, -1.f, 100.f),
+            };
+
+            auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
+
+            Triangle.set(Scene::Component::CollisionShape{ std::move(TriangleShape) });
+            Scene::Component::CollisionObject::AddStaticBody(Triangle, Wall_CollisionGroup, Wall_CollisionMask);
+        };
+
         auto TriangleMaterial = GetMaterial("BaseSprite")->CreateInstance();
         TriangleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
 
@@ -200,51 +214,43 @@ void FlappyBirdClone::LoadScene()
 
             auto SpriteComponent = Triangle.get_mut<Scene::Component::Sprite>();
             {
-                SpriteComponent->Size             = { 1.f, 1.f };
+                SpriteComponent->Size             = { 2.6f, 4.0f };
                 SpriteComponent->MaterialInstance = TriangleMaterial;
             }
             Triangle.modified<Scene::Component::Sprite>();
 
             auto TransformComponent = Triangle.get_mut<Scene::Component::Transform>();
             {
-                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 3.5f);
+                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 2.6f);
                 TransformComponent->Local = TransformComponent->World;
             }
             Triangle.modified<Scene::Component::Transform>();
 
-            {
-                Triangle.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Triangle, Wall_CollisionGroup, Wall_CollisionMask);
-            }
+            // CreatePhysicsBody(Triangle);
         }
 
-        auto Triangle2 = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle02");
-        {
-            Triangle2.add<RainbowSprite>();
+        // auto Triangle2 = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle02");
+        //{
+        //     Triangle2.add<RainbowSprite>();
 
-            auto SpriteComponent = Triangle2.get_mut<Scene::Component::Sprite>();
-            {
-                SpriteComponent->Size             = { 1.f, 1.f };
-                SpriteComponent->MaterialInstance = TriangleMaterial;
-            }
-            Triangle2.modified<Scene::Component::Sprite>();
+        //    auto SpriteComponent = Triangle2.get_mut<Scene::Component::Sprite>();
+        //    {
+        //        SpriteComponent->Size             = { 2.6f, 4.0f };
+        //        SpriteComponent->MaterialInstance = TriangleMaterial;
+        //    }
+        //    Triangle2.modified<Scene::Component::Sprite>();
 
-            auto TransformComponent = Triangle2.get_mut<Scene::Component::Transform>();
-            {
-                Quaternion Rot = glm::angleAxis(glm::radians(180.f), Vec::Forward<Vector3>);
-                TransformComponent->World.SetBasis(glm::toMat3(Rot));
-                TransformComponent->World.SetPosition(Vec::Up<Vector3> * 3.5f);
-                TransformComponent->Local = TransformComponent->World;
-            }
-            Triangle2.modified<Scene::Component::Transform>();
+        //    auto TransformComponent = Triangle2.get_mut<Scene::Component::Transform>();
+        //    {
+        //        Quaternion Rot = glm::angleAxis(glm::radians(180.f), Vec::Forward<Vector3>);
+        //        TransformComponent->World.SetBasis(glm::toMat3(Rot));
+        //        TransformComponent->World.SetPosition(Vec::Up<Vector3> * 2.6f);
+        //        TransformComponent->Local = TransformComponent->World;
+        //    }
+        //    Triangle2.modified<Scene::Component::Transform>();
 
-            {
-                Triangle2.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Triangle2, Wall_CollisionGroup, Wall_CollisionMask);
-            }
-        }
+        //    CreatePhysicsBody(Triangle);
+        //}
     }
 
     //
@@ -267,7 +273,7 @@ void FlappyBirdClone::LoadScene()
             [this](flecs::entity Entity, RainbowSprite)
             {
                 static float Time = 0.f;
-                Time += 0.002f;
+                Time += 0.003f;
 
                 Color4 Color;
                 Color.r = (std::sin(Time * 2.f) + 1.f) / 2.f;
@@ -306,6 +312,36 @@ void FlappyBirdClone::AttachInputs()
             m_RigidBody->setLinearVelocity({});
             m_IsJumping = false;
         });
+
+    {
+        auto EditAction = ActionTable->AddAction();
+        EditAction->SetInput(Input::EKeyboardInput::E);
+        EditAction->Bind(
+            Input::InputAction::BindType::Press,
+            [this]
+            {
+                auto Ent       = GetScene().GetEntityWorld()->lookup("Triangle01");
+                auto Transform = Ent.get_mut<Scene::Component::Transform>();
+
+                Transform->World.SetPosition(Transform->World.GetPosition() + Vec::Up<Vector3> * 0.05f);
+
+                Ent.modified<Scene::Component::Transform>();
+            });
+
+        auto Unedit = ActionTable->AddAction();
+        Unedit->SetInput(Input::EKeyboardInput::R);
+        Unedit->Bind(
+            Input::InputAction::BindType::Press,
+            [this]
+            {
+                auto Ent       = GetScene().GetEntityWorld()->lookup("Triangle01");
+                auto Transform = Ent.get_mut<Scene::Component::Transform>();
+
+                Transform->World.SetPosition(Transform->World.GetPosition() - Vec::Up<Vector3> * 0.05f);
+
+                Ent.modified<Scene::Component::Transform>();
+            });
+    }
 }
 
 void FlappyBirdClone::OnUpdate()
@@ -354,6 +390,8 @@ void FlappyBirdClone::OnUpdate()
 void FlappyBirdClone::OnCollisionEnter(
     btPersistentManifold* Manifold)
 {
+    return;
+
     m_RigidBody->setActivationState(0);
 
     //

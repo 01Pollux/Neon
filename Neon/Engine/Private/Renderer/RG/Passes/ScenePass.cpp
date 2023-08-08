@@ -33,17 +33,6 @@ namespace Neon::RG
                 .in()
                 .term<Component::Transform>()
                 .in()
-                //// Order by material root signature & pipeline state
-                //.order_by(
-                //    +[](flecs::entity_t,
-                //        const Component::Sprite* LhsSprite,
-                //        flecs::entity_t,
-                //        const Component::Sprite* RhsSprite) -> int
-                //    {
-                //        // Order by material root signature and pipeline state, this is like qsort compare function, pipeline state and root signature!
-                //        return int((intptr_t(LhsSprite->MaterialInstance->GetRootSignature().get()) - intptr_t(RhsSprite->MaterialInstance->GetRootSignature().get()))) * 1000 +
-                //               int((intptr_t(LhsSprite->MaterialInstance->GetPipelineState().get()) - intptr_t(RhsSprite->MaterialInstance->GetPipelineState().get())));
-                //    })
                 .build();
         //
     }
@@ -72,11 +61,15 @@ namespace Neon::RG
 
             m_SpriteBatch.SetCameraBuffer(CameraStorage);
             m_SpriteBatch.Begin(RenderCommandList);
-            m_SpriteQuery.each(
-                [this](const Component::Transform& Transform,
-                               const Component::Sprite&    Sprite)
+            m_SpriteQuery.iter(
+                [this](flecs::iter&                Iter,
+                       const Component::Transform* Transform,
+                       const Component::Sprite*    Sprite)
                 {
-                    m_SpriteBatch.Draw(Transform, Sprite);
+                    for (size_t i : Iter)
+                    {
+                        m_SpriteBatch.Draw(Transform[i], Sprite[i]);
+                    }
                 });
             m_SpriteBatch.End();
         }

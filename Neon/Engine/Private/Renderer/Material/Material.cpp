@@ -642,7 +642,7 @@ namespace Neon::Renderer
     void MaterialTable::Reset()
     {
         m_Materials.clear();
-        m_HighestId = 0;
+        m_MaterialMap.clear();
     }
 
     uint32_t MaterialTable::Append(
@@ -652,10 +652,11 @@ namespace Neon::Renderer
         NEON_ASSERT(Material, "Material cannot be null");
         NEON_ASSERT(m_Materials.empty() || GetFirstMaterial()->GetPipelineState() == Material->GetPipelineState(), "Material must have the same pipeline state");
 #endif
-        auto [Iter, WasInserted] = m_Materials.emplace(Material, m_HighestId);
+        auto [Iter, WasInserted] = m_MaterialMap.emplace(Material, 0);
         if (WasInserted)
         {
-            m_HighestId++;
+            Iter->second = uint32_t(m_Materials.size());
+            m_Materials.emplace_back(Material);
         }
         return Iter->second;
     }
@@ -748,7 +749,7 @@ namespace Neon::Renderer
             {
                 for (auto& CurMaterial : m_Materials)
                 {
-                    InsertToDescriptorBatch(CurMaterial.first->GetDescriptorParam(ParamName), Param.Descriptor.Type);
+                    InsertToDescriptorBatch(CurMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
                 }
             }
             else

@@ -213,7 +213,7 @@ namespace Neon::Renderer
         /// </summary>
         [[nodiscard]] IMaterial* GetFirstMaterial() const
         {
-            return m_Materials.begin()->first;
+            return m_Materials[0];
         }
 
         /// <summary>
@@ -223,8 +223,8 @@ namespace Neon::Renderer
             RHI::ICommonCommandList* CommandList);
 
     private:
-        std::unordered_map<IMaterial*, uint32_t> m_Materials;
-        uint32_t                                 m_HighestId = 0;
+        std::vector<IMaterial*>                  m_Materials;
+        std::unordered_map<IMaterial*, uint32_t> m_MaterialMap;
     };
 
 } // namespace Neon::Renderer
