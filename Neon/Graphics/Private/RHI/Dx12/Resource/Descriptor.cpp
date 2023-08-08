@@ -719,7 +719,7 @@ namespace Neon::RHI
         }
 
         // Grow the heap for each new allocation
-        if (m_HeapBlocks.empty()) [[likely]]
+        if (!m_HeapBlocks.empty()) [[likely]]
         {
             m_HeapBlockAllocInfo.SizeOfHeap *= 2;
         }

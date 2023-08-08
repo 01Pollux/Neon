@@ -257,6 +257,52 @@ namespace Neon::Renderer
     {
         m_RootSignature = Other->m_RootSignature;
         m_PipelineState = Other->m_PipelineState;
+
+        //
+
+        // Iterate descriptors and copy them over
+        DescriptorHeapHandle *FromHandle, *ToHandle;
+        uint32_t              Count, Offset;
+
+        for (auto& [Name, Entry] : m_Parameters->Entries)
+        {
+            if (auto Descriptor = std::get_if<DescriptorEntry>(&Entry))
+            {
+                if (!Descriptor->Instanced)
+                {
+                    continue;
+                }
+
+                FromHandle = &m_LocalDescriptors.ResourceDescriptors;
+                ToHandle   = &Other->m_LocalDescriptors.ResourceDescriptors;
+
+                Offset = Descriptor->Offset;
+                Count  = Descriptor->Count;
+            }
+            else if (auto Sampler = std::get_if<SamplerEntry>(&Entry))
+            {
+                if (!Sampler->Instanced)
+                {
+                    continue;
+                }
+
+                FromHandle = &m_LocalDescriptors.SamplerDescriptors;
+                ToHandle   = &Other->m_LocalDescriptors.SamplerDescriptors;
+
+                Offset = Sampler->Offset;
+                Count  = Sampler->Count;
+            }
+            else
+            {
+                continue;
+            }
+
+            FromHandle->Heap->Copy(
+                FromHandle->Offset,
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = ToHandle->GetCpuHandle(Offset),
+                    .CopySize   = Count });
+        }
     }
 
     Ptr<IMaterial> Material::CreateInstance()
@@ -542,8 +588,40 @@ namespace Neon::Renderer
         CreateDescriptorIfNeeded(SamplerDescriptors, RHI::DescriptorType::Sampler, SamplerDescriptorSize);
     }
 
-    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(UnqiueDescriptorHeapHandle&&)                    = default;
-    auto Material::UnqiueDescriptorHeapHandle::operator=(UnqiueDescriptorHeapHandle&&) -> UnqiueDescriptorHeapHandle& = default;
+    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
+        UnqiueDescriptorHeapHandle&& Other) :
+        ResourceDescriptors(std::move(Other.ResourceDescriptors)),
+        SamplerDescriptors(std::move(Other.SamplerDescriptors))
+    {
+        Other.ResourceDescriptors.Heap = nullptr;
+        Other.SamplerDescriptors.Heap  = nullptr;
+    }
+
+    auto Material::UnqiueDescriptorHeapHandle::operator=(
+        UnqiueDescriptorHeapHandle&& Other) -> UnqiueDescriptorHeapHandle&
+    {
+        if (this != &Other)
+        {
+            if (ResourceDescriptors)
+            {
+                auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+                Allocator->Free(ResourceDescriptors);
+            }
+            if (SamplerDescriptors)
+            {
+                auto Allocator = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::Sampler);
+                Allocator->Free(SamplerDescriptors);
+            }
+
+            ResourceDescriptors = std::move(Other.ResourceDescriptors);
+            SamplerDescriptors  = std::move(Other.SamplerDescriptors);
+
+            Other.ResourceDescriptors.Heap = nullptr;
+            Other.SamplerDescriptors.Heap  = nullptr;
+        }
+
+        return *this;
+    }
 
     Material::UnqiueDescriptorHeapHandle::~UnqiueDescriptorHeapHandle()
     {
