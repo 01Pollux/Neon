@@ -374,7 +374,18 @@ namespace Neon::RHI
                             // Instanced will allocate unbounded descriptors
                             auto Flags = CastRootDescriptorTableFlags(Range.Flags);
 
-                            uint32_t DescriptorCount = Range.Instanced ? UINT32_MAX : Range.DescriptorCount;
+                            uint32_t DescriptorCount;
+                            if (Range.Instanced)
+                            {
+                                DescriptorCount = UINT32_MAX;
+                                Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+                                Flags &= ~D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_STATIC_KEEPING_BUFFER_BOUNDS_CHECKS;
+                            }
+                            else
+                            {
+                                DescriptorCount = Range.DescriptorCount;
+                            }
+
                             Ranges.emplace_back().Init(
                                 Type,
                                 DescriptorCount,
