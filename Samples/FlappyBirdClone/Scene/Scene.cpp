@@ -13,6 +13,10 @@
 
 using namespace Neon;
 
+struct HdrTriangle
+{
+};
+
 void FlappyBirdClone::LoadScene()
 {
     constexpr uint32_t Player_CollisionGroup = 1 << 0;
@@ -181,6 +185,64 @@ void FlappyBirdClone::LoadScene()
         }
     }
 
+    // Create triangle in top and bottom (seperated by 3.5f)
+    {
+        auto TriangleMaterial = GetMaterial("BaseSprite")->CreateInstance();
+        TriangleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
+
+        auto Triangle = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle01");
+        {
+            Triangle.add<HdrTriangle>();
+
+            auto SpriteComponent = Triangle.get_mut<Scene::Component::Sprite>();
+            {
+                SpriteComponent->Size             = { 1.f, 1.f };
+                SpriteComponent->MaterialInstance = TriangleMaterial;
+            }
+            Triangle.modified<Scene::Component::Sprite>();
+
+            auto TransformComponent = Triangle.get_mut<Scene::Component::Transform>();
+            {
+                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 3.5f);
+                TransformComponent->Local = TransformComponent->World;
+            }
+            Triangle.modified<Scene::Component::Transform>();
+
+            {
+                Triangle.set(Scene::Component::CollisionShape{
+                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
+                Scene::Component::CollisionObject::AddStaticBody(Triangle, Wall_CollisionGroup, Wall_CollisionMask);
+            }
+        }
+
+        auto Triangle2 = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle02");
+        {
+            Triangle2.add<HdrTriangle>();
+
+            auto SpriteComponent = Triangle2.get_mut<Scene::Component::Sprite>();
+            {
+                SpriteComponent->Size             = { 1.f, 1.f };
+                SpriteComponent->MaterialInstance = TriangleMaterial;
+            }
+            Triangle2.modified<Scene::Component::Sprite>();
+
+            auto TransformComponent = Triangle2.get_mut<Scene::Component::Transform>();
+            {
+                Quaternion Rot = glm::angleAxis(glm::radians(180.f), Vec::Forward<Vector3>);
+                TransformComponent->World.SetBasis(glm::toMat3(Rot));
+                TransformComponent->World.SetPosition(Vec::Up<Vector3> * 3.5f);
+                TransformComponent->Local = TransformComponent->World;
+            }
+            Triangle2.modified<Scene::Component::Transform>();
+
+            {
+                Triangle2.set(Scene::Component::CollisionShape{
+                    std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 1.f)) });
+                Scene::Component::CollisionObject::AddStaticBody(Triangle2, Wall_CollisionGroup, Wall_CollisionMask);
+            }
+        }
+    }
+
     //
 
     AttachInputs();
@@ -193,6 +255,28 @@ void FlappyBirdClone::LoadScene()
         .kind(flecs::OnUpdate)
         .iter([this](flecs::iter)
               { OnUpdate(); });
+
+    Scene.GetEntityWorld()
+        ->system<HdrTriangle>()
+        .multi_threaded()
+        .each(
+            [this](flecs::entity Entity, HdrTriangle)
+            {
+                float Time = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
+                Time *= 0.75f;
+
+                Color4 Color;
+                Color.r = (std::sin(Time * 2.f) + 1.f) / 2.f;
+                Color.g = (std::sin(Time * 2.f + 2.f) + 1.f) / 2.f;
+                Color.b = (std::sin(Time * 2.f + 4.f) + 1.f) / 2.f;
+                Color.a = 1.f;
+
+                auto SpriteComponent = Entity.get_mut<Scene::Component::Sprite>();
+
+                SpriteComponent->ModulationColor = Color;
+
+                Entity.modified<Scene::Component::Sprite>();
+            });
 }
 
 void FlappyBirdClone::AttachInputs()
