@@ -109,7 +109,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Create a new collision object as static body.
         /// </summary>
-        static Actor AddStaticBody(
+        static btCollisionObject* AddStaticBody(
             Actor    Target,
             uint32_t Group = 1,
             uint32_t Mask  = MaskAll);
@@ -117,7 +117,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Create a new collision object as rigid body.
         /// </summary>
-        static Actor AddRigidBody(
+        static btCollisionObject* AddRigidBody(
             Actor    Target,
             float    Mass,
             uint32_t Group = 1,
@@ -126,7 +126,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Create a new collision object as kinematic body.
         /// </summary>
-        static Actor AddKinematicBody(
+        static btCollisionObject* AddKinematicBody(
             Actor    Target,
             float    Mass,
             uint32_t Group = 1,

@@ -5,7 +5,7 @@
 
 namespace Neon::Scene::Component
 {
-    Actor CollisionObject::AddStaticBody(
+    btCollisionObject* CollisionObject::AddStaticBody(
         Actor    Target,
         uint32_t Group,
         uint32_t Mask)
@@ -17,13 +17,17 @@ namespace Neon::Scene::Component
         Object->setUserPointer(std::bit_cast<void*>(Target.id()));
         Object->setCollisionFlags(Object->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
 
-        return Target.set(CollisionObject{
+        auto ObjectPtr = Object.get();
+
+        Target.set(CollisionObject{
             .BulletObject = std::move(Object),
             .Group        = Group,
             .Mask         = Mask });
+
+        return ObjectPtr;
     }
 
-    Actor CollisionObject::AddRigidBody(
+    btCollisionObject* CollisionObject::AddRigidBody(
         Actor    Target,
         float    Mass,
         uint32_t Group,
@@ -41,13 +45,17 @@ namespace Neon::Scene::Component
         auto Object = std::make_unique<btRigidBody>(Mass, MotionState, Shape->BulletShape.get(), LocalInertia);
         Object->setUserPointer(std::bit_cast<void*>(Target.id()));
 
-        return Target.set(CollisionObject{
+        auto ObjectPtr = Object.get();
+
+        Target.set(CollisionObject{
             .BulletObject = std::move(Object),
             .Group        = Group,
             .Mask         = Mask });
+
+        return ObjectPtr;
     }
 
-    Actor CollisionObject::AddKinematicBody(
+    btCollisionObject* CollisionObject::AddKinematicBody(
         Actor    Target,
         float    Mass,
         uint32_t Group,
@@ -66,9 +74,13 @@ namespace Neon::Scene::Component
         Object->setUserPointer(std::bit_cast<void*>(Target.id()));
         Object->setCollisionFlags(Object->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
 
-        return Target.set(CollisionObject{
+        auto ObjectPtr = Object.get();
+
+        Target.set(CollisionObject{
             .BulletObject = std::move(Object),
             .Group        = Group,
             .Mask         = Mask });
+
+        return ObjectPtr;
     }
 } // namespace Neon::Scene::Component

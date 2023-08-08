@@ -46,19 +46,23 @@ namespace Neon::Runtime
         {
             Ptr<Renderer::IMaterial> Material;
 
-            UPtr<RHI::IUploadBuffer> VertexBuffer;
-            UPtr<RHI::IUploadBuffer> IndexBuffer;
+            std::vector<UPtr<RHI::IUploadBuffer>> VertexBuffers;
 
             Overlay_Debug_Line::Vertex* VertexBufferPtr = nullptr;
             uint32_t                    DrawCount       = 0;
 
             Overlay_Debug_LineBuffer();
 
-            void Flush();
             bool ShouldDraw() const;
-            void Draw(
+            void Flush(
                 RHI::IGraphicsCommandList* CommandList,
                 RHI::GpuResourceHandle     PerFrameData);
+
+            void Append(
+                const Vector3& StartPosition,
+                const Vector3& EndPosition,
+                const Color4&  StartColor,
+                const Color4&  EndColor);
         };
 
     public:
@@ -78,9 +82,6 @@ namespace Neon::Runtime
             const Vector3& CenterPosition,
             const Vector3& Size,
             const Color4&  Color) override;
-
-    private:
-        void FlushBuffers();
 
     private:
         Overlay_Debug_LineBuffer m_LineBuffer;
@@ -110,8 +111,7 @@ namespace Neon::Runtime
         RHI::IGraphicsCommandList* CommandList,
         RHI::GpuResourceHandle     PerFrameData)
     {
-        m_LineBuffer.Draw(CommandList, PerFrameData);
-        FlushBuffers();
+        m_LineBuffer.Flush(CommandList, PerFrameData);
     }
 
     void DefaultEngineDebugOverlay::DrawLine_Impl(
@@ -120,22 +120,7 @@ namespace Neon::Runtime
         const Color4&  StartColor,
         const Color4&  EndColor)
     {
-        if (m_LineBuffer.DrawCount == Overlay_Debug_Line::MaxVertices)
-        {
-            NEON_WARNING("Debug", "Max vertices reached for debug overlay, skipping draw the next lines");
-            return;
-        }
-
-        auto CurVertex = &m_LineBuffer.VertexBufferPtr[m_LineBuffer.DrawCount];
-        m_LineBuffer.DrawCount += Overlay_Debug_Line::VerticesCount;
-
-        CurVertex[0].Position        = StartPosition;
-        CurVertex[0].Color           = (StartColor * 255.f);
-        CurVertex[0].NeedsProjection = 1;
-
-        CurVertex[1].Position        = EndPosition;
-        CurVertex[1].Color           = (EndColor * 255.f);
-        CurVertex[1].NeedsProjection = 1;
+        m_LineBuffer.Append(StartPosition, EndPosition, StartColor, EndColor);
     }
 
     void DefaultEngineDebugOverlay::DrawCuboidLine_Impl(
@@ -185,15 +170,12 @@ namespace Neon::Runtime
             const Vector3& P1 = Positions[Indices[i]];
             const Vector3& P2 = Positions[Indices[i + 1]];
 
-            DrawLine_Impl(P1, P2, Color, Color);
+            m_LineBuffer.Append(P1, P2, Color, Color);
         }
     }
 
-    void DefaultEngineDebugOverlay::FlushBuffers()
-    {
-        m_LineBuffer.Flush();
-    }
-
+    //
+    //
     //
 
     // Line
@@ -225,22 +207,14 @@ namespace Neon::Runtime
                 .Build();
 
         Asset::Manager::Unload(DebugShader->GetGuid());
-
-        VertexBuffer.reset(RHI::IUploadBuffer::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
-        VertexBufferPtr = static_cast<Overlay_Debug_Line::Vertex*>(VertexBuffer->Map<Overlay_Debug_Line::Vertex>());
-    }
-
-    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Flush()
-    {
-        DrawCount = 0;
     }
 
     bool DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::ShouldDraw() const
     {
-        return DrawCount != 0;
+        return !VertexBuffers.empty();
     }
 
-    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Draw(
+    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Flush(
         RHI::IGraphicsCommandList* CommandList,
         RHI::GpuResourceHandle     PerFrameData)
     {
@@ -249,6 +223,8 @@ namespace Neon::Runtime
             return;
         }
 
+        VertexBuffers.back()->Unmap();
+
         CommandList->SetRootSignature(Material->GetRootSignature());
         CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData);
 
@@ -256,11 +232,43 @@ namespace Neon::Runtime
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);
 
         RHI::Views::Vertex VtxView;
-        VtxView.Append(VertexBuffer.get(), 0, sizeof(Overlay_Debug_Line::Vertex), VertexBuffer->GetSize());
-
-        CommandList->SetVertexBuffer(0, VtxView);
+        for (auto& VertexBuffer : VertexBuffers)
+        {
+            VtxView.Append(VertexBuffer.get(), 0, sizeof(Overlay_Debug_Line::Vertex), VertexBuffer->GetSize());
+        }
 
         CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = DrawCount });
+
+        DrawCount = 0;
+        VertexBuffers.clear();
+    }
+
+    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Append(
+        const Vector3& StartPosition,
+        const Vector3& EndPosition,
+        const Color4&  StartColor,
+        const Color4&  EndColor)
+    {
+        if (DrawCount >= Overlay_Debug_Line::MaxVertices || VertexBuffers.empty()) [[unlikely]]
+        {
+            if (!VertexBuffers.empty())
+            {
+                VertexBuffers.back()->Unmap();
+            }
+            VertexBuffers.emplace_back(RHI::IUploadBuffer::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
+            VertexBufferPtr = VertexBuffers.back()->Map<Overlay_Debug_Line::Vertex>();
+        }
+
+        auto CurVertex = VertexBufferPtr + DrawCount;
+        DrawCount += Overlay_Debug_Line::VerticesCount;
+
+        CurVertex[0].Position        = StartPosition;
+        CurVertex[0].Color           = (StartColor * 255.f);
+        CurVertex[0].NeedsProjection = 1;
+
+        CurVertex[1].Position        = EndPosition;
+        CurVertex[1].Color           = (EndColor * 255.f);
+        CurVertex[1].NeedsProjection = 1;
     }
 } // namespace Neon::Runtime
 

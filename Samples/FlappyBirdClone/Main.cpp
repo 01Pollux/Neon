@@ -12,7 +12,7 @@ NEON_MAIN(Argc, Argv)
             .Windowed   = true,
             .Fullscreen = false },
         //.Renderer{ .Device = { .EnableGPUDebugger = false } }
-        .Renderer{ .Device = { .EnableDebugLayer = false }, .Swapchain = { .VSync = false } }
+        .Renderer{ /* .Device = { .EnableDebugLayer = false },*/ .Swapchain = { .VSync = false } }
         //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
     Config.Renderer.Device.Descriptors.Frame_Resource = 262'144;

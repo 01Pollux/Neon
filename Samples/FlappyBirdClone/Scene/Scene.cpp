@@ -15,6 +15,14 @@ using namespace Neon;
 
 void FlappyBirdClone::LoadScene()
 {
+    constexpr uint32_t Player_CollisionGroup = 1 << 0;
+    constexpr uint32_t Wall_CollisionGroup   = 1 << 1;
+
+    constexpr uint32_t Player_CollisionMask = uint32_t(-1) & ~Player_CollisionGroup;
+    constexpr uint32_t Wall_CollisionMask   = uint32_t(-1) & ~Wall_CollisionGroup;
+
+    //
+
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
 
@@ -39,9 +47,9 @@ void FlappyBirdClone::LoadScene()
         {
             m_Player.set(Scene::Component::CollisionShape{
                 std::make_unique<btCapsuleShape>(1.0f, 1.4f) });
-            Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f);
 
-            m_RigidBody = btRigidBody::upcast(m_Player.get<Scene::Component::CollisionObject>()->BulletObject.get());
+            m_RigidBody = btRigidBody::upcast(
+                Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
 
             m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
             m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
@@ -75,7 +83,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Stress test: Create 200'000 sprites
-    if (1)
+    if (0)
     {
         std::vector<Ptr<Renderer::IMaterial>> MaterialInstances;
         // Random 1000 material instances
@@ -90,7 +98,7 @@ void FlappyBirdClone::LoadScene()
 
         for (int i = 0; i < 200; ++i)
         {
-            for (int j = 0; j < 1000; ++j)
+            for (int j = 0; j < 100; ++j)
             {
                 auto Sprite = Scene.CreateEntity(Scene::EntityType::Sprite, StringUtils::Format("StressTestSprite{}{}", i, j).c_str());
                 {
@@ -145,7 +153,7 @@ void FlappyBirdClone::LoadScene()
             {
                 Floor.set(Scene::Component::CollisionShape{
                     std::make_unique<btBoxShape>(btVector3(100.f, 1.45f, 100.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Floor);
+                Scene::Component::CollisionObject::AddStaticBody(Floor, Wall_CollisionGroup, Wall_CollisionMask);
             }
         }
 
@@ -168,7 +176,7 @@ void FlappyBirdClone::LoadScene()
             {
                 Ceiling.set(Scene::Component::CollisionShape{
                     std::make_unique<btBoxShape>(btVector3(100.f, 1.32f, 100.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Ceiling);
+                Scene::Component::CollisionObject::AddStaticBody(Ceiling, Wall_CollisionGroup, Wall_CollisionMask);
             }
         }
     }
