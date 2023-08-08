@@ -13,7 +13,7 @@
 
 using namespace Neon;
 
-struct HdrTriangle
+struct RainbowSprite
 {
 };
 
@@ -140,6 +140,8 @@ void FlappyBirdClone::LoadScene()
 
         auto Floor = Scene.CreateEntity(Scene::EntityType::Sprite, "Floor");
         {
+            Floor.add<RainbowSprite>();
+
             auto SpriteComponent = Floor.get_mut<Scene::Component::Sprite>();
             {
                 SpriteComponent->Size             = { 100.f, 5.35f };
@@ -163,6 +165,8 @@ void FlappyBirdClone::LoadScene()
 
         auto Ceiling = Scene.CreateEntity(Scene::EntityType::Sprite, "Ceiling");
         {
+            Ceiling.add<RainbowSprite>();
+
             auto SpriteComponent = Ceiling.get_mut<Scene::Component::Sprite>();
             {
                 SpriteComponent->Size             = { 100.f, 5.35f };
@@ -192,7 +196,7 @@ void FlappyBirdClone::LoadScene()
 
         auto Triangle = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle01");
         {
-            Triangle.add<HdrTriangle>();
+            Triangle.add<RainbowSprite>();
 
             auto SpriteComponent = Triangle.get_mut<Scene::Component::Sprite>();
             {
@@ -217,7 +221,7 @@ void FlappyBirdClone::LoadScene()
 
         auto Triangle2 = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle02");
         {
-            Triangle2.add<HdrTriangle>();
+            Triangle2.add<RainbowSprite>();
 
             auto SpriteComponent = Triangle2.get_mut<Scene::Component::Sprite>();
             {
@@ -257,13 +261,13 @@ void FlappyBirdClone::LoadScene()
               { OnUpdate(); });
 
     Scene.GetEntityWorld()
-        ->system<HdrTriangle>()
+        ->system<RainbowSprite>()
         .multi_threaded()
         .each(
-            [this](flecs::entity Entity, HdrTriangle)
+            [this](flecs::entity Entity, RainbowSprite)
             {
-                float Time = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
-                Time *= 0.75f;
+                static float Time = 0.f;
+                Time += 0.002f;
 
                 Color4 Color;
                 Color.r = (std::sin(Time * 2.f) + 1.f) / 2.f;

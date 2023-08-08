@@ -29,7 +29,6 @@ void FlappyBirdClone::PreloadMaterials()
 
         BaseSpriteMaterial
             .RenderTarget(0, RHI::EResourceFormat::R8G8B8A8_UNorm)
-            .Blend(0, Renderer::MaterialStates::Blend::Additive)
             .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
             .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
             .Topology(RHI::PrimitiveTopologyCategory::Triangle)
