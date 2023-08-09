@@ -55,7 +55,7 @@ namespace Neon::RG
 
         std::visit(
             VariantVisitor{
-                [&State, &Flags](const std::optional<RHI::CBVDesc>&)
+                [&State, &Flags](const RHI::CBVDesc&)
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
@@ -78,9 +78,9 @@ namespace Neon::RG
 
                     m_DepthStencil = ViewId;
                 },
-                [](const auto&)
+                [&ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to write to");
+                    NEON_ASSERT(false, "Invalid descriptor view type to write to ({})", StringUtils::Transform<StringU8>(ViewId.GetName()));
                 } },
             Desc);
 
@@ -116,7 +116,7 @@ namespace Neon::RG
 
         std::visit(
             VariantVisitor{
-                [&State, &Flags](const std::optional<RHI::CBVDesc>&)
+                [&State, &Flags](const RHI::CBVDesc&)
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
@@ -133,9 +133,9 @@ namespace Neon::RG
 
                     m_DepthStencil = ViewId;
                 },
-                [](const auto&)
+                [&ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to read from");
+                    NEON_ASSERT(false, "Invalid descriptor view type to read from ({})", StringUtils::Transform<StringU8>(ViewId.GetName()));
                 } },
             Desc);
 

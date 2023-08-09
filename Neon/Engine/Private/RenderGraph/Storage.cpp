@@ -186,7 +186,8 @@ namespace Neon::RG
                 RHI::BufferDesc BufferDesc{
                     .Size      = Desc.Width,
                     .Alignment = Desc.Alignment,
-                    .Flags     = Desc.Flags
+                    .Flags     = Desc.Flags,
+                    .UsePool   = false
                 };
                 switch (Handle.GetBufferType())
                 {

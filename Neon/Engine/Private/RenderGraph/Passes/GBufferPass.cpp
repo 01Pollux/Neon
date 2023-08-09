@@ -84,15 +84,16 @@ namespace Neon::RG
             }
         }
 
+        ResourceId CameraBufferId(STR("CameraBuffer"));
         Resolver.CreateBuffer(
-            ResourceId(STR("CameraBuffer")),
+            CameraBufferId,
             RHI::BufferDesc{
                 .Size      = sizeof(Component::CameraFrameData),
                 .Alignment = 255,
                 .UsePool   = false },
             RHI::GraphicsBufferType::Upload);
 
-        Resolver.WriteBuffer
+        Resolver.WriteBuffer(CameraBufferId.CreateView(STR("GBufferInit")));
     }
 
     void GBufferPass::Dispatch(

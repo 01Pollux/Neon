@@ -34,6 +34,8 @@ namespace Neon::RG
     enum class EPassFlags : uint8_t
     {
         Cull,
+
+        _Last_Enum,
     };
     using MPassFlags = Bitmask<EPassFlags>;
 

@@ -26,10 +26,10 @@ namespace Neon::RG
     void DebugPass::Dispatch(
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
-    {
-        Runtime::DebugOverlay::Render(
-            dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
+    { /*
+         Runtime::DebugOverlay::Render(
+             dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
 
-        );
+         );*/
     }
 } // namespace Neon::RG

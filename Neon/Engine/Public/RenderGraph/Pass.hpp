@@ -20,8 +20,13 @@ namespace Neon::RG
 
         IRenderPass(
             StringU8      PassName,
-            PassQueueType QueueType) :
-            m_QueueType(QueueType)
+            PassQueueType QueueType,
+            MPassFlags    Flags = {}) :
+#ifndef NEON_DIST
+            m_PassName(std::move(PassName)),
+#endif
+            m_QueueType(QueueType),
+            m_Flags(std::move(Flags))
         {
         }
 
@@ -56,6 +61,26 @@ namespace Neon::RG
 
     public:
         /// <summary>
+        /// Get pass name
+        /// </summary>
+        [[nodiscard]] const StringU8& GetPassName() const noexcept
+        {
+#ifndef NEON_DIST
+            return m_PassName;
+#else
+            return StringUtils::Empty<StringU8>;
+#endif
+        }
+
+        /// <summary>
+        /// Get queue type
+        /// </summary>
+        [[nodiscard]] PassQueueType GetQueueType() const noexcept
+        {
+            return m_QueueType;
+        }
+
+        /// <summary>
         /// Set render pass flags
         /// </summary>
         void SetPassFlags(
@@ -72,24 +97,11 @@ namespace Neon::RG
             return m_Flags;
         }
 
-        /// <summary>
-        /// Get pass name
-        /// </summary>
-        [[nodiscard]] const StringU8& GetPassName() const noexcept
-        {
-            return m_PassName;
-        }
-
-        /// <summary>
-        /// Get queue type
-        /// </summary>
-        [[nodiscard]] PassQueueType GetQueueType() const noexcept
-        {
-            return m_QueueType;
-        }
-
     private:
-        StringU8      m_PassName;
+#ifndef NEON_DIST
+        StringU8 m_PassName;
+#endif
+
         PassQueueType m_QueueType;
         MPassFlags    m_Flags;
     };

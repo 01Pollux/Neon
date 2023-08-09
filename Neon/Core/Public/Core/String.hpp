@@ -22,6 +22,10 @@ namespace Neon
 
 namespace Neon::StringUtils
 {
+    template<typename _Ty>
+        requires std::is_same_v<_Ty, StringU8> || std::is_same_v<_Ty, String>
+    static _Ty Empty = {};
+
     template<typename _To, typename _From>
     [[nodiscard]] constexpr _To Transform(const _From& Str) noexcept
     {

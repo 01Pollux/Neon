@@ -3,7 +3,6 @@
 #include <Config/Engine.hpp>
 
 #include <Runtime/GameTimer.hpp>
-#include <Runtime/Interface.hpp>
 #include <Runtime/Window.hpp>
 
 #include <Asio/ThreadPool.hpp>

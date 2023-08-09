@@ -83,6 +83,7 @@ namespace Neon::RHI
             D3D12MA::ALLOCATION_DESC AllocDesc{};
 
             auto Flags = CastResourceFlags(Desc.Flags);
+
             switch (Type)
             {
             case GraphicsBufferType::Default:
@@ -102,16 +103,23 @@ namespace Neon::RHI
                 std::unreachable();
             }
 
-            auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Desc.Size, Flags);
-            ThrowIfFailed(Allocator->GetMA()->CreateResource(
-                &AllocDesc,
-                &Dx12Desc,
-                InitialState,
-                nullptr,
-                &m_Allocation,
-                IID_PPV_ARGS(&m_Resource)));
+            {
+                auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Desc.Size, Flags);
+                ThrowIfFailed(Allocator->GetMA()->CreateResource(
+                    &AllocDesc,
+                    &Dx12Desc,
+                    InitialState,
+                    nullptr,
+                    &m_Allocation,
+                    IID_PPV_ARGS(&m_Resource)));
+                Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
+            }
+            {
+                auto Dx12Desc = m_Resource->GetDesc();
 
-            Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
+                m_Size  = Dx12Desc.Width;
+                m_Flags = Flags;
+            }
         }
     }
 

@@ -32,6 +32,7 @@ namespace Neon::RHI
     protected:
         WinAPI::ComPtr<ID3D12Resource>      m_Resource;
         WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
+        ResourceDesc                        m_Desc;
     };
 
     class Dx12Buffer : public virtual IBuffer,
