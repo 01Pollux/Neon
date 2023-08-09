@@ -17,5 +17,7 @@ namespace Neon::RG
         void Dispatch(
             const GraphStorage& Storage,
             RHI::ICommandList*  CommandList) override;
+
+    private:
     };
 } // namespace Neon::RG

@@ -57,6 +57,20 @@ namespace Neon::RG
             const ResourceViewId& ViewId);
 
         /// <summary>
+        /// Write resource as cbv
+        /// 0 offset and size means whole buffer
+        /// </summary>
+        ResourceViewId WriteBuffer(
+            const ResourceViewId& ViewId,
+            size_t                Offset = 0,
+            size_t                Size   = 0)
+        {
+            return WriteResource(ViewId, RHI::DescriptorViewDesc{ RHI::CBVDesc{
+                                             .Resource = Offset,
+                                             .Size     = Size } });
+        }
+
+        /// <summary>
         /// Write resource as uav
         /// </summary>
         ResourceViewId WriteResource(

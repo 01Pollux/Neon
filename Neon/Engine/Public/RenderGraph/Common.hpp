@@ -31,6 +31,12 @@ namespace Neon::RG
         Compute
     };
 
+    enum class EPassFlags : uint8_t
+    {
+        Cull,
+    };
+    using MPassFlags = Bitmask<EPassFlags>;
+
     //
 
     enum class EResourceFlags : uint8_t

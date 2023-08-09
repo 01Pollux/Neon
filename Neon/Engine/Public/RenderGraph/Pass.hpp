@@ -1,7 +1,6 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
-#include <boost/compressed_pair.hpp>
 
 namespace Neon::RHI
 {
@@ -57,6 +56,23 @@ namespace Neon::RG
 
     public:
         /// <summary>
+        /// Set render pass flags
+        /// </summary>
+        void SetPassFlags(
+            MPassFlags Flags)
+        {
+            m_Flags = Flags;
+        }
+
+        /// <summary>
+        /// Get render pass flags
+        /// </summary>
+        [[nodiscard]] MPassFlags GetPassFlags() const noexcept
+        {
+            return m_Flags;
+        }
+
+        /// <summary>
         /// Get pass name
         /// </summary>
         [[nodiscard]] const StringU8& GetPassName() const noexcept
@@ -75,6 +91,7 @@ namespace Neon::RG
     private:
         StringU8      m_PassName;
         PassQueueType m_QueueType;
+        MPassFlags    m_Flags;
     };
 
     using ResourceResolver = IRenderPass::ResourceResolver;

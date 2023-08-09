@@ -50,27 +50,31 @@ namespace Neon::RG
         NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
         m_ResourcesWritten.emplace(Id);
 
-        RHI::EResourceState State{};
-        RHI::EResourceFlags Flags{};
+        RHI::MResourceState State;
+        RHI::MResourceFlags Flags;
 
         std::visit(
             VariantVisitor{
+                [&State, &Flags](const std::optional<RHI::CBVDesc>&)
+                {
+                    State.Set(RHI::EResourceState::ConstantBuffer);
+                },
                 [&State, &Flags](const std::optional<RHI::UAVDesc>&)
                 {
-                    State = RHI::EResourceState::UnorderedAccess;
-                    Flags = RHI::EResourceFlags::AllowUnorderedAccess;
+                    State.Set(RHI::EResourceState::UnorderedAccess);
+                    Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
                 [&State, &Flags, this, &ViewId](const std::optional<RHI::RTVDesc>&)
                 {
-                    State = RHI::EResourceState::RenderTarget;
-                    Flags = RHI::EResourceFlags::AllowRenderTarget;
+                    State.Set(RHI::EResourceState::RenderTarget);
+                    Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
                     m_RenderTargets.emplace_back(ViewId);
                 },
                 [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
                 {
-                    State = RHI::EResourceState::DepthWrite;
-                    Flags = RHI::EResourceFlags::AllowDepthStencil;
+                    State.Set(RHI::EResourceState::DepthWrite);
+                    Flags.Set(RHI::EResourceFlags::AllowDepthStencil);
 
                     m_DepthStencil = ViewId;
                 },
@@ -80,7 +84,7 @@ namespace Neon::RG
                 } },
             Desc);
 
-        SetResourceState(ViewId, RHI::MResourceState::FromEnum(State), RHI::MResourceFlags::FromEnum(Flags));
+        SetResourceState(ViewId, State, Flags);
         m_Storage.DeclareResourceView(ViewId, Desc);
 
         return ViewId;
@@ -114,13 +118,13 @@ namespace Neon::RG
             VariantVisitor{
                 [&State, &Flags](const std::optional<RHI::CBVDesc>&)
                 {
-                    State = RHI::MResourceState::FromEnum(RHI::EResourceState::ConstantBuffer);
+                    State.Set(RHI::EResourceState::ConstantBuffer);
                 },
                 [&State, &Flags](const std::optional<RHI::SRVDesc>&) {},
                 [&State, &Flags](const std::optional<RHI::UAVDesc>&)
                 {
-                    State = RHI::MResourceState::FromEnum(RHI::EResourceState::UnorderedAccess);
-                    Flags = RHI::MResourceFlags::FromEnum(RHI::EResourceFlags::AllowUnorderedAccess);
+                    State.Set(RHI::EResourceState::UnorderedAccess);
+                    Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
                 [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
                 {

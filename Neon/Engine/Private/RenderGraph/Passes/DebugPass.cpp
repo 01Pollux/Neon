@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
+#include <Runtime/DebugOverlay.hpp>
 
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/DebugPass.hpp>
@@ -11,7 +12,6 @@ namespace Neon::RG
     DebugPass::DebugPass() :
         IRenderPass("DebugPass", PassQueueType::Direct)
     {
-        //
     }
 
     void DebugPass::ResolveResources(
@@ -27,5 +27,9 @@ namespace Neon::RG
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
+        Runtime::DebugOverlay::Render(
+            dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
+
+        );
     }
 } // namespace Neon::RG

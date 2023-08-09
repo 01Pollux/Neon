@@ -337,7 +337,8 @@ namespace Neon::RG
 
             for (size_t i = 0; i < m_Passes.size(); i++)
             {
-                if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown)
+                if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown ||
+                    m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
                 {
                     continue;
                 }
@@ -355,8 +356,11 @@ namespace Neon::RG
         // Here we can just execute in the current thread rather than spawning a new one
         else
         {
-            ChainedCommandList.Preload(IsDirect);
-            DispatchTask(0, false);
+            if (!m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
+            {
+                ChainedCommandList.Preload(IsDirect);
+                DispatchTask(0, false);
+            }
         }
     }
 

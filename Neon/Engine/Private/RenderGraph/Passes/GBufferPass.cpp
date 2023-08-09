@@ -83,6 +83,16 @@ namespace Neon::RG
                         .Format     = RenderTargetsFormatsTyped[i] });
             }
         }
+
+        Resolver.CreateBuffer(
+            ResourceId(STR("CameraBuffer")),
+            RHI::BufferDesc{
+                .Size      = sizeof(Component::CameraFrameData),
+                .Alignment = 255,
+                .UsePool   = false },
+            RHI::GraphicsBufferType::Upload);
+
+        Resolver.WriteBuffer
     }
 
     void GBufferPass::Dispatch(
