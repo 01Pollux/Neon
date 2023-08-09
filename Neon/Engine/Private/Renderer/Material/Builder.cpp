@@ -2,6 +2,8 @@
 #include <Renderer/Material/Builder.hpp>
 #include <Renderer/Material/Material.hpp>
 
+#include <RenderGraph/Passes/GBufferPass.hpp>
+
 namespace Neon::Renderer
 {
     Ptr<IMaterial> RenderMaterialBuilder::Build()
@@ -308,5 +310,19 @@ namespace Neon::Renderer
         Desc.RegisterSpace  = Space;
         Desc.Visibility     = Visibility;
         return Desc;
+    }
+
+    //
+
+    GBufferMaterialBuilder::GBufferMaterialBuilder()
+    {
+        size_t DepthStencilIndex = std::size(RG::GBufferPass::RenderTargetsFormatsTyped) - 1;
+        for (uint32_t i = 0; i < DepthStencilIndex; ++i)
+        {
+            RenderMaterialBuilder::RenderTarget(i, RG::GBufferPass::RenderTargetsFormatsTyped[i]);
+        }
+
+        RenderMaterialBuilder::DepthStencil(Renderer::MaterialStates::DepthStencil::Default);
+        RenderMaterialBuilder::DepthStencilFormat(RG::GBufferPass::RenderTargetsFormatsTyped[DepthStencilIndex]);
     }
 } // namespace Neon::Renderer

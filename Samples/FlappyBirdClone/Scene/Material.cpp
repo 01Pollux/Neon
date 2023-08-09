@@ -25,12 +25,10 @@ void FlappyBirdClone::PreloadMaterials()
     ShaderAssetTaskPtr RocketShader = Asset::Manager::Load(AssetGuids::RocketShaderGuid());
 
     {
-        Renderer::RenderMaterialBuilder BaseSpriteMaterial;
+        Renderer::GBufferMaterialBuilder BaseSpriteMaterial;
 
         BaseSpriteMaterial
-            .RenderTarget(0, RHI::EResourceFormat::R8G8B8A8_UNorm)
             .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
-            .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
             .Topology(RHI::PrimitiveTopologyCategory::Triangle)
             .RootSignature(
                 RHI::RootSignatureBuilder()

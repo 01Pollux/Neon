@@ -43,6 +43,25 @@ struct PSInput
 	nointerpolation int SpriteIndex : SPRITE_INDEX;
 };
 
+struct PSOutput
+{
+	float4 Albedo : SV_TARGET0;
+	float4 Normal : SV_TARGET1;
+	float4 Emissive : SV_TARGET2;
+};
+
+PSOutput GBufferPack(
+	float4 Albedo,
+	float4 Normal,
+	float4 Emissive)
+{
+	PSOutput Out;
+	Out.Albedo = Albedo;
+	Out.Normal = Normal;
+	Out.Emissive = Emissive;
+	return Out;
+}
+
 // --------------------
 // Global
 // --------------------
@@ -79,11 +98,15 @@ SamplerState p_Sampler_LinearClamp : register(s3, space0);
 SamplerState p_Sampler_AnisotropicWrap : register(s4, space0);
 SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
-float4 PS_Main(PSInput Ps) : SV_TARGET
+PSOutput PS_Main(PSInput Ps)
 {
 	int TextureIndex = g_SpriteData[Ps.SpriteIndex].TextureIndex;
 	float4 Color = g_SpriteData[Ps.SpriteIndex].Color;
 	Color *= p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
 	clip(Color.a - 0.1f);
-	return Color;
+	
+	return GBufferPack(
+		Color,
+		Color,
+		Color);
 }

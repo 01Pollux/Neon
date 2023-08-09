@@ -325,7 +325,7 @@ namespace Neon::RHI
         if (Desc.ClearValue && (Dx12Desc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)))
         {
             ClearValuePtr         = &ClearValue;
-            ClearValuePtr->Format = CastFormat(Desc.Format);
+            ClearValuePtr->Format = CastFormat(Desc.ClearValue->Format);
 
             std::visit(
                 VariantVisitor{

@@ -359,16 +359,18 @@ namespace Neon::RHI
 
         //
 
-        EResourceFormat Format = EResourceFormat::Unknown;
-        ViewVariant     View;
+        ViewVariant View;
 
-        bool ReadOnlyDepth   : 1 = false;
-        bool ReadOnlyStencil : 1 = false;
+        EDSClearType ClearType = EDSClearType::Ignore;
 
         // optional clear color, only used to hold information about the clear color for the user
         std::optional<float>   ForceDepth;
         std::optional<uint8_t> ForceStencil;
-        EDSClearType           ClearType = EDSClearType::Ignore;
+
+        EResourceFormat Format = EResourceFormat::Unknown;
+
+        bool ReadOnlyDepth   : 1 = false;
+        bool ReadOnlyStencil : 1 = false;
     };
 
     //

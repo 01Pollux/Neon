@@ -207,14 +207,18 @@ namespace Neon::RG
 
                     if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
                     {
-                        if (ViewDesc->ForceColor || Desc.ClearValue)
+#if NEON_DEBUG
+                        if (!ViewDesc->ForceColor && !Desc.ClearValue)
                         {
-                            RenderCommandList->ClearRtv(RtvHandle, ViewDesc->ForceColor.value_or(
-                                                                       std::get<Color4>(Desc.ClearValue->Value)));
+                            NEON_WARNING_TAG("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
                         }
                         else
+#endif
                         {
-                            NEON_WARNING("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
+                            RenderCommandList->ClearRtv(
+                                RtvHandle,
+                                ViewDesc->ForceColor.value_or(
+                                    std::get<Color4>(Desc.ClearValue->Value)));
                         }
                     }
                 }
@@ -228,26 +232,33 @@ namespace Neon::RG
                     std::optional<float>   Depth;
                     std::optional<uint8_t> Stencil;
 
-                    auto& ClearValue = std::get<RHI::ClearOperation::DepthStencil>(Desc.ClearValue->Value);
+                    auto ClearValue = Desc.ClearValue ? std::get_if<RHI::ClearOperation::DepthStencil>(&Desc.ClearValue->Value) : nullptr;
 
                     if (ViewDesc)
                     {
+#if NEON_DEBUG
+                        if (!ViewDesc->ForceDepth && !ClearValue)
+                        {
+                            NEON_WARNING_TAG("RenderGraph", "Depth stencil view has no clear value, while clear type is not set to Ignore");
+                        }
+#endif
+
                         switch (ViewDesc->ClearType)
                         {
                         case RHI::EDSClearType::Depth:
                         {
-                            Depth = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
+                            Depth = ViewDesc->ForceDepth ? *ViewDesc->ForceDepth : ClearValue->Depth;
                             break;
                         }
                         case RHI::EDSClearType::Stencil:
                         {
-                            Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
+                            Stencil = ViewDesc->ForceStencil ? *ViewDesc->ForceStencil : ClearValue->Stencil;
                             break;
                         }
                         case RHI::EDSClearType::DepthStencil:
                         {
-                            Depth   = ViewDesc->ForceDepth.value_or(ClearValue.Depth);
-                            Stencil = ViewDesc->ForceStencil.value_or(ClearValue.Stencil);
+                            Depth   = ViewDesc->ForceDepth ? *ViewDesc->ForceDepth : ClearValue->Depth;
+                            Stencil = ViewDesc->ForceStencil ? *ViewDesc->ForceStencil : ClearValue->Stencil;
                             break;
                         }
 
@@ -257,9 +268,16 @@ namespace Neon::RG
                     }
                     else if (Desc.ClearValue)
                     {
-                        Depth   = ClearValue.Depth;
-                        Stencil = ClearValue.Stencil;
+                        Depth   = ClearValue->Depth;
+                        Stencil = ClearValue->Stencil;
                     }
+#if NEON_DEBUG
+                    else
+                    {
+                        NEON_WARNING_TAG("RenderGraph", "Depth stencil view has no clear value, while clear type is not set to Ignore");
+                    }
+#endif
+
                     RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
                     DsvHandlePtr = &DsvHandle;
                 }

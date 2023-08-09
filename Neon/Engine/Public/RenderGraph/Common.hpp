@@ -57,7 +57,7 @@ namespace Neon::RG
     {
     public:
         constexpr explicit ResourceId(
-            const String& Name) :
+            const String& Name = STR("")) :
 #ifndef NEON_DIST
             m_ResourceName(Name),
 #endif

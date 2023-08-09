@@ -10,7 +10,7 @@ namespace Neon::RG
     /// This render graph is used for 2D rendering.
     ///
     /// This render graph contains the following passes:
-    /// - ScenePass
+    /// - GBufferPass
     /// </summary>
     [[nodiscard]] UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
         flecs::entity Camera);

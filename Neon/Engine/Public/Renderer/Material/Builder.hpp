@@ -238,6 +238,14 @@ namespace Neon::Renderer
         /// <summary>
         /// Get the render target formats.
         /// </summary>
+        [[nodiscard]] auto& RenderTargets()
+        {
+            return m_RenderTargetFormats;
+        }
+
+        /// <summary>
+        /// Get the render target formats.
+        /// </summary>
         [[nodiscard]] auto& RenderTargets() const
         {
             return m_RenderTargetFormats;
@@ -327,4 +335,64 @@ namespace Neon::Renderer
         uint16_t                Register,
         uint16_t                Space,
         RHI::ShaderVisibility   Visibility);
+
+    //
+
+    /// <summary>
+    /// Build a material for the GBuffer pass.
+    /// </summary>
+    class GBufferMaterialBuilder : public RenderMaterialBuilder
+    {
+    public:
+        GBufferMaterialBuilder();
+
+    public:
+        /// <summary>
+        /// Delete RenderMaterialBuilder::RenderTarget
+        /// </summary>
+        GBufferMaterialBuilder& RenderTarget(
+            uint32_t,
+            RHI::EResourceFormat) = delete;
+
+        /// <summary>
+        /// Delete RenderMaterialBuilder::RenderTargets non-const version
+        /// </summary>
+        auto& RenderTargets() = delete;
+
+        /// <summary>
+        /// Get the render target formats.
+        /// </summary>
+        [[nodiscard]] auto& RenderTargets() const
+        {
+            return RenderMaterialBuilder::RenderTargets();
+        }
+
+        /// <summary>
+        /// Delete RenderMaterialBuilder::DepthStencil
+        /// </summary>
+        GBufferMaterialBuilder& DepthStencil(
+            RHI::PipelineStateBuilderG::DepthStencilState) = delete;
+
+        /// <summary>
+        /// Delete RenderMaterialBuilder::DepthStencil
+        /// </summary>
+        GBufferMaterialBuilder& DepthStencilFormat(
+            RHI::EResourceFormat) = delete;
+
+        /// <summary>
+        /// Get the depth stencil state.
+        /// </summary>
+        const auto& DepthStencil() const
+        {
+            return RenderMaterialBuilder::DepthStencil();
+        }
+
+        /// <summary>
+        /// Get the depth stencil format.
+        /// </summary>
+        RHI::EResourceFormat DepthStencilFormat() const
+        {
+            return RenderMaterialBuilder::DepthStencilFormat();
+        }
+    };
 } // namespace Neon::Renderer

@@ -8,10 +8,24 @@
 
 namespace Neon::RG
 {
-    class ScenePass : public IRenderPass
+    class GBufferPass : public IRenderPass
     {
     public:
-        ScenePass(
+        static constexpr RHI::EResourceFormat RenderTargetsFormats[] = {
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Albedo
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Normal
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Emissive,
+            RHI::EResourceFormat::R32_Typeless    // Depth-Stencil
+        };
+
+        static constexpr RHI::EResourceFormat RenderTargetsFormatsTyped[] = {
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Albedo
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Normal
+            RHI::EResourceFormat::R8G8B8A8_UNorm, // Emissive,
+            RHI::EResourceFormat::D32_Float       // Depth-Stencil
+        };
+
+        GBufferPass(
             flecs::entity Camera);
 
         /// <summary>

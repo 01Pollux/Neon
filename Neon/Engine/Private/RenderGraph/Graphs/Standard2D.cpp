@@ -1,7 +1,7 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/Graphs/Standard2D.hpp>
 
-#include <RenderGraph/Passes/ScenePass.hpp>
+#include <RenderGraph/Passes/GBufferPass.hpp>
 #include <RenderGraph/Passes/DebugPass.hpp>
 
 //
@@ -18,9 +18,9 @@ namespace Neon::RG
         auto Graph   = std::make_unique<RenderGraph>();
         auto Builder = Graph->Reset();
 
-        auto& ScenePass = Builder.AddPass<RG::ScenePass>(Camera);
+        auto& GBufferPass = Builder.AddPass<RG::GBufferPass>(Camera);
         {
-            ScenePass.AttachRenderer<Renderer::SpriteRenderer>();
+            GBufferPass.AttachRenderer<Renderer::SpriteRenderer>();
         }
 
         Builder.Build();
