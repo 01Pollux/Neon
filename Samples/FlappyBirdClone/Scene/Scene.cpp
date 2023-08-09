@@ -30,62 +30,6 @@ void FlappyBirdClone::LoadScene()
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
 
-    // Player instance
-    m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
-    {
-        auto SpriteComponent = m_Player.get_mut<Scene::Component::Sprite>();
-        {
-            SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
-            SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
-        }
-        m_Player.modified<Scene::Component::Sprite>();
-
-        auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
-        {
-            Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
-            TransformComponent->World.SetBasis(glm::toMat3(Rot));
-            TransformComponent->Local = TransformComponent->World;
-        }
-        m_Player.modified<Scene::Component::Transform>();
-
-        {
-            m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(1.0f, 1.4f) });
-
-            m_RigidBody = btRigidBody::upcast(
-                Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
-
-            m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
-            m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
-
-            m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
-        }
-        m_Player.modified<Scene::Component::CollisionEnter>();
-    }
-
-    // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
-    {
-        Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
-
-        auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
-        {
-            CameraComponent->Viewport.OrthographicSize = 15.0f;
-            CameraComponent->Viewport.NearPlane        = -1.0f;
-            CameraComponent->Viewport.FarPlane         = 10.0f;
-
-            CameraComponent->LookAt = m_Player.get<Scene::Component::Transform>()->World.GetPosition();
-        }
-        Camera.modified<Scene::Component::Camera>();
-
-        auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
-        {
-            TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
-            TransformComponent->Local = TransformComponent->World;
-        }
-        Camera.modified<Scene::Component::Transform>();
-    }
-
     // Stress test: Create 200'000 sprites
     if (0)
     {
@@ -194,12 +138,14 @@ void FlappyBirdClone::LoadScene()
         auto CreatePhysicsBody = [](flecs::entity Triangle)
         {
             std::array<btVector3, 3> Vertices = {
-                btVector3(-1.f, -1.f, 100.f),
-                btVector3(0.f, 1.f, 100.f),
-                btVector3(1.f, -1.f, 100.f),
+                btVector3(-4.0f, -2.6f, 100.f),
+                btVector3(0.f, 6.6f, 100.f),
+                btVector3(4.0f, -2.6f, 100.f),
             };
 
-            auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
+            auto TriangleShape = std::make_unique<btBoxShape>(btVector3(1.f, 1.f, 100.f));
+
+            // auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
 
             Triangle.set(Scene::Component::CollisionShape{ std::move(TriangleShape) });
             Scene::Component::CollisionObject::AddStaticBody(Triangle, Wall_CollisionGroup, Wall_CollisionMask);
@@ -214,19 +160,19 @@ void FlappyBirdClone::LoadScene()
 
             auto SpriteComponent = Triangle.get_mut<Scene::Component::Sprite>();
             {
-                SpriteComponent->Size             = { 2.6f, 4.0f };
+                SpriteComponent->Size             = { 1.f, 1.f };
                 SpriteComponent->MaterialInstance = TriangleMaterial;
             }
             Triangle.modified<Scene::Component::Sprite>();
 
             auto TransformComponent = Triangle.get_mut<Scene::Component::Transform>();
             {
-                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 2.6f);
+                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 5.8f);
                 TransformComponent->Local = TransformComponent->World;
             }
             Triangle.modified<Scene::Component::Transform>();
 
-            // CreatePhysicsBody(Triangle);
+            CreatePhysicsBody(Triangle);
         }
 
         // auto Triangle2 = Scene.CreateEntity(Scene::EntityType::Sprite, "Triangle02");
@@ -251,6 +197,62 @@ void FlappyBirdClone::LoadScene()
 
         //    CreatePhysicsBody(Triangle);
         //}
+    }
+
+    // Player instance
+    m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
+    {
+        auto SpriteComponent = m_Player.get_mut<Scene::Component::Sprite>();
+        {
+            SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
+            SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
+        }
+        m_Player.modified<Scene::Component::Sprite>();
+
+        auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
+        {
+            Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
+            TransformComponent->World.SetBasis(glm::toMat3(Rot));
+            TransformComponent->Local = TransformComponent->World;
+        }
+        m_Player.modified<Scene::Component::Transform>();
+
+        {
+            m_Player.set(Scene::Component::CollisionShape{
+                std::make_unique<btCapsuleShape>(1.0f, 1.4f) });
+
+            m_RigidBody = btRigidBody::upcast(
+                Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
+
+            m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
+            m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
+
+            m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
+        }
+        m_Player.modified<Scene::Component::CollisionEnter>();
+    }
+
+    // Player camera
+    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
+    {
+        Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
+
+        auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
+        {
+            CameraComponent->Viewport.OrthographicSize = 15.0f;
+            CameraComponent->Viewport.NearPlane        = -1.0f;
+            CameraComponent->Viewport.FarPlane         = 10.0f;
+
+            CameraComponent->LookAt = m_Player.get<Scene::Component::Transform>()->World.GetPosition();
+        }
+        Camera.modified<Scene::Component::Camera>();
+
+        auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
+        {
+            TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
+            TransformComponent->Local = TransformComponent->World;
+        }
+        Camera.modified<Scene::Component::Transform>();
     }
 
     //
@@ -349,6 +351,8 @@ void FlappyBirdClone::OnUpdate()
     // Player lost
     if (!m_RigidBody->getActivationState())
     {
+        m_RigidBody->setLinearVelocity({});
+        m_RigidBody->setAngularVelocity({});
         return;
     }
 
@@ -390,8 +394,6 @@ void FlappyBirdClone::OnUpdate()
 void FlappyBirdClone::OnCollisionEnter(
     btPersistentManifold* Manifold)
 {
-    return;
-
     m_RigidBody->setActivationState(0);
 
     //

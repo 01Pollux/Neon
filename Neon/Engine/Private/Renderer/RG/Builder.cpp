@@ -1,19 +1,43 @@
 #include <EnginePCH.hpp>
 #include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Passes/OuputImage.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::RG
 {
-    RenderGraphBuilder::RenderGraphBuilder(
+    class InitializeOutputImage : public IRenderPass
+    {
+    public:
+        InitializeOutputImage() :
+            IRenderPass("InitializeOutputImage", PassQueueType::Unknown)
+        {
+        }
+
+        void ResolveResources(
+            ResourceResolver& Resolver) override
+        {
+            auto Desc = RHI::ResourceDesc::Tex2D(
+                ResourceResolver::GetSwapchainFormat(),
+                0, 0, 1, 1);
+            Desc.SetClearValue(Colors::Green);
+
+            Resolver.CreateTexture(
+                RG::ResourceId(STR("OutputImage")),
+                Desc,
+                MResourceFlags::FromEnum(EResourceFlags::WindowSizeDependent));
+        }
+    };
+
+    //
+
+    GraphBuilder::GraphBuilder(
         RenderGraph& Context) :
         m_Context(Context)
     {
-        AppendPass<InitializeOutputImage>();
+        AddPass<InitializeOutputImage>();
     }
 
-    void RenderGraphBuilder::Build()
+    void GraphBuilder::Build()
     {
         BuildersListType Builders;
 
@@ -32,8 +56,8 @@ namespace Neon::RG
         m_Context.Build(BuildPasses(Builders));
     }
 
-    auto RenderGraphBuilder::BuildPasses(
-        BuildersListType& Builders) -> std::vector<RenderGraphDepdencyLevel>
+    auto GraphBuilder::BuildPasses(
+        BuildersListType& Builders) -> std::vector<GraphDepdencyLevel>
     {
         BuildAdjacencyLists(Builders);
         TopologicalSort();
@@ -43,7 +67,7 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphBuilder::BuildAdjacencyLists(
+    void GraphBuilder::BuildAdjacencyLists(
         const BuildersListType& Builders)
     {
         m_AdjacencyList.resize(m_Passes.size());
@@ -72,7 +96,7 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphBuilder::TopologicalSort()
+    void GraphBuilder::TopologicalSort()
     {
         std::stack<size_t> Stack{};
         std::vector<bool>  Visited(m_Passes.size(), false);
@@ -94,7 +118,7 @@ namespace Neon::RG
 
     //
 
-    auto RenderGraphBuilder::CalculateResourcesLifetime(
+    auto GraphBuilder::CalculateResourcesLifetime(
         BuildersListType& Builders) const -> std::vector<std::set<ResourceId>>
     {
         std::vector<std::set<ResourceId>> ResourceToDestroy(m_Passes.size());
@@ -125,7 +149,7 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphBuilder::DepthFirstSearch(
+    void GraphBuilder::DepthFirstSearch(
         size_t              Index,
         std::vector<bool>&  Visited,
         std::stack<size_t>& Stack)
@@ -143,9 +167,9 @@ namespace Neon::RG
 
     //
 
-    auto RenderGraphBuilder::BuildDependencyLevels(
+    auto GraphBuilder::BuildDependencyLevels(
         BuildersListType&                  Builders,
-        std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<RenderGraphDepdencyLevel>
+        std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<GraphDepdencyLevel>
     {
         std::vector<size_t> Distances(m_TopologicallySortedList.size());
         for (size_t d = 0; d < Distances.size(); d++)
@@ -162,7 +186,7 @@ namespace Neon::RG
 
         size_t Size = std::ranges::max(Distances) + 1;
 
-        std::vector<RenderGraphDepdencyLevel> Dependencies;
+        std::vector<GraphDepdencyLevel> Dependencies;
         Dependencies.reserve(Size);
 
         for (size_t i = 0; i < Size; i++)
@@ -188,13 +212,13 @@ namespace Neon::RG
 
     //
 
-    IRenderPass& RenderGraphBuilder::AppendPass(
+    IRenderPass& GraphBuilder::AddPass(
         std::unique_ptr<IRenderPass> Pass)
     {
         return *m_Passes.emplace_back(std::move(Pass));
     }
 
-    RenderGraphBuilder::BuilderInfo::BuilderInfo(
+    GraphBuilder::BuilderInfo::BuilderInfo(
         GraphStorage& Storage) :
         Resources(Storage)
     {

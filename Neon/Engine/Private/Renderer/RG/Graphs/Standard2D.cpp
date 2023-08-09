@@ -13,7 +13,7 @@ namespace Neon::RG
         auto Graph   = std::make_unique<RenderGraph>();
         auto Builder = Graph->Reset();
 
-        Builder.AppendPass<RG::ScenePass>(Graph->GetStorage(), Scene, Camera);
+        Builder.AddPass<RG::ScenePass>(Graph->GetStorage(), Scene, Camera);
 
         Builder.Build();
 

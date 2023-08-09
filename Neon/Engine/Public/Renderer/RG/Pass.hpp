@@ -1,11 +1,13 @@
 #pragma once
 
 #include <Renderer/RG/Common.hpp>
+#include <boost/compressed_pair.hpp>
 
 namespace Neon::RHI
 {
     class ICommandList;
     class IGraphicsCommandList;
+    class IComputeCommandList;
 } // namespace Neon::RHI
 
 namespace Neon::RG
@@ -18,6 +20,7 @@ namespace Neon::RG
         class ResourceResolver;
 
         IRenderPass(
+            StringU8      PassName,
             PassQueueType QueueType) :
             m_QueueType(QueueType)
         {
@@ -54,6 +57,14 @@ namespace Neon::RG
 
     public:
         /// <summary>
+        /// Get pass name
+        /// </summary>
+        [[nodiscard]] const StringU8& GetPassName() const noexcept
+        {
+            return m_PassName;
+        }
+
+        /// <summary>
         /// Get queue type
         /// </summary>
         [[nodiscard]] PassQueueType GetQueueType() const noexcept
@@ -62,6 +73,9 @@ namespace Neon::RG
         }
 
     private:
+        StringU8      m_PassName;
         PassQueueType m_QueueType;
     };
+
+    using ResourceResolver = IRenderPass::ResourceResolver;
 } // namespace Neon::RG

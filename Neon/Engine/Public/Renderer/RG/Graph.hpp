@@ -9,15 +9,15 @@
 namespace Neon::RG
 {
     class IRenderPass;
-    class RenderGraphBuilder;
-    class RenderGraphDepdencyLevel;
+    class GraphBuilder;
+    class GraphDepdencyLevel;
 
     class RenderGraph
     {
-        friend class RenderGraphDepdencyLevel;
+        friend class GraphDepdencyLevel;
 
-        friend class RenderGraphBuilder;
-        using DepdencyLevelList = std::vector<RenderGraphDepdencyLevel>;
+        friend class GraphBuilder;
+        using DepdencyLevelList = std::vector<GraphDepdencyLevel>;
 
         using RenderCommandContext  = RHI::TCommandContext<RHI::CommandQueueType::Graphics>;
         using ComputeCommandContext = RHI::TCommandContext<RHI::CommandQueueType::Compute>;
@@ -64,7 +64,7 @@ namespace Neon::RG
         /// <summary>
         /// Reset resource graph for recording
         /// </summary>
-        [[nodiscard]] RenderGraphBuilder Reset();
+        [[nodiscard]] GraphBuilder Reset();
 
         /// <summary>
         /// Get the storage of the graph
@@ -107,18 +107,18 @@ namespace Neon::RG
 
     //
 
-    class RenderGraphDepdencyLevel
+    class GraphDepdencyLevel
     {
 
     public:
-        RenderGraphDepdencyLevel(
+        GraphDepdencyLevel(
             RenderGraph& Context);
 
-        RenderGraphDepdencyLevel(const RenderGraphDepdencyLevel&)            = delete;
-        RenderGraphDepdencyLevel(RenderGraphDepdencyLevel&&)                 = default;
-        RenderGraphDepdencyLevel& operator=(const RenderGraphDepdencyLevel&) = delete;
-        RenderGraphDepdencyLevel& operator=(RenderGraphDepdencyLevel&&)      = default;
-        ~RenderGraphDepdencyLevel()                                          = default;
+        GraphDepdencyLevel(const GraphDepdencyLevel&)            = delete;
+        GraphDepdencyLevel(GraphDepdencyLevel&&)                 = default;
+        GraphDepdencyLevel& operator=(const GraphDepdencyLevel&) = delete;
+        GraphDepdencyLevel& operator=(GraphDepdencyLevel&&)      = default;
+        ~GraphDepdencyLevel()                                    = default;
 
         /// <summary>
         /// Append render pass

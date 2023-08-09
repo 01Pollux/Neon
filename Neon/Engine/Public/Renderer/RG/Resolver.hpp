@@ -2,21 +2,17 @@
 
 #include <Renderer/RG/Pass.hpp>
 
-#include <RHI/Shader.hpp>
-#include <RHI/RootSignature.hpp>
-#include <RHI/PipelineState.hpp>
-
-/// <summary>
-/// Purpose of those classes is to defer the loading of resources to the render graph.
-/// This allows to load resources only when they are needed.
-/// </summary>
 namespace Neon::RG
 {
     class GraphStorage;
 
+    /// <summary>
+    /// Purpose of this classes is to defer the loading of resources to the render graph.
+    /// This allows to load resources only when they are needed.
+    /// </summary>
     class IRenderPass::ResourceResolver
     {
-        friend class RenderGraphBuilder;
+        friend class GraphBuilder;
 
     public:
         ResourceResolver(
@@ -41,20 +37,20 @@ namespace Neon::RG
         /// <summary>
         /// Write resource view
         /// </summary>
-        void WriteResource(
+        ResourceViewId WriteResource(
             const ResourceViewId&          ViewId,
             const RHI::DescriptorViewDesc& Desc);
 
         /// <summary>
         /// Write resource in copy operation
         /// </summary>
-        void WriteDstResource(
+        ResourceViewId WriteDstResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
         /// Read resource view
         /// </summary>
-        void ReadResource(
+        ResourceViewId ReadResource(
             const ResourceViewId&          ViewId,
             ResourceReadAccess             ReadAccess,
             const RHI::DescriptorViewDesc& Desc);
@@ -62,7 +58,7 @@ namespace Neon::RG
         /// <summary>
         /// Read resource in copy operation
         /// </summary>
-        void ReadSrcResource(
+        ResourceViewId ReadSrcResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
@@ -80,6 +76,11 @@ namespace Neon::RG
             const ResourceId&             Id,
             const Ptr<RHI::ITexture>&     Resource,
             const RHI::ClearOperationOpt& ClearValue = std::nullopt);
+
+        /// <summary>
+        /// Get swapchain's format
+        /// </summary>
+        [[nodiscard]] static RHI::EResourceFormat GetSwapchainFormat();
 
     private:
         /// <summary>

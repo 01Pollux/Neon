@@ -9,10 +9,10 @@
 
 namespace Neon::RG
 {
-    RenderGraphBuilder RenderGraph::Reset()
+    GraphBuilder RenderGraph::Reset()
     {
         m_Storage.Reset();
-        return RenderGraphBuilder(*this);
+        return GraphBuilder(*this);
     }
 
     GraphStorage& RenderGraph::GetStorage() noexcept
@@ -52,7 +52,7 @@ namespace Neon::RG
     }
 
     void RenderGraph::Build(
-        std::vector<RenderGraphDepdencyLevel>&& Levels)
+        std::vector<GraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
     }
@@ -92,7 +92,7 @@ namespace Neon::RG
 
     //
 
-    RenderGraphDepdencyLevel::RenderGraphDepdencyLevel(
+    GraphDepdencyLevel::GraphDepdencyLevel(
         RenderGraph& Context) :
         m_Context(Context)
     {
@@ -100,7 +100,7 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphDepdencyLevel::AddPass(
+    void GraphDepdencyLevel::AddPass(
         UPtr<IRenderPass>                             Pass,
         std::vector<ResourceViewId>                   RenderTargets,
         std::optional<ResourceViewId>                 DepthStencil,
@@ -118,7 +118,7 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::Execute(
+    void GraphDepdencyLevel::Execute(
         RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
         auto& Storage = m_Context.GetStorage();
@@ -140,7 +140,7 @@ namespace Neon::RG
         }
     }
 
-    void RenderGraphDepdencyLevel::ExecuteBarriers(
+    void GraphDepdencyLevel::ExecuteBarriers(
         RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
         auto& Storage      = m_Context.GetStorage();
@@ -160,7 +160,7 @@ namespace Neon::RG
 
     //
 
-    void RenderGraphDepdencyLevel::ExecutePasses(
+    void GraphDepdencyLevel::ExecutePasses(
         RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
         auto DispatchTask =

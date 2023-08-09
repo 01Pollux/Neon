@@ -22,7 +22,7 @@ namespace Neon::RG
         const GraphStorage&,
         GameScene& Scene,
         Actor      Camera) :
-        IRenderPass(PassQueueType::Direct),
+        IRenderPass("ScenePass", PassQueueType::Direct),
         m_Scene(Scene),
         m_Camera(Camera)
     {

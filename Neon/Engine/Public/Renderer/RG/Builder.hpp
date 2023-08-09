@@ -7,9 +7,9 @@
 
 namespace Neon::RG
 {
-    class RenderGraphDepdencyLevel;
+    class GraphDepdencyLevel;
 
-    class RenderGraphBuilder
+    class GraphBuilder
     {
         friend class RenderGraph;
 
@@ -32,17 +32,17 @@ namespace Neon::RG
         /// <summary>
         /// Append render pass
         /// </summary>
-        IRenderPass& AppendPass(
+        IRenderPass& AddPass(
             UPtr<IRenderPass> Pass);
 
         /// <summary>
         /// Append render pass
         /// </summary>
         template<typename _Ty, typename... _Args>
-        _Ty& AppendPass(
+        _Ty& AddPass(
             _Args&&... Args)
         {
-            return static_cast<_Ty&>(AppendPass(std::make_unique<_Ty>(std::forward<_Args>(Args)...)));
+            return static_cast<_Ty&>(AddPass(std::make_unique<_Ty>(std::forward<_Args>(Args)...)));
         }
 
     private:
@@ -50,7 +50,7 @@ namespace Neon::RG
         /// Build passes from builders
         /// </summary>
         [[nodiscard]] auto BuildPasses(
-            BuildersListType& Builders) -> std::vector<RenderGraphDepdencyLevel>;
+            BuildersListType& Builders) -> std::vector<GraphDepdencyLevel>;
 
         /// <summary>
         /// Build adjacency lists for passes dependencies
@@ -82,10 +82,10 @@ namespace Neon::RG
         /// </summary>
         [[nodiscard]] auto BuildDependencyLevels(
             BuildersListType&                  Builders,
-            std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<RenderGraphDepdencyLevel>;
+            std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<GraphDepdencyLevel>;
 
     private:
-        explicit RenderGraphBuilder(
+        explicit GraphBuilder(
             RenderGraph& Context);
 
     private:

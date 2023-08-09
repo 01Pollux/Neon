@@ -19,7 +19,7 @@ namespace Neon::RG
     class GraphStorage
     {
         friend class RenderGraph;
-        friend class RenderGraphDepdencyLevel;
+        friend class GraphDepdencyLevel;
 
         using ResourceMapType          = std::map<ResourceId, ResourceHandle>;
         using InactiveResourceListType = std::deque<ResourceHandle>;

@@ -33,7 +33,7 @@ namespace Neon::RG
         m_ResourcesCreated.emplace(Id);
     }
 
-    void IRenderPass::ResourceResolver::WriteResource(
+    ResourceViewId IRenderPass::ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)
     {
@@ -73,9 +73,11 @@ namespace Neon::RG
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(State), RHI::MResourceFlags::FromEnum(Flags));
         m_Storage.DeclareResourceView(ViewId, Desc);
+
+        return ViewId;
     }
 
-    void IRenderPass::ResourceResolver::WriteDstResource(
+    ResourceViewId IRenderPass::ResourceResolver::WriteDstResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -83,9 +85,11 @@ namespace Neon::RG
         m_ResourcesWritten.emplace(Id);
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest), {});
+
+        return ViewId;
     }
 
-    void IRenderPass::ResourceResolver::ReadResource(
+    ResourceViewId IRenderPass::ResourceResolver::ReadResource(
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
         const RHI::DescriptorViewDesc& Desc)
@@ -130,9 +134,11 @@ namespace Neon::RG
 
         SetResourceState(ViewId, State, Flags);
         m_Storage.DeclareResourceView(ViewId, Desc);
+
+        return ViewId;
     }
 
-    void IRenderPass::ResourceResolver::ReadSrcResource(
+    ResourceViewId IRenderPass::ResourceResolver::ReadSrcResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -140,6 +146,8 @@ namespace Neon::RG
         m_ResourcesRead.emplace(Id);
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
+
+        return ViewId;
     }
 
     void IRenderPass::ResourceResolver::ImportBuffer(
@@ -156,6 +164,11 @@ namespace Neon::RG
         const RHI::ClearOperationOpt& ClearValue)
     {
         m_Storage.ImportTexture(Id, Resource, ClearValue);
+    }
+
+    RHI::EResourceFormat IRenderPass::ResourceResolver::GetSwapchainFormat()
+    {
+        return RHI::ISwapchain::Get()->GetFormat();
     }
 
     void IRenderPass::ResourceResolver::SetResourceState(
