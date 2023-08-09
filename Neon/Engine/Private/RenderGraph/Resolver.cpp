@@ -122,6 +122,13 @@ namespace Neon::RG
                     State = RHI::MResourceState::FromEnum(RHI::EResourceState::UnorderedAccess);
                     Flags = RHI::MResourceFlags::FromEnum(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
+                {
+                    State.Set(RHI::EResourceState::DepthRead);
+                    Flags.Set(RHI::EResourceFlags::AllowDepthStencil);
+
+                    m_DepthStencil = ViewId;
+                },
                 [](const auto&)
                 {
                     NEON_ASSERT(false, "Invalid descriptor view type to read from");

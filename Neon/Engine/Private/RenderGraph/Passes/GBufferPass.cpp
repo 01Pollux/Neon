@@ -67,17 +67,13 @@ namespace Neon::RG
             // Write to render target
             if (i != (RenderTargets.size() - 1)) [[likely]]
             {
-                Resolver.WriteResource(
-                    Resource.CreateView(STR("Main")),
-                    RHI::RTVDesc{
-                        .View      = RHI::RTVDesc::Texture2D{},
-                        .ClearType = RHI::ERTClearType::Color,
-                        .Format    = RenderTargetsFormatsTyped[i] });
+                Resolver.WriteRenderTarget(
+                    Resource.CreateView(STR("Main")));
             }
             // Write to depth buffer
             else
             {
-                Resolver.WriteResource(
+                Resolver.WriteDepthStencil(
                     Resource.CreateView(STR("Main")),
                     RHI::DSVDesc{
                         .View      = RHI::DSVDesc::Texture2D{},

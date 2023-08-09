@@ -17,6 +17,10 @@ namespace Neon::RG
     void DebugPass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        Resolver.WriteRenderTarget(
+            RG::ResourceViewId(STR("GBufferAlbedo"), STR("DebugPass")),
+            RHI::RTVDesc{
+                .ClearType = RHI::ERTClearType::Ignore });
     }
 
     void DebugPass::Dispatch(

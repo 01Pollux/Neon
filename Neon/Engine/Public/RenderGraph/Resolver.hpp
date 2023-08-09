@@ -42,6 +42,7 @@ namespace Neon::RG
             const RHI::ResourceDesc& Desc,
             MResourceFlags           Flags = {});
 
+    public:
         /// <summary>
         /// Write resource view
         /// </summary>
@@ -56,6 +57,37 @@ namespace Neon::RG
             const ResourceViewId& ViewId);
 
         /// <summary>
+        /// Write resource as uav
+        /// </summary>
+        ResourceViewId WriteResource(
+            const ResourceViewId&       ViewId,
+            std::optional<RHI::UAVDesc> Desc = std::nullopt)
+        {
+            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+        /// <summary>
+        /// Write resource as renter target
+        /// </summary>
+        ResourceViewId WriteRenderTarget(
+            const ResourceViewId&       ViewId,
+            std::optional<RHI::RTVDesc> Desc = std::nullopt)
+        {
+            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+        /// <summary>
+        /// Write resource as renter target
+        /// </summary>
+        ResourceViewId WriteDepthStencil(
+            const ResourceViewId&       ViewId,
+            std::optional<RHI::DSVDesc> Desc = std::nullopt)
+        {
+            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+    public:
+        /// <summary>
         /// Read resource view
         /// </summary>
         ResourceViewId ReadResource(
@@ -69,6 +101,29 @@ namespace Neon::RG
         ResourceViewId ReadSrcResource(
             const ResourceViewId& ViewId);
 
+        /// <summary>
+        /// Write resource as uav
+        /// </summary>
+        ResourceViewId ReadTexture(
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            std::optional<RHI::SRVDesc> Desc = std::nullopt)
+        {
+            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+        /// <summary>
+        /// Write resource as renter target
+        /// </summary>
+        ResourceViewId ReadDepthStencil(
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            std::optional<RHI::DSVDesc> Desc = std::nullopt)
+        {
+            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+    public:
         /// <summary>
         /// import buffer to be used later when dispatching passes
         /// </summary>

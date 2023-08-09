@@ -23,6 +23,10 @@ namespace Neon::RG
             GBufferPass.AttachRenderer<Renderer::SpriteRenderer>();
         }
 
+#ifndef NEON_DIST
+        // Builder.AddPass<RG::DebugPass>();
+#endif
+
         Builder.Build();
 
         return Graph;
