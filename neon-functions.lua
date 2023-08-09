@@ -6,10 +6,15 @@ function copy_file_to_target_dir(from_dir, folder, name)
     }
 end
 function copy_directory_to_target_dir(from_dir, to_dir)
+    filter "system:windows"
+        postbuildcommands
+        {
+    	    string.format("powershell rmdir -R $(targetdir)%s 2>nul", to_dir)
+        }
+    filter {}
     postbuildcommands
     {
-        string.format("{DELETE} $(targetdir)%s", from_dir, to_dir),
-        string.format('mkdir "$(targetdir)%s"', to_dir, to_dir),
+        string.format('mkdir "$(targetdir)%s"', to_dir),
         string.format("{COPY} %s $(targetdir)%s", from_dir, to_dir)
     }
 end

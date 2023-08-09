@@ -98,6 +98,7 @@ SamplerState p_Sampler_LinearClamp : register(s3, space0);
 SamplerState p_Sampler_AnisotropicWrap : register(s4, space0);
 SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 
+[earlydepthstencil]
 PSOutput PS_Main(PSInput Ps)
 {
 	int TextureIndex = g_SpriteData[Ps.SpriteIndex].TextureIndex;
