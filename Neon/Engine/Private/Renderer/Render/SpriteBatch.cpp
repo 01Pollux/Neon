@@ -11,7 +11,7 @@
 namespace Neon::Renderer
 {
     void SpriteBatcher::SetCameraBuffer(
-        const Ptr<RHI::IUploadBuffer>& Buffer)
+        RHI::GpuResourceHandle Buffer)
     {
         m_CameraBuffer = Buffer;
     }
@@ -31,11 +31,11 @@ namespace Neon::Renderer
 
         FirstMaterial->SetResourceView(
             "g_SpriteData",
-            m_PerObjectBuffer.GetHandle(0));
+            m_PerObjectBuffer.GetHandle());
 
         FirstMaterial->SetResourceView(
             "g_FrameData",
-            m_CameraBuffer->GetHandle());
+            m_CameraBuffer);
 
         m_MaterialInstances.Bind(m_CommandList);
     }

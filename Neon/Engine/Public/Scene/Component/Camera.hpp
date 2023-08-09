@@ -172,6 +172,6 @@ namespace Neon::Scene::Component
 
     struct MainCamera
     {
-        Actor Target;
+        flecs::entity Target;
     };
 } // namespace Neon::Scene::Component

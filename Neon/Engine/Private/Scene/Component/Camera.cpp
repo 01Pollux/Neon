@@ -2,7 +2,7 @@
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
 
-#include <Renderer/RG/RG.hpp>
+#include <RenderGraph/RG.hpp>
 #include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Scene::Component

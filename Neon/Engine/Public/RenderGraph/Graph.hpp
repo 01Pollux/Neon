@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Renderer/RG/Storage.hpp>
-#include <Renderer/RG/Pass.hpp>
+#include <RenderGraph/Storage.hpp>
+#include <RenderGraph/Pass.hpp>
 #include <RHI/Commands/Context.hpp>
 
 #include <Asio/ThreadPool.hpp>

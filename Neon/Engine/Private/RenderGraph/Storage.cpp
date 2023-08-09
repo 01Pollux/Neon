@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Storage.hpp>
+#include <RenderGraph/RG.hpp>
+#include <RenderGraph/Storage.hpp>
 
 #include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Swapchain.hpp>

@@ -62,10 +62,10 @@ namespace Neon::Renderer
         }
 
         /// <summary>
-        /// Update camera buffer.
+        /// Set camera's buffer.
         /// </summary>
         void SetCameraBuffer(
-            const Ptr<RHI::IUploadBuffer>& Buffer);
+            RHI::GpuResourceHandle Buffer);
 
     protected:
         /// <summary>
@@ -118,6 +118,6 @@ namespace Neon::Renderer
         FrameBuffer   m_PerObjectBuffer;
         MaterialTable m_MaterialInstances;
 
-        Ptr<RHI::IUploadBuffer> m_CameraBuffer;
+        RHI::GpuResourceHandle m_CameraBuffer;
     };
 } // namespace Neon::Renderer

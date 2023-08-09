@@ -1,7 +1,7 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Resolver.hpp>
-#include <Renderer/RG/Storage.hpp>
+#include <RenderGraph/RG.hpp>
+#include <RenderGraph/Resolver.hpp>
+#include <RenderGraph/Storage.hpp>
 
 #include <RHI/Swapchain.hpp>
 

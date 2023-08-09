@@ -1,5 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/Common.hpp>
+#include <RenderGraph/Common.hpp>
 
 namespace Neon::RG
 {

@@ -12,7 +12,7 @@ namespace Neon::Physics
     {
     public:
         ActorMotionState(
-            Scene::Actor Target) :
+            flecs::entity Target) :
             m_Target(std::move(Target))
         {
         }
@@ -37,6 +37,6 @@ namespace Neon::Physics
         }
 
     private:
-        Scene::Actor m_Target;
+        flecs::entity m_Target;
     };
 } // namespace Neon::Physics

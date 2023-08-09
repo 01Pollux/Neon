@@ -73,7 +73,7 @@ namespace Neon::Scene
         /// <summary>
         /// Create a new entity.
         /// </summary>
-        Actor CreateEntity(
+        flecs::entity CreateEntity(
             EntityType  Type,
             const char* Name = nullptr);
 

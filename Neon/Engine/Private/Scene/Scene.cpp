@@ -7,7 +7,7 @@
 //
 
 #include <RHI/Swapchain.hpp>
-#include <Renderer/RG/RG.hpp>
+#include <RenderGraph/RG.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
@@ -93,7 +93,7 @@ namespace Neon::Scene
     {
         auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
         m_CameraQuery.each(
-            [MainCamera](Actor                       Entity,
+            [MainCamera](flecs::entity               Entity,
                          const Component::Transform& Transform,
                          Component::Camera&          Camera)
             {

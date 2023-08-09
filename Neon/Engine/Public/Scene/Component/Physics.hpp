@@ -110,26 +110,26 @@ namespace Neon::Scene::Component
         /// Create a new collision object as static body.
         /// </summary>
         static btCollisionObject* AddStaticBody(
-            Actor    Target,
-            uint32_t Group = 1,
-            uint32_t Mask  = MaskAll);
+            flecs::entity Target,
+            uint32_t      Group = 1,
+            uint32_t      Mask  = MaskAll);
 
         /// <summary>
         /// Create a new collision object as rigid body.
         /// </summary>
         static btCollisionObject* AddRigidBody(
-            Actor    Target,
-            float    Mass,
-            uint32_t Group = 1,
-            uint32_t Mask  = MaskAll);
+            flecs::entity Target,
+            float         Mass,
+            uint32_t      Group = 1,
+            uint32_t      Mask  = MaskAll);
 
         /// <summary>
         /// Create a new collision object as kinematic body.
         /// </summary>
         static btCollisionObject* AddKinematicBody(
-            Actor    Target,
-            float    Mass,
-            uint32_t Group = 1,
-            uint32_t Mask  = MaskAll);
+            flecs::entity Target,
+            float         Mass,
+            uint32_t      Group = 1,
+            uint32_t      Mask  = MaskAll);
     };
 } // namespace Neon::Scene::Component

@@ -1,17 +1,16 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/RG.hpp>
-#include <Renderer/RG/Passes/ScenePass.hpp>
-#include <Scene/Component/Camera.hpp>
 #include <Runtime/GameEngine.hpp>
+
+#include <RenderGraph/RG.hpp>
+#include <RenderGraph/Passes/ScenePass.hpp>
+
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Camera.hpp>
 
 //
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/Commands/List.hpp>
-
-//
-
-namespace ranges = std::ranges;
 
 namespace Neon::RG
 {
@@ -19,21 +18,10 @@ namespace Neon::RG
     using namespace Renderer;
 
     ScenePass::ScenePass(
-        const GraphStorage&,
-        GameScene& Scene,
-        Actor      Camera) :
+        flecs::entity Camera) :
         IRenderPass("ScenePass", PassQueueType::Direct),
-        m_Scene(Scene),
         m_Camera(Camera)
     {
-        m_SpriteQuery =
-            m_Scene.GetEntityWorld()
-                ->query_builder<Component::Transform, Component::Sprite>()
-                .term<Component::Sprite>()
-                .in()
-                .term<Component::Transform>()
-                .in()
-                .build();
         //
     }
 
@@ -55,27 +43,14 @@ namespace Neon::RG
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
-        if (m_SpriteQuery.is_true())
+        auto CameraStorage = UpdateCameraBuffer();
+        for (auto& Renderer : m_Renderers)
         {
-            auto CameraStorage = UpdateCameraBuffer();
-
-            m_SpriteBatch.SetCameraBuffer(CameraStorage);
-            m_SpriteBatch.Begin(RenderCommandList);
-            m_SpriteQuery.iter(
-                [this](flecs::iter&                Iter,
-                       const Component::Transform* Transform,
-                       const Component::Sprite*    Sprite)
-                {
-                    for (size_t i : Iter)
-                    {
-                        m_SpriteBatch.Draw(Transform[i], Sprite[i]);
-                    }
-                });
-            m_SpriteBatch.End();
+            Renderer->Render(CameraStorage, RenderCommandList);
         }
     }
 
-    Ptr<RHI::IUploadBuffer> ScenePass::UpdateCameraBuffer()
+    RHI::GpuResourceHandle ScenePass::UpdateCameraBuffer()
     {
         auto CameraComponent = m_Camera.get<Component::Camera>();
         auto CameraTransform = m_Camera.get<Component::Transform>();
@@ -96,6 +71,6 @@ namespace Neon::RG
         CameraBuffer->DeltaTime  = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
 
         CameraComponent->GraphicsBuffer->Unmap();
-        return CameraComponent->GraphicsBuffer;
+        return CameraComponent->GraphicsBuffer->GetHandle();
     }
 } // namespace Neon::RG

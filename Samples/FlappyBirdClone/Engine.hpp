@@ -64,7 +64,7 @@ private:
     TextureAssetPtr m_Sprite;
     TextureAssetPtr m_HdrTriangle;
 
-    Neon::Scene::Actor m_Player;
+    flecs::entity m_Player;
 
     /// <summary>
     /// Pointer to player's rigid body

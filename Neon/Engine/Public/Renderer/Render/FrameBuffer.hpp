@@ -131,7 +131,7 @@ namespace Neon::Renderer
         /// Get a handle for the data by subtracting the size in bytes from the current size.
         /// </summary>
         [[nodiscard]] auto GetHandle(
-            uint32_t Offset) const
+            uint32_t Offset = 0) const
         {
             return Buffer->GetHandle(Offset);
         }

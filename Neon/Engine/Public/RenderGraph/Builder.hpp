@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/RG/Resolver.hpp>
+#include <RenderGraph/Resolver.hpp>
 #include <vector>
 #include <future>
 #include <stack>

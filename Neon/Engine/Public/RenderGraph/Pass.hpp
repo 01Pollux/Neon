@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/RG/Common.hpp>
+#include <RenderGraph/Common.hpp>
 #include <boost/compressed_pair.hpp>
 
 namespace Neon::RHI

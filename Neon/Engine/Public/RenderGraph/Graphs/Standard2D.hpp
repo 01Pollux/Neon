@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/RG/RG.hpp>
+#include <RenderGraph/RG.hpp>
 #include <Scene/Scene.hpp>
 
 namespace Neon::RG
@@ -14,6 +14,5 @@ namespace Neon::RG
     /// - DebugOverlay
     /// </summary>
     [[nodiscard]] UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
-        Scene::GameScene& Scene,
-        Scene::Actor      Camera);
+        flecs::entity Camera);
 } // namespace Neon::RG

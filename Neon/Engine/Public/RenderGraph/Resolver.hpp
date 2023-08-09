@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/RG/Pass.hpp>
+#include <RenderGraph/Pass.hpp>
 
 namespace Neon::RG
 {

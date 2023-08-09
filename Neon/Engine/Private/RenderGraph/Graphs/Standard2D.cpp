@@ -1,19 +1,23 @@
 #include <EnginePCH.hpp>
-#include <Renderer/RG/Graphs/Standard2D.hpp>
-#include <Renderer/RG/Passes/ScenePass.hpp>
+#include <RenderGraph/Graphs/Standard2D.hpp>
+#include <RenderGraph/Passes/ScenePass.hpp>
+
+//
+
+#include <Renderer/Render/SpriteRenderer.hpp>
 
 //
 
 namespace Neon::RG
 {
     UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
-        Scene::GameScene& Scene,
-        Scene::Actor      Camera)
+        flecs::entity Camera)
     {
         auto Graph   = std::make_unique<RenderGraph>();
         auto Builder = Graph->Reset();
 
-        Builder.AddPass<RG::ScenePass>(Graph->GetStorage(), Scene, Camera);
+        Builder.AddPass<RG::ScenePass>(Camera)
+            .AttachRenderer<Renderer::SpriteRenderer>();
 
         Builder.Build();
 

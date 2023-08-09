@@ -3,7 +3,7 @@
 
 //
 
-#include <Renderer/RG/Graphs/Standard2D.hpp>
+#include <RenderGraph/Graphs/Standard2D.hpp>
 #include <Scene/Component/Camera.hpp>
 
 #include <Scene/Component/Transform.hpp>
@@ -15,7 +15,7 @@ namespace Neon::Scene
 {
     using namespace Component;
 
-    Actor GameScene::CreateEntity(
+    flecs::entity GameScene::CreateEntity(
         EntityType  Type,
         const char* Name)
     {
@@ -28,7 +28,7 @@ namespace Neon::Scene
         case EntityType::Camera2D:
         {
             auto Actor       = m_EntityWorld->entity(Name);
-            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
+            auto RenderGraph = RG::CreateStandard2DRenderGraph(Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Orthographic);
             Actor.set(std::move(CameraComponent));
@@ -40,7 +40,7 @@ namespace Neon::Scene
         {
             // TODO: change to 3D render graph
             auto Actor       = m_EntityWorld->entity(Name);
-            auto RenderGraph = RG::CreateStandard2DRenderGraph(*this, Actor);
+            auto RenderGraph = RG::CreateStandard2DRenderGraph(Actor);
 
             Camera CameraComponent(std::move(RenderGraph), CameraType::Perspective);
             Actor.set<Camera>(std::move(CameraComponent));

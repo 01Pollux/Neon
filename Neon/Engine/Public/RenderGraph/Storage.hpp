@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/RG/Common.hpp>
+#include <RenderGraph/Common.hpp>
 #include <deque>
 #include <shared_mutex>
 #include <set>
