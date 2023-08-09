@@ -33,6 +33,15 @@ namespace Neon::RG
         m_ResourcesCreated.emplace(Id);
     }
 
+    void IRenderPass::ResourceResolver::CreateWindowTexture(
+        const ResourceId&        Id,
+        const RHI::ResourceDesc& Desc,
+        MResourceFlags           Flags)
+    {
+        Flags.Set(RG::EResourceFlags::WindowSizeDependent);
+        CreateTexture(Id, Desc, std::move(Flags));
+    }
+
     ResourceViewId IRenderPass::ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)

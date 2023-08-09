@@ -32,7 +32,15 @@ namespace Neon::RG
         void CreateTexture(
             const ResourceId&        Id,
             const RHI::ResourceDesc& Desc,
-            MResourceFlags           Flags);
+            MResourceFlags           Flags = {});
+
+        /// <summary>
+        /// Create window sized texture
+        /// </summary>
+        void CreateWindowTexture(
+            const ResourceId&        Id,
+            const RHI::ResourceDesc& Desc,
+            MResourceFlags           Flags = {});
 
         /// <summary>
         /// Write resource view

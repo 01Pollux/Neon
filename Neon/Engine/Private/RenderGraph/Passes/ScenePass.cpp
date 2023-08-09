@@ -7,11 +7,6 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Camera.hpp>
 
-//
-
-#include <RHI/Swapchain.hpp>
-#include <RHI/Commands/List.hpp>
-
 namespace Neon::RG
 {
     using namespace Scene;
@@ -22,18 +17,57 @@ namespace Neon::RG
         IRenderPass("ScenePass", PassQueueType::Direct),
         m_Camera(Camera)
     {
-        //
     }
 
     void ScenePass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        /*  auto ResourceDesc = RHI::ResourceDesc::Tex2D(
+              RHI::EResourceFormat::R8G8B8A8_UNorm,
+              0, 0, 1, 1);
+
+          auto DepthDesc = RHI::ResourceDesc::Tex2D(
+              RHI::EResourceFormat::R32_Typeless,
+              0, 0, 1, 1);
+
+          std::array Resources{
+              std::pair{ ResourceId(STR("GBufferAlbedo")), &ResourceDesc },
+              std::pair{ ResourceId(STR("GBufferNormal")), &ResourceDesc },
+              std::pair{ ResourceId(STR("GBufferEmissive")), &ResourceDesc }
+          };
+
+          for (auto& [Resource, Desc] : Resources)
+          {
+              Resolver.CreateWindowTexture(ResourceId(STR("GBufferAlbedo")), *Desc);
+
+              if (Desc == &ResourceDesc) [[likely]]
+              {
+                  Resolver.WriteResource(
+                      Resource.CreateView(STR("Main")),
+                      RHI::RTVDesc{
+                          .View      = RHI::RTVDesc::Texture2D{},
+                          .ClearType = RHI::ERTClearType::Color,
+                          .Format    = RHI::EResourceFormat::R8G8B8A8_UNorm,
+                      });
+              }
+              else
+              {
+                  Resolver.WriteResource(
+                      Resource.CreateView(STR("Main")),
+                      RHI::DSVDesc{
+                          .View       = RHI::DSVDesc::Texture2D{},
+                          .ForceDepth = 1.f,
+                          .ClearType  = RHI::EDSClearType::Depth,
+                      });
+              }
+          }*/
+
         Resolver.WriteResource(
             RG::ResourceViewId(STR("OutputImage"), STR("ScenePass")),
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Color,
-                .Format    = RHI::ISwapchain::Get()->GetFormat(),
+                .Format    = ResourceResolver::GetSwapchainFormat(),
             });
     }
 

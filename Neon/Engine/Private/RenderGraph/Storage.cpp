@@ -116,7 +116,9 @@ namespace Neon::RG
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Buffer, BufferType)).first->second.Get();
-        RHI::RenameObject(Handle.get(), Id.GetName());
+#ifndef NEON_DIST
+        RHI::RenameObject(Handle.get(), Id.GetName().c_str());
+#endif
 
         m_ImportedResources.emplace(Id);
     }
@@ -128,8 +130,9 @@ namespace Neon::RG
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second.Get();
-        RHI::RenameObject(Handle.get(), Id.GetName());
-
+#ifndef NEON_DIST
+        RHI::RenameObject(Handle.get(), Id.GetName().c_str());
+#endif
         m_ImportedResources.emplace(Id);
     }
 
@@ -209,7 +212,9 @@ namespace Neon::RG
             Desc = Res->GetDesc();
         }
 
-        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
+#ifndef NEON_DIST
+        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName().c_str());
+#endif
     }
 
     void GraphStorage::FreeResource(
