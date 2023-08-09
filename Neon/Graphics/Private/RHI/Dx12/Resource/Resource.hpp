@@ -19,6 +19,8 @@ namespace Neon::RHI
             size_t*               RowSizeInBytes,
             size_t*               TotalBytes) const;
 
+        const ResourceDesc& GetDesc() const override;
+
         /// <summary>
         /// Get the underlying D3D12 resource.
         /// </summary>
@@ -59,8 +61,6 @@ namespace Neon::RHI
 
         ~Dx12Buffer() override;
 
-        ResourceDesc GetDesc() const override;
-
         size_t GetSize() const override;
 
         GpuResourceHandle GetHandle(
@@ -78,12 +78,9 @@ namespace Neon::RHI
         bool IsUsingPool() const;
 
     protected:
-        size_t m_Size   = 0;
         size_t m_Offset = 0;
 
-        uint32_t             m_Alignement = 0;
-        D3D12_RESOURCE_FLAGS m_Flags{};
-        GraphicsBufferType   m_Type{};
+        GraphicsBufferType m_Type{};
     };
 
     //
@@ -141,9 +138,7 @@ namespace Neon::RHI
 
         ~Dx12Texture() override;
 
-        ResourceDesc GetDesc() const override;
-
-        const Vector3I& GetDimensions() const override;
+        Vector3I GetDimensions() const override;
 
         uint16_t GetMipLevels() const override;
 
@@ -155,6 +150,11 @@ namespace Neon::RHI
             uint32_t MipIndex) const override;
 
     private:
+        /// <summary>
+        /// Initialize the texture description.
+        /// </summary>
+        void InitializeDesc();
+
         /// <summary>
         /// Get the size of the texture in bytes to copy.
         /// </summary>
@@ -169,9 +169,6 @@ namespace Neon::RHI
             uint64_t&                        CopyId);
 
     protected:
-        Vector3I m_Dimensions;
-        uint16_t m_MipLevels = 0;
-
         ClearOperationOpt m_ClearValue;
     };
 } // namespace Neon::RHI

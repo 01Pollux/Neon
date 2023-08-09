@@ -44,6 +44,11 @@ namespace Neon::RHI
         }
     }
 
+    const ResourceDesc& Dx12GpuResource::GetDesc() const
+    {
+        return m_Desc;
+    }
+
     ID3D12Resource* Dx12GpuResource::GetResource() const
     {
         return m_Resource.Get();
@@ -65,17 +70,19 @@ namespace Neon::RHI
     Dx12Buffer::Dx12Buffer(
         const BufferDesc&  Desc,
         GraphicsBufferType Type) :
-        m_Alignement(Desc.Alignment),
         m_Type(Type)
     {
+        m_Desc.Alignment = Desc.Alignment;
+
         auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
         if (Desc.UsePool)
         {
-            auto Buffer = Allocator->AllocateBuffer(Type, Desc.Size, size_t(m_Alignement), CastResourceFlags(Desc.Flags));
-            m_Resource  = Buffer.Resource;
-            m_Size      = Desc.Size;
-            m_Offset    = Buffer.Offset;
-            m_Flags     = Buffer.Flags;
+            auto Buffer = Allocator->AllocateBuffer(Type, Desc.Size, size_t(m_Desc.Alignment), CastResourceFlags(Desc.Flags));
+
+            m_Resource   = Buffer.Resource;
+            m_Desc.Width = Desc.Size;
+            m_Offset     = Buffer.Offset;
+            m_Desc.Flags = CastResourceFlags(Buffer.Flags);
         }
         else
         {
@@ -105,6 +112,7 @@ namespace Neon::RHI
 
             {
                 auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Desc.Size, Flags);
+                m_Desc        = ResourceDesc::Buffer(Dx12Desc.Width, uint32_t(Dx12Desc.Alignment), CastResourceFlags(Flags));
                 ThrowIfFailed(Allocator->GetMA()->CreateResource(
                     &AllocDesc,
                     &Dx12Desc,
@@ -113,12 +121,6 @@ namespace Neon::RHI
                     &m_Allocation,
                     IID_PPV_ARGS(&m_Resource)));
                 Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
-            }
-            {
-                auto Dx12Desc = m_Resource->GetDesc();
-
-                m_Size  = Dx12Desc.Width;
-                m_Flags = Flags;
             }
         }
     }
@@ -130,9 +132,9 @@ namespace Neon::RHI
             Handle Buffer{
                 .Resource = std::move(m_Resource),
                 .Offset   = m_Offset,
-                .Size     = m_Size,
+                .Size     = m_Desc.Width,
                 .Type     = m_Type,
-                .Flags    = m_Flags
+                .Flags    = CastResourceFlags(m_Desc.Flags)
             };
             Dx12Swapchain::Get()->SafeRelease(Buffer);
         }
@@ -143,14 +145,9 @@ namespace Neon::RHI
         }
     }
 
-    ResourceDesc Dx12Buffer::GetDesc() const
-    {
-        return ResourceDesc::Buffer(m_Size, m_Alignement, CastResourceFlags(m_Flags));
-    }
-
     size_t Dx12Buffer::GetSize() const
     {
-        return m_Size;
+        return m_Desc.Width;
     }
 
     GpuResourceHandle Dx12Buffer::GetHandle(
@@ -364,22 +361,7 @@ namespace Neon::RHI
             &m_Allocation,
             IID_PPV_ARGS(&m_Resource)));
 
-        if (Dx12Desc.MipLevels == 0)
-        {
-            for (uint64_t Width = Dx12Desc.Width, Height = Dx12Desc.Height;
-                 Width && Height;
-                 Width >>= 1, Height >>= 1)
-            {
-                m_MipLevels++;
-            }
-        }
-        else
-        {
-            m_MipLevels = Dx12Desc.MipLevels;
-        }
-        m_Dimensions = { int(Dx12Desc.Width),
-                         int(Dx12Desc.Height),
-                         int(Dx12Desc.DepthOrArraySize) };
+        InitializeDesc();
 
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         if (!Subresources.empty())
@@ -398,13 +380,7 @@ namespace Neon::RHI
 
         if (m_Resource)
         {
-            auto Desc = m_Resource->GetDesc();
-
-            m_Dimensions = { int(Desc.Width),
-                             int(Desc.Height),
-                             int(Desc.DepthOrArraySize) };
-            m_MipLevels  = Desc.MipLevels;
-
+            InitializeDesc();
             Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         }
     }
@@ -428,12 +404,41 @@ namespace Neon::RHI
         }
     }
 
-    ResourceDesc Dx12Texture::GetDesc() const
+    Vector3I Dx12Texture::GetDimensions() const
+    {
+        return {
+            int(m_Desc.Width),
+            int(m_Desc.Height),
+            int(m_Desc.Depth)
+        };
+    }
+
+    uint16_t Dx12Texture::GetMipLevels() const
+    {
+        return m_Desc.MipLevels;
+    }
+
+    uint32_t Dx12Texture::GetSubResourceCount() const
+    {
+        return uint32_t(m_Desc.MipLevels) * m_Desc.Depth;
+    }
+
+    uint32_t Dx12Texture::GetSubresourceIndex(
+        uint32_t PlaneIndex,
+        uint32_t ArrayIndex,
+        uint32_t MipIndex) const
+    {
+        return MipIndex +
+               ArrayIndex * m_Desc.MipLevels +
+               PlaneIndex * m_Desc.Depth * m_Desc.MipLevels;
+    }
+
+    void Dx12Texture::InitializeDesc()
     {
         NEON_ASSERT(m_Resource);
         auto Dx12Desc = m_Resource->GetDesc();
 
-        ResourceDesc Desc{
+        m_Desc = {
             .Width         = Dx12Desc.Width,
             .Height        = Dx12Desc.Height,
             .Depth         = Dx12Desc.DepthOrArraySize,
@@ -448,16 +453,16 @@ namespace Neon::RHI
         switch (Dx12Desc.Layout)
         {
         case D3D12_TEXTURE_LAYOUT_UNKNOWN:
-            Desc.Layout = ResourceLayout::Unknown;
+            m_Desc.Layout = ResourceLayout::Unknown;
             break;
         case D3D12_TEXTURE_LAYOUT_ROW_MAJOR:
-            Desc.Layout = ResourceLayout::RowMajor;
+            m_Desc.Layout = ResourceLayout::RowMajor;
             break;
         case D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE:
-            Desc.Layout = ResourceLayout::StandardSwizzle64KB;
+            m_Desc.Layout = ResourceLayout::StandardSwizzle64KB;
             break;
         case D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE:
-            Desc.Layout = ResourceLayout::UndefinedSwizzle64KB;
+            m_Desc.Layout = ResourceLayout::UndefinedSwizzle64KB;
             break;
         default:
             break;
@@ -466,44 +471,18 @@ namespace Neon::RHI
         switch (Dx12Desc.Dimension)
         {
         case D3D12_RESOURCE_DIMENSION_BUFFER:
-            Desc.Type = ResourceType::Buffer;
+            m_Desc.Type = ResourceType::Buffer;
             break;
         case D3D12_RESOURCE_DIMENSION_TEXTURE1D:
-            Desc.Type = ResourceType::Texture1D;
+            m_Desc.Type = ResourceType::Texture1D;
             break;
         case D3D12_RESOURCE_DIMENSION_TEXTURE2D:
-            Desc.Type = ResourceType::Texture2D;
+            m_Desc.Type = ResourceType::Texture2D;
             break;
         case D3D12_RESOURCE_DIMENSION_TEXTURE3D:
-            Desc.Type = ResourceType::Texture3D;
+            m_Desc.Type = ResourceType::Texture3D;
             break;
         }
-        return Desc;
-    }
-
-    const Vector3I& Dx12Texture::GetDimensions() const
-    {
-        return m_Dimensions;
-    }
-
-    uint16_t Dx12Texture::GetMipLevels() const
-    {
-        return m_MipLevels;
-    }
-
-    uint32_t Dx12Texture::GetSubResourceCount() const
-    {
-        return uint32_t(m_MipLevels) * m_Dimensions.z;
-    }
-
-    uint32_t Dx12Texture::GetSubresourceIndex(
-        uint32_t PlaneIndex,
-        uint32_t ArrayIndex,
-        uint32_t MipIndex) const
-    {
-        return MipIndex +
-               ArrayIndex * m_MipLevels +
-               PlaneIndex * m_Dimensions.z * m_MipLevels;
     }
 
     size_t Dx12Texture::GetTextureCopySize(

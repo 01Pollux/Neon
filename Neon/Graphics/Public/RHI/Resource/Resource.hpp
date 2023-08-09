@@ -52,7 +52,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get desc of the resource.
         /// </summary>
-        [[nodiscard]] virtual ResourceDesc GetDesc() const = 0;
+        [[nodiscard]] virtual const ResourceDesc& GetDesc() const = 0;
 
         /// <summary>
         /// Query the footprint of the resource.
@@ -242,7 +242,7 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the dimensions of the texture.
         /// </summary>
-        [[nodiscard]] virtual const Vector3I& GetDimensions() const = 0;
+        [[nodiscard]] virtual Vector3I GetDimensions() const = 0;
 
         /// <summary>
         /// Returns the number of mip levels in the texture.
