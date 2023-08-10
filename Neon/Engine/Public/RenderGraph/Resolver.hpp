@@ -45,6 +45,7 @@ namespace Neon::RG
     public:
         /// <summary>
         /// Write resource view
+        /// RawView indicates that the resource is used as raw buffer and no descriptor will be created
         /// </summary>
         ResourceViewId WriteResource(
             const ResourceViewId&          ViewId,

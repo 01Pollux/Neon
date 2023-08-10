@@ -68,7 +68,11 @@ namespace Neon::RG
             if (i != (RenderTargets.size() - 1)) [[likely]]
             {
                 Resolver.WriteRenderTarget(
-                    Resource.CreateView(STR("Main")));
+                    Resource.CreateView(STR("Main")),
+                    RHI::RTVDesc{
+                        .View      = RHI::RTVDesc::Texture2D{},
+                        .ClearType = RHI::ERTClearType::Color,
+                        .Format    = Desc.ClearValue->Format });
             }
             // Write to depth buffer
             else
@@ -78,9 +82,7 @@ namespace Neon::RG
                     RHI::DSVDesc{
                         .View      = RHI::DSVDesc::Texture2D{},
                         .ClearType = RHI::EDSClearType::Depth,
-
-                        .ForceDepth = 1.f,
-                        .Format     = RenderTargetsFormatsTyped[i] });
+                        .Format    = Desc.ClearValue->Format });
             }
         }
 
@@ -92,8 +94,6 @@ namespace Neon::RG
                 .Alignment = 255,
                 .UsePool   = false },
             RHI::GraphicsBufferType::Upload);
-
-        Resolver.WriteBuffer(CameraBufferId.CreateView(STR("GBufferInit")));
     }
 
     void GBufferPass::Dispatch(
@@ -102,7 +102,34 @@ namespace Neon::RG
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
-        auto CameraStorage = UpdateCameraBuffer();
+        // auto CameraStorage = UpdateCameraBuffer();
+        RHI::GpuResourceHandle CameraStorage;
+        ResourceId             CameraBufferId(STR("CameraBuffer"));
+        auto                   Buffer = Storage.GetResource(CameraBufferId).AsUploadBuffer();
+        {
+            auto CameraComponent = m_Camera.get<Component::Camera>();
+            auto CameraTransform = m_Camera.get<Component::Transform>();
+
+            auto CameraBuffer = Buffer->Map<Component::CameraFrameData>();
+
+            CameraBuffer->World = glm::transpose(CameraTransform->World.ToMat4x4());
+
+            CameraBuffer->View           = glm::transpose(CameraComponent->ViewMatrix(m_Camera));
+            CameraBuffer->Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
+            CameraBuffer->ViewProjection = CameraBuffer->View * CameraBuffer->Projection;
+
+            CameraBuffer->ViewInverse           = glm::inverse(CameraBuffer->View);
+            CameraBuffer->ProjectionInverse     = glm::inverse(CameraBuffer->Projection);
+            CameraBuffer->ViewProjectionInverse = glm::inverse(CameraBuffer->ViewProjection);
+
+            CameraBuffer->EngineTime = float(Runtime::DefaultGameEngine::Get()->GetEngineTime());
+            CameraBuffer->GameTime   = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
+            CameraBuffer->DeltaTime  = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+
+            Buffer->Unmap();
+            CameraStorage = Buffer->GetHandle();
+        }
+
         for (auto& Renderer : m_Renderers)
         {
             Renderer->Render(CameraStorage, RenderCommandList);
