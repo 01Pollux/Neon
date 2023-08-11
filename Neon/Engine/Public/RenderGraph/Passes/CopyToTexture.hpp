@@ -46,6 +46,6 @@ namespace Neon::RG
     private:
         CopyToTextureData m_Data;
 
-        Ptr<Renderer::IMaterial> m_Material[static_cast<size_t>(BlendMode::Count)];
+        Ptr<Renderer::IMaterial> m_Materials[static_cast<size_t>(BlendMode::Count)];
     };
 } // namespace Neon::RG

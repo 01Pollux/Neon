@@ -27,7 +27,8 @@ namespace Neon::RG
         /// <summary>
         /// Build render graph from graph builder
         /// </summary>
-        void Build();
+        void Build(
+            ResourceId FinalOutput);
 
         /// <summary>
         /// Append render pass

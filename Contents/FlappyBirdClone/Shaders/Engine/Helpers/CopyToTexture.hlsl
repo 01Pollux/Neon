@@ -16,7 +16,7 @@ struct PSInput
 
 PSInput VS_Main(VSInput Vs)
 {
-	int2 TexCoord = int2(Vs.Id & 1, Vs.Id >> 2);
+	int2 TexCoord = int2(Vs.Id & 1, Vs.Id >> 1);
 	
 	PSInput Ps;
 	Ps.Position = float4(2.f * (TexCoord.x - .5f), -2.f * (TexCoord.y - .5f), 0.f, 1.f);

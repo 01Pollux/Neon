@@ -47,16 +47,18 @@ namespace Neon::RG
 
             if (CopyToBackBuffer)
             {
-                SubmitToBackBuffer(ChainedCommandList.Load(), CameraBuffer);
+                m_BackBufferFinalizer.Dispatch(m_Storage, ChainedCommandList.Load());
             }
         }
         m_Storage.FlushResources();
     }
 
     void RenderGraph::Build(
+        ResourceId                        FinalOutput,
         std::vector<GraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
+        m_BackBufferFinalizer.SetSource(std::move(FinalOutput));
     }
 
     void RenderGraph::SubmitToBackBuffer(

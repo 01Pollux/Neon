@@ -37,7 +37,8 @@ namespace Neon::RG
         AddPass<InitializeOutputImage>();
     }
 
-    void GraphBuilder::Build()
+    void GraphBuilder::Build(
+        ResourceId FinalOutput)
     {
         BuildersListType Builders;
 
@@ -53,7 +54,7 @@ namespace Neon::RG
             auto& Builder = Builders[i];
             m_Passes[i]->ResolveResources(Builder.Resources);
         }
-        m_Context.Build(BuildPasses(Builders));
+        m_Context.Build(std::move(FinalOutput), BuildPasses(Builders));
     }
 
     auto GraphBuilder::BuildPasses(

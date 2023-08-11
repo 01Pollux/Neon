@@ -28,7 +28,7 @@ namespace Neon::RG
         // Builder.AddPass<RG::DebugPass>();
 #endif
 
-        Builder.Build();
+        Builder.Build(RG::ResourceId(STR("GBufferAlbedo")));
 
         return Graph;
     }

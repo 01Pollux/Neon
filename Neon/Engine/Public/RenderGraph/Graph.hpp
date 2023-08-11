@@ -2,6 +2,8 @@
 
 #include <RenderGraph/Storage.hpp>
 #include <RenderGraph/Pass.hpp>
+#include <RenderGraph/BackBuffer.hpp>
+
 #include <RHI/Commands/Context.hpp>
 
 #include <Asio/ThreadPool.hpp>
@@ -93,6 +95,7 @@ namespace Neon::RG
         /// Build levels and imported resources
         /// </summary>
         void Build(
+            ResourceId          FinalOutput,
             DepdencyLevelList&& Levels);
 
         /// <summary>
@@ -105,6 +108,8 @@ namespace Neon::RG
     private:
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
+
+        BackBufferFinalizer m_BackBufferFinalizer;
 
         std::mutex         m_RenderMutex, m_ComputeMutex;
         Asio::ThreadPool<> m_ThreadPool{ 3 };

@@ -13,7 +13,7 @@ namespace Neon
 {
     namespace AssetGuids
     {
-        auto CopyToTextureShaderGuid()
+        static inline auto CopyToTextureShaderGuid()
         {
             return Asset::Handle::FromString("d54f5bd2-3945-4e46-acfb-b31de1f08ad5");
         }
@@ -28,7 +28,6 @@ namespace Neon::RG
         m_Data(std::move(Data))
     {
         // TODO: Load from asset rather than hardcoding
-
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
 
         ShaderAssetTaskPtr CopyToTextureShader = Asset::Manager::Load(AssetGuids::CopyToTextureShaderGuid());
@@ -47,13 +46,13 @@ namespace Neon::RG
             .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
             .RenderTarget(0, RHI::EResourceFormat::R8G8B8A8_UNorm);
 
-        m_Material[size_t(BlendMode::Opaque)] = Builder.Build();
+        m_Materials[size_t(BlendMode::Opaque)] = Builder.Build();
 
         Builder.Blend(0, Renderer::MaterialStates::Blend::AlphaBlend);
-        m_Material[size_t(BlendMode::AlphaBlend)] = Builder.Build();
+        m_Materials[size_t(BlendMode::AlphaBlend)] = Builder.Build();
 
         Builder.Blend(0, Renderer::MaterialStates::Blend::Additive);
-        m_Material[size_t(BlendMode::Additive)] = Builder.Build();
+        m_Materials[size_t(BlendMode::Additive)] = Builder.Build();
     }
 
     void CopyToTexturePass::ResolveResources(
@@ -73,13 +72,13 @@ namespace Neon::RG
         switch (m_Data.Blend)
         {
         case BlendMode::Opaque:
-            Material = m_Material[size_t(BlendMode::Opaque)];
+            Material = m_Materials[size_t(BlendMode::Opaque)];
             break;
         case BlendMode::AlphaBlend:
-            Material = m_Material[size_t(BlendMode::AlphaBlend)];
+            Material = m_Materials[size_t(BlendMode::AlphaBlend)];
             break;
         case BlendMode::Additive:
-            Material = m_Material[size_t(BlendMode::Additive)];
+            Material = m_Materials[size_t(BlendMode::Additive)];
             break;
         }
 
