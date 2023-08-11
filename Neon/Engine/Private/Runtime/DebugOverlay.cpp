@@ -54,6 +54,7 @@ namespace Neon::Runtime
             Overlay_Debug_LineBuffer();
 
             bool ShouldDraw() const;
+
             void Flush(
                 RHI::IGraphicsCommandList* CommandList,
                 RHI::GpuResourceHandle     PerFrameData);
@@ -64,10 +65,14 @@ namespace Neon::Runtime
                 const Color4&  StartColor,
                 const Color4&  EndColor,
                 bool           WorldsSpace);
+
+            void Reset();
         };
 
     public:
         bool ShouldRender_Impl() override;
+
+        void Reset_Impl() override;
 
         void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
@@ -108,6 +113,11 @@ namespace Neon::Runtime
     bool DefaultEngineDebugOverlay::ShouldRender_Impl()
     {
         return m_LineBuffer.ShouldDraw();
+    }
+
+    void DefaultEngineDebugOverlay::Reset_Impl()
+    {
+        m_LineBuffer.Reset();
     }
 
     void DefaultEngineDebugOverlay::Render_Impl(
@@ -244,9 +254,6 @@ namespace Neon::Runtime
 
         CommandList->SetVertexBuffer(0, VtxView);
         CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = DrawCount });
-
-        DrawCount = 0;
-        VertexBuffers.clear();
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Append(
@@ -276,6 +283,12 @@ namespace Neon::Runtime
         CurVertex[1].Position        = EndPosition;
         CurVertex[1].Color           = (EndColor * 255.f);
         CurVertex[1].NeedsProjection = WorldsSpace;
+    }
+
+    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Reset()
+    {
+        DrawCount = 0;
+        VertexBuffers.clear();
     }
 } // namespace Neon::Runtime
 

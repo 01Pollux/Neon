@@ -35,6 +35,16 @@ namespace Neon::Runtime
         }
 
         /// <summary>
+        /// Reset all draw calls.
+        /// </summary>
+        static void Reset()
+        {
+#ifndef NEON_DIST
+            s_DebugOverlay->Reset_Impl();
+#endif
+        }
+
+        /// <summary>
         /// Flush all draw calls into ommand list.
         /// </summary>
         static void Render(
@@ -77,6 +87,8 @@ namespace Neon::Runtime
 
     protected:
         NEON_M_NODIST_PV(bool ShouldRender_Impl());
+
+        NEON_M_NODIST_PV(void Reset_Impl());
 
         NEON_M_NODIST_PV(void Render_Impl(
             RHI::IGraphicsCommandList* CommandList,
