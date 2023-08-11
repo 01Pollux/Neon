@@ -28,6 +28,12 @@ namespace Neon::Physics
         double DeltaTime)
     {
         m_DynamicsWorld.stepSimulation(btScalar(DeltaTime), m_MaxSubSteps, m_FixedTimeStep);
+#ifndef NEON_DEBUG
+        if (m_DynamicsWorld.getDebugDrawer()->getDebugMode())
+        {
+            m_DynamicsWorld.debugDrawWorld();
+        }
+#endif
     }
 
     //
@@ -54,7 +60,7 @@ namespace Neon::Physics
         m_FixedTimeStep = FixedTimeStep;
     }
 
-    int World::SetMaxSubSteps()
+    int World::GetMaxSubSteps()
     {
         return m_MaxSubSteps;
     }
@@ -64,6 +70,25 @@ namespace Neon::Physics
     {
         m_MaxSubSteps = MaxSubSteps;
     }
+
+    btIDebugDraw::DebugDrawModes World::GetDebugFlags()
+    {
+#ifndef NEON_DIST
+        return btIDebugDraw::DebugDrawModes(m_DynamicsWorld.getDebugDrawer()->getDebugMode());
+#else
+        return 0;
+#endif
+    }
+
+    void World::SetDebugFlags(
+        btIDebugDraw::DebugDrawModes Flags)
+    {
+#ifndef NEON_DIST
+        m_DynamicsWorld.getDebugDrawer()->setDebugMode(Flags);
+#endif
+    }
+
+    //
 
     void World::AddPhysicsObject(
         btCollisionObject* PhysicsObject,

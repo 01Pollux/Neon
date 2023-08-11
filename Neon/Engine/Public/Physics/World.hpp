@@ -79,13 +79,24 @@ namespace Neon::Physics
         /// <summary>
         /// Get the maximum number of sub steps of the physics world.
         /// </summary>
-        [[nodiscard]] int SetMaxSubSteps();
+        [[nodiscard]] int GetMaxSubSteps();
 
         /// <summary>
         /// Set the maximum number of sub steps of the physics world.
         /// </summary>
         void SetMaxSubSteps(
             int MaxSubSteps);
+
+        /// <summary>
+        /// Get the debug flags of the physics world.
+        /// </summary>
+        [[nodiscard]] btIDebugDraw::DebugDrawModes GetDebugFlags();
+
+        /// <summary>
+        /// Set the maximum number of sub steps of the physics world.
+        /// </summary>
+        void SetDebugFlags(
+            btIDebugDraw::DebugDrawModes Flags);
 
     public:
         /// <summary>

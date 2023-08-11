@@ -5,6 +5,8 @@
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Physics.hpp>
 
+#include <Physics/World.hpp>
+
 #include <Input/Table.hpp>
 #include <Input/System.hpp>
 
@@ -74,6 +76,8 @@ void FlappyBirdClone::LoadScene()
             }
         }
     }
+
+    GetScene().GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
 
     // Floor and ceiling as sprite
     {
