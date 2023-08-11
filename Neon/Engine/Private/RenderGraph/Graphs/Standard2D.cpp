@@ -24,13 +24,6 @@ namespace Neon::RG
             GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
         }
 
-        Builder.AddPass<CopyToTexturePass>(
-            CopyToTexturePass::CopyToTextureData{
-                .ViewName    = STR("CopyToOutputImage"),
-                .Source      = ResourceId(STR("GBufferAlbedo")),
-                .Destination = ResourceId(STR("OutputImage")),
-                .Blend       = CopyToTexturePass::BlendMode::Opaque });
-
 #ifndef NEON_DIST
         // Builder.AddPass<RG::DebugPass>();
 #endif

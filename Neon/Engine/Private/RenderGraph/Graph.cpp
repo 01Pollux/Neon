@@ -63,7 +63,9 @@ namespace Neon::RG
         RHI::ICommonCommandList* CommandList,
         RHI::GpuResourceHandle   CameraBuffer)
     {
-        auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+        // Temporary until we have a more complete graph
+        // auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
+        auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("GBufferAlbedo"))).AsTexture();
 
         auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
         auto StateManager = RHI::IResourceStateManager::Get();

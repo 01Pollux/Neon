@@ -1,6 +1,6 @@
 {
   "Guid": "d54f5bd2-3945-4e46-acfb-b31de1f08ad5",
-  "Path": "Contents\/Shaders\/Engine\/CopyToTexture.hlsl.namd",
+  "Path": "Contents\/Shaders\/Engine\/Helpers\/CopyToTexture.hlsl.namd",
   "Loader": "",
   "Dependencies": "",
   "LoaderId": "15635213787607061289",
