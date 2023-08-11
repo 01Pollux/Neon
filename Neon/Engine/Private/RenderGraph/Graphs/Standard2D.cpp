@@ -1,4 +1,5 @@
 #include <EnginePCH.hpp>
+#include <RenderGraph/RG.hpp>
 #include <RenderGraph/Graphs/Standard2D.hpp>
 
 #include <RenderGraph/Passes/GBufferPass.hpp>
@@ -13,23 +14,22 @@
 
 namespace Neon::RG
 {
-    UPtr<RenderGraph> CreateStandard2DRenderGraph(
-        flecs::entity Camera)
+    void CreateStandard2DRenderGraph(
+        Scene::Component::Camera& CameraComponent,
+        flecs::entity             Camera)
     {
-        auto Graph   = std::make_unique<RenderGraph>();
+        auto Graph   = CameraComponent.NewRenderGraph(Camera);
         auto Builder = Graph->Reset();
 
-        auto& GBuffer = Builder.AddPass<GBufferPass>(Camera);
+        auto& GBuffer = Builder.AddPass<GBufferPass>();
         {
             GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
         }
 
 #ifndef NEON_DIST
-        // Builder.AddPass<RG::DebugPass>();
+        Builder.AddPass<RG::DebugPass>(RG::ResourceId(STR("GBufferAlbedo")));
 #endif
 
         Builder.Build(RG::ResourceId(STR("GBufferAlbedo")));
-
-        return Graph;
     }
 } // namespace Neon::RG

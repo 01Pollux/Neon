@@ -46,9 +46,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Called when the engine is shutdown.
         /// </summary>
-        virtual void Shutdown()
-        {
-        }
+        virtual void Shutdown();
 
         /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.

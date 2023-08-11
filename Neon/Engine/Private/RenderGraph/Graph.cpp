@@ -5,12 +5,22 @@
 #include <RHI/Swapchain.hpp>
 #include <RHI/Resource/State.hpp>
 
+#include <Runtime/GameEngine.hpp>
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Camera.hpp>
+
 #include <Log/Logger.hpp>
 
 #define NEON_RENDER_GRAPH_THREADED
 
 namespace Neon::RG
 {
+    RenderGraph::RenderGraph(
+        flecs::entity CameraEntity) :
+        m_CameraEntity(CameraEntity)
+    {
+    }
+
     GraphBuilder RenderGraph::Reset()
     {
         m_Storage.Reset();
@@ -28,9 +38,15 @@ namespace Neon::RG
     }
 
     void RenderGraph::Run(
-        RHI::GpuResourceHandle CameraBuffer,
-        bool                   CopyToBackBuffer)
+        bool CopyToBackBuffer)
     {
+        if (!UpdateCameraBuffer()) [[unlikely]]
+        {
+            return;
+        }
+
+        //
+
         for (auto& ImportedResource : m_Storage.m_ImportedResources)
         {
             auto& Handle = m_Storage.GetResourceMut(ImportedResource);
@@ -53,47 +69,43 @@ namespace Neon::RG
         m_Storage.FlushResources();
     }
 
+    bool RenderGraph::UpdateCameraBuffer()
+    {
+        using namespace Scene;
+
+        auto CameraComponent = m_CameraEntity.get<Component::Camera>();
+        auto CameraTransform = m_CameraEntity.get<Component::Transform>();
+        if (!CameraComponent || !CameraTransform) [[unlikely]]
+        {
+            return false;
+        }
+
+        auto& CameraBuffer = m_Storage.MapFrameData();
+
+        CameraBuffer.World = glm::transpose(CameraTransform->World.ToMat4x4());
+
+        CameraBuffer.View           = glm::transpose(CameraComponent->ViewMatrix(m_CameraEntity));
+        CameraBuffer.Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
+        CameraBuffer.ViewProjection = CameraBuffer.View * CameraBuffer.Projection;
+
+        CameraBuffer.ViewInverse           = glm::inverse(CameraBuffer.View);
+        CameraBuffer.ProjectionInverse     = glm::inverse(CameraBuffer.Projection);
+        CameraBuffer.ViewProjectionInverse = glm::inverse(CameraBuffer.ViewProjection);
+
+        CameraBuffer.EngineTime = float(Runtime::DefaultGameEngine::Get()->GetEngineTime());
+        CameraBuffer.GameTime   = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
+        CameraBuffer.DeltaTime  = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+
+        m_Storage.UnmapFrameData();
+        return true;
+    }
+
     void RenderGraph::Build(
         ResourceId                        FinalOutput,
         std::vector<GraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
         m_BackBufferFinalizer.SetSource(std::move(FinalOutput));
-    }
-
-    void RenderGraph::SubmitToBackBuffer(
-        RHI::ICommonCommandList* CommandList,
-        RHI::GpuResourceHandle   CameraBuffer)
-    {
-        // Temporary until we have a more complete graph
-        // auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("OutputImage"))).AsTexture();
-        auto OutputImage = m_Storage.GetResource(RG::ResourceId(STR("GBufferAlbedo"))).AsTexture();
-
-        auto Backbuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
-        auto StateManager = RHI::IResourceStateManager::Get();
-
-        //
-
-        // Transition the backbuffer to a copy destination.
-        StateManager->TransitionResource(
-            Backbuffer,
-            RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest));
-
-        // Transition the output image to a copy source.
-        StateManager->TransitionResource(
-            OutputImage.get(),
-            RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource));
-
-        // Prepare the command list.
-        StateManager->FlushBarriers(CommandList);
-        CommandList->CopyResource(Backbuffer, OutputImage.get());
-
-        // Transition the backbuffer to a present state.
-        StateManager->TransitionResource(
-            Backbuffer,
-            RHI::MResourceState_Present);
-
-        StateManager->FlushBarriers(CommandList);
     }
 
     //
@@ -262,6 +274,7 @@ namespace Neon::RG
                             {
                                 Depth = *ViewDesc->ForceDepth;
                             }
+                            Stencil.reset();
 
                             break;
                         }
@@ -271,12 +284,12 @@ namespace Neon::RG
                             {
                                 Stencil = *ViewDesc->ForceStencil;
                             }
+                            Depth.reset();
 
                             break;
                         }
                         case RHI::EDSClearType::DepthStencil:
                         {
-
                             if (ViewDesc->ForceDepth)
                             {
                                 Depth = *ViewDesc->ForceDepth;

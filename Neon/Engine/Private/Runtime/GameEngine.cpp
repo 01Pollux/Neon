@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
+#include <Runtime/DebugOverlay.hpp>
 
 #include <Asset/Manager.hpp>
 #include <Asset/Storage.hpp>
@@ -47,6 +48,13 @@ namespace Neon::Runtime
         //
 
         m_Window.reset(NEON_NEW EngineWindow(Config));
+
+        Runtime::DebugOverlay::Create();
+    }
+
+    void DefaultGameEngine::Shutdown()
+    {
+        Runtime::DebugOverlay::Destroy();
     }
 
     int DefaultGameEngine::Run()

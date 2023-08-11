@@ -10,11 +10,8 @@ namespace Neon::Scene::Component
     Camera::Camera() = default;
 
     Camera::Camera(
-        UPtr<RG::RenderGraph> RenderGraph,
-        CameraType            Type) :
-        RenderGraph(std::move(RenderGraph)),
-        Type(Type),
-        GraphicsBuffer(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 256), .Alignment = 256 }))
+        CameraType Type) :
+        Type(Type)
     {
         if (Type == CameraType::Orthographic)
         {
@@ -90,5 +87,17 @@ namespace Neon::Scene::Component
         const flecs::entity& OwningEntity) const
     {
         return ViewMatrix(OwningEntity) * ProjectionMatrix();
+    }
+
+    RG::RenderGraph* Camera::NewRenderGraph(
+        const flecs::entity& OwningEntity)
+    {
+        RenderGraph.reset(NEON_NEW RG::RenderGraph(OwningEntity));
+        return RenderGraph.get();
+    }
+
+    RG::RenderGraph* Camera::GetRenderGraph()
+    {
+        return RenderGraph.get();
     }
 } // namespace Neon::Scene::Component

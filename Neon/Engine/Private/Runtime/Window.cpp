@@ -1,6 +1,5 @@
 #include <EnginePCH.hpp>
 #include <Runtime/Window.hpp>
-#include <Runtime/GameEngine.hpp>
 
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>

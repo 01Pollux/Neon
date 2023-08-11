@@ -4,8 +4,6 @@
 #include <RenderGraph/Graph.hpp>
 #include <Renderer/Render/BaseRenderer.hpp>
 
-#include <Scene/Scene.hpp>
-
 namespace Neon::RG
 {
     class GBufferPass : public IRenderPass
@@ -25,8 +23,7 @@ namespace Neon::RG
             RHI::EResourceFormat::D32_Float       // Depth-Stencil
         };
 
-        GBufferPass(
-            flecs::entity Camera);
+        GBufferPass();
 
         /// <summary>
         /// Attach a renderer to the scene pass.
@@ -48,14 +45,6 @@ namespace Neon::RG
             RHI::ICommandList*  CommandList) override;
 
     private:
-        /// <summary>
-        /// Update camera buffer.
-        /// </summary>
-        [[nodiscard]] RHI::GpuResourceHandle UpdateCameraBuffer();
-
-    private:
-        flecs::entity m_Camera;
-
         std::vector<UPtr<Renderer::IRenderer>> m_Renderers;
     };
 } // namespace Neon::RG

@@ -22,7 +22,7 @@ namespace Neon::RG
             Desc.SetClearValue(Colors::Green);
 
             Resolver.CreateTexture(
-                RG::ResourceId(STR("OutputImage")),
+                ResourceResolver::GetOutputImage(),
                 Desc,
                 MResourceFlags::FromEnum(EResourceFlags::WindowSizeDependent));
         }

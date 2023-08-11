@@ -15,6 +15,11 @@
 
 namespace Neon::RG
 {
+    GraphStorage::GraphStorage() :
+        m_CameraFrameData(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 255), .Alignment = 255 }))
+    {
+    }
+
     void GraphStorage::Reset()
     {
         FlushResources();
@@ -86,6 +91,21 @@ namespace Neon::RG
 
         NEON_ASSERT(false, "Resource view doesn't exists");
         std::unreachable();
+    }
+
+    CameraFrameData& GraphStorage::MapFrameData() const
+    {
+        return *m_CameraFrameData->Map<CameraFrameData>();
+    }
+
+    void GraphStorage::UnmapFrameData() const
+    {
+        m_CameraFrameData->Unmap();
+    }
+
+    RHI::GpuResourceHandle GraphStorage::GetFrameDataHandle() const
+    {
+        return m_CameraFrameData->GetHandle();
     }
 
     //

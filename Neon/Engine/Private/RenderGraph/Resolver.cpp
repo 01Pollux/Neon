@@ -191,6 +191,11 @@ namespace Neon::RG
         return RHI::ISwapchain::Get()->GetFormat();
     }
 
+    ResourceId IRenderPass::ResourceResolver::GetOutputImage()
+    {
+        return ResourceId(STR("OutputImage"));
+    }
+
     void IRenderPass::ResourceResolver::SetResourceState(
         const ResourceViewId&      ViewId,
         const RHI::MResourceState& State,

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
+#include <RenderGraph/CameraFramData.hpp>
+
 #include <deque>
 #include <shared_mutex>
 #include <set>
@@ -25,6 +27,8 @@ namespace Neon::RG
         using InactiveResourceListType = std::deque<ResourceHandle>;
 
     public:
+        GraphStorage();
+
         /// <summary>
         /// Reset resources
         /// </summary>
@@ -63,6 +67,22 @@ namespace Neon::RG
             const ResourceViewId&     ViewId,
             RHI::CpuDescriptorHandle* CpuHandle = nullptr,
             RHI::GpuDescriptorHandle* GpuHandle = nullptr) const;
+
+    public:
+        /// <summary>
+        /// Map global frame data to system memory
+        /// </summary>
+        [[nodiscard]] CameraFrameData& MapFrameData() const;
+
+        /// <summary>
+        /// Unmap global frame data from system memory
+        /// </summary>
+        void UnmapFrameData() const;
+
+        /// <summary>
+        /// Get global frame data
+        /// </summary>
+        RHI::GpuResourceHandle GetFrameDataHandle() const;
 
     public:
         // TODO: Add sampler
@@ -132,6 +152,12 @@ namespace Neon::RG
             ResourceHandle& Handle);
 
     private:
+        /// <summary>
+        /// The graphics buffer of the camera.
+        /// Structured as CameraFrameData.
+        /// </summary>
+        Ptr<RHI::IUploadBuffer> m_CameraFrameData;
+
         ResourceMapType          m_Resources;
         std::set<ResourceId>     m_ImportedResources;
         InactiveResourceListType m_InactiveResources;

@@ -8,7 +8,8 @@ namespace Neon::RG
     class DebugPass : public IRenderPass
     {
     public:
-        DebugPass();
+        DebugPass(
+            ResourceId DrawTarget);
 
     protected:
         void ResolveResources(
@@ -19,5 +20,6 @@ namespace Neon::RG
             RHI::ICommandList*  CommandList) override;
 
     private:
+        ResourceId m_DrawTarget;
     };
 } // namespace Neon::RG

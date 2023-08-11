@@ -18,6 +18,7 @@ namespace Neon::RG
         ResourceResolver(
             GraphStorage& Storage);
 
+    public:
         /// <summary>
         /// Create buffer
         /// </summary>
@@ -159,6 +160,11 @@ namespace Neon::RG
         /// Get swapchain's format
         /// </summary>
         [[nodiscard]] static RHI::EResourceFormat GetSwapchainFormat();
+
+        /// <summary>
+        /// Get output image id
+        /// </summary>
+        [[nodiscard]] static ResourceId GetOutputImage();
 
     private:
         /// <summary>

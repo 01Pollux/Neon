@@ -11,29 +11,8 @@ namespace Neon::RG
     class RenderGraph;
 } // namespace Neon::RG
 
-namespace Neon::RHI
-{
-    class IUploadBuffer;
-} // namespace Neon::RHI
-
 namespace Neon::Scene::Component
 {
-    struct CameraFrameData
-    {
-        alignas(16) Matrix4x4 World;
-
-        alignas(16) Matrix4x4 View;
-        alignas(16) Matrix4x4 Projection;
-        alignas(16) Matrix4x4 ViewProjection;
-
-        alignas(16) Matrix4x4 ViewInverse;
-        alignas(16) Matrix4x4 ProjectionInverse;
-        alignas(16) Matrix4x4 ViewProjectionInverse;
-
-        float EngineTime;
-        float GameTime;
-        float DeltaTime;
-    };
 
     enum class CameraType : uint8_t
     {
@@ -104,8 +83,7 @@ namespace Neon::Scene::Component
 
         Camera();
         Camera(
-            UPtr<RG::RenderGraph> RenderGraph,
-            CameraType            Type);
+            CameraType Type);
 
         NEON_CLASS_NO_COPY(Camera);
         NEON_CLASS_MOVE_DECL(Camera);
@@ -131,10 +109,23 @@ namespace Neon::Scene::Component
 
         NEON_EXPORT_COMPONENT();
 
+    private:
         /// <summary>
         /// The render graph of the camera.
         /// </summary>
         UPtr<RG::RenderGraph> RenderGraph;
+
+    public:
+        /// <summary>
+        /// Create a new render graph for the camera.
+        /// </summary>
+        RG::RenderGraph* NewRenderGraph(
+            const flecs::entity& OwningEntity);
+
+        /// <summary>
+        /// Get the render graph of the camera.
+        /// </summary>
+        RG::RenderGraph* GetRenderGraph();
 
         /// <summary>
         /// The viewport of the camera.
@@ -160,14 +151,6 @@ namespace Neon::Scene::Component
         /// The type of the camera.
         /// </summary>
         CameraType Type = CameraType::Perspective;
-
-        //
-
-        /// <summary>
-        /// The graphics buffer of the camera.
-        /// Structured as CameraFrameData.
-        /// </summary>
-        Ptr<RHI::IUploadBuffer> GraphicsBuffer;
     };
 
     struct MainCamera

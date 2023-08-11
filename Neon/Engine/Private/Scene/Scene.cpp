@@ -108,9 +108,9 @@ namespace Neon::Scene
                     Camera.Viewport.Height = float(Size.Height());
                 }
 
-                if (Camera.RenderGraph)
+                if (auto RenderGraph = Camera.GetRenderGraph())
                 {
-                    Camera.RenderGraph->Run(Camera.GraphicsBuffer->GetHandle(), MainCamera->Target == Entity);
+                    RenderGraph->Run(MainCamera->Target == Entity);
                 }
             });
     }

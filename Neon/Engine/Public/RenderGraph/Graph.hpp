@@ -1,5 +1,7 @@
 #pragma once
 
+#include <flecs/flecs.h>
+
 #include <RenderGraph/Storage.hpp>
 #include <RenderGraph/Pass.hpp>
 #include <RenderGraph/BackBuffer.hpp>
@@ -68,6 +70,9 @@ namespace Neon::RG
         };
 
     public:
+        RenderGraph(
+            flecs::entity CameraEntity);
+
         /// <summary>
         /// Reset resource graph for recording
         /// </summary>
@@ -87,8 +92,7 @@ namespace Neon::RG
         /// Run the graph
         /// </summary>
         void Run(
-            RHI::GpuResourceHandle CameraBuffer,
-            bool                   CopyToBackBuffer);
+            bool CopyToBackBuffer);
 
     private:
         /// <summary>
@@ -99,13 +103,13 @@ namespace Neon::RG
             DepdencyLevelList&& Levels);
 
         /// <summary>
-        /// Submit to back buffer by copying the output image aswell as the debug overlay
+        /// Update camera buffer
         /// </summary>
-        void SubmitToBackBuffer(
-            RHI::ICommonCommandList* CommandList,
-            RHI::GpuResourceHandle   CameraBuffer);
+        [[nodiscard]] bool UpdateCameraBuffer();
 
     private:
+        flecs::entity m_CameraEntity;
+
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
 

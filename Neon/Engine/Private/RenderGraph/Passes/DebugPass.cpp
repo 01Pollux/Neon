@@ -1,5 +1,4 @@
 #include <EnginePCH.hpp>
-#include <Runtime/GameEngine.hpp>
 #include <Runtime/DebugOverlay.hpp>
 
 #include <RenderGraph/RG.hpp>
@@ -7,10 +6,10 @@
 
 namespace Neon::RG
 {
-    using namespace Scene;
-
-    DebugPass::DebugPass() :
-        IRenderPass(STR("DebugPass"), PassQueueType::Direct)
+    DebugPass::DebugPass(
+        ResourceId DrawTarget) :
+        IRenderPass(STR("DebugPass"), PassQueueType::Direct),
+        m_DrawTarget(std::move(DrawTarget))
     {
     }
 
@@ -18,7 +17,7 @@ namespace Neon::RG
         ResourceResolver& Resolver)
     {
         Resolver.WriteRenderTarget(
-            RG::ResourceViewId(STR("GBufferAlbedo"), STR("DebugPass")),
+            m_DrawTarget.CreateView(STR("DebugPass")),
             RHI::RTVDesc{
                 .ClearType = RHI::ERTClearType::Ignore });
     }
@@ -26,10 +25,10 @@ namespace Neon::RG
     void DebugPass::Dispatch(
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
-    { /*
-         Runtime::DebugOverlay::Render(
-             dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
-
-         );*/
+    {
+        return;
+        Runtime::DebugOverlay::Render(
+            dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
+            Storage.GetFrameDataHandle());
     }
 } // namespace Neon::RG
