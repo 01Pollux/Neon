@@ -15,6 +15,22 @@ namespace Neon::Runtime
     class DebugOverlay
     {
     public:
+        struct LineArgs
+        {
+            Vector3  StartPosition;
+            Color4U8 StartColor;
+            Vector3  EndPosition;
+            Color4U8 EndColor;
+        };
+
+        struct CubeArgs
+        {
+            Vector3  CenterPosition;
+            Color4U8 Color;
+            Vector3  Size;
+        };
+
+    public:
         NEON_M_NODIST(static void Create());
         NEON_M_NODIST(static void Destroy());
 
@@ -60,14 +76,24 @@ namespace Neon::Runtime
         /// Draw a line in world space.
         /// </summary>
         static void DrawLine(
-            const Vector3& StartPosition,
-            const Vector3& EndPosition,
-            const Color4&  StartColor,
-            const Color4&  EndColor,
-            bool           WorldsSpace = true)
+            const LineArgs& Args,
+            bool            WorldsSpace = true)
         {
 #ifndef NEON_DIST
-            s_DebugOverlay->DrawLine_Impl(StartPosition, EndPosition, StartColor, EndColor, WorldsSpace);
+            s_DebugOverlay->DrawLine_Impl(Args, WorldsSpace);
+#endif
+        }
+
+        /// <summary>
+        /// Draw a line in world space.
+        /// </summary>
+        static void DrawLine(
+            float           Duration,
+            const LineArgs& Args,
+            bool            WorldsSpace = true)
+        {
+#ifndef NEON_DIST
+            s_DebugOverlay->DrawLine_Impl(Duration, Args, WorldsSpace);
 #endif
         }
 
@@ -75,15 +101,34 @@ namespace Neon::Runtime
         /// Draw a cuboid line in world space.
         /// </summary>
         static void DrawCuboidLine(
-            const Vector3& CenterPosition,
-            const Vector3& Size,
-            const Color4&  Color,
-            bool           WorldsSpace = true)
+            const CubeArgs& Args,
+            bool            WorldsSpace = true)
         {
 #ifndef NEON_DIST
-            s_DebugOverlay->DrawCuboidLine_Impl(CenterPosition, Size, Color, WorldsSpace);
+            s_DebugOverlay->DrawCuboidLine_Impl(-1.f, Args, WorldsSpace);
 #endif
         }
+
+        /// <summary>
+        /// Draw a cuboid line in world space.
+        /// </summary>
+        static void DrawCuboidLine(
+            float           Duration,
+            const CubeArgs& Args,
+            bool            WorldsSpace = true)
+        {
+#ifndef NEON_DIST
+            s_DebugOverlay->DrawCuboidLine_Impl(Duration, Args, WorldsSpace);
+#endif
+        }
+
+    private:
+#ifndef NEON_DIST
+        void DrawCuboidLine_Impl(
+            float           Duration,
+            const CubeArgs& Args,
+            bool            WorldsSpace);
+#endif
 
     protected:
         NEON_M_NODIST_PV(bool ShouldRender_Impl());
@@ -95,17 +140,13 @@ namespace Neon::Runtime
             RHI::GpuResourceHandle     PerFrameData));
 
         NEON_M_NODIST_PV(void DrawLine_Impl(
-            const Vector3& StartPosition,
-            const Vector3& EndPosition,
-            const Color4&  StartColor,
-            const Color4&  EndColor,
-            bool           WorldsSpace));
+            const LineArgs& Args,
+            bool            WorldsSpace));
 
-        NEON_M_NODIST_PV(void DrawCuboidLine_Impl(
-            const Vector3& CenterPosition,
-            const Vector3& Size,
-            const Color4&  Color,
-            bool           WorldsSpace));
+        NEON_M_NODIST_PV(void DrawLine_Impl(
+            float           Duration,
+            const LineArgs& Args,
+            bool            WorldsSpace));
 
     private:
 #ifndef NEON_DIST

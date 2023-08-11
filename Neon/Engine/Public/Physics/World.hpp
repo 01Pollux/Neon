@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Physics/Bullet3.hpp>
+#include <Physics/Debug.hpp>
 
 #include <Bullet3/btBulletCollisionCommon.h>
 #include <Bullet3/btBulletDynamicsCommon.h>
@@ -110,6 +111,9 @@ namespace Neon::Physics
             btScalar         DeltaTimeStep);
 
     private:
+#ifndef NEON_DEBUG
+        BulletPhysicsDebugDraw m_DebugDrawer;
+#endif
         btSoftBodyRigidBodyCollisionConfiguration m_CollisionConfiguration;
         btCollisionDispatcher                     m_Dispatcher;
         btDbvtBroadphase                          m_Broadphase;

@@ -14,6 +14,10 @@ namespace Neon::Physics
     {
         m_DynamicsWorld.setGravity(btVector3(0.0f, -9.8f, 0.0f));
         m_DynamicsWorld.setInternalTickCallback(&WorldPostTickCallback, this, false);
+
+#ifndef NEON_DEBUG
+        m_DynamicsWorld.setDebugDrawer(&m_DebugDrawer);
+#endif
     }
 
     World::~World()

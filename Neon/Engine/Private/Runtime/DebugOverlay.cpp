@@ -2,7 +2,9 @@
 
 #ifndef NEON_DIST
 
+#include <Runtime/GameEngine.hpp>
 #include <Runtime/DebugOverlay.hpp>
+
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
 
@@ -46,7 +48,8 @@ namespace Neon::Runtime
         {
             Ptr<Renderer::IMaterial> Material;
 
-            std::vector<UPtr<RHI::IUploadBuffer>> VertexBuffers;
+            std::multimap<float, std::pair<LineArgs, bool>> m_TimedLines;
+            std::vector<UPtr<RHI::IUploadBuffer>>           VertexBuffers;
 
             Overlay_Debug_Line::Vertex* VertexBufferPtr = nullptr;
             uint32_t                    DrawCount       = 0;
@@ -60,11 +63,13 @@ namespace Neon::Runtime
                 RHI::GpuResourceHandle     PerFrameData);
 
             void Append(
-                const Vector3& StartPosition,
-                const Vector3& EndPosition,
-                const Color4&  StartColor,
-                const Color4&  EndColor,
-                bool           WorldsSpace);
+                const LineArgs& Args,
+                bool            WorldsSpace);
+
+            void Append(
+                float           Duration,
+                const LineArgs& Args,
+                bool            WorldsSpace);
 
             void Reset();
         };
@@ -79,17 +84,13 @@ namespace Neon::Runtime
             RHI::GpuResourceHandle     PerFrameData) override;
 
         void DrawLine_Impl(
-            const Vector3& StartPosition,
-            const Vector3& EndPosition,
-            const Color4&  StartColor,
-            const Color4&  EndColor,
-            bool           WorldsSpace) override;
+            const LineArgs& Args,
+            bool            WorldsSpace) override;
 
-        void DrawCuboidLine_Impl(
-            const Vector3& CenterPosition,
-            const Vector3& Size,
-            const Color4&  Color,
-            bool           WorldsSpace) override;
+        void DrawLine_Impl(
+            float           Duration,
+            const LineArgs& Args,
+            bool            WorldsSpace) override;
 
     private:
         Overlay_Debug_LineBuffer m_LineBuffer;
@@ -108,42 +109,12 @@ namespace Neon::Runtime
         s_DebugOverlay = nullptr;
     }
 
-    //
-
-    bool DefaultEngineDebugOverlay::ShouldRender_Impl()
+    void DebugOverlay::DrawCuboidLine_Impl(
+        float           Duration,
+        const CubeArgs& Args,
+        bool            WorldsSpace)
     {
-        return m_LineBuffer.ShouldDraw();
-    }
-
-    void DefaultEngineDebugOverlay::Reset_Impl()
-    {
-        m_LineBuffer.Reset();
-    }
-
-    void DefaultEngineDebugOverlay::Render_Impl(
-        RHI::IGraphicsCommandList* CommandList,
-        RHI::GpuResourceHandle     PerFrameData)
-    {
-        m_LineBuffer.Flush(CommandList, PerFrameData);
-    }
-
-    void DefaultEngineDebugOverlay::DrawLine_Impl(
-        const Vector3& StartPosition,
-        const Vector3& EndPosition,
-        const Color4&  StartColor,
-        const Color4&  EndColor,
-        bool           WorldsSpace)
-    {
-        m_LineBuffer.Append(StartPosition, EndPosition, StartColor, EndColor, WorldsSpace);
-    }
-
-    void DefaultEngineDebugOverlay::DrawCuboidLine_Impl(
-        const Vector3& CenterPosition,
-        const Vector3& Size,
-        const Color4&  Color,
-        bool           WorldsSpace)
-    {
-        const Vector3 HalfSize = Size / 2.f;
+        const Vector3 HalfSize = Args.Size / 2.f;
 
         /*
         X: center
@@ -153,14 +124,14 @@ namespace Neon::Runtime
         <----------> == half size
         */
         const Vector3 Positions[]{
-            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z }, // 0 -- back -- top left
-            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z - HalfSize.z }, // 1 -- back -- top right
-            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z }, // 2 -- back -- bottom right
-            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z - HalfSize.z }, // 3 -- back -- bottom left
-            { CenterPosition.x - HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z }, // 4 -- front -- top left
-            { CenterPosition.x + HalfSize.x, CenterPosition.y + HalfSize.y, CenterPosition.z + HalfSize.z }, // 5 -- front -- top right
-            { CenterPosition.x + HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z }, // 6 -- front -- bottom right
-            { CenterPosition.x - HalfSize.x, CenterPosition.y - HalfSize.y, CenterPosition.z + HalfSize.z }  // 7 -- front -- bottom left
+            { Args.CenterPosition.x - HalfSize.x, Args.CenterPosition.y + HalfSize.y, Args.CenterPosition.z - HalfSize.z }, // 0 -- back -- top left
+            { Args.CenterPosition.x + HalfSize.x, Args.CenterPosition.y + HalfSize.y, Args.CenterPosition.z - HalfSize.z }, // 1 -- back -- top right
+            { Args.CenterPosition.x + HalfSize.x, Args.CenterPosition.y - HalfSize.y, Args.CenterPosition.z - HalfSize.z }, // 2 -- back -- bottom right
+            { Args.CenterPosition.x - HalfSize.x, Args.CenterPosition.y - HalfSize.y, Args.CenterPosition.z - HalfSize.z }, // 3 -- back -- bottom left
+            { Args.CenterPosition.x - HalfSize.x, Args.CenterPosition.y + HalfSize.y, Args.CenterPosition.z + HalfSize.z }, // 4 -- front -- top left
+            { Args.CenterPosition.x + HalfSize.x, Args.CenterPosition.y + HalfSize.y, Args.CenterPosition.z + HalfSize.z }, // 5 -- front -- top right
+            { Args.CenterPosition.x + HalfSize.x, Args.CenterPosition.y - HalfSize.y, Args.CenterPosition.z + HalfSize.z }, // 6 -- front -- bottom right
+            { Args.CenterPosition.x - HalfSize.x, Args.CenterPosition.y - HalfSize.y, Args.CenterPosition.z + HalfSize.z }  // 7 -- front -- bottom left
         };
 
         constexpr uint8_t Indices[]{
@@ -185,8 +156,45 @@ namespace Neon::Runtime
             const Vector3& P1 = Positions[Indices[i]];
             const Vector3& P2 = Positions[Indices[i + 1]];
 
-            m_LineBuffer.Append(P1, P2, Color, Color, WorldsSpace);
+            if (Duration < 0.f)
+                DrawLine_Impl({ P1, Args.Color, P2, Args.Color }, WorldsSpace);
+            else
+                DrawLine_Impl(Duration, { P1, Args.Color, P2, Args.Color }, WorldsSpace);
         }
+    }
+
+    //
+
+    bool DefaultEngineDebugOverlay::ShouldRender_Impl()
+    {
+        return m_LineBuffer.ShouldDraw();
+    }
+
+    void DefaultEngineDebugOverlay::Reset_Impl()
+    {
+        m_LineBuffer.Reset();
+    }
+
+    void DefaultEngineDebugOverlay::Render_Impl(
+        RHI::IGraphicsCommandList* CommandList,
+        RHI::GpuResourceHandle     PerFrameData)
+    {
+        m_LineBuffer.Flush(CommandList, PerFrameData);
+    }
+
+    void DefaultEngineDebugOverlay::DrawLine_Impl(
+        const LineArgs& Args,
+        bool            WorldsSpace)
+    {
+        m_LineBuffer.Append(Args, WorldsSpace);
+    }
+
+    void DefaultEngineDebugOverlay::DrawLine_Impl(
+        float           Duration,
+        const LineArgs& Args,
+        bool            WorldsSpace)
+    {
+        m_LineBuffer.Append(Duration, Args, WorldsSpace);
     }
 
     //
@@ -226,13 +234,29 @@ namespace Neon::Runtime
 
     bool DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::ShouldDraw() const
     {
-        return !VertexBuffers.empty();
+        return !VertexBuffers.empty() || !m_TimedLines.empty();
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Flush(
         RHI::IGraphicsCommandList* CommandList,
         RHI::GpuResourceHandle     PerFrameData)
     {
+        // Remove any expired lines from the timed line buffer
+        if (!m_TimedLines.empty())
+        {
+            float GameTime = float(DefaultGameEngine::Get()->GetEngineTime());
+            auto  Iter     = m_TimedLines.upper_bound(GameTime);
+            if (Iter != m_TimedLines.begin())
+            {
+                m_TimedLines.erase(m_TimedLines.begin(), Iter);
+            }
+            for (auto& [Args, WorldsSpace] : m_TimedLines |
+                                                 std::views::values)
+            {
+                Append(Args, WorldsSpace);
+            }
+        }
+
         if (!ShouldDraw())
         {
             return;
@@ -257,11 +281,8 @@ namespace Neon::Runtime
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Append(
-        const Vector3& StartPosition,
-        const Vector3& EndPosition,
-        const Color4&  StartColor,
-        const Color4&  EndColor,
-        bool           WorldsSpace)
+        const LineArgs& Args,
+        bool            WorldsSpace)
     {
         if (DrawCount >= Overlay_Debug_Line::MaxVertices || VertexBuffers.empty()) [[unlikely]]
         {
@@ -276,13 +297,21 @@ namespace Neon::Runtime
         auto CurVertex = VertexBufferPtr + DrawCount;
         DrawCount += Overlay_Debug_Line::VerticesCount;
 
-        CurVertex[0].Position        = StartPosition;
-        CurVertex[0].Color           = (StartColor * 255.f);
+        CurVertex[0].Position        = Args.StartPosition;
+        CurVertex[0].Color           = Args.StartColor;
         CurVertex[0].NeedsProjection = WorldsSpace;
 
-        CurVertex[1].Position        = EndPosition;
-        CurVertex[1].Color           = (EndColor * 255.f);
+        CurVertex[1].Position        = Args.EndPosition;
+        CurVertex[1].Color           = Args.EndColor;
         CurVertex[1].NeedsProjection = WorldsSpace;
+    }
+
+    void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Append(
+        float           Duration,
+        const LineArgs& Args,
+        bool            WorldsSpace)
+    {
+        m_TimedLines.emplace(float(DefaultGameEngine::Get()->GetEngineTime() + Duration), std::make_pair(Args, WorldsSpace));
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Reset()

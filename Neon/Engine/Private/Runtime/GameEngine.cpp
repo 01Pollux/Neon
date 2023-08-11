@@ -66,7 +66,7 @@ namespace Neon::Runtime
             m_Window->ProcessInputs();
             if (m_GameTimer.Tick())
             {
-                Runtime::DebugOverlay::Flush();
+                Runtime::DebugOverlay::Reset();
                 auto IsScreenVisible = GetWindow()->IsVisible();
 
                 m_Scene->Update();
