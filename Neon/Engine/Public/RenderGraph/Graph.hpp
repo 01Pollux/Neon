@@ -22,6 +22,49 @@ namespace Neon::RG
         using RenderCommandContext  = RHI::TCommandContext<RHI::CommandQueueType::Graphics>;
         using ComputeCommandContext = RHI::TCommandContext<RHI::CommandQueueType::Compute>;
 
+        struct ChainedCommandList
+        {
+            RHI::ICommonCommandList* CommandList = nullptr;
+            bool                     IsDirect    = false;
+
+            RenderCommandContext  RenderContext;
+            ComputeCommandContext ComputeContext;
+
+            template<bool _IsDirect>
+            [[nodiscard]] auto NewCommandList()
+            {
+                if constexpr (_IsDirect)
+                {
+                    return RenderContext.Append();
+                }
+                else
+                {
+                    return ComputeContext.Append();
+                }
+            }
+
+            /// <summary>
+            /// Get the previously available command list or append new one
+            /// </summary>
+            [[nodiscard]] RHI::ICommonCommandList* Load();
+
+            /// <summary>
+            /// Prepare the command list for recording
+            /// </summary>
+            [[nodiscard]] void Preload(
+                bool IsDirect);
+
+            /// <summary>
+            /// Flush the command list to the queue
+            /// </summary>
+            void Flush();
+
+            /// <summary>
+            /// Flush if there are more than 2 command lists, else delay for next execution
+            /// </summary>
+            void FlushOrDelay();
+        };
+
     public:
         /// <summary>
         /// Reset resource graph for recording
@@ -97,23 +140,20 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            RenderGraph::RenderCommandContext&  RenderContext,
-            RenderGraph::ComputeCommandContext& ComputeContext) const;
+            RenderGraph::ChainedCommandList& ChainedCommandList) const;
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
         void ExecuteBarriers(
-            RenderGraph::RenderCommandContext&  RenderContext,
-            RenderGraph::ComputeCommandContext& ComputeContext) const;
+            RenderGraph::ChainedCommandList& ChainedCommandList) const;
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            RenderGraph::RenderCommandContext&  RenderContext,
-            RenderGraph::ComputeCommandContext& ComputeContext) const;
+            RenderGraph::ChainedCommandList& ChainedCommandList) const;
 
     private:
         struct RenderPassInfo
