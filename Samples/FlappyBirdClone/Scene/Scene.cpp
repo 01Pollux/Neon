@@ -32,6 +32,8 @@ void FlappyBirdClone::LoadScene()
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
 
+    Scene.GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
+
     // Stress test: Create 200'000 sprites
     if (0)
     {
@@ -76,8 +78,6 @@ void FlappyBirdClone::LoadScene()
             }
         }
     }
-
-    GetScene().GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
 
     // Floor and ceiling as sprite
     {
@@ -230,6 +230,7 @@ void FlappyBirdClone::LoadScene()
 
             m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
             m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
+            m_RigidBody->setCustomDebugColor(Physics::ToBullet3<>(Colors::Red));
 
             m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
         }

@@ -14,7 +14,7 @@ namespace Neon::Physics
         const btVector3& To,
         const btVector3& Color)
     {
-        Color4 RgbaColor(Color.getX(), Color.getY(), Color.getZ(), 1.0f);
+        Color4U8 RgbaColor(Color.getX() * 255.f, Color.getY() * 255.f, Color.getZ() * 255.f, 255);
         Runtime::DebugOverlay::DrawLine(
             Runtime::DebugOverlay::LineArgs{
                 .StartPosition = FromBullet3<true>(From),
@@ -30,7 +30,7 @@ namespace Neon::Physics
         int              LifeTime,
         const btVector3& Color)
     {
-        Color4 RgbaColor(Color.getX(), Color.getY(), Color.getZ(), 1.0f);
+        Color4U8 RgbaColor(Color.getX() * 255.f, Color.getY() * 255.f, Color.getZ() * 255.f, 255);
         Runtime::DebugOverlay::DrawLine(
             float(LifeTime),
             Runtime::DebugOverlay::LineArgs{
