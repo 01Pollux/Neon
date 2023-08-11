@@ -10,7 +10,7 @@ namespace Neon::RG
     using namespace Scene;
 
     DebugPass::DebugPass() :
-        IRenderPass("DebugPass", PassQueueType::Direct)
+        IRenderPass(STR("DebugPass"), PassQueueType::Direct)
     {
     }
 

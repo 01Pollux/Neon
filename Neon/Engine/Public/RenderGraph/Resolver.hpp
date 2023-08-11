@@ -47,21 +47,21 @@ namespace Neon::RG
         /// Write resource view
         /// RawView indicates that the resource is used as raw buffer and no descriptor will be created
         /// </summary>
-        ResourceViewId WriteResource(
+        const ResourceViewId& WriteResource(
             const ResourceViewId&          ViewId,
             const RHI::DescriptorViewDesc& Desc);
 
         /// <summary>
         /// Write resource in copy operation
         /// </summary>
-        ResourceViewId WriteDstResource(
+        const ResourceViewId& WriteDstResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
         /// Write resource as cbv
         /// 0 offset and size means whole buffer
         /// </summary>
-        ResourceViewId WriteBuffer(
+        const ResourceViewId& WriteBuffer(
             const ResourceViewId& ViewId,
             size_t                Offset = 0,
             size_t                Size   = 0)
@@ -74,7 +74,7 @@ namespace Neon::RG
         /// <summary>
         /// Write resource as uav
         /// </summary>
-        ResourceViewId WriteResource(
+        const ResourceViewId& WriteResource(
             const ResourceViewId&       ViewId,
             std::optional<RHI::UAVDesc> Desc = std::nullopt)
         {
@@ -84,7 +84,7 @@ namespace Neon::RG
         /// <summary>
         /// Write resource as renter target
         /// </summary>
-        ResourceViewId WriteRenderTarget(
+        const ResourceViewId& WriteRenderTarget(
             const ResourceViewId&       ViewId,
             std::optional<RHI::RTVDesc> Desc = std::nullopt)
         {
@@ -94,7 +94,7 @@ namespace Neon::RG
         /// <summary>
         /// Write resource as renter target
         /// </summary>
-        ResourceViewId WriteDepthStencil(
+        const ResourceViewId& WriteDepthStencil(
             const ResourceViewId&       ViewId,
             std::optional<RHI::DSVDesc> Desc = std::nullopt)
         {
@@ -105,7 +105,7 @@ namespace Neon::RG
         /// <summary>
         /// Read resource view
         /// </summary>
-        ResourceViewId ReadResource(
+        const ResourceViewId& ReadResource(
             const ResourceViewId&          ViewId,
             ResourceReadAccess             ReadAccess,
             const RHI::DescriptorViewDesc& Desc);
@@ -113,13 +113,13 @@ namespace Neon::RG
         /// <summary>
         /// Read resource in copy operation
         /// </summary>
-        ResourceViewId ReadSrcResource(
+        const ResourceViewId& ReadSrcResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
         /// Write resource as uav
         /// </summary>
-        ResourceViewId ReadTexture(
+        const ResourceViewId& ReadTexture(
             const ResourceViewId&       ViewId,
             ResourceReadAccess          ReadAccess,
             std::optional<RHI::SRVDesc> Desc = std::nullopt)
@@ -130,7 +130,7 @@ namespace Neon::RG
         /// <summary>
         /// Write resource as renter target
         /// </summary>
-        ResourceViewId ReadDepthStencil(
+        const ResourceViewId& ReadDepthStencil(
             const ResourceViewId&       ViewId,
             ResourceReadAccess          ReadAccess,
             std::optional<RHI::DSVDesc> Desc = std::nullopt)
@@ -165,9 +165,9 @@ namespace Neon::RG
         /// Initialize resource to the default state
         /// </summary>
         void SetResourceState(
-            const ResourceViewId& ViewId,
-            RHI::MResourceState   State,
-            RHI::MResourceFlags   Flags);
+            const ResourceViewId&      ViewId,
+            const RHI::MResourceState& State,
+            const RHI::MResourceFlags& Flags);
 
     private:
         GraphStorage& m_Storage;

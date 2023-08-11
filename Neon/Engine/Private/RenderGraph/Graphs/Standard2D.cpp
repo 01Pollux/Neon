@@ -3,6 +3,7 @@
 
 #include <RenderGraph/Passes/GBufferPass.hpp>
 #include <RenderGraph/Passes/DebugPass.hpp>
+#include <RenderGraph/Passes/CopyToTexture.hpp>
 
 //
 
@@ -12,16 +13,23 @@
 
 namespace Neon::RG
 {
-    UPtr<RG::RenderGraph> CreateStandard2DRenderGraph(
+    UPtr<RenderGraph> CreateStandard2DRenderGraph(
         flecs::entity Camera)
     {
         auto Graph   = std::make_unique<RenderGraph>();
         auto Builder = Graph->Reset();
 
-        auto& GBufferPass = Builder.AddPass<RG::GBufferPass>(Camera);
+        auto& GBuffer = Builder.AddPass<GBufferPass>(Camera);
         {
-            GBufferPass.AttachRenderer<Renderer::SpriteRenderer>();
+            GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
         }
+
+        Builder.AddPass<CopyToTexturePass>(
+            CopyToTexturePass::CopyToTextureData{
+                .ViewName    = STR("CopyToOutputImage"),
+                .Source      = ResourceId(STR("GBufferAlbedo")),
+                .Destination = ResourceId(STR("OutputImage")),
+                .Blend       = CopyToTexturePass::BlendMode::Opaque });
 
 #ifndef NEON_DIST
         // Builder.AddPass<RG::DebugPass>();

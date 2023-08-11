@@ -37,7 +37,7 @@ namespace Neon::Renderer
             "g_FrameData",
             m_CameraBuffer);
 
-        m_MaterialInstances.Bind(m_CommandList);
+        m_MaterialInstances.Apply(m_CommandList);
     }
 
     void SpriteBatcher::OnReset()

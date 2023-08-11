@@ -11,10 +11,9 @@ NEON_MAIN(Argc, Argv)
             .Title      = STR("Flappy Bird"),
             .Windowed   = true,
             .Fullscreen = false },
-        //.Renderer{ .Device = { .EnableGPUDebugger = false } }
-        .Renderer{ /* .Device = { .EnableDebugLayer = false },*/ .Swapchain = { .VSync = false } }
-        //.Renderer{ .Device = { .EnableGpuBasedValidation = true } }
     };
+
+    // Config.Renderer.Device.EnableGpuBasedValidation   = true;
     Config.Renderer.Device.Descriptors.Frame_Resource = 262'144;
     Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
     return RunEngine<FlappyBirdClone>(std::move(Config));

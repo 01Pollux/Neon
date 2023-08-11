@@ -14,7 +14,7 @@ namespace Neon::RG
 
     GBufferPass::GBufferPass(
         flecs::entity Camera) :
-        IRenderPass("GBufferPass", PassQueueType::Direct),
+        IRenderPass(STR("GBufferPass"), PassQueueType::Direct),
         m_Camera(Camera)
     {
     }
@@ -91,8 +91,7 @@ namespace Neon::RG
             CameraBufferId,
             RHI::BufferDesc{
                 .Size      = sizeof(Component::CameraFrameData),
-                .Alignment = 255,
-                .UsePool   = false },
+                .Alignment = 255 },
             RHI::GraphicsBufferType::Upload);
     }
 

@@ -13,50 +13,32 @@ namespace Neon::RHI
     class IRootSignature;
     class IGpuResource;
     class IDescriptorHeap;
+    class ICommandList;
 
-/// <summary>
-/// Rename a root signature.
-/// </summary>
-#if !NEON_DIST
-    void RenameObject(IRootSignature* Object, const wchar_t* Name);
-#else
-    inline void RenameObject(IRootSignature*, const wchar_t*)
-    {
-    }
-#endif
+    /// <summary>
+    /// Rename a root signature.
+    /// </summary>
+    NEON_M_NODIST(void RenameObject(IRootSignature* Object, const wchar_t* Name));
 
-/// <summary>
-/// Rename a root signature.
-/// </summary>
-#if !NEON_DIST
-    void RenameObject(IPipelineState* PipelienState, const wchar_t* Name);
-#else
-    inline void RenameObject(IPipelineState*, const wchar_t*)
-    {
-    }
-#endif
+    /// <summary>
+    /// Rename a pipeline state.
+    /// </summary>
+    NEON_M_NODIST(void RenameObject(IPipelineState* Object, const String& Name));
 
-/// <summary>
-/// Rename a GPU resource.
-/// </summary>
-#if !NEON_DIST
-    void RenameObject(IGpuResource* Object, const wchar_t* Name);
-#else
-    inline void RenameObject(IGpuResource*, const wchar_t*)
-    {
-    }
-#endif
+    /// <summary>
+    /// Rename a GPU resource.
+    /// </summary>
+    NEON_M_NODIST(void RenameObject(IGpuResource* Object, const String& Name));
 
-/// <summary>
-/// Rename a GPU resource.
-/// </summary>
-#if !NEON_DIST
-    void RenameObject(IDescriptorHeap* Heap, const wchar_t* Name);
-#else
-    inline void RenameObject(IDescriptorHeap*, const wchar_t*)
-    {
-    }
-#endif
+    /// <summary>
+    /// Rename a descriptor heap.
+    /// </summary>
+    NEON_M_NODIST(void RenameObject(IDescriptorHeap* Object, const String& Name));
+
+    /// <summary>
+    /// Rename a command list.
+    /// </summary>
+    NEON_M_NODIST(void RenameObject(ICommandList* Object, const String& Name));
 
     //
 

@@ -360,6 +360,14 @@ namespace Neon::Renderer
         return m_PipelineState;
     }
 
+    void Material::Apply(
+        RHI::ICommonCommandList* CommandList)
+    {
+        MaterialTable Table;
+        Table.Append(this);
+        Table.Apply(CommandList);
+    }
+
     void Material::ApplyAll(
         RHI::ICommonCommandList*         CommandList,
         std::span<uint32_t>              DescriptorOffsets,
@@ -367,6 +375,10 @@ namespace Neon::Renderer
         const RHI::DescriptorHeapHandle& SamplerDescriptor) const
     {
         auto& RootSignature = GetRootSignature();
+
+        // Bind root signature and pipeline state
+        CommandList->SetRootSignature(RootSignature);
+        CommandList->SetPipelineState(GetPipelineState());
 
         // We will start at 1 to correctly bind root indices, (first Param always start with 0, and keep incrementing)
         uint32_t LastRootIndex         = 1;
@@ -661,7 +673,7 @@ namespace Neon::Renderer
         return Iter->second;
     }
 
-    void MaterialTable::Bind(
+    void MaterialTable::Apply(
         RHI::ICommonCommandList* CommandList)
     {
         std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
@@ -724,12 +736,6 @@ namespace Neon::Renderer
 
         // All the materials shares the same root signature + pipeline state
         auto& RootSignature = FirstMaterial->GetRootSignature();
-
-        // Bind root signature and pipeline state
-        CommandList->SetRootSignature(RootSignature);
-        CommandList->SetPipelineState(FirstMaterial->GetPipelineState());
-
-        //
 
         DescriptorOffsets.reserve(RootSignature->GetParams().size());
         for (auto& Params = RootSignature->GetParams();

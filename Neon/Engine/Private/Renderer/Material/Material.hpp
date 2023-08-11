@@ -52,6 +52,9 @@ namespace Neon::Renderer
         RHI::IDescriptorHeap::CopyInfo GetDescriptorParam(
             const StringU8& ParamName) const override;
 
+        void Apply(
+            RHI::ICommonCommandList* CommandList) override;
+
         /// <summary>
         /// Apply all the material's resources.
         /// ResourceDescriptor and SamplerDescriptor are expected to hold the correct descriptors.

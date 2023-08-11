@@ -58,24 +58,29 @@ namespace Neon::RHI
     }
 
 #if !NEON_DIST
-    void RenameObject(IRootSignature* Object, const wchar_t* Name)
+    void RenameObject(IRootSignature* Object, const String& Name)
     {
-        RenameObject(static_cast<Dx12RootSignature*>(Object)->Get(), Name);
+        RenameObject(static_cast<Dx12RootSignature*>(Object)->Get(), Name.c_str());
     }
 
-    void RenameObject(IPipelineState* Object, const wchar_t* Name)
+    void RenameObject(IPipelineState* Object, const String& Name)
     {
-        RenameObject(static_cast<Dx12PipelineState*>(Object)->Get(), Name);
+        RenameObject(static_cast<Dx12PipelineState*>(Object)->Get(), Name.c_str());
     }
 
-    void RenameObject(IGpuResource* Object, const wchar_t* Name)
+    void RenameObject(IGpuResource* Object, const String& Name)
     {
-        RenameObject(dynamic_cast<Dx12GpuResource*>(Object)->GetResource(), Name);
+        RenameObject(dynamic_cast<Dx12GpuResource*>(Object)->GetResource(), Name.c_str());
     }
 
-    void RenameObject(IDescriptorHeap* Object, const wchar_t* Name)
+    void RenameObject(IDescriptorHeap* Object, const String& Name)
     {
-        RenameObject(dynamic_cast<Dx12DescriptorHeap*>(Object)->Get(), Name);
+        RenameObject(dynamic_cast<Dx12DescriptorHeap*>(Object)->Get(), Name.c_str());
+    }
+
+    void RenameObject(ICommandList* Object, const String& Name)
+    {
+        RenameObject(dynamic_cast<Dx12CommandList*>(Object)->Get(), Name.c_str());
     }
 #endif
 

@@ -7,6 +7,8 @@
 
 #include <Log/Logger.hpp>
 
+// #define NEON_RENDER_GRAPH_THREADED
+
 namespace Neon::RG
 {
     GraphBuilder RenderGraph::Reset()
@@ -35,17 +37,18 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
         {
-            // We will cache the command contexts to avoid submitting single command list per pass + barrier flush
-            ChainedCommandList ChainedCommandList;
+
+            RenderGraph::RenderCommandContext  RenderContext;
+            RenderGraph::ComputeCommandContext ComputeContext;
 
             for (auto& Level : m_Levels)
             {
-                Level.Execute(ChainedCommandList);
+                Level.Execute(RenderContext, ComputeContext);
             }
 
             if (CopyToBackBuffer)
             {
-                SubmitToBackBuffer(ChainedCommandList.Load(), CameraBuffer);
+                SubmitToBackBuffer(RenderContext.Append(), CameraBuffer);
             }
         }
         m_Storage.FlushResources();
@@ -119,7 +122,8 @@ namespace Neon::RG
     }
 
     void GraphDepdencyLevel::Execute(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -130,8 +134,8 @@ namespace Neon::RG
             Storage.CreateViews(Handle);
         }
 
-        ExecuteBarriers(ChainedCommandList);
-        ExecutePasses(ChainedCommandList);
+        ExecuteBarriers(RenderContext, ComputeContext);
+        ExecutePasses(RenderContext, ComputeContext);
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -141,7 +145,8 @@ namespace Neon::RG
     }
 
     void GraphDepdencyLevel::ExecuteBarriers(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
@@ -155,16 +160,17 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        StateManager->FlushBarriers(ChainedCommandList.Load());
+        StateManager->FlushBarriers();
     }
 
     //
 
     void GraphDepdencyLevel::ExecutePasses(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+        RenderGraph::RenderCommandContext&  RenderContext,
+        RenderGraph::ComputeCommandContext& ComputeContext) const
     {
         auto DispatchTask =
-            [this, &ChainedCommandList](
+            [this, &RenderContext, &ComputeContext](
                 size_t PassIndex,
                 bool   Threaded)
         {
@@ -178,14 +184,9 @@ namespace Neon::RG
             case PassQueueType::Direct:
             {
                 RHI::IGraphicsCommandList* RenderCommandList;
-                if (Threaded)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    RenderCommandList = ChainedCommandList.RenderContext.Append();
-                }
-                else
-                {
-                    RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(ChainedCommandList.Load());
+                    RenderCommandList = RenderContext.Append();
                 }
                 CommandList = RenderCommandList;
 
@@ -266,7 +267,7 @@ namespace Neon::RG
                             std::unreachable();
                         }
                     }
-                    else if (Desc.ClearValue)
+                    else if (ClearValue)
                     {
                         Depth   = ClearValue->Depth;
                         Stencil = ClearValue->Stencil;
@@ -305,93 +306,59 @@ namespace Neon::RG
 
             case PassQueueType::Compute:
             {
-                if (Threaded)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    CommandList = ChainedCommandList.RenderContext.Append();
-                }
-                else
-                {
-                    CommandList = ChainedCommandList.Load();
+                    CommandList = RenderContext.Append();
                 }
                 break;
             }
             }
 
+#ifndef NEON_DIST
+            RHI::RenameObject(CommandList, RenderPass->GetPassName());
+#endif
             RenderPass->Dispatch(Storage, CommandList);
         };
 
-        // If we have more than one pass, we need to synchronize them
-        // therefore we need to flush the chained command list we previously created
-        const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
-        const bool ShouldFlush = m_Passes.size() > 1 || (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect);
-        if (ShouldFlush)
-        {
-            ChainedCommandList.Flush();
-        }
-
         if (m_Passes.size())
         {
+#ifdef NEON_RENDER_GRAPH_THREADED
             std::vector<std::future<void>> Futures;
             Futures.reserve(m_Passes.size());
+#endif
 
             for (size_t i = 0; i < m_Passes.size(); i++)
             {
                 if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown ||
-                    m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
+                    m_Passes[i].Pass->GetPassFlags().Test(EPassFlags::Cull))
                 {
                     continue;
                 }
 
+#ifdef NEON_RENDER_GRAPH_THREADED
                 Futures.emplace_back(m_Context.m_ThreadPool.enqueue(DispatchTask, i, true));
+#else
+                DispatchTask(i, true);
+#endif
             }
 
+#ifdef NEON_RENDER_GRAPH_THREADED
             for (auto& Future : Futures)
             {
                 Future.get();
             }
-
-            ChainedCommandList.Flush();
+#endif
         }
         // Here we can just execute in the current thread rather than spawning a new one
         else
         {
-            if (!m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
+            if (m_Passes[0].Pass->GetQueueType() != PassQueueType::Unknown &&
+                !m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
             {
-                ChainedCommandList.Preload(IsDirect);
                 DispatchTask(0, false);
             }
         }
-    }
 
-    RHI::ICommonCommandList* RenderGraph::ChainedCommandList::Load()
-    {
-        if (CommandList) [[likely]]
-        {
-            return CommandList;
-        }
-
-        IsDirect           = true;
-        return CommandList = RenderContext.Append();
-    }
-
-    void RenderGraph::ChainedCommandList::Preload(
-        bool IsDirect)
-    {
-        if (IsDirect)
-        {
-            CommandList = RenderContext.Append();
-        }
-        else
-        {
-            CommandList = ComputeContext.Append();
-        }
-        this->IsDirect = IsDirect;
-    }
-
-    void RenderGraph::ChainedCommandList::Flush()
-    {
-        CommandList = nullptr;
         RenderContext.Upload();
         ComputeContext.Upload();
     }

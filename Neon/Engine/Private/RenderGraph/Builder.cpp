@@ -9,7 +9,7 @@ namespace Neon::RG
     {
     public:
         InitializeOutputImage() :
-            IRenderPass("InitializeOutputImage", PassQueueType::Unknown)
+            IRenderPass(STR("InitializeOutputImage"), PassQueueType::Unknown)
         {
         }
 

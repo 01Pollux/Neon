@@ -42,7 +42,7 @@ namespace Neon::RG
         CreateTexture(Id, Desc, std::move(Flags));
     }
 
-    ResourceViewId IRenderPass::ResourceResolver::WriteResource(
+    const ResourceViewId& IRenderPass::ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)
     {
@@ -90,7 +90,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    ResourceViewId IRenderPass::ResourceResolver::WriteDstResource(
+    const ResourceViewId& IRenderPass::ResourceResolver::WriteDstResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -102,7 +102,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    ResourceViewId IRenderPass::ResourceResolver::ReadResource(
+    const ResourceViewId& IRenderPass::ResourceResolver::ReadResource(
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
         const RHI::DescriptorViewDesc& Desc)
@@ -158,7 +158,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    ResourceViewId IRenderPass::ResourceResolver::ReadSrcResource(
+    const ResourceViewId& IRenderPass::ResourceResolver::ReadSrcResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -192,9 +192,9 @@ namespace Neon::RG
     }
 
     void IRenderPass::ResourceResolver::SetResourceState(
-        const ResourceViewId& ViewId,
-        RHI::MResourceState   State,
-        RHI::MResourceFlags   Flags)
+        const ResourceViewId&      ViewId,
+        const RHI::MResourceState& State,
+        const RHI::MResourceFlags& Flags)
     {
         auto& ResourceHandle = m_Storage.GetResourceMut(ViewId.GetResource());
         auto& ResourceDesc   = ResourceHandle.GetDesc();

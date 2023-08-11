@@ -22,44 +22,6 @@ namespace Neon::RG
         using RenderCommandContext  = RHI::TCommandContext<RHI::CommandQueueType::Graphics>;
         using ComputeCommandContext = RHI::TCommandContext<RHI::CommandQueueType::Compute>;
 
-        struct ChainedCommandList
-        {
-            RHI::ICommonCommandList* CommandList = nullptr;
-            bool                     IsDirect    = false;
-
-            RenderGraph::RenderCommandContext  RenderContext;
-            RenderGraph::ComputeCommandContext ComputeContext;
-
-            template<bool _IsDirect>
-            [[nodiscard]] auto NewCommandList()
-            {
-                if constexpr (_IsDirect)
-                {
-                    return RenderContext.Append();
-                }
-                else
-                {
-                    return ComputeContext.Append();
-                }
-            }
-
-            /// <summary>
-            /// Get the previously available command list or append new one
-            /// </summary>
-            [[nodiscard]] RHI::ICommonCommandList* Load();
-
-            /// <summary>
-            /// Prepare the command list for recording
-            /// </summary>
-            [[nodiscard]] void Preload(
-                bool IsDirect);
-
-            /// <summary>
-            /// Flush the command list to the queue
-            /// </summary>
-            void Flush();
-        };
-
     public:
         /// <summary>
         /// Reset resource graph for recording
@@ -135,20 +97,23 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
         void ExecuteBarriers(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
         /// <summary>
         /// Execute render passes
         /// </summary>
         void ExecutePasses(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+            RenderGraph::RenderCommandContext&  RenderContext,
+            RenderGraph::ComputeCommandContext& ComputeContext) const;
 
     private:
         struct RenderPassInfo

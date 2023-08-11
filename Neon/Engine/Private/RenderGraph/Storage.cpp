@@ -117,7 +117,7 @@ namespace Neon::RG
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Buffer, BufferType)).first->second.Get();
 #ifndef NEON_DIST
-        RHI::RenameObject(Handle.get(), Id.GetName().c_str());
+        RHI::RenameObject(Handle.get(), Id.GetName());
 #endif
 
         m_ImportedResources.emplace(Id);
@@ -131,7 +131,7 @@ namespace Neon::RG
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second.Get();
 #ifndef NEON_DIST
-        RHI::RenameObject(Handle.get(), Id.GetName().c_str());
+        RHI::RenameObject(Handle.get(), Id.GetName());
 #endif
         m_ImportedResources.emplace(Id);
     }
@@ -214,7 +214,7 @@ namespace Neon::RG
         }
 
 #ifndef NEON_DIST
-        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName().c_str());
+        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
 #endif
     }
 

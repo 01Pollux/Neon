@@ -44,6 +44,12 @@ namespace Neon::Renderer
             const StringU8& ParamName) const = 0;
 
         /// <summary>
+        /// Apply the material to the command list.
+        /// </summary>
+        virtual void Apply(
+            RHI::ICommonCommandList* CommandList) = 0;
+
+        /// <summary>
         /// Get the root signature.
         /// </summary>
         const Ptr<RHI::IRootSignature>& GetRootSignature() const noexcept;
@@ -205,7 +211,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Append a material to the table.
         /// </summary>
-        [[nodiscard]] uint32_t Append(
+        uint32_t Append(
             IMaterial* Material);
 
         /// <summary>
@@ -219,7 +225,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Bind the materials into the command list.
         /// </summary>
-        void Bind(
+        void Apply(
             RHI::ICommonCommandList* CommandList);
 
     private:
