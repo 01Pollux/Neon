@@ -37,7 +37,6 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
         {
-
             RenderGraph::RenderCommandContext  RenderContext;
             RenderGraph::ComputeCommandContext ComputeContext;
 
@@ -130,7 +129,7 @@ namespace Neon::RG
         for (auto& Id : m_ResourcesToCreate)
         {
             auto& Handle = Storage.GetResourceMut(Id);
-            Storage.RellocateResource(Handle);
+            Storage.ReallocateResource(Handle);
             Storage.CreateViews(Handle);
         }
 
@@ -234,6 +233,11 @@ namespace Neon::RG
                     std::optional<uint8_t> Stencil;
 
                     auto ClearValue = Desc.ClearValue ? std::get_if<RHI::ClearOperation::DepthStencil>(&Desc.ClearValue->Value) : nullptr;
+                    if (ClearValue)
+                    {
+                        Depth   = ClearValue->Depth;
+                        Stencil = ClearValue->Stencil;
+                    }
 
                     if (ViewDesc)
                     {
@@ -248,18 +252,34 @@ namespace Neon::RG
                         {
                         case RHI::EDSClearType::Depth:
                         {
-                            Depth = ViewDesc->ForceDepth ? *ViewDesc->ForceDepth : ClearValue->Depth;
+                            if (ViewDesc->ForceDepth)
+                            {
+                                Depth = *ViewDesc->ForceDepth;
+                            }
+
                             break;
                         }
                         case RHI::EDSClearType::Stencil:
                         {
-                            Stencil = ViewDesc->ForceStencil ? *ViewDesc->ForceStencil : ClearValue->Stencil;
+                            if (ViewDesc->ForceStencil)
+                            {
+                                Stencil = *ViewDesc->ForceStencil;
+                            }
+
                             break;
                         }
                         case RHI::EDSClearType::DepthStencil:
                         {
-                            Depth   = ViewDesc->ForceDepth ? *ViewDesc->ForceDepth : ClearValue->Depth;
-                            Stencil = ViewDesc->ForceStencil ? *ViewDesc->ForceStencil : ClearValue->Stencil;
+
+                            if (ViewDesc->ForceDepth)
+                            {
+                                Depth = *ViewDesc->ForceDepth;
+                            }
+                            if (ViewDesc->ForceStencil)
+                            {
+                                Stencil = *ViewDesc->ForceStencil;
+                            }
+
                             break;
                         }
 
@@ -267,11 +287,7 @@ namespace Neon::RG
                             std::unreachable();
                         }
                     }
-                    else if (ClearValue)
-                    {
-                        Depth   = ClearValue->Depth;
-                        Stencil = ClearValue->Stencil;
-                    }
+
 #if NEON_DEBUG
                     else
                     {

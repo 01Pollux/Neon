@@ -110,7 +110,7 @@ namespace Neon::RG
         /// <summary>
         /// Allocate resource from the pool
         /// </summary>
-        void RellocateResource(
+        void ReallocateResource(
             ResourceHandle& Handle);
 
         /// <summary>

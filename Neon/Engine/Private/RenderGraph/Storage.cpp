@@ -149,7 +149,7 @@ namespace Neon::RG
 
     //
 
-    void GraphStorage::RellocateResource(
+    void GraphStorage::ReallocateResource(
         ResourceHandle& Handle)
     {
         auto& Desc = Handle.GetDesc();

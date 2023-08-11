@@ -316,7 +316,7 @@ namespace Neon::RHI
         m_CommandList->OMSetRenderTargets(
             UINT(RenderTargetCount),
             Rtv.data(),
-            TRUE,
+            FALSE,
             DepthStencil ? &Dsv : nullptr);
     }
 
