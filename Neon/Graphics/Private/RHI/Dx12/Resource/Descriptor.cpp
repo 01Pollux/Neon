@@ -216,6 +216,12 @@ namespace Neon::RHI
 
             std::visit(
                 VariantVisitor{
+                    [](const std::monostate&)
+                    {
+#ifndef NEON_DIST
+                        NEON_ASSERT(false, "Invalid SRV description");
+#endif
+                    },
                     [&Dx12Desc](const SRVDesc::Buffer& Buffer)
                     {
                         Dx12Desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
@@ -345,6 +351,12 @@ namespace Neon::RHI
             Dx12DescPtr = &Dx12Desc;
             std::visit(
                 VariantVisitor{
+                    [](const std::monostate&)
+                    {
+#ifndef NEON_DIST
+                        NEON_ASSERT(false, "Invalid UAV description");
+#endif
+                    },
                     [&Dx12Desc](const UAVDesc::Buffer& Buffer)
                     {
                         Dx12Desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
@@ -427,6 +439,12 @@ namespace Neon::RHI
             Dx12DescPtr = &Dx12Desc;
             std::visit(
                 VariantVisitor{
+                    [](const std::monostate&)
+                    {
+#ifndef NEON_DIST
+                        NEON_ASSERT(false, "Invalid RTV description");
+#endif
+                    },
                     [&Dx12Desc](const RTVDesc::Buffer& Buffer)
                     {
                         Dx12Desc.ViewDimension = D3D12_RTV_DIMENSION_BUFFER;
@@ -516,6 +534,12 @@ namespace Neon::RHI
             Dx12DescPtr = &Dx12Desc;
             std::visit(
                 VariantVisitor{
+                    [](const std::monostate&)
+                    {
+#ifndef NEON_DIST
+                        NEON_ASSERT(false, "Invalid DSV description");
+#endif
+                    },
                     [&Dx12Desc](const DSVDesc::Texture1D& Texture)
                     {
                         Dx12Desc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE1D;

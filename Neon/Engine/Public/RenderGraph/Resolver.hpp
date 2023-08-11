@@ -45,6 +45,12 @@ namespace Neon::RG
 
     public:
         /// <summary>
+        /// Write resource view to add dependency without actually writing anything
+        /// </summary>
+        void WriteResourceEmpty(
+            const ResourceId& Id);
+
+        /// <summary>
         /// Write resource view
         /// RawView indicates that the resource is used as raw buffer and no descriptor will be created
         /// </summary>
@@ -103,6 +109,12 @@ namespace Neon::RG
         }
 
     public:
+        /// <summary>
+        /// Read resource view
+        /// </summary>
+        void ReadResourceEmpty(
+            const ResourceId& ViewId);
+
         /// <summary>
         /// Read resource view
         /// </summary>

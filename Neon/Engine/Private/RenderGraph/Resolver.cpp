@@ -42,6 +42,13 @@ namespace Neon::RG
         CreateTexture(Id, Desc, std::move(Flags));
     }
 
+    void IRenderPass::ResourceResolver::WriteResourceEmpty(
+        const ResourceId& Id)
+    {
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesWritten.emplace(Id);
+    }
+
     const ResourceViewId& IRenderPass::ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)
@@ -59,20 +66,23 @@ namespace Neon::RG
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
-                [&State, &Flags](const std::optional<RHI::UAVDesc>&)
+                [&State, &Flags](const std::optional<RHI::UAVDesc>& Desc)
                 {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::RTVDesc>&)
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::RTVDesc>& Desc)
                 {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::RenderTarget);
                     Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
                     m_RenderTargets.emplace_back(ViewId);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>& Desc)
                 {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthWrite);
                     Flags.Set(RHI::EResourceFlags::AllowDepthStencil);
 
@@ -102,6 +112,13 @@ namespace Neon::RG
         return ViewId;
     }
 
+    void IRenderPass::ResourceResolver::ReadResourceEmpty(
+        const ResourceId& Id)
+    {
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        m_ResourcesRead.emplace(Id);
+    }
+
     const ResourceViewId& IRenderPass::ResourceResolver::ReadResource(
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
@@ -120,14 +137,19 @@ namespace Neon::RG
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
-                [&State, &Flags](const std::optional<RHI::SRVDesc>&) {},
-                [&State, &Flags](const std::optional<RHI::UAVDesc>&)
+                [&State, &Flags](const std::optional<RHI::SRVDesc>& Desc)
                 {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
+                },
+                [&State, &Flags](const std::optional<RHI::UAVDesc>& Desc)
+                {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>&)
+                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>& Desc)
                 {
+                    NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthRead);
                     Flags.Set(RHI::EResourceFlags::AllowDepthStencil);
 

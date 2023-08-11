@@ -16,9 +16,11 @@ namespace Neon::RG
     void DebugPass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        Resolver.ReadResourceEmpty(m_DrawTarget);
         Resolver.WriteRenderTarget(
             m_DrawTarget.CreateView(STR("DebugPass")),
             RHI::RTVDesc{
+                .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Ignore });
     }
 
@@ -26,7 +28,6 @@ namespace Neon::RG
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
-        return;
         Runtime::DebugOverlay::Render(
             dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
             Storage.GetFrameDataHandle());

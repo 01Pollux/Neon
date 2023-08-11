@@ -130,6 +130,7 @@ namespace Neon::RHI
         };
 
         using ViewVariant = std::variant<
+            std::monostate,
             Buffer,
             Texture1D,
             Texture1DArray,
@@ -193,6 +194,7 @@ namespace Neon::RHI
         };
 
         using ViewVariant = std::variant<
+            std::monostate,
             Buffer,
             Texture1D,
             Texture1DArray,
@@ -270,6 +272,7 @@ namespace Neon::RHI
         };
 
         using ViewVariant = std::variant<
+            std::monostate,
             Buffer,
             Texture1D,
             Texture1DArray,
@@ -350,6 +353,7 @@ namespace Neon::RHI
         };
 
         using ViewVariant = std::variant<
+            std::monostate,
             Texture1D,
             Texture1DArray,
             Texture2D,
