@@ -13,7 +13,7 @@ NEON_MAIN(Argc, Argv)
             .Fullscreen = false },
     };
 
-    // Config.Renderer.Device.EnableDebugLayer = false;
+     Config.Renderer.Device.EnableDebugLayer = false;
     //   Config.Renderer.Swapchain.VSync         = false;
     //  Config.Renderer.Device.EnableGpuBasedValidation   = true;
     Config.Renderer.Device.Descriptors.Frame_Resource = 262'144;

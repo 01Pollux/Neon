@@ -181,8 +181,17 @@ namespace Neon::RG
     void GraphDepdencyLevel::ExecutePasses(
         RenderGraph::ChainedCommandList& ChainedCommandList) const
     {
+        // If we have more than one pass, we need to synchronize them
+        // therefore we need to flush the chained command list we previously created
+        const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
+        const bool ShouldFlush = m_Passes.size() > 1 || (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect);
+        if (ShouldFlush)
+        {
+            ChainedCommandList.Flush();
+        }
+
         auto DispatchTask =
-            [this, &ChainedCommandList](
+            [this, &ChainedCommandList, ShouldFlush](
                 size_t PassIndex,
                 bool   Threaded)
         {
@@ -196,7 +205,7 @@ namespace Neon::RG
             case PassQueueType::Direct:
             {
                 RHI::IGraphicsCommandList* RenderCommandList;
-                if (Threaded)
+                if (Threaded && ShouldFlush)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
                     RenderCommandList = ChainedCommandList.RenderContext.Append();
@@ -341,7 +350,7 @@ namespace Neon::RG
 
             case PassQueueType::Compute:
             {
-                if (Threaded)
+                if (Threaded && ShouldFlush)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
                     CommandList = ChainedCommandList.RenderContext.Append();
@@ -360,14 +369,6 @@ namespace Neon::RG
             RenderPass->Dispatch(Storage, CommandList);
         };
 
-        // If we have more than one pass, we need to synchronize them
-        // therefore we need to flush the chained command list we previously created
-        const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
-        const bool ShouldFlush = m_Passes.size() > 1 || (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect);
-        if (ShouldFlush)
-        {
-            ChainedCommandList.Flush();
-        }
 
         if (m_Passes.size())
         {
@@ -440,17 +441,21 @@ namespace Neon::RG
     void RenderGraph::ChainedCommandList::Flush()
     {
         CommandList = nullptr;
+        RenderContext.Upload();
+        ComputeContext.Upload();
     }
 
     void RenderGraph::ChainedCommandList::FlushOrDelay()
     {
         if (RenderContext.Size() == 1)
         {
-            IsDirect = true;
+            IsDirect    = true;
+            CommandList = RenderContext[0];
         }
         else if (ComputeContext.Size() == 1)
         {
-            IsDirect = false;
+            IsDirect    = false;
+            CommandList = ComputeContext[0];
         }
         else
         {
