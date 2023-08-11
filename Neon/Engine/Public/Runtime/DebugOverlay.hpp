@@ -53,10 +53,11 @@ namespace Neon::Runtime
             const Vector3& StartPosition,
             const Vector3& EndPosition,
             const Color4&  StartColor,
-            const Color4&  EndColor)
+            const Color4&  EndColor,
+            bool           WorldsSpace = true)
         {
 #ifndef NEON_DIST
-            s_DebugOverlay->DrawLine_Impl(StartPosition, EndPosition, StartColor, EndColor);
+            s_DebugOverlay->DrawLine_Impl(StartPosition, EndPosition, StartColor, EndColor, WorldsSpace);
 #endif
         }
 
@@ -66,10 +67,11 @@ namespace Neon::Runtime
         static void DrawCuboidLine(
             const Vector3& CenterPosition,
             const Vector3& Size,
-            const Color4&  Color)
+            const Color4&  Color,
+            bool           WorldsSpace = true)
         {
 #ifndef NEON_DIST
-            s_DebugOverlay->DrawCuboidLine_Impl(CenterPosition, Size, Color);
+            s_DebugOverlay->DrawCuboidLine_Impl(CenterPosition, Size, Color, WorldsSpace);
 #endif
         }
 
@@ -84,12 +86,14 @@ namespace Neon::Runtime
             const Vector3& StartPosition,
             const Vector3& EndPosition,
             const Color4&  StartColor,
-            const Color4&  EndColor));
+            const Color4&  EndColor,
+            bool           WorldsSpace));
 
         NEON_M_NODIST_PV(void DrawCuboidLine_Impl(
             const Vector3& CenterPosition,
             const Vector3& Size,
-            const Color4&  Color));
+            const Color4&  Color,
+            bool           WorldsSpace));
 
     private:
 #ifndef NEON_DIST

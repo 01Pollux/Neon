@@ -348,6 +348,13 @@ void FlappyBirdClone::AttachInputs()
 
 void FlappyBirdClone::OnUpdate()
 {
+    Runtime::DebugOverlay::DrawCuboidLine(
+        m_Player.get<Scene::Component::Transform>()->World.GetPosition(),
+        Vec::One<Vector3> * 2.5f,
+        Colors::Red);
+
+    //
+
     // Player lost
     if (!m_RigidBody->getActivationState())
     {

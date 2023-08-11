@@ -49,7 +49,6 @@ PSInput VS_Main(VSInput Vs)
 	Ps.Position = float4(Vs.Position, 1.0f);
 	if (Vs.NeedsProjection)
 	{
-		Ps.Position = mul(Ps.Position, g_FrameData.World);
 		Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
 	}
 	Ps.Color = Vs.Color;
@@ -63,6 +62,5 @@ PSInput VS_Main(VSInput Vs)
 
 float4 PS_Main(PSInput Ps) : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
-	//return Ps.Color;
+	return Ps.Color;
 }

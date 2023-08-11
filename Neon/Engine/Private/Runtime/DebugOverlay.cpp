@@ -62,7 +62,8 @@ namespace Neon::Runtime
                 const Vector3& StartPosition,
                 const Vector3& EndPosition,
                 const Color4&  StartColor,
-                const Color4&  EndColor);
+                const Color4&  EndColor,
+                bool           WorldsSpace);
         };
 
     public:
@@ -76,12 +77,14 @@ namespace Neon::Runtime
             const Vector3& StartPosition,
             const Vector3& EndPosition,
             const Color4&  StartColor,
-            const Color4&  EndColor) override;
+            const Color4&  EndColor,
+            bool           WorldsSpace) override;
 
         void DrawCuboidLine_Impl(
             const Vector3& CenterPosition,
             const Vector3& Size,
-            const Color4&  Color) override;
+            const Color4&  Color,
+            bool           WorldsSpace) override;
 
     private:
         Overlay_Debug_LineBuffer m_LineBuffer;
@@ -118,15 +121,17 @@ namespace Neon::Runtime
         const Vector3& StartPosition,
         const Vector3& EndPosition,
         const Color4&  StartColor,
-        const Color4&  EndColor)
+        const Color4&  EndColor,
+        bool           WorldsSpace)
     {
-        m_LineBuffer.Append(StartPosition, EndPosition, StartColor, EndColor);
+        m_LineBuffer.Append(StartPosition, EndPosition, StartColor, EndColor, WorldsSpace);
     }
 
     void DefaultEngineDebugOverlay::DrawCuboidLine_Impl(
         const Vector3& CenterPosition,
         const Vector3& Size,
-        const Color4&  Color)
+        const Color4&  Color,
+        bool           WorldsSpace)
     {
         const Vector3 HalfSize = Size / 2.f;
 
@@ -170,7 +175,7 @@ namespace Neon::Runtime
             const Vector3& P1 = Positions[Indices[i]];
             const Vector3& P2 = Positions[Indices[i + 1]];
 
-            m_LineBuffer.Append(P1, P2, Color, Color);
+            m_LineBuffer.Append(P1, P2, Color, Color, WorldsSpace);
         }
     }
 
@@ -237,6 +242,7 @@ namespace Neon::Runtime
             VtxView.Append(VertexBuffer.get(), 0, sizeof(Overlay_Debug_Line::Vertex), VertexBuffer->GetSize());
         }
 
+        CommandList->SetVertexBuffer(0, VtxView);
         CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = DrawCount });
 
         DrawCount = 0;
@@ -247,7 +253,8 @@ namespace Neon::Runtime
         const Vector3& StartPosition,
         const Vector3& EndPosition,
         const Color4&  StartColor,
-        const Color4&  EndColor)
+        const Color4&  EndColor,
+        bool           WorldsSpace)
     {
         if (DrawCount >= Overlay_Debug_Line::MaxVertices || VertexBuffers.empty()) [[unlikely]]
         {
@@ -264,11 +271,11 @@ namespace Neon::Runtime
 
         CurVertex[0].Position        = StartPosition;
         CurVertex[0].Color           = (StartColor * 255.f);
-        CurVertex[0].NeedsProjection = 1;
+        CurVertex[0].NeedsProjection = WorldsSpace;
 
         CurVertex[1].Position        = EndPosition;
         CurVertex[1].Color           = (EndColor * 255.f);
-        CurVertex[1].NeedsProjection = 1;
+        CurVertex[1].NeedsProjection = WorldsSpace;
     }
 } // namespace Neon::Runtime
 
