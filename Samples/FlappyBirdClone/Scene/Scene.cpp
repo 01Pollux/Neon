@@ -86,55 +86,39 @@ void FlappyBirdClone::LoadScene()
         auto WorldTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
         WorldMaterial->SetTexture("p_SpriteTextures", WorldTexture);
 
-        auto Floor = Scene.CreateEntity(Scene::EntityType::Sprite, "Floor");
+        auto WallCreate =
+            [&](const char* Name, const Vector3& Position)
         {
-            Floor.add<RainbowSprite>();
-
-            auto SpriteComponent = Floor.get_mut<Scene::Component::Sprite>();
+            auto Wall = Scene.CreateEntity(Scene::EntityType::Sprite, "Floor");
             {
-                SpriteComponent->Size             = { 100.f, 5.35f };
-                SpriteComponent->MaterialInstance = WorldMaterial;
-            }
-            Floor.modified<Scene::Component::Sprite>();
+                Wall.add<RainbowSprite>();
 
-            auto TransformComponent = Floor.get_mut<Scene::Component::Transform>();
-            {
-                TransformComponent->World.SetPosition(Vec::Down<Vector3> * 6.5f);
-                TransformComponent->Local = TransformComponent->World;
-            }
-            Floor.modified<Scene::Component::Transform>();
+                auto SpriteComponent = Wall.get_mut<Scene::Component::Sprite>();
+                {
+                    SpriteComponent->Size             = { 100.f, 5.35f };
+                    SpriteComponent->MaterialInstance = WorldMaterial;
+                }
+                Wall.modified<Scene::Component::Sprite>();
 
-            {
-                Floor.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(100.f, 1.45f, 100.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Floor, Wall_CollisionGroup, Wall_CollisionMask);
-            }
-        }
+                auto TransformComponent = Wall.get_mut<Scene::Component::Transform>();
+                {
+                    TransformComponent->World.SetPosition(Position);
+                    TransformComponent->Local = TransformComponent->World;
+                }
+                Wall.modified<Scene::Component::Transform>();
 
-        auto Ceiling = Scene.CreateEntity(Scene::EntityType::Sprite, "Ceiling");
-        {
-            Ceiling.add<RainbowSprite>();
+                {
+                    Wall.set(Scene::Component::CollisionShape{
+                        std::make_unique<btBoxShape>(btVector3(100.f, 1.45f, 100.f)) });
 
-            auto SpriteComponent = Ceiling.get_mut<Scene::Component::Sprite>();
-            {
-                SpriteComponent->Size             = { 100.f, 5.35f };
-                SpriteComponent->MaterialInstance = WorldMaterial;
+                    auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall, Wall_CollisionGroup, Wall_CollisionMask);
+                    StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Black));
+                }
             }
-            Ceiling.modified<Scene::Component::Sprite>();
+        };
 
-            auto TransformComponent = Ceiling.get_mut<Scene::Component::Transform>();
-            {
-                TransformComponent->World.SetPosition(Vec::Up<Vector3> * 6.5f);
-                TransformComponent->Local = TransformComponent->World;
-            }
-            Ceiling.modified<Scene::Component::Transform>();
-
-            {
-                Ceiling.set(Scene::Component::CollisionShape{
-                    std::make_unique<btBoxShape>(btVector3(100.f, 1.32f, 100.f)) });
-                Scene::Component::CollisionObject::AddStaticBody(Ceiling, Wall_CollisionGroup, Wall_CollisionMask);
-            }
-        }
+        WallCreate("Floor", Vec::Down<Vector3> * 6.5f);
+        WallCreate("Floor", Vec::Up<Vector3> * 6.5f);
     }
 
     // Create triangle in top and bottom (seperated by 3.5f)
@@ -228,9 +212,9 @@ void FlappyBirdClone::LoadScene()
             m_RigidBody = btRigidBody::upcast(
                 Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
 
-            m_RigidBody->setAngularFactor(Physics::ToBullet3<true>(Vec::Forward<Vector3>));
-            m_RigidBody->setLinearFactor(Physics::ToBullet3<true>(Vec::Up<Vector3>));
-            m_RigidBody->setCustomDebugColor(Physics::ToBullet3<>(Colors::Red));
+            m_RigidBody->setAngularFactor(Physics::ToBullet3(Vec::Forward<Vector3>));
+            m_RigidBody->setLinearFactor(Physics::ToBullet3(Vec::Up<Vector3>));
+            m_RigidBody->setCustomDebugColor(Physics::ToBullet3(Colors::Red));
 
             m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
         }
@@ -384,12 +368,12 @@ void FlappyBirdClone::OnUpdate()
 
     if (UpdateVelocity)
     {
-        m_RigidBody->setLinearVelocity(Physics::ToBullet3<true>(Vec::Up<Vector3> * m_VelocityAccum));
+        m_RigidBody->setLinearVelocity(Physics::ToBullet3(Vec::Up<Vector3> * m_VelocityAccum));
     }
 
     //
 
-    float Angle = std::lerp(180.f, 0.f, (m_VelocityAccum + m_EnginePower * 2) / (m_EnginePower * 4));
+    float Angle = std::lerp(0.f, -180.f, (m_VelocityAccum + m_EnginePower * 2) / (m_EnginePower * 4));
 
     auto& Transform = m_RigidBody->getWorldTransform();
     Transform.setRotation(btQuaternion(btVector3(0, 0, 1), glm::radians(Angle)));

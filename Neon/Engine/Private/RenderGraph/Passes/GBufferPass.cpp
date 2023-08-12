@@ -38,7 +38,7 @@ namespace Neon::RG
                     .Format = RenderTargetsFormatsTyped[Index],
                     // TODO: Until we have skybox pass, we will use white color
                     //.Value  = Colors::Black
-                    .Value = Colors::White
+                    .Value = Colors::LightGray
                 };
             }
 

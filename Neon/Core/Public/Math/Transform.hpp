@@ -22,9 +22,19 @@ namespace Neon
         [[nodiscard]] const Matrix3x3& GetBasis() const noexcept;
 
         /// <summary>
+        /// Get basis of transform
+        /// </summary>
+        [[nodiscard]] Matrix3x3& GetBasis() noexcept;
+
+        /// <summary>
         /// Get position of transform
         /// </summary>
         [[nodiscard]] const Vector3& GetPosition() const noexcept;
+
+        /// <summary>
+        /// Get position of transform
+        /// </summary>
+        [[nodiscard]] Vector3& GetPosition() noexcept;
 
         /// <summary>
         /// Set basis of transform

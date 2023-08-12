@@ -9,7 +9,17 @@ namespace Neon
         return m_Basis;
     }
 
+    Matrix3x3& TransformMatrix::GetBasis() noexcept
+    {
+        return m_Basis;
+    }
+
     const Vector3& TransformMatrix::GetPosition() const noexcept
+    {
+        return m_Position;
+    }
+
+    Vector3& TransformMatrix::GetPosition() noexcept
     {
         return m_Position;
     }

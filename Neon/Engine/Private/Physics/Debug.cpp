@@ -17,9 +17,9 @@ namespace Neon::Physics
         Color4U8 RgbaColor(Color.getX() * 255.f, Color.getY() * 255.f, Color.getZ() * 255.f, 255);
         Runtime::DebugOverlay::DrawLine(
             Runtime::DebugOverlay::LineArgs{
-                .StartPosition = FromBullet3<true>(From),
+                .StartPosition = FromBullet3(From),
                 .StartColor    = RgbaColor,
-                .EndPosition   = FromBullet3<true>(To),
+                .EndPosition   = FromBullet3(To),
                 .EndColor      = RgbaColor });
     }
 
@@ -34,9 +34,9 @@ namespace Neon::Physics
         Runtime::DebugOverlay::DrawLine(
             float(LifeTime),
             Runtime::DebugOverlay::LineArgs{
-                .StartPosition = FromBullet3<true>(PointOnB),
+                .StartPosition = FromBullet3(PointOnB),
                 .StartColor    = RgbaColor,
-                .EndPosition   = FromBullet3<true>(PointOnB + NormalOnB * Distance),
+                .EndPosition   = FromBullet3(PointOnB + NormalOnB * Distance),
                 .EndColor      = RgbaColor });
     }
 
