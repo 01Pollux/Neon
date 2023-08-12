@@ -4,28 +4,8 @@
 
 using namespace Neon;
 
-void Test()
-{
-    flecs::world World;
-    struct MyComponent
-    {
-        struct SubComponent
-        {
-        };
-
-        std::unique_ptr<int> ptr;
-    };
-
-    World.component<MyComponent::SubComponent>();
-    World.component<MyComponent>();
-
-    auto Ent = World.entity("Test");
-    Ent.set<MyComponent>({}); // This will crash
-}
-
 NEON_MAIN(Argc, Argv)
 {
-    Test();
     Config::EngineConfig Config{
         .Window = {
             .Title      = STR("Flappy Bird"),

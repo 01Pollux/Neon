@@ -78,6 +78,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Floor and ceiling as sprite
+    if (0)
     {
         auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
 
@@ -119,6 +120,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Create triangle in top and bottom (seperated by 3.5f)
+    if (0)
     {
         auto CreatePhysicsBody = [](flecs::entity Triangle)
         {
@@ -194,10 +196,7 @@ void FlappyBirdClone::LoadScene()
 
         auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
         {
-            Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
-            TransformComponent->World.SetBasis(glm::toMat3(Rot));
-            auto p = TransformComponent->World.GetScale();
-            p      = TransformComponent->World.GetScale();
+            TransformComponent->World.SetRotationEuler(Vec::Forward<Vector3> * -90.f);
         }
         m_Player.modified<Scene::Component::Transform>();
 
