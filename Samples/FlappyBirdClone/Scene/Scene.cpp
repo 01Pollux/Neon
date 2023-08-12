@@ -78,7 +78,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Floor and ceiling as sprite
-    if (0)
+    if (1)
     {
         auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
 
@@ -100,23 +100,23 @@ void FlappyBirdClone::LoadScene()
 
                 auto TransformComponent = Wall.get_mut<Scene::Component::Transform>();
                 {
-                    TransformComponent->World.SetScale(Vector3(100.f, 5.35, 1.f));
+                    TransformComponent->World.SetScale(Vector3(100.f, 2.35, 200.f));
                     TransformComponent->World.SetPosition(Position);
                 }
                 Wall.modified<Scene::Component::Transform>();
 
                 {
                     Wall.set(Scene::Component::CollisionShape{
-                        std::make_unique<btBoxShape>(btVector3(100.f, 1.45f, 100.f)) });
+                        std::make_unique<btBoxShape>(btVector3(0.5f, 0.5f, 0.5f)) });
 
                     auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall, Wall_CollisionGroup, Wall_CollisionMask);
-                    StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Black));
+                    StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Green));
                 }
             }
         };
 
-        WallCreate("Ceiling", Vec::Up<Vector3> * 6.5f);
-        WallCreate("Floor", Vec::Down<Vector3> * 6.5f);
+        // WallCreate("Ceiling", Vec::Up<Vector3> * 6.5f);
+        WallCreate("Floor", Vec::Down<Vector3> * 5.5f);
     }
 
     // Create triangle in top and bottom (seperated by 3.5f)
@@ -191,6 +191,7 @@ void FlappyBirdClone::LoadScene()
         {
             SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
             SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
+            // SpriteComponent->TextureTransform.SetScale(Vec::One<Vector3> * 0.5f);
         }
         m_Player.modified<Scene::Component::Sprite>();
 
@@ -202,7 +203,7 @@ void FlappyBirdClone::LoadScene()
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(1.0f, 1.4f) });
+                std::make_unique<btCapsuleShape>(2.5f, 3.5f) });
 
             m_RigidBody = btRigidBody::upcast(
                 Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
@@ -217,13 +218,13 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
+    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera3D, "PlayerCamera");
     {
         Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
         auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
         {
-            CameraComponent->Viewport.OrthographicSize = 15.0f;
+            CameraComponent->Viewport.OrthographicSize = 20.0f;
             CameraComponent->Viewport.NearPlane        = -1.0f;
             CameraComponent->Viewport.FarPlane         = 10.0f;
 
@@ -233,6 +234,7 @@ void FlappyBirdClone::LoadScene()
 
         auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
         {
+            TransformComponent->World.SetRotationEuler(Vec::Right<Vector3> * -90.f);
             TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
         }
         Camera.modified<Scene::Component::Transform>();

@@ -127,13 +127,14 @@ namespace Neon::Physics
 
     template<typename _CollisionTy, typename _TriggerTy>
     static void SendCollisionCallback(
-        btPersistentManifold* Manifold,
-        flecs::entity_t       EntityId)
+        btPersistentManifold*    Manifold,
+        const btCollisionObject* Body,
+        flecs::entity_t          EntityId)
     {
         auto World = Runtime::DefaultGameEngine::Get()->GetScene().GetEntityWorld();
         auto Actor = flecs::entity(*World, EntityId);
 
-        if (!(Manifold->getBody0()->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE)) [[likely]]
+        if (!(Body->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE)) [[likely]]
         {
             if (auto Event = Actor.get<_CollisionTy>(); Event && Event->Callback)
             {
@@ -164,15 +165,17 @@ namespace Neon::Physics
         for (int i = 0; i < Dispatcher->getNumManifolds(); i++)
         {
             auto Manifold = Manifolds[i];
-            auto Body0    = Manifold->getBody0();
 
-            auto EntityId = std::bit_cast<flecs::entity_t>(Body0->getUserPointer());
-            if (!EntityId)
+            auto Body0 = Manifold->getBody0();
+            auto Body1 = Manifold->getBody1();
+
+            auto Ent0 = std::bit_cast<flecs::entity_t>(Body0->getUserPointer());
+            auto Ent1 = std::bit_cast<flecs::entity_t>(Body1->getUserPointer());
+            if (!Ent0 || !Ent1)
             {
                 continue;
             }
 
-            auto Body1 = Manifold->getBody1();
             auto Tuple = std::make_tuple(Body0, Body1, Manifold);
 
             // Collision exit
@@ -180,18 +183,21 @@ namespace Neon::Physics
             {
                 if (PhysicsWorld->m_PreviousTickCollisions.contains(Tuple))
                 {
-                    SendCollisionCallback<Scene::Component::CollisionExit, Scene::Component::TriggerExit>(Manifold, EntityId);
+                    SendCollisionCallback<Scene::Component::CollisionExit, Scene::Component::TriggerExit>(Manifold, Body0, Ent0);
+                    SendCollisionCallback<Scene::Component::CollisionExit, Scene::Component::TriggerExit>(Manifold, Body1, Ent1);
                     PhysicsWorld->m_PreviousTickCollisions.erase(std::move(Tuple));
                 }
             }
             else if (!PhysicsWorld->m_PreviousTickCollisions.contains(Tuple))
             {
-                SendCollisionCallback<Scene::Component::CollisionEnter, Scene::Component::TriggerEnter>(Manifold, EntityId);
+                SendCollisionCallback<Scene::Component::CollisionEnter, Scene::Component::TriggerEnter>(Manifold, Body0, Ent0);
+                SendCollisionCallback<Scene::Component::CollisionEnter, Scene::Component::TriggerEnter>(Manifold, Body1, Ent1);
                 PhysicsWorld->m_PreviousTickCollisions.insert(std::move(Tuple));
             }
             else
             {
-                SendCollisionCallback<Scene::Component::CollisionStay, Scene::Component::TriggerStay>(Manifold, EntityId);
+                SendCollisionCallback<Scene::Component::CollisionStay, Scene::Component::TriggerStay>(Manifold, Body0, Ent0);
+                SendCollisionCallback<Scene::Component::CollisionStay, Scene::Component::TriggerStay>(Manifold, Body1, Ent1);
             }
         }
     }
