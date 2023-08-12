@@ -42,9 +42,14 @@ void FlappyBirdClone::PreloadMaterials()
                     .AddStandardSamplers()
                     .Build());
 
+        RHI::MShaderCompileFlags Flags;
+#if NEON_DEBUG
+        Flags.Set(RHI::EShaderCompileFlags::Debug);
+#endif
+
         BaseSpriteMaterial
-            .VertexShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
-            .PixelShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }));
+            .VertexShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
+            .PixelShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
         m_Materials.emplace(StringU8("BaseSprite"), Renderer::IMaterial::Create(std::move(BaseSpriteMaterial)));
     }

@@ -52,8 +52,9 @@ namespace Neon::Scene
         {
             auto Actor = m_EntityWorld->entity(Name);
 
-            Actor.set(Transform{});
-            Actor.set(Sprite{});
+            Actor.set<Transform>({});
+            Actor.set<Sprite>({});
+            Actor.add<Sprite::MainRenderer>();
 
             return Actor;
         }

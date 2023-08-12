@@ -1,14 +1,25 @@
 #pragma once
 
-#include <Scene/Component/CanvasItem.hpp>
 #include <Renderer/Material/Material.hpp>
+#include <Math/Transform.hpp>
 
 namespace Neon::Scene::Component
 {
-    struct Sprite : CanvasItem
+    struct Sprite
     {
+        /// <summary>
+        /// Tag component for the main renderer of a sprite.
+        /// Used for query in gbuffer rendering pass for sprites.
+        /// </summary>
+        struct MainRenderer
+        {
+            NEON_EXPORT_COMPONENT();
+        };
+
         NEON_EXPORT_COMPONENT();
 
-        Ptr<Renderer::IMaterial> MaterialInstance;
+        Ptr<Renderer::IMaterial> MaterialInstance = nullptr;
+        TransformMatrix          TextureTransform;
+        Color4                   ModulationColor = Colors::White;
     };
 } // namespace Neon::Scene::Component

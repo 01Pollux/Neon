@@ -3,7 +3,6 @@
 
 #include <Scene/Component/Transform.hpp>
 
-#include <Scene/Component/CanvasItem.hpp>
 #include <Scene/Component/Sprite.hpp>
 
 #include <Scene/Component/Camera.hpp>
@@ -19,9 +18,9 @@ namespace Neon::Scene::Component
 
     //
 
-    NEON_IMPLEMENT_COMPONENT(CanvasItem)
+    NEON_IMPLEMENT_COMPONENT(Sprite::MainRenderer)
     {
-        World.component<CanvasItem>("Neon::Scene::CanvasItem");
+        World.component<MainRenderer>("Neon::Scene::Sprite::MainRenderer");
     }
 
     NEON_IMPLEMENT_COMPONENT(Sprite)

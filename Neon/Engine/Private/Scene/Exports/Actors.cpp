@@ -17,8 +17,8 @@ namespace Neon::Scene::Exports
     {
         NEON_REGISTER_COMPONENT(Component::Transform);
 
-        NEON_REGISTER_COMPONENT(Component::CanvasItem);
         NEON_REGISTER_COMPONENT(Component::Sprite);
+        NEON_REGISTER_COMPONENT(Component::Sprite::MainRenderer);
 
         NEON_REGISTER_COMPONENT(Component::Camera);
 

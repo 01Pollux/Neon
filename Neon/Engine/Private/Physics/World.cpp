@@ -15,7 +15,7 @@ namespace Neon::Physics
         m_DynamicsWorld.setGravity(btVector3(0.0f, -9.8f, 0.0f));
         m_DynamicsWorld.setInternalTickCallback(&WorldPostTickCallback, this, false);
 
-#ifndef NEON_DEBUG
+#ifndef NEON_DIST
         m_DynamicsWorld.setDebugDrawer(&m_DebugDrawer);
 #endif
     }
@@ -28,11 +28,8 @@ namespace Neon::Physics
         double DeltaTime)
     {
         m_DynamicsWorld.stepSimulation(btScalar(DeltaTime), m_MaxSubSteps, m_FixedTimeStep);
-#ifndef NEON_DEBUG
-        if (m_DynamicsWorld.getDebugDrawer()->getDebugMode())
-        {
-            m_DynamicsWorld.debugDrawWorld();
-        }
+#ifndef NEON_DIST
+        m_DynamicsWorld.debugDrawWorld();
 #endif
     }
 
@@ -74,7 +71,7 @@ namespace Neon::Physics
     btIDebugDraw::DebugDrawModes World::GetDebugFlags()
     {
 #ifndef NEON_DIST
-        return btIDebugDraw::DebugDrawModes(m_DynamicsWorld.getDebugDrawer()->getDebugMode());
+        return btIDebugDraw::DebugDrawModes(m_DebugDrawer.getDebugMode());
 #else
         return 0;
 #endif
@@ -84,7 +81,7 @@ namespace Neon::Physics
         btIDebugDraw::DebugDrawModes Flags)
     {
 #ifndef NEON_DIST
-        m_DynamicsWorld.getDebugDrawer()->setDebugMode(Flags);
+        m_DebugDrawer.setDebugMode(Flags);
 #endif
     }
 

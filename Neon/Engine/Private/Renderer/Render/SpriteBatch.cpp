@@ -71,19 +71,19 @@ namespace Neon::Renderer
 
         uint32_t SpriteIndex = uint32_t(m_PerObjectBuffer.CurSize / sizeof(PerObjectData));
 
-        Vector2    HalfSize = Sprite.Size * 0.5f;
         std::array Vertices = {
-            BatchSpriteVertex{ .Position = Vector2(-HalfSize.x, HalfSize.y), .TexCoord = Sprite.TextureRect.TopLeft(), .SpriteIndex = SpriteIndex },
-            BatchSpriteVertex{ .Position = Vector2(HalfSize.x, HalfSize.y), .TexCoord = Sprite.TextureRect.TopRight(), .SpriteIndex = SpriteIndex },
-            BatchSpriteVertex{ .Position = Vector2(HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomRight(), .SpriteIndex = SpriteIndex },
-            BatchSpriteVertex{ .Position = Vector2(-HalfSize.x, -HalfSize.y), .TexCoord = Sprite.TextureRect.BottomLeft(), .SpriteIndex = SpriteIndex }
+            BatchSpriteVertex{ .Position = Vector2(-0.5f, 0.5f), .TexCoord = Vector2(0.f, 0.f), .SpriteIndex = SpriteIndex },
+            BatchSpriteVertex{ .Position = Vector2(0.5f, 0.5f), .TexCoord = Vector2(1.f, 0.f), .SpriteIndex = SpriteIndex },
+            BatchSpriteVertex{ .Position = Vector2(0.5f, -0.5f), .TexCoord = Vector2(1.f, 1.f), .SpriteIndex = SpriteIndex },
+            BatchSpriteVertex{ .Position = Vector2(-0.5f, -0.5f), .TexCoord = Vector2(0.f, 1.f), .SpriteIndex = SpriteIndex },
         };
         DrawQuad<>(Vertices);
 
         auto ObjectData = m_PerObjectBuffer.AllocateData<PerObjectData>(1);
 
-        ObjectData->World        = glm::transpose(Transform.World.ToMat4x4());
-        ObjectData->Color        = Sprite.ModulationColor;
-        ObjectData->TextureIndex = m_MaterialInstances.Append(Sprite.MaterialInstance.get());
+        ObjectData->World            = Transform.World.ToMat4x4Transposed();
+        ObjectData->TextureTransform = Sprite.TextureTransform.ToMat4x4Transposed();
+        ObjectData->Color            = Sprite.ModulationColor;
+        ObjectData->TextureIndex     = m_MaterialInstances.Append(Sprite.MaterialInstance.get());
     }
 } // namespace Neon::Renderer

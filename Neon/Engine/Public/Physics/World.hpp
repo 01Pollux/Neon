@@ -122,7 +122,7 @@ namespace Neon::Physics
             btScalar         DeltaTimeStep);
 
     private:
-#ifndef NEON_DEBUG
+#ifndef NEON_DIST
         BulletPhysicsDebugDraw m_DebugDrawer;
 #endif
         btSoftBodyRigidBodyCollisionConfiguration m_CollisionConfiguration;

@@ -64,14 +64,12 @@ void FlappyBirdClone::LoadScene()
                             ((i * 1000 + j) % 255) / 255.f,
                             ((i * 1000 + j) % 255) / 255.f,
                             1.f);
-                        SpriteComponent->Size = { 1.f, 1.f };
                     }
                     Sprite.modified<Scene::Component::Sprite>();
 
                     auto TransformComponent = Sprite.get_mut<Scene::Component::Transform>();
                     {
                         TransformComponent->World.SetPosition(Vec::Right<Vector3> * (i * 1.1f));
-                        TransformComponent->Local = TransformComponent->World;
                     }
                     Sprite.modified<Scene::Component::Transform>();
                 }
@@ -89,21 +87,20 @@ void FlappyBirdClone::LoadScene()
         auto WallCreate =
             [&](const char* Name, const Vector3& Position)
         {
-            auto Wall = Scene.CreateEntity(Scene::EntityType::Sprite, "Floor");
+            auto Wall = Scene.CreateEntity(Scene::EntityType::Sprite, Name);
             {
                 Wall.add<RainbowSprite>();
 
                 auto SpriteComponent = Wall.get_mut<Scene::Component::Sprite>();
                 {
-                    SpriteComponent->Size             = { 100.f, 5.35f };
                     SpriteComponent->MaterialInstance = WorldMaterial;
                 }
                 Wall.modified<Scene::Component::Sprite>();
 
                 auto TransformComponent = Wall.get_mut<Scene::Component::Transform>();
                 {
+                    TransformComponent->World.SetScale(Vector3(100.f, 5.35, 1.f));
                     TransformComponent->World.SetPosition(Position);
-                    TransformComponent->Local = TransformComponent->World;
                 }
                 Wall.modified<Scene::Component::Transform>();
 
@@ -117,8 +114,8 @@ void FlappyBirdClone::LoadScene()
             }
         };
 
+        WallCreate("Ceiling", Vec::Up<Vector3> * 6.5f);
         WallCreate("Floor", Vec::Down<Vector3> * 6.5f);
-        WallCreate("Floor", Vec::Up<Vector3> * 6.5f);
     }
 
     // Create triangle in top and bottom (seperated by 3.5f)
@@ -148,7 +145,6 @@ void FlappyBirdClone::LoadScene()
 
             auto SpriteComponent = Triangle.get_mut<Scene::Component::Sprite>();
             {
-                SpriteComponent->Size             = { 1.f, 1.f };
                 SpriteComponent->MaterialInstance = TriangleMaterial;
             }
             Triangle.modified<Scene::Component::Sprite>();
@@ -156,7 +152,6 @@ void FlappyBirdClone::LoadScene()
             auto TransformComponent = Triangle.get_mut<Scene::Component::Transform>();
             {
                 TransformComponent->World.SetPosition(Vec::Down<Vector3> * 5.8f);
-                TransformComponent->Local = TransformComponent->World;
             }
             Triangle.modified<Scene::Component::Transform>();
 
@@ -201,7 +196,8 @@ void FlappyBirdClone::LoadScene()
         {
             Quaternion Rot = glm::angleAxis(glm::radians(-90.f), Vec::Forward<Vector3>);
             TransformComponent->World.SetBasis(glm::toMat3(Rot));
-            TransformComponent->Local = TransformComponent->World;
+            auto p = TransformComponent->World.GetScale();
+            p      = TransformComponent->World.GetScale();
         }
         m_Player.modified<Scene::Component::Transform>();
 
@@ -239,7 +235,6 @@ void FlappyBirdClone::LoadScene()
         auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
         {
             TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
-            TransformComponent->Local = TransformComponent->World;
         }
         Camera.modified<Scene::Component::Transform>();
     }
@@ -373,7 +368,7 @@ void FlappyBirdClone::OnUpdate()
 
     //
 
-    float Angle = std::lerp(0.f, -180.f, (m_VelocityAccum + m_EnginePower * 2) / (m_EnginePower * 4));
+    float Angle = std::lerp(-180.f, 0.f, (m_VelocityAccum + m_EnginePower * 2) / (m_EnginePower * 4));
 
     auto& Transform = m_RigidBody->getWorldTransform();
     Transform.setRotation(btQuaternion(btVector3(0, 0, 1), glm::radians(Angle)));

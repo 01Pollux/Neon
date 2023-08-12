@@ -41,6 +41,7 @@ namespace Neon::Renderer
         struct PerObjectData
         {
             Matrix4x4 World;
+            Matrix4x4 TextureTransform;
             Vector4   Color;
             int       TextureIndex;
             int       _Padding[3];

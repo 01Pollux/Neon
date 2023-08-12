@@ -4,8 +4,28 @@
 
 using namespace Neon;
 
+void Test()
+{
+    flecs::world World;
+    struct MyComponent
+    {
+        struct SubComponent
+        {
+        };
+
+        std::unique_ptr<int> ptr;
+    };
+
+    World.component<MyComponent::SubComponent>();
+    World.component<MyComponent>();
+
+    auto Ent = World.entity("Test");
+    Ent.set<MyComponent>({}); // This will crash
+}
+
 NEON_MAIN(Argc, Argv)
 {
+    Test();
     Config::EngineConfig Config{
         .Window = {
             .Title      = STR("Flappy Bird"),
@@ -13,7 +33,7 @@ NEON_MAIN(Argc, Argv)
             .Fullscreen = false },
     };
 
-     Config.Renderer.Device.EnableDebugLayer = false;
+    Config.Renderer.Device.EnableDebugLayer = false;
     //   Config.Renderer.Swapchain.VSync         = false;
     //  Config.Renderer.Device.EnableGpuBasedValidation   = true;
     Config.Renderer.Device.Descriptors.Frame_Resource = 262'144;

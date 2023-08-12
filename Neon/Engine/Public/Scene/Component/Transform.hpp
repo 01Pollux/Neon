@@ -9,7 +9,6 @@ namespace Neon::Scene::Component
     {
         NEON_EXPORT_COMPONENT();
 
-        TransformMatrix Local;
         TransformMatrix World;
     };
 } // namespace Neon::Scene::Component

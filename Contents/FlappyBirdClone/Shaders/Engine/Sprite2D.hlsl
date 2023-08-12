@@ -22,6 +22,7 @@ struct PerFrameData
 struct PerObjectData
 {
 	matrix World;
+	matrix TextureTransform;
 	float4 Color;
 	int TextureIndex;
 	int3 _Pad;
@@ -76,11 +77,11 @@ StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 PSInput VS_Main(VSInput Vs)
 {
 	PSInput Ps;
-	Ps.Position = float4(Vs.Position, 0.f, 1.f);
-	Ps.Position = mul(Ps.Position, g_SpriteData[Vs.SpriteIndex].World);
-	Ps.Position = mul(Ps.Position, g_FrameData.ViewProjection);
-	Ps.Position.z = 0.f;
-	Ps.TexCoord = Vs.TexCoord;
+	Ps.Position = mul(
+		mul(float4(Vs.Position, 0.f, 1.f),
+			g_SpriteData[Vs.SpriteIndex].World),
+		g_FrameData.ViewProjection);
+	Ps.TexCoord = mul(float4(Vs.TexCoord, 0.f, 1.f), g_SpriteData[Vs.SpriteIndex].TextureTransform).xy;
 	Ps.SpriteIndex = Vs.SpriteIndex;
 	return Ps;
 }
