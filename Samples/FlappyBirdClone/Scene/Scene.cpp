@@ -20,16 +20,14 @@ struct RainbowSprite
 {
 };
 
+constexpr uint32_t Player_CollisionGroup = 1 << 0;
+constexpr uint32_t Wall_CollisionGroup   = 1 << 1;
+
+constexpr uint32_t Player_CollisionMask = Wall_CollisionGroup;
+constexpr uint32_t Wall_CollisionMask   = Player_CollisionGroup;
+
 void FlappyBirdClone::LoadScene()
 {
-    constexpr uint32_t Player_CollisionGroup = 1 << 0;
-    constexpr uint32_t Wall_CollisionGroup   = 1 << 1;
-
-    constexpr uint32_t Player_CollisionMask = Wall_CollisionGroup;
-    constexpr uint32_t Wall_CollisionMask   = Player_CollisionGroup;
-
-    //
-
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
 
@@ -119,61 +117,6 @@ void FlappyBirdClone::LoadScene()
         WallCreate("Floor", Vec::Down<Vector3> * 14.f);
     }
 
-    // Create triangle in top and bottom (seperated by 3.5f)
-    {
-        auto TriangleMaterial = GetMaterial("BaseSprite")->CreateInstance();
-        TriangleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
-
-        auto ObstacleCreate =
-            [&](const char* Name, const Vector3& Position, const Vector2& Size, bool Up)
-        {
-            auto Obstacle = Scene.CreateEntity(Scene::EntityType::Sprite, Name);
-            {
-                Obstacle.add<RainbowSprite>();
-
-                auto SpriteComponent = Obstacle.get_mut<Scene::Component::Sprite>();
-                {
-                    SpriteComponent->MaterialInstance = TriangleMaterial;
-                    SpriteComponent->SpriteSize       = Vector2(23.42f, 11.7f) * Size;
-                }
-                Obstacle.modified<Scene::Component::Sprite>();
-
-                auto TransformComponent = Obstacle.get_mut<Scene::Component::Transform>();
-                {
-                    TransformComponent->World.SetPosition(Position);
-                    if (Up)
-                    {
-                        TransformComponent->World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * 180.f));
-                    }
-                }
-                Obstacle.modified<Scene::Component::Transform>();
-
-                {
-                    std::array<btVector3, 3> Vertices = {
-                        btVector3(-10.f, -4.75, -1.f),
-                        btVector3(0.f, 4.75, -1.f),
-                        btVector3(10.f, -4.75, -1.f),
-                    };
-
-                    for (auto& Vertex : Vertices)
-                    {
-                        Vertex.setX(Vertex.x() * Size.x);
-                        Vertex.setY(Vertex.y() * Size.y);
-                    }
-
-                    auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
-
-                    Obstacle.set(Scene::Component::CollisionShape{ std::move(TriangleShape) });
-                    auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Obstacle, Wall_CollisionGroup, Wall_CollisionMask);
-                    StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Black));
-                }
-            }
-        };
-
-        ObstacleCreate("Obstacle01", Vec::Down<Vector3> * 12.f + Vec::Right<Vector3> * 5.f, Vector2(0.6f, 2.f), false);
-        ObstacleCreate("Obstacle02", Vec::Up<Vector3> * 12.f + Vec::Right<Vector3> * 5.f, Vector2(0.6f, 2.f), true);
-    }
-
     // Player instance
     m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
     {
@@ -230,6 +173,8 @@ void FlappyBirdClone::LoadScene()
         }
         Camera.modified<Scene::Component::Transform>();
     }
+
+    CreateObstacle(Vec::Zero<Vector3>);
 
     //
 
@@ -298,10 +243,8 @@ void FlappyBirdClone::AttachInputs()
             Input::InputAction::BindType::Press,
             [this]
             {
-                auto Obstacle01 = GetScene().GetEntityWorld()->lookup("Obstacle01");
-                auto Sprite     = Obstacle01.get_mut<Scene::Component::Sprite>();
-                Sprite->SpriteSize.x += 0.1f;
-                Obstacle01.modified<Scene::Component::Sprite>();
+                m_ObstacleSpeed += 0.1f;
+                printf("Obstacle speed: %f\n", m_ObstacleSpeed);
             });
 
         auto Unedit = ActionTable->AddAction();
@@ -310,35 +253,8 @@ void FlappyBirdClone::AttachInputs()
             Input::InputAction::BindType::Press,
             [this]
             {
-                auto Obstacle01 = GetScene().GetEntityWorld()->lookup("Obstacle01");
-                auto Sprite     = Obstacle01.get_mut<Scene::Component::Sprite>();
-                Sprite->SpriteSize.x -= 0.1f;
-                Obstacle01.modified<Scene::Component::Sprite>();
-            });
-    }
-    {
-        auto EditAction = ActionTable->AddAction();
-        EditAction->SetInput(Input::EKeyboardInput::T);
-        EditAction->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
-            {
-                auto Obstacle01 = GetScene().GetEntityWorld()->lookup("Obstacle01");
-                auto Sprite     = Obstacle01.get_mut<Scene::Component::Sprite>();
-                Sprite->SpriteSize.y += 0.1f;
-                Obstacle01.modified<Scene::Component::Sprite>();
-            });
-
-        auto Unedit = ActionTable->AddAction();
-        Unedit->SetInput(Input::EKeyboardInput::Y);
-        Unedit->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
-            {
-                auto Obstacle01 = GetScene().GetEntityWorld()->lookup("Obstacle01");
-                auto Sprite     = Obstacle01.get_mut<Scene::Component::Sprite>();
-                Sprite->SpriteSize.y -= 0.1f;
-                Obstacle01.modified<Scene::Component::Sprite>();
+                m_ObstacleSpeed -= 0.1f;
+                printf("Obstacle speed: %f\n", m_ObstacleSpeed);
             });
     }
 }
@@ -353,6 +269,86 @@ void FlappyBirdClone::OnUpdate()
         return;
     }
 
+    UpdateInputs();
+    UpdateObstacles();
+}
+
+void FlappyBirdClone::OnCollisionEnter(
+    btPersistentManifold* Manifold)
+{
+    m_RigidBody->setActivationState(0);
+
+    //
+
+    auto Sprite             = m_Player.get_mut<Scene::Component::Sprite>();
+    Sprite->ModulationColor = Colors::Red;
+    m_Player.modified<Scene::Component::Sprite>();
+}
+
+void FlappyBirdClone::CreateObstacle(
+    const Vector3& Pos)
+{
+    auto TriangleMaterial = GetMaterial("BaseSprite")->CreateInstance();
+    TriangleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
+
+    auto ObstacleCreate =
+        [&](const Vector3& Position, const Vector2& Size, bool Up)
+    {
+        auto Obstacle = GetScene().CreateEntity(Scene::EntityType::Sprite);
+        {
+            Obstacle.add<RainbowSprite>();
+
+            auto SpriteComponent = Obstacle.get_mut<Scene::Component::Sprite>();
+            {
+                SpriteComponent->MaterialInstance = TriangleMaterial;
+                SpriteComponent->SpriteSize       = Vector2(23.42f, 11.7f) * Size;
+            }
+            Obstacle.modified<Scene::Component::Sprite>();
+
+            auto TransformComponent = Obstacle.get_mut<Scene::Component::Transform>();
+            {
+                TransformComponent->World.SetPosition(Position);
+                if (Up)
+                {
+                    TransformComponent->World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * 180.f));
+                }
+            }
+            Obstacle.modified<Scene::Component::Transform>();
+
+            {
+                std::array<btVector3, 3> Vertices = {
+                    btVector3(-10.f, -4.75, -1.f),
+                    btVector3(0.f, 4.75, -1.f),
+                    btVector3(10.f, -4.75, -1.f),
+                };
+
+                for (auto& Vertex : Vertices)
+                {
+                    Vertex.setX(Vertex.x() * Size.x);
+                    Vertex.setY(Vertex.y() * Size.y);
+                }
+
+                auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
+
+                Obstacle.set(Scene::Component::CollisionShape{ std::move(TriangleShape) });
+                auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Obstacle, Wall_CollisionGroup, Wall_CollisionMask);
+                StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Black));
+            }
+        }
+
+        return Obstacle;
+    };
+
+    auto SpawnPosition = Vec::Right<Vector3> * 20.f + Pos;
+
+    m_Obstacles.push_back(ObstacleCreate(Vec::Down<Vector3> * 12.f + SpawnPosition, Vector2(0.6f, 2.f), false));
+    m_Obstacles.push_back(ObstacleCreate(Vec::Up<Vector3> * 12.f + SpawnPosition, Vector2(0.6f, 2.f), true));
+}
+
+//
+
+void FlappyBirdClone::UpdateInputs()
+{
     float Mult        = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
@@ -381,14 +377,16 @@ void FlappyBirdClone::OnUpdate()
     m_RigidBody->setInterpolationWorldTransform(Transform);
 }
 
-void FlappyBirdClone::OnCollisionEnter(
-    btPersistentManifold* Manifold)
+void FlappyBirdClone::UpdateObstacles()
 {
-    m_RigidBody->setActivationState(0);
+    auto DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+    for (auto& Entity : m_Obstacles)
+    {
+        auto Rigidbody = Entity.get<Scene::Component::CollisionObject>()->AsRigidBody();
 
-    //
-
-    auto Sprite             = m_Player.get_mut<Scene::Component::Sprite>();
-    Sprite->ModulationColor = Colors::Red;
-    m_Player.modified<Scene::Component::Sprite>();
+        auto& Transform = Rigidbody->getWorldTransform();
+        Transform.setOrigin(Transform.getOrigin() + btVector3(-m_ObstacleSpeed, 0.f, 0.f) * DeltaTime);
+        Rigidbody->setInterpolationWorldTransform(Transform);
+        Rigidbody->getMotionState()->setWorldTransform(Transform);
+    }
 }

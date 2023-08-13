@@ -83,4 +83,14 @@ namespace Neon::Scene::Component
 
         return ObjectPtr;
     }
+
+    btRigidBody* CollisionObject::AsRigidBody() const
+    {
+        return btRigidBody::upcast(BulletObject.get());
+    }
+
+    btSoftBody* CollisionObject::AsSoftBody() const
+    {
+        return btSoftBody::upcast(BulletObject.get());
+    }
 } // namespace Neon::Scene::Component

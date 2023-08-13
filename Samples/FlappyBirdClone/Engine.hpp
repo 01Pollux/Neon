@@ -2,6 +2,7 @@
 
 #include <Runtime/GameEngine.hpp>
 #include <Scene/Scene.hpp>
+#include <Math/Vector.hpp>
 
 #include <RHI/Resource/Resource.hpp>
 #include <Asset/Types/Texture.hpp>
@@ -58,6 +59,23 @@ private:
     [[nodiscard]] Neon::Ptr<Neon::Renderer::IMaterial> GetMaterial(
         const Neon::StringU8& Name);
 
+    /// <summary>
+    /// Create a new obstacle in the scene
+    /// </summary>
+    void CreateObstacle(
+        const Neon::Vector3& Position);
+
+public:
+    /// <summary>
+    /// Update the inputs for the player
+    /// </summary>
+    void UpdateInputs();
+
+    /// <summary>
+    /// Update the obstacles in the scene
+    /// </summary>
+    void UpdateObstacles();
+
 private:
     MaterialMap m_Materials;
 
@@ -65,6 +83,8 @@ private:
     TextureAssetPtr m_HdrTriangle;
 
     flecs::entity m_Player;
+
+    std::vector<flecs::entity> m_Obstacles;
 
     /// <summary>
     /// Pointer to player's rigid body
@@ -80,6 +100,11 @@ private:
     /// Engine power of the player
     /// </summary>
     float m_EnginePower = 9.5f;
+
+    /// <summary>
+    /// Obstacle speed
+    /// </summary>
+    float m_ObstacleSpeed = 9.5f;
 
     /// <summary>
     /// Temporary flag to check if the player is jumping until we have imgui

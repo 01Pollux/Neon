@@ -131,5 +131,15 @@ namespace Neon::Scene::Component
             float         Mass,
             uint32_t      Group = 1,
             uint32_t      Mask  = MaskAll);
+
+        /// <summary>
+        /// Get the collision object as rigid body.
+        /// </summary>
+        [[nodiscard]] btRigidBody* AsRigidBody() const;
+
+        /// <summary>
+        /// Get the collision object as soft body.
+        /// </summary>
+        [[nodiscard]] btSoftBody* AsSoftBody() const;
     };
 } // namespace Neon::Scene::Component
