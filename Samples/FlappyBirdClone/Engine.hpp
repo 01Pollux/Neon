@@ -79,7 +79,7 @@ private:
     /// <summary>
     /// Engine power of the player
     /// </summary>
-    float m_EnginePower = 4.0f;
+    float m_EnginePower = 9.5f;
 
     /// <summary>
     /// Temporary flag to check if the player is jumping until we have imgui

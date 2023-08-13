@@ -107,7 +107,7 @@ void FlappyBirdClone::LoadScene()
 
                 {
                     Wall.set(Scene::Component::CollisionShape{
-                        std::make_unique<btBoxShape>(btVector3(0.5f, 0.5f, 0.5f)) });
+                        std::make_unique<btBoxShape>(btVector3(100.f, 2.35, 200.f) / 2.f) });
 
                     auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall, Wall_CollisionGroup, Wall_CollisionMask);
                     StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Green));
@@ -115,8 +115,8 @@ void FlappyBirdClone::LoadScene()
             }
         };
 
-        // WallCreate("Ceiling", Vec::Up<Vector3> * 6.5f);
-        WallCreate("Floor", Vec::Down<Vector3> * 5.5f);
+        WallCreate("Ceiling", Vec::Up<Vector3> * 14.f);
+        WallCreate("Floor", Vec::Down<Vector3> * 14.f);
     }
 
     // Create triangle in top and bottom (seperated by 3.5f)
@@ -218,13 +218,13 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera3D, "PlayerCamera");
+    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
     {
         Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
         auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
         {
-            CameraComponent->Viewport.OrthographicSize = 20.0f;
+            CameraComponent->Viewport.OrthographicSize = 50.0f;
             CameraComponent->Viewport.NearPlane        = -1.0f;
             CameraComponent->Viewport.FarPlane         = 10.0f;
 
@@ -308,12 +308,8 @@ void FlappyBirdClone::AttachInputs()
             Input::InputAction::BindType::Press,
             [this]
             {
-                auto Ent       = GetScene().GetEntityWorld()->lookup("Triangle01");
-                auto Transform = Ent.get_mut<Scene::Component::Transform>();
-
-                Transform->World.SetPosition(Transform->World.GetPosition() + Vec::Up<Vector3> * 0.05f);
-
-                Ent.modified<Scene::Component::Transform>();
+                m_EnginePower += 0.1f;
+                printf("Engine power: %f\n", m_EnginePower);
             });
 
         auto Unedit = ActionTable->AddAction();
@@ -322,12 +318,8 @@ void FlappyBirdClone::AttachInputs()
             Input::InputAction::BindType::Press,
             [this]
             {
-                auto Ent       = GetScene().GetEntityWorld()->lookup("Triangle01");
-                auto Transform = Ent.get_mut<Scene::Component::Transform>();
-
-                Transform->World.SetPosition(Transform->World.GetPosition() - Vec::Up<Vector3> * 0.05f);
-
-                Ent.modified<Scene::Component::Transform>();
+                m_EnginePower -= 0.1f;
+                printf("Engine power: %f\n", m_EnginePower);
             });
     }
 }
@@ -345,7 +337,7 @@ void FlappyBirdClone::OnUpdate()
     float Mult        = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
-    bool UpdateVelocity;
+    bool UpdateVelocity = true;
     if (m_IsJumping)
     {
         EnginePower *= 2.6f;
@@ -353,12 +345,10 @@ void FlappyBirdClone::OnUpdate()
         {
             EnginePower *= 3.5f;
         }
-        UpdateVelocity = true;
     }
     else
     {
-        UpdateVelocity = false;
-        EnginePower *= -5.6f;
+        EnginePower *= -4.6f;
     }
 
     m_VelocityAccum = std::clamp(m_VelocityAccum + EnginePower, -m_EnginePower * 2, m_EnginePower * 2);
