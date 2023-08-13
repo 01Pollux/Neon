@@ -60,7 +60,7 @@ Copy-Item Premake\flecs.lua $(Get-DepSrcPath("flecs\premake5.lua"))
 
 Remove-Directory $(Get-DepIncPath("flecs"))
 Copy-Item -Recurse $(Get-DepSrcPath("flecs\include")) $(Get-DepIncPath("flecs"))
-
+Get-ChildItem -Path Deps/Externals/flecs -Filter project.json -Recurse | Remove-Item -Force
 
 #
 # ImGui

@@ -9,4 +9,4 @@ Write-Output "Clearing temporary files..."
 Remove-Item -Force -Recurse tmp | Out-Null
 
 .\Install.ps1
-.\Setup.ps1
+.\Setup_d3d12.ps1

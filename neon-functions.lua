@@ -117,13 +117,13 @@ function link_boost_lib(lib_name)
     filter "configurations:Dist"
         links
         {
-            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
+            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_84.lib"
         }
     filter {}
     filter "configurations:not Dist"
         links
         {
-            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
+            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_84.lib"
         }
     filter {}
 end

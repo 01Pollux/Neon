@@ -1,5 +1,4 @@
 #include <Runtime/EntryPoint.hpp>
-#include <Runtime/Types/WorldRuntime.hpp>
 #include <Asset/Packs/Directory.hpp>
 
 using namespace Neon;
