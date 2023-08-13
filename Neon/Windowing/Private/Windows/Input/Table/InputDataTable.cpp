@@ -22,28 +22,28 @@ namespace Neon::Input
     {
         for (auto& [ActionName, Action] : m_InputActionMap)
         {
-            if (Action->IsEnabled())
+            if (Action && Action->IsEnabled())
             {
                 Handled |= static_cast<InputActionTableImpl*>(Action.get())->PushMessage(m_EventQueue, Message, wParam, lParam);
             }
         }
         for (auto& [ActionName, Axis] : m_InputAxisMap)
         {
-            if (Axis->IsEnabled())
+            if (Axis && Axis->IsEnabled())
             {
                 Handled |= static_cast<InputAxisTableImpl*>(Axis.get())->PushMessage(m_EventQueue, Message, wParam, lParam);
             }
         }
         for (auto& [ActionName, Mouse] : m_InputMouseMap)
         {
-            if (Mouse->IsEnabled())
+            if (Mouse && Mouse->IsEnabled())
             {
                 Handled |= static_cast<InputMouseTableImpl*>(Mouse.get())->PushMessage(m_EventQueue, WindowHandle, Message, wParam, lParam);
             }
         }
         for (auto& [ActionName, Mouse] : m_InputMouseWheelMap)
         {
-            if (Mouse->IsEnabled())
+            if (Mouse && Mouse->IsEnabled())
             {
                 Handled |= static_cast<InputMouseWheelTableImpl*>(Mouse.get())->PushMessage(m_EventQueue, Message, wParam, lParam);
             }
