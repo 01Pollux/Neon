@@ -79,7 +79,6 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Floor and ceiling as sprite
-    if (0)
     {
         auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
 
@@ -192,8 +191,7 @@ void FlappyBirdClone::LoadScene()
         {
             SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
             SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
-            SpriteComponent->SpriteSize = Vec::One<Vector3> * 5.f;
-            // SpriteComponent->TextureTransform.SetScale(Vec::One<Vector3> * 0.5f);
+            SpriteComponent->SpriteSize = { 4.f, 5.2f };
         }
         m_Player.modified<Scene::Component::Sprite>();
 
@@ -205,7 +203,7 @@ void FlappyBirdClone::LoadScene()
 
         {
             m_Player.set(Scene::Component::CollisionShape{
-                std::make_unique<btCapsuleShape>(2.5f, 3.5f) });
+                std::make_unique<btCapsuleShape>(1.35f, 1.75f) });
 
             m_RigidBody = btRigidBody::upcast(
                 Scene::Component::CollisionObject::AddRigidBody(m_Player, 10.f, Player_CollisionGroup, Player_CollisionMask));
