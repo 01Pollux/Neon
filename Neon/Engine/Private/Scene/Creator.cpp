@@ -43,8 +43,8 @@ namespace Neon::Scene
             Camera CameraComponent(CameraType::Perspective);
 
             RG::CreateStandard2DRenderGraph(CameraComponent, Actor);
-            Actor.set<Camera>(std::move(CameraComponent));
-            Actor.set<Transform>({});
+            Actor.set(std::move(CameraComponent));
+            Actor.set(Transform{});
 
             return Actor;
         }
@@ -52,8 +52,8 @@ namespace Neon::Scene
         {
             auto Actor = m_EntityWorld->entity(Name);
 
-            Actor.set<Transform>({});
-            Actor.set<Sprite>({});
+            Actor.set(Transform{});
+            Actor.set(Sprite{});
             Actor.add<Sprite::MainRenderer>();
 
             return Actor;

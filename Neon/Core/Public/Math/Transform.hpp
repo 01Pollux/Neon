@@ -6,10 +6,11 @@
 
 namespace Neon
 {
-    class TransformMatrix
+    template<bool _IsAffine>
+    class TransformMatrixT
     {
     public:
-        TransformMatrix(
+        TransformMatrixT(
             const Matrix3x3& Basis    = Mat::Identity<Matrix3x3>,
             const Vector3&   Position = Vec::Zero<Vector3>) :
             m_Basis(Basis),
@@ -70,9 +71,16 @@ namespace Neon
         void SetRotation(
             const Quaternion& Rotation) noexcept
         {
-            auto Scale = GetScale();
-            m_Basis    = glm::mat3_cast(Rotation);
-            SetScale(Scale);
+            if constexpr (_IsAffine)
+            {
+                auto Scale = GetScale();
+                m_Basis    = glm::mat3_cast(Rotation);
+                SetScale(Scale);
+            }
+            else
+            {
+                m_Basis = glm::mat3_cast(Rotation);
+            }
         }
 
         /// <summary>
@@ -90,7 +98,14 @@ namespace Neon
         /// </summary>
         [[nodiscard]] Vector3 GetRotationEuler() const noexcept
         {
-            return glm::eulerAngles(glm::quat_cast(GetBasisNormalized()));
+            if constexpr (_IsAffine)
+            {
+                return glm::eulerAngles(glm::quat_cast(GetBasisNormalized()));
+            }
+            else
+            {
+                return glm::eulerAngles(glm::quat_cast(GetBasis()));
+            }
         }
 
         /// <summary>
@@ -119,7 +134,14 @@ namespace Neon
             Vector3& Axis) const noexcept
         {
             float Angle;
-            glm::axisAngle(Matrix4x4(GetBasisNormalized()), Axis, Angle);
+            if constexpr (_IsAffine)
+            {
+                glm::axisAngle(Matrix4x4(GetBasisNormalized()), Axis, Angle);
+            }
+            else
+            {
+                glm::axisAngle(Matrix4x4(GetBasis()), Axis, Angle);
+            }
             return Angle;
         }
 
@@ -137,6 +159,7 @@ namespace Neon
         /// <summary>
         /// Get scale of transform
         /// </summary>
+        template<typename = std::enable_if_t<_IsAffine>>
         [[nodiscard]] Vector3 GetScale() const noexcept
         {
             return {
@@ -149,6 +172,7 @@ namespace Neon
         /// <summary>
         /// Set scale of transform
         /// </summary>
+        template<typename = std::enable_if_t<_IsAffine>>
         void SetScale(
             const Vector3& Scale) noexcept
         {
@@ -160,6 +184,7 @@ namespace Neon
         /// <summary>
         /// Accumulate scale of transform
         /// </summary>
+        template<typename = std::enable_if_t<_IsAffine>>
         void AppendScale(
             const Vector3& Scale) noexcept
         {
@@ -219,14 +244,14 @@ namespace Neon
         }
 
     public:
-        [[nodiscard]] TransformMatrix operator*(
-            const TransformMatrix& Other) const noexcept
+        [[nodiscard]] TransformMatrixT operator*(
+            const TransformMatrixT& Other) const noexcept
         {
             return TransformMatrix(GetBasis() * Other.GetBasis(), GetPosition() + Other.GetPosition());
         }
 
-        TransformMatrix& operator*=(
-            const TransformMatrix& Other) noexcept
+        TransformMatrixT& operator*=(
+            const TransformMatrixT& Other) noexcept
         {
             m_Basis *= Other.m_Basis;
             m_Position += Other.m_Position;
@@ -237,4 +262,7 @@ namespace Neon
         Matrix3x3 m_Basis;
         Vector3   m_Position;
     };
+
+    using AffineTransformMatrix = TransformMatrixT<true>;
+    using TransformMatrix       = TransformMatrixT<false>;
 } // namespace Neon

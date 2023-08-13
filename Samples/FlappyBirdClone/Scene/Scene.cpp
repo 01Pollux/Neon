@@ -12,6 +12,7 @@
 
 #include <Runtime/DebugOverlay.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 using namespace Neon;
 
@@ -78,7 +79,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Floor and ceiling as sprite
-    if (1)
+    if (0)
     {
         auto WorldMaterial = GetMaterial("BaseSprite")->CreateInstance();
 
@@ -95,12 +96,12 @@ void FlappyBirdClone::LoadScene()
                 auto SpriteComponent = Wall.get_mut<Scene::Component::Sprite>();
                 {
                     SpriteComponent->MaterialInstance = WorldMaterial;
+                    SpriteComponent->SpriteSize       = Vector3(100.f, 2.35, 200.f);
                 }
                 Wall.modified<Scene::Component::Sprite>();
 
                 auto TransformComponent = Wall.get_mut<Scene::Component::Transform>();
                 {
-                    TransformComponent->World.SetScale(Vector3(100.f, 2.35, 200.f));
                     TransformComponent->World.SetPosition(Position);
                 }
                 Wall.modified<Scene::Component::Transform>();
@@ -191,13 +192,14 @@ void FlappyBirdClone::LoadScene()
         {
             SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
             SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
+            SpriteComponent->SpriteSize = Vec::One<Vector3> * 5.f;
             // SpriteComponent->TextureTransform.SetScale(Vec::One<Vector3> * 0.5f);
         }
         m_Player.modified<Scene::Component::Sprite>();
 
         auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
         {
-            TransformComponent->World.SetRotationEuler(Vec::Forward<Vector3> * -90.f);
+            TransformComponent->World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
         }
         m_Player.modified<Scene::Component::Transform>();
 
@@ -234,7 +236,8 @@ void FlappyBirdClone::LoadScene()
 
         auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
         {
-            TransformComponent->World.SetRotationEuler(Vec::Right<Vector3> * -90.f);
+            TransformComponent->World.SetRotationEuler(glm::radians(Vec::Right<Vector3> * -90.f));
+            // TransformComponent->World.SetAxisAngle(Vec::Right<Vector3>, -90.f);
             TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
         }
         Camera.modified<Scene::Component::Transform>();

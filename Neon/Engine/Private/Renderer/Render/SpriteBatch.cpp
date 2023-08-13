@@ -77,6 +77,11 @@ namespace Neon::Renderer
             BatchSpriteVertex{ .Position = Vector2(0.5f, -0.5f), .TexCoord = Vector2(1.f, 1.f), .SpriteIndex = SpriteIndex },
             BatchSpriteVertex{ .Position = Vector2(-0.5f, -0.5f), .TexCoord = Vector2(0.f, 1.f), .SpriteIndex = SpriteIndex },
         };
+        for (auto& Vertex : Vertices)
+        {
+            Vertex.Position *= Sprite.SpriteSize;
+        }
+
         DrawQuad<>(Vertices);
 
         auto ObjectData = m_PerObjectBuffer.AllocateData<PerObjectData>(1);
