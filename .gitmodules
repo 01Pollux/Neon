@@ -1,9 +1,6 @@
 [submodule "Deps/Externals/Bullet3"]
 	path = Deps/Externals/Bullet3
 	url = https://github.com/01Pollux/bullet3
-[submodule "Deps/Externals/spdlog"]
-	path = Deps/Externals/spdlog
-	url = https://github.com/01Pollux/spdlog
 [submodule "Deps/Externals/zlib"]
 	path = Deps/Externals/zlib
 	url = https://github.com/01Pollux/zlib
@@ -13,12 +10,6 @@
 [submodule "Deps/Externals/DirectX-Headers"]
 	path = Deps/Externals/DirectX-Headers
 	url = https://github.com/01Pollux/DirectX-Headers
-[submodule "Deps/Externals/glm"]
-	path = Deps/Externals/glm
-	url = https://github.com/01Pollux/glm
-[submodule "Deps/Externals/cppcoro"]
-	path = Deps/Externals/cppcoro
-	url = https://github.com/andreasbuhr/cppcoro.git
 [submodule "Deps/Externals/flecs"]
 	path = Deps/Externals/flecs
 	url = https://github.com/01Pollux/flecs.git
