@@ -51,15 +51,40 @@ namespace Neon::Physics
     //
 
     /// <summary>
+    /// Convert Neon::Quaternion to QubtQuaternionaternion.
+    /// </summary>
+    [[nodiscard]] inline btQuaternion ToBullet3(
+        const Quaternion& Quat) noexcept
+    {
+        return btQuaternion(Quat.x, Quat.y, Quat.z, Quat.w);
+    }
+
+    /// <summary>
+    /// Convert btQuaternion to Neon::Quaternion.
+    /// </summary>
+    [[nodiscard]] inline Quaternion FromBullet3(
+        const btQuaternion& Quat) noexcept
+    {
+        return Quaternion(float(Quat.x()), float(Quat.y()), float(Quat.z()), float(Quat.w()));
+    }
+
+    //
+
+    /// <summary>
     /// Convert Neon::Matrix3x3 to btMatrix3x3.
     /// </summary>
     [[nodiscard]] inline btMatrix3x3 ToBullet3(
         const Matrix3x3& Mat) noexcept
     {
-        return btMatrix3x3(
-            ToBullet3(Mat[0]),
-            ToBullet3(Mat[1]),
-            ToBullet3(Mat[2]));
+        btMatrix3x3 ToMat;
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                ToMat[i][j] = Mat[j][i];
+            }
+        }
+        return ToMat;
     }
 
     /// <summary>
@@ -68,10 +93,15 @@ namespace Neon::Physics
     [[nodiscard]] inline Matrix3x3 FromBullet3(
         const btMatrix3x3& Mat) noexcept
     {
-        return Matrix3x3(
-            FromBullet3(Mat[0]),
-            FromBullet3(Mat[1]),
-            FromBullet3(Mat[2]));
+        Matrix3x3 ToMat;
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                ToMat[i][j] = float(Mat[j][i]);
+            }
+        }
+        return ToMat;
     }
 
     //
@@ -82,19 +112,7 @@ namespace Neon::Physics
     [[nodiscard]] inline btTransform ToBullet3(
         const TransformMatrix& Transform) noexcept
     {
-        btTransform Result;
-
-        auto& ToBasis   = Result.getBasis();
-        auto& FromBasis = Transform.GetBasis();
-        for (int row = 0; row < 3; row++)
-        {
-            for (int col = 0; col < 3; col++)
-            {
-                ToBasis[row][col] = FromBasis[col][row];
-            }
-        }
-        Result.setOrigin(ToBullet3(Transform.GetPosition()));
-        return Result;
+        return btTransform(ToBullet3(Transform.GetBasis()), ToBullet3(Transform.GetPosition()));
     }
 
     /// <summary>
@@ -103,18 +121,6 @@ namespace Neon::Physics
     [[nodiscard]] inline TransformMatrix FromBullet3(
         const btTransform& Transform) noexcept
     {
-        TransformMatrix Result;
-
-        auto& ToBasis   = Result.GetBasis();
-        auto& FromBasis = Transform.getBasis();
-        for (int row = 0; row < 3; row++)
-        {
-            for (int col = 0; col < 3; col++)
-            {
-                ToBasis[row][col] = float(FromBasis[col][row]);
-            }
-        }
-        Result.SetPosition(FromBullet3(Transform.getOrigin()));
-        return Result;
+        return TransformMatrix(FromBullet3(Transform.getBasis()), FromBullet3(Transform.getOrigin()));
     }
 } // namespace Neon::Physics
