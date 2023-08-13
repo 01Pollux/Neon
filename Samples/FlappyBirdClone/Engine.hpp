@@ -44,7 +44,8 @@ private:
     /// <summary>
     /// Called by pipeline on update
     /// </summary>
-    void OnUpdate();
+    void OnUpdate(
+        flecs::iter& Iter);
 
     /// <summary>
     /// Called when the player collides with something
@@ -63,6 +64,7 @@ private:
     /// Create a new obstacle in the scene
     /// </summary>
     void CreateObstacle(
+        flecs::world         World,
         const Neon::Vector3& Position);
 
 public:
@@ -74,7 +76,7 @@ public:
     /// <summary>
     /// Update the obstacles in the scene
     /// </summary>
-    void UpdateObstacles();
+    void UpdateObstacles(flecs::iter& Iter);
 
 private:
     MaterialMap m_Materials;
@@ -85,6 +87,8 @@ private:
     flecs::entity m_Player;
 
     std::vector<flecs::entity> m_Obstacles;
+
+    Neon::Ptr<Neon::Renderer::IMaterial> m_ObstacleMaterial;
 
     /// <summary>
     /// Pointer to player's rigid body

@@ -20,18 +20,6 @@ namespace Neon
 
 namespace Neon::Scene
 {
-    enum class EntityType : uint8_t
-    {
-        Empty,
-
-        Camera2D,
-        Camera3D,
-
-        Sprite,
-    };
-
-    //
-
     class GameScene
     {
     public:
@@ -68,14 +56,6 @@ namespace Neon::Scene
         {
             return m_EntityWorld.get();
         }
-
-    public:
-        /// <summary>
-        /// Create a new entity.
-        /// </summary>
-        flecs::entity CreateEntity(
-            EntityType  Type,
-            const char* Name = nullptr);
 
     private:
         UPtr<Physics::World> m_PhysicsWorld;

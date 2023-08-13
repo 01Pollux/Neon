@@ -11,8 +11,7 @@
 #include <Input/System.hpp>
 
 #include <Runtime/DebugOverlay.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/matrix_decompose.hpp>
+#include <RenderGraph/Graphs/Standard2D.hpp>
 
 using namespace Neon;
 
@@ -30,51 +29,9 @@ void FlappyBirdClone::LoadScene()
 {
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
     auto& Scene = GetScene();
+    auto& World = *Scene.GetEntityWorld();
 
     // Scene.GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
-
-    // Stress test: Create 200'000 sprites
-    if (0)
-    {
-        std::vector<Ptr<Renderer::IMaterial>> MaterialInstances;
-        // Random 1000 material instances
-        auto MaterialInstance = GetMaterial("BaseSprite");
-        auto WorldTexture     = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
-        for (int i = 0; i < 1000; ++i)
-        {
-            auto Copy = MaterialInstance->CreateInstance();
-            Copy->SetTexture("p_SpriteTextures", WorldTexture);
-            MaterialInstances.emplace_back(Copy);
-        }
-
-        for (int i = 0; i < 200; ++i)
-        {
-            for (int j = 0; j < 100; ++j)
-            {
-                auto Sprite = Scene.CreateEntity(Scene::EntityType::Sprite, StringUtils::Format("StressTestSprite{}{}", i, j).c_str());
-                {
-                    auto SpriteComponent = Sprite.get_mut<Scene::Component::Sprite>();
-                    {
-                        // Select random material instance
-                        SpriteComponent->MaterialInstance = MaterialInstances[j];
-                        // Random color based on i and j
-                        SpriteComponent->ModulationColor = Color4(
-                            ((i * 1000 + j) % 255) / 255.f,
-                            ((i * 1000 + j) % 255) / 255.f,
-                            ((i * 1000 + j) % 255) / 255.f,
-                            1.f);
-                    }
-                    Sprite.modified<Scene::Component::Sprite>();
-
-                    auto TransformComponent = Sprite.get_mut<Scene::Component::Transform>();
-                    {
-                        TransformComponent->World.SetPosition(Vec::Right<Vector3> * (i * 1.1f));
-                    }
-                    Sprite.modified<Scene::Component::Transform>();
-                }
-            }
-        }
-    }
 
     // Floor and ceiling as sprite
     {
@@ -86,22 +43,23 @@ void FlappyBirdClone::LoadScene()
         auto WallCreate =
             [&](const char* Name, const Vector3& Position)
         {
-            auto Wall = Scene.CreateEntity(Scene::EntityType::Sprite, Name);
+            auto Wall = World.entity(Name);
             {
                 Wall.add<RainbowSprite>();
 
-                auto SpriteComponent = Wall.get_mut<Scene::Component::Sprite>();
+                Scene::Component::Sprite SpriteComponent;
                 {
-                    SpriteComponent->MaterialInstance = WorldMaterial;
-                    SpriteComponent->SpriteSize       = Vector2(100.f, 2.35);
+                    SpriteComponent.MaterialInstance = WorldMaterial;
+                    SpriteComponent.SpriteSize       = Vector2(100.f, 2.35);
                 }
-                Wall.modified<Scene::Component::Sprite>();
+                Wall.set(std::move(SpriteComponent));
+                Wall.add<Scene::Component::Sprite::MainRenderer>();
 
-                auto TransformComponent = Wall.get_mut<Scene::Component::Transform>();
+                Scene::Component::Transform Transform;
                 {
-                    TransformComponent->World.SetPosition(Position);
+                    Transform.World.SetPosition(Position);
                 }
-                Wall.modified<Scene::Component::Transform>();
+                Wall.set(std::move(Transform));
 
                 {
                     Wall.set(Scene::Component::CollisionShape{
@@ -118,21 +76,22 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player instance
-    m_Player = Scene.CreateEntity(Scene::EntityType::Sprite, "PlayerSprite");
+    m_Player = World.entity("Player");
     {
-        auto SpriteComponent = m_Player.get_mut<Scene::Component::Sprite>();
+        Scene::Component::Sprite SpriteComponent;
         {
-            SpriteComponent->MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
-            SpriteComponent->MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
-            SpriteComponent->SpriteSize = { 4.f, 5.2f };
+            SpriteComponent.MaterialInstance = GetMaterial("BaseSprite")->CreateInstance();
+            SpriteComponent.MaterialInstance->SetTexture("p_SpriteTextures", m_Sprite);
+            SpriteComponent.SpriteSize = { 4.f, 5.2f };
         }
-        m_Player.modified<Scene::Component::Sprite>();
+        m_Player.set(std::move(SpriteComponent));
+        m_Player.add<Scene::Component::Sprite::MainRenderer>();
 
-        auto TransformComponent = m_Player.get_mut<Scene::Component::Transform>();
+        Scene::Component::Transform Transform;
         {
-            TransformComponent->World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
+            Transform.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
         }
-        m_Player.modified<Scene::Component::Transform>();
+        m_Player.set(std::move(Transform));
 
         {
             m_Player.set(Scene::Component::CollisionShape{
@@ -147,34 +106,40 @@ void FlappyBirdClone::LoadScene()
 
             m_Player.set<Scene::Component::CollisionEnter>({ std::bind(&FlappyBirdClone::OnCollisionEnter, this, std::placeholders::_1) });
         }
-        m_Player.modified<Scene::Component::CollisionEnter>();
     }
 
     // Player camera
-    auto Camera = Scene.CreateEntity(Scene::EntityType::Camera2D, "PlayerCamera");
+    auto Camera = World.entity("PlayerCamera");
     {
         Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
 
-        auto CameraComponent = Camera.get_mut<Scene::Component::Camera>();
+        Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {
-            CameraComponent->Viewport.OrthographicSize = 50.0f;
-            CameraComponent->Viewport.NearPlane        = -1.0f;
-            CameraComponent->Viewport.FarPlane         = 10.0f;
+            RG::CreateStandard2DRenderGraph(CameraComponent, Camera);
 
-            CameraComponent->LookAt = m_Player.get<Scene::Component::Transform>()->World.GetPosition();
+            CameraComponent.Viewport.OrthographicSize = 50.0f;
+            CameraComponent.Viewport.NearPlane        = -1.0f;
+            CameraComponent.Viewport.FarPlane         = 10.0f;
+
+            CameraComponent.LookAt = m_Player.get<Scene::Component::Transform>()->World.GetPosition();
         }
-        Camera.modified<Scene::Component::Camera>();
+        Camera.set(std::move(CameraComponent));
 
-        auto TransformComponent = Camera.get_mut<Scene::Component::Transform>();
+        Scene::Component::Transform TransformComponent;
         {
-            TransformComponent->World.SetRotationEuler(glm::radians(Vec::Right<Vector3> * -90.f));
-            // TransformComponent->World.SetAxisAngle(Vec::Right<Vector3>, -90.f);
-            TransformComponent->World.SetPosition(Vec::Backward<Vector3> * 10.f);
+            TransformComponent.World.SetRotationEuler(glm::radians(Vec::Right<Vector3> * -90.f));
+            TransformComponent.World.SetPosition(Vec::Backward<Vector3> * 10.f);
         }
-        Camera.modified<Scene::Component::Transform>();
+        Camera.set(std::move(TransformComponent));
     }
 
-    CreateObstacle(Vec::Zero<Vector3>);
+    m_ObstacleMaterial = GetMaterial("BaseSprite")->CreateInstance();
+    m_ObstacleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
+
+    for (int i = 0; i < 3; i++)
+    {
+        CreateObstacle(World.get_world(), Vec::Right<Vector3> * 25.f * float(i));
+    }
 
     //
 
@@ -184,14 +149,12 @@ void FlappyBirdClone::LoadScene()
 
     Scene.GetEntityWorld()
         ->system()
-        .multi_threaded()
         .kind(flecs::OnUpdate)
-        .iter([this](flecs::iter)
-              { OnUpdate(); });
+        .iter([this](flecs::iter Iter)
+              { OnUpdate(Iter); });
 
     Scene.GetEntityWorld()
         ->system<RainbowSprite>()
-        .multi_threaded()
         .each(
             [this](flecs::entity Entity, RainbowSprite)
             {
@@ -259,7 +222,8 @@ void FlappyBirdClone::AttachInputs()
     }
 }
 
-void FlappyBirdClone::OnUpdate()
+void FlappyBirdClone::OnUpdate(
+    flecs::iter& Iter)
 {
     // Player lost
     if (!m_RigidBody->getActivationState())
@@ -270,7 +234,7 @@ void FlappyBirdClone::OnUpdate()
     }
 
     UpdateInputs();
-    UpdateObstacles();
+    UpdateObstacles(Iter);
 }
 
 void FlappyBirdClone::OnCollisionEnter(
@@ -286,34 +250,33 @@ void FlappyBirdClone::OnCollisionEnter(
 }
 
 void FlappyBirdClone::CreateObstacle(
+    flecs::world   World,
     const Vector3& Pos)
 {
-    auto TriangleMaterial = GetMaterial("BaseSprite")->CreateInstance();
-    TriangleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
-
     auto ObstacleCreate =
-        [&](const Vector3& Position, const Vector2& Size, bool Up)
+        [this, &World](const Vector3& Position, const Vector2& Size, bool Up)
     {
-        auto Obstacle = GetScene().CreateEntity(Scene::EntityType::Sprite);
+        auto Obstacle = World.entity();
         {
             Obstacle.add<RainbowSprite>();
 
-            auto SpriteComponent = Obstacle.get_mut<Scene::Component::Sprite>();
+            Scene::Component::Sprite SpriteComponent;
             {
-                SpriteComponent->MaterialInstance = TriangleMaterial;
-                SpriteComponent->SpriteSize       = Vector2(23.42f, 11.7f) * Size;
+                SpriteComponent.MaterialInstance = m_ObstacleMaterial;
+                SpriteComponent.SpriteSize       = Vector2(23.42f, 11.7f) * Size;
             }
-            Obstacle.modified<Scene::Component::Sprite>();
+            Obstacle.set(std::move(SpriteComponent));
+            Obstacle.add<Scene::Component::Sprite::MainRenderer>();
 
-            auto TransformComponent = Obstacle.get_mut<Scene::Component::Transform>();
+            Scene::Component::Transform TransformComponent;
             {
-                TransformComponent->World.SetPosition(Position);
+                TransformComponent.World.SetPosition(Position);
                 if (Up)
                 {
-                    TransformComponent->World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * 180.f));
+                    TransformComponent.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * 180.f));
                 }
             }
-            Obstacle.modified<Scene::Component::Transform>();
+            Obstacle.set(std::move(TransformComponent));
 
             {
                 std::array<btVector3, 3> Vertices = {
@@ -330,7 +293,7 @@ void FlappyBirdClone::CreateObstacle(
 
                 auto TriangleShape = std::make_unique<btConvexHullShape>(&Vertices[0].x(), int(Vertices.size()), int(sizeof(Vertices[0])));
 
-                Obstacle.set(Scene::Component::CollisionShape{ std::move(TriangleShape) });
+                Obstacle.set<Scene::Component::CollisionShape>({ std::move(TriangleShape) });
                 auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Obstacle, Wall_CollisionGroup, Wall_CollisionMask);
                 StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Black));
             }
@@ -377,16 +340,36 @@ void FlappyBirdClone::UpdateInputs()
     m_RigidBody->setInterpolationWorldTransform(Transform);
 }
 
-void FlappyBirdClone::UpdateObstacles()
+void FlappyBirdClone::UpdateObstacles(
+    flecs::iter& Iter)
 {
-    auto DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+    auto DeltaTime   = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+    bool RemoveFirst = false;
     for (auto& Entity : m_Obstacles)
     {
-        auto Rigidbody = Entity.get<Scene::Component::CollisionObject>()->AsRigidBody();
-
+        auto  Rigidbody = Entity.get<Scene::Component::CollisionObject>()->AsRigidBody();
         auto& Transform = Rigidbody->getWorldTransform();
+
+        if (Transform.getOrigin().x() < -40.f)
+        {
+            RemoveFirst = true;
+            continue;
+        }
+
         Transform.setOrigin(Transform.getOrigin() + btVector3(-m_ObstacleSpeed, 0.f, 0.f) * DeltaTime);
         Rigidbody->setInterpolationWorldTransform(Transform);
         Rigidbody->getMotionState()->setWorldTransform(Transform);
     }
+
+    static bool once = false;
+    if (RemoveFirst)
+        if (!once)
+        {
+            once = true;
+            /*         m_Obstacles[0].destruct();
+                 m_Obstacles[1].destruct();
+                 m_Obstacles.erase(m_Obstacles.begin(), m_Obstacles.begin() + 2);*/
+
+            CreateObstacle(Iter.world(), Vec::Right<Vector3> * 25.f);
+        }
 }
