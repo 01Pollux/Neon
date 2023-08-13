@@ -23,3 +23,12 @@
 	path = Deps/Externals/ImGui
 	url = https://github.com/01Pollux/imgui.git
 	branch = docking
+[submodule "Deps/Externals/spdlog"]
+	path = Deps/Externals/spdlog
+	url = https://github.com/01Pollux/spdlog.git
+[submodule "Deps/Externals/glm"]
+	path = Deps/Externals/glm
+	url = https://github.com/01Pollux/glm.git
+[submodule "Deps/Externals/cppcoro"]
+	path = Deps/Externals/cppcoro
+	url = https://github.com/andreasbuhr/cppcoro.git
