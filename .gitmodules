@@ -19,3 +19,16 @@
 [submodule "Deps/Externals/cppcoro"]
 	path = Deps/Externals/cppcoro
 	url = https://github.com/andreasbuhr/cppcoro.git
+[submodule "Deps/Externals/flecs"]
+	path = Deps/Externals/flecs
+	url = https://github.com/01Pollux/flecs.git
+[submodule "Deps/Externals/libogg-1.3.0"]
+	path = Deps/Externals/libogg-1.3.0
+	url = https://github.com/01Pollux/libogg-1.3.0
+[submodule "Deps/Externals/vorbis"]
+	path = Deps/Externals/vorbis
+	url = https://github.com/01Pollux/vorbis
+[submodule "Deps/Externals/ImGui"]
+	path = Deps/Externals/ImGui
+	url = https://github.com/01Pollux/imgui.git
+	branch = docking
