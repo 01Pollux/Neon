@@ -14,47 +14,56 @@ namespace Neon::Runtime
     /// <summary>
     /// Entry point for the engine.
     /// </summary>
-    extern int Main(
+    extern UPtr<DefaultGameEngine> Main(
         int       Argc,
         wchar_t** Argv);
 }; // namespace Neon::Runtime
 
 #if defined(NEON_PLATFORM_WINDOWS) && defined(NEON_DIST)
 
-#define NEON_MAIN(Argc, Argv)                           \
-    int __stdcall wWinMain(                             \
-        void*,                                          \
-        void*,                                          \
-        const wchar_t*,                                 \
-        int)                                            \
-    {                                                   \
-        Neon::Logger::Initialize();                     \
-        std::atexit(&Neon::Logger::Shutdown);           \
-        Neon::Asset::Storage::Initialize();             \
-        int Ret = Neon::Runtime::Main(__argc, __wargv); \
-        Neon::Asset::Storage::Shutdown();               \
-        return Ret;                                     \
-    }                                                   \
-    int Neon::Runtime::Main(                            \
-        int       Argc,                                 \
+#define NEON_MAIN(Argc, Argv)                                         \
+    int __stdcall wWinMain(                                           \
+        void*,                                                        \
+        void*,                                                        \
+        const wchar_t*,                                               \
+        int)                                                          \
+    {                                                                 \
+        Neon::Logger::Initialize();                                   \
+        std::atexit(&Neon::Logger::Shutdown);                         \
+        Neon::Asset::Storage::Initialize();                           \
+                                                                      \
+        auto Engine = Neon::Runtime::Main(__argc, __wargv);           \
+        int  Ret    = Engine->Run();                                  \
+        Engine.reset();                                               \
+                                                                      \
+        Neon::Asset::Storage::Shutdown();                             \
+        return Ret;                                                   \
+    }                                                                 \
+    Neon::UPtr<Neon::Runtime::DefaultGameEngine> Neon::Runtime::Main( \
+    UPtr<Neon::DefaultGameEngine> Neon::Runtime::Main(      \
+        int       Argc,                                     \
         wchar_t** Argv)
 
 #else
 
-#define NEON_MAIN(Argc, Argv)                      \
-    int wmain(                                     \
-        int       argc,                            \
-        wchar_t** argv)                            \
-    {                                              \
-        Neon::Logger::Initialize();                \
-        std::atexit(&Neon::Logger::Shutdown);      \
-        Neon::Asset::Storage::Initialize();        \
-        int Ret = Neon::Runtime::Main(argc, argv); \
-        Neon::Asset::Storage::Shutdown();          \
-        return Ret;                                \
-    }                                              \
-    int Neon::Runtime::Main(                       \
-        int       Argc,                            \
+#define NEON_MAIN(Argc, Argv)                                         \
+    int wmain(                                                        \
+        int       argc,                                               \
+        wchar_t** argv)                                               \
+    {                                                                 \
+        Neon::Logger::Initialize();                                   \
+        std::atexit(&Neon::Logger::Shutdown);                         \
+        Neon::Asset::Storage::Initialize();                           \
+                                                                      \
+        auto Engine = Neon::Runtime::Main(argc, argv);                \
+        int  Ret    = Engine->Run();                                  \
+        Engine.reset();                                               \
+                                                                      \
+        Neon::Asset::Storage::Shutdown();                             \
+        return Ret;                                                   \
+    }                                                                 \
+    Neon::UPtr<Neon::Runtime::DefaultGameEngine> Neon::Runtime::Main( \
+        int       Argc,                                               \
         wchar_t** Argv)
 
 #endif
@@ -63,11 +72,11 @@ namespace Neon::Runtime
 {
     template<typename _Ty>
         requires std::is_base_of_v<DefaultGameEngine, _Ty>
-    int RunEngine(
+    UPtr<DefaultGameEngine> RunEngine(
         Config::EngineConfig Config)
     {
-        _Ty Engine{};
-        Engine.Initialize(std::move(Config));
-        return Engine.Run();
+        auto Engine = std::make_unique<_Ty>();
+        Engine->Initialize(std::move(Config));
+        return Engine;
     }
 } // namespace Neon::Runtime
