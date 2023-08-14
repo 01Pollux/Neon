@@ -2,6 +2,7 @@ Remove-Item -Force -Recurse .\tmp -ErrorAction SilentlyContinue
 
 New-Item .\tmp -Type Directory | Out-Null
 
+.\Scripts\Boost.ps1
 .\Scripts\Directx.ps1
 
 Write-Output "Clearing temporary files..."

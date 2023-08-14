@@ -21,7 +21,7 @@ Function Copy-Boost {
 
 Push-Location -Path .\tmp -StackName "TempPath"
 
-git clone --recursive https://github.com/boostorg/boost.git
+git clone -b boost-1.83.0 --recursive https://github.com/boostorg/boost.git
 
 Push-Location -Path .\boost -StackName "BoostTempPath"
 .\bootstrap.bat

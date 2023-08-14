@@ -1,18 +1,5 @@
 include "neon-config.lua"
 include "neon-functions.lua"
-require('vstudio')
-
-function set_vcpkg()
-    premake.w("<PropertyGroup Label=\"Vcpkg\">")
-    premake.w("<VcpkgEnableManifest>true</VcpkgEnableManifest>")
-    premake.w("</PropertyGroup>")
-end
-
-premake.override(premake.vstudio.vc2010.elements, "project", function(base, prj)
-    local calls = base(prj)
-    table.insertafter(calls, premake.vstudio.vc2010.project, set_vcpkg)
-    return calls
-end)
 
 workspace "Neon"
     architecture "x64"
