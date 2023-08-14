@@ -46,4 +46,5 @@ bin-int/*
 /packages/*
 /Neon/Coroutines/Public/cppcoro
 /Neon/Coroutines/Private/cppcoro
-/vcpkg_installed/x64-windows
+
+/vcpkg_installed/*

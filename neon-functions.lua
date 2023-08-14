@@ -98,36 +98,6 @@ function select_launch_kind()
     filter {}
 end
 
-function link_boost_inc()
-    filter "configurations:Dist"
-        includedirs
-        {
-            "%{CommonDir.Deps.Inc}/boost_def"
-        }
-    filter {}
-    filter "configurations:not Dist"
-        includedirs
-        {
-            "%{CommonDir.Deps.Inc}/boost_san"
-        }
-    filter {}
-end
-
-function link_boost_lib(lib_name)
-    filter "configurations:Dist"
-        links
-        {
-            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_84.lib"
-        }
-    filter {}
-    filter "configurations:not Dist"
-        links
-        {
-            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_84.lib"
-        }
-    filter {}
-end
-
 function common_neon()
     defines "flecs_STATIC"
     defines "BT_USE_DOUBLE_PRECISION"
@@ -135,42 +105,6 @@ function common_neon()
 
     libdirs "%{CommonDir.Deps.Libs}"
     
-    link_boost_lib("atomic")
-    link_boost_lib("chrono")
-    link_boost_lib("container")
-    link_boost_lib("context")
-    link_boost_lib("contract")
-    link_boost_lib("coroutine")
-    link_boost_lib("date_time")
-    link_boost_lib("exception")
-    link_boost_lib("fiber")
-    link_boost_lib("filesystem")
-    link_boost_lib("graph")
-    link_boost_lib("iostreams")
-    link_boost_lib("json")
-    link_boost_lib("locale")
-    link_boost_lib("math_c99")
-    link_boost_lib("math_c99f")
-    link_boost_lib("math_c99l")
-    link_boost_lib("math_tr1")
-    link_boost_lib("math_tr1f")
-    link_boost_lib("math_tr1l")
-    link_boost_lib("nowide")
-    link_boost_lib("program_options")
-    link_boost_lib("random")
-    link_boost_lib("regex")
-    link_boost_lib("serialization")
-    link_boost_lib("system")
-    link_boost_lib("thread")
-    link_boost_lib("timer")
-    link_boost_lib("type_erasure")
-    link_boost_lib("url")
-    link_boost_lib("wave")
-    link_boost_lib("wserialization")
-    link_boost_lib("zlib")
-    
-    link_boost_inc()
-
     links
     {
         "Flecs",

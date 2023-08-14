@@ -1,0 +1,113 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "dependencies": [
+    {
+      "name": "boost-atomic",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-chrono",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-container",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-context",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-contract",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-coroutine",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-date-time",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-exception",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-fiber",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-filesystem",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-graph",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-iostreams",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-json",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-locale",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-math",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-nowide",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-program-options",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-random",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-regex",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-serialization",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-system",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-thread",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-timer",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-type-erasure",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-url",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-wave",
+      "platform": "(x64 & static)"
+    },
+    {
+      "name": "boost-zlib",
+      "platform": "(x64 & static)"
+    }
+  ]
+}
