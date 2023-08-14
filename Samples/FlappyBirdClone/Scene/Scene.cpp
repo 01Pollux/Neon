@@ -136,9 +136,9 @@ void FlappyBirdClone::LoadScene()
     m_ObstacleMaterial = GetMaterial("BaseSprite")->CreateInstance();
     m_ObstacleMaterial->SetTexture("p_SpriteTextures", m_HdrTriangle);
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 4; i++)
     {
-        CreateObstacle(World.get_world(), Vec::Right<Vector3> * 25.f * float(i));
+        CreateObstacle(World.get_world(), Vec::Right<Vector3> * 20.f * float(i));
     }
 
     //
@@ -150,6 +150,7 @@ void FlappyBirdClone::LoadScene()
     Scene.GetEntityWorld()
         ->system()
         .kind(flecs::OnUpdate)
+        .no_readonly()
         .iter([this](flecs::iter Iter)
               { OnUpdate(Iter); });
 
@@ -361,15 +362,17 @@ void FlappyBirdClone::UpdateObstacles(
         Rigidbody->getMotionState()->setWorldTransform(Transform);
     }
 
-    static bool once = false;
     if (RemoveFirst)
-        if (!once)
-        {
-            once = true;
-            /*         m_Obstacles[0].destruct();
-                 m_Obstacles[1].destruct();
-                 m_Obstacles.erase(m_Obstacles.begin(), m_Obstacles.begin() + 2);*/
+    {
+        auto World = Iter.world();
+        World.defer_suspend();
 
-            CreateObstacle(Iter.world(), Vec::Right<Vector3> * 25.f);
-        }
+        m_Obstacles[0].destruct();
+        m_Obstacles[1].destruct();
+        m_Obstacles.erase(m_Obstacles.begin(), m_Obstacles.begin() + 2);
+
+        CreateObstacle(World.get_world(), Vec::Right<Vector3> * 20.f);
+
+        World.defer_resume();
+    }
 }
