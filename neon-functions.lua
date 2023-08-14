@@ -76,6 +76,7 @@ function link_engine_library()
 
         "NeonEngine"
     }
+
     includedirs
     {
         "%{CommonDir.Deps.Inc}/Bullet3",
@@ -189,4 +190,18 @@ function common_neon()
         "%{CommonDir.Deps.Inc}",
         "%{prj.location}"
     }
+end
+
+function setup_runtime_engine(asset_path_name)
+    language "C++"
+    cppdialect "C++latest"
+    staticruntime "On"
+    architecture "x64"
+
+    select_launch_kind()
+    common_dir_setup()
+    common_neon()
+
+    link_engine_library()
+    copy_engine_resources(asset_path_name)
 end

@@ -3,7 +3,7 @@ include "neon-functions.lua"
 
 workspace "Neon"
     architecture "x64"
-    startproject "FlappyBirdClone"
+    startproject "NeonEditor"
 
     configurations
     {
@@ -82,14 +82,15 @@ workspace "Neon"
         include "Neon/Windowing"
         include "Neon/Graphics"
         include "Neon/Engine"
+        include "Neon/Editor"
     group ""
 
     group "Neon/Tools"
-        include "Neon/Tools/pakc"
+--        include "Neon/Tools/pakc"
     group ""
 
     group "Samples"
-        include "Samples/BasicAsset"
-        include "Samples/HelloWorld"
-        include "Samples/FlappyBirdClone"
+--        include "Samples/BasicAsset"
+--        include "Samples/HelloWorld"
+--        include "Samples/FlappyBirdClone"
     group ""
