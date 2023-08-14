@@ -73,7 +73,7 @@ namespace Neon::Physics
 #ifndef NEON_DIST
         return btIDebugDraw::DebugDrawModes(m_DebugDrawer.getDebugMode());
 #else
-        return 0;
+        return {};
 #endif
     }
 

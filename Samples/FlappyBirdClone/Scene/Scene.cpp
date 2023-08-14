@@ -200,34 +200,27 @@ void FlappyBirdClone::AttachInputs()
             m_IsJumping = false;
         });
 
-    {
-        auto EditAction = ActionTable->AddAction();
-        EditAction->SetInput(Input::EKeyboardInput::E);
-        EditAction->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
+    auto Reset = ActionTable->AddAction();
+    Reset->SetInput(Input::EKeyboardInput::R);
+    Reset->Bind(
+        Input::InputAction::BindType::Press,
+        [this]
+        {
+            if (m_RigidBody->getActivationState() == DISABLE_SIMULATION)
             {
-                m_ObstacleSpeed += 0.1f;
-                printf("Obstacle speed: %f\n", m_ObstacleSpeed);
-            });
-
-        auto Unedit = ActionTable->AddAction();
-        Unedit->SetInput(Input::EKeyboardInput::R);
-        Unedit->Bind(
-            Input::InputAction::BindType::Press,
-            [this]
-            {
-                m_ObstacleSpeed -= 0.1f;
-                printf("Obstacle speed: %f\n", m_ObstacleSpeed);
-            });
-    }
+                m_RigidBody->setActivationState(DISABLE_DEACTIVATION);
+                m_RigidBody->setLinearVelocity({});
+                m_RigidBody->setAngularVelocity({});
+                m_RigidBody->setWorldTransform(btTransform(btQuaternion::getIdentity(), btVector3(0.f, 0.f, 0.f)));
+            }
+        });
 }
 
 void FlappyBirdClone::OnUpdate(
     flecs::iter& Iter)
 {
     // Player lost
-    if (!m_RigidBody->getActivationState())
+    if (m_RigidBody->getActivationState() == DISABLE_SIMULATION)
     {
         m_RigidBody->setLinearVelocity({});
         m_RigidBody->setAngularVelocity({});
@@ -241,7 +234,7 @@ void FlappyBirdClone::OnUpdate(
 void FlappyBirdClone::OnCollisionEnter(
     btPersistentManifold* Manifold)
 {
-    m_RigidBody->setActivationState(0);
+    m_RigidBody->setActivationState(DISABLE_SIMULATION);
 
     //
 

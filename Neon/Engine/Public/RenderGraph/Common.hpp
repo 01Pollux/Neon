@@ -133,9 +133,10 @@ namespace Neon::RG
             const String& ViewName,
             uint32_t      SubresourceIndex = uint32_t(-1)) :
             m_Resource(ResId),
-            m_ViewId(StringUtils::Hash(ViewName) + ResId.Get() +SubresourceIndex),
-            m_SubresourceIndex(SubresourceIndex),
+            m_ViewId(StringUtils::Hash(ViewName) + ResId.Get() + SubresourceIndex),
+            m_SubresourceIndex(SubresourceIndex)
 #ifndef NEON_DIST
+            ,
             m_ViewName(StringUtils::Format(STR("{}::{}"), ViewName, ResId.GetName()))
 #endif
         {
@@ -157,17 +158,23 @@ namespace Neon::RG
             return m_ViewId;
         }
 
+#ifndef NEON_DIST
         /// <summary>
         /// Get resource view name
         /// </summary>
         [[nodiscard]] constexpr const String& GetName() const noexcept
         {
-#ifndef NEON_DIST
             return m_ViewName;
-#else
-            return STR("");
-#endif
         }
+#else
+        /// <summary>
+        /// Get resource view name
+        /// </summary>
+        [[nodiscard]] constexpr String GetName() const noexcept
+        {
+            return STR("");
+        }
+#endif
 
         /// <summary>
         /// Get subresource index

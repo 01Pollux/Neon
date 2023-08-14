@@ -40,6 +40,7 @@ struct VSInput
 struct PSInput
 {
 	float4 Position : SV_POSITION;
+	float2 PositionInScene : POSITION;
 	float2 TexCoord : TEX_COORD;
 	nointerpolation int SpriteIndex : SPRITE_INDEX;
 };
@@ -81,6 +82,7 @@ PSInput VS_Main(VSInput Vs)
 		mul(float4(Vs.Position, 0.f, 1.f),
 			g_SpriteData[Vs.SpriteIndex].World),
 		g_FrameData.ViewProjection);
+	Ps.PositionInScene = Ps.Position.xy;
 	Ps.TexCoord = mul(float4(Vs.TexCoord, 0.f, 1.f), g_SpriteData[Vs.SpriteIndex].TextureTransform).xy;
 	Ps.SpriteIndex = Vs.SpriteIndex;
 	return Ps;
@@ -106,6 +108,11 @@ PSOutput PS_Main(PSInput Ps)
 	float4 Color = g_SpriteData[Ps.SpriteIndex].Color;
 	Color *= p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
 	clip(Color.a - 0.1f);
+	
+	float Dist = 1.0f - distance(Ps.PositionInScene * 0.3f, (float2) 0);
+	Dist = clamp(Dist, 0.0f, 1.0f);
+	Dist = pow(Dist, 2.5f);
+	Color.rgb *= Dist;
 	
 	return GBufferPack(
 		Color,

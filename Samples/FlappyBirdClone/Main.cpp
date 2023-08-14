@@ -17,6 +17,7 @@ NEON_MAIN(Argc, Argv)
     //   Config.Renderer.Swapchain.VSync         = false;
     //  Config.Renderer.Device.EnableGpuBasedValidation   = true;
     Config.Renderer.Device.Descriptors.Frame_Resource = 262'144;
+
     Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
     return RunEngine<FlappyBirdClone>(std::move(Config));
 }

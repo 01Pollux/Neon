@@ -120,7 +120,7 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY_PV(...) virtual __VA_ARGS__ = 0
 #else
 #define NEON_M_DEBUG_ONLY_PV(...) \
-    __VA_ARGS__                   \
+    inline __VA_ARGS__            \
     {                             \
     }
 #endif
@@ -130,7 +130,7 @@ namespace Neon
 #define NEON_M_NODIST_PV(...) virtual __VA_ARGS__ = 0
 #else
 #define NEON_M_NODIST_PV(...) \
-    __VA_ARGS__               \
+    inline __VA_ARGS__        \
     {                         \
     }
 #endif
@@ -142,7 +142,7 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY_V(...) virtual __VA_ARGS__
 #else
 #define NEON_M_DEBUG_ONLY_V(...) \
-    __VA_ARGS__                  \
+    inline __VA_ARGS__           \
     {                            \
     }
 #endif
@@ -152,7 +152,7 @@ namespace Neon
 #define NEON_M_NODIST_V(...) virtual __VA_ARGS__
 #else
 #define NEON_M_NODIST_V(...) \
-    __VA_ARGS__              \
+    inline __VA_ARGS__       \
     {                        \
     }
 #endif
@@ -164,7 +164,7 @@ namespace Neon
 #define NEON_M_DEBUG_ONLY(...) __VA_ARGS__
 #else
 #define NEON_M_DEBUG_ONLY(...) \
-    __VA_ARGS__                \
+    inline __VA_ARGS__         \
     {                          \
     }
 #endif
@@ -174,7 +174,7 @@ namespace Neon
 #define NEON_M_NODIST(...) __VA_ARGS__
 #else
 #define NEON_M_NODIST(...) \
-    __VA_ARGS__            \
+    inline __VA_ARGS__     \
     {                      \
     }
 #endif
