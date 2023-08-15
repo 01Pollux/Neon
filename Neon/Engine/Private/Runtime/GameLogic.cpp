@@ -1,45 +1,49 @@
 #include <EnginePCH.hpp>
-#include <Scene/Scene.hpp>
 #include <Physics/World.hpp>
-#include <Runtime/GameEngine.hpp>
-#include <Scene/Exports/Export.hpp>
 
-//
+#include <Runtime/GameLogic.hpp>
+#include <Runtime/GameEngine.hpp>
 
 #include <RHI/Swapchain.hpp>
 #include <RenderGraph/RG.hpp>
-#include <Scene/Component/Transform.hpp>
+
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
+#include <Scene/Exports/Export.hpp>
 
-namespace Neon::Scene
+#include <Log/Logger.hpp>
+
+namespace Neon::Runtime
 {
     static std::mutex s_FlecsWorldMutex;
 
-    GameScene::GameScene() :
+    using namespace Scene;
+
+    GameLogic::GameLogic() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
+        // Create entity world.
         {
             std::scoped_lock Lock(s_FlecsWorldMutex);
             m_EntityWorld = std::make_unique<flecs::world>();
         }
 
+        // Register components & relations.
         Exports::RegisterComponents(*m_EntityWorld);
+        Exports::RegisterRelations(*m_EntityWorld);
 
-#if NEON_DEBUG
-        m_EntityWorld->set<flecs::Rest>({});
-        m_EntityWorld->import <flecs::monitor>();
-#endif
-
+        // Create physics update system.
         m_EntityWorld->system("PhysicsUpdate")
+            .no_readonly()
             .kind(flecs::PreUpdate)
             .iter(
-                [this](flecs::iter)
+                [this](flecs::iter Iter)
                 {
                     double DeltaTime = Runtime::DefaultGameEngine::Get()->GetDeltaTime();
-                    m_PhysicsWorld->Update(DeltaTime);
+                    m_PhysicsWorld->Update(Iter.world(), DeltaTime);
                 });
 
+        // Create physics collision add/remove system.
         m_EntityWorld->observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
             .event(flecs::OnAdd)
@@ -58,13 +62,11 @@ namespace Neon::Scene
                         m_PhysicsWorld->AddPhysicsObject(Object.BulletObject.get(), Object.Group, Object.Mask);
                     }
                 });
-        //
 
+        // Create physics camera render system.
         m_CameraQuery =
             m_EntityWorld
-                ->query_builder<Component::Transform, Component::Camera>()
-                .term<Component::Transform>()
-                .in()
+                ->query_builder<Component::Camera>()
                 .term<Component::Camera>()
                 .inout()
                 .order_by(
@@ -78,7 +80,7 @@ namespace Neon::Scene
                 .build();
     }
 
-    GameScene::~GameScene()
+    GameLogic::~GameLogic()
     {
         if (m_EntityWorld)
         {
@@ -87,17 +89,21 @@ namespace Neon::Scene
         }
     }
 
+    GameLogic* GameLogic::Get()
+    {
+        return Runtime::DefaultGameEngine::Get()->GetLogic();
+    }
+
     //
 
-    void GameScene::Render()
+    void GameLogic::Render()
     {
-        auto MainCamera = m_EntityWorld->get<Component::MainCamera>();
+        auto MainCamera = m_EntityWorld->target<Component::MainCamera>();
         m_CameraQuery.each(
-            [MainCamera](flecs::entity               Entity,
-                         const Component::Transform& Transform,
-                         Component::Camera&          Camera)
+            [MainCamera](flecs::entity      Entity,
+                         Component::Camera& Camera)
             {
-                auto Size = RHI::ISwapchain::Get()->GetSize();
+                auto& Size = RHI::ISwapchain::Get()->GetSize();
 
                 if (Camera.Viewport.ClientWidth)
                 {
@@ -110,14 +116,49 @@ namespace Neon::Scene
 
                 if (auto RenderGraph = Camera.GetRenderGraph())
                 {
-                    RenderGraph->Run(MainCamera->Target == Entity);
+                    RenderGraph->Run(MainCamera == Entity);
                 }
             });
     }
 
-    void GameScene::Update()
+    void GameLogic::Update()
     {
         float DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
         m_EntityWorld->progress(DeltaTime);
     }
-} // namespace Neon::Scene
+
+    //
+
+    flecs::entity GameLogic::CreateEntity(
+        const char* Name)
+    {
+        return m_EntityWorld->entity(Name);
+    }
+
+    flecs::entity GameLogic::CreateEntityInRoot(
+        const char* Name)
+    {
+        auto RootEntity = GetRootEntity();
+        NEON_ASSERT(RootEntity, "Root entity not found");
+        return CreateEntity(Name).child_of(RootEntity);
+    }
+
+    flecs::entity GameLogic::CreateRootEntity(
+        const char* Name)
+    {
+        auto Entity = CreateEntity(Name);
+        m_EntityWorld->add<Component::Root>(Entity);
+        return Entity;
+    }
+
+    flecs::entity GameLogic::GetRootEntity() const
+    {
+        return m_EntityWorld->target<Component::Root>();
+    }
+
+    void GameLogic::SetRootEntity(
+        const flecs::entity& Entity)
+    {
+        m_EntityWorld->add<Component::Root>(Entity);
+    }
+} // namespace Neon::Runtime

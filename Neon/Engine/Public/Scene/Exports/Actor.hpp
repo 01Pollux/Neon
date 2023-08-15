@@ -9,4 +9,10 @@ namespace Neon::Scene::Exports
     /// </summary>
     void RegisterActorComponents(
         flecs::world& world);
+
+    /// <summary>
+    /// Register all actor relations.
+    /// </summary>
+    void RegisterActorRelations(
+        flecs::world& world);
 } // namespace Neon::Scene::Exports

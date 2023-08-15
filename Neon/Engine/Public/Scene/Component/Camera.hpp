@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <flecs/flecs.h>
 #include <Math/Matrix.hpp>
 
 #include <Scene/Component/Component.hpp>
@@ -13,7 +12,6 @@ namespace Neon::RG
 
 namespace Neon::Scene::Component
 {
-
     enum class CameraType : uint8_t
     {
         Perspective,
@@ -22,6 +20,10 @@ namespace Neon::Scene::Component
 
     struct Camera
     {
+        NEON_EXPORT_FLECS(Camera, "Camera")
+        {
+        }
+
         struct Viewport
         {
             /// <summary>
@@ -107,8 +109,6 @@ namespace Neon::Scene::Component
         [[nodiscard]] Matrix4x4 ViewProjectionMatrix(
             const flecs::entity& OwningEntity) const;
 
-        NEON_EXPORT_COMPONENT();
-
     private:
         /// <summary>
         /// The render graph of the camera.
@@ -155,6 +155,9 @@ namespace Neon::Scene::Component
 
     struct MainCamera
     {
-        flecs::entity Target;
+        NEON_EXPORT_FLECS(MainCamera, "MainCamera")
+        {
+            Component.add(flecs::Exclusive);
+        }
     };
 } // namespace Neon::Scene::Component

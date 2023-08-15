@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Scene/Component/Camera.hpp>
-#include <flecs/flecs.h>
 
 namespace Neon::RG
 {
@@ -17,5 +16,5 @@ namespace Neon::RG
     /// </summary>
     [[nodiscard]] void CreateStandard2DRenderGraph(
         Scene::Component::Camera& CameraComponent,
-        flecs::entity             Camera);
+        const flecs::entity&      Camera);
 } // namespace Neon::RG

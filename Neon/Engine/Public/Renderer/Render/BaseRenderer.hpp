@@ -1,10 +1,7 @@
 #pragma once
 
 #include <RHI/Resource/Common.hpp>
-
-#include <Scene/Scene.hpp>
 #include <Runtime/GameEngine.hpp>
-#include <flecs/flecs.h>
 
 namespace Neon::RHI
 {

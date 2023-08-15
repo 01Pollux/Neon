@@ -15,22 +15,29 @@ namespace Neon::Scene::Exports
     void RegisterActorComponents(
         flecs::world& World)
     {
-        NEON_REGISTER_COMPONENT(Component::Transform);
+        NEON_REGISTER_FLECS(Component::Transform);
 
-        NEON_REGISTER_COMPONENT(Component::Sprite);
-        NEON_REGISTER_COMPONENT(Component::Sprite::MainRenderer);
+        NEON_REGISTER_FLECS(Component::Sprite);
 
-        NEON_REGISTER_COMPONENT(Component::Camera);
+        NEON_REGISTER_FLECS(Component::Camera);
 
-        NEON_REGISTER_COMPONENT(Component::CollisionEnter);
-        NEON_REGISTER_COMPONENT(Component::CollisionStay);
-        NEON_REGISTER_COMPONENT(Component::CollisionExit);
+        NEON_REGISTER_FLECS(Component::CollisionEnter);
+        NEON_REGISTER_FLECS(Component::CollisionStay);
+        NEON_REGISTER_FLECS(Component::CollisionExit);
 
-        NEON_REGISTER_COMPONENT(Component::TriggerEnter);
-        NEON_REGISTER_COMPONENT(Component::TriggerStay);
-        NEON_REGISTER_COMPONENT(Component::TriggerExit);
+        NEON_REGISTER_FLECS(Component::TriggerEnter);
+        NEON_REGISTER_FLECS(Component::TriggerStay);
+        NEON_REGISTER_FLECS(Component::TriggerExit);
 
-        NEON_REGISTER_COMPONENT(Component::CollisionShape);
-        NEON_REGISTER_COMPONENT(Component::CollisionObject);
+        NEON_REGISTER_FLECS(Component::CollisionShape);
+        NEON_REGISTER_FLECS(Component::CollisionObject);
+    }
+
+    void RegisterActorRelations(
+        flecs::world& World)
+    {
+        NEON_REGISTER_FLECS(Component::Root);
+        NEON_REGISTER_FLECS(Component::MainCamera);
+        NEON_REGISTER_FLECS(Component::Sprite::MainRenderer);
     }
 } // namespace Neon::Scene::Exports

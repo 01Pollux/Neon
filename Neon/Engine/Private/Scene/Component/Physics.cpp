@@ -6,9 +6,9 @@
 namespace Neon::Scene::Component
 {
     btCollisionObject* CollisionObject::AddStaticBody(
-        flecs::entity Target,
-        uint32_t      Group,
-        uint32_t      Mask)
+        flecs::entity& Target,
+        uint32_t       Group,
+        uint32_t       Mask)
     {
         auto Shape       = Target.get<CollisionShape>();
         auto MotionState = new Physics::ActorMotionState(Target);
@@ -28,10 +28,10 @@ namespace Neon::Scene::Component
     }
 
     btCollisionObject* CollisionObject::AddRigidBody(
-        flecs::entity Target,
-        float         Mass,
-        uint32_t      Group,
-        uint32_t      Mask)
+        flecs::entity& Target,
+        float          Mass,
+        uint32_t       Group,
+        uint32_t       Mask)
     {
         auto Shape       = Target.get<CollisionShape>();
         auto MotionState = new Physics::ActorMotionState(Target);
@@ -56,10 +56,10 @@ namespace Neon::Scene::Component
     }
 
     btCollisionObject* CollisionObject::AddKinematicBody(
-        flecs::entity Target,
-        float         Mass,
-        uint32_t      Group,
-        uint32_t      Mask)
+        flecs::entity& Target,
+        float          Mass,
+        uint32_t       Group,
+        uint32_t       Mask)
     {
         auto Shape       = Target.get<CollisionShape>();
         auto MotionState = new Physics::ActorMotionState(Target);

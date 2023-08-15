@@ -7,16 +7,20 @@ namespace Neon::Scene::Component
 {
     struct Sprite
     {
+        NEON_EXPORT_FLECS(Sprite, "Sprite")
+        {
+        }
+
         /// <summary>
         /// Tag component for the main renderer of a sprite.
         /// Used for query in gbuffer rendering pass for sprites.
         /// </summary>
         struct MainRenderer
         {
-            NEON_EXPORT_COMPONENT();
+            NEON_EXPORT_FLECS(MainRenderer, "Sprite_MainRenderer")
+            {
+            }
         };
-
-        NEON_EXPORT_COMPONENT();
 
         Ptr<Renderer::IMaterial> MaterialInstance = nullptr;
         AffineTransformMatrix    TextureTransform;

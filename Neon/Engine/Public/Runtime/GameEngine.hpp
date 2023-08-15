@@ -13,15 +13,12 @@ namespace Neon
     {
         class IWindowApp;
     }
-
-    namespace Scene
-    {
-        class GameScene;
-    }
 } // namespace Neon
 
 namespace Neon::Runtime
 {
+    class GameLogic;
+
     class DefaultGameEngine
     {
     public:
@@ -89,7 +86,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Get the current scene.
         /// </summary>
-        [[nodiscard]] Scene::GameScene& GetScene() const noexcept;
+        [[nodiscard]] GameLogic* GetLogic() const noexcept;
 
     public:
         /// <summary>
@@ -116,7 +113,7 @@ namespace Neon::Runtime
     private:
         GameTimer                m_GameTimer;
         UPtr<EngineWindow>       m_Window;
-        UPtr<Scene::GameScene>   m_Scene;
+        UPtr<GameLogic>          m_Logic;
         UPtr<Asio::ThreadPool<>> m_ThreadPool;
     };
 } // namespace Neon::Runtime

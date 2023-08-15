@@ -1,18 +1,26 @@
 #pragma once
 
-namespace flecs
+#include <flecs/flecs.h>
+
+#define NEON_EXPORT_FLECS(Class, Name)                  \
+    static void RegisterFlecs(                          \
+        flecs::world& World)                            \
+    {                                                   \
+        _HandleComponent(World.component<Class>(Name)); \
+    }                                                   \
+    static void _HandleComponent(                       \
+        flecs::entity Component)
+
+#define NEON_REGISTER_FLECS(ClassName) \
+    ClassName::RegisterFlecs(World);
+
+namespace Neon::Scene::Component
 {
-    struct world;
-    struct entity;
-} // namespace flecs
-
-#define NEON_EXPORT_COMPONENT() \
-    static void Register(       \
-        flecs::world& World);
-
-#define NEON_IMPLEMENT_COMPONENT(ClassName) \
-    void ClassName::Register(               \
-        flecs::world& World)
-
-#define NEON_REGISTER_COMPONENT(ClassName) \
-    ClassName::Register(World);
+    struct Root
+    {
+        NEON_EXPORT_FLECS(Root, "Root")
+        {
+            Component.add(flecs::Exclusive);
+        }
+    };
+} // namespace Neon::Scene::Component

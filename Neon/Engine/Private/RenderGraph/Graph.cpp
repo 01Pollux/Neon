@@ -16,7 +16,7 @@
 namespace Neon::RG
 {
     RenderGraph::RenderGraph(
-        flecs::entity CameraEntity) :
+        const flecs::entity& CameraEntity) :
         m_CameraEntity(CameraEntity)
     {
     }
@@ -368,7 +368,6 @@ namespace Neon::RG
 #endif
             RenderPass->Dispatch(Storage, CommandList);
         };
-
 
         if (m_Passes.size())
         {

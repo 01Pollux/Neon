@@ -7,7 +7,9 @@ namespace Neon::Scene::Component
 {
     struct Transform
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(Transform, "Transform")
+        {
+        }
 
         TransformMatrix World;
     };

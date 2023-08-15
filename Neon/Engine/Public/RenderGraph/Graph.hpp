@@ -71,7 +71,7 @@ namespace Neon::RG
 
     public:
         RenderGraph(
-            flecs::entity CameraEntity);
+            const flecs::entity& CameraEntity);
 
         /// <summary>
         /// Reset resource graph for recording

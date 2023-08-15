@@ -12,4 +12,10 @@ namespace Neon::Scene::Exports
         RegisterMathComponents(World);
         RegisterActorComponents(World);
     }
+
+    void RegisterRelations(
+        flecs::world& World)
+    {
+        RegisterActorRelations(World);
+    }
 } // namespace Neon::Scene::Exports

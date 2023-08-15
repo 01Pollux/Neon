@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Renderer/Render/SpriteRenderer.hpp>
+#include <Runtime/GameLogic.hpp>
 
 namespace Component = Neon::Scene::Component;
 
@@ -9,10 +10,12 @@ namespace Neon::Renderer
         uint32_t MaxSpritePerBatch) :
         m_SpriteBatch(MaxSpritePerBatch),
         m_SpriteQuery(
-            Runtime::DefaultGameEngine::Get()
-                ->GetScene()
-                .GetEntityWorld()
+            Runtime::GameLogic::Get()
+                ->GetEntityWorld()
                 ->query_builder<Component::Transform, Component::Sprite>()
+                .with<Component::Root>()
+                .parent()
+                .cascade()
                 .with<Component::Sprite::MainRenderer>()
                 .term<Component::Transform>()
                 .in()

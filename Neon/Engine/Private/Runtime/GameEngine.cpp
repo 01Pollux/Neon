@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Runtime/GameEngine.hpp>
+#include <Runtime/GameLogic.hpp>
 #include <Runtime/DebugOverlay.hpp>
 
 #include <Asset/Manager.hpp>
@@ -12,7 +13,6 @@
 #include <Asset/Handlers/RootSignature.hpp>
 #include <Asset/Handlers/Shader.hpp>
 
-#include <Scene/Scene.hpp>
 #include <RHI/Swapchain.hpp>
 
 #include <Log/Logger.hpp>
@@ -22,7 +22,7 @@ namespace Neon::Runtime
     static DefaultGameEngine* s_GameEngine = nullptr;
 
     DefaultGameEngine::DefaultGameEngine() :
-        m_Scene(std::make_unique<Scene::GameScene>()),
+        m_Logic(std::make_unique<GameLogic>()),
         m_ThreadPool(std::make_unique<Asio::ThreadPool<>>(4))
     {
         NEON_ASSERT(!s_GameEngine);
@@ -69,11 +69,11 @@ namespace Neon::Runtime
                 Runtime::DebugOverlay::Reset();
                 auto IsScreenVisible = GetWindow()->IsVisible();
 
-                m_Scene->Update();
+                m_Logic->Update();
                 if (IsScreenVisible.get())
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
-                    m_Scene->Render();
+                    m_Logic->Render();
                     RHI::ISwapchain::Get()->Present(float(m_GameTimer.GetDeltaTime()));
                 }
             }
@@ -89,9 +89,9 @@ namespace Neon::Runtime
         return m_Window->GetWindow();
     }
 
-    Scene::GameScene& DefaultGameEngine::GetScene() const noexcept
+    GameLogic* DefaultGameEngine::GetLogic() const noexcept
     {
-        return *m_Scene;
+        return m_Logic.get();
     }
 
     void DefaultGameEngine::LoadPacks(

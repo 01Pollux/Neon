@@ -5,9 +5,6 @@
 
 namespace Neon::RG
 {
-    using namespace Scene;
-    using namespace Renderer;
-
     GBufferPass::GBufferPass() :
         IRenderPass(STR("GBufferPass"), PassQueueType::Direct)
     {

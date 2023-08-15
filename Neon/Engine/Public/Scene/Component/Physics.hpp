@@ -1,8 +1,7 @@
 #pragma once
 
-#include <flecs/flecs.h>
-#include <Scene/Component/Component.hpp>
 #include <Physics/Bullet3.hpp>
+#include <Scene/Component/Component.hpp>
 
 #include <Bullet3/btBulletDynamicsCommon.h>
 #include <Bullet3/btBulletCollisionCommon.h>
@@ -39,7 +38,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionEnter
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(CollisionEnter, "Collision Enter")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -48,7 +50,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionStay
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(CollisionStay, "Collision Stay")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -57,7 +62,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionExit
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(CollisionExit, "Collision Exit")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -66,7 +74,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerEnter
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(TriggerEnter, "Trigger Enter")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -75,7 +86,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerStay
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(TriggerStay, "Trigger Stay")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -84,7 +98,10 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerExit
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(TriggerExit, "Trigger Exit")
+        {
+        }
+
         mutable CollisionCallback Callback;
     };
 
@@ -92,13 +109,19 @@ namespace Neon::Scene::Component
 
     struct CollisionShape
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(CollisionShape, "Collision Shape")
+        {
+        }
+
         UPtr<btCollisionShape> BulletShape = nullptr;
     };
 
     struct CollisionObject
     {
-        NEON_EXPORT_COMPONENT();
+        NEON_EXPORT_FLECS(CollisionObject, "Collision Object")
+        {
+        }
+
         static constexpr auto MaskAll = std::numeric_limits<uint32_t>::max();
 
         UPtr<btCollisionObject> BulletObject = nullptr;
@@ -110,27 +133,27 @@ namespace Neon::Scene::Component
         /// Create a new collision object as static body.
         /// </summary>
         static btCollisionObject* AddStaticBody(
-            flecs::entity Target,
-            uint32_t      Group = 1,
-            uint32_t      Mask  = MaskAll);
+            flecs::entity& Target,
+            uint32_t       Group = 1,
+            uint32_t       Mask  = MaskAll);
 
         /// <summary>
         /// Create a new collision object as rigid body.
         /// </summary>
         static btCollisionObject* AddRigidBody(
-            flecs::entity Target,
-            float         Mass,
-            uint32_t      Group = 1,
-            uint32_t      Mask  = MaskAll);
+            flecs::entity& Target,
+            float          Mass,
+            uint32_t       Group = 1,
+            uint32_t       Mask  = MaskAll);
 
         /// <summary>
         /// Create a new collision object as kinematic body.
         /// </summary>
         static btCollisionObject* AddKinematicBody(
-            flecs::entity Target,
-            float         Mass,
-            uint32_t      Group = 1,
-            uint32_t      Mask  = MaskAll);
+            flecs::entity& Target,
+            float          Mass,
+            uint32_t       Group = 1,
+            uint32_t       Mask  = MaskAll);
 
         /// <summary>
         /// Get the collision object as rigid body.

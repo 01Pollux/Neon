@@ -40,7 +40,8 @@ namespace Neon::Physics
         /// Update the physics world.
         /// </summary>
         void Update(
-            double DeltaTime);
+            flecs::world_t* World,
+            double          DeltaTime);
 
     public:
         /// <summary>
@@ -133,6 +134,12 @@ namespace Neon::Physics
 
     private:
         CollisionDataSet m_PreviousTickCollisions;
+
+        /// <summary>
+        /// We will have to get the current world for the simulation world.
+        /// Doing so will allow us to add/remove flecs' entities during physics simulation.
+        /// </summary>
+        flecs::world_t* m_SimulationWorld = nullptr;
 
     private:
         double m_FixedTimeStep = 1.0 / 60.0;

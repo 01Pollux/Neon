@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <flecs/flecs.h>
 #include <Scene/Component/Transform.hpp>
 #include <Bullet3/LinearMath/btMotionState.h>
 #include <Physics/Bullet3.hpp>

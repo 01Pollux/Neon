@@ -10,35 +10,38 @@ namespace Neon::Scene::Exports
 {
     void RegisterMathComponents(flecs::world& World)
     {
-        World.component<Vector2>("Neon::Vector2");
-        World.component<Vector2I>("Neon::Vector2I");
-        World.component<Vector2U>("Neon::Vector2U");
+        World.component<Vector2>("Vector2");
+        World.component<Vector2I>("Vector2I");
+        World.component<Vector2U>(":Vector2U");
 
-        World.component<Vector3>("Neon::Vector3");
-        World.component<Vector3I>("Neon::Vector3I");
-        World.component<Vector3U>("Neon::Vector3U");
+        World.component<Vector3>("Vector3");
+        World.component<Vector3I>("Vector3I");
+        World.component<Vector3U>("Vector3U");
 
-        World.component<Vector4>("Neon::Vector4");
-        World.component<Vector4I>("Neon::Vector4I");
-        World.component<Vector4U>("Neon::Vector4U");
+        World.component<Vector4>("Vector4");
+        World.component<Vector4I>("Vector4I");
+        World.component<Vector4U>("Vector4U");
 
-        //
-
-        World.component<Color3U8>("Neon::Color3U8");
-        World.component<Color4U8>("Neon::Color4U8");
+        World.component<Quaternion>("Quaternion");
 
         //
 
-        World.component<Matrix3x3>("Neon::Matrix3x3");
-        World.component<Matrix4x4>("Neon::Matrix4x4");
+        World.component<Color3U8>("Color3U8");
+        World.component<Color4U8>("Color4U8");
 
         //
 
-        World.component<RectI>("Neon::RectI");
-        World.component<RectF>("Neon::RectF");
+        World.component<Matrix3x3>("Matrix3x3");
+        World.component<Matrix4x4>("Matrix4x4");
 
         //
 
-        World.component<TransformMatrix>("Neon::Transform");
+        World.component<RectI>("RectI");
+        World.component<RectF>("RectF");
+
+        //
+
+        World.component<TransformMatrix>("TransformMatrix");
+        World.component<AffineTransformMatrix>("AffineTransformMatrix");
     }
 } // namespace Neon::Scene::Exports

@@ -16,7 +16,7 @@ namespace Neon::RG
 {
     void CreateStandard2DRenderGraph(
         Scene::Component::Camera& CameraComponent,
-        flecs::entity             Camera)
+        const flecs::entity&      Camera)
     {
         auto Graph   = CameraComponent.NewRenderGraph(Camera);
         auto Builder = Graph->Reset();

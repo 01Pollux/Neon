@@ -1,10 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Physics/World.hpp>
-
-#include <Runtime/GameEngine.hpp>
-#include <Scene/Scene.hpp>
 #include <Scene/Component/Physics.hpp>
-#include <Runtime/GameEngine.hpp>
+
+#include <Runtime/GameLogic.hpp>
 
 namespace Neon::Physics
 {
@@ -25,8 +23,10 @@ namespace Neon::Physics
     }
 
     void World::Update(
-        double DeltaTime)
+        flecs::world_t* World,
+        double          DeltaTime)
     {
+        m_SimulationWorld = World;
         m_DynamicsWorld.stepSimulation(btScalar(DeltaTime), m_MaxSubSteps, m_FixedTimeStep);
 #ifndef NEON_DIST
         m_DynamicsWorld.debugDrawWorld();
@@ -127,12 +127,12 @@ namespace Neon::Physics
 
     template<typename _CollisionTy, typename _TriggerTy>
     static void SendCollisionCallback(
+        flecs::world_t*          SimulationWorld,
         btPersistentManifold*    Manifold,
         const btCollisionObject* Body,
         flecs::entity_t          EntityId)
     {
-        auto World = Runtime::DefaultGameEngine::Get()->GetScene().GetEntityWorld();
-        auto Actor = flecs::entity(*World, EntityId);
+        auto Actor = flecs::entity(SimulationWorld, EntityId);
 
         if (!(Body->getCollisionFlags() & btCollisionObject::CF_NO_CONTACT_RESPONSE)) [[likely]]
         {
@@ -154,8 +154,7 @@ namespace Neon::Physics
         btDynamicsWorld* BtWorld,
         btScalar         DeltaTimeStep)
     {
-
-        //
+        using namespace Scene::Component;
 
         auto PhysicsWorld = static_cast<World*>(BtWorld->getWorldUserInfo());
 
@@ -183,21 +182,21 @@ namespace Neon::Physics
             {
                 if (PhysicsWorld->m_PreviousTickCollisions.contains(Tuple))
                 {
-                    SendCollisionCallback<Scene::Component::CollisionExit, Scene::Component::TriggerExit>(Manifold, Body0, Ent0);
-                    SendCollisionCallback<Scene::Component::CollisionExit, Scene::Component::TriggerExit>(Manifold, Body1, Ent1);
+                    SendCollisionCallback<CollisionExit, TriggerExit>(PhysicsWorld->m_SimulationWorld, Manifold, Body0, Ent0);
+                    SendCollisionCallback<CollisionExit, TriggerExit>(PhysicsWorld->m_SimulationWorld, Manifold, Body1, Ent1);
                     PhysicsWorld->m_PreviousTickCollisions.erase(std::move(Tuple));
                 }
             }
             else if (!PhysicsWorld->m_PreviousTickCollisions.contains(Tuple))
             {
-                SendCollisionCallback<Scene::Component::CollisionEnter, Scene::Component::TriggerEnter>(Manifold, Body0, Ent0);
-                SendCollisionCallback<Scene::Component::CollisionEnter, Scene::Component::TriggerEnter>(Manifold, Body1, Ent1);
+                SendCollisionCallback<CollisionEnter, TriggerEnter>(PhysicsWorld->m_SimulationWorld, Manifold, Body0, Ent0);
+                SendCollisionCallback<CollisionEnter, TriggerEnter>(PhysicsWorld->m_SimulationWorld, Manifold, Body1, Ent1);
                 PhysicsWorld->m_PreviousTickCollisions.insert(std::move(Tuple));
             }
             else
             {
-                SendCollisionCallback<Scene::Component::CollisionStay, Scene::Component::TriggerStay>(Manifold, Body0, Ent0);
-                SendCollisionCallback<Scene::Component::CollisionStay, Scene::Component::TriggerStay>(Manifold, Body1, Ent1);
+                SendCollisionCallback<CollisionStay, TriggerStay>(PhysicsWorld->m_SimulationWorld, Manifold, Body0, Ent0);
+                SendCollisionCallback<CollisionStay, TriggerStay>(PhysicsWorld->m_SimulationWorld, Manifold, Body1, Ent1);
             }
         }
     }
