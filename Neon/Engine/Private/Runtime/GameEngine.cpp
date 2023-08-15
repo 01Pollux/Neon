@@ -14,6 +14,7 @@
 #include <Asset/Handlers/Shader.hpp>
 
 #include <RHI/Swapchain.hpp>
+#include <RHI/ImGui.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -57,6 +58,10 @@ namespace Neon::Runtime
         Runtime::DebugOverlay::Destroy();
     }
 
+    void GameEngine::PostRender()
+    {
+    }
+
     int GameEngine::Run()
     {
         // Reset the timer before entering the loop to avoid a large delta time on the first frame
@@ -69,11 +74,26 @@ namespace Neon::Runtime
                 Runtime::DebugOverlay::Reset();
                 auto IsScreenVisible = GetWindow()->IsVisible();
 
+                PreUpdate();
                 m_Logic->Update();
+                PostUpdate();
+
                 if (IsScreenVisible.get())
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
-                    m_Logic->Render();
+
+                    {
+                        RHI::GraphicsCommandContext GraphicsContext;
+
+                        PreRender();
+                        RHI::ImGuiRHI::BeginImGuiFrame();
+
+                        m_Logic->Render(GraphicsContext);
+
+                        RHI::ImGuiRHI::EndImGuiFrame(GraphicsContext[0]);
+                        PostRender();
+                    }
+
                     RHI::ISwapchain::Get()->Present(float(m_GameTimer.GetDeltaTime()));
                 }
             }

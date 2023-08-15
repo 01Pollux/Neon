@@ -46,6 +46,32 @@ namespace Neon::Runtime
         virtual void Shutdown();
 
         /// <summary>
+        /// Called before the engine update.
+        /// </summary>
+        virtual void PreUpdate()
+        {
+        }
+
+        /// <summary>
+        /// Called after the engine update.
+        /// </summary>
+        virtual void PostUpdate()
+        {
+        }
+
+        /// <summary>
+        /// Called before the engine render.
+        /// </summary>
+        virtual void PreRender()
+        {
+        }
+
+        /// <summary>
+        /// Called after the engine render.
+        /// </summary>
+        virtual void PostRender();
+
+        /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.
         /// </summary>
         int Run();

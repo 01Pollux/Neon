@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Scene/EntityWorld.hpp>
+#include <RHI/Commands/Context.hpp>
 
 namespace Neon
 {
@@ -37,7 +38,8 @@ namespace Neon::Runtime
         /// <summary>
         /// Render the scene to all active cameras.
         /// </summary>
-        void Render();
+        void Render(
+            RHI::GraphicsCommandContext& GraphicsContext);
 
         /// <summary>
         /// Update the scene physics.

@@ -24,6 +24,10 @@ namespace Neon::Editor
         void Initialize(
             Config::EngineConfig Config) override;
 
+        void PreUpdate() override;
+
+        void PostRender() override;
+
     public:
         /// <summary>
         /// Register a new editor view.

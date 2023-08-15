@@ -23,16 +23,13 @@ namespace Neon::RG
         friend class GraphBuilder;
         using DepdencyLevelList = std::vector<GraphDepdencyLevel>;
 
-        using RenderCommandContext  = RHI::TCommandContext<RHI::CommandQueueType::Graphics>;
-        using ComputeCommandContext = RHI::TCommandContext<RHI::CommandQueueType::Compute>;
-
         struct ChainedCommandList
         {
             RHI::ICommonCommandList* CommandList = nullptr;
             bool                     IsDirect    = false;
 
-            RenderCommandContext  RenderContext;
-            ComputeCommandContext ComputeContext;
+            RHI::GraphicsCommandContext RenderContext;
+            RHI::ComputeCommandContext  ComputeContext;
 
             template<bool _IsDirect>
             [[nodiscard]] auto NewCommandList()
@@ -90,9 +87,13 @@ namespace Neon::RG
 
         /// <summary>
         /// Run the graph
+        /// For convinience, the graph will copy the final output to the back buffer
+        /// The graph will also return the command list for us to handle ui rendering
+        /// If CopyToBackBuffer is false, the function will return nullptr
         /// </summary>
         void Run(
-            bool CopyToBackBuffer);
+            bool                         CopyToBackBuffer,
+            RHI::GraphicsCommandContext& RenderContext);
 
     private:
         /// <summary>

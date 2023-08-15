@@ -1,4 +1,5 @@
 #include <GraphicsPCH.hpp>
+#include <RHI/ImGui.hpp>
 #include <Core/Neon.hpp>
 
 #include <Private/RHI/Dx12/Device.hpp>
@@ -21,10 +22,13 @@ namespace Neon::RHI
         const SwapchainCreateDesc& Desc)
     {
         ResizeBackbuffers(Desc.FramesInFlight);
+        ImGuiRHI::InitializeImGui();
     }
 
     void Dx12Swapchain::Shutdown()
     {
+        ImGuiRHI::ShutdownImGui();
+
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
 
         m_BackBuffers.clear();
@@ -60,6 +64,11 @@ namespace Neon::RHI
 
         UINT SyncInterval = m_IsVSyncEnabled ? std::min(4, int(std::roundf(FrameTime * 60.f))) : 0;
         ThrowIfFailed(m_Swapchain->Present(SyncInterval, 0));
+    }
+
+    Windowing::IWindowApp* Dx12Swapchain::GetWindow()
+    {
+        return m_WindowApp;
     }
 
     const Size2I& Dx12Swapchain::GetSize()
@@ -136,6 +145,11 @@ namespace Neon::RHI
 
         m_FrameManager->ResetFrameIndex();
         m_FrameManager->IdleGPU();
+    }
+
+    uint32_t Dx12Swapchain::GetBackbufferCount()
+    {
+        return uint32_t(m_BackBuffers.size());
     }
 
     //

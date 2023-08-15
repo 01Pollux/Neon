@@ -26,6 +26,8 @@ namespace Neon::RHI
         void Present(
             float FrameTime) override;
 
+        Windowing::IWindowApp* GetWindow() override;
+
         const Size2I& GetSize() override;
 
         EResourceFormat GetFormat() override;
@@ -37,6 +39,8 @@ namespace Neon::RHI
         void Resize(
             const Size2I&   Size,
             EResourceFormat NewFormat) override;
+
+        uint32_t GetBackbufferCount() override;
 
         [[nodiscard]] ICommandQueue* GetQueue(
             CommandQueueType Type) override;

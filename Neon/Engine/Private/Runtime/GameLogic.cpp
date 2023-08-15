@@ -80,12 +80,13 @@ namespace Neon::Runtime
 
     //
 
-    void GameLogic::Render()
+    void GameLogic::Render(
+        RHI::GraphicsCommandContext& GraphicsContext)
     {
         auto MainCamera = m_EntityWorld.GetWorld().target<Component::MainCamera>();
         m_CameraQuery.each(
-            [MainCamera](flecs::entity      Entity,
-                         Component::Camera& Camera)
+            [MainCamera, &GraphicsContext](flecs::entity      Entity,
+                                           Component::Camera& Camera)
             {
                 auto& Size = RHI::ISwapchain::Get()->GetSize();
 
@@ -100,9 +101,14 @@ namespace Neon::Runtime
 
                 if (auto RenderGraph = Camera.GetRenderGraph())
                 {
-                    RenderGraph->Run(MainCamera == Entity);
+                    RenderGraph->Run(MainCamera == Entity, GraphicsContext);
                 }
             });
+
+        if (!GraphicsContext.Size())
+        {
+            GraphicsContext.Append();
+        }
     }
 
     void GameLogic::Update()

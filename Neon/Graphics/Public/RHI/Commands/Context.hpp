@@ -101,4 +101,8 @@ namespace Neon::RHI
             return dynamic_cast<CommandListType*>(CommandContext::operator[](Index));
         }
     };
+
+    using GraphicsCommandContext = TCommandContext<CommandQueueType::Graphics>;
+    using ComputeCommandContext  = TCommandContext<CommandQueueType::Compute>;
+    using CopyCommandContext     = TCommandContext<CommandQueueType::Copy>;
 } // namespace Neon::RHI

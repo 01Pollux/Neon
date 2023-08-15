@@ -41,6 +41,11 @@ namespace Neon::RHI
             float FrameTime) = 0;
 
         /// <summary>
+        /// Get the swapchain's window.
+        /// </summary>
+        [[nodiscard]] virtual Windowing::IWindowApp* GetWindow() = 0;
+
+        /// <summary>
         /// Get the swapchain's window size.
         /// </summary>
         [[nodiscard]] virtual const Size2I& GetSize() = 0;
@@ -66,6 +71,11 @@ namespace Neon::RHI
         virtual void Resize(
             const Size2I&   Size,
             EResourceFormat NewFormat = EResourceFormat::Unknown) = 0;
+
+        /// <summary>
+        /// Get the swapchain's backbuffer count.
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetBackbufferCount() = 0;
 
         /// <summary>
         /// Get the swapchain's queue.
