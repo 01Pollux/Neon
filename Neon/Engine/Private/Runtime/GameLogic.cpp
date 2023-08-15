@@ -22,18 +22,10 @@ namespace Neon::Runtime
     GameLogic::GameLogic() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
-        // Create entity world.
-        {
-            std::scoped_lock Lock(s_FlecsWorldMutex);
-            m_EntityWorld = std::make_unique<flecs::world>();
-        }
-
-        // Register components & relations.
-        Exports::RegisterComponents(*m_EntityWorld);
-        Exports::RegisterRelations(*m_EntityWorld);
+        flecs::world World = m_EntityWorld;
 
         // Create physics update system.
-        m_EntityWorld->system("PhysicsUpdate")
+        World.system("PhysicsUpdate")
             .no_readonly()
             .kind(flecs::PreUpdate)
             .iter(
@@ -44,7 +36,7 @@ namespace Neon::Runtime
                 });
 
         // Create physics collision add/remove system.
-        m_EntityWorld->observer<Component::CollisionObject>("Physics(Add/Remove)")
+        World.observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
             .event(flecs::OnAdd)
             .event(flecs::OnRemove)
@@ -65,8 +57,7 @@ namespace Neon::Runtime
 
         // Create physics camera render system.
         m_CameraQuery =
-            m_EntityWorld
-                ->query_builder<Component::Camera>()
+            World.query_builder<Component::Camera>()
                 .term<Component::Camera>()
                 .inout()
                 .order_by(
@@ -80,14 +71,7 @@ namespace Neon::Runtime
                 .build();
     }
 
-    GameLogic::~GameLogic()
-    {
-        if (m_EntityWorld)
-        {
-            std::scoped_lock Lock(s_FlecsWorldMutex);
-            m_EntityWorld.reset();
-        }
-    }
+    GameLogic::~GameLogic() = default;
 
     GameLogic* GameLogic::Get()
     {
@@ -98,7 +82,7 @@ namespace Neon::Runtime
 
     void GameLogic::Render()
     {
-        auto MainCamera = m_EntityWorld->target<Component::MainCamera>();
+        auto MainCamera = m_EntityWorld.GetWorld().target<Component::MainCamera>();
         m_CameraQuery.each(
             [MainCamera](flecs::entity      Entity,
                          Component::Camera& Camera)
@@ -124,7 +108,7 @@ namespace Neon::Runtime
     void GameLogic::Update()
     {
         float DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
-        m_EntityWorld->progress(DeltaTime);
+        ecs_progress(m_EntityWorld, DeltaTime);
     }
 
     //
@@ -132,34 +116,29 @@ namespace Neon::Runtime
     flecs::entity GameLogic::CreateEntity(
         const char* Name)
     {
-        return m_EntityWorld->entity(Name);
+        return m_EntityWorld.CreateEntity(Name);
     }
 
     flecs::entity GameLogic::CreateEntityInRoot(
         const char* Name)
     {
-        return CreateEntity(Name);
-        // auto RootEntity = GetRootEntity();
-        // NEON_ASSERT(RootEntity, "Root entity not found");
-        // return CreateEntity(Name).child_of(RootEntity);
+        return m_EntityWorld.CreateEntityInRoot(Name);
     }
 
     flecs::entity GameLogic::CreateRootEntity(
         const char* Name)
     {
-        auto Entity = CreateEntity(Name);
-        m_EntityWorld->add<Component::Root>(Entity);
-        return Entity;
+        return m_EntityWorld.CreateRootEntity(Name);
     }
 
-    flecs::entity GameLogic::GetRootEntity() const
+    flecs::entity GameLogic::GetRootEntity()
     {
-        return m_EntityWorld->target<Component::Root>();
+        return m_EntityWorld.GetRootEntity();
     }
 
     void GameLogic::SetRootEntity(
         const flecs::entity& Entity)
     {
-        m_EntityWorld->add<Component::Root>(Entity);
+        m_EntityWorld.SetRootEntity(Entity);
     }
 } // namespace Neon::Runtime

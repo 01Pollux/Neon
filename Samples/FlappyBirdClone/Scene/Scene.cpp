@@ -33,7 +33,7 @@ void FlappyBirdClone::LoadScene()
     auto Logic = Runtime::GameLogic::Get();
 
     Logic->CreateRootEntity("Root");
-    auto& World = *Logic->GetEntityWorld();
+    flecs::world World = Logic->GetEntityWorld();
 
     // Scene.GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
 
@@ -252,8 +252,7 @@ void FlappyBirdClone::CreateObstacle(
     auto ObstacleCreate =
         [this, &World](const Vector3& Position, const Vector2& Size, bool Up)
     {
-        auto Obstacle = World.entity();
-        // auto Obstacle = World.CreateEntityInRoot();
+        auto Obstacle = World.CreateEntityInRoot();
         {
             Obstacle.add<RainbowSprite>();
 

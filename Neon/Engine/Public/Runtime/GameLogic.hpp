@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <Scene/Component/Component.hpp>
+#include <Scene/EntityWorld.hpp>
 
 namespace Neon
 {
@@ -56,35 +56,35 @@ namespace Neon::Runtime
         /// <summary>
         /// Get the entity world.
         /// </summary>
-        [[nodiscard]] flecs::world* GetEntityWorld() const
+        [[nodiscard]] Scene::EntityWorld GetEntityWorld() const
         {
-            return m_EntityWorld.get();
+            return m_EntityWorld;
         }
 
     public:
         /// <summary>
         /// Create a new entity.
         /// </summary>
-        [[nodiscard]] flecs::entity CreateEntity(
+        flecs::entity CreateEntity(
             const char* Name = nullptr);
 
         /// <summary>
         /// Create a new entity in the root world.
         /// The world's root must be set.
         /// </summary>
-        [[nodiscard]] flecs::entity CreateEntityInRoot(
+        flecs::entity CreateEntityInRoot(
             const char* Name = nullptr);
 
         /// <summary>
         /// Create a new entity.
         /// </summary>
-        [[nodiscard]] flecs::entity CreateRootEntity(
+        flecs::entity CreateRootEntity(
             const char* Name = nullptr);
 
         /// <summary>
         /// Get the root entity.
         /// </summary>
-        [[nodiscard]] flecs::entity GetRootEntity() const;
+        [[nodiscard]] flecs::entity GetRootEntity();
 
         /// <summary>
         /// Set the root entity.
@@ -94,7 +94,7 @@ namespace Neon::Runtime
 
     private:
         UPtr<Physics::World> m_PhysicsWorld;
-        UPtr<flecs::world>   m_EntityWorld;
+        Scene::EntityWorld   m_EntityWorld;
 
         flecs::query<
             Scene::Component::Camera>

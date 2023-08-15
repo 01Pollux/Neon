@@ -7,59 +7,81 @@
 
 namespace Neon::Scene
 {
-#if 0
     static std::mutex s_FlecsWorldMutex;
-    //
-    //    EntityWorld::EntityWorld()
-    //    {
-    //        {
-    //            std::scoped_lock Lock(s_FlecsWorldMutex);
-    //            m_World         = flecs::world(ecs_init());
-    //            m_World.m_owned = true;
-    //        }
-    //
-    //        // Register built-in modules.
-    // #ifndef NEON_DIST
-    //        m_World.set<flecs::Rest>({});
-    //        m_World.import <flecs::monitor>();
-    // #endif
-    //
-    //        // Register components & relations.
-    //        Exports::RegisterComponents(m_World);
-    //        Exports::RegisterRelations(m_World);
-    //    }
+
+    EntityWorld::EntityWorld()
+    {
+        {
+            std::scoped_lock Lock(s_FlecsWorldMutex);
+            m_World = ecs_init();
+            m_Owned = true;
+        }
+
+        // Register built-in modules.
+        flecs::world World(m_World);
+
+        World.init_builtin_components();
+
+#ifndef NEON_DIST
+        World.set<flecs::Rest>({});
+        World.import <flecs::monitor>();
+#endif
+
+        // Register components & relations.
+        Exports::RegisterComponents(World);
+        Exports::RegisterRelations(World);
+    }
+
+    void EntityWorld::Release()
+    {
+        if (!m_Owned || !m_World)
+        {
+            return;
+        }
+
+        if (ecs_stage_is_async(m_World))
+        {
+            ecs_async_stage_free(m_World);
+        }
+        else
+        {
+            ecs_fini(m_World);
+        }
+    }
 
     flecs::entity EntityWorld::CreateEntity(
         const char* Name)
     {
-        return entity(Name);
+        return GetWorld().entity(Name);
     }
 
     flecs::entity EntityWorld::CreateEntityInRoot(
         const char* Name)
     {
-        auto RootEntity = GetRootEntity();
-        NEON_ASSERT(RootEntity, "Root entity not found");
-        return CreateEntity(Name).child_of(RootEntity);
+        return CreateEntity(Name);
+
+        // auto RootEntity = GetRootEntity();
+        // NEON_ASSERT(RootEntity, "Root entity not found");
+        // return CreateEntity(Name).child_of(RootEntity);
     }
 
     flecs::entity EntityWorld::CreateRootEntity(
         const char* Name)
     {
-        auto Entity = CreateEntity(Name);
-        add<Component::Root>(Entity);
+        auto World  = GetWorld();
+        auto Entity = World.entity(Name);
+        World.add<Component::Root>(Entity);
         return Entity;
     }
 
     flecs::entity EntityWorld::GetRootEntity()
     {
-        return target<Component::Root>();
+        return GetWorld().target<Component::Root>();
     }
 
     void EntityWorld::SetRootEntity(
         const flecs::entity& Entity)
     {
-        add<Component::Root>(Entity);
+        GetWorld().add<Component::Root>(Entity);
     }
-#endif
 } // namespace Neon::Scene
