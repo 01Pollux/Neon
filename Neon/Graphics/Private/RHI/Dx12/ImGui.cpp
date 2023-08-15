@@ -64,10 +64,16 @@ namespace Neon::RHI::ImGuiRHI
         ImGui::NewFrame();
     }
 
-    void EndImGuiFrame(
-        RHI::IGraphicsCommandList* CommandList)
+    void EndImGuiFrame()
     {
         ImGui::Render();
+
+        RHI::GraphicsCommandContext GraphicsContext;
+
+        auto Swapchain    = RHI::ISwapchain::Get();
+        auto StateManager = RHI::IResourceStateManager::Get();
+        auto BackBuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
+        auto CommandList  = GraphicsContext.Append();
 
         auto DrawData = ImGui::GetDrawData();
         {
@@ -135,8 +141,46 @@ namespace Neon::RHI::ImGuiRHI
             }
         }
 
+        //
+
+        // Set Render target view and viewport to the backbuffer.
+        StateManager->TransitionResource(
+            BackBuffer,
+            RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
+
+        StateManager->FlushBarriers(CommandList);
+
+        // Set viewport, scissor rect and render target view
+        {
+            auto& Size = RHI::ISwapchain::Get()->GetSize();
+
+            CommandList->SetViewport(
+                ViewportF{
+                    .Width    = float(Size.Width()),
+                    .Height   = float(Size.Height()),
+                    .MaxDepth = 1.f,
+                });
+            CommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
+
+            auto View = RHI::ISwapchain::Get()->GetBackBufferView();
+
+            CommandList->ClearRtv(
+                View,
+                Colors::White);
+
+            CommandList->SetRenderTargets(
+                View, 1);
+        }
+
         auto Dx12CmdList = dynamic_cast<Dx12CommandList*>(CommandList)->Get();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), Dx12CmdList);
+
+        // Transition the backbuffer to a present state.
+        StateManager->TransitionResource(
+            BackBuffer,
+            RHI::MResourceState_Present);
+
+        StateManager->FlushBarriers(CommandList);
 
         // Update and Render additional Platform Windows
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)

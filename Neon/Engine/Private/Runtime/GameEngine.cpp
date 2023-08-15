@@ -82,17 +82,13 @@ namespace Neon::Runtime
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
 
-                    {
-                        RHI::GraphicsCommandContext GraphicsContext;
+                    RHI::ImGuiRHI::BeginImGuiFrame();
 
-                        PreRender();
-                        RHI::ImGuiRHI::BeginImGuiFrame();
+                    PreRender();
+                    m_Logic->Render();
+                    PostRender();
 
-                        m_Logic->Render(GraphicsContext);
-
-                        RHI::ImGuiRHI::EndImGuiFrame(GraphicsContext[0]);
-                        PostRender();
-                    }
+                    RHI::ImGuiRHI::EndImGuiFrame();
 
                     RHI::ISwapchain::Get()->Present(float(m_GameTimer.GetDeltaTime()));
                 }

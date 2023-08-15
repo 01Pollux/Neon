@@ -92,8 +92,7 @@ namespace Neon::RG
         /// If CopyToBackBuffer is false, the function will return nullptr
         /// </summary>
         void Run(
-            bool                         CopyToBackBuffer,
-            RHI::GraphicsCommandContext& RenderContext);
+            bool CopyToBackBuffer);
 
     private:
         /// <summary>

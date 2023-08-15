@@ -38,8 +38,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Render the scene to all active cameras.
         /// </summary>
-        void Render(
-            RHI::GraphicsCommandContext& GraphicsContext);
+        void Render();
 
         /// <summary>
         /// Update the scene physics.

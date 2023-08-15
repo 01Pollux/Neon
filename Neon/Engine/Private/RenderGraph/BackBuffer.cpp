@@ -67,7 +67,7 @@ namespace Neon::RG
 
         // Transition to appropriate states
         {
-            // Transition the backbuffer to a copy destination.
+            // Transition the backbuffer to a render target.
             StateManager->TransitionResource(
                 BackBuffer,
                 RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));

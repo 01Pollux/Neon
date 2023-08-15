@@ -38,8 +38,7 @@ namespace Neon::RG
     }
 
     void RenderGraph::Run(
-        bool                         CopyToBackBuffer,
-        RHI::GraphicsCommandContext& RenderContext)
+        bool CopyToBackBuffer)
     {
         if (!UpdateCameraBuffer()) [[unlikely]]
         {
@@ -55,23 +54,21 @@ namespace Neon::RG
         }
 
         // We will cache the command contexts to avoid submitting single command list per pass + barrier flush
-        ChainedCommandList ChainedCommandList;
-
-        for (auto& Level : m_Levels)
         {
-            Level.Execute(ChainedCommandList);
+            ChainedCommandList ChainedCommandList;
+
+            for (auto& Level : m_Levels)
+            {
+                Level.Execute(ChainedCommandList);
+            }
+
+            if (CopyToBackBuffer)
+            {
+                m_BackBufferFinalizer.Dispatch(m_Storage, ChainedCommandList.Load());
+            }
         }
 
-        if (CopyToBackBuffer)
-        {
-            m_BackBufferFinalizer.Dispatch(m_Storage, ChainedCommandList.Load());
-        }
         m_Storage.FlushResources();
-
-        if (CopyToBackBuffer)
-        {
-            RenderContext = std::move(ChainedCommandList.RenderContext);
-        }
     }
 
     bool RenderGraph::UpdateCameraBuffer()

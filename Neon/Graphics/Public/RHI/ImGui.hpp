@@ -1,10 +1,5 @@
 #pragma once
 
-namespace Neon::RHI
-{
-    class IGraphicsCommandList;
-}
-
 namespace Neon::RHI::ImGuiRHI
 {
     /// <summary>
@@ -25,8 +20,7 @@ namespace Neon::RHI::ImGuiRHI
     /// <summary>
     /// End the current ImGui frame.
     /// </summary>
-    void EndImGuiFrame(
-        RHI::IGraphicsCommandList* CommandList);
+    void EndImGuiFrame();
 
     /// <summary>
     /// Set the default ImGui theme.
