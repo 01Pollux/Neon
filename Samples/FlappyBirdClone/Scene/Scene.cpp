@@ -47,7 +47,7 @@ void FlappyBirdClone::LoadScene()
         auto WallCreate =
             [&](const char* Name, const Vector3& Position)
         {
-            auto Wall = Logic->CreateEntityInRoot(Name);
+            auto Wall = Logic->CreateEntity(Name);
             {
                 Wall.add<RainbowSprite>();
 
@@ -80,7 +80,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player instance
-    m_Player = Logic->CreateEntityInRoot("Player");
+    m_Player = Logic->CreateEntity("Player");
     {
         Scene::Component::Sprite SpriteComponent;
         {
@@ -113,7 +113,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = Logic->CreateEntityInRoot("PlayerCamera");
+    auto Camera = Logic->CreateEntity("PlayerCamera");
     {
         World.add<Scene::Component::MainCamera>(Camera);
 
@@ -252,7 +252,7 @@ void FlappyBirdClone::CreateObstacle(
     auto ObstacleCreate =
         [this, &World](const Vector3& Position, const Vector2& Size, bool Up)
     {
-        auto Obstacle = World.CreateEntityInRoot();
+        auto Obstacle = World.CreateEntity();
         {
             Obstacle.add<RainbowSprite>();
 
