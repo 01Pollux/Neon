@@ -8,11 +8,11 @@ NEON_SIGNAL_DECL(OnWindowSizeChanged, const Neon::Size2I& /*NewSize*/);
 
 namespace Neon::Runtime
 {
-    class DefaultGameEngine;
+    class GameEngine;
 
     class EngineWindow
     {
-        friend class DefaultGameEngine;
+        friend class GameEngine;
 
     public:
         EngineWindow(

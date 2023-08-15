@@ -10,7 +10,7 @@
 
 #include <unordered_map>
 
-class FlappyBirdClone : public Neon::Runtime::DefaultGameEngine
+class FlappyBirdClone : public Neon::Runtime::GameEngine
 {
     using MaterialMap     = std::unordered_map<Neon::StringU8, Neon::Ptr<Neon::Renderer::IMaterial>>;
     using TextureAssetPtr = Neon::Ptr<Neon::RHI::ITexture>;

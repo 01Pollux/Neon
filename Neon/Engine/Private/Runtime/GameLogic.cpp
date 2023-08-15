@@ -31,7 +31,7 @@ namespace Neon::Runtime
             .iter(
                 [this](flecs::iter Iter)
                 {
-                    double DeltaTime = Runtime::DefaultGameEngine::Get()->GetDeltaTime();
+                    double DeltaTime = Runtime::GameEngine::Get()->GetDeltaTime();
                     m_PhysicsWorld->Update(Iter.world(), DeltaTime);
                 });
 
@@ -75,7 +75,7 @@ namespace Neon::Runtime
 
     GameLogic* GameLogic::Get()
     {
-        return Runtime::DefaultGameEngine::Get()->GetLogic();
+        return Runtime::GameEngine::Get()->GetLogic();
     }
 
     //
@@ -107,7 +107,7 @@ namespace Neon::Runtime
 
     void GameLogic::Update()
     {
-        float DeltaTime = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+        float DeltaTime = float(Runtime::GameEngine::Get()->GetDeltaTime());
         ecs_progress(m_EntityWorld, DeltaTime);
     }
 

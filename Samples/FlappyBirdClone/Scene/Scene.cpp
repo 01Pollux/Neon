@@ -28,7 +28,7 @@ constexpr uint32_t Wall_CollisionMask   = Player_CollisionGroup;
 
 void FlappyBirdClone::LoadScene()
 {
-    Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
+    Runtime::GameEngine::Get()->SetTimeScale(1.f);
 
     auto Logic = Runtime::GameLogic::Get();
 
@@ -308,7 +308,7 @@ void FlappyBirdClone::CreateObstacle(
 
 void FlappyBirdClone::UpdateInputs()
 {
-    float Mult        = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+    float Mult        = float(Runtime::GameEngine::Get()->GetDeltaTime());
     float EnginePower = m_EnginePower * Mult;
 
     if (m_IsJumping)
@@ -339,7 +339,7 @@ void FlappyBirdClone::UpdateInputs()
 void FlappyBirdClone::UpdateObstacles(
     flecs::iter& Iter)
 {
-    auto DeltaTime   = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+    auto DeltaTime   = float(Runtime::GameEngine::Get()->GetDeltaTime());
     bool RemoveFirst = false;
     for (auto& Entity : m_Obstacles)
     {

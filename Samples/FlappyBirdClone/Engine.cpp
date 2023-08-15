@@ -5,7 +5,7 @@ using namespace Neon;
 void FlappyBirdClone::Initialize(
     Config::EngineConfig Config)
 {
-    DefaultGameEngine::Initialize(std::move(Config));
+    GameEngine::Initialize(std::move(Config));
 
     PreloadSprite();
 

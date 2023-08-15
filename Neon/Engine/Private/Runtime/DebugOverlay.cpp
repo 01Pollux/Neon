@@ -244,7 +244,7 @@ namespace Neon::Runtime
         // Remove any expired lines from the timed line buffer
         if (!m_TimedLines.empty())
         {
-            float GameTime = float(DefaultGameEngine::Get()->GetEngineTime());
+            float GameTime = float(GameEngine::Get()->GetEngineTime());
             auto  Iter     = m_TimedLines.upper_bound(GameTime);
             if (Iter != m_TimedLines.begin())
             {
@@ -311,7 +311,7 @@ namespace Neon::Runtime
         const LineArgs& Args,
         bool            WorldsSpace)
     {
-        m_TimedLines.emplace(float(DefaultGameEngine::Get()->GetEngineTime() + Duration), std::make_pair(Args, WorldsSpace));
+        m_TimedLines.emplace(float(GameEngine::Get()->GetEngineTime() + Duration), std::make_pair(Args, WorldsSpace));
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Reset()

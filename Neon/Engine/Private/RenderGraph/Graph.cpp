@@ -92,9 +92,9 @@ namespace Neon::RG
         CameraBuffer.ProjectionInverse     = glm::inverse(CameraBuffer.Projection);
         CameraBuffer.ViewProjectionInverse = glm::inverse(CameraBuffer.ViewProjection);
 
-        CameraBuffer.EngineTime = float(Runtime::DefaultGameEngine::Get()->GetEngineTime());
-        CameraBuffer.GameTime   = float(Runtime::DefaultGameEngine::Get()->GetGameTime());
-        CameraBuffer.DeltaTime  = float(Runtime::DefaultGameEngine::Get()->GetDeltaTime());
+        CameraBuffer.EngineTime = float(Runtime::GameEngine::Get()->GetEngineTime());
+        CameraBuffer.GameTime   = float(Runtime::GameEngine::Get()->GetGameTime());
+        CameraBuffer.DeltaTime  = float(Runtime::GameEngine::Get()->GetDeltaTime());
 
         m_Storage.UnmapFrameData();
         return true;

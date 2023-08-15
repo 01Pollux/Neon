@@ -19,20 +19,20 @@ namespace Neon::Runtime
 {
     class GameLogic;
 
-    class DefaultGameEngine
+    class GameEngine
     {
     public:
-        DefaultGameEngine();
+        GameEngine();
 
-        NEON_CLASS_NO_COPY(DefaultGameEngine);
-        NEON_CLASS_MOVE(DefaultGameEngine);
+        NEON_CLASS_NO_COPY(GameEngine);
+        NEON_CLASS_MOVE(GameEngine);
 
-        virtual ~DefaultGameEngine();
+        virtual ~GameEngine();
 
         /// <summary>
         /// Get the singleton instance of the engine.
         /// </summary>
-        static DefaultGameEngine* Get();
+        static GameEngine* Get();
 
         /// <summary>
         /// Called when the engine is initialized.

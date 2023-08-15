@@ -19,9 +19,9 @@
 
 namespace Neon::Runtime
 {
-    static DefaultGameEngine* s_GameEngine = nullptr;
+    static GameEngine* s_GameEngine = nullptr;
 
-    DefaultGameEngine::DefaultGameEngine() :
+    GameEngine::GameEngine() :
         m_Logic(std::make_unique<GameLogic>()),
         m_ThreadPool(std::make_unique<Asio::ThreadPool<>>(4))
     {
@@ -29,18 +29,18 @@ namespace Neon::Runtime
         s_GameEngine = this;
     }
 
-    DefaultGameEngine::~DefaultGameEngine()
+    GameEngine::~GameEngine()
     {
         NEON_ASSERT(s_GameEngine);
         s_GameEngine = nullptr;
     }
 
-    DefaultGameEngine* DefaultGameEngine::Get()
+    GameEngine* GameEngine::Get()
     {
         return s_GameEngine;
     }
 
-    void DefaultGameEngine::Initialize(
+    void GameEngine::Initialize(
         Config::EngineConfig Config)
     {
         InitializeAssetSystem(Config);
@@ -52,12 +52,12 @@ namespace Neon::Runtime
         Runtime::DebugOverlay::Create();
     }
 
-    void DefaultGameEngine::Shutdown()
+    void GameEngine::Shutdown()
     {
         Runtime::DebugOverlay::Destroy();
     }
 
-    int DefaultGameEngine::Run()
+    int GameEngine::Run()
     {
         // Reset the timer before entering the loop to avoid a large delta time on the first frame
         m_GameTimer.Reset();
@@ -84,17 +84,17 @@ namespace Neon::Runtime
 
     //
 
-    Windowing::IWindowApp* DefaultGameEngine::GetWindow() const
+    Windowing::IWindowApp* GameEngine::GetWindow() const
     {
         return m_Window->GetWindow();
     }
 
-    GameLogic* DefaultGameEngine::GetLogic() const noexcept
+    GameLogic* GameEngine::GetLogic() const noexcept
     {
         return m_Logic.get();
     }
 
-    void DefaultGameEngine::LoadPacks(
+    void GameEngine::LoadPacks(
         Config::EngineConfig& Config)
     {
         for (auto& Pack : Config.Resource.AssetPackages)
@@ -103,7 +103,7 @@ namespace Neon::Runtime
         }
     }
 
-    void DefaultGameEngine::InitializeAssetSystem(
+    void GameEngine::InitializeAssetSystem(
         Config::EngineConfig& Config)
     {
         Asset::Storage::RegisterHandler<Asset::TextFileAsset::Handler>();
@@ -127,27 +127,27 @@ namespace Neon::Runtime
 
     //
 
-    double DefaultGameEngine::GetGameTime() const
+    double GameEngine::GetGameTime() const
     {
         return m_GameTimer.GetGameTime();
     }
 
-    double DefaultGameEngine::GetEngineTime() const
+    double GameEngine::GetEngineTime() const
     {
         return m_GameTimer.GetEngineTime();
     }
 
-    double DefaultGameEngine::GetDeltaTime() const
+    double GameEngine::GetDeltaTime() const
     {
         return m_GameTimer.GetDeltaTime();
     }
 
-    float DefaultGameEngine::GetTimeScale() const
+    float GameEngine::GetTimeScale() const
     {
         return m_GameTimer.GetTimeScale();
     }
 
-    void DefaultGameEngine::SetTimeScale(
+    void GameEngine::SetTimeScale(
         float TimeScale)
     {
         m_GameTimer.SetTimeScale(TimeScale);
