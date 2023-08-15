@@ -10,12 +10,16 @@ namespace Neon::Editor
         /// <summary>
         /// Called when the view is updated.
         /// </summary>
-        virtual void OnUpdate() = 0;
+        virtual void OnUpdate()
+        {
+        }
 
         /// <summary>
         /// Called when the view is rendered.
         /// </summary>
-        virtual void OnRender() = 0;
+        virtual void OnRender()
+        {
+        }
 
         /// <summary>
         /// Called when the view is opened.

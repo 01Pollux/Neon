@@ -1,11 +1,13 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
+#include <EditorViews/View.hpp>
+
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Neon::Editor
 {
-    class IEditorView;
-
     using EditorViewId = uint64_t;
 
     class EditorEngine : public Runtime::GameEngine
@@ -55,7 +57,7 @@ namespace Neon::Editor
         /// <summary>
         /// Check if the editor view is open.
         /// </summary>
-        void IsViewOpen(
+        bool IsViewOpen(
             EditorViewId ViewId);
 
         /// <summary>
@@ -67,6 +69,6 @@ namespace Neon::Editor
     private:
         std::unordered_map<uint64_t, UPtr<IEditorView>> m_Views;
 
-        std::set<IEditorView*> m_OpenViews;
+        std::unordered_set<IEditorView*> m_OpenViews;
     };
 } // namespace Neon::Editor

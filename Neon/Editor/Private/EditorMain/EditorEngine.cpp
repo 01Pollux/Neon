@@ -1,6 +1,5 @@
 #include <EditorPCH.hpp>
 #include <EditorMain/EditorEngine.hpp>
-#include <EditorViews/View.hpp>
 
 #include <Asset/Packs/Directory.hpp>
 
@@ -58,6 +57,13 @@ namespace Neon::Editor
         {
             Iter->second->OnOpen();
         }
+    }
+
+    bool EditorEngine::IsViewOpen(
+        EditorViewId ViewId)
+    {
+        auto Iter = m_Views.find(ViewId);
+        return Iter != m_Views.end() ? m_OpenViews.contains(Iter->second.get()) : false;
     }
 
     void EditorEngine::CloseView(
