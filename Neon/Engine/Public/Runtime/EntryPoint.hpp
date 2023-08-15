@@ -40,8 +40,7 @@ namespace Neon::Runtime
         return Ret;                                                   \
     }                                                                 \
     Neon::UPtr<Neon::Runtime::DefaultGameEngine> Neon::Runtime::Main( \
-    UPtr<Neon::DefaultGameEngine> Neon::Runtime::Main(      \
-        int       Argc,                                     \
+        int       Argc,                                               \
         wchar_t** Argv)
 
 #else
