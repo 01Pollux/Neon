@@ -6,6 +6,7 @@
 #include <Scene/Component/Physics.hpp>
 
 #include <Physics/World.hpp>
+#include <Runtime/GameLogic.hpp>
 
 #include <Input/Table.hpp>
 #include <Input/System.hpp>
@@ -28,8 +29,11 @@ constexpr uint32_t Wall_CollisionMask   = Player_CollisionGroup;
 void FlappyBirdClone::LoadScene()
 {
     Runtime::DefaultGameEngine::Get()->SetTimeScale(1.f);
-    auto& Scene = GetScene();
-    auto& World = *Scene.GetEntityWorld();
+
+    auto Logic = Runtime::GameLogic::Get();
+
+    Logic->CreateRootEntity("Root");
+    auto& World = *Logic->GetEntityWorld();
 
     // Scene.GetPhysicsWorld()->SetDebugFlags(btIDebugDraw::DebugDrawModes::DBG_DrawWireframe);
 
@@ -43,7 +47,7 @@ void FlappyBirdClone::LoadScene()
         auto WallCreate =
             [&](const char* Name, const Vector3& Position)
         {
-            auto Wall = World.entity(Name);
+            auto Wall = Logic->CreateEntityInRoot(Name);
             {
                 Wall.add<RainbowSprite>();
 
@@ -76,7 +80,7 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player instance
-    m_Player = World.entity("Player");
+    m_Player = Logic->CreateEntityInRoot("Player");
     {
         Scene::Component::Sprite SpriteComponent;
         {
@@ -109,9 +113,9 @@ void FlappyBirdClone::LoadScene()
     }
 
     // Player camera
-    auto Camera = World.entity("PlayerCamera");
+    auto Camera = Logic->CreateEntityInRoot("PlayerCamera");
     {
-        Scene.GetEntityWorld()->set<Scene::Component::MainCamera>({ Camera });
+        World.add<Scene::Component::MainCamera>(Camera);
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {
@@ -147,15 +151,13 @@ void FlappyBirdClone::LoadScene()
 
     //
 
-    Scene.GetEntityWorld()
-        ->system()
+    World.system()
         .kind(flecs::OnUpdate)
         .no_readonly()
         .iter([this](flecs::iter Iter)
               { OnUpdate(Iter); });
 
-    Scene.GetEntityWorld()
-        ->system<RainbowSprite>()
+    World.system<RainbowSprite>()
         .each(
             [this](flecs::entity Entity, RainbowSprite)
             {
@@ -244,13 +246,14 @@ void FlappyBirdClone::OnCollisionEnter(
 }
 
 void FlappyBirdClone::CreateObstacle(
-    flecs::world   World,
-    const Vector3& Pos)
+    Scene::EntityWorld World,
+    const Vector3&     Pos)
 {
     auto ObstacleCreate =
         [this, &World](const Vector3& Position, const Vector2& Size, bool Up)
     {
         auto Obstacle = World.entity();
+        // auto Obstacle = World.CreateEntityInRoot();
         {
             Obstacle.add<RainbowSprite>();
 

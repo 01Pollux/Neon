@@ -1,8 +1,7 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
-#include <Scene/Scene.hpp>
-#include <Math/Vector.hpp>
+#include <Scene/EntityWorld.hpp>
 
 #include <RHI/Resource/Resource.hpp>
 #include <Asset/Types/Texture.hpp>
@@ -64,8 +63,8 @@ private:
     /// Create a new obstacle in the scene
     /// </summary>
     void CreateObstacle(
-        flecs::world         World,
-        const Neon::Vector3& Position);
+        Neon::Scene::EntityWorld World,
+        const Neon::Vector3&     Position);
 
 public:
     /// <summary>

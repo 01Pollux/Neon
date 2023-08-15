@@ -12,10 +12,7 @@ namespace Neon::Renderer
         m_SpriteQuery(
             Runtime::GameLogic::Get()
                 ->GetEntityWorld()
-                ->query_builder<Component::Transform, Component::Sprite>()
-                .with<Component::Root>()
-                .parent()
-                .cascade()
+                ->query_builder<Component::Transform, Component::Sprite>("query")
                 .with<Component::Sprite::MainRenderer>()
                 .term<Component::Transform>()
                 .in()

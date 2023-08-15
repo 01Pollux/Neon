@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/String.hpp>
 #include <flecs/flecs.h>
 
 #define NEON_EXPORT_FLECS(Class, Name)                  \

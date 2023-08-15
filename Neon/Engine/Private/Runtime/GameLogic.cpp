@@ -138,9 +138,10 @@ namespace Neon::Runtime
     flecs::entity GameLogic::CreateEntityInRoot(
         const char* Name)
     {
-        auto RootEntity = GetRootEntity();
-        NEON_ASSERT(RootEntity, "Root entity not found");
-        return CreateEntity(Name).child_of(RootEntity);
+        return CreateEntity(Name);
+        // auto RootEntity = GetRootEntity();
+        // NEON_ASSERT(RootEntity, "Root entity not found");
+        // return CreateEntity(Name).child_of(RootEntity);
     }
 
     flecs::entity GameLogic::CreateRootEntity(
