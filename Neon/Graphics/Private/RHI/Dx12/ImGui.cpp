@@ -29,7 +29,8 @@ namespace Neon::RHI::ImGuiRHI
         IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
         IO.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-        auto WindowHandle = ISwapchain::Get()->GetWindow()->GetPlatformHandle();
+        auto Window       = ISwapchain::Get()->GetWindow();
+        auto WindowHandle = Window->GetPlatformHandle();
         auto Swapchain    = RHI::ISwapchain::Get();
 
         ImGui_ImplWin32_Init(WindowHandle);
@@ -54,10 +55,11 @@ namespace Neon::RHI::ImGuiRHI
     {
         auto BackendData = ImGui_ImplDX12_GetBackendData();
 
-        auto FrameDescriptor = IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-        auto Handle          = FrameDescriptor->Allocate(1);
+        auto StagedDescriptor = IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+        auto FrameDescriptor  = static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView));
+        auto Handle           = StagedDescriptor->Allocate(1);
 
-        BackendData->pd3dSrvDescHeap       = static_cast<Dx12DescriptorHeap*>(Handle.Heap)->Get();
+        BackendData->pd3dSrvDescHeap       = FrameDescriptor->GetHeap();
         BackendData->hFontSrvCpuDescHandle = { Handle.GetCpuHandle().Value };
         BackendData->hFontSrvGpuDescHandle = { Handle.GetCpuHandle().Value };
 
@@ -73,15 +75,19 @@ namespace Neon::RHI::ImGuiRHI
         RHI::GraphicsCommandContext GraphicsContext;
 
         auto Swapchain    = RHI::ISwapchain::Get();
+        auto Window       = Swapchain->GetWindow();
         auto StateManager = RHI::IResourceStateManager::Get();
-        auto BackBuffer   = RHI::ISwapchain::Get()->GetBackBuffer();
+        auto BackBuffer   = Swapchain->GetBackBuffer();
         auto CommandList  = GraphicsContext.Append();
 
-        auto DrawData = ImGui::GetDrawData();
-        {
-            s_DrawCommands.reserve(DrawData->CmdListsCount);
+        auto GlobalDrawData = ImGui::GetDrawData();
 
-            uint32_t Offset = 0;
+        auto& Viewports = ImGui::GetPlatformIO().Viewports;
+        // Iterate all viewports, and collect all draw commands' texture descriptors.
+        uint32_t DescriptorOffset = 0;
+        for (auto Viewport : Viewports)
+        {
+            auto DrawData = Viewport->DrawData;
             for (int i = 0; i < DrawData->CmdListsCount; i++)
             {
                 auto DrawList = DrawData->CmdLists[i];
@@ -91,56 +97,56 @@ namespace Neon::RHI::ImGuiRHI
                     if (!DrawCmd->UserCallback && DrawCmd->TextureId)
                     {
                         auto Handle                = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
-                        auto [Iter, NewlyInserted] = s_DescriptorHandlesRemapTexID.emplace(Handle.ptr, Offset);
+                        auto [Iter, NewlyInserted] = s_DescriptorHandlesRemapTexID.emplace(Handle.ptr, DescriptorOffset);
 
                         if (NewlyInserted)
                         {
                             s_DescriptorHandles.emplace_back(Handle);
-                            Offset++;
+                            DescriptorOffset++;
                         }
 
                         s_DrawCommands.emplace_back(DrawCmd);
                     }
                 }
             }
+        }
 
-            // Copy the texture descriptors to the frame descriptor heap.
-            if (!s_DrawCommands.empty())
+        // Copy the texture descriptors to the frame descriptor heap.
+        if (!s_DrawCommands.empty()) [[unlikely]]
+        {
+            auto FrameDescriptor = IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+            auto DstDescriptor   = FrameDescriptor->Allocate(uint32_t(s_DescriptorHandles.size()));
+
+            auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+
+            for (size_t i = s_DescriptorHandlesSizes.size(); i < s_DescriptorHandles.size(); i++)
             {
-                auto FrameDescriptor = IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-                auto DstDescriptor   = FrameDescriptor->Allocate(uint32_t(s_DrawCommands.size()));
-
-                auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
-
-                for (size_t i = s_DescriptorHandlesSizes.size(); i < s_DrawCommands.size(); i++)
-                {
-                    s_DescriptorHandlesSizes.emplace_back(1);
-                }
-
-                for (auto& DrawCmd : s_DrawCommands)
-                {
-                    auto Handle = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
-                    auto Offset = s_DescriptorHandlesRemapTexID.at(Handle.ptr);
-
-                    DrawCmd->TextureId = std::bit_cast<ImTextureID>(DstDescriptor.GetGpuHandle(Offset).Value);
-                }
-
-                D3D12_CPU_DESCRIPTOR_HANDLE DxDescriptors[]      = { DstDescriptor.GetCpuHandle().Value };
-                UINT                        DxDescriptorsSizes[] = { UINT(s_DescriptorHandles.size()) };
-
-                Dx12Device->CopyDescriptors(
-                    1,
-                    DxDescriptors,
-                    DxDescriptorsSizes,
-                    UINT(s_DescriptorHandles.size()),
-                    s_DescriptorHandles.data(),
-                    s_DescriptorHandlesSizes.data(),
-                    D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-                s_DescriptorHandles.clear();
-                s_DescriptorHandlesRemapTexID.clear();
-                s_DrawCommands.clear();
+                s_DescriptorHandlesSizes.emplace_back(1);
             }
+
+            for (auto& DrawCmd : s_DrawCommands)
+            {
+                auto Handle = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
+                auto Offset = s_DescriptorHandlesRemapTexID.at(Handle.ptr);
+
+                DrawCmd->TextureId = std::bit_cast<ImTextureID>(DstDescriptor.GetGpuHandle(Offset).Value);
+            }
+
+            D3D12_CPU_DESCRIPTOR_HANDLE DxDescriptors[]      = { DstDescriptor.GetCpuHandle().Value };
+            UINT                        DxDescriptorsSizes[] = { UINT(s_DescriptorHandles.size()) };
+
+            Dx12Device->CopyDescriptors(
+                1,
+                DxDescriptors,
+                DxDescriptorsSizes,
+                UINT(s_DescriptorHandles.size()),
+                s_DescriptorHandles.data(),
+                s_DescriptorHandlesSizes.data(),
+                D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+            s_DescriptorHandles.clear();
+            s_DescriptorHandlesRemapTexID.clear();
+            s_DrawCommands.clear();
         }
 
         // Set viewport, scissor rect and render target view
@@ -174,7 +180,7 @@ namespace Neon::RHI::ImGuiRHI
         // Update and Render additional Platform Windows
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            ImGui::UpdatePlatformWindows();
+            Window->UpdateImGuiDockingSystem();
             ImGui::RenderPlatformWindowsDefault(nullptr, Dx12CmdList);
         }
     }

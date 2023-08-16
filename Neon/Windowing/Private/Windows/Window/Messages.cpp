@@ -2,9 +2,11 @@
 #include <Private/Windows/Window/Window.hpp>
 #include <Private/Windows/Input/Table.hpp>
 
-#include <CommCtrl.h>
+#include <ImGui/backends/imgui_impl_win32.h>
 
 #include <Log/Logger.hpp>
+
+IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Neon::Windowing
 {
@@ -35,6 +37,11 @@ namespace Neon::Windowing
         WPARAM wParam,
         LPARAM lParam)
     {
+        if (ImGui_ImplWin32_WndProcHandler(Handle, Message, wParam, lParam))
+        {
+            return true;
+        }
+
         auto Window = std::bit_cast<WindowApp*>(GetWindowLongPtr(Handle, GWLP_USERDATA));
         if (Window) [[likely]]
         {

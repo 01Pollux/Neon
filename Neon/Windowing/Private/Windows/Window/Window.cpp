@@ -3,8 +3,8 @@
 
 #include <consoleapi.h>
 #include <CommCtrl.h>
-#include <minidumpapiset.h>
 
+#include <ImGui/imgui.h>
 #include <Log/Logger.hpp>
 
 namespace Neon::Windowing
@@ -425,6 +425,17 @@ namespace Neon::Windowing
         Message = std::move(m_PendingEvents.front());
         m_PendingEvents.pop();
         return true;
+    }
+
+    void WindowApp::UpdateImGuiDockingSystem()
+    {
+        DispatchTask(
+            []()
+            {
+                NEON_ASSERT(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable);
+                ImGui::UpdatePlatformWindows();
+            })
+            .get();
     }
 
     //

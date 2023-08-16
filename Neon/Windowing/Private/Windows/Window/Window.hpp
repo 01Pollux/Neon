@@ -82,6 +82,8 @@ namespace Neon::Windowing
         bool PeekEvent(
             Event& Message) override;
 
+        void UpdateImGuiDockingSystem() override;
+
     private:
         template<typename _FnTy, typename... _Args>
         auto DispatchTask(

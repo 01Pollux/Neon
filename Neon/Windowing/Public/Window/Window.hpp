@@ -157,6 +157,13 @@ namespace Neon::Windowing
             Event& Message) = 0;
 
         /// <summary>
+        /// Update imgui's docking system
+        /// Used in Dx12/ImGui.cpp
+        /// </summary>
+        virtual void UpdateImGuiDockingSystem() = 0;
+
+    public:
+        /// <summary>
         /// Enable input table for the window to receive input events
         /// </summary>
         void PushInputTable(
