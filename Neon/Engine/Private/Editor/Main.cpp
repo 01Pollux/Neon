@@ -20,8 +20,8 @@ NEON_MAIN(Argc, Argv)
         Description.add_options()(
             "help", "Produce help message")(
 
-            "custom_titlebar,ctb", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)
-                                                                                      { Config.Window.CustomTitleBar = Val; }),
+            "custom_titlebar,ctb", bpo::value<bool>()->default_value(true)->notifier([&](bool Val)
+                                                                                     { Config.Window.CustomTitleBar = Val; }),
 
             "Run maximized")(
             "maximized,m", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)

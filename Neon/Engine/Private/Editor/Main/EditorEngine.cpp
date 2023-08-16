@@ -31,10 +31,13 @@ namespace Neon::Editor
     void EditorEngine::PostRender()
     {
         GameEngine::PostRender();
+
+        BeginEditorSpace();
         for (auto& View : m_OpenViews)
         {
             View->OnRender();
         }
+        EndEditorSpace();
     }
 
     //

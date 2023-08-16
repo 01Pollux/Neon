@@ -76,6 +76,16 @@ namespace Neon::Editor
         /// </summary>
         void AddStandardViews();
 
+        /// <summary>
+        /// Begin the editor space by initializing dockspace.
+        /// </summary>
+        void BeginEditorSpace();
+
+        /// <summary>
+        /// End the editor space by finalizing dockspace.
+        /// </summary>
+        void EndEditorSpace();
+
     private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
 

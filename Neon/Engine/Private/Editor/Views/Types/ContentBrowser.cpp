@@ -3,13 +3,22 @@
 
 namespace Neon::Editor::Views
 {
+    ContentBrowser::ContentBrowser(
+        const StringU8& Name) :
+        // IEditorView("Content Browser##ContentBrowser")
+        IEditorView(Name)
+    {
+    }
+
     void ContentBrowser::OnUpdate()
     {
     }
 
     void ContentBrowser::OnRender()
     {
-        ImGui::Begin("Content Browser");
+        if (ImGui::Begin(GetWidgetId().c_str()))
+        {
+        }
         ImGui::End();
     }
 } // namespace Neon::Editor::Views
