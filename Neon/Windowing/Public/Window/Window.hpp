@@ -161,9 +161,9 @@ namespace Neon::Windowing
             const Ptr<Input::InputDataTable>& InputTable);
 
         /// <summary>
-        /// Process input events
+        /// Process window events
         /// </summary>
-        void ProcessInputs();
+        void ProcessEvents();
 
     public:
         /// <summary>

@@ -70,7 +70,17 @@ namespace Neon::Runtime
 
     void GameEngine::Shutdown()
     {
+        // Shutdown the game logic
+        m_Logic.reset();
+
+        // Shutdown the debug overlay
         Runtime::DebugOverlay::Destroy();
+
+        // Shutdown the renderer
+        RHI::IRenderDevice::Destroy();
+
+        // Shutdown the window
+        m_Window.reset();
     }
 
     void GameEngine::PostRender()
@@ -83,7 +93,7 @@ namespace Neon::Runtime
         m_GameTimer.Reset();
         while (m_Window->IsRunning())
         {
-            m_Window->ProcessInputs();
+            m_Window->ProcessEvents();
             if (m_GameTimer.Tick())
             {
                 Runtime::DebugOverlay::Reset();

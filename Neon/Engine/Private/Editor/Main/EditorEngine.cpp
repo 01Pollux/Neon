@@ -1,11 +1,11 @@
 #include <EnginePCH.hpp>
 #include <Editor/Main/EditorEngine.hpp>
+#include <Window/Window.hpp>
 
 #include <Asset/Packs/Directory.hpp>
 
-#include <Log/Logger.hpp>
-
 #include <imgui/imgui.h>
+#include <Log/Logger.hpp>
 
 namespace Neon::Editor
 {
@@ -25,6 +25,7 @@ namespace Neon::Editor
 
     void EditorEngine::PreUpdate()
     {
+
         GameEngine::PreUpdate();
         for (auto& View : m_OpenViews)
         {

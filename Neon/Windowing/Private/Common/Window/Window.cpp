@@ -93,15 +93,18 @@ namespace Neon::Windowing
 
         SetupInputs();
 
-        glfwSetTitlebarHitTestCallback(
-            m_Handle,
-            [](GLFWwindow* Window, int X, int Y, int* Hit)
-            {
-                auto App    = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
-                bool WasHit = false;
-                App->OnWindowTitleHitTest().Broadcast({ X, Y }, WasHit);
-                *Hit = WasHit;
-            });
+        if (Desc.CustomTitleBar)
+        {
+            glfwSetTitlebarHitTestCallback(
+                m_Handle,
+                [](GLFWwindow* Window, int X, int Y, int* Hit)
+                {
+                    auto App    = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
+                    bool WasHit = false;
+                    App->OnWindowTitleHitTest().Broadcast({ X, Y }, WasHit);
+                    *Hit = WasHit;
+                });
+        }
 
         glfwSetWindowIconifyCallback(
             m_Handle,
@@ -270,8 +273,9 @@ namespace Neon::Windowing
         m_InputTables.erase(InputTable);
     }
 
-    void WindowApp::ProcessInputs()
+    void WindowApp::ProcessEvents()
     {
+        glfwPollEvents();
         for (const auto& InputTable : m_InputTables)
         {
             InputTable->ProcessInputs();
