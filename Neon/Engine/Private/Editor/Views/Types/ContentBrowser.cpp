@@ -9,5 +9,7 @@ namespace Neon::Editor::Views
 
     void ContentBrowser::OnRender()
     {
+        ImGui::Begin("Content Browser");
+        ImGui::End();
     }
 } // namespace Neon::Editor::Views

@@ -8,8 +8,6 @@
 
 namespace Neon::Editor
 {
-    using EditorViewId = uint64_t;
-
     class EditorEngine : public Runtime::GameEngine
     {
     public:
@@ -32,7 +30,8 @@ namespace Neon::Editor
         /// <summary>
         /// Register a new editor view.
         /// </summary>
-        [[nodiscard]] EditorViewId RegisterView(
+        [[nodiscard]] void RegisterView(
+            const StringU8&   Name,
             UPtr<IEditorView> View);
 
         /// <summary>
@@ -40,38 +39,45 @@ namespace Neon::Editor
         /// </summary>
         template<typename _Ty, typename... _Args>
             requires std::derived_from<_Ty, IEditorView>
-        [[nodiscard]] EditorViewId RegisterView(
+        [[nodiscard]] void RegisterView(
+            const StringU8& Name,
             _Args&&... Args)
         {
-            return RegisterView(std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+            RegisterView(Name, std::make_unique<_Ty>(std::forward<_Args>(Args)...));
         }
 
         /// <summary>
         /// Unregister an editor view.
         /// </summary>
         void UnregisterView(
-            EditorViewId ViewId);
+            const StringU8& Name);
 
         /// <summary>
         /// Open the editor view.
         /// </summary>
         void OpenView(
-            EditorViewId Id);
+            const StringU8& Name);
 
         /// <summary>
         /// Check if the editor view is open.
         /// </summary>
         bool IsViewOpen(
-            EditorViewId ViewId);
+            const StringU8& Name);
 
         /// <summary>
         /// Close the editor view.
         /// </summary>
         void CloseView(
-            EditorViewId ViewId);
+            const StringU8& Name);
+
+    public:
+        /// <summary>
+        /// Add the standard views to the editor.
+        /// </summary>
+        void AddStandardViews();
 
     private:
-        std::unordered_map<uint64_t, UPtr<IEditorView>> m_Views;
+        std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
 
         std::unordered_set<IEditorView*> m_OpenViews;
     };

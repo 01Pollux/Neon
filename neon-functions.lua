@@ -183,15 +183,14 @@ function common_neon_defines()
     defines "GLM_FORCE_LEFT_HANDED"
 end
 
-function common_neon_links()
+function common_neon_inc()
     libdirs "%{CommonDir.Deps.Libs}"
-    
     link_boost_inc()
 end
 
 function common_neon()
     common_neon_defines()
-    common_neon_links()
+    common_neon_inc()
 
     files
     {

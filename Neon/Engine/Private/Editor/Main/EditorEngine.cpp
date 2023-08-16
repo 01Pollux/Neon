@@ -9,18 +9,13 @@
 
 namespace Neon::Editor
 {
-    static bool  show = true;
-    static float colro[3]{ 0.1f, 0.1f, 0.1f };
-    static float f       = 0.0f;
-    static int   counter = 0;
-
-    static EditorViewId s_EditorEngineId = 1;
-
     void EditorEngine::Initialize(
         Config::EngineConfig Config)
     {
         Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
         GameEngine::Initialize(std::move(Config));
+
+        AddStandardViews();
     }
 
     void EditorEngine::PreUpdate()
@@ -44,21 +39,17 @@ namespace Neon::Editor
 
     //
 
-    EditorViewId EditorEngine::RegisterView(
+    void EditorEngine::RegisterView(
+        const StringU8&   Name,
         UPtr<IEditorView> View)
     {
-        NEON_ASSERT(s_EditorEngineId, "Editor view id overflow.");
-
-        uint64_t Id = s_EditorEngineId++;
-        m_Views.emplace(Id, std::move(View));
-
-        return Id;
+        m_Views.emplace(Name, std::move(View));
     }
 
     void EditorEngine::UnregisterView(
-        EditorViewId ViewId)
+        const StringU8& Name)
     {
-        auto Iter = m_Views.find(ViewId);
+        auto Iter = m_Views.find(Name);
         if (Iter == m_Views.end())
         {
             NEON_WARNING("Editor", "Trying to unregister a view that does not exist.");
@@ -69,9 +60,9 @@ namespace Neon::Editor
     }
 
     void EditorEngine::OpenView(
-        EditorViewId ViewId)
+        const StringU8& Name)
     {
-        auto Iter = m_Views.find(ViewId);
+        auto Iter = m_Views.find(Name);
         if (Iter == m_Views.end())
         {
             NEON_WARNING("Editor", "Trying to open a view that does not exist.");
@@ -86,16 +77,16 @@ namespace Neon::Editor
     }
 
     bool EditorEngine::IsViewOpen(
-        EditorViewId ViewId)
+        const StringU8& Name)
     {
-        auto Iter = m_Views.find(ViewId);
+        auto Iter = m_Views.find(Name);
         return Iter != m_Views.end() ? m_OpenViews.contains(Iter->second.get()) : false;
     }
 
     void EditorEngine::CloseView(
-        EditorViewId ViewId)
+        const StringU8& Name)
     {
-        auto Iter = m_Views.find(ViewId);
+        auto Iter = m_Views.find(Name);
         if (Iter == m_Views.end())
         {
             NEON_WARNING("Editor", "Trying to close a view that does not exist.");

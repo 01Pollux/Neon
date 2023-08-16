@@ -1,5 +1,8 @@
 #pragma once
 
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_internal.h>
+
 namespace Neon::Editor
 {
     class IEditorView

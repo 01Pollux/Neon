@@ -22,3 +22,5 @@
 #include <Math/Colors.hpp>
 
 #include <flecs/flecs.h>
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_internal.h>
