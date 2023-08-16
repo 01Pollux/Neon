@@ -21,6 +21,4 @@
 #include <Math/Matrix.hpp>
 #include <Math/Colors.hpp>
 
-#if defined(NEON_PLATFORM_WINDOWS)
-#include <Private/Windows/API/WindowHeaders.hpp>
-#endif
+#include <glfw/glfw3.h>

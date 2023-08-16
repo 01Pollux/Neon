@@ -1,9 +1,11 @@
 #pragma once
 
-#include <Window/Event.hpp>
-#include <Core/Bitmask.hpp>
+#include <Core/String.hpp>
 #include <Utils/Signal.hpp>
-#include <future>
+
+#include <Math/Vector.hpp>
+#include <Math/Size2.hpp>
+
 #include <unordered_set>
 
 namespace Neon::Input
@@ -11,156 +13,141 @@ namespace Neon::Input
     class IInputDataTable;
 } // namespace Neon::Input
 
+struct GLFWwindow;
+
+NEON_SIGNAL_DECL(OnWindowSizeChanged, const Neon::Size2I& /*NewSize*/);
+NEON_SIGNAL_DECL(OnWindowMinized, bool /*Minimized*/);
+NEON_SIGNAL_DECL(OnWindowClosed);
+NEON_SIGNAL_DECL(OnWindowTitleHitTest, const Vector2I& /*MousePos*/, bool& /*WasHit*/);
+
 namespace Neon::Windowing
 {
-    enum class EWindowStyle : uint8_t
+    struct WindowInitDesc
     {
-        TitleBar,
-        Resize,
-        Close,
+        StringU8 Title = "Neon";
+        Size2I   Size  = { 800, 600 };
 
-        Windowed,
-        Fullscreen,
-
-        _Last_Enum
+        bool FullScreen    : 1 = false;
+        bool StartInMiddle : 1 = true;
     };
-    using MWindowStyle = Bitmask<EWindowStyle>;
 
-    static constexpr MWindowStyle s_DefaultWindowStyle = BitMask_Or(
-        EWindowStyle::TitleBar,
-        EWindowStyle::Resize,
-        EWindowStyle::Close);
-
-    class IWindowApp
+    class WindowApp
     {
     public:
-        [[nodiscard]] static IWindowApp* Create(
-            const String&       Title,
-            const Size2I&       Size,
-            const MWindowStyle& Style,
-            bool                StartInMiddle,
-            bool                InitialVisible);
+        WindowApp(
+            const WindowInitDesc& Desc);
 
-        IWindowApp() = default;
+        NEON_CLASS_NO_COPY(WindowApp);
 
-        NEON_CLASS_NO_COPYMOVE(IWindowApp);
+        WindowApp(
+            WindowApp&& Other) noexcept :
+            m_Handle(std::exchange(Other.m_Handle, nullptr)),
+            m_WindowSize(Other.m_WindowSize),
+            m_InputTables(std::move(Other.m_InputTables))
+        {
+        }
 
-        virtual ~IWindowApp() = default;
+        WindowApp& operator=(
+            WindowApp&& Other) noexcept
+        {
+            if (this != &Other)
+            {
+                m_Handle      = std::exchange(Other.m_Handle, nullptr);
+                m_WindowSize  = Other.m_WindowSize;
+                m_InputTables = std::move(Other.m_InputTables);
+            }
+
+            return *this;
+        }
+
+        ~WindowApp();
 
         /// <summary>
         /// Get window handle
         /// </summary>
-        [[nodiscard]] virtual void* GetPlatformHandle() const = 0;
+        [[nodiscard]] GLFWwindow* GetHandle() const;
 
         /// <summary>
         /// Close the window
         /// The window will remain valid until its destructor is called
         /// </summary>
-        virtual void Close() = 0;
+        void Close();
 
         /// <summary>
         /// Check whether the window is running or not
         /// </summary>
-        [[nodiscard]] virtual bool IsRunning() const = 0;
+        [[nodiscard]] bool IsRunning() const;
 
         /// <summary>
         /// Get window title
         /// </summary>
-        [[nodiscard]] virtual std::future<String> GetTitle() const = 0;
+        [[nodiscard]] const StringU8& GetTitle() const;
 
         /// <summary>
         /// Set window title
         /// </summary>
-        virtual std::future<void> SetTitle(
-            const String& Title) = 0;
-
-        /// <summary>
-        /// Get window style
-        /// </summary>
-        [[nodiscard]] virtual std::future<MWindowStyle> GetStyle() const = 0;
-
-        /// <summary>
-        /// Set window style
-        /// </summary>
-        virtual std::future<void> SetStyle(
-            const MWindowStyle& Style) = 0;
-
-        /// <summary>
-        /// Get window screen caps
-        /// </summary>
-        [[nodiscard]] virtual std::future<Size2I> GetScreenCaps() const = 0;
+        void SetTitle(
+            StringU8 Title);
 
         /// <summary>
         /// Get window position
         /// </summary>
-        [[nodiscard]] virtual std::future<Vector2I> GetPosition() const = 0;
+        [[nodiscard]] Vector2I GetPosition() const;
 
         /// <summary>
         /// Set window position
         /// </summary>
-        virtual std::future<void> SetPosition(
-            const Vector2I& Position) = 0;
+        void SetPosition(
+            const Vector2I& Position);
 
         /// <summary>
         /// Get window size
         /// </summary>
-        [[nodiscard]] virtual std::future<Size2I> GetSize() const = 0;
+        [[nodiscard]] Size2I GetSize() const;
 
         /// <summary>
         /// Check whether the window is minimized or not
         /// </summary>
-        [[nodiscard]] virtual std::future<bool> IsMinimized() const = 0;
+        [[nodiscard]] bool IsMinimized() const;
 
         /// <summary>
         /// Check whether the window is maximized or not
         /// </summary>
-        [[nodiscard]] virtual std::future<bool> IsMaximized() const = 0;
+        [[nodiscard]] bool IsMaximized() const;
 
         /// <summary>
         /// Check whether the window is visible or not
         /// </summary>
-        [[nodiscard]] virtual std::future<bool> IsVisible() const = 0;
+        [[nodiscard]] bool IsVisible() const;
 
         /// <summary>
         /// Set window size
         /// </summary>
-        virtual std::future<void> SetSize(
-            const Size2I& Size) = 0;
+        void SetSize(
+            const Size2I& Size);
 
         /// <summary>
         /// Set window icon
         /// </summary>
-        virtual std::future<void> SetIcon(
-            const void*     IconData,
-            const Vector2I& Size) = 0;
+        void SetIcon(
+            void*           IconData,
+            const Vector2I& Size);
 
         /// <summary>
         /// Set window visbility
         /// </summary>
-        virtual std::future<void> SetVisible(
-            bool Show) = 0;
+        void SetVisible(
+            bool Show);
 
         /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        virtual std::future<void> RequestFocus() = 0;
+        void RequestFocus();
 
         /// <summary>
         /// Set the current window to be made the active foreground window
         /// </summary>
-        [[nodiscard]] virtual std::future<bool> HasFocus() const = 0;
-
-        /// <summary>
-        /// Peek the next event from the event queue and return true if there is atleast one
-        /// </summary>
-        [[nodiscard]] virtual bool PeekEvent(
-            Event& Message) = 0;
-
-        /// <summary>
-        /// Update imgui's docking system
-        /// Used in Dx12/ImGui.cpp
-        /// </summary>
-        virtual void UpdateImGuiDockingSystem() = 0;
+        [[nodiscard]] bool HasFocus() const;
 
     public:
         /// <summary>
@@ -180,7 +167,32 @@ namespace Neon::Windowing
         /// </summary>
         void ProcessInputs();
 
-    protected:
+    public:
+        /// <summary>
+        /// Event fired when the window is resized
+        /// </summary>
+        NEON_SIGNAL_INST(OnWindowSizeChanged);
+
+        /// <summary>
+        /// Event fired when the window is minimized or restored
+        /// </summary>
+        NEON_SIGNAL_INST(OnWindowMinized);
+
+        /// <summary>
+        /// Event fired when the window is closed
+        /// </summary>
+        NEON_SIGNAL_INST(OnWindowClosed);
+
+        /// <summary>
+        /// Event fired when the window title bar is hit
+        /// </summary>
+        NEON_SIGNAL_INST(OnWindowTitleHitTest);
+
+    private:
+        GLFWwindow* m_Handle;
+        Size2I      m_WindowSize;
+        StringU8    m_Title;
+
         std::unordered_set<Ptr<Input::IInputDataTable>> m_InputTables;
     };
 } // namespace Neon::Windowing
