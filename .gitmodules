@@ -32,3 +32,6 @@
 [submodule "Deps/Externals/cppcoro"]
 	path = Deps/Externals/cppcoro
 	url = https://github.com/andreasbuhr/cppcoro.git
+[submodule "Deps/Externals/glfw"]
+	path = Deps/Externals/glfw
+	url = https://github.com/01Pollux/glfw
