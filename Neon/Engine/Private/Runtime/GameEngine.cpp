@@ -39,6 +39,18 @@ namespace Neon::Runtime
 
     GameEngine::~GameEngine()
     {
+        // Shutdown the game logic
+        m_Logic.reset();
+
+        // Shutdown the debug overlay
+        Runtime::DebugOverlay::Destroy();
+
+        // Shutdown the renderer
+        RHI::IRenderDevice::Destroy();
+
+        // Shutdown the window
+        m_Window.reset();
+
         NEON_ASSERT(s_GameEngine);
         s_GameEngine = nullptr;
     }
@@ -66,25 +78,6 @@ namespace Neon::Runtime
 
         // Initialize the game logic
         m_Logic = std::make_unique<GameLogic>();
-    }
-
-    void GameEngine::Shutdown()
-    {
-        // Shutdown the game logic
-        m_Logic.reset();
-
-        // Shutdown the debug overlay
-        Runtime::DebugOverlay::Destroy();
-
-        // Shutdown the renderer
-        RHI::IRenderDevice::Destroy();
-
-        // Shutdown the window
-        m_Window.reset();
-    }
-
-    void GameEngine::PostRender()
-    {
     }
 
     void GameEngine::Run()
