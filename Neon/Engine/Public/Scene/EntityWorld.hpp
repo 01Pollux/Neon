@@ -82,7 +82,7 @@ namespace Neon::Scene
         /// Create a new entity.
         /// </summary>
         flecs::entity CreateRootEntity(
-            const char* Name = nullptr);
+            const char* Name = "_Root");
 
         /// <summary>
         /// Get the root entity.

@@ -8,9 +8,8 @@ NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
         .Window = {
-            .Title      = STR("Flappy Bird"),
-            .Windowed   = true,
-            .Fullscreen = false },
+            .Title = "Flappy Bird",
+            .Size  = { 1280, 720 } }
     };
 
     Config.Renderer.Device.EnableDebugLayer = false;

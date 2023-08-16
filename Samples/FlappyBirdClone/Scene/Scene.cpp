@@ -13,6 +13,7 @@
 
 #include <Runtime/DebugOverlay.hpp>
 #include <RenderGraph/Graphs/Standard2D.hpp>
+#include <Window/Window.hpp>
 
 using namespace Neon;
 
@@ -54,7 +55,7 @@ void FlappyBirdClone::LoadScene()
                 Scene::Component::Sprite SpriteComponent;
                 {
                     SpriteComponent.MaterialInstance = WorldMaterial;
-                    SpriteComponent.SpriteSize       = Vector2(100.f, 2.35);
+                    SpriteComponent.SpriteSize       = Vector2(100.f, 2.35f);
                 }
                 Wall.set(std::move(SpriteComponent));
                 Wall.add<Scene::Component::Sprite::MainRenderer>();
@@ -180,8 +181,8 @@ void FlappyBirdClone::LoadScene()
 
 void FlappyBirdClone::AttachInputs()
 {
-    auto InputTable = Input::IInputDataTable::Create();
-    GetWindow()->PushInputTable(InputTable);
+    auto InputTable = std::make_shared<Input::InputDataTable>();
+    GetWindow()->RegisterInputTable(InputTable);
 
     auto ActionTable = InputTable->LoadActionTable("Jump");
     ActionTable->Enable();

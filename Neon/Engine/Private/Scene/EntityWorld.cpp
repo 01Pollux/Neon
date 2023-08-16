@@ -58,11 +58,9 @@ namespace Neon::Scene
     flecs::entity EntityWorld::CreateEntityInRoot(
         const char* Name)
     {
-        return CreateEntity(Name);
-
-        // auto RootEntity = GetRootEntity();
-        // NEON_ASSERT(RootEntity, "Root entity not found");
-        // return CreateEntity(Name).child_of(RootEntity);
+        auto RootEntity = GetRootEntity();
+        NEON_ASSERT(RootEntity, "Root entity not found");
+        return CreateEntity(Name).child_of(RootEntity);
     }
 
     flecs::entity EntityWorld::CreateRootEntity(
