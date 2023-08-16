@@ -9,6 +9,10 @@
 #include <Math/Colors.hpp>
 #include <RHI/Commands/Context.hpp>
 
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw/glfw3.h>
+#include <glfw/glfw3native.h>
+
 #include <Window/Window.hpp>
 
 namespace Neon::RHI
@@ -38,11 +42,11 @@ namespace Neon::RHI
     //
 
     Dx12Swapchain::Dx12Swapchain(
-        Windowing::IWindowApp*     Window,
+        Windowing::WindowApp*      Window,
         const SwapchainCreateDesc& Desc) :
         m_WindowApp(Window),
         m_BackbufferFormat(Desc.BackbufferFormat),
-        m_Size(m_WindowApp->GetSize().get())
+        m_Size(m_WindowApp->GetSize())
     {
         m_IsVSyncEnabled = Desc.VSync;
 
@@ -84,7 +88,7 @@ namespace Neon::RHI
         ThrowIfFailed(m_Swapchain->Present(SyncInterval, 0));
     }
 
-    Windowing::IWindowApp* Dx12Swapchain::GetWindow()
+    Windowing::WindowApp* Dx12Swapchain::GetWindow()
     {
         return m_WindowApp;
     }
@@ -180,8 +184,8 @@ namespace Neon::RHI
         WinAPI::ComPtr<IDXGIFactory2> DxgiFactory2;
 
         auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
-        auto WindowStyle   = m_WindowApp->GetStyle().get();
-        bool IsFullscreen  = WindowStyle.Test(Windowing::EWindowStyle::Fullscreen) && !WindowStyle.Test(Windowing::EWindowStyle::Windowed);
+        auto IsFullscreen  = m_WindowApp->IsFullScreen();
+        HWND Handle        = glfwGetWin32Window(m_WindowApp->GetHandle());
 
         if (SUCCEEDED(DxgiFactory->QueryInterface(IID_PPV_ARGS(&DxgiFactory2))))
         {
@@ -211,7 +215,7 @@ namespace Neon::RHI
 
             ThrowIfFailed(DxgiFactory2->CreateSwapChainForHwnd(
                 GraphicsQueue,
-                HWND(m_WindowApp->GetPlatformHandle()),
+                Handle,
                 &SwapchainDesc,
                 &FullscreenDesc,
                 nullptr,
@@ -238,7 +242,7 @@ namespace Neon::RHI
                 },
                 .BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount  = Desc.FramesInFlight,
-                .OutputWindow = HWND(m_WindowApp->GetPlatformHandle()),
+                .OutputWindow = Handle,
                 .Windowed     = !IsFullscreen,
                 .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD,
                 .Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
@@ -253,7 +257,7 @@ namespace Neon::RHI
         }
 
         ThrowIfFailed(Dx12RenderDevice::Get()->GetDxgiFactory()->MakeWindowAssociation(
-            HWND(m_WindowApp->GetPlatformHandle()), DXGI_MWA_NO_ALT_ENTER));
+            Handle, DXGI_MWA_NO_ALT_ENTER));
     }
 
     void Dx12Swapchain::ResizeBackbuffers(

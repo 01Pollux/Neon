@@ -5,14 +5,9 @@
 
 namespace Neon::Input
 {
-    class IInputActionTable : public IInputTable<InputAction>
+    class InputActionTable : public IInputTable<InputAction>
     {
     public:
-        /// <summary>
-        /// Create a new input table.
-        /// </summary>
-        [[nodiscard]] static Ptr<IInputActionTable> Create();
-
         /// <summary>
         /// Add input data to the table.
         /// </summary>

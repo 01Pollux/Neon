@@ -136,7 +136,7 @@ namespace Neon::Input
     }
 
     void InputMouseDataEvent::DispatchInput(
-        IInputMouseTable* Table)
+        InputMouseTable* Table)
     {
         for (auto& Mouse : Table->GetMouses())
         {

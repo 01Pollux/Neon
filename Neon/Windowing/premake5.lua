@@ -16,13 +16,6 @@ project "NeonWindowing"
         }
     filter {}
 
-    links
-    {
-        "ImGui",
-        "NeonCore",
-        "NeonCoroutines"
-    }
-
     includedirs
     {
         "%{CommonDir.Neon.Core}",

@@ -113,7 +113,7 @@ namespace Neon::Input
         /// Dispatch the input.
         /// </summary>
         void DispatchInput(
-            class IInputActionTable* Table);
+            class InputActionTable* Table);
 
     private:
         InputSysKeyState      m_SysKeyState;

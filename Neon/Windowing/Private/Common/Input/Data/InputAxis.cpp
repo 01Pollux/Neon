@@ -111,7 +111,7 @@ namespace Neon::Input
     }
 
     void InputAxisDataEvent::DispatchInput(
-        IInputAxisTable* Table)
+        InputAxisTable* Table)
     {
         for (auto& Axis : Table->GetAxis())
         {

@@ -18,7 +18,7 @@ namespace Neon::RHI
 
     public:
         Dx12Swapchain(
-            Windowing::IWindowApp*     Window,
+            Windowing::WindowApp*      Window,
             const SwapchainCreateDesc& Desc);
 
         void PrepareFrame() override;
@@ -26,7 +26,7 @@ namespace Neon::RHI
         void Present(
             float FrameTime) override;
 
-        Windowing::IWindowApp* GetWindow() override;
+        Windowing::WindowApp* GetWindow() override;
 
         const Size2I& GetSize() override;
 
@@ -148,8 +148,8 @@ namespace Neon::RHI
             uint32_t NewSize);
 
     private:
-        Windowing::IWindowApp* m_WindowApp;
-        Size2I                 m_Size;
+        Windowing::WindowApp* m_WindowApp;
+        Size2I                m_Size;
 
         WinAPI::ComPtr<IDXGISwapChain3> m_Swapchain;
 

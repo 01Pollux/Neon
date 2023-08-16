@@ -118,7 +118,7 @@ namespace Neon::Input
         /// Dispatch the input type.
         /// </summary>
         void DispatchInput(
-            class IInputAxisTable* Axis);
+            class InputAxisTable* Axis);
 
     private:
         EKeyboardInput      m_InputType;

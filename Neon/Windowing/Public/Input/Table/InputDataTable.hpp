@@ -79,10 +79,10 @@ namespace Neon::Input
         friend class Windowing::WindowApp;
         friend class InputEventQueue;
 
-        using InputActionMap     = std::unordered_map<StringU8, Ptr<IInputActionTable>>;
-        using InputAxisMap       = std::unordered_map<StringU8, Ptr<IInputAxisTable>>;
-        using InputMouseMap      = std::unordered_map<StringU8, Ptr<IInputMouseTable>>;
-        using InputMouseWheelMap = std::unordered_map<StringU8, Ptr<IInputMouseWheelTable>>;
+        using InputActionMap     = std::unordered_map<StringU8, Ptr<InputActionTable>>;
+        using InputAxisMap       = std::unordered_map<StringU8, Ptr<InputAxisTable>>;
+        using InputMouseMap      = std::unordered_map<StringU8, Ptr<InputMouseTable>>;
+        using InputMouseWheelMap = std::unordered_map<StringU8, Ptr<InputMouseWheelTable>>;
 
     private:
         /// <summary>
@@ -119,14 +119,14 @@ namespace Neon::Input
         /// Get or create an action table.
         /// An action table is a collection of keyboard and gamepad inputs.
         /// </summary>
-        Ptr<IInputActionTable> LoadActionTable(
+        Ptr<InputActionTable> LoadActionTable(
             const StringU8& ActionName);
 
         /// <summary>
         /// Get an action table.
         /// An action table is a collection of keyboard and gamepad inputs.
         /// </summary>
-        Ptr<IInputActionTable> GetActionTable(
+        Ptr<InputActionTable> GetActionTable(
             const StringU8& ActionName) const;
 
         /// <summary>
@@ -141,14 +141,14 @@ namespace Neon::Input
         /// Get or create an axis table.
         /// An axis table is a collection of keyboard and gamepad press/hold/release inputs.
         /// </summary>
-        Ptr<IInputAxisTable> LoadAxisTable(
+        Ptr<InputAxisTable> LoadAxisTable(
             const StringU8& AxisName);
 
         /// <summary>
         /// Get an axis table.
         /// An axis table is a collection of keyboard and gamepad press/hold/release inputs.
         /// </summary>
-        Ptr<IInputAxisTable> GetAxisTable(
+        Ptr<InputAxisTable> GetAxisTable(
             const StringU8& ActionName) const;
 
         /// <summary>
@@ -163,14 +163,14 @@ namespace Neon::Input
         /// Get or create an mouse table.
         /// A mouse table is a collection of mouse inputs.
         /// </summary>
-        Ptr<IInputMouseTable> LoadMouseTable(
+        Ptr<InputMouseTable> LoadMouseTable(
             const StringU8& MouseName);
 
         /// <summary>
         /// Get an mouse table.
         /// A mouse table is a collection of mouse inputs.
         /// </summary>
-        Ptr<IInputMouseTable> GetMouseTable(
+        Ptr<InputMouseTable> GetMouseTable(
             const StringU8& MouseName) const;
 
         /// <summary>
@@ -185,14 +185,14 @@ namespace Neon::Input
         /// Get or create an mouse wheel table.
         /// A mouse wheel table is a collection of mouse wheel inputs.
         /// </summary>
-        Ptr<IInputMouseWheelTable> LoadMouseWheelTable(
+        Ptr<InputMouseWheelTable> LoadMouseWheelTable(
             const StringU8& MouseWheelName);
 
         /// <summary>
         /// Get an mouse wheel table.
         /// A mouse wheel table is a collection of mouse wheel inputs.
         /// </summary>
-        Ptr<IInputMouseWheelTable> GetMouseWheelTable(
+        Ptr<InputMouseWheelTable> GetMouseWheelTable(
             const StringU8& MouseWheelName) const;
 
         /// <summary>

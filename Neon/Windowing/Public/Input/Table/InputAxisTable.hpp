@@ -5,14 +5,9 @@
 
 namespace Neon::Input
 {
-    class IInputAxisTable : public IInputTable<InputAxis>
+    class InputAxisTable : public IInputTable<InputAxis>
     {
     public:
-        /// <summary>
-        /// Create a new input table.
-        /// </summary>
-        [[nodiscard]] static Ptr<IInputAxisTable> Create();
-
         /// <summary>
         /// Add input data to the table.
         /// </summary>

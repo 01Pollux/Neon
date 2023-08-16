@@ -1,9 +1,7 @@
 #pragma once
 
 #include <Config/Engine.hpp>
-
 #include <Runtime/GameTimer.hpp>
-#include <Runtime/Window.hpp>
 
 #include <Asio/ThreadPool.hpp>
 
@@ -11,7 +9,7 @@ namespace Neon
 {
     namespace Windowing
     {
-        class IWindowApp;
+        class WindowApp;
     }
 } // namespace Neon
 
@@ -74,7 +72,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Run the engine and return when the engine is closed or an error occurs.
         /// </summary>
-        int Run();
+        void Run();
 
     public:
         /// <summary>
@@ -107,7 +105,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Get the window associated with the engine.
         /// </summary>
-        [[nodiscard]] Windowing::IWindowApp* GetWindow() const;
+        [[nodiscard]] Windowing::WindowApp* GetWindow() const;
 
         /// <summary>
         /// Get the current scene.
@@ -137,9 +135,9 @@ namespace Neon::Runtime
             Config::EngineConfig& Config);
 
     private:
-        GameTimer                m_GameTimer;
-        UPtr<EngineWindow>       m_Window;
-        UPtr<GameLogic>          m_Logic;
-        UPtr<Asio::ThreadPool<>> m_ThreadPool;
+        GameTimer                  m_GameTimer;
+        UPtr<Asio::ThreadPool<>>   m_ThreadPool;
+        UPtr<Windowing::WindowApp> m_Window;
+        UPtr<GameLogic>            m_Logic;
     };
 } // namespace Neon::Runtime

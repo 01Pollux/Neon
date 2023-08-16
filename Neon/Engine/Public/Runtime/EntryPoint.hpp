@@ -33,11 +33,11 @@ namespace Neon::Runtime
         Neon::Asset::Storage::Initialize();                    \
                                                                \
         auto Engine = Neon::Runtime::Main(__argc, __wargv);    \
-        int  Ret    = Engine->Run();                           \
+        Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
         Neon::Asset::Storage::Shutdown();                      \
-        return Ret;                                            \
+        return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
         int       Argc,                                        \
@@ -55,11 +55,11 @@ namespace Neon::Runtime
         Neon::Asset::Storage::Initialize();                    \
                                                                \
         auto Engine = Neon::Runtime::Main(argc, argv);         \
-        int  Ret    = Engine->Run();                           \
+        Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
         Neon::Asset::Storage::Shutdown();                      \
-        return Ret;                                            \
+        return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
         int       Argc,                                        \

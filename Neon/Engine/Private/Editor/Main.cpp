@@ -12,7 +12,7 @@ namespace bpo = boost::program_options;
 NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
-        .Window = { .Title = STR("Neon Editor") }
+        .Window = { .Title = "Neon Editor" }
     };
 
     {
@@ -20,12 +20,16 @@ NEON_MAIN(Argc, Argv)
         Description.add_options()(
             "help", "Produce help message")(
 
-            "windowed", bpo::value<bool>()->default_value(true)->notifier([&](bool Val)
-                                                                          { Config.Window.Windowed = Val; }),
+            "custom_titlebar,ctb", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)
+                                                                                      { Config.Window.CustomTitleBar = Val; }),
 
-            "Run in windowed mode")(
+            "Run maximized")(
+            "maximized,m", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)
+                                                                              { Config.Window.Maximized = Val; }),
+
+            "Run maximized")(
             "fullscreen", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)
-                                                                             { Config.Window.Fullscreen = Val; }),
+                                                                             { Config.Window.FullScreen = Val; }),
 
             "Run in fullscreen mode")(
 

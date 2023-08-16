@@ -126,7 +126,7 @@ namespace Neon::Input
         /// Dispatch the input type.
         /// </summary>
         void DispatchInput(
-            class IInputMouseTable* Table);
+            class InputMouseTable* Table);
 
     private:
         Vector2              m_NewPos;

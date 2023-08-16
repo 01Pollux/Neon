@@ -126,7 +126,7 @@ namespace Neon::Input
     }
 
     void InputActionDataEvent::DispatchInput(
-        IInputActionTable* Table)
+        InputActionTable* Table)
     {
         for (auto& Action : Table->GetActions())
         {

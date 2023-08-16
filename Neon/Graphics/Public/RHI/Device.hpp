@@ -5,7 +5,7 @@
 
 namespace Neon::Windowing
 {
-    class IWindowApp;
+    class WindowApp;
 }
 
 namespace Neon::RHI
@@ -27,7 +27,7 @@ namespace Neon::RHI
         }
 
         static void Create(
-            Windowing::IWindowApp*     Window,
+            Windowing::WindowApp*     Window,
             const DeviceCreateDesc&    DeviceDesc,
             const SwapchainCreateDesc& SwapchainDesc);
 

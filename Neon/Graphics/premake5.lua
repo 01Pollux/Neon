@@ -8,13 +8,6 @@ project "NeonGraphics"
 	common_dir_setup()
     common_add_pch("GraphicsPCH")
     common_neon()
-    
-    links
-    {
-        "NeonCore",
-        "NeonCoroutines",
-        "NeonWindowing"
-    }
 
     includedirs
     {

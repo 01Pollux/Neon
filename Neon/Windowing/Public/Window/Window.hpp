@@ -1,11 +1,7 @@
 #pragma once
 
-#include <Core/String.hpp>
+#include <Window/WindowConfig.hpp>
 #include <Utils/Signal.hpp>
-
-#include <Math/Vector.hpp>
-#include <Math/Size2.hpp>
-
 #include <unordered_set>
 
 namespace Neon::Input
@@ -22,15 +18,6 @@ NEON_SIGNAL_DECL(OnWindowTitleHitTest, const Vector2I& /*MousePos*/, bool& /*Was
 
 namespace Neon::Windowing
 {
-    struct WindowInitDesc
-    {
-        StringU8 Title = "Neon";
-        Size2I   Size  = { 800, 600 };
-
-        bool FullScreen    : 1 = false;
-        bool StartInMiddle : 1 = true;
-    };
-
     class WindowApp
     {
     public:
@@ -106,6 +93,18 @@ namespace Neon::Windowing
         [[nodiscard]] Size2I GetSize() const;
 
         /// <summary>
+        /// Set window size
+        /// </summary>
+        void SetSize(
+            const Size2I& Size);
+
+        /// <summary>
+        /// Set window to fullscreen
+        /// </summary>
+        void SetFullscreen(
+            bool State);
+
+        /// <summary>
         /// Check whether the window is minimized or not
         /// </summary>
         [[nodiscard]] bool IsMinimized() const;
@@ -116,15 +115,14 @@ namespace Neon::Windowing
         [[nodiscard]] bool IsMaximized() const;
 
         /// <summary>
+        /// Check whether the window is maximized or not
+        /// </summary>
+        [[nodiscard]] bool IsFullScreen() const;
+
+        /// <summary>
         /// Check whether the window is visible or not
         /// </summary>
         [[nodiscard]] bool IsVisible() const;
-
-        /// <summary>
-        /// Set window size
-        /// </summary>
-        void SetSize(
-            const Size2I& Size);
 
         /// <summary>
         /// Set window icon

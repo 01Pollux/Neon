@@ -98,7 +98,7 @@ namespace Neon::Input
         /// Dispatch the input type.
         /// </summary>
         void DispatchInput(
-            class IInputMouseWheelTable* Table);
+            class InputMouseWheelTable* Table);
 
     private:
         float                       m_Factor;

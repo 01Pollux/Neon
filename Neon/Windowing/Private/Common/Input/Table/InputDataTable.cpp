@@ -547,18 +547,18 @@ namespace Neon::Input
         m_EventQueue.Dispatch(this);
     }
 
-    Ptr<IInputActionTable> InputDataTable::LoadActionTable(
+    Ptr<InputActionTable> InputDataTable::LoadActionTable(
         const StringU8& ActionName)
     {
         auto& Action = m_InputActionMap[ActionName];
         if (!Action)
         {
-            Action = IInputActionTable::Create();
+            Action.reset(NEON_NEW InputActionTable);
         }
         return Action;
     }
 
-    Ptr<IInputActionTable> InputDataTable::GetActionTable(
+    Ptr<InputActionTable> InputDataTable::GetActionTable(
         const StringU8& ActionName) const
     {
         auto Iter = m_InputActionMap.find(ActionName);
@@ -573,18 +573,18 @@ namespace Neon::Input
 
     //
 
-    Ptr<IInputAxisTable> InputDataTable::LoadAxisTable(
+    Ptr<InputAxisTable> InputDataTable::LoadAxisTable(
         const StringU8& AxisName)
     {
         auto& Axis = m_InputAxisMap[AxisName];
         if (!Axis)
         {
-            Axis = IInputAxisTable::Create();
+            Axis.reset(NEON_NEW InputAxisTable);
         }
         return Axis;
     }
 
-    Ptr<IInputAxisTable> InputDataTable::GetAxisTable(
+    Ptr<InputAxisTable> InputDataTable::GetAxisTable(
         const StringU8& AxisName) const
     {
         auto Iter = m_InputAxisMap.find(AxisName);
@@ -599,18 +599,18 @@ namespace Neon::Input
 
     //
 
-    Ptr<IInputMouseTable> InputDataTable::LoadMouseTable(
+    Ptr<InputMouseTable> InputDataTable::LoadMouseTable(
         const StringU8& MouseName)
     {
         auto& Mouse = m_InputMouseMap[MouseName];
         if (!Mouse)
         {
-            Mouse = IInputMouseTable::Create();
+            Mouse.reset(NEON_NEW InputMouseTable);
         }
         return Mouse;
     }
 
-    Ptr<IInputMouseTable> InputDataTable::GetMouseTable(
+    Ptr<InputMouseTable> InputDataTable::GetMouseTable(
         const StringU8& MouseName) const
     {
         auto Iter = m_InputMouseMap.find(MouseName);
@@ -625,18 +625,18 @@ namespace Neon::Input
 
     //
 
-    Ptr<IInputMouseWheelTable> InputDataTable::LoadMouseWheelTable(
+    Ptr<InputMouseWheelTable> InputDataTable::LoadMouseWheelTable(
         const StringU8& MouseWheelName)
     {
         auto& MouseWheel = m_InputMouseWheelMap[MouseWheelName];
         if (!MouseWheel)
         {
-            MouseWheel = IInputMouseWheelTable::Create();
+            MouseWheel.reset(NEON_NEW InputMouseWheelTable);
         }
         return MouseWheel;
     }
 
-    Ptr<IInputMouseWheelTable> InputDataTable::GetMouseWheelTable(
+    Ptr<InputMouseWheelTable> InputDataTable::GetMouseWheelTable(
         const StringU8& MouseWheelName) const
     {
         auto Iter = m_InputMouseWheelMap.find(MouseWheelName);

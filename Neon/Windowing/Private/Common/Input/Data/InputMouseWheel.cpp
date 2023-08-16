@@ -104,7 +104,7 @@ namespace Neon::Input
     }
 
     void InputMouseWheelDataEvent::DispatchInput(
-        IInputMouseWheelTable* Table)
+        InputMouseWheelTable* Table)
     {
         for (auto& MouseWheel : Table->GetMouseWheels())
         {

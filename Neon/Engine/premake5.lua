@@ -55,3 +55,4 @@ project "NeonEditor"
     neon_engine_project_setup()
     defines "NEON_EDITOR"
     setup_runtime_engine("Editor")
+    link_engine_library_no_engine()

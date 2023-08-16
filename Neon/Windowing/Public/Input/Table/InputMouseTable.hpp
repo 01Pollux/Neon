@@ -5,14 +5,9 @@
 
 namespace Neon::Input
 {
-    class IInputMouseTable : public IInputTable<InputMouse>
+    class InputMouseTable : public IInputTable<InputMouse>
     {
     public:
-        /// <summary>
-        /// Create a new input table.
-        /// </summary>
-        [[nodiscard]] static Ptr<IInputMouseTable> Create();
-
         /// <summary>
         /// Add input data to the table.
         /// </summary>

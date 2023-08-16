@@ -2,10 +2,6 @@
 #include <Window/Window.hpp>
 #include <Input/Table.hpp>
 
-#ifdef NEON_PLATFORM_WINDOWS
-#include <ImGui/backends/imgui_impl_win32.h>
-#endif
-
 #include <glfw/glfw3.h>
 #include <Log/Logger.hpp>
 
@@ -17,6 +13,7 @@ namespace Neon::Windowing
         int         Code,
         const char* Description)
     {
+        NEON_ERROR("Window", "GLFW Error: {0} ({1})", Description, Code);
     }
 
     //
@@ -33,9 +30,9 @@ namespace Neon::Windowing
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 #ifdef NEON_PLATFORM_WINDOWS
-            glfwWindowHint(GLFW_TITLEBAR, false);
+            glfwWindowHint(GLFW_TITLEBAR, !Desc.CustomTitleBar);
 #else
-            glfwWindowHint(GLFW_DECORATED, false);
+            glfwWindowHint(GLFW_DECORATED, !Desc.CustomTitleBar);
 #endif
 
             s_GlfwInitCount.store(1, std::memory_order_release);
@@ -64,6 +61,11 @@ namespace Neon::Windowing
                 int Y = (Mode->height - Desc.Size.Height()) / 2;
 
                 glfwSetWindowPos(m_Handle, X, Y);
+            }
+
+            if (Desc.Maximized)
+            {
+                glfwMaximizeWindow(m_Handle);
             }
         }
 
@@ -165,6 +167,25 @@ namespace Neon::Windowing
         glfwSetWindowPos(m_Handle, Position.x, Position.y);
     }
 
+    void WindowApp::SetFullscreen(
+        bool State)
+    {
+        if (State)
+        {
+            GLFWmonitor*       Monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* Mode    = glfwGetVideoMode(Monitor);
+
+            m_WindowSize = Size2I{ Mode->width, Mode->height };
+            glfwSetWindowMonitor(m_Handle, Monitor, 0, 0, Mode->width, Mode->height, Mode->refreshRate);
+            glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_FALSE);
+        }
+        else
+        {
+            glfwSetWindowMonitor(m_Handle, nullptr, 0, 0, m_WindowSize.Width(), m_WindowSize.Height(), 0);
+            glfwSetWindowAttrib(m_Handle, GLFW_DECORATED, GLFW_TRUE);
+        }
+    }
+
     Size2I WindowApp::GetSize() const
     {
         return m_WindowSize;
@@ -180,6 +201,11 @@ namespace Neon::Windowing
         return glfwGetWindowAttrib(m_Handle, GLFW_MAXIMIZED) == GLFW_TRUE;
     }
 
+    bool WindowApp::IsFullScreen() const
+    {
+        return glfwGetWindowMonitor(m_Handle) != nullptr;
+    }
+
     bool WindowApp::IsVisible() const
     {
         return glfwGetWindowAttrib(m_Handle, GLFW_VISIBLE) == GLFW_TRUE;
@@ -188,8 +214,8 @@ namespace Neon::Windowing
     void WindowApp::SetSize(
         const Size2I& Size)
     {
-        glfwSetWindowSize(m_Handle, Size.Width(), Size.Height());
         m_WindowSize = Size;
+        glfwSetWindowSize(m_Handle, Size.Width(), Size.Height());
     }
 
     void WindowApp::SetIcon(

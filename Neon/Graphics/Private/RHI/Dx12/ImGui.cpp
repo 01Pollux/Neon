@@ -8,7 +8,7 @@
 
 #include <ImGui/imgui.h>
 #include <ImGui/backends/imgui_impl_dx12.h>
-#include <ImGui/backends/imgui_impl_win32.h>
+#include <ImGui/backends/imgui_impl_glfw.h>
 
 extern ImGui_ImplDX12_Data* ImGui_ImplDX12_GetBackendData();
 
@@ -30,10 +30,10 @@ namespace Neon::RHI::ImGuiRHI
         IO.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
         auto Window       = ISwapchain::Get()->GetWindow();
-        auto WindowHandle = Window->GetPlatformHandle();
+        auto WindowHandle = Window->GetHandle();
         auto Swapchain    = RHI::ISwapchain::Get();
 
-        ImGui_ImplWin32_Init(WindowHandle);
+        ImGui_ImplGlfw_InitForOther(WindowHandle, true);
         // Setting descriptor heap and font heaps to null since we are using our own allocator.
         ImGui_ImplDX12_Init(
             RHI::Dx12RenderDevice::Get()->GetDevice(),
@@ -47,7 +47,7 @@ namespace Neon::RHI::ImGuiRHI
     void ShutdownImGui()
     {
         ImGui_ImplDX12_Shutdown();
-        ImGui_ImplWin32_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
     }
 
@@ -64,7 +64,7 @@ namespace Neon::RHI::ImGuiRHI
         BackendData->hFontSrvGpuDescHandle = { Handle.GetCpuHandle().Value };
 
         ImGui_ImplDX12_NewFrame();
-        ImGui_ImplWin32_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
     }
 
@@ -180,7 +180,7 @@ namespace Neon::RHI::ImGuiRHI
         // Update and Render additional Platform Windows
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            Window->UpdateImGuiDockingSystem();
+            ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault(nullptr, Dx12CmdList);
         }
     }

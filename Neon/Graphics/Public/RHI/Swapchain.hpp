@@ -7,7 +7,7 @@
 
 namespace Neon::Windowing
 {
-    class IWindowApp;
+    class WindowApp;
 } // namespace Neon::Windowing
 
 namespace Neon::RHI
@@ -43,7 +43,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get the swapchain's window.
         /// </summary>
-        [[nodiscard]] virtual Windowing::IWindowApp* GetWindow() = 0;
+        [[nodiscard]] virtual Windowing::WindowApp* GetWindow() = 0;
 
         /// <summary>
         /// Get the swapchain's window size.

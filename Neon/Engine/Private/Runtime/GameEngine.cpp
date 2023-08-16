@@ -3,6 +3,8 @@
 #include <Runtime/GameLogic.hpp>
 #include <Runtime/DebugOverlay.hpp>
 
+//
+
 #include <Asset/Manager.hpp>
 #include <Asset/Storage.hpp>
 
@@ -13,8 +15,14 @@
 #include <Asset/Handlers/RootSignature.hpp>
 #include <Asset/Handlers/Shader.hpp>
 
+//
+
+#include <Window/Window.hpp>
+#include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 #include <RHI/ImGui.hpp>
+
+//
 
 #include <Log/Logger.hpp>
 
@@ -23,7 +31,6 @@ namespace Neon::Runtime
     static GameEngine* s_GameEngine = nullptr;
 
     GameEngine::GameEngine() :
-        m_Logic(std::make_unique<GameLogic>()),
         m_ThreadPool(std::make_unique<Asio::ThreadPool<>>(4))
     {
         NEON_ASSERT(!s_GameEngine);
@@ -44,13 +51,21 @@ namespace Neon::Runtime
     void GameEngine::Initialize(
         Config::EngineConfig Config)
     {
+        // Initialize and load assets packages
         InitializeAssetSystem(Config);
 
-        //
+        // Initialize the window
+        m_Window = std::make_unique<Windowing::WindowApp>(Config.Window);
 
-        m_Window.reset(NEON_NEW EngineWindow(Config));
+        // Initialize the renderer
+        auto& RendererConfig = Config.Renderer;
+        RHI::IRenderDevice::Create(m_Window.get(), RendererConfig.Device, RendererConfig.Swapchain);
 
+        //  Initialize the debug overlay
         Runtime::DebugOverlay::Create();
+
+        // Initialize the game logic
+        m_Logic = std::make_unique<GameLogic>();
     }
 
     void GameEngine::Shutdown()
@@ -62,11 +77,11 @@ namespace Neon::Runtime
     {
     }
 
-    int GameEngine::Run()
+    void GameEngine::Run()
     {
         // Reset the timer before entering the loop to avoid a large delta time on the first frame
         m_GameTimer.Reset();
-        while (m_Window->Run())
+        while (m_Window->IsRunning())
         {
             m_Window->ProcessInputs();
             if (m_GameTimer.Tick())
@@ -78,7 +93,7 @@ namespace Neon::Runtime
                 m_Logic->Update();
                 PostUpdate();
 
-                if (IsScreenVisible.get())
+                if (IsScreenVisible)
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
 
@@ -95,14 +110,13 @@ namespace Neon::Runtime
             }
         }
         Shutdown();
-        return m_Window->GetExitCode();
     }
 
     //
 
-    Windowing::IWindowApp* GameEngine::GetWindow() const
+    Windowing::WindowApp* GameEngine::GetWindow() const
     {
-        return m_Window->GetWindow();
+        return m_Window.get();
     }
 
     GameLogic* GameEngine::GetLogic() const noexcept

@@ -52,44 +52,6 @@ function common_add_pch(pch_file)
     pchsource (pch_file..".cpp")
 end
 
-function link_engine_library()
-    links
-    {
-        "Bullet3Common",
-        "Bullet3Collision",
-        "Bullet3Dynamics",
-        "Bullet3Geometry",
-        "Bullet3Serialize",
-        "BulletCollision",
-        "BulletDynamics",
-        "BulletInverseDynamics",
-        "BulletSoftBody",
-        "BulletLinearMath",
-
-        "ImGui",
-
-        "NeonCore",
-        "NeonCoroutines",
-        "NeonResource",
-        "NeonWindowing",
-        "NeonGraphics",
-
-        "NeonEngine"
-    }
-
-    includedirs
-    {
-        "%{CommonDir.Deps.Inc}/Bullet3",
-
-        "%{CommonDir.Neon.Core}",
-        "%{CommonDir.Neon.Coroutines}",
-        "%{CommonDir.Neon.Windowing}",
-        "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Resource}",
-        "%{CommonDir.Neon.Engine}"
-    }
-end
-
 function select_launch_kind()
     filter "configurations:Dist"
         kind "WindowedApp"
@@ -129,14 +91,46 @@ function link_boost_lib(lib_name)
     filter {}
 end
 
-function common_neon_defines()
-    defines "flecs_STATIC"
-    defines "BT_USE_DOUBLE_PRECISION"
-    defines "GLM_FORCE_LEFT_HANDED"
-end
+--
 
-function common_neon_links()
-    libdirs "%{CommonDir.Deps.Libs}"
+function link_engine_library_no_engine()
+    links
+    {
+        "Bullet3Common",
+        "Bullet3Collision",
+        "Bullet3Dynamics",
+        "Bullet3Geometry",
+        "Bullet3Serialize",
+        "BulletCollision",
+        "BulletDynamics",
+        "BulletInverseDynamics",
+        "BulletSoftBody",
+        "BulletLinearMath",
+
+        "ImGui",
+        "glfw",
+        "Flecs",
+        "spdlog",
+
+        "NeonCore",
+        "NeonCoroutines",
+        "NeonResource",
+        "NeonWindowing",
+        "NeonGraphics",
+    }
+
+    includedirs
+    {
+        "%{CommonDir.Deps.Inc}/Bullet3",
+
+        "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
+        "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Neon.Graphics}",
+        "%{CommonDir.Neon.Resource}",
+        "%{CommonDir.Neon.Engine}"
+    }
+
     
     link_boost_lib("atomic")
     link_boost_lib("chrono")
@@ -171,14 +165,28 @@ function common_neon_links()
     link_boost_lib("wave")
     link_boost_lib("wserialization")
     link_boost_lib("zlib")
-    
-    link_boost_inc()
-    
+end
+
+function link_engine_library(with_engine)
+    link_engine_library_no_engine()
     links
     {
-        "Flecs",
-        "spdlog"
+        "NeonEngine"
     }
+end
+
+--
+
+function common_neon_defines()
+    defines "flecs_STATIC"
+    defines "BT_USE_DOUBLE_PRECISION"
+    defines "GLM_FORCE_LEFT_HANDED"
+end
+
+function common_neon_links()
+    libdirs "%{CommonDir.Deps.Libs}"
+    
+    link_boost_inc()
 end
 
 function common_neon()
