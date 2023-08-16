@@ -10,7 +10,10 @@ namespace Neon::Input
     class InputMouse
     {
         friend class InputMouseDataEvent;
-        using InputDelegateHandler = Utils::Signal<const Vector2&>;
+        /// <summary>
+        /// NewPos is (0,0) if the event type is not Move.
+        /// </summary>
+        using InputDelegateHandler = Utils::Signal<const Vector2& /*NewPos*/>;
 
     public:
         enum class BindType : uint8_t
@@ -37,6 +40,13 @@ namespace Neon::Input
         {
             return m_InputType;
         }
+
+        /// <summary>
+        /// Enable or disable system input.
+        /// </summary>
+        void Requires(
+            EKeyboardInput SysInput,
+            bool           State = true);
 
         /// <summary>
         /// Bind a delegate to the input type.
@@ -70,8 +80,9 @@ namespace Neon::Input
         /// Dispatch the input type.
         /// </summary>
         void Dispatch(
-            BindType       Type,
-            const Vector2& ScreenPosition);
+            BindType                Type,
+            const InputSysKeyState& SysKeyState,
+            const Vector2&          ScreenPosition);
 
         /// <summary>
         /// Get the handler for the input type.
@@ -97,22 +108,30 @@ namespace Neon::Input
             m_OnMouseDoubleClick,
             m_OnMouseRelease,
             m_OnMouseMove;
-        EMouseInput m_InputType = EMouseInput::None;
+
+        InputSysKeyState m_RequiredSysInputs;
+        EMouseInput      m_InputType = EMouseInput::None;
     };
 
     class InputMouseDataEvent final
     {
     public:
         InputMouseDataEvent(
-            Ref<InputMouse>      Mouse,
-            const Vector2&       MoveDelta,
-            InputMouse::BindType Type);
+            const Vector2&       NewPos,
+            InputSysKeyState     KeyState,
+            EMouseInput          InputType,
+            InputMouse::BindType BindType);
 
-        void DispatchInput();
+        /// <summary>
+        /// Dispatch the input type.
+        /// </summary>
+        void DispatchInput(
+            class IInputMouseTable* Table);
 
     private:
-        Ref<InputMouse>      m_InputAxis;
-        Vector2              m_MoveDelta;
-        InputMouse::BindType m_InputType;
+        Vector2              m_NewPos;
+        InputSysKeyState     m_KeyState;
+        EMouseInput          m_InputType;
+        InputMouse::BindType m_BindType;
     };
 } // namespace Neon::Input

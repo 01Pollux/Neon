@@ -10,8 +10,15 @@
 #include <unordered_map>
 #include <list>
 
+namespace Neon::Windowing
+{
+    class WindowApp;
+} // namespace Neon::Windowing
+
 namespace Neon::Input
 {
+    class InputDataTable;
+
     class InputEventQueue
     {
         template<typename _Ty>
@@ -22,7 +29,8 @@ namespace Neon::Input
         /// Queue input data.
         /// </summary>
         template<typename _Ty, typename... _Args>
-        void QueueData(_Args&&... Args)
+        void QueueData(
+            _Args&&... Args)
         {
             GetPool<_Ty>().emplace_back(std::forward<_Args>(Args)...);
         }
@@ -30,7 +38,13 @@ namespace Neon::Input
         /// <summary>
         /// Dispatch input data.
         /// </summary>
-        void Dispatch();
+        void Dispatch(
+            InputDataTable* DataTable);
+
+        /// <summary>
+        /// Clear the input data.
+        /// </summary>
+        void ClearState();
 
     private:
         template<typename _Ty>
@@ -60,26 +74,41 @@ namespace Neon::Input
     /// For exemple, a user can create an input table for the action "Jump".
     /// This table will contain all the input data
     /// </summary>
-    class IInputDataTable
+    class InputDataTable
     {
+        friend class Windowing::WindowApp;
+        friend class InputEventQueue;
+
         using InputActionMap     = std::unordered_map<StringU8, Ptr<IInputActionTable>>;
         using InputAxisMap       = std::unordered_map<StringU8, Ptr<IInputAxisTable>>;
         using InputMouseMap      = std::unordered_map<StringU8, Ptr<IInputMouseTable>>;
         using InputMouseWheelMap = std::unordered_map<StringU8, Ptr<IInputMouseWheelTable>>;
 
-    public:
+    private:
         /// <summary>
-        /// Create a new input data table.
+        /// Insert a key press/tick/release event.
         /// </summary>
-        static Ptr<IInputDataTable> Create();
+        void PushKey(
+            int Key, int ScanCode, int Action, int Mods);
 
-        IInputDataTable() = default;
+        /// <summary>
+        /// Insert a mouse press/tick/release event.
+        /// </summary>
+        void PushMouseInput(
+            int Key, int Action, int Mods);
 
-        NEON_CLASS_NO_COPY(IInputDataTable);
-        NEON_CLASS_MOVE(IInputDataTable);
+        /// <summary>
+        /// Insert a mouse move event.
+        /// </summary>
+        void PushMouseMove(
+            double X, double Y);
 
-        virtual ~IInputDataTable() = default;
+        /// <summary>
+        /// Reset the input state.
+        /// </summary>
+        void ClearState();
 
+    public:
         /// <summary>
         /// Process queued inputs.
         /// </summary>

@@ -40,7 +40,7 @@ namespace Neon::Input
         /// </summary>
         void Requires(
             EKeyboardInput SysInput,
-            bool           State);
+            bool           State = true);
 
         /// <summary>
         /// Bind a delegate to the input type.
@@ -105,15 +105,19 @@ namespace Neon::Input
     {
     public:
         InputActionDataEvent(
-            Ref<InputAction>      Action,
             InputSysKeyState      SysKeyState,
-            InputAction::BindType Type);
+            EKeyboardInput        Input,
+            InputAction::BindType BindType);
 
-        void DispatchInput();
+        /// <summary>
+        /// Dispatch the input.
+        /// </summary>
+        void DispatchInput(
+            class IInputActionTable* Table);
 
     private:
-        Ref<InputAction>      m_InputAction;
         InputSysKeyState      m_SysKeyState;
-        InputAction::BindType m_InputType;
+        EKeyboardInput        m_Input;
+        InputAction::BindType m_BindType;
     };
 } // namespace Neon::Input

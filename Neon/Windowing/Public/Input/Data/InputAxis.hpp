@@ -111,13 +111,17 @@ namespace Neon::Input
     {
     public:
         InputAxisDataEvent(
-            Ref<InputAxis>      Axis,
-            InputAxis::BindType Type);
+            EKeyboardInput      InputType,
+            InputAxis::BindType BindType);
 
-        void DispatchInput();
+        /// <summary>
+        /// Dispatch the input type.
+        /// </summary>
+        void DispatchInput(
+            class IInputAxisTable* Axis);
 
     private:
-        Ref<InputAxis>      m_InputAxis;
-        InputAxis::BindType m_InputType;
+        EKeyboardInput      m_InputType;
+        InputAxis::BindType m_BindType;
     };
 } // namespace Neon::Input

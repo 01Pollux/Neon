@@ -1,5 +1,6 @@
 #include <WindowPCH.hpp>
 #include <Input/Data/InputAction.hpp>
+#include <Input/Table/InputActionTable.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -44,9 +45,12 @@ namespace Neon::Input
         BindType                Type,
         const InputSysKeyState& SysKeyState)
     {
-        if (m_RequiredSysInputs.IsEmpty() || m_RequiredSysInputs.ContainsAll(SysKeyState))
+        if (m_RequiredSysInputs.ContainsAll(SysKeyState))
         {
-            GetHandler(Type)->Broadcast();
+            if (auto Handler = GetHandler(Type))
+            {
+                Handler->Broadcast();
+            }
         }
     }
 
@@ -112,20 +116,24 @@ namespace Neon::Input
     }
 
     InputActionDataEvent::InputActionDataEvent(
-        Ref<InputAction>      Action,
         InputSysKeyState      SysKeyState,
-        InputAction::BindType Type) :
-        m_InputAction(std::move(Action)),
+        EKeyboardInput        Input,
+        InputAction::BindType BindType) :
         m_SysKeyState(SysKeyState),
-        m_InputType(Type)
+        m_Input(Input),
+        m_BindType(BindType)
     {
     }
 
-    void InputActionDataEvent::DispatchInput()
+    void InputActionDataEvent::DispatchInput(
+        IInputActionTable* Table)
     {
-        if (auto Action = m_InputAction.lock())
+        for (auto& Action : Table->GetActions())
         {
-            Action->Dispatch(m_InputType, m_SysKeyState);
+            if (Action->m_InputType == m_Input)
+            {
+                Action->Dispatch(m_BindType, m_SysKeyState);
+            }
         }
     }
 } // namespace Neon::Input

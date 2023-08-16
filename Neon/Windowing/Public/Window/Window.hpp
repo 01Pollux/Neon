@@ -10,7 +10,7 @@
 
 namespace Neon::Input
 {
-    class IInputDataTable;
+    class InputDataTable;
 } // namespace Neon::Input
 
 struct GLFWwindow;
@@ -153,14 +153,14 @@ namespace Neon::Windowing
         /// <summary>
         /// Enable input table for the window to receive input events
         /// </summary>
-        void PushInputTable(
-            const Ptr<Input::IInputDataTable>& InputTable);
+        void RegisterInputTable(
+            const Ptr<Input::InputDataTable>& InputTable);
 
         /// <summary>
         /// Disable input table for the window
         /// </summary>
-        void PopInputTable(
-            const Ptr<Input::IInputDataTable>& InputTable);
+        void UnregisterInputTable(
+            const Ptr<Input::InputDataTable>& InputTable);
 
         /// <summary>
         /// Process input events
@@ -189,10 +189,16 @@ namespace Neon::Windowing
         NEON_SIGNAL_INST(OnWindowTitleHitTest);
 
     private:
+        /// <summary>
+        /// Setup window inputs
+        /// </summary>
+        void SetupInputs();
+
+    private:
         GLFWwindow* m_Handle;
         Size2I      m_WindowSize;
         StringU8    m_Title;
 
-        std::unordered_set<Ptr<Input::IInputDataTable>> m_InputTables;
+        std::unordered_set<Ptr<Input::InputDataTable>> m_InputTables;
     };
 } // namespace Neon::Windowing

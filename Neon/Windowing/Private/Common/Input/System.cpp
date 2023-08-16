@@ -43,21 +43,21 @@ namespace Neon::Input
             return ImGuiKey_Tab;
         case EKeyboardInput::Escape:
             return ImGuiKey_Escape;
-        case EKeyboardInput::LeftCtrl:
+        case EKeyboardInput::LCtrl:
             return ImGuiKey_LeftCtrl;
-        case EKeyboardInput::LeftShift:
+        case EKeyboardInput::LShift:
             return ImGuiKey_LeftShift;
-        case EKeyboardInput::LeftAlt:
+        case EKeyboardInput::LAlt:
             return ImGuiKey_LeftAlt;
-        case EKeyboardInput::RightCtrl:
+        case EKeyboardInput::RCtrl:
             return ImGuiKey_RightCtrl;
-        case EKeyboardInput::RightShift:
+        case EKeyboardInput::RShift:
             return ImGuiKey_RightShift;
-        case EKeyboardInput::RightAlt:
+        case EKeyboardInput::RAlt:
             return ImGuiKey_RightAlt;
-        case EKeyboardInput::LeftSuper:
+        case EKeyboardInput::LSuper:
             return ImGuiKey_LeftSuper;
-        case EKeyboardInput::RightSuper:
+        case EKeyboardInput::RSuper:
             return ImGuiKey_RightSuper;
         case EKeyboardInput::Menu:
             return ImGuiKey_Menu;
@@ -237,9 +237,9 @@ namespace Neon::Input
             return ImGuiMouseButton_Right;
         case EMouseInput::Middle:
             return ImGuiMouseButton_Middle;
-        case EMouseInput::X1:
+        case EMouseInput::Button4:
             return ImGuiMouseButton_Middle + 1;
-        case EMouseInput::X2:
+        case EMouseInput::Button5:
             return ImGuiMouseButton_Middle + 2;
         default:
             std::unreachable();

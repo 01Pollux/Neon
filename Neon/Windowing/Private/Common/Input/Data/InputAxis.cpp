@@ -1,5 +1,6 @@
 #include <WindowPCH.hpp>
 #include <Input/Data/InputAxis.hpp>
+#include <Input/Table/InputAxisTable.hpp>
 
 namespace Neon::Input
 {
@@ -102,18 +103,22 @@ namespace Neon::Input
     }
 
     InputAxisDataEvent::InputAxisDataEvent(
-        Ref<InputAxis>      Axis,
-        InputAxis::BindType Type) :
-        m_InputAxis(std::move(Axis)),
-        m_InputType(Type)
+        EKeyboardInput      InputType,
+        InputAxis::BindType BindType) :
+        m_InputType(InputType),
+        m_BindType(BindType)
     {
     }
 
-    void InputAxisDataEvent::DispatchInput()
+    void InputAxisDataEvent::DispatchInput(
+        IInputAxisTable* Table)
     {
-        if (auto Axis = m_InputAxis.lock())
+        for (auto& Axis : Table->GetAxis())
         {
-            Axis->Dispatch(m_InputType);
+            if (Axis->m_InputType == m_InputType)
+            {
+                Axis->Dispatch(m_BindType);
+            }
         }
     }
 } // namespace Neon::Input

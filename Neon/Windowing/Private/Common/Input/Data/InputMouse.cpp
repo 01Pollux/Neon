@@ -1,8 +1,16 @@
 #include <WindowPCH.hpp>
 #include <Input/Data/InputMouse.hpp>
+#include <Input/Table/InputMouseTable.hpp>
 
 namespace Neon::Input
 {
+    void InputMouse::Requires(
+        EKeyboardInput SysInput,
+        bool           State)
+    {
+        m_RequiredSysInputs.SetSysControlState(SysInput, State);
+    }
+
     uint64_t InputMouse::Bind(
         BindType                           Type,
         InputDelegateHandler::DelegateType Delegate)
@@ -31,12 +39,16 @@ namespace Neon::Input
     }
 
     void InputMouse::Dispatch(
-        BindType       Type,
-        const Vector2& MoveDelta)
+        BindType                Type,
+        const InputSysKeyState& SysKeyState,
+        const Vector2&          MoveDelta)
     {
-        if (auto Handler = GetHandler(Type))
+        if (m_RequiredSysInputs.ContainsAll(SysKeyState))
         {
-            Handler->Broadcast(MoveDelta);
+            if (auto Handler = GetHandler(Type))
+            {
+                Handler->Broadcast(MoveDelta);
+            }
         }
     }
 
@@ -112,20 +124,26 @@ namespace Neon::Input
     }
 
     InputMouseDataEvent::InputMouseDataEvent(
-        Ref<InputMouse>      Mouse,
-        const Vector2&        MoveDelta,
-        InputMouse::BindType Type) :
-        m_InputAxis(std::move(Mouse)),
-        m_MoveDelta(MoveDelta),
-        m_InputType(Type)
+        const Vector2&       NewPos,
+        InputSysKeyState     KeyState,
+        EMouseInput          InputType,
+        InputMouse::BindType BindType) :
+        m_NewPos(NewPos),
+        m_KeyState(KeyState),
+        m_InputType(InputType),
+        m_BindType(BindType)
     {
     }
 
-    void InputMouseDataEvent::DispatchInput()
+    void InputMouseDataEvent::DispatchInput(
+        IInputMouseTable* Table)
     {
-        if (auto Mouse = m_InputAxis.lock())
+        for (auto& Mouse : Table->GetMouses())
         {
-            Mouse->Dispatch(m_InputType, m_MoveDelta);
+            if (Mouse->m_InputType == m_InputType)
+            {
+                Mouse->Dispatch(m_BindType, m_KeyState, m_NewPos);
+            }
         }
     }
 } // namespace Neon::Input

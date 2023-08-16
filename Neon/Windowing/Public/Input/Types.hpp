@@ -30,18 +30,26 @@ namespace Neon::Input
         Tab,
         Escape,
 
-        LeftCtrl,
-        LeftShift,
-        LeftAlt,
-        RightCtrl,
-        RightShift,
-        RightAlt,
-        _Begin_SysControl = LeftCtrl,
-        _End_SysContrl    = RightAlt,
+        LCtrl,
+        LShift,
+        LAlt,
+        LSuper,
 
-        LeftSuper,
-        RightSuper,
+        RCtrl,
+        RShift,
+        RAlt,
+        RSuper,
+
         Menu,
+
+        // System Control Keys
+        Ctrl,
+        Shift,
+        Alt,
+        Super,
+        CapsLock,
+        _Begin_SysControl = Ctrl,
+        _End_SysContrl    = CapsLock,
 
         Keypad0,
         Keypad1,
@@ -103,6 +111,19 @@ namespace Neon::Input
         F10,
         F11,
         F12,
+        F13,
+        F14,
+        F15,
+        F16,
+        F17,
+        F18,
+        F19,
+        F20,
+        F21,
+        F22,
+        F23,
+        F24,
+        F25,
 
         Apostrophe,  // '
         Comma,       // ,
@@ -116,7 +137,6 @@ namespace Neon::Input
 	    RightBracket,// ]
         GraveAccent, // `
 
-        CapsLock,
         ScrollLock,
         NumLock,
         PrintScreen,
@@ -139,7 +159,12 @@ namespace Neon::Input
         Left,
         Right,
         Middle,
-        X1,
-        X2,
+
+        Button3 = Middle,
+        Button4,
+        Button5,
+        Button6,
+        Button7,
+        Button8,
     };
 } // namespace Neon::Input

@@ -90,16 +90,18 @@ namespace Neon::Input
     {
     public:
         InputMouseWheelDataEvent(
-            Ref<InputMouseWheel>        Mouse,
-            float                        Factor,
+            float                       Factor,
             InputMouseWheel::BindType   Type,
             InputMouseWheel::MotionType Motion);
 
-        void DispatchInput();
+        /// <summary>
+        /// Dispatch the input type.
+        /// </summary>
+        void DispatchInput(
+            class IInputMouseWheelTable* Table);
 
     private:
-        Ref<InputMouseWheel>        m_InputAxis;
-        float                        m_Factor;
+        float                       m_Factor;
         InputMouseWheel::BindType   m_InputType;
         InputMouseWheel::MotionType m_Motion;
     };

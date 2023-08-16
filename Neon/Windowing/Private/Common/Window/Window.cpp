@@ -89,18 +89,7 @@ namespace Neon::Windowing
                 App->OnWindowClosed().Broadcast();
             });
 
-        // TODO: Implement input system
-        /* glfwSetKeyCallback(
-             m_Handle,
-             [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Mods)
-             {
-                 auto App = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
-                 for (auto& InputTable : App->m_InputTables)
-                 {
-                     bool ProcessInput = false;
-                     validate_cast<Input::InputDataTableImpl*>(InputTable.get())->PushMessage(this->m_Handle, Message, wParam, lParam, ProcessInput);
-                 }
-             });*/
+        SetupInputs();
 
         glfwSetTitlebarHitTestCallback(
             m_Handle,
@@ -160,7 +149,7 @@ namespace Neon::Windowing
         StringU8 Title)
     {
         m_Title = std::move(Title);
-        glfwSetWindowTitle(m_Handle, Title.c_str());
+        glfwSetWindowTitle(m_Handle, m_Title.c_str());
     }
 
     Vector2I WindowApp::GetPosition() const
@@ -241,15 +230,17 @@ namespace Neon::Windowing
 
     //
 
-    void WindowApp::PushInputTable(
-        const Ptr<Input::IInputDataTable>& InputTable)
+    void WindowApp::RegisterInputTable(
+        const Ptr<Input::InputDataTable>& InputTable)
     {
+        InputTable->ClearState();
         m_InputTables.insert(InputTable);
     }
 
-    void WindowApp::PopInputTable(
-        const Ptr<Input::IInputDataTable>& InputTable)
+    void WindowApp::UnregisterInputTable(
+        const Ptr<Input::InputDataTable>& InputTable)
     {
+        InputTable->ClearState();
         m_InputTables.erase(InputTable);
     }
 
@@ -259,5 +250,41 @@ namespace Neon::Windowing
         {
             InputTable->ProcessInputs();
         }
+    }
+
+    void WindowApp::SetupInputs()
+    {
+        glfwSetKeyCallback(
+            m_Handle,
+            [](GLFWwindow* Window, int Key, int ScanCode, int Action, int Mods)
+            {
+                auto App = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
+                for (auto& InputTable : App->m_InputTables)
+                {
+                    InputTable->PushKey(Key, ScanCode, Action, Mods);
+                }
+            });
+
+        glfwSetMouseButtonCallback(
+            m_Handle,
+            [](GLFWwindow* Window, int Button, int Action, int Mods)
+            {
+                auto App = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
+                for (auto& InputTable : App->m_InputTables)
+                {
+                    InputTable->PushMouseInput(Button, Action, Mods);
+                }
+            });
+
+        glfwSetCursorPosCallback(
+            m_Handle,
+            [](GLFWwindow* Window, double X, double Y)
+            {
+                auto App = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
+                for (auto& InputTable : App->m_InputTables)
+                {
+                    InputTable->PushMouseMove(X, Y);
+                }
+            });
     }
 } // namespace Neon::Windowing

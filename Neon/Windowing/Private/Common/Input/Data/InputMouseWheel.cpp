@@ -1,5 +1,6 @@
 #include <WindowPCH.hpp>
 #include <Input/Data/InputMouseWheel.hpp>
+#include <Input/Table/InputMouseWheelTable.hpp>
 
 namespace Neon::Input
 {
@@ -93,22 +94,21 @@ namespace Neon::Input
     }
 
     InputMouseWheelDataEvent::InputMouseWheelDataEvent(
-        Ref<InputMouseWheel>        Mouse,
-        float                        Factor,
+        float                       Factor,
         InputMouseWheel::BindType   Type,
         InputMouseWheel::MotionType Motion) :
-        m_InputAxis(std::move(Mouse)),
         m_Factor(Factor),
         m_InputType(Type),
         m_Motion(Motion)
     {
     }
 
-    void InputMouseWheelDataEvent::DispatchInput()
+    void InputMouseWheelDataEvent::DispatchInput(
+        IInputMouseWheelTable* Table)
     {
-        if (auto Axis = m_InputAxis.lock())
+        for (auto& MouseWheel : Table->GetMouseWheels())
         {
-            Axis->Dispatch(m_InputType, m_Factor, m_Motion);
+            MouseWheel->Dispatch(m_InputType, m_Factor, m_Motion);
         }
     }
 } // namespace Neon::Input
