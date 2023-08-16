@@ -45,8 +45,6 @@ namespace Neon::RG
             return;
         }
 
-        //
-
         for (auto& ImportedResource : m_Storage.m_ImportedResources)
         {
             auto& Handle = m_Storage.GetResourceMut(ImportedResource);

@@ -10,6 +10,8 @@
 #include <ImGui/backends/imgui_impl_dx12.h>
 #include <ImGui/backends/imgui_impl_win32.h>
 
+extern ImGui_ImplDX12_Data* ImGui_ImplDX12_GetBackendData();
+
 namespace Neon::RHI::ImGuiRHI
 {
     static std::vector<ImDrawCmd*>                  s_DrawCommands;
@@ -79,6 +81,7 @@ namespace Neon::RHI::ImGuiRHI
         {
             s_DrawCommands.reserve(DrawData->CmdListsCount);
 
+            uint32_t Offset = 0;
             for (int i = 0; i < DrawData->CmdListsCount; i++)
             {
                 auto DrawList = DrawData->CmdLists[i];
@@ -87,6 +90,15 @@ namespace Neon::RHI::ImGuiRHI
                     auto DrawCmd = &DrawList->CmdBuffer[CmdId];
                     if (!DrawCmd->UserCallback && DrawCmd->TextureId)
                     {
+                        auto Handle                = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
+                        auto [Iter, NewlyInserted] = s_DescriptorHandlesRemapTexID.emplace(Handle.ptr, Offset);
+
+                        if (NewlyInserted)
+                        {
+                            s_DescriptorHandles.emplace_back(Handle);
+                            Offset++;
+                        }
+
                         s_DrawCommands.emplace_back(DrawCmd);
                     }
                 }
@@ -100,31 +112,21 @@ namespace Neon::RHI::ImGuiRHI
 
                 auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
 
-                s_DescriptorHandles.reserve(s_DrawCommands.size());
-
-                s_DescriptorHandlesSizes.reserve(s_DrawCommands.size());
                 for (size_t i = s_DescriptorHandlesSizes.size(); i < s_DrawCommands.size(); i++)
                 {
                     s_DescriptorHandlesSizes.emplace_back(1);
                 }
 
-                uint32_t Offset = 0;
                 for (auto& DrawCmd : s_DrawCommands)
                 {
-                    auto Handle                = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
-                    auto [Iter, NewlyInserted] = s_DescriptorHandlesRemapTexID.emplace(Handle.ptr, Offset);
+                    auto Handle = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
+                    auto Offset = s_DescriptorHandlesRemapTexID.at(Handle.ptr);
 
-                    if (NewlyInserted)
-                    {
-                        s_DescriptorHandles.emplace_back(Handle);
-                        Offset++;
-                    }
-
-                    DrawCmd->TextureId = std::bit_cast<ImTextureID>(DstDescriptor.GetGpuHandle(Iter->second).Value);
+                    DrawCmd->TextureId = std::bit_cast<ImTextureID>(DstDescriptor.GetGpuHandle(Offset).Value);
                 }
 
                 D3D12_CPU_DESCRIPTOR_HANDLE DxDescriptors[]      = { DstDescriptor.GetCpuHandle().Value };
-                UINT                        DxDescriptorsSizes[] = { 1 };
+                UINT                        DxDescriptorsSizes[] = { UINT(s_DescriptorHandles.size()) };
 
                 Dx12Device->CopyDescriptors(
                     1,

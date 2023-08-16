@@ -27,9 +27,9 @@ namespace Neon::RG
         }
 
 #ifndef NEON_DIST
-        Builder.AddPass<RG::DebugPass>(RG::ResourceId(STR("GBufferAlbedo")));
+        Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));
 #endif
 
-        Builder.Build(RG::ResourceId(STR("GBufferAlbedo")));
+        Builder.Build(ResourceId(STR("GBufferAlbedo")));
     }
 } // namespace Neon::RG
