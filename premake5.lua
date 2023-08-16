@@ -82,7 +82,6 @@ workspace "Neon"
         include "Neon/Windowing"
         include "Neon/Graphics"
         include "Neon/Engine"
-        include "Neon/Editor"
     group ""
 
     group "Neon/Tools"

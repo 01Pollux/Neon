@@ -1,5 +1,5 @@
-#include <EditorPCH.hpp>
-#include <EditorViews/Types/ContentBrowser.hpp>
+#include <EnginePCH.hpp>
+#include <Editor/Views/Types/ContentBrowser.hpp>
 
 namespace Neon::Editor::Views
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
-#include <EditorViews/View.hpp>
+#include <Editor/Views/View.hpp>
 
 #include <unordered_map>
 #include <unordered_set>

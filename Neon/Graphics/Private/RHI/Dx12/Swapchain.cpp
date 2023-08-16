@@ -55,6 +55,24 @@ namespace Neon::RHI
     void Dx12Swapchain::PrepareFrame()
     {
         m_FrameManager->NewFrame();
+
+        auto StateManager = RHI::IResourceStateManager::Get();
+        auto BackBuffer   = GetBackBuffer();
+
+        // Set Render target view and viewport to the backbuffer.
+        StateManager->TransitionResource(
+            BackBuffer,
+            RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
+
+        GraphicsCommandContext CommandContext;
+
+        auto CommandList = CommandContext.Append();
+        StateManager->FlushBarriers(CommandList);
+
+        auto View = RHI::ISwapchain::Get()->GetBackBufferView();
+        CommandList->ClearRtv(
+            View,
+            Colors::White);
     }
 
     void Dx12Swapchain::Present(

@@ -129,11 +129,13 @@ function link_boost_lib(lib_name)
     filter {}
 end
 
-function common_neon()
+function common_neon_defines()
     defines "flecs_STATIC"
     defines "BT_USE_DOUBLE_PRECISION"
     defines "GLM_FORCE_LEFT_HANDED"
+end
 
+function common_neon_links()
     libdirs "%{CommonDir.Deps.Libs}"
     
     link_boost_lib("atomic")
@@ -171,12 +173,17 @@ function common_neon()
     link_boost_lib("zlib")
     
     link_boost_inc()
-
+    
     links
     {
         "Flecs",
         "spdlog"
     }
+end
+
+function common_neon()
+    common_neon_defines()
+    common_neon_links()
 
     files
     {

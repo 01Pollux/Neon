@@ -1,6 +1,6 @@
 #pragma once
 
-#include <EditorViews/View.hpp>
+#include <Editor/Views/View.hpp>
 
 namespace Neon::Editor::Views
 {

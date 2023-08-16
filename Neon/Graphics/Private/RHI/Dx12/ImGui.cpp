@@ -143,15 +143,6 @@ namespace Neon::RHI::ImGuiRHI
             }
         }
 
-        //
-
-        // Set Render target view and viewport to the backbuffer.
-        StateManager->TransitionResource(
-            BackBuffer,
-            RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
-
-        StateManager->FlushBarriers(CommandList);
-
         // Set viewport, scissor rect and render target view
         {
             auto& Size = RHI::ISwapchain::Get()->GetSize();
@@ -165,10 +156,6 @@ namespace Neon::RHI::ImGuiRHI
             CommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
 
             auto View = RHI::ISwapchain::Get()->GetBackBufferView();
-
-            CommandList->ClearRtv(
-                View,
-                Colors::White);
 
             CommandList->SetRenderTargets(
                 View, 1);

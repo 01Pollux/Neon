@@ -1,6 +1,6 @@
-#include <EditorPCH.hpp>
+#include <EnginePCH.hpp>
 #include <Runtime/EntryPoint.hpp>
-#include <EditorMain/EditorEngine.hpp>
+#include <Editor/Main/EditorEngine.hpp>
 
 #include <iostream>
 #include <boost/program_options.hpp>

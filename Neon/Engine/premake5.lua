@@ -1,5 +1,4 @@
-project "NeonEngine"
-    kind "StaticLib"
+function neon_engine_project_setup()
     language "C++"
     cppdialect "C++latest"
     staticruntime "On"
@@ -42,3 +41,17 @@ project "NeonEngine"
 
         "%{CommonDir.Deps.Inc}/Bullet3"
     }
+end
+
+project "NeonEngine"
+    kind "StaticLib"
+    neon_engine_project_setup()
+    removefiles
+    {
+        "**/Editor/**"
+    }
+   
+project "NeonEditor"
+    neon_engine_project_setup()
+    defines "NEON_EDITOR"
+    setup_runtime_engine("Editor")
