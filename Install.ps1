@@ -182,3 +182,11 @@ Write-Output "Copying cppcoro files..."
 Remove-Item "Neon/Coroutines"  -Exclude *.lua -Force -Recurse
 Copy-Item -Recurse $(Get-DepSrcPath("cppcoro\lib")) "Neon/Coroutines/Private/cppcoro"
 Copy-Item -Recurse $(Get-DepSrcPath("cppcoro\include")) "Neon/Coroutines/Public"
+
+
+#
+# Glfw
+#
+Write-Output "Copying glfw files..."
+Remove-Directory $(Get-DepIncPath("glfw"))
+Copy-Item -Recurse $(Get-DepSrcPath("glfw\include\GLFW")) $(Get-DepIncPath("glfw"))

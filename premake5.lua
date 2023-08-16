@@ -66,6 +66,7 @@ workspace "Neon"
     
     group "Dependencies/UI"
         include "Deps/Externals/ImGui"
+        include "Deps/Externals/glfw"
 
     group "Dependencies/Bullet3"
         include "Deps/Externals/Bullet3/src"
