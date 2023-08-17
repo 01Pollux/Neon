@@ -19,7 +19,7 @@ namespace Neon::Editor
         GetWindow()->OnWindowTitleHitTest().Listen(
             [this](const Vector2I& MousePos, bool& WasHit)
             {
-                WasHit = m_IsDraggingWindow;
+                WasHit = m_IsTitlebarHovered;
             });
     }
 

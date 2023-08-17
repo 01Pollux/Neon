@@ -141,7 +141,7 @@ namespace Neon::Editor
 
         // Check if we are holding down mouse inside the menu bar
         // This is used for the window movement logic
-        m_IsDraggingWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+        m_IsTitlebarHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
         constexpr ImU32 HoveredColor = IM_COL32(0, 0, 0, 80);
 

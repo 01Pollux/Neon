@@ -96,6 +96,6 @@ namespace Neon::Editor
 
         std::unordered_set<IEditorView*> m_OpenViews;
 
-        bool m_IsDraggingWindow = false;
+        bool m_IsTitlebarHovered = false;
     };
 } // namespace Neon::Editor
