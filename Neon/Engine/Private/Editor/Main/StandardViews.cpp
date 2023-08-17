@@ -22,13 +22,12 @@ namespace Neon::Editor
         OpenView("_ContentBrowser5");
     }
 
-    void EditorEngine::BeginEditorSpace()
+    bool EditorEngine::BeginEditorSpace()
     {
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
         constexpr ImGuiWindowFlags EditorWindowFlags =
             ImGuiWindowFlags_NoDocking |
-            ImGuiWindowFlags_NoTitleBar |
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoMove |
@@ -54,7 +53,7 @@ namespace Neon::Editor
         // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
         // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 
-        ImGui::Begin("Editor Main Viewport", nullptr, EditorWindowFlags);
+        bool EditorOpen = ImGui::Begin("Neon Editor", nullptr, EditorWindowFlags);
         ImGui::PopStyleVar(2);
 
         // Submit the DockSpace
@@ -113,6 +112,7 @@ namespace Neon::Editor
         }
 
         ImGui::DockSpace(DockerspaceId, {}, MainEditorWindowDockSpaceFlags);
+        return EditorOpen;
     }
 
     void EditorEngine::EndEditorSpace()

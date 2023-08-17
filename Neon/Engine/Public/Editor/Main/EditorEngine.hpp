@@ -79,7 +79,7 @@ namespace Neon::Editor
         /// <summary>
         /// Begin the editor space by initializing dockspace.
         /// </summary>
-        void BeginEditorSpace();
+        bool BeginEditorSpace();
 
         /// <summary>
         /// End the editor space by finalizing dockspace.

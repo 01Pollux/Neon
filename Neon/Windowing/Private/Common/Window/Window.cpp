@@ -80,7 +80,10 @@ namespace Neon::Windowing
                 auto App = static_cast<WindowApp*>(glfwGetWindowUserPointer(Window));
 
                 App->m_WindowSize = Size2I{ Width, Height };
-                App->OnWindowSizeChanged().Broadcast(App->m_WindowSize);
+                if (Width && Height)
+                {
+                    App->OnWindowSizeChanged().Broadcast(App->m_WindowSize);
+                }
             });
 
         glfwSetWindowCloseCallback(
@@ -211,7 +214,9 @@ namespace Neon::Windowing
 
     bool WindowApp::IsVisible() const
     {
-        return glfwGetWindowAttrib(m_Handle, GLFW_VISIBLE) == GLFW_TRUE;
+        return glfwGetWindowAttrib(m_Handle, GLFW_VISIBLE) == GLFW_TRUE &&
+               !IsMinimized() &&
+               IsRunning();
     }
 
     void WindowApp::SetSize(

@@ -73,6 +73,10 @@ namespace Neon::Runtime
         auto& RendererConfig = Config.Renderer;
         RHI::IRenderDevice::Create(m_Window.get(), RendererConfig.Device, RendererConfig.Swapchain);
 
+        m_Window->OnWindowSizeChanged()
+            .Listen([](const Size2I& Size)
+                    { RHI::ISwapchain::Get()->Resize(Size); });
+
         //  Initialize the debug overlay
         Runtime::DebugOverlay::Create();
 

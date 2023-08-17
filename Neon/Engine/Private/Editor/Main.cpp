@@ -12,7 +12,8 @@ namespace bpo = boost::program_options;
 NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
-        .Window = { .Title = "Neon Editor" }
+        .Window = { .Title = "Neon Editor" },
+        .Renderer{ .Device = { .EnableGPUDebugger = false } }
     };
 
     {
@@ -28,17 +29,17 @@ NEON_MAIN(Argc, Argv)
                                                                               { Config.Window.Maximized = Val; }),
 
             "Run maximized")(
-            "fullscreen", bpo::value<bool>()->default_value(false)->notifier([&](bool Val)
-                                                                             { Config.Window.FullScreen = Val; }),
+            "fullscreen", bpo::value<bool>()->default_value(true)->notifier([&](bool Val)
+                                                                            { Config.Window.FullScreen = Val; }),
 
             "Run in fullscreen mode")(
 
-            "width,w", bpo::value<int>()->default_value(1280)->notifier([&](int Val)
+            "width,w", bpo::value<int>()->default_value(1920)->notifier([&](int Val)
                                                                         { Config.Window.Size.x = Val; }),
             "Set window width")(
 
-            "height,h", bpo::value<int>()->default_value(720)->notifier([&](int Val)
-                                                                        { Config.Window.Size.y = Val; }),
+            "height,h", bpo::value<int>()->default_value(1080)->notifier([&](int Val)
+                                                                         { Config.Window.Size.y = Val; }),
             "Set window height")(
 
             "start-in-middle,sim", bpo::value<bool>()->default_value(true)->notifier([&](bool Val)

@@ -20,7 +20,6 @@ namespace Neon::Editor
 
     void EditorEngine::PreUpdate()
     {
-
         GameEngine::PreUpdate();
         for (auto& View : m_OpenViews)
         {
@@ -32,10 +31,12 @@ namespace Neon::Editor
     {
         GameEngine::PostRender();
 
-        BeginEditorSpace();
-        for (auto& View : m_OpenViews)
+        if (BeginEditorSpace())
         {
-            View->OnRender();
+            for (auto& View : m_OpenViews)
+            {
+                View->OnRender();
+            }
         }
         EndEditorSpace();
     }
