@@ -73,6 +73,7 @@ namespace Neon::Runtime
         auto& RendererConfig = Config.Renderer;
         RHI::IRenderDevice::Create(m_Window.get(), RendererConfig.Device, RendererConfig.Swapchain);
 
+        // Listen for resize events
         m_Window->OnWindowSizeChanged()
             .Listen([](const Size2I& Size)
                     { RHI::ISwapchain::Get()->Resize(Size); });
@@ -86,6 +87,11 @@ namespace Neon::Runtime
 
     void GameEngine::Run()
     {
+        bool IsMinimized = m_Window->IsMinimized();
+        m_Window->OnWindowMinized()
+            .Listen([&IsMinimized](bool Minimized)
+                    { IsMinimized = Minimized; });
+
         // Reset the timer before entering the loop to avoid a large delta time on the first frame
         m_GameTimer.Reset();
         while (m_Window->IsRunning())
@@ -94,13 +100,12 @@ namespace Neon::Runtime
             if (m_GameTimer.Tick())
             {
                 Runtime::DebugOverlay::Reset();
-                auto IsScreenVisible = GetWindow()->IsVisible();
 
                 PreUpdate();
                 m_Logic->Update();
                 PostUpdate();
 
-                if (IsScreenVisible)
+                if (!IsMinimized)
                 {
                     RHI::ISwapchain::Get()->PrepareFrame();
 

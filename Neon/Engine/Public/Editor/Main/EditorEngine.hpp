@@ -82,6 +82,11 @@ namespace Neon::Editor
         bool BeginEditorSpace();
 
         /// <summary>
+        /// Render the menu bar.
+        /// </summary>
+        void RenderMenuBar();
+
+        /// <summary>
         /// End the editor space by finalizing dockspace.
         /// </summary>
         void EndEditorSpace();
@@ -90,5 +95,7 @@ namespace Neon::Editor
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
 
         std::unordered_set<IEditorView*> m_OpenViews;
+
+        bool m_IsDraggingWindow = false;
     };
 } // namespace Neon::Editor

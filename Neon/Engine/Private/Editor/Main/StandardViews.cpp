@@ -28,6 +28,7 @@ namespace Neon::Editor
         // because it would be confusing to have two docking targets within each others.
         constexpr ImGuiWindowFlags EditorWindowFlags =
             ImGuiWindowFlags_NoDocking |
+            ImGuiWindowFlags_NoTitleBar |
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoMove |
@@ -113,6 +114,157 @@ namespace Neon::Editor
 
         ImGui::DockSpace(DockerspaceId, {}, MainEditorWindowDockSpaceFlags);
         return EditorOpen;
+    }
+
+    void EditorEngine::RenderMenuBar()
+    {
+        {
+            ImVec2 FramePadding = ImGui::GetStyle().FramePadding;
+            FramePadding.x *= 1.5f;
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, FramePadding);
+        }
+
+        bool DisplayMenuBar;
+        {
+            ImVec2 FramePadding = ImGui::GetStyle().FramePadding;
+            FramePadding.y *= 2.8f;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, FramePadding);
+            DisplayMenuBar = ImGui::BeginMainMenuBar();
+            ImGui::PopStyleVar();
+        }
+
+        if (!DisplayMenuBar)
+        {
+            return;
+        }
+
+        // Check if we are holding down mouse inside the menu bar
+        // This is used for the window movement logic
+        m_IsDraggingWindow = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
+        constexpr ImU32 HoveredColor = IM_COL32(0, 0, 0, 80);
+
+        // Write title at top left with a some paddings
+        {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 5.f));
+            ImGui::Text("Neon Editor");
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor();
+        }
+
+        if (ImGui::BeginMenu("File"))
+        {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
+
+            if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+            {
+            }
+
+            if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+            {
+            }
+
+            if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+            {
+            }
+
+            if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+            {
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Exit", "Alt+F4"))
+            {
+            }
+
+            ImGui::PopStyleColor();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Edit"))
+        {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
+
+            if (ImGui::MenuItem("Undo", "Ctrl+Z"))
+            {
+            }
+
+            if (ImGui::MenuItem("Redo", "Ctrl+Y"))
+            {
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Cut", "Ctrl+X"))
+            {
+            }
+
+            if (ImGui::MenuItem("Copy", "Ctrl+C"))
+            {
+            }
+
+            if (ImGui::MenuItem("Paste", "Ctrl+V"))
+            {
+            }
+
+            //
+
+            bool Serparated = false;
+            for (auto& [ViewId, View] : m_Views)
+            {
+                if (View->OnMenuEdit())
+                {
+                    Serparated = true;
+                }
+            }
+
+            if (!Serparated)
+            {
+                ImGui::Separator();
+            }
+
+            if (ImGui::MenuItem("Delete", "Del"))
+            {
+            }
+
+            ImGui::PopStyleColor();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Views"))
+        {
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
+
+            for (auto& [ViewId, View] : m_Views)
+            {
+                bool IsOpen = IsViewOpen(ViewId);
+                if (ImGui::MenuItem(View->GetWidgetId().c_str(), nullptr, IsOpen))
+                {
+                    if (IsOpen)
+                    {
+                        CloseView(ViewId);
+                    }
+                    else
+                    {
+                        OpenView(ViewId);
+                    }
+                }
+            }
+
+            ImGui::PopStyleColor();
+            ImGui::EndMenu();
+        }
+
+        for (auto& View : m_Views | std::views::values)
+        {
+            View->OnMenuBar();
+        }
+
+        ImGui::PopStyleVar();
+        ImGui::EndMainMenuBar();
     }
 
     void EditorEngine::EndEditorSpace()

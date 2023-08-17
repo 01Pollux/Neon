@@ -19,7 +19,7 @@ namespace Neon::Utils
         /// Add a listener to the delegate list
         /// </summary>
         template<std::invocable<_Args...> _FnTy>
-        [[nodiscard]] uint64_t Listen(
+        uint64_t Listen(
             _FnTy&& Listener)
         {
             return m_Listeners.emplace_back(std::forward<_FnTy>(Listener), m_NextHandle++).second;

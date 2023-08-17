@@ -16,6 +16,11 @@ namespace Neon::Editor
         GameEngine::Initialize(std::move(Config));
 
         AddStandardViews();
+        GetWindow()->OnWindowTitleHitTest().Listen(
+            [this](const Vector2I& MousePos, bool& WasHit)
+            {
+                WasHit = m_IsDraggingWindow;
+            });
     }
 
     void EditorEngine::PreUpdate()
@@ -33,6 +38,7 @@ namespace Neon::Editor
 
         if (BeginEditorSpace())
         {
+            RenderMenuBar();
             for (auto& View : m_OpenViews)
             {
                 View->OnRender();

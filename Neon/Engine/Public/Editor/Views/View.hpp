@@ -35,6 +35,22 @@ namespace Neon::Editor
         }
 
         /// <summary>
+        /// Called when the view is rendered in the edit bar.
+        /// Returning true will insert a seperator after the view.
+        /// </summary>
+        virtual bool OnMenuEdit()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Called when the view is rendered.
+        /// </summary>
+        virtual void OnMenuBar()
+        {
+        }
+
+        /// <summary>
         /// Called when the view is rendered.
         /// </summary>
         virtual void OnRender()

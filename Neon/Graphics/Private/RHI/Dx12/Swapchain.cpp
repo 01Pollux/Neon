@@ -121,11 +121,7 @@ namespace Neon::RHI
         {
             NewFormat = m_BackbufferFormat;
         }
-        if (m_BackbufferFormat == NewFormat && m_Size == Size)
-        {
-            return;
-        }
-
+  
         m_Size             = Size;
         m_BackbufferFormat = NewFormat;
 
