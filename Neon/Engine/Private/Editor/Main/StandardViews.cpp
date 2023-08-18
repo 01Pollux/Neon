@@ -3,14 +3,22 @@
 #include <Window/Window.hpp>
 
 #include <Editor/Views/Types/ContentBrowser.hpp>
+#include <Editor/Views/Types/Console.hpp>
+#include <Editor/Views/Types/Game.hpp>
+#include <Editor/Views/Types/Hierachy.hpp>
+#include <Editor/Views/Types/Inspector.hpp>
+#include <Editor/Views/Types/Scene.hpp>
 
 namespace Neon::Editor
 {
     void EditorEngine::AddStandardViews()
     {
         RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
-
-        OpenView("_ContentBrowser");
+        RegisterView<Views::Console>("_Console", true);
+        RegisterView<Views::Game>("_Game", true);
+        RegisterView<Views::Hierachy>("_Hierachy", true);
+        RegisterView<Views::Inspector>("_Inspector", true);
+        RegisterView<Views::Scene>("_Scene", true);
     }
 
     bool EditorEngine::BeginEditorSpace()
@@ -93,7 +101,7 @@ namespace Neon::Editor
              * F = Console view
              */
 
-            ImGui::DockBuilderDockWindow(StandardViews::s_HierarchyViewWidgetId, Left);
+            ImGui::DockBuilderDockWindow(StandardViews::s_HierachyViewWidgetId, Left);
             ImGui::DockBuilderDockWindow(StandardViews::s_SceneViewWidgetId, TopCenter);
             ImGui::DockBuilderDockWindow(StandardViews::s_GameViewWidgetId, TopCenter);
             ImGui::DockBuilderDockWindow(StandardViews::s_InspectorViewWidgetId, Right);

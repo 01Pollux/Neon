@@ -14,6 +14,8 @@ namespace Neon::Editor
         Config::EngineConfig Config)
     {
         Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("EditorData"));
+        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Content"));
+
         GameEngine::Initialize(std::move(Config));
 
         AddStandardViews();

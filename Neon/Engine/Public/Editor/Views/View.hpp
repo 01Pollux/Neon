@@ -8,7 +8,7 @@ namespace Neon::Editor
 {
     namespace StandardViews
     {
-        static constexpr const char* s_HierarchyViewWidgetId  = "Hiearchy View";
+        static constexpr const char* s_HierachyViewWidgetId   = "Hiearchy View";
         static constexpr const char* s_SceneViewWidgetId      = "Scene View";
         static constexpr const char* s_GameViewWidgetId       = "Game View";
         static constexpr const char* s_InspectorViewWidgetId  = "Inspector View";

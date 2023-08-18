@@ -3,9 +3,20 @@
 
 namespace Neon::Editor::Views
 {
-    ContentBrowser::ContentBrowser() :
-        IEditorView(StandardViews::s_ContentBrowserWidgetId)
+    void ContentBrowserListener::handleFileAction(
+        efsw::WatchID      WatchId,
+        const std::string& dir,
+        const std::string& FileName,
+        efsw::Action       Action,
+        std::string        OldFileName)
     {
+    }
+
+    ContentBrowser::ContentBrowser() :
+        IEditorView(StandardViews::s_ContentBrowserWidgetId),
+        m_ContentID(m_FileWatcher.addWatch("Content", &m_Listener, true))
+    {
+        m_FileWatcher.watch();
     }
 
     void ContentBrowser::OnUpdate()
