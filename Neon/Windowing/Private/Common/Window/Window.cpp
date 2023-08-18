@@ -202,9 +202,24 @@ namespace Neon::Windowing
         return glfwGetWindowAttrib(m_Handle, GLFW_ICONIFIED) == GLFW_TRUE;
     }
 
+    void WindowApp::Minimize()
+    {
+        glfwIconifyWindow(m_Handle);
+    }
+
+    void WindowApp::Restore()
+    {
+        glfwRestoreWindow(m_Handle);
+    }
+
     bool WindowApp::IsMaximized() const
     {
         return glfwGetWindowAttrib(m_Handle, GLFW_MAXIMIZED) == GLFW_TRUE;
+    }
+
+    void WindowApp::Maximize()
+    {
+        glfwMaximizeWindow(m_Handle);
     }
 
     bool WindowApp::IsFullScreen() const

@@ -1,6 +1,6 @@
 {
   "Guid": "bbd67e6b-afc3-4d55-bbda-ed382b3342f5",
-  "Path": "Contents\/Shaders\/Engine\/Debug.hlsl.namd",
+  "Path": "Shaders\/Engine\/Debug.hlsl.namd",
   "Loader": "",
   "Dependencies": "",
   "LoaderId": "15635213787607061289",

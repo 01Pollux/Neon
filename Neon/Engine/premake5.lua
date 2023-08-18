@@ -33,7 +33,7 @@ project "NeonEditor"
     architecture "x64"
     
     defines "NEON_EDITOR"
-    copy_engine_resources("Editor")
+    copy_engine_resources_to("Editor", "EditorData")
     link_engine_library_no_engine()
 
 	common_dir_setup()

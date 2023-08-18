@@ -110,9 +110,24 @@ namespace Neon::Windowing
         [[nodiscard]] bool IsMinimized() const;
 
         /// <summary>
+        /// Minimize the window.
+        /// </summary>
+        void Minimize();
+
+        /// <summary>
+        /// Restore the window.
+        /// </summary>
+        void Restore();
+
+        /// <summary>
         /// Check whether the window is maximized or not
         /// </summary>
         [[nodiscard]] bool IsMaximized() const;
+
+        /// <summary>
+        /// Maximize the window.
+        /// </summary>
+        void Maximize();
 
         /// <summary>
         /// Check whether the window is maximized or not

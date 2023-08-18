@@ -19,10 +19,10 @@ function copy_directory_to_target_dir(from_dir, to_dir)
     }
 end
 
-function copy_engine_resources(content_name)
+function copy_engine_resources_to(content_name, out_dir)
     if content_name ~= nil then
         content_name = "%{wks.location}Contents/"..content_name;
-        copy_directory_to_target_dir(content_name, "Contents/");
+        copy_directory_to_target_dir(content_name, out_dir);
 	end
 
     copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
@@ -33,6 +33,10 @@ function copy_engine_resources(content_name)
         copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
         copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
     filter {}
+end
+
+function copy_engine_resources(content_name)
+    copy_engine_resources_to(content_name, "Contents/");
 end
 
 function common_dir_setup()

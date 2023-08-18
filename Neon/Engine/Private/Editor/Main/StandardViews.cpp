@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Editor/Main/EditorEngine.hpp>
+#include <Window/Window.hpp>
 
 #include <Editor/Views/Types/ContentBrowser.hpp>
 
@@ -74,7 +75,7 @@ namespace Neon::Editor
             // Build dock layout
             ImGuiID Center = DockerspaceId;
 
-            ImGuiID TopCenter = ImGui::DockBuilderSplitNode(Center, ImGuiDir_Up, .65f, nullptr, &Center);
+            ImGuiID TopCenter = ImGui::DockBuilderSplitNode(Center, ImGuiDir_Up, .45f, nullptr, &Center);
             ImGuiID Bottom    = Center;
 
             ImGuiID Left  = ImGui::DockBuilderSplitNode(TopCenter, ImGuiDir_Left, .25f, nullptr, &TopCenter);
@@ -142,6 +143,45 @@ namespace Neon::Editor
         // Check if we are holding down mouse inside the menu bar
         // This is used for the window movement logic
         m_IsTitlebarHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
+        {
+            auto OldPos = ImGui::GetCursorPos();
+            // Set cursor position to the right and append close button, minimize button and maximize button
+            ImGui::SetCursorPos({ ImGui::GetWindowWidth() - 3 * ImGui::GetFrameHeight(), OldPos.y });
+
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.2f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 0.2f));
+
+            if (ImGui::Button(ICON_FA_TIMES, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
+            {
+                GetWindow()->Close();
+            }
+            ImGui::SameLine();
+
+            if (ImGui::Button(ICON_FA_WINDOW_MINIMIZE, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
+            {
+                GetWindow()->Minimize();
+            }
+            ImGui::SameLine();
+
+            bool IsMaximized = GetWindow()->IsMaximized();
+            if (ImGui::Button(IsMaximized ? ICON_FA_WINDOW_RESTORE : ICON_FA_WINDOW_MAXIMIZE, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
+            {
+                if (IsMaximized)
+                {
+                    GetWindow()->Restore();
+                }
+                else
+                {
+                    GetWindow()->Maximize();
+                }
+            }
+
+            ImGui::PopStyleColor(3);
+
+            ImGui::SetCursorPos(OldPos);
+        }
 
         constexpr ImU32 HoveredColor = IM_COL32(0, 0, 0, 80);
 

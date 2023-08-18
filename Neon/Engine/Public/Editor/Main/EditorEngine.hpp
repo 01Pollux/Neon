@@ -3,6 +3,8 @@
 #include <Runtime/GameEngine.hpp>
 #include <Editor/Views/View.hpp>
 
+#include <Editor/Project/Fonts/FontAwesome5.hpp>
+
 #include <unordered_map>
 #include <unordered_set>
 

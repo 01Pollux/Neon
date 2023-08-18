@@ -1,7 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Editor/Main/EditorEngine.hpp>
-#include <Window/Window.hpp>
+#include <Editor/Project/DefaultFonts.hpp>
 
+#include <Window/Window.hpp>
 #include <Asset/Packs/Directory.hpp>
 
 #include <imgui/imgui.h>
@@ -12,7 +13,7 @@ namespace Neon::Editor
     void EditorEngine::Initialize(
         Config::EngineConfig Config)
     {
-        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Contents"));
+        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("EditorData"));
         GameEngine::Initialize(std::move(Config));
 
         AddStandardViews();
@@ -21,6 +22,9 @@ namespace Neon::Editor
             {
                 WasHit = m_IsTitlebarHovered;
             });
+
+        // Load the default fonts
+        LoadDefaultFonts();
     }
 
     void EditorEngine::PreUpdate()
