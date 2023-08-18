@@ -25,7 +25,7 @@ namespace Neon::RHI
     static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
 
     void IRenderDevice::Create(
-        Windowing::WindowApp*     Window,
+        Windowing::WindowApp*      Window,
         const DeviceCreateDesc&    DeviceDesc,
         const SwapchainCreateDesc& SwapchainDesc)
     {
@@ -117,7 +117,7 @@ namespace Neon::RHI
     //
 
     void Dx12RenderDevice::PostInitialize(
-        Windowing::WindowApp*     Window,
+        Windowing::WindowApp*      Window,
         const SwapchainCreateDesc& SwapchainDesc)
     {
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);

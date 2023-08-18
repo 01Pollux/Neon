@@ -42,6 +42,8 @@ namespace Neon::RHI::ImGuiRHI
             nullptr,
             {},
             {});
+
+        SetDefaultTheme();
     }
 
     void ShutdownImGui()
@@ -191,16 +193,9 @@ namespace Neon::RHI::ImGuiRHI
     {
         ImGuiStyle& Style = ImGui::GetStyle();
 
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            Style.WindowRounding              = 0.0f;
-            Style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-        }
-
         Style.Alpha                     = 1.0f;
         Style.DisabledAlpha             = 1.0f;
         Style.WindowPadding             = ImVec2(4.0f, 12.0f);
-        Style.WindowRounding            = 0.0f;
         Style.WindowBorderSize          = 0.0f;
         Style.WindowMinSize             = ImVec2(20.0f, 20.0f);
         Style.WindowTitleAlign          = ImVec2(0.5f, 0.5f);
