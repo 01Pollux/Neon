@@ -119,12 +119,6 @@ namespace Neon::Editor
 
     void EditorEngine::RenderMenuBar()
     {
-        {
-            ImVec2 FramePadding = ImGui::GetStyle().FramePadding;
-            FramePadding.x *= 1.5f;
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, FramePadding);
-        }
-
         bool DisplayMenuBar;
         {
             ImVec2 FramePadding = ImGui::GetStyle().FramePadding;
@@ -132,22 +126,18 @@ namespace Neon::Editor
 
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, FramePadding);
             DisplayMenuBar = ImGui::BeginMainMenuBar();
-            ImGui::PopStyleVar();
         }
 
         m_IsTitlebarHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
         if (!DisplayMenuBar)
         {
+            ImGui::PopStyleVar();
             return;
         }
 
-        constexpr ImU32 HoveredColor = IM_COL32(0, 0, 0, 80);
-
         if (ImGui::BeginMenu("File"))
         {
-            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
-
             if (ImGui::MenuItem("New Scene", "Ctrl+N"))
             {
             }
@@ -170,14 +160,11 @@ namespace Neon::Editor
             {
             }
 
-            ImGui::PopStyleColor();
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Edit"))
         {
-            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
-
             if (ImGui::MenuItem("Undo", "Ctrl+Z"))
             {
             }
@@ -220,14 +207,11 @@ namespace Neon::Editor
             {
             }
 
-            ImGui::PopStyleColor();
             ImGui::EndMenu();
         }
 
         if (ImGui::BeginMenu("Views"))
         {
-            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
-
             for (auto& [ViewId, View] : m_Views)
             {
                 bool IsOpen = IsViewOpen(ViewId);
@@ -244,7 +228,6 @@ namespace Neon::Editor
                 }
             }
 
-            ImGui::PopStyleColor();
             ImGui::EndMenu();
         }
 
@@ -252,14 +235,12 @@ namespace Neon::Editor
         {
             View->OnMenuBar();
         }
-        ImGui::PopStyleVar();
 
         auto CurPos = ImGui::GetCursorPos();
         {
             auto TitlebarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-            auto ButtonSize     = ImVec2(TitlebarHeight * 1.4F, TitlebarHeight);
+            auto ButtonSize     = ImVec2(TitlebarHeight * 1.4f, TitlebarHeight);
 
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
             ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
@@ -293,12 +274,13 @@ namespace Neon::Editor
             ImGui::SameLine();
 
             ImGui::PopStyleColor(3);
-            ImGui::PopStyleVar(2);
+            ImGui::PopStyleVar();
         }
         ImGui::SetCursorPos(CurPos);
 
         m_IsTitlebarHovered &= !ImGui::IsAnyItemHovered();
 
+        ImGui::PopStyleVar();
         ImGui::EndMainMenuBar();
     }
 
