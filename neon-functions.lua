@@ -66,13 +66,13 @@ function select_launch_kind()
 end
 
 function link_boost_inc()
-    filter "configurations:Dist"
+    filter "configurations:Debug"
         includedirs
         {
             "%{CommonDir.Deps.Inc}/boost_def"
         }
     filter {}
-    filter "configurations:not Dist"
+    filter "configurations:not Debug"
         includedirs
         {
             "%{CommonDir.Deps.Inc}/boost_san"
@@ -81,13 +81,13 @@ function link_boost_inc()
 end
 
 function link_boost_lib(lib_name)
-    filter "configurations:Dist"
+    filter "configurations:not Debug"
         links
         {
             "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
         }
     filter {}
-    filter "configurations:not Dist"
+    filter "configurations:Debug"
         links
         {
             "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"

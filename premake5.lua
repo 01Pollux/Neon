@@ -39,14 +39,10 @@ workspace "Neon"
 
     filter "configurations:Release"
         defines "NEON_RELEASE"
-        runtime "Debug"
+        runtime "Release"
         symbols "On"
         optimize "On"
-        editAndContinue "Off"
-        sanitize
-        {
-            "Address"
-        }
+        editAndContinue "On"
     filter {}
 
     filter "configurations:Dist"

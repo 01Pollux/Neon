@@ -34,7 +34,8 @@ namespace Neon::Editor
         /// </summary>
         [[nodiscard]] void RegisterView(
             const StringU8&   Name,
-            UPtr<IEditorView> View);
+            UPtr<IEditorView> View,
+            bool              InitialVisible = false);
 
         /// <summary>
         /// Register a new editor view.
@@ -43,9 +44,10 @@ namespace Neon::Editor
             requires std::derived_from<_Ty, IEditorView>
         [[nodiscard]] void RegisterView(
             const StringU8& Name,
+            bool            InitialVisible = false,
             _Args&&... Args)
         {
-            RegisterView(Name, std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+            RegisterView(Name, std::make_unique<_Ty>(std::forward<_Args>(Args)...), InitialVisible);
         }
 
         /// <summary>

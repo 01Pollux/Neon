@@ -9,11 +9,11 @@ namespace Neon::Editor
     namespace StandardViews
     {
         static constexpr const char* s_HierarchyViewWidgetId  = "Hiearchy View";
-        static constexpr const char* s_SceneViewWidgetId      = "Scene view";
-        static constexpr const char* s_GameViewWidgetId       = "Game view";
-        static constexpr const char* s_InspectorViewWidgetId  = "Inspector view";
-        static constexpr const char* s_ContentBrowserWidgetId = "Content browser";
-        static constexpr const char* s_ConsoleViewWidgetId    = "Console view";
+        static constexpr const char* s_SceneViewWidgetId      = "Scene View";
+        static constexpr const char* s_GameViewWidgetId       = "Game View";
+        static constexpr const char* s_InspectorViewWidgetId  = "Inspector View";
+        static constexpr const char* s_ContentBrowserWidgetId = "Content Browser";
+        static constexpr const char* s_ConsoleViewWidgetId    = "Console View";
     } // namespace StandardViews
 
     class IEditorView

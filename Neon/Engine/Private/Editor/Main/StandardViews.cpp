@@ -8,19 +8,9 @@ namespace Neon::Editor
 {
     void EditorEngine::AddStandardViews()
     {
-        RegisterView<Views::ContentBrowser>("_ContentBrowser0", StandardViews::s_HierarchyViewWidgetId);
-        RegisterView<Views::ContentBrowser>("_ContentBrowser1", StandardViews::s_SceneViewWidgetId);
-        RegisterView<Views::ContentBrowser>("_ContentBrowser2", StandardViews::s_GameViewWidgetId);
-        RegisterView<Views::ContentBrowser>("_ContentBrowser3", StandardViews::s_InspectorViewWidgetId);
-        RegisterView<Views::ContentBrowser>("_ContentBrowser4", StandardViews::s_ContentBrowserWidgetId);
-        RegisterView<Views::ContentBrowser>("_ContentBrowser5", StandardViews::s_ConsoleViewWidgetId);
+        RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
 
-        OpenView("_ContentBrowser0");
-        OpenView("_ContentBrowser1");
-        OpenView("_ContentBrowser2");
-        OpenView("_ContentBrowser3");
-        OpenView("_ContentBrowser4");
-        OpenView("_ContentBrowser5");
+        OpenView("_ContentBrowser");
     }
 
     bool EditorEngine::BeginEditorSpace()

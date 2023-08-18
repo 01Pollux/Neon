@@ -55,9 +55,15 @@ namespace Neon::Editor
 
     void EditorEngine::RegisterView(
         const StringU8&   Name,
-        UPtr<IEditorView> View)
+        UPtr<IEditorView> View,
+        bool              InitialVisible)
     {
+        auto ViewPtr = View.get();
         m_Views.emplace(Name, std::move(View));
+        if (InitialVisible)
+        {
+            m_OpenViews.insert(ViewPtr);
+        }
     }
 
     void EditorEngine::UnregisterView(

@@ -3,10 +3,8 @@
 
 namespace Neon::Editor::Views
 {
-    ContentBrowser::ContentBrowser(
-        const StringU8& Name) :
-        // IEditorView("Content Browser##ContentBrowser")
-        IEditorView(Name)
+    ContentBrowser::ContentBrowser() :
+        IEditorView(StandardViews::s_ContentBrowserWidgetId)
     {
     }
 
