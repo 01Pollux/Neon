@@ -135,64 +135,14 @@ namespace Neon::Editor
             ImGui::PopStyleVar();
         }
 
+        m_IsTitlebarHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
         if (!DisplayMenuBar)
         {
             return;
         }
 
-        // Check if we are holding down mouse inside the menu bar
-        // This is used for the window movement logic
-        m_IsTitlebarHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-
-        {
-            auto OldPos = ImGui::GetCursorPos();
-            // Set cursor position to the right and append close button, minimize button and maximize button
-            ImGui::SetCursorPos({ ImGui::GetWindowWidth() - 3 * ImGui::GetFrameHeight(), OldPos.y });
-
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.2f, 0.2f, 0.2f, 0.2f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.2f, 0.2f, 0.2f));
-
-            if (ImGui::Button(ICON_FA_TIMES, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
-            {
-                GetWindow()->Close();
-            }
-            ImGui::SameLine();
-
-            if (ImGui::Button(ICON_FA_WINDOW_MINIMIZE, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
-            {
-                GetWindow()->Minimize();
-            }
-            ImGui::SameLine();
-
-            bool IsMaximized = GetWindow()->IsMaximized();
-            if (ImGui::Button(IsMaximized ? ICON_FA_WINDOW_RESTORE : ICON_FA_WINDOW_MAXIMIZE, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())))
-            {
-                if (IsMaximized)
-                {
-                    GetWindow()->Restore();
-                }
-                else
-                {
-                    GetWindow()->Maximize();
-                }
-            }
-
-            ImGui::PopStyleColor(3);
-
-            ImGui::SetCursorPos(OldPos);
-        }
-
         constexpr ImU32 HoveredColor = IM_COL32(0, 0, 0, 80);
-
-        // Write title at top left with a some paddings
-        {
-            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, HoveredColor);
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.f, 5.f));
-            ImGui::Text("Neon Editor");
-            ImGui::PopStyleVar();
-            ImGui::PopStyleColor();
-        }
 
         if (ImGui::BeginMenu("File"))
         {
@@ -302,8 +252,53 @@ namespace Neon::Editor
         {
             View->OnMenuBar();
         }
-
         ImGui::PopStyleVar();
+
+        auto CurPos = ImGui::GetCursorPos();
+        {
+            auto TitlebarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+            auto ButtonSize     = ImVec2(TitlebarHeight * 1.4F, TitlebarHeight);
+
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ButtonSize.x * 3);
+
+            if (ImGui::Button(ICON_FA_WINDOW_MINIMIZE, ButtonSize))
+            {
+                GetWindow()->Minimize();
+            }
+            ImGui::SameLine();
+
+            bool IsMaximized = GetWindow()->IsMaximized();
+            if (ImGui::Button(IsMaximized ? ICON_FA_WINDOW_RESTORE : ICON_FA_WINDOW_MAXIMIZE, ButtonSize))
+            {
+                if (IsMaximized)
+                {
+                    GetWindow()->Restore();
+                }
+                else
+                {
+                    GetWindow()->Maximize();
+                }
+            }
+
+            if (ImGui::Button(ICON_FA_TIMES, ButtonSize))
+            {
+                GetWindow()->Close();
+            }
+            ImGui::SameLine();
+
+            ImGui::PopStyleColor(3);
+            ImGui::PopStyleVar(2);
+        }
+        ImGui::SetCursorPos(CurPos);
+
+        m_IsTitlebarHovered &= !ImGui::IsAnyItemHovered();
+
         ImGui::EndMainMenuBar();
     }
 

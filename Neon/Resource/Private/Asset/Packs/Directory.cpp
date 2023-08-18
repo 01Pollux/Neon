@@ -56,7 +56,7 @@ namespace Neon::Asset
                 AssetMetaDataDef Metadata(File);
                 File.close();
 
-                if (Metadata.GetPath() != MetafilePath)
+                if ((m_RootPath / Metadata.GetPath()) != MetafilePath)
                 {
                     NEON_ERROR_TAG("Asset", "Meta file '{}' has a different path than the one in meta file", MetafilePath.string());
                     continue;
@@ -75,7 +75,7 @@ namespace Neon::Asset
                     continue;
                 }
 
-                auto AssetFile = Metadata.GetAssetPath();
+                auto AssetFile = m_RootPath / Metadata.GetAssetPath();
                 File.open(AssetFile, std::ios::ate | std::ios::binary);
 
                 if (!File.is_open())
@@ -139,7 +139,7 @@ namespace Neon::Asset
                         continue;
                     }
 
-                    std::filesystem::path AssetPath = Metadata.GetPath();
+                    std::filesystem::path AssetPath = m_RootPath / Metadata.GetPath();
                     std::filesystem::create_directories(AssetPath.parent_path());
 
                     std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
@@ -195,7 +195,7 @@ namespace Neon::Asset
                     continue;
                 }
 
-                auto AssetPath = Metadata->GetAssetPath();
+                auto AssetPath = m_RootPath / Metadata->GetAssetPath();
                 std::filesystem::create_directories(AssetPath.parent_path());
 
                 std::fstream AssetFile(AssetPath, std::ios::in | std::ios::out | std::ios::trunc | std::ios::binary);
@@ -324,7 +324,7 @@ namespace Neon::Asset
                 continue;
             }
 
-            auto AssetPath = Metadata->GetAssetPath();
+            auto AssetPath = m_RootPath / Metadata->GetAssetPath();
             if (!std::filesystem::exists(AssetPath))
             {
                 NEON_ERROR_TAG("Asset", "Loading '{}' -- Asset file '{}' of GUID '{}' does not exist", AssetGuid.ToString(), AssetPath.string(), CurrentGuid.ToString());
