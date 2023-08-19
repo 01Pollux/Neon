@@ -13,8 +13,8 @@ namespace Neon::Editor
 {
     void EditorEngine::AddStandardViews()
     {
-        RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
         RegisterView<Views::Console>("_Console", true);
+        RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
         RegisterView<Views::Game>("_Game", true);
         RegisterView<Views::Hierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
@@ -97,16 +97,16 @@ namespace Neon::Editor
              * B = Scene view
              * C = Game view
              * D = Inspector view
-             * E = Content browser
-             * F = Console view
+             * E = Console view
+             * F = Content browser
              */
 
             ImGui::DockBuilderDockWindow(StandardViews::s_HierachyViewWidgetId, Left);
             ImGui::DockBuilderDockWindow(StandardViews::s_SceneViewWidgetId, TopCenter);
             ImGui::DockBuilderDockWindow(StandardViews::s_GameViewWidgetId, TopCenter);
             ImGui::DockBuilderDockWindow(StandardViews::s_InspectorViewWidgetId, Right);
-            ImGui::DockBuilderDockWindow(StandardViews::s_ContentBrowserWidgetId, Bottom);
             ImGui::DockBuilderDockWindow(StandardViews::s_ConsoleViewWidgetId, Bottom);
+            ImGui::DockBuilderDockWindow(StandardViews::s_ContentBrowserWidgetId, Bottom);
 
             ImGui::DockBuilderFinish(DockerspaceId);
         }

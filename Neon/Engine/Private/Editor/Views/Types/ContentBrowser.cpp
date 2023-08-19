@@ -79,8 +79,10 @@ namespace Neon::Editor::Views
             return;
         }
 
-        static int ViewSize = 120;
+        static int ViewSize = 124;
         const int  Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
+
+        imcxx::slider ViewSizeSLider("View Size", ViewSize, 0, 500);
 
         imcxx::shared_style BrowserStyle(
             ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f),
@@ -94,13 +96,11 @@ namespace Neon::Editor::Views
                 if (Table.next_column())
                 {
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
-                    imcxx::button(FilePath->string(), ImVec2(float(ViewSize), float(ViewSize)));
+                    imcxx::button       IconButton(FilePath->string(), ImVec2(float(ViewSize), float(ViewSize)));
                 }
 
-                imcxx::text(imcxx::text::wrapped{}, FilePath->string());
+                imcxx::text FileText(imcxx::text::wrapped{}, FilePath->string());
             }
         }
-
-        imcxx::slider("View Size", ViewSize, 0, 500);
     }
 } // namespace Neon::Editor::Views
