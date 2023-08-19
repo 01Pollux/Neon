@@ -13,8 +13,11 @@ namespace Neon::Editor
     void EditorEngine::Initialize(
         Config::EngineConfig Config)
     {
+        auto ContentPackage = std::make_unique<Asset::DirectoryAssetPackage>("Content");
+        m_ContentPackage    = ContentPackage.get();
+
         Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("EditorData"));
-        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Content"));
+        Config.Resource.AssetPackages.emplace_back(std::move(ContentPackage));
 
         GameEngine::Initialize(std::move(Config));
 

@@ -8,6 +8,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
+namespace Neon::Asset
+{
+    class IAssetPackage;
+} // namespace Neon::Asset
+
 namespace Neon::Editor
 {
     class EditorEngine : public Runtime::GameEngine
@@ -95,10 +100,24 @@ namespace Neon::Editor
         /// </summary>
         void EndEditorSpace();
 
+    public:
+        /// <summary>
+        /// Get the content package.
+        /// </summary>
+        [[nodiscard]] Asset::IAssetPackage* GetContentPackage() const
+        {
+            return m_ContentPackage;
+        }
+
     private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
 
         std::unordered_set<IEditorView*> m_OpenViews;
+
+        /// <summary>
+        /// TODO: move it to ProjectInstance.
+        /// </summary>
+        Asset::IAssetPackage* m_ContentPackage;
 
         bool m_IsTitlebarHovered = false;
     };
