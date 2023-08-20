@@ -12,10 +12,9 @@
 namespace Neon::Editor
 {
     Profile::Profile(
-        const Asset::Handle& ProfileAsset)
+        const Asset::Handle& ProfileAsset) :
+        m_Properties(Asset::AssetTaskPtr<Asset::PropertyTreeAsset>(Asset::Manager::Load(ProfileAsset))->Get())
     {
-        auto Asset   = Asset::AssetTaskPtr<Asset::PropertyTreeAsset>(Asset::Manager::Load(ProfileAsset));
-        m_Properties = Asset->Get();
     }
 
     ImTextureID Profile::LoadTexture(
@@ -35,6 +34,6 @@ namespace Neon::Editor
         Handle->CreateShaderResourceView(
             Handle.Offset, Texture.get());
 
-        return m_LoadedTextures[Guid] = std::bit_cast<ImTextureID>(Handle.GetGpuHandle());
+        return m_LoadedTextures[Guid] = std::bit_cast<ImTextureID>(Handle.GetCpuHandle());
     }
 } // namespace Neon::Editor

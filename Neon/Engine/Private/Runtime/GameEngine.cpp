@@ -35,10 +35,16 @@ namespace Neon::Runtime
     {
         NEON_ASSERT(!s_GameEngine);
         s_GameEngine = this;
+
+        // Initialize the asset system
+        Neon::Asset::Storage::Initialize();
     }
 
     GameEngine::~GameEngine()
     {
+        // Shutdown the asset system
+        Asset::Storage::Shutdown();
+
         // Shutdown the game logic
         m_Logic.reset();
 

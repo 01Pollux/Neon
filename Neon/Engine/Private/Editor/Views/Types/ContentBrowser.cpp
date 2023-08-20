@@ -132,6 +132,7 @@ namespace Neon::Editor::Views
                 break;
 
             case StringUtils::Hash("txt"):
+            case StringUtils::Hash("log"):
                 IconName = "Icons.Text";
                 break;
 

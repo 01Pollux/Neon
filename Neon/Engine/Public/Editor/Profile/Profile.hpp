@@ -31,7 +31,11 @@ namespace Neon::Editor
             const StringU8& Key) const
         {
             ImTextureRectInfo Info;
-            if (auto Prop = m_Properties.get_child_optional(Key))
+            if (auto AssetGuid = m_Properties.get_optional<StringU8>(Key))
+            {
+                Info.TextureID = LoadTexture(*AssetGuid);
+            }
+            else if (auto Prop = m_Properties.get_child_optional(Key))
             {
                 if (auto AssetGuid = Prop->get_optional<StringU8>("texture"))
                 {
@@ -52,10 +56,6 @@ namespace Neon::Editor
                 };
                 ParseUV(Prop->get_optional<StringU8>("Min-uv"), Info.MinUV);
                 ParseUV(Prop->get_optional<StringU8>("Max-uv"), Info.MaxUV);
-            }
-            else if (auto AssetGuid = m_Properties.get_optional<StringU8>(Key))
-            {
-                Info.TextureID = LoadTexture(*AssetGuid);
             }
             return Info;
         }

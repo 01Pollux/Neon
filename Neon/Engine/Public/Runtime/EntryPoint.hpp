@@ -2,10 +2,6 @@
 
 #include <Runtime/GameEngine.hpp>
 #include <Config/Engine.hpp>
-#include <Asset/Manager.hpp>
-#include <Asset/Storage.hpp>
-
-#include <ranges>
 
 #include <Log/Logger.hpp>
 
@@ -30,13 +26,11 @@ namespace Neon::Runtime
     {                                                          \
         Neon::Logger::Initialize();                            \
         std::atexit(&Neon::Logger::Shutdown);                  \
-        Neon::Asset::Storage::Initialize();                    \
                                                                \
         auto Engine = Neon::Runtime::Main(__argc, __wargv);    \
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
-        Neon::Asset::Storage::Shutdown();                      \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
@@ -52,13 +46,11 @@ namespace Neon::Runtime
     {                                                          \
         Neon::Logger::Initialize();                            \
         std::atexit(&Neon::Logger::Shutdown);                  \
-        Neon::Asset::Storage::Initialize();                    \
                                                                \
         auto Engine = Neon::Runtime::Main(argc, argv);         \
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
-        Neon::Asset::Storage::Shutdown();                      \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
