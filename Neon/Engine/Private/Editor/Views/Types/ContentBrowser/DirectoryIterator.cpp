@@ -17,11 +17,11 @@ namespace Neon::Editor::Views::CB
         {
             if (Entry.is_directory())
             {
-                Directories.insert(Entry.path().stem());
+                Directories.insert(Entry.path());
             }
             else if (Entry.is_regular_file())
             {
-                Files.insert(Entry.path().stem().filename());
+                Files.insert(Entry.path());
             }
         }
     }
@@ -71,15 +71,15 @@ namespace Neon::Editor::Views::CB
         ScanDirectories(BuildPath(m_RootPath, m_ParentDirectories), m_Files, m_Directories);
     }
 
-    Asio::CoGenerator<std::pair<const std::filesystem::path*, bool>> DirectoryIterator::GetAllFiles() const noexcept
+    auto DirectoryIterator::GetAllFiles() const noexcept -> Asio::CoGenerator<FileResult>
     {
         for (const auto& Directory : m_Directories)
         {
-            co_yield { &Directory, false };
+            co_yield FileResult{ &Directory, false };
         }
         for (const auto& File : m_Files)
         {
-            co_yield { &File, true };
+            co_yield FileResult{ &File, true };
         }
     }
 } // namespace Neon::Editor::Views::CB

@@ -63,13 +63,17 @@ namespace Neon::Editor::Views::CB
             return m_Directories;
         }
 
+        struct FileResult
+        {
+            const std::filesystem::path* Path;
+            bool                         IsFile;
+        };
+
         /// <summary>
         /// Get all files and directories in the current directory.
         /// The second value in the pair is true if the entry is a file.
         /// </summary>
-        [[nodiscard]] Asio::CoGenerator<
-            std::pair<const std::filesystem::path*, bool>>
-        GetAllFiles() const noexcept;
+        [[nodiscard]] Asio::CoGenerator<FileResult> GetAllFiles() const noexcept;
 
     private:
         const std::filesystem::path m_RootPath;

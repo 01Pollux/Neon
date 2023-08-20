@@ -96,21 +96,22 @@ namespace Neon::Editor::Views
             {
                 if (Table.next_column())
                 {
-                    auto Text        = FilePath->string();
-                    auto TextureInfo = GetImageIcon(Text, IsFile);
+                    auto FileName    = FilePath->filename().string();
+                    auto Extension   = FilePath->has_extension() ? StringUtils::ToLower(FilePath->extension().string()) : "";
+                    auto TextureInfo = GetImageIcon(Extension, IsFile);
 
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
                     imcxx::button(imcxx::button::image{}, TextureInfo.TextureID, { float(ViewSize), float(ViewSize) }, TextureInfo.MinUV, TextureInfo.MaxUV);
 
-                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(Text.c_str()).x) / 2.0f);
-                    imcxx::text FileName(imcxx::text::wrapped{}, Text);
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
+                    imcxx::text FileNameText(imcxx::text::wrapped{}, FileName);
                 }
             }
         }
     }
 
     ImTextureRectInfo ContentBrowser::GetImageIcon(
-        const StringU8& FileName,
+        const StringU8& Extension,
         bool            IsFile)
     {
         // Get file extension
@@ -118,21 +119,20 @@ namespace Neon::Editor::Views
 
         if (IsFile)
         {
-            auto Extension = StringUtils::ToLower(FileName.substr(FileName.find_last_of(".") + 1));
             switch (StringUtils::Hash(Extension))
             {
-            case StringUtils::Hash("dll"):
-            case StringUtils::Hash("so"):
-            case StringUtils::Hash("dylib"):
+            case StringUtils::Hash(".dll"):
+            case StringUtils::Hash(".so"):
+            case StringUtils::Hash(".dylib"):
                 IconName = "Icons.DLL";
                 break;
 
-            case StringUtils::Hash("ini"):
+            case StringUtils::Hash(".ini"):
                 IconName = "Icons.INI";
                 break;
 
-            case StringUtils::Hash("txt"):
-            case StringUtils::Hash("log"):
+            case StringUtils::Hash(".txt"):
+            case StringUtils::Hash(".log"):
                 IconName = "Icons.Text";
                 break;
 

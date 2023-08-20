@@ -1,8 +1,8 @@
 {
-    "Guid": "6590b8f4-c887-4d27-ad2c-8c5f25029285",
-    "Path": "Editor/Icons/DLL.png.namd",
-    "Loader": "",
-    "Dependencies": "",
-    "LoaderId": "13214050269981132729",
-    "Hash": "5059B06C700E33624CB338939796C4350490FDD3BA95072D6FE59FB3EB50F31C"
+  "Guid": "6590b8f4-c887-4d27-ad2c-8c5f25029285",
+  "Path": "Editor/Icons/DLL.png.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "13214050269981132729",
+  "Hash": "5059B06C700E33624CB338939796C4350490FDD3BA95072D6FE59FB3EB50F31C"
 }
