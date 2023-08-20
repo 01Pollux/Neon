@@ -38,8 +38,9 @@ namespace Neon::Editor::Views
         /// <summary>
         /// Get the image icon for the asset.
         /// </summary>
-        [[nodiscard]] ImTextureID GetImageIcon(
-            const StringU8& FileName);
+        [[nodiscard]] ImTextureRectInfo GetImageIcon(
+            const StringU8& FileName,
+            bool            IsFile);
 
     private:
         FileListener      m_Listener;

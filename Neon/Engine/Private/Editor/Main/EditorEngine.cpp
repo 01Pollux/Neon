@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Project/DefaultFonts.hpp>
+#include <Editor/Profile/Manager.hpp>
 
 #include <Window/Window.hpp>
 #include <Asset/Packs/Directory.hpp>
@@ -16,7 +17,7 @@ namespace Neon::Editor
         auto ContentPackage = std::make_unique<Asset::DirectoryAssetPackage>("Content");
         m_ContentPackage    = ContentPackage.get();
 
-        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("EditorData"));
+        Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Editor"));
         Config.Resource.AssetPackages.emplace_back(std::move(ContentPackage));
 
         GameEngine::Initialize(std::move(Config));
@@ -30,6 +31,9 @@ namespace Neon::Editor
 
         // Load the default fonts
         LoadDefaultFonts();
+
+        // Load profile
+        ProfileManager::Load(Asset::Handle::FromString("1f212ba0-6313-4452-8dec-92b34f7b21e3"));
     }
 
     void EditorEngine::PreUpdate()

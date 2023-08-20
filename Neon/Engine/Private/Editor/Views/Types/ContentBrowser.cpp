@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
 #include <Editor/Main/EditorEngine.hpp>
+#include <Editor/Profile/Manager.hpp>
 
 #include <ImGuiUtils/imcxx/all_in_one.hpp>
 
@@ -95,11 +96,11 @@ namespace Neon::Editor::Views
             {
                 if (Table.next_column())
                 {
-                    auto Text       = FilePath->string();
-                    auto ImageTexId = GetImageIcon(Text);
+                    auto Text        = FilePath->string();
+                    auto TextureInfo = GetImageIcon(Text, IsFile);
 
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
-                    // imcxx::button(imcxx::button::image{}, ImageTexId, { ViewSize, ViewSize });
+                    imcxx::button(imcxx::button::image{}, TextureInfo.TextureID, { float(ViewSize), float(ViewSize) }, TextureInfo.MinUV, TextureInfo.MaxUV);
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(Text.c_str()).x) / 2.0f);
                     imcxx::text FileName(imcxx::text::wrapped{}, Text);
@@ -108,8 +109,43 @@ namespace Neon::Editor::Views
         }
     }
 
-    ImTextureID ContentBrowser::GetImageIcon(
-        const StringU8& FileName)
+    ImTextureRectInfo ContentBrowser::GetImageIcon(
+        const StringU8& FileName,
+        bool            IsFile)
     {
+        // Get file extension
+        const char* IconName;
+
+        if (IsFile)
+        {
+            auto Extension = StringUtils::ToLower(FileName.substr(FileName.find_last_of(".") + 1));
+            switch (StringUtils::Hash(Extension))
+            {
+            case StringUtils::Hash("dll"):
+            case StringUtils::Hash("so"):
+            case StringUtils::Hash("dylib"):
+                IconName = "Icons.DLL";
+                break;
+
+            case StringUtils::Hash("ini"):
+                IconName = "Icons.INI";
+                break;
+
+            case StringUtils::Hash("txt"):
+                IconName = "Icons.Text";
+                break;
+
+            default:
+                IconName = "Icons.File";
+                break;
+            }
+        }
+        else
+        {
+            IconName = "Icons.Folder";
+        }
+
+        auto Profile = Editor::ProfileManager::Get();
+        return Profile->GetTexture(IconName);
     }
 } // namespace Neon::Editor::Views

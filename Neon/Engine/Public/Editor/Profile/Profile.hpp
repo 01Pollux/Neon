@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Asset/Handle.hpp>
+#include <Editor/Views/View.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ImGui/imgui.h>
 
@@ -9,15 +10,8 @@ namespace Neon::Editor
     class Profile
     {
     public:
-        Profile(
-            const StringU8& Path = "");
-
-        struct TextureRectInfo
-        {
-            ImTextureID TextureID{};
-            ImVec2      MinUV = ImVec2(0.0f, 0.0f);
-            ImVec2      MaxUV = ImVec2(1.0f, 1.0f);
-        };
+        explicit Profile(
+            const Asset::Handle& ProfileAsset);
 
         /// <summary>
         /// Get the value of the key or the default value if the key doesn't exist.
@@ -33,10 +27,10 @@ namespace Neon::Editor
         /// <summary>
         /// Get the value of the key or the default value if the key doesn't exist.
         /// </summary>
-        TextureRectInfo GetTexture(
+        ImTextureRectInfo GetTexture(
             const StringU8& Key) const
         {
-            TextureRectInfo Info;
+            ImTextureRectInfo Info;
             if (auto Prop = m_Properties.get_child_optional(Key))
             {
                 if (auto AssetGuid = Prop->get_optional<StringU8>("texture"))

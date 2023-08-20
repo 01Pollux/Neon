@@ -1,12 +1,9 @@
 {
   "Icons": {
-    "Directory": "Icons/folder.png",
-    "File": "Icons/file.png",
-    "Text": "Icons/Text.png",
-    "Image": {
-      "Texture": "Icons/image.png",
-      "Min-uv": "0.0,0.0",
-      "Max-uv": "1.0,1.0"
-    }
+    "Folder": "1d795f66-0131-4249-8648-e142ad78b65a",
+    "File": "f372f4fc-c96b-429a-8db0-040365364c6e",
+    "Text": "fd10d17f-4b37-4dad-958c-562b79cfa9bc",
+    "DLL": "6590b8f4-c887-4d27-ad2c-8c5f25029285",
+    "INI": "9098de25-4aee-4060-95f9-8209c18a3d30"
   }
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
-
 #include <boost/json.hpp>
 
 namespace Neon::Asset

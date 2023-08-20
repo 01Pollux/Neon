@@ -5,15 +5,17 @@
 #include <Asset/Storage.hpp>
 #include <Asset/Manager.hpp>
 #include <Asset/Handlers/Texture.hpp>
+#include <Asset/Handlers/PropertyTree.hpp>
 
 #include <RHI/GlobalDescriptors.hpp>
-#include <RHI/Resource/Views/ShaderResource.hpp>
 
 namespace Neon::Editor
 {
     Profile::Profile(
-        const StringU8& Path)
+        const Asset::Handle& ProfileAsset)
     {
+        auto Asset   = Asset::AssetTaskPtr<Asset::PropertyTreeAsset>(Asset::Manager::Load(ProfileAsset));
+        m_Properties = Asset->Get();
     }
 
     ImTextureID Profile::LoadTexture(
@@ -30,8 +32,8 @@ namespace Neon::Editor
         auto Descriptor = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
         auto Handle     = Descriptor->Allocate(1);
 
-        RHI::Views::ShaderResource View(Handle);
-        View.Bind(Texture.get());
+        Handle->CreateShaderResourceView(
+            Handle.Offset, Texture.get());
 
         return m_LoadedTextures[Guid] = std::bit_cast<ImTextureID>(Handle.GetGpuHandle());
     }

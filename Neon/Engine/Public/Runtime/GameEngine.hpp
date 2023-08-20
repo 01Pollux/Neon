@@ -3,8 +3,6 @@
 #include <Config/Engine.hpp>
 #include <Runtime/GameTimer.hpp>
 
-#include <Asio/ThreadPool.hpp>
-
 namespace Neon
 {
     namespace Windowing
@@ -116,15 +114,6 @@ namespace Neon::Runtime
         /// </summary>
         [[nodiscard]] GameLogic* GetLogic() const noexcept;
 
-    public:
-        /// <summary>
-        /// Get the thread pool associated with the engine.
-        /// </summary>
-        auto GetThreadPool() const noexcept
-        {
-            return m_ThreadPool.get();
-        }
-
     protected:
         /// <summary>
         /// Load packs from config.
@@ -140,7 +129,6 @@ namespace Neon::Runtime
 
     private:
         GameTimer                  m_GameTimer;
-        UPtr<Asio::ThreadPool<>>   m_ThreadPool;
         UPtr<Windowing::WindowApp> m_Window;
         UPtr<GameLogic>            m_Logic;
     };

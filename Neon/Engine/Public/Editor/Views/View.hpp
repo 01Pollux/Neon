@@ -6,6 +6,13 @@
 
 namespace Neon::Editor
 {
+    struct ImTextureRectInfo
+    {
+        ImTextureID TextureID{};
+        ImVec2      MinUV = ImVec2(0.0f, 0.0f);
+        ImVec2      MaxUV = ImVec2(1.0f, 1.0f);
+    };
+
     namespace StandardViews
     {
         static constexpr const char* s_HierachyViewWidgetId   = "Hiearchy View";
