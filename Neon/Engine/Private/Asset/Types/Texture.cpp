@@ -42,6 +42,7 @@ namespace Neon::Asset
                 m_ImageInfo.Data = m_ImageData.get();
             }
         }
+        MarkDirty();
     }
 
     //

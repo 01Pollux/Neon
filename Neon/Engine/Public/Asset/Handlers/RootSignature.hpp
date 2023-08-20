@@ -3,11 +3,6 @@
 #include <Asset/Handler.hpp>
 #include <Asset/Types/RootSignature.hpp>
 
-namespace Neon::RHI
-{
-    class IRootSignature;
-}
-
 namespace Neon::Asset
 {
     class RootSignatureAsset::Handler : public IAssetHandler

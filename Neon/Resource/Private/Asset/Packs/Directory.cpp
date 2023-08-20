@@ -305,7 +305,7 @@ namespace Neon::Asset
             // Insert the assets that should be loaded first
             {
                 RLock Lock(m_CacheMutex);
-                for (auto DepGuid : Metadata->GetDependencies())
+                for (auto& DepGuid : Metadata->GetDependencies())
                 {
                     if (auto CacheAsset = LoadFromCache(DepGuid))
                     {
@@ -313,7 +313,6 @@ namespace Neon::Asset
                     }
                     else
                     {
-                        printf("%s -- Loading: %s\n", AssetGuid.ToString().c_str(), DepGuid.ToString().c_str());
                         ToLoad.push(std::move(DepGuid));
                         NeedsToDependenciesFirst = true;
                     }

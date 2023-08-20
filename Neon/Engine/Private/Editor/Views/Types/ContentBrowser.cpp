@@ -73,7 +73,7 @@ namespace Neon::Editor::Views
 
     void ContentBrowser::OnRender()
     {
-        imcxx::window Window{ GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar };
+        imcxx::window Window{ GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse };
         if (!Window)
         {
             return;
@@ -99,7 +99,7 @@ namespace Neon::Editor::Views
                     imcxx::button       IconButton(FilePath->string(), ImVec2(float(ViewSize), float(ViewSize)));
                 }
 
-                imcxx::text FileText(imcxx::text::wrapped{}, FilePath->string());
+                // imcxx::text FileText(imcxx::text::wrapped{}, FilePath->string());
             }
         }
     }
