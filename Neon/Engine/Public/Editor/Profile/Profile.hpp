@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/String.hpp>
+#include <Asset/Handle.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <ImGui/imgui.h>
 
@@ -14,7 +14,7 @@ namespace Neon::Editor
 
         struct TextureRectInfo
         {
-            ImTextureID TextureID;
+            ImTextureID TextureID{};
             ImVec2      MinUV = ImVec2(0.0f, 0.0f);
             ImVec2      MaxUV = ImVec2(1.0f, 1.0f);
         };
@@ -39,9 +39,9 @@ namespace Neon::Editor
             TextureRectInfo Info;
             if (auto Prop = m_Properties.get_child_optional(Key))
             {
-                if (auto TextureID = Prop->get_optional<uint64_t>("texture"))
+                if (auto AssetGuid = Prop->get_optional<StringU8>("texture"))
                 {
-                    Info.TextureID = reinterpret_cast<ImTextureID>(TextureID.get());
+                    Info.TextureID = LoadTexture(*AssetGuid);
                 }
                 auto ParseUV = [&](const boost::optional<StringU8>& UV, ImVec2& OutUV)
                 {
@@ -59,17 +59,23 @@ namespace Neon::Editor
                 ParseUV(Prop->get_optional<StringU8>("Min-uv"), Info.MinUV);
                 ParseUV(Prop->get_optional<StringU8>("Max-uv"), Info.MaxUV);
             }
-            else if (auto TextureID = m_Properties.get_optional<uint64_t>(Key))
+            else if (auto AssetGuid = m_Properties.get_optional<StringU8>(Key))
             {
-                Info.TextureID = reinterpret_cast<ImTextureID>(TextureID.get());
+                Info.TextureID = LoadTexture(*AssetGuid);
             }
-            return Info;
-
-            Info.TextureID = reinterpret_cast<ImTextureID>(Get<uint64_t>(Key + ".TextureID"));
             return Info;
         }
 
     private:
+        /// <summary>
+        /// Load the texture from the path.
+        /// </summary>
+        [[nodiscard]] ImTextureID LoadTexture(
+            const StringU8& AssetGuid) const;
+
+    private:
         boost::property_tree::ptree m_Properties;
+
+        mutable std::unordered_map<Asset::Handle, ImTextureID> m_LoadedTextures;
     };
 } // namespace Neon::Editor

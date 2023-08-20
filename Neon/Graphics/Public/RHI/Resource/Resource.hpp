@@ -270,6 +270,7 @@ namespace Neon::RHI
             DefaultTextures Type);
     };
 
+    /// TODO: Rework and remove PendingResource!!!
     class PendingResource
     {
     public:
@@ -306,13 +307,13 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the texture once it has been created.
         /// </summary>
-        [[nodiscard]] Ptr<IGpuResource> Access(
+        Ptr<IGpuResource> Access(
             ICommandQueue* Queue) const;
 
         /// <summary>
         /// Returns the texture once it has been created.
         /// </summary>
-        [[nodiscard]] Ptr<IGpuResource> Access(
+        Ptr<IGpuResource> Access(
             RHI::CommandQueueType QueueType) const;
 
         /// <summary>
@@ -320,7 +321,7 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
             requires std::derived_from<_Ty, IGpuResource>
-        [[nodiscard]] auto Access(
+        auto Access(
             ICommandQueue* Queue) const
         {
             return std::dynamic_pointer_cast<_Ty>(Access(Queue));
@@ -331,7 +332,7 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
             requires std::derived_from<_Ty, IGpuResource>
-        [[nodiscard]] auto Access(
+        auto Access(
             RHI::CommandQueueType QueueType) const
         {
             return std::dynamic_pointer_cast<_Ty>(Access(QueueType));

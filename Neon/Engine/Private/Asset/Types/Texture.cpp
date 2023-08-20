@@ -45,6 +45,15 @@ namespace Neon::Asset
         MarkDirty();
     }
 
+    Ptr<RHI::ITexture> TextureAsset::GetTexture() const
+    {
+        if (!m_Texture)
+        {
+            m_Texture = RHI::PendingResource(m_ImageInfo).Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
+        }
+        return m_Texture;
+    }
+
     //
 
     bool TextureAsset::Handler::CanHandle(

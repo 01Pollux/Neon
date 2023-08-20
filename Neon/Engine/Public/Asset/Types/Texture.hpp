@@ -29,8 +29,14 @@ namespace Neon::Asset
             const RHI::TextureRawImage& ImageInfo,
             bool                        Owning = false);
 
+        /// <summary>
+        /// Get or load the texture.
+        /// </summary>
+        [[nodiscard]] Ptr<RHI::ITexture> GetTexture() const;
+
     private:
         RHI::TextureRawImage       m_ImageInfo;
         std::unique_ptr<uint8_t[]> m_ImageData;
+        mutable Ptr<RHI::ITexture> m_Texture;
     };
 } // namespace Neon::Asset

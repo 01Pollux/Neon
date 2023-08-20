@@ -95,12 +95,21 @@ namespace Neon::Editor::Views
             {
                 if (Table.next_column())
                 {
-                    imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
-                    imcxx::button       IconButton(FilePath->string(), ImVec2(float(ViewSize), float(ViewSize)));
-                }
+                    auto Text       = FilePath->string();
+                    auto ImageTexId = GetImageIcon(Text);
 
-                // imcxx::text FileText(imcxx::text::wrapped{}, FilePath->string());
+                    imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
+                    // imcxx::button(imcxx::button::image{}, ImageTexId, { ViewSize, ViewSize });
+
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(Text.c_str()).x) / 2.0f);
+                    imcxx::text FileName(imcxx::text::wrapped{}, Text);
+                }
             }
         }
+    }
+
+    ImTextureID ContentBrowser::GetImageIcon(
+        const StringU8& FileName)
+    {
     }
 } // namespace Neon::Editor::Views

@@ -35,6 +35,13 @@ namespace Neon::Editor::Views
         void OnRender() override;
 
     private:
+        /// <summary>
+        /// Get the image icon for the asset.
+        /// </summary>
+        [[nodiscard]] ImTextureID GetImageIcon(
+            const StringU8& FileName);
+
+    private:
         FileListener      m_Listener;
         efsw::FileWatcher m_FileWatcher;
         efsw::WatchID     m_ContentID;

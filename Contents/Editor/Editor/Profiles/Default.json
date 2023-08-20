@@ -1,9 +1,10 @@
 {
   "Icons": {
-    "Directory": "icons/folder.png",
-    "File": "icons/file.png",
+    "Directory": "Icons/folder.png",
+    "File": "Icons/file.png",
+    "Text": "Icons/Text.png",
     "Image": {
-      "Texture": "icons/image.png",
+      "Texture": "Icons/image.png",
       "Min-uv": "0.0,0.0",
       "Max-uv": "1.0,1.0"
     }
