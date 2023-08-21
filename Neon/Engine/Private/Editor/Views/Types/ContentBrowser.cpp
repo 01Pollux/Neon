@@ -4,6 +4,7 @@
 #include <Editor/Profile/Manager.hpp>
 
 #include <ImGuiUtils/imcxx/all_in_one.hpp>
+#include <FileSystem/File.hpp>
 
 #include <Asset/Storage.hpp>
 
@@ -124,13 +125,13 @@ namespace Neon::Editor::Views
                         {},
                         IconTint);
 
-                    DisplayPopup();
-
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
                     ImGui::TextWrapped(FileName.c_str());
                 }
             }
         }
+
+        DisplayPopup();
     }
 
     ImTextureRectInfo ContentBrowser::GetImageIcon(
@@ -175,22 +176,53 @@ namespace Neon::Editor::Views
 
     void ContentBrowser::DisplayPopup()
     {
-        imcxx::popup Popup(imcxx::popup::context_item{}, "ContentBrowserPopup");
+        imcxx::shared_style PopupStyle(
+            ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f),
+            ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 4.0f),
+            ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
+            ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
+        imcxx::popup Popup(imcxx::popup::context_window{}, "ContentBrowserPopup", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight);
         if (!Popup)
         {
             return;
         }
 
-        if (ImGui::MenuItem("Open"))
+        if (imcxx::menubar_item New{ "New" })
+        {
+            if (ImGui::MenuItem("Folder"))
+            {
+            }
+
+            if (ImGui::MenuItem("Material"))
+            {
+            }
+
+            if (ImGui::MenuItem("Script"))
+            {
+            }
+        }
+
+        if (ImGui::MenuItem("Import"))
+        {
+        }
+
+        if (ImGui::MenuItem("Copy", "Ctrl+C"))
+        {
+        }
+
+        if (ImGui::MenuItem("Paste", "Ctrl+V"))
+        {
+        }
+
+        if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
         {
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Show In Explorer"))
+        if (ImGui::MenuItem("Show in Explorer"))
         {
+            FileSystem::OpenDirectoryInExplorer(m_DirectoryIterator.CurrentRoot());
         }
-
-        ImGui::EndPopup();
     }
 } // namespace Neon::Editor::Views

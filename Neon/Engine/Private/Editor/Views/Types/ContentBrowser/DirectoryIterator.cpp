@@ -68,7 +68,7 @@ namespace Neon::Editor::Views::CB
                     "Directory does not exist.");
 
         m_ParentDirectories.push_back(Directory);
-        ScanDirectories(BuildPath(m_RootPath, m_ParentDirectories), m_Files, m_Directories);
+        ScanDirectories(CurrentRoot(), m_Files, m_Directories);
     }
 
     void DirectoryIterator::GoBack(
@@ -81,7 +81,12 @@ namespace Neon::Editor::Views::CB
             m_ParentDirectories.pop_back();
         }
 
-        ScanDirectories(BuildPath(m_RootPath, m_ParentDirectories), m_Files, m_Directories);
+        ScanDirectories(CurrentRoot(), m_Files, m_Directories);
+    }
+
+    std::filesystem::path DirectoryIterator::CurrentRoot() const noexcept
+    {
+        return BuildPath(m_RootPath, m_ParentDirectories);
     }
 
     auto DirectoryIterator::GetAllFiles() const noexcept -> Asio::CoGenerator<FileResult>

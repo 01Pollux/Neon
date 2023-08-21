@@ -68,6 +68,11 @@ namespace Neon::Editor::Views::CB
             return m_Directories;
         }
 
+        /// <summary>
+        /// Get the current root directory.
+        /// </summary>
+        [[nodiscard]] std::filesystem::path CurrentRoot() const noexcept;
+
         struct FileResult
         {
             const std::filesystem::path*   Path;
