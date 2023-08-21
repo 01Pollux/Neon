@@ -14,14 +14,15 @@ project "ImGui"
 		"**.natvis",
 
 		"misc/cpp/imgui_stdlib.hpp",
-		"misc/cpp/imgui_stdlib.cpp"
+		"misc/cpp/imgui_stdlib.cpp",
+		
+		"backends/imgui_impl_win32.h",
+		"backends/imgui_impl_win32.cpp"
 	}
 
 	filter "system:windows"
 		files
 		{
-			"backends/imgui_impl_win32.h",
-			"backends/imgui_impl_win32.cpp",
 			"backends/imgui_impl_dx12.h",
 			"backends/imgui_impl_dx12.cpp"
 		}
@@ -33,3 +34,4 @@ project "ImGui"
     }
 
 	defines "IMGUI_DISABLE_DEMO_WINDOWS"
+	defines "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"

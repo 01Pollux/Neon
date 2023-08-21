@@ -106,6 +106,7 @@ namespace Neon::Editor::Views
 
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
                     ImGui::ImageButton(
+                        FileName.c_str(),
                         TextureInfo.TextureID,
                         { float(ViewSize), float(ViewSize) },
                         TextureInfo.MinUV,
