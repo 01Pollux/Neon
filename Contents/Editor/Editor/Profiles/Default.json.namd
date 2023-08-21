@@ -1,8 +1,8 @@
 {
-    "Guid": "1f212ba0-6313-4452-8dec-92b34f7b21e3",
-    "Path": "Editor/Profiles/Default.json.namd",
-    "Loader": "",
-    "Dependencies": "",
-    "LoaderId": "604673305261495394",
-    "Hash": "721DD26BAD7B2EA62B42B907E307A3B6EA87D2B464CE1F8B365D579A63B8C37C"
+  "Guid": "1f212ba0-6313-4452-8dec-92b34f7b21e3",
+  "Path": "Editor/Profiles/Default.json.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "604673305261495394",
+  "Hash": "32a25b777f4998a862c76b8c542d4b6e52440e7e4fc8014288ed60bb53872bdc"
 }

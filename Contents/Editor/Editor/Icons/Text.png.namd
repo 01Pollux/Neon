@@ -1,8 +1,8 @@
 {
-    "Guid": "fd10d17f-4b37-4dad-958c-562b79cfa9bc",
-    "Path": "Editor/Icons/Text.png.namd",
-    "Loader": "",
-    "Dependencies": "",
-    "LoaderId": "13214050269981132729",
-    "Hash": "6823E5B9946686B8779077D72CC52E3B5DE2AD18AB20DE4B85C163232F1E4F9F"
+  "Guid": "fd10d17f-4b37-4dad-958c-562b79cfa9bc",
+  "Path": "Editor/Icons/Text.png.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "13214050269981132729",
+  "Hash": "6823e5b9946686b8779077d72cc52e3b5de2ad18ab20de4b85c163232f1e4f9f"
 }
