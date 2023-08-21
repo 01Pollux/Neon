@@ -9,10 +9,6 @@ namespace Neon::Asset
     {
         using AssetMetaMap = std::unordered_map<Handle, AssetMetaDataDef>;
 
-        static constexpr const char*    s_MetaFileExtension       = ".namd";
-        static constexpr const wchar_t* s_MetaFileExtensionW      = L".namd";
-        static constexpr size_t         s_MetaFileExtensionLength = 5;
-
     public:
         DirectoryAssetPackage(
             std::filesystem::path Path);

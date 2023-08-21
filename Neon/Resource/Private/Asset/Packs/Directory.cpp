@@ -40,7 +40,7 @@ namespace Neon::Asset
         // First load all the meta files
         for (auto& MetafilePath : GetFiles(m_RootPath))
         {
-            if (!MetafilePath.native().ends_with(s_MetaFileExtensionW))
+            if (!MetafilePath.native().ends_with(AssetMetaDataDef::s_MetaFileExtensionW))
             {
                 continue;
             }
@@ -178,7 +178,7 @@ namespace Neon::Asset
                     if (Iter == m_AssetMeta.end())
                     {
                         Iter = m_AssetMeta.emplace(AssetGuid, AssetMetaDataDef(AssetGuid, CurrentAsset->GetPath())).first;
-                        Iter->second.SetPath(StringUtils::Format("{}/{}{}", m_RootPath.string(), CurrentAsset->GetPath(), s_MetaFileExtension));
+                        Iter->second.SetPath(StringUtils::Format("{}/{}{}", m_RootPath.string(), CurrentAsset->GetPath(), AssetMetaDataDef::s_MetaFileExtension));
                     }
                     Metadata = &Iter->second;
                 }

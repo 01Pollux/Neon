@@ -93,16 +93,26 @@ namespace Neon::Editor::Views
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
 
+        auto ContentPackage = Editor::EditorEngine::Get()->GetContentPackage();
+
         if (imcxx::table Table{ "Data", Columns })
         {
-            for (auto& [FilePath, IsFile] : m_DirectoryIterator.GetAllFiles())
+            for (auto& File : m_DirectoryIterator.GetAllFiles())
             {
                 if (Table.next_column())
                 {
-                    // Get FilePath's file name without extension
-                    auto FileName    = FilePath->stem().string();
-                    auto Extension   = FilePath->has_extension() ? StringUtils::ToLower(FilePath->extension().string()) : "";
-                    auto TextureInfo = GetImageIcon(Extension, IsFile);
+                    auto FileName    = File.Path->stem().string();
+                    auto Extension   = File.Path->has_extension() ? StringUtils::ToLower(File.Path->extension().string()) : "";
+                    auto TextureInfo = GetImageIcon(Extension, File.IsFile);
+
+                    ImVec4 IconTint(1.f, 1.f, 1.f, 1.f);
+                    if (File.IsFile)
+                    {
+                        if (!File.MetaData || !ContentPackage->ContainsAsset(File.MetaData->GetGuid()))
+                        {
+                            IconTint = ImVec4(1.f, 0.5f, 0.5f, 1.f);
+                        }
+                    }
 
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
                     ImGui::ImageButton(
@@ -110,7 +120,9 @@ namespace Neon::Editor::Views
                         TextureInfo.TextureID,
                         { float(ViewSize), float(ViewSize) },
                         TextureInfo.MinUV,
-                        TextureInfo.MaxUV);
+                        TextureInfo.MaxUV,
+                        {},
+                        IconTint);
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
                     ImGui::TextWrapped(FileName.c_str());

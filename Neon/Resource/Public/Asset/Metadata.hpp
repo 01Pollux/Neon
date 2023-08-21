@@ -11,6 +11,10 @@ namespace Neon::Asset
 
     struct AssetMetaDataDef
     {
+        static constexpr const char*    s_MetaFileExtension       = ".namd";
+        static constexpr const wchar_t* s_MetaFileExtensionW      = L".namd";
+        static constexpr size_t         s_MetaFileExtensionLength = 5;
+
         /// <summary>
         /// Creating an asset's metadata from an input stream.
         /// </summary>

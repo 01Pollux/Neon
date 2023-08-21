@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Asset/Metadata.hpp>
+
 #include <Core/String.hpp>
 #include <Asio/Coroutines.hpp>
 
@@ -12,9 +14,12 @@ namespace Neon::Editor::Views::CB
     class DirectoryIterator
     {
     public:
-        using RootList     = std::vector<std::filesystem::path>;
-        using FileSet      = std::unordered_set<std::filesystem::path>;
-        using DirectorySet = std::unordered_set<std::filesystem::path>;
+        using AssetMetaDataDefOpt = std::optional<Asset::AssetMetaDataDef>;
+        using FileAssetMetaPair   = std::pair<std::filesystem::path, AssetMetaDataDefOpt>;
+
+        using RootList      = std::vector<std::filesystem::path>;
+        using FileAssetList = std::vector<FileAssetMetaPair>;
+        using DirectoryList = std::vector<std::filesystem::path>;
 
         DirectoryIterator(
             const StringU8& RootPath);
@@ -65,21 +70,23 @@ namespace Neon::Editor::Views::CB
 
         struct FileResult
         {
-            const std::filesystem::path* Path;
-            bool                         IsFile;
+            const std::filesystem::path*   Path;
+            const Asset::AssetMetaDataDef* MetaData;
+            bool                           IsFile;
         };
 
         /// <summary>
         /// Get all files and directories in the current directory.
-        /// The second value in the pair is true if the entry is a file.
+        /// If the result is a file, the metadata can be null, indicating that the file does not have metadata.
+        /// else if the result is a directory, the metadata is always null.
         /// </summary>
         [[nodiscard]] Asio::CoGenerator<FileResult> GetAllFiles() const noexcept;
 
     private:
         const std::filesystem::path m_RootPath;
 
-        RootList     m_ParentDirectories;
-        FileSet      m_Files;
-        DirectorySet m_Directories;
+        RootList      m_ParentDirectories;
+        FileAssetList m_Files;
+        DirectoryList m_Directories;
     };
 } // namespace Neon::Editor::Views::CB

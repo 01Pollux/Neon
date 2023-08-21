@@ -1,27 +1,38 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Types/ContentBrowser/DirectoryIterator.hpp>
+#include <fstream>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::Editor::Views::CB
 {
     static void ScanDirectories(
-        const std::filesystem::path&     Path,
-        DirectoryIterator::FileSet&      Files,
-        DirectoryIterator::DirectorySet& Directories)
+        const std::filesystem::path&      Path,
+        DirectoryIterator::FileAssetList& Files,
+        DirectoryIterator::DirectoryList& Directories)
     {
         Files.clear();
         Directories.clear();
 
         for (const auto& Entry : std::filesystem::directory_iterator(Path))
         {
+            // If the entry is a directory
             if (Entry.is_directory())
             {
-                Directories.insert(Entry.path());
+                Directories.emplace_back(Entry.path());
             }
-            else if (Entry.is_regular_file())
+            // If the file is not a meta data file
+            else if (Entry.is_regular_file() && Entry.path().extension() != Asset::AssetMetaDataDef::s_MetaFileExtensionW)
             {
-                Files.insert(Entry.path());
+                std::ifstream MetaDataFile(Entry.path().wstring() + Asset::AssetMetaDataDef::s_MetaFileExtensionW);
+                if (!MetaDataFile)
+                {
+                    Files.emplace_back(Entry.path(), std::nullopt);
+                }
+                else
+                {
+                    Files.emplace_back(Entry.path(), MetaDataFile);
+                }
             }
         }
     }
@@ -52,7 +63,9 @@ namespace Neon::Editor::Views::CB
     void DirectoryIterator::Visit(
         const StringU8& Directory)
     {
-        NEON_ASSERT(m_Directories.contains(Directory), "Directory does not exist.");
+        NEON_ASSERT(std::ranges::find_if(m_Directories, [&Directory](auto& Dir)
+                                         { return Dir == Directory; }) != m_Directories.end(),
+                    "Directory does not exist.");
 
         m_ParentDirectories.push_back(Directory);
         ScanDirectories(BuildPath(m_RootPath, m_ParentDirectories), m_Files, m_Directories);
@@ -75,11 +88,11 @@ namespace Neon::Editor::Views::CB
     {
         for (const auto& Directory : m_Directories)
         {
-            co_yield FileResult{ &Directory, false };
+            co_yield FileResult{ &Directory, nullptr, false };
         }
         for (const auto& File : m_Files)
         {
-            co_yield FileResult{ &File, true };
+            co_yield FileResult{ &File.first, File.second ? &*File.second : nullptr, true };
         }
     }
 } // namespace Neon::Editor::Views::CB
