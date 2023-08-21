@@ -145,6 +145,11 @@ namespace Neon::Runtime
         return m_Window.get();
     }
 
+    GLFWwindow* GameEngine::GetWindowHandle() const
+    {
+        return m_Window->GetHandle();
+    }
+
     GameLogic* GameEngine::GetLogic() const noexcept
     {
         return m_Logic.get();

@@ -3,9 +3,10 @@
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Profile/Manager.hpp>
 
-#include <ImGuiUtils/imcxx/all_in_one.hpp>
 #include <FileSystem/File.hpp>
+#include <OS/Clipboard.hpp>
 
+#include <ImGuiUtils/imcxx/all_in_one.hpp>
 #include <Asset/Storage.hpp>
 
 namespace Neon::Editor::Views
@@ -84,7 +85,6 @@ namespace Neon::Editor::Views
         static int ViewSize = 96;
         if (imcxx::slider("View Size", ViewSize, 64, 352))
         {
-            // Make ViewSize a multiple of 32
             ViewSize = (ViewSize / 32) * 32;
         }
         const int Columns = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
@@ -187,26 +187,95 @@ namespace Neon::Editor::Views
             return;
         }
 
-        if (imcxx::menubar_item New{ "New" })
+        if (imcxx::menubar_item CreateMenu{ "Create" })
         {
             if (ImGui::MenuItem("Folder"))
             {
             }
 
-            if (ImGui::MenuItem("Material"))
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("C# Script"))
             {
             }
 
-            if (ImGui::MenuItem("Script"))
+            if (imcxx::menubar_item Create2D{ "2D" })
             {
+                if (imcxx::menubar_item CreateSprite{ "Sprite" })
+                {
+                    if (ImGui::MenuItem("Triangle"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Quad"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Circle"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Polygon"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Capsule"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Hexagon-Flat"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Hexagon-Pointy"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("9-Sliced"))
+                    {
+                    }
+
+                    if (ImGui::MenuItem("Isometric Diamon"))
+                    {
+                    }
+                }
             }
         }
 
-        if (ImGui::MenuItem("Import"))
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Show in Explorer", "Ctrl+Shift+Enter"))
+        {
+            FileSystem::OpenDirectoryInExplorer(m_DirectoryIterator.CurrentRoot());
+        }
+
+        if (ImGui::MenuItem("Delete", "Del"))
         {
         }
 
+        if (ImGui::MenuItem("Rename", "F2"))
+        {
+        }
+
+        if (ImGui::MenuItem("Copy Path", "Ctrl+Shift+C"))
+        {
+            OS::SetClipboard(EditorEngine::Get()->GetWindowHandle(), m_DirectoryIterator.CurrentRoot().string());
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Import Asset...", "Ctrl+I"))
+        {
+            OS::SetClipboard(EditorEngine::Get()->GetWindowHandle(), m_DirectoryIterator.CurrentRoot().string());
+        }
+
+        ImGui::Separator();
+
         if (ImGui::MenuItem("Copy", "Ctrl+C"))
+        {
+        }
+
+        if (ImGui::MenuItem("Cut", "Ctrl+X"))
         {
         }
 
@@ -216,13 +285,6 @@ namespace Neon::Editor::Views
 
         if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
         {
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Show in Explorer"))
-        {
-            FileSystem::OpenDirectoryInExplorer(m_DirectoryIterator.CurrentRoot());
         }
     }
 } // namespace Neon::Editor::Views

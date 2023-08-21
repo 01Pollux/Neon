@@ -11,6 +11,8 @@ namespace Neon
     }
 } // namespace Neon
 
+struct GLFWwindow;
+
 namespace Neon::Runtime
 {
     class GameLogic;
@@ -108,6 +110,11 @@ namespace Neon::Runtime
         /// Get the window associated with the engine.
         /// </summary>
         [[nodiscard]] Windowing::WindowApp* GetWindow() const;
+
+        /// <summary>
+        /// Get the window handle associated with the engine.
+        /// </summary>
+        [[nodiscard]] GLFWwindow* GetWindowHandle() const;
 
         /// <summary>
         /// Get the current scene.
