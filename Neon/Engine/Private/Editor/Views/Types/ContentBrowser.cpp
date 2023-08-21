@@ -124,6 +124,8 @@ namespace Neon::Editor::Views
                         {},
                         IconTint);
 
+                    DisplayPopup();
+
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
                     ImGui::TextWrapped(FileName.c_str());
                 }
@@ -169,5 +171,26 @@ namespace Neon::Editor::Views
 
         auto Profile = Editor::ProfileManager::Get();
         return Profile->GetTexture(IconName);
+    }
+
+    void ContentBrowser::DisplayPopup()
+    {
+        imcxx::popup Popup(imcxx::popup::context_item{}, "ContentBrowserPopup");
+        if (!Popup)
+        {
+            return;
+        }
+
+        if (ImGui::MenuItem("Open"))
+        {
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Show In Explorer"))
+        {
+        }
+
+        ImGui::EndPopup();
     }
 } // namespace Neon::Editor::Views

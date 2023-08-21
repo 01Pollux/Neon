@@ -42,6 +42,11 @@ namespace Neon::Editor::Views
             const StringU8& FileName,
             bool            IsFile);
 
+        /// <summary>
+        /// Display the popup if the user right clicks on an asset(s).
+        /// </summary>
+        void DisplayPopup();
+
     private:
         FileListener      m_Listener;
         efsw::FileWatcher m_FileWatcher;
