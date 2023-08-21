@@ -80,10 +80,13 @@ namespace Neon::Editor::Views
             return;
         }
 
-        static int ViewSize = 124;
-        const int  Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
-
-        imcxx::slider ViewSizeSLider("View Size", ViewSize, 0, 500);
+        static int ViewSize = 96;
+        if (imcxx::slider("View Size", ViewSize, 64, 352))
+        {
+            // Make ViewSize a multiple of 32
+            ViewSize = (ViewSize / 32) * 32;
+        }
+        const int Columns = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
 
         imcxx::shared_style BrowserStyle(
             ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f),
@@ -96,15 +99,20 @@ namespace Neon::Editor::Views
             {
                 if (Table.next_column())
                 {
-                    auto FileName    = FilePath->filename().string();
+                    // Get FilePath's file name without extension
+                    auto FileName    = FilePath->stem().string();
                     auto Extension   = FilePath->has_extension() ? StringUtils::ToLower(FilePath->extension().string()) : "";
                     auto TextureInfo = GetImageIcon(Extension, IsFile);
 
                     imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
-                    imcxx::button(imcxx::button::image{}, TextureInfo.TextureID, { float(ViewSize), float(ViewSize) }, TextureInfo.MinUV, TextureInfo.MaxUV);
+                    ImGui::ImageButton(
+                        TextureInfo.TextureID,
+                        { float(ViewSize), float(ViewSize) },
+                        TextureInfo.MinUV,
+                        TextureInfo.MaxUV);
 
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
-                    imcxx::text FileNameText(imcxx::text::wrapped{}, FileName);
+                    ImGui::TextWrapped(FileName.c_str());
                 }
             }
         }
