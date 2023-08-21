@@ -16,8 +16,8 @@ project "ImGui"
 		"misc/cpp/imgui_stdlib.hpp",
 		"misc/cpp/imgui_stdlib.cpp",
 		
-		"backends/imgui_impl_win32.h",
-		"backends/imgui_impl_win32.cpp"
+		"backends/imgui_impl_glfw.h",
+		"backends/imgui_impl_glfw.cpp"
 	}
 
 	filter "system:windows"
@@ -30,7 +30,8 @@ project "ImGui"
 
     includedirs
     {
-        "%{prj.location}"
+        "%{prj.location}",
+		"%{CommonDir.Deps.Inc}"
     }
 
 	defines "IMGUI_DISABLE_DEMO_WINDOWS"
