@@ -30,6 +30,8 @@ namespace Neon::Scene
         // Register components & relations.
         Exports::RegisterComponents(World);
         Exports::RegisterRelations(World);
+
+        CreateRootEntity();
     }
 
     void EntityWorld::Release()

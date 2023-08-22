@@ -15,14 +15,12 @@
 
 namespace Neon::FileSystem
 {
-#if NEON_DEBUG
 #define RETURN_IF_FAILED(Hr)                                                                    \
     if (FAILED(Hr))                                                                             \
     {                                                                                           \
         NEON_ERROR("Failed to create file dialog instance with error code: {0}", uint64_t(Hr)); \
         return Paths;                                                                           \
     }
-#endif
 
     std::vector<std::filesystem::path> OpenFile(
         GLFWwindow*                  Window,
@@ -110,14 +108,12 @@ namespace Neon::FileSystem
 
 #undef RETURN_IF_FAILED
 
-#if NEON_DEBUG
 #define RETURN_IF_FAILED(Hr)                                                                    \
     if (FAILED(Hr))                                                                             \
     {                                                                                           \
         NEON_ERROR("Failed to create file dialog instance with error code: {0}", uint64_t(Hr)); \
         return Path;                                                                            \
     }
-#endif
 
     std::filesystem::path SaveFile(
         const std::filesystem::path& InitialAbsoluteDir,
