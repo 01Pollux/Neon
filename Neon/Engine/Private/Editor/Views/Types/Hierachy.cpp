@@ -59,8 +59,8 @@ namespace Neon::Editor::Views
             TableFlags |= ImGuiTreeNodeFlags_Leaf;
         }
 
-        bool ShouldGrayText = Entity.has<Scene::Editor::HideInEditor>();
-        if (ShouldGrayText)
+        bool IsHiddenInEditor = Entity.has<Scene::Editor::HideInEditor>();
+        if (IsHiddenInEditor)
         {
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
         }
@@ -70,9 +70,43 @@ namespace Neon::Editor::Views
             TableFlags,
             Entity.name().size() > 0 ? Entity.name() : "Unnamed Entity");
 
-        if (ShouldGrayText)
+        if (IsHiddenInEditor)
         {
             ImGui::PopStyleColor();
+        }
+
+        if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
+        {
+            if (ImGui::MenuItem("Delete (Recursive)"))
+            {
+                Entity.destruct();
+            }
+
+            if (ImGui::MenuItem("Delete"))
+            {
+                // Delete only entity, and move children to parent.
+                Entity.children(
+                    [Parent = Entity.parent()](flecs::entity Child)
+                    {
+                        Child.child_of(Parent);
+                    });
+                Entity.destruct();
+            }
+
+            if (IsHiddenInEditor)
+            {
+                if (ImGui::MenuItem("Show in Editor"))
+                {
+                    Entity.remove<Scene::Editor::HideInEditor>();
+                }
+            }
+            else
+            {
+                if (ImGui::MenuItem("Hide in Editor"))
+                {
+                    Entity.add<Scene::Editor::HideInEditor>();
+                }
+            }
         }
 
         if (HierachyNode)
@@ -96,7 +130,9 @@ namespace Neon::Editor::Views
         auto Root = World.lookup("_EditorRoot");
         if (Root)
         {
+            World.defer_begin();
             Root.children(&DispalySceneObject);
+            World.defer_end();
         }
     }
 } // namespace Neon::Editor::Views
