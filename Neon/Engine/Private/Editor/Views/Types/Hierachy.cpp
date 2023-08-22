@@ -77,6 +77,24 @@ namespace Neon::Editor::Views
 
         if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
         {
+            if (ImGui::MenuItem("Rename"))
+            {
+                // TODO
+            }
+
+            if (ImGui::MenuItem("Duplicate"))
+            {
+                auto     Parent    = Entity.parent();
+                auto     NewEntity = Entity.clone();
+                StringU8 NewName{ Entity.name() };
+
+                while (Parent.lookup(NewName.c_str()))
+                {
+                    NewName += " (Copy)";
+                }
+                NewEntity.set_name(NewName.c_str());
+            }
+
             if (ImGui::MenuItem("Delete (Recursive)"))
             {
                 Entity.destruct();
