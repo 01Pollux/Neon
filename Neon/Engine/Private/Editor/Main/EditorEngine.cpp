@@ -22,7 +22,6 @@ namespace Neon::Editor
 
         GameEngine::Initialize(std::move(Config));
 
-        AddStandardViews();
         GetWindow()->OnWindowTitleHitTest().Listen(
             [this](const Vector2I& MousePos, bool& WasHit)
             {
@@ -34,6 +33,12 @@ namespace Neon::Editor
 
         // Load profile
         ProfileManager::Load(Asset::Handle::FromString("1f212ba0-6313-4452-8dec-92b34f7b21e3"));
+
+        // Register editor world components
+        RegisterEditorWorldComponents();
+
+        // Register views
+        AddStandardViews();
     }
 
     void EditorEngine::PreUpdate()

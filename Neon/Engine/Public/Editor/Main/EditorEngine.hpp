@@ -81,6 +81,11 @@ namespace Neon::Editor
 
     public:
         /// <summary>
+        /// Register the editor world components.
+        /// </summary>
+        void RegisterEditorWorldComponents();
+
+        /// <summary>
         /// Add the standard views to the editor.
         /// </summary>
         void AddStandardViews();

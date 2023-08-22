@@ -1,7 +1,8 @@
 #include <EnginePCH.hpp>
-#include <Editor/Main/EditorEngine.hpp>
+#include <Runtime/GameLogic.hpp>
 #include <Window/Window.hpp>
 
+#include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
 #include <Editor/Views/Types/Console.hpp>
 #include <Editor/Views/Types/Game.hpp>
@@ -9,8 +10,20 @@
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
+#include <Editor/Scene/EditorEntity.hpp>
+
 namespace Neon::Editor
 {
+    void EditorEngine::RegisterEditorWorldComponents()
+    {
+        flecs::world World = GetLogic()->GetEntityWorld();
+
+        World.entity("_EditorRoot");
+
+        World.component<Scene::Editor::HideInEditor>();
+        World.component<Scene::Editor::SelectedForEditor>();
+    }
+
     void EditorEngine::AddStandardViews()
     {
         RegisterView<Views::Console>("_Console", true);
