@@ -29,7 +29,7 @@ namespace Neon::Editor
         RegisterView<Views::Console>("_Console", true);
         RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
         RegisterView<Views::Game>("_Game", true);
-        RegisterView<Views::Hierachy>("_Hierachy", true);
+        RegisterView<Views::SceneHierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
         RegisterView<Views::Scene>("_Scene", true);
     }

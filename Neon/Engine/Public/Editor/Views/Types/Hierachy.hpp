@@ -4,10 +4,10 @@
 
 namespace Neon::Editor::Views
 {
-    class Hierachy : public IEditorView
+    class SceneHierachy : public IEditorView
     {
     public:
-        Hierachy();
+        SceneHierachy();
 
         void OnUpdate() override;
 

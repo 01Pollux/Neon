@@ -9,7 +9,7 @@
 
 namespace Neon::Editor::Views
 {
-    Hierachy::Hierachy() :
+    SceneHierachy::SceneHierachy() :
         IEditorView(StandardViews::s_HierachyViewWidgetId)
     {
         flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
@@ -39,7 +39,7 @@ namespace Neon::Editor::Views
         G.child_of(Root);
     }
 
-    void Hierachy::OnUpdate()
+    void SceneHierachy::OnUpdate()
     {
     }
 
@@ -153,7 +153,7 @@ namespace Neon::Editor::Views
         }
     }
 
-    void Hierachy::OnRender()
+    void SceneHierachy::OnRender()
     {
         imcxx::window Window(GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
         if (!Window)
