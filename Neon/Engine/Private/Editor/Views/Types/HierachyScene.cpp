@@ -36,7 +36,10 @@ namespace Neon::Editor::Views
             E.child_of(A);
         }
 
-        B.set<Scene::Component::Transform>({});
+        Scene::Component::Transform Tr;
+        Tr.World.SetPosition({ 30.0f, 20.0f, 10.0f });
+        Tr.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
+        B.set(Tr);
 
         A.add<Scene::Editor::HideInEditor>();
         F.child_of(Root);

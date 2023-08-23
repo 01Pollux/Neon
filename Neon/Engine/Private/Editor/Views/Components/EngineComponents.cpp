@@ -33,7 +33,7 @@ namespace Neon::Editor
         auto& Transform = Entity.get_mut<Scene::Component::Transform>()->World;
 
         auto& Position = Transform.GetPosition();
-        auto  Rotation = Transform.GetRotationEuler();
+        auto  Rotation = glm::degrees(Transform.GetRotationEuler());
 
         bool Changed = false;
         ImGui::Text("Position");
@@ -45,7 +45,7 @@ namespace Neon::Editor
         ImGui::Text("Rotation");
         if (ImGui::DragFloat3("##Rotation", glm::value_ptr(Rotation), 0.1f))
         {
-            Transform.SetRotationEuler(Rotation);
+            Transform.SetRotationEuler(glm::radians(Rotation));
             Changed = true;
         }
 
