@@ -131,14 +131,20 @@ namespace Neon::Editor::Views
             {
                 if (ImGui::MenuItem("Show in Editor"))
                 {
-                    Entity.remove<Scene::Editor::HideInEditor>();
+                    DeferredTask = [Entity]() mutable
+                    {
+                        Entity.remove<Scene::Editor::HideInEditor>();
+                    };
                 }
             }
             else
             {
                 if (ImGui::MenuItem("Hide in Editor"))
                 {
-                    Entity.add<Scene::Editor::HideInEditor>();
+                    DeferredTask = [Entity]() mutable
+                    {
+                        Entity.add<Scene::Editor::HideInEditor>();
+                    };
                 }
             }
         }
