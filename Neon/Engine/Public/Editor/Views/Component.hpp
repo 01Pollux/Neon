@@ -6,12 +6,8 @@
 #include <ImGui/imgui.h>
 #include <ImGui/imgui_internal.h>
 
-#include <boost/uuid/uuid.hpp>
-
 namespace Neon::Editor
 {
-    using ComponentHandlerUID = boost::uuids::uuid;
-
     class IEditorComponentHandler
     {
     public:

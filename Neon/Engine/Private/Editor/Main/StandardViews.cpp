@@ -2,6 +2,8 @@
 #include <Runtime/GameLogic.hpp>
 #include <Window/Window.hpp>
 
+#include <Editor/Views/Components/EngineComponents.hpp>
+
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
 #include <Editor/Views/Types/Console.hpp>
@@ -23,6 +25,11 @@ namespace Neon::Editor
         World.component<Scene::Editor::HideInEditor>("Editor::_HideInEditor");
         World.component<Scene::Editor::SelectedForEditor>("Editor::_SelectedForEditor")
             .add(flecs::Exclusive);
+    }
+
+    void EditorEngine::AddStandardComponentHandlers()
+    {
+        RegisterStandardComponentHandler<TransformComponentHandler, Scene::Component::Transform>();
     }
 
     void EditorEngine::AddStandardViews()

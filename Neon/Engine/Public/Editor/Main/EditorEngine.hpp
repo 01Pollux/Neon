@@ -115,6 +115,11 @@ namespace Neon::Editor
         void RegisterEditorWorldComponents();
 
         /// <summary>
+        /// Add the standard component handlers.
+        /// </summary>
+        void AddStandardComponentHandlers();
+
+        /// <summary>
         /// Add the standard views to the editor.
         /// </summary>
         void AddStandardViews();
@@ -144,9 +149,29 @@ namespace Neon::Editor
         }
 
     private:
+        /// <summary>
+        /// Helper function to register the standard component handler.
+        /// </summary>
+        template<typename _Ty, typename... _Args>
+        void RegisterStandardComponentHandler()
+        {
+            auto Handler    = std::make_unique<_Ty>();
+            auto HandlerPtr = Handler.get();
+            m_StandardComponentHandlers.emplace(std::move(Handler));
+
+            flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+            for (auto ComponentId : { World.component<_Args>()... })
+            {
+                RegisterComponentHandler(ComponentId, HandlerPtr);
+            }
+        }
+
+    private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
 
-        std::unordered_map<uint64_t, std::set<IEditorComponentHandler*>> m_ComponentHandlers;
+        std::set<UPtr<IEditorComponentHandler>> m_StandardComponentHandlers;
+
+        std::unordered_map<uint64_t, std::vector<IEditorComponentHandler*>> m_ComponentHandlers;
 
         std::unordered_set<IEditorView*> m_OpenViews;
 

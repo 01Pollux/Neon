@@ -38,6 +38,9 @@ namespace Neon::Editor
         // Register editor world components
         RegisterEditorWorldComponents();
 
+        // Register component handlers
+        AddStandardComponentHandlers();
+
         // Register views
         AddStandardViews();
     }
@@ -139,7 +142,7 @@ namespace Neon::Editor
         const flecs::id&         ComponentId,
         IEditorComponentHandler* Handler)
     {
-        m_ComponentHandlers[ComponentId].emplace(Handler);
+        m_ComponentHandlers[ComponentId].emplace_back(Handler);
     }
 
     void EditorEngine::UnregisterComponentHandler(
@@ -152,7 +155,7 @@ namespace Neon::Editor
             return;
         }
 
-        Handlers->second.erase(Handler);
+        std::erase(Handlers->second, Handler);
     }
 
     void EditorEngine::UnregisterComponentHandler(
@@ -160,7 +163,7 @@ namespace Neon::Editor
     {
         for (auto& [ComponentId, Handlers] : m_ComponentHandlers)
         {
-            Handlers.erase(Handler);
+            std::erase(Handlers, Handler);
         }
     }
 

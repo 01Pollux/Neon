@@ -7,6 +7,8 @@
 
 #include <ImGuiUtils/imcxx/all_in_one.hpp>
 
+#include <Scene/Component/Transform.hpp>
+
 namespace Neon::Editor::Views
 {
     SceneHierachy::SceneHierachy() :
@@ -33,6 +35,8 @@ namespace Neon::Editor::Views
             }
             E.child_of(A);
         }
+
+        B.set<Scene::Component::Transform>({});
 
         A.add<Scene::Editor::HideInEditor>();
         F.child_of(Root);
