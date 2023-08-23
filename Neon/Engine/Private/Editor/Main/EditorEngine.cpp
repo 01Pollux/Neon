@@ -134,4 +134,52 @@ namespace Neon::Editor
             View->OnClose();
         }
     }
+
+    void EditorEngine::RegisterComponentHandler(
+        const flecs::id&         ComponentId,
+        IEditorComponentHandler* Handler)
+    {
+        m_ComponentHandlers[ComponentId].emplace(Handler);
+    }
+
+    void EditorEngine::UnregisterComponentHandler(
+        const flecs::id&         ComponentId,
+        IEditorComponentHandler* Handler)
+    {
+        auto Handlers = m_ComponentHandlers.find(ComponentId);
+        if (Handlers == m_ComponentHandlers.end())
+        {
+            return;
+        }
+
+        Handlers->second.erase(Handler);
+    }
+
+    void EditorEngine::UnregisterComponentHandler(
+        IEditorComponentHandler* Handler)
+    {
+        for (auto& [ComponentId, Handlers] : m_ComponentHandlers)
+        {
+            Handlers.erase(Handler);
+        }
+    }
+
+    void EditorEngine::DispatchComponentHandlers(
+        const flecs::entity& Entity,
+        const flecs::id&     ComponentId)
+    {
+        auto Handlers = m_ComponentHandlers.find(ComponentId);
+        if (Handlers == m_ComponentHandlers.end())
+        {
+            return;
+        }
+
+        for (auto& Handler : Handlers->second)
+        {
+            if (Handler->Dispatch(Entity, ComponentId))
+            {
+                break;
+            }
+        }
+    }
 } // namespace Neon::Editor

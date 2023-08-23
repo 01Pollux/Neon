@@ -2,6 +2,7 @@
 
 #include <Runtime/GameEngine.hpp>
 #include <Editor/Views/View.hpp>
+#include <Editor/Views/Component.hpp>
 
 #include <Editor/Project/Fonts/FontAwesome5.hpp>
 
@@ -81,6 +82,34 @@ namespace Neon::Editor
 
     public:
         /// <summary>
+        /// Register the component handler.
+        /// </summary>
+        void RegisterComponentHandler(
+            const flecs::id&         ComponentId,
+            IEditorComponentHandler* Handler);
+
+        /// <summary>
+        /// Unregister the component handler.
+        /// </summary>
+        void UnregisterComponentHandler(
+            const flecs::id&         ComponentId,
+            IEditorComponentHandler* Handler);
+
+        /// <summary>
+        /// Unregister the component handler.
+        /// </summary>
+        void UnregisterComponentHandler(
+            IEditorComponentHandler* Handler);
+
+        /// <summary>
+        /// Dispatch the component handlers.
+        /// </summary>
+        void DispatchComponentHandlers(
+            const flecs::entity& Entity,
+            const flecs::id&     ComponentId);
+
+    public:
+        /// <summary>
         /// Register the editor world components.
         /// </summary>
         void RegisterEditorWorldComponents();
@@ -116,6 +145,8 @@ namespace Neon::Editor
 
     private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
+
+        std::unordered_map<uint64_t, std::set<IEditorComponentHandler*>> m_ComponentHandlers;
 
         std::unordered_set<IEditorView*> m_OpenViews;
 

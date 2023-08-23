@@ -34,11 +34,10 @@ namespace Neon::Editor::Views
             return;
         }
 
-        // Iterate over all components of the entity.
         SelectedEntity.each(
-            [](flecs::id ComponentId)
+            [&SelectedEntity](flecs::id ComponentId)
             {
-                ImGui::Text("%s", ComponentId.str().c_str());
+                EditorEngine::Get()->DispatchComponentHandlers(SelectedEntity, ComponentId);
             });
     }
 } // namespace Neon::Editor::Views
