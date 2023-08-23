@@ -121,7 +121,7 @@ namespace Neon::RHI
         {
             NewFormat = m_BackbufferFormat;
         }
-  
+
         m_Size             = Size;
         m_BackbufferFormat = NewFormat;
 
@@ -197,8 +197,7 @@ namespace Neon::RHI
                 },
                 .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
                 .BufferCount = Desc.FramesInFlight,
-                .SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-                .Flags       = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+                .SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD
             };
 
             DXGI_SWAP_CHAIN_FULLSCREEN_DESC FullscreenDesc{
@@ -240,8 +239,7 @@ namespace Neon::RHI
                 .BufferCount  = Desc.FramesInFlight,
                 .OutputWindow = Handle,
                 .Windowed     = !IsFullscreen,
-                .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-                .Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+                .SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD
             };
 
             DxgiFactory->CreateSwapChain(

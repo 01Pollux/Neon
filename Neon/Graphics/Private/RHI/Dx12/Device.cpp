@@ -308,7 +308,7 @@ namespace Neon::RHI
             InfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
             WinAPI::ComPtr<ID3D12InfoQueue1> InfoQueue1;
-            if (InfoQueue.As(&InfoQueue))
+            if (SUCCEEDED(InfoQueue.As(&InfoQueue1)))
             {
                 auto MessageCallback =
                     [](D3D12_MESSAGE_CATEGORY Category,
