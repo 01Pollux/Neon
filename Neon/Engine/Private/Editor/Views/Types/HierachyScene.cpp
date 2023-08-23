@@ -1,5 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Editor/Views/Types/Hierachy.hpp>
+#include <Editor/Views/Types/HierachyScene.hpp>
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Scene/EditorEntity.hpp>
@@ -74,6 +74,12 @@ namespace Neon::Editor::Views
         if (IsHiddenInEditor)
         {
             ImGui::PopStyleColor();
+        }
+
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        {
+            flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+            World.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
         if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })

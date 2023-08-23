@@ -6,7 +6,7 @@
 #include <Editor/Views/Types/ContentBrowser.hpp>
 #include <Editor/Views/Types/Console.hpp>
 #include <Editor/Views/Types/Game.hpp>
-#include <Editor/Views/Types/Hierachy.hpp>
+#include <Editor/Views/Types/HierachyScene.hpp>
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
