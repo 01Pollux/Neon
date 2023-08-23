@@ -16,7 +16,7 @@ namespace Neon::Editor::Views
 
         auto Root = World.lookup("_EditorRoot");
 
-        auto A = World.entity();
+        auto A = World.entity("Unnamed Entity");
         auto B = World.entity("B");
         auto C = World.entity("C");
         auto D = World.entity("D");
@@ -69,7 +69,7 @@ namespace Neon::Editor::Views
         imcxx::tree_node HierachyNode(
             std::bit_cast<void*>(Entity.raw_id()),
             TableFlags,
-            Entity.name().size() > 0 ? Entity.name() : "Unnamed Entity");
+            Entity.name());
 
         if (IsHiddenInEditor)
         {

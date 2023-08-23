@@ -256,9 +256,9 @@ namespace imcxx
             else
             {
                 if constexpr (std::is_pointer_v<_Ty>)
-                    return str->data();
+                    return str->c_str();
                 else
-                    return str.data();
+                    return str.c_str();
             }
         }
 

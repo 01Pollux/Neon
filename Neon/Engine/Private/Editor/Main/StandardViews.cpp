@@ -20,8 +20,9 @@ namespace Neon::Editor
 
         World.entity("_EditorRoot");
 
-        World.component<Scene::Editor::HideInEditor>();
-        World.component<Scene::Editor::SelectedForEditor>();
+        World.component<Scene::Editor::HideInEditor>("Editor::_HideInEditor");
+        World.component<Scene::Editor::SelectedForEditor>("Editor::_SelectedForEditor")
+            .add(flecs::Exclusive);
     }
 
     void EditorEngine::AddStandardViews()
