@@ -45,25 +45,25 @@ namespace Neon::Editor
         auto  Rotation = glm::degrees(Transform.GetRotationEuler());
 
         bool Changed = false;
-        ImGui::Text("Position");
-        if (ImGui::DragFloat3("##Position", glm::value_ptr(Position), 0.1f))
+
+        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>("Position", Position))
         {
             Changed = true;
         }
 
-        ImGui::Text("Rotation");
         if (ImGui::DragFloat3("##Rotation", glm::value_ptr(Rotation), 0.1f))
         {
             Transform.SetRotationEuler(glm::radians(Rotation));
             Changed = true;
         }
 
+        UI::Utils::EndComponentHeader();
+
         if (Changed)
         {
             Entity.modified<Scene::Component::Transform>();
         }
 
-        UI::Utils::EndComponentHeader();
         return true;
     }
 } // namespace Neon::Editor

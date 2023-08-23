@@ -31,12 +31,12 @@ namespace Neon::RHI
 
     void Dx12Swapchain::Shutdown()
     {
-        ImGuiRHI::ShutdownImGui();
-
         m_Swapchain->SetFullscreenState(FALSE, nullptr);
 
         m_BackBuffers.clear();
         m_FrameManager = nullptr;
+
+        ImGuiRHI::ShutdownImGui();
     }
 
     //

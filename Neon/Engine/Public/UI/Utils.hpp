@@ -35,7 +35,7 @@ namespace Neon::UI::Utils
     /// <summary>
     /// Begins a component header with the given label and togglable state.
     /// </summary>
-    [[nodiscard]] ComponentHeaderInfo BeginComponentHeader(
+    [[nodiscard]] static ComponentHeaderInfo BeginComponentHeader(
         const char* Label,
         bool*       Togglable = nullptr)
     {
@@ -95,7 +95,7 @@ namespace Neon::UI::Utils
     /// <summary>
     /// Ends a component header.
     /// </summary>
-    void EndComponentHeader()
+    static void EndComponentHeader()
     {
         ImGui::TreePop();
     }
@@ -105,7 +105,7 @@ namespace Neon::UI::Utils
     /// </summary>
     template<typename _FnTy = std::nullptr_t>
         requires std::same_as<_FnTy, std::nullptr_t> || std::invocable<_FnTy>
-    void DrawComponentLabel(
+    static void DrawComponentLabel(
         const char* Label,
         bool        SameLine,
         _FnTy&&     TooltipText = nullptr)
@@ -131,6 +131,26 @@ namespace Neon::UI::Utils
         Slider
     };
 
+    static constexpr const char* DrawVectorPositionNames[] = {
+        "X",
+        "Y",
+        "Z",
+        "W"
+    };
+
+    static constexpr const char* DrawVectorColorNames[] = {
+        "R",
+        "G",
+        "B",
+        "A"
+    };
+
+    static constexpr const char* DrawVectorRotationNames[] = {
+        "Pitch",
+        "Yaw",
+        "Roll"
+    };
+
     /// <summary>
     /// Draw a vector component.
     ///
@@ -139,67 +159,77 @@ namespace Neon::UI::Utils
     /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
     /// </summary>
     template<DrawVectorType DrawType, Vec::VectorType _Ty>
-    void DrawVectorComponent(
+    static bool DrawVectorComponent(
         const char*              Label,
         _Ty&                     Value,
-        typename _Ty::value_type Min    = _Ty::value_type(0),
-        typename _Ty::value_type Max    = _Ty::value_type(0),
-        const char*              Format = nullptr,
-        uint32_t                 Flags  = 0,
-        std::span<const char*>   Names  = { "X", "Y", "Z", "W" })
+        typename _Ty::value_type Min     = _Ty::value_type(0),
+        typename _Ty::value_type Max     = _Ty::value_type(0),
+        const char*              Format  = nullptr,
+        uint32_t                 Flags   = 0,
+        const char* const        Names[] = DrawVectorPositionNames)
     {
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(Label);
         ImGui::SameLine();
 
         ImGui::PushID(Label);
-        for (uint8_t i = 0; i < Value.size(); ++i)
+        bool  Changed     = false;
+        float RegionWidth = // Get space left for the region
+            (ImGui::GetContentRegionAvail().x -
+             ImGui::GetFrameHeightWithSpacing() -   // Remove the settings button
+             ImGui::CalcTextSize(Label).x -         // Remove the label
+             ImGui::GetStyle().ItemSpacing.x * 2) / // Remove the spacing
+            _Ty::length();                          // Divide by the number of components
+
+        for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {
+            ImGui::SameLine();
+            ImGui::TextUnformatted(Names[i]);
+
+            ImGui::SetNextItemWidth(RegionWidth);
+            ImGui::SameLine();
             ImGui::PushID(i);
-            ImGui::SetNextItemWidth(-FLT_MIN);
 
             if constexpr (DrawType == DrawVectorType::Drag)
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    ImGui::DragFloat(Names[i], &Value[i], 0.1f, Min, Max);
+                    Changed |= ImGui::DragFloat("##Value", &Value[i], 0.1f, Min, Max);
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    ImGui::DragInt(Names[i], std::bit_cast<int*>(&Value[i]), 1, Min, Max);
+                    Changed |= ImGui::DragInt("##Value", std::bit_cast<int*>(&Value[i]), 1, Min, Max);
                 }
-                break;
             }
             else if constexpr (DrawType == DrawVectorType::Input)
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    ImGui::InputFloat(Names[i], &Value[i]);
+                    Changed |= ImGui::InputFloat("##Value", &Value[i]);
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    ImGui::InputInt(Names[i], std::bit_cast<int*>(&Value[i]));
+                    Changed |= ImGui::InputInt("##Value", std::bit_cast<int*>(&Value[i]));
                 }
-                break;
             }
             else if constexpr (DrawType == DrawVectorType::Slider)
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    ImGui::SliderFloat(Names[i], &Value[i], Min, Max);
+                    Changed |= ImGui::SliderFloat("##Value", &Value[i], Min, Max);
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    ImGui::SliderInt(Names[i], std::bit_cast<int*>(&Value[i]), Min, Max);
+                    Changed |= ImGui::SliderInt("##Value", std::bit_cast<int*>(&Value[i]), Min, Max);
                 }
-                break;
             }
 
             ImGui::PopID();
         }
         ImGui::PopID();
+        return Changed;
     }
 } // namespace Neon::UI::Utils
