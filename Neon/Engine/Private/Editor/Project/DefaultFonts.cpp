@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Editor/Project/DefaultFonts.hpp>
-#include <Editor/Project/Fonts/FontAwesome5.hpp>
+#include <UI/Fonts/FontAwesome5.hpp>
 #include <ImGui/imgui.h>
 
 //

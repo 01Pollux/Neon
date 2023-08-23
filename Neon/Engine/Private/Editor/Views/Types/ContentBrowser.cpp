@@ -6,7 +6,7 @@
 #include <FileSystem/File.hpp>
 #include <OS/Clipboard.hpp>
 
-#include <ImGuiUtils/imcxx/all_in_one.hpp>
+#include <UI/imcxx/all_in_one.hpp>
 #include <Asset/Storage.hpp>
 
 namespace Neon::Editor::Views

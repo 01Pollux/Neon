@@ -1,6 +1,9 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Components/EngineComponents.hpp>
 
+#include <Editor/Main/EditorEngine.hpp>
+
+#include <UI/Utils.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Neon::Editor
@@ -30,6 +33,12 @@ namespace Neon::Editor
         const flecs::entity& Entity,
         const flecs::id&     ComponentId)
     {
+        auto HeaderInfo = UI::Utils::BeginComponentHeader("Transform");
+        if (!HeaderInfo)
+        {
+            return true;
+        }
+
         auto& Transform = Entity.get_mut<Scene::Component::Transform>()->World;
 
         auto& Position = Transform.GetPosition();
@@ -54,6 +63,7 @@ namespace Neon::Editor
             Entity.modified<Scene::Component::Transform>();
         }
 
+        UI::Utils::EndComponentHeader();
         return true;
     }
 } // namespace Neon::Editor

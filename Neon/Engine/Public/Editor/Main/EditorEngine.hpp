@@ -4,7 +4,7 @@
 #include <Editor/Views/View.hpp>
 #include <Editor/Views/Component.hpp>
 
-#include <Editor/Project/Fonts/FontAwesome5.hpp>
+#include <UI/Fonts/FontAwesome5.hpp>
 
 #include <unordered_map>
 #include <unordered_set>

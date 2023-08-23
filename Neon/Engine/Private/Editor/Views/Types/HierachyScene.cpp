@@ -5,7 +5,7 @@
 #include <Editor/Scene/EditorEntity.hpp>
 #include <Runtime/GameLogic.hpp>
 
-#include <ImGuiUtils/imcxx/all_in_one.hpp>
+#include <UI/imcxx/all_in_one.hpp>
 
 #include <Scene/Component/Transform.hpp>
 
