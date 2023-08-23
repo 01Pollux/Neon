@@ -44,7 +44,8 @@ namespace Neon::Editor::Views
     }
 
     static void DispalySceneObject(
-        flecs::entity Entity)
+        flecs::entity                    Entity,
+        std::move_only_function<void()>& DeferredTask)
     {
         ImGuiTableFlags TableFlags =
             ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -84,31 +85,46 @@ namespace Neon::Editor::Views
 
             if (ImGui::MenuItem("Duplicate"))
             {
-                auto     Parent    = Entity.parent();
-                auto     NewEntity = Entity.clone();
-                StringU8 NewName{ Entity.name() };
-
-                while (Parent.lookup(NewName.c_str()))
+                DeferredTask = [Entity]() mutable
                 {
-                    NewName += " (Copy)";
-                }
-                NewEntity.set_name(NewName.c_str());
+                    auto Parent = Entity.parent();
+
+                    StringU8 OldName{ Entity.name() };
+                    StringU8 NewName{ Entity.name() };
+
+                    Entity.set_name(nullptr);
+                    auto NewEntity = Entity.clone();
+
+                    do
+                    {
+                        NewName += " (Copy)";
+                    } while (Parent.lookup(NewName.c_str()));
+
+                    Entity.set_name(OldName.c_str());
+                    NewEntity.set_name(NewName.c_str());
+                };
             }
 
             if (ImGui::MenuItem("Delete (Recursive)"))
             {
-                Entity.destruct();
+                DeferredTask = [Entity]
+                {
+                    Entity.destruct();
+                };
             }
 
             if (ImGui::MenuItem("Delete"))
             {
                 // Delete only entity, and move children to parent.
-                Entity.children(
-                    [Parent = Entity.parent()](flecs::entity Child)
-                    {
-                        Child.child_of(Parent);
-                    });
-                Entity.destruct();
+                DeferredTask = [Entity]
+                {
+                    Entity.children(
+                        [Parent = Entity.parent()](flecs::entity Child)
+                        {
+                            Child.child_of(Parent);
+                        });
+                    Entity.destruct();
+                };
             }
 
             if (IsHiddenInEditor)
@@ -129,7 +145,11 @@ namespace Neon::Editor::Views
 
         if (HierachyNode)
         {
-            ChidlrenFilter.each(&DispalySceneObject);
+            ChidlrenFilter.each(
+                [&DeferredTask](flecs::entity Entity)
+                {
+                    DispalySceneObject(Entity, DeferredTask);
+                });
         }
     }
 
@@ -148,9 +168,16 @@ namespace Neon::Editor::Views
         auto Root = World.lookup("_EditorRoot");
         if (Root)
         {
-            World.defer_begin();
-            Root.children(&DispalySceneObject);
-            World.defer_end();
+            std::move_only_function<void()> DeferredTask;
+            Root.children(
+                [&DeferredTask](flecs::entity Entity)
+                {
+                    DispalySceneObject(Entity, DeferredTask);
+                });
+            if (DeferredTask)
+            {
+                DeferredTask();
+            }
         }
     }
 } // namespace Neon::Editor::Views
