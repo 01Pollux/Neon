@@ -20,3 +20,4 @@
 #include "nodes.hpp"
 #include "popup.hpp"
 #include "layout.hpp"
+#include "tooltip.hpp"

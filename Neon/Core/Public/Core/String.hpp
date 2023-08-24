@@ -18,6 +18,13 @@ namespace Neon
     using Char       = wchar_t;
     using String     = std::wstring;
     using StringView = std::wstring_view;
+
+    //
+
+    template<typename _Ty>
+    concept StringType = std::is_same_v<_Ty, StringU8> || std::is_same_v<_Ty, String> ||
+                         std::is_same_v<_Ty, StringU8View> || std::is_same_v<_Ty, StringView> ||
+                         std::is_same_v<_Ty, const char*> || std::is_same_v<_Ty, const wchar_t*>;
 } // namespace Neon
 
 namespace Neon::StringUtils
@@ -27,7 +34,8 @@ namespace Neon::StringUtils
     static _Ty Empty = {};
 
     template<typename _To, typename _From>
-    [[nodiscard]] constexpr _To Transform(const _From& Str) noexcept
+    [[nodiscard]] constexpr _To Transform(
+        const _From& Str) noexcept
     {
         // same type
         if constexpr (std::is_same_v<_To, _From>)
@@ -58,7 +66,8 @@ namespace Neon::StringUtils
 
     // support for array of characters
     template<typename _To, typename _From, size_t _Size>
-    [[nodiscard]] constexpr _To Transform(const _From (&Str)[_Size]) noexcept
+    [[nodiscard]] constexpr _To Transform(
+        const _From (&Str)[_Size]) noexcept
     {
         if constexpr (std::is_same_v<typename _To::value_type, _From>)
             return _To{ Str };
@@ -74,7 +83,10 @@ namespace Neon::StringUtils
         }
     }
 
-    [[nodiscard]] constexpr String ToLower(String Str) noexcept
+    //
+
+    [[nodiscard]] constexpr String ToLower(
+        const String& Str) noexcept
     {
         String LowStr;
         LowStr.reserve(Str.size());
@@ -83,7 +95,8 @@ namespace Neon::StringUtils
         return LowStr;
     }
 
-    [[nodiscard]] constexpr StringU8 ToLower(StringU8 Str) noexcept
+    [[nodiscard]] constexpr StringU8 ToLower(
+        const StringU8& Str) noexcept
     {
         StringU8 LowStr;
         LowStr.reserve(Str.size());
@@ -92,7 +105,8 @@ namespace Neon::StringUtils
         return LowStr;
     }
 
-    [[nodiscard]] constexpr String ToUpper(String Str) noexcept
+    [[nodiscard]] constexpr String ToUpper(
+        const String& Str) noexcept
     {
         String UpStr;
         UpStr.reserve(Str.size());
@@ -101,7 +115,8 @@ namespace Neon::StringUtils
         return UpStr;
     }
 
-    [[nodiscard]] constexpr StringU8 ToUpper(StringU8 Str) noexcept
+    [[nodiscard]] constexpr StringU8 ToUpper(
+        const StringU8& Str) noexcept
     {
         StringU8 UpStr;
         UpStr.reserve(Str.size());
@@ -110,17 +125,25 @@ namespace Neon::StringUtils
         return UpStr;
     }
 
+    //
+
     template<typename... _Args>
-    [[nodiscard]] constexpr String Format(const StringView FormatStr, _Args&&... Args)
+    [[nodiscard]] constexpr String Format(
+        const StringView FormatStr,
+        _Args&&... Args)
     {
         return std::vformat(FormatStr, std::make_wformat_args(Args...));
     }
 
     template<typename... _Args>
-    [[nodiscard]] constexpr StringU8 Format(const StringU8View FormatStr, _Args&&... Args)
+    [[nodiscard]] constexpr StringU8 Format(
+        const StringU8View FormatStr,
+        _Args&&... Args)
     {
         return std::vformat(FormatStr, std::make_format_args(Args...));
     }
+
+    //
 
     namespace Impl
     {
@@ -130,6 +153,8 @@ namespace Neon::StringUtils
         static constexpr size_t _Hash_Basis = 14695981039346656037ULL;
         static constexpr size_t _Hash_Prime = 1099511628211ULL;
     } // namespace Impl
+
+    //
 
     // compile-time hash
     [[nodiscard]] constexpr size_t Hash(const char* Str)
@@ -180,11 +205,16 @@ namespace Neon::StringUtils
 
     inline namespace Literals
     {
-        constexpr size_t operator"" _hash(const char* Str, size_t)
+        constexpr size_t operator"" _hash(
+            const char* Str,
+            size_t)
         {
             return Hash(Str);
         }
-        constexpr size_t operator"" _hash(const wchar_t* Str, size_t)
+
+        constexpr size_t operator"" _hash(
+            const wchar_t* Str,
+            size_t)
         {
             return Hash(Str);
         }

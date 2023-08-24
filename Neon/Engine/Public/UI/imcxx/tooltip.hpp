@@ -5,30 +5,33 @@
 
 namespace imcxx
 {
-	/// <summary>
-	/// Tooltips
-	/// - Tooltip are windows following the mouse. They do not take focus away.
-	/// </summary>
-	class [[nodiscard]] tooltip : public scope_wrap<tooltip, scope_traits::always_dtor, false>
-	{
-		friend class scope_wrap<tooltip, scope_traits::always_dtor, false>;
-	public:
-		struct ignore_previous {};
+    /// <summary>
+    /// Tooltips
+    /// - Tooltip are windows following the mouse. They do not take focus away.
+    /// </summary>
+    class [[nodiscard]] tooltip : public scope_wrap<tooltip, scope_traits::always_dtor, false>
+    {
+        friend class scope_wrap<tooltip, scope_traits::always_dtor, false>;
 
-		tooltip()
-		{
-			ImGui::BeginTooltip();
-		}
+    public:
+        struct ignore_previous
+        {
+        };
 
-		tooltip(ignore_previous)
-		{
-			ImGui::BeginTooltipEx(ImGuiTooltipFlags_OverridePreviousTooltip, ImGuiWindowFlags_None);
-		}
+        tooltip()
+        {
+            ImGui::BeginTooltip();
+        }
 
-	private:
-		void destruct()
-		{
-			ImGui::EndTooltip();
-		}
-	};
-}
+        tooltip(ignore_previous)
+        {
+            ImGui::BeginTooltipEx(ImGuiTooltipFlags_OverridePrevious, ImGuiWindowFlags_None);
+        }
+
+    private:
+        void destruct()
+        {
+            ImGui::EndTooltip();
+        }
+    };
+} // namespace imcxx

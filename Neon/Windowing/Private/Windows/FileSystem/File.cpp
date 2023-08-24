@@ -1,7 +1,13 @@
 #include <WindowPCH.hpp>
 #include <FileSystem/File.hpp>
-#include <Private/Windows/API/WindowHeaders.hpp>
 #include <Core/String.hpp>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <glfw/glfw3.h>
+#include <glfw/glfw3native.h>
+
+#include <Private/Windows/API/WindowHeaders.hpp>
+#include <Private/Windows/API/WinPtr.hpp>
 
 namespace Neon::FileSystem
 {

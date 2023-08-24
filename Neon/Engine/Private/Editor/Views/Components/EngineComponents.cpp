@@ -44,17 +44,37 @@ namespace Neon::Editor
         auto& Position = Transform.GetPosition();
         auto  Rotation = glm::degrees(Transform.GetRotationEuler());
 
-        bool Changed = false;
-
-        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>("Position", Position))
+        UI::Utils::DrawComponentLabel("Position");
+        if (ImGui::IsItemHovered())
         {
-            Changed = true;
+            if (imcxx::tooltip PositionTt{})
+            {
+                ImGui::Text(
+                    "Global: (%.3f, %.3f, %.3f)",
+                    Position.x,
+                    Position.y,
+                    Position.z);
+            }
         }
 
-        if (ImGui::DragFloat3("##Rotation", glm::value_ptr(Rotation), 0.1f))
+        bool Changed = UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Position);
+
+        UI::Utils::DrawComponentLabel("Rotation");
+        if (ImGui::IsItemHovered())
+        {
+            if (imcxx::tooltip RotationTt{})
+            {
+                ImGui::Text(
+                    "Global: (%.3f, %.3f, %.3f)",
+                    Rotation.x,
+                    Rotation.y,
+                    Rotation.z);
+            }
+        }
+
+        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Rotation, {}, {}, {}, std::nullopt))
         {
             Transform.SetRotationEuler(glm::radians(Rotation));
-            Changed = true;
         }
 
         UI::Utils::EndComponentHeader();
