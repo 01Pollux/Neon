@@ -108,7 +108,7 @@ namespace Neon::Editor
             const flecs::entity& Entity,
             const flecs::id&     ComponentId);
 
-    public:
+    private:
         /// <summary>
         /// Register the editor world components.
         /// </summary>
@@ -140,6 +140,16 @@ namespace Neon::Editor
         void EndEditorSpace();
 
     public:
+        /// <summary>
+        /// Get the editor root entity.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetEditorRootEntity() const;
+
+        /// <summary>
+        /// Get the editor active root entity.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetEditorActiveRootEntity() const;
+
         /// <summary>
         /// Get the content package.
         /// </summary>

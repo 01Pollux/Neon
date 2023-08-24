@@ -19,12 +19,13 @@ namespace Neon::Editor
     void EditorEngine::RegisterEditorWorldComponents()
     {
         flecs::world World = GetLogic()->GetEntityWorld();
-
         World.entity("_EditorRoot");
 
-        World.component<Scene::Editor::HideInEditor>("Editor::_HideInEditor");
-        World.component<Scene::Editor::SelectedForEditor>("Editor::_SelectedForEditor")
-            .add(flecs::Exclusive);
+        NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
+        NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
+        NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
+
+        World.add<Scene::Editor::WorldEditorMode>();
     }
 
     void EditorEngine::AddStandardComponentHandlers()
@@ -306,5 +307,18 @@ namespace Neon::Editor
     void EditorEngine::EndEditorSpace()
     {
         ImGui::End();
+    }
+
+    flecs::entity EditorEngine::GetEditorRootEntity() const
+    {
+        flecs::world World = GetLogic()->GetEntityWorld();
+        return World.lookup("_EditorRoot");
+    }
+
+    flecs::entity EditorEngine::GetEditorActiveRootEntity() const
+    {
+        flecs::world World    = GetLogic()->GetEntityWorld();
+        const char*  RootName = World.has<Scene::Editor::WorldEditorMode>() ? "_EditorRoot" : "_Root";
+        return World.lookup(RootName);
     }
 } // namespace Neon::Editor

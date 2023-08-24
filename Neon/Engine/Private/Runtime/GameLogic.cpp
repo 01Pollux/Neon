@@ -110,35 +110,4 @@ namespace Neon::Runtime
         float DeltaTime = float(Runtime::GameEngine::Get()->GetDeltaTime());
         ecs_progress(m_EntityWorld, DeltaTime);
     }
-
-    //
-
-    flecs::entity GameLogic::CreateEntity(
-        const char* Name)
-    {
-        return m_EntityWorld.CreateEntity(Name);
-    }
-
-    flecs::entity GameLogic::CreateEntityInRoot(
-        const char* Name)
-    {
-        return m_EntityWorld.CreateEntityInRoot(Name);
-    }
-
-    flecs::entity GameLogic::CreateRootEntity(
-        const char* Name)
-    {
-        return m_EntityWorld.CreateRootEntity(Name);
-    }
-
-    flecs::entity GameLogic::GetRootEntity()
-    {
-        return m_EntityWorld.GetRootEntity();
-    }
-
-    void GameLogic::SetRootEntity(
-        const flecs::entity& Entity)
-    {
-        m_EntityWorld.SetRootEntity(Entity);
-    }
 } // namespace Neon::Runtime

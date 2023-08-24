@@ -178,20 +178,17 @@ namespace Neon::Editor::Views
         flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
 
         // If we are in editor mode, we need to display the editor root entity.
-        // Otherwise, we need to display the game root entity. TODO
-        auto Root = World.lookup("_EditorRoot");
-        if (Root)
-        {
-            std::move_only_function<void()> DeferredTask;
-            Root.children(
-                [&DeferredTask](flecs::entity Entity)
-                {
-                    DispalySceneObject(Entity, DeferredTask);
-                });
-            if (DeferredTask)
+        auto Root = EditorEngine::Get()->GetEditorActiveRootEntity();
+
+        std::move_only_function<void()> DeferredTask;
+        Root.children(
+            [&DeferredTask](flecs::entity Entity)
             {
-                DeferredTask();
-            }
+                DispalySceneObject(Entity, DeferredTask);
+            });
+        if (DeferredTask)
+        {
+            DeferredTask();
         }
     }
 } // namespace Neon::Editor::Views

@@ -62,37 +62,6 @@ namespace Neon::Runtime
             return m_EntityWorld;
         }
 
-    public:
-        /// <summary>
-        /// Create a new entity.
-        /// </summary>
-        flecs::entity CreateEntity(
-            const char* Name = nullptr);
-
-        /// <summary>
-        /// Create a new entity in the root world.
-        /// The world's root must be set.
-        /// </summary>
-        flecs::entity CreateEntityInRoot(
-            const char* Name = nullptr);
-
-        /// <summary>
-        /// Create a new entity.
-        /// </summary>
-        flecs::entity CreateRootEntity(
-            const char* Name = nullptr);
-
-        /// <summary>
-        /// Get the root entity.
-        /// </summary>
-        [[nodiscard]] flecs::entity GetRootEntity();
-
-        /// <summary>
-        /// Set the root entity.
-        /// </summary>
-        [[nodiscard]] void SetRootEntity(
-            const flecs::entity& Entity);
-
     private:
         UPtr<Physics::World> m_PhysicsWorld;
         Scene::EntityWorld   m_EntityWorld;

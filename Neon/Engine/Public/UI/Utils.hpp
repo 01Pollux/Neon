@@ -20,11 +20,10 @@ namespace Neon::UI::Utils
         auto   DrawList  = ImGui::GetWindowDrawList();
         ImVec2 Pos       = ImGui::GetCursorScreenPos();
         ImVec2 Size      = ImGui::CalcTextSize(Text);
-        auto   FrameSize = ImGui::GetStyle().FramePadding.y * 2;
-        Size.x += FrameSize;
-        Size.y += FrameSize;
+        float  FrameSize = ImGui::GetStyle().FramePadding.y * 2.f;
+        ImVec2 EndPos    = { Pos.x + Size.x + FrameSize, Pos.y + Size.y + FrameSize };
 
-        DrawList->AddRectFilled(Pos, { Pos.x + Size.x, Pos.y + Size.y }, ImGui::GetColorU32(ImGuiCol_FrameBg));
+        DrawList->AddRectFilled(Pos, EndPos, ImGui::GetColorU32(ImGuiCol_FrameBg));
         DrawList->AddText({ Pos.x + FrameSize / 2.f, Pos.y + FrameSize / 2.f }, ImGui::GetColorU32(ImGuiCol_Text), Text);
 
         ImGui::Dummy(Size);
@@ -225,10 +224,9 @@ namespace Neon::UI::Utils
         bool Changed = false;
 
         float RegionWidth =
-            (ImGui::GetContentRegionAvail().x -       // Get space left for the region
-             ImGui::GetCursorPosX() -                 // Remove the settings button
-             ImGui::GetStyle().ItemSpacing.x * 2.f) / // Remove the spacing
-            _Ty::length();                            // Divide by the number of components
+            (ImGui::GetContentRegionAvail().x - // Get space left for the region
+             ImGui::GetCursorPosX()) /          // Remove the settings button
+            _Ty::length();                      // Divide by the number of components
 
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {

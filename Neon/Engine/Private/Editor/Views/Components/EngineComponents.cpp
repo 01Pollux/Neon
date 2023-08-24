@@ -40,9 +40,8 @@ namespace Neon::Editor
         }
 
         auto& Transform = Entity.get_mut<Scene::Component::Transform>()->World;
-
-        auto& Position = Transform.GetPosition();
-        auto  Rotation = glm::degrees(Transform.GetRotationEuler());
+        auto& Position  = Transform.GetPosition();
+        auto  Rotation  = glm::degrees(Transform.GetRotationEuler());
 
         UI::Utils::DrawComponentLabel("Position");
         if (ImGui::IsItemHovered())

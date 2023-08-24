@@ -66,34 +66,9 @@ namespace Neon::Scene
 
     public:
         /// <summary>
-        /// Create a new entity.
-        /// </summary>
-        flecs::entity CreateEntity(
-            const char* Name = nullptr);
-
-        /// <summary>
-        /// Create a new entity in the root world.
-        /// The world's root must be set.
-        /// </summary>
-        flecs::entity CreateEntityInRoot(
-            const char* Name = nullptr);
-
-        /// <summary>
-        /// Create a new entity.
-        /// </summary>
-        flecs::entity CreateRootEntity(
-            const char* Name = "_Root");
-
-        /// <summary>
         /// Get the root entity.
         /// </summary>
         [[nodiscard]] flecs::entity GetRootEntity();
-
-        /// <summary>
-        /// Set the root entity.
-        /// </summary>
-        void SetRootEntity(
-            const flecs::entity& Entity);
 
     public:
         operator flecs::world_t*() const noexcept

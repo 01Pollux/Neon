@@ -9,6 +9,9 @@ namespace Neon::Scene::Editor
     /// </summary>
     struct HideInEditor
     {
+        NEON_EXPORT_FLECS(HideInEditor, "Editor::HideInEditor")
+        {
+        }
     };
 
     /// <summary>
@@ -16,5 +19,19 @@ namespace Neon::Scene::Editor
     /// </summary>
     struct SelectedForEditor
     {
+        NEON_EXPORT_FLECS(SelectedForEditor, "Editor::SelectedForEditor")
+        {
+            Component.add(flecs::Exclusive);
+		}
+    };
+
+    /// <summary>
+    /// World tag that indicates that the world is in editor mode.
+    /// </summary>
+    struct WorldEditorMode
+    {
+        NEON_EXPORT_FLECS(WorldEditorMode, "Editor::WorldEditorMode")
+        {
+		}
     };
 } // namespace Neon::Scene::Editor

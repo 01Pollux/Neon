@@ -17,11 +17,10 @@
 
 namespace Neon::Scene::Component
 {
-    struct Root
+    struct SceneEntity
     {
-        NEON_EXPORT_FLECS(Root, "Root")
+        NEON_EXPORT_FLECS(SceneEntity, "SceneEntity")
         {
-            Component.add(flecs::Exclusive);
         }
     };
 } // namespace Neon::Scene::Component

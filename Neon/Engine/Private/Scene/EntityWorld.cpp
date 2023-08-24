@@ -31,7 +31,7 @@ namespace Neon::Scene
         Exports::RegisterComponents(World);
         Exports::RegisterRelations(World);
 
-        CreateRootEntity();
+        World.entity("_Root");
     }
 
     void EntityWorld::Release()
@@ -51,37 +51,8 @@ namespace Neon::Scene
         }
     }
 
-    flecs::entity EntityWorld::CreateEntity(
-        const char* Name)
-    {
-        return GetWorld().entity(Name);
-    }
-
-    flecs::entity EntityWorld::CreateEntityInRoot(
-        const char* Name)
-    {
-        auto RootEntity = GetRootEntity();
-        NEON_ASSERT(RootEntity, "Root entity not found");
-        return CreateEntity(Name).child_of(RootEntity);
-    }
-
-    flecs::entity EntityWorld::CreateRootEntity(
-        const char* Name)
-    {
-        auto World  = GetWorld();
-        auto Entity = World.entity(Name);
-        World.add<Component::Root>(Entity);
-        return Entity;
-    }
-
     flecs::entity EntityWorld::GetRootEntity()
     {
-        return GetWorld().target<Component::Root>();
-    }
-
-    void EntityWorld::SetRootEntity(
-        const flecs::entity& Entity)
-    {
-        GetWorld().add<Component::Root>(Entity);
+        return GetWorld().lookup("_Root");
     }
 } // namespace Neon::Scene
