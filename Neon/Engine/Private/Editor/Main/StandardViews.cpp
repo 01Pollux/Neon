@@ -3,6 +3,7 @@
 #include <Window/Window.hpp>
 
 #include <Editor/Views/Components/EngineComponents.hpp>
+#include <Editor/Scene/EditorEntity.hpp>
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
@@ -12,7 +13,7 @@
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
-#include <Editor/Scene/EditorEntity.hpp>
+#include <UI/imcxx/all_in_one.hpp>
 
 namespace Neon::Editor
 {
@@ -156,6 +157,45 @@ namespace Neon::Editor
             return;
         }
 
+        auto CurPos = ImGui::GetCursorPos();
+        // Render the titlebar buttons
+        {
+            auto TitlebarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+            auto ButtonSize     = ImVec2(TitlebarHeight * 1.4f, TitlebarHeight);
+
+            imcxx::shared_style OverrideSpacing(ImGuiStyleVar_ItemSpacing, ImVec2{});
+            imcxx::shared_color OverrideColor(
+                ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg),
+                ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive),
+                ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ButtonSize.x * 3);
+
+            if (ImGui::Button(ICON_FA_WINDOW_MINIMIZE, ButtonSize))
+            {
+                GetWindow()->Minimize();
+            }
+
+            bool IsMaximized = GetWindow()->IsMaximized();
+            if (ImGui::Button(IsMaximized ? ICON_FA_WINDOW_RESTORE : ICON_FA_WINDOW_MAXIMIZE, ButtonSize))
+            {
+                if (IsMaximized)
+                {
+                    GetWindow()->Restore();
+                }
+                else
+                {
+                    GetWindow()->Maximize();
+                }
+            }
+
+            if (ImGui::Button(ICON_FA_TIMES, ButtonSize))
+            {
+                GetWindow()->Close();
+            }
+        }
+        ImGui::SetCursorPos(CurPos);
+
         if (ImGui::BeginMenu("File"))
         {
             if (ImGui::MenuItem("New Scene", "Ctrl+N"))
@@ -256,47 +296,6 @@ namespace Neon::Editor
             View->OnMenuBar();
         }
 
-        auto CurPos = ImGui::GetCursorPos();
-        {
-            auto TitlebarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-            auto ButtonSize     = ImVec2(TitlebarHeight * 1.4f, TitlebarHeight);
-
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
-
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ButtonSize.x * 3);
-
-            if (ImGui::Button(ICON_FA_WINDOW_MINIMIZE, ButtonSize))
-            {
-                GetWindow()->Minimize();
-            }
-            ImGui::SameLine();
-
-            bool IsMaximized = GetWindow()->IsMaximized();
-            if (ImGui::Button(IsMaximized ? ICON_FA_WINDOW_RESTORE : ICON_FA_WINDOW_MAXIMIZE, ButtonSize))
-            {
-                if (IsMaximized)
-                {
-                    GetWindow()->Restore();
-                }
-                else
-                {
-                    GetWindow()->Maximize();
-                }
-            }
-
-            if (ImGui::Button(ICON_FA_TIMES, ButtonSize))
-            {
-                GetWindow()->Close();
-            }
-            ImGui::SameLine();
-
-            ImGui::PopStyleColor(3);
-            ImGui::PopStyleVar();
-        }
-        ImGui::SetCursorPos(CurPos);
 
         m_IsTitlebarHovered &= !ImGui::IsAnyItemHovered();
 
