@@ -151,23 +151,9 @@ namespace Neon::RHI::ImGuiRHI
             s_DrawCommands.clear();
         }
 
-        // Set viewport, scissor rect and render target view
-        {
-            auto& Size = RHI::ISwapchain::Get()->GetSize();
-
-            CommandList->SetViewport(
-                ViewportF{
-                    .Width    = float(Size.Width()),
-                    .Height   = float(Size.Height()),
-                    .MaxDepth = 1.f,
-                });
-            CommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
-
-            auto View = RHI::ISwapchain::Get()->GetBackBufferView();
-
-            CommandList->SetRenderTargets(
-                View, 1);
-        }
+        // Set viewport
+        auto View = RHI::ISwapchain::Get()->GetBackBufferView();
+        CommandList->SetRenderTargets(View, 1);
 
         auto Dx12CmdList = dynamic_cast<Dx12CommandList*>(CommandList)->Get();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), Dx12CmdList);
@@ -180,7 +166,7 @@ namespace Neon::RHI::ImGuiRHI
         StateManager->FlushBarriers(CommandList);
 
         // Update and Render additional Platform Windows
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) [[likely]]
         {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault(nullptr, Dx12CmdList);
