@@ -46,10 +46,6 @@ namespace Neon::Editor::Views
         G.child_of(Root);
     }
 
-    void SceneHierachy::OnUpdate()
-    {
-    }
-
     static void DispalySceneObject(
         flecs::entity                    Entity,
         std::move_only_function<void()>& DeferredTask)

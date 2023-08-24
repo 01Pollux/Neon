@@ -9,8 +9,6 @@ namespace Neon::Editor::Views
     public:
         SceneHierachy();
 
-        void OnUpdate() override;
-
         void OnRender() override;
     };
 } // namespace Neon::Editor::Views

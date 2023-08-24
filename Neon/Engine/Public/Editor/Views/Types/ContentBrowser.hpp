@@ -30,8 +30,6 @@ namespace Neon::Editor::Views
     public:
         ContentBrowser();
 
-        void OnUpdate() override;
-
         void OnRender() override;
 
     private:

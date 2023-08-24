@@ -14,10 +14,6 @@ namespace Neon::Editor::Views
     {
     }
 
-    void Inspector::OnUpdate()
-    {
-    }
-
     void Inspector::OnRender()
     {
         imcxx::window Window(GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);

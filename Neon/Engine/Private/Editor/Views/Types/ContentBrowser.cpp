@@ -66,14 +66,6 @@ namespace Neon::Editor::Views
         m_FileWatcher.watch();
     }
 
-    //
-
-    void ContentBrowser::OnUpdate()
-    {
-    }
-
-    //
-
     void ContentBrowser::OnRender()
     {
         imcxx::window Window{ GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse };

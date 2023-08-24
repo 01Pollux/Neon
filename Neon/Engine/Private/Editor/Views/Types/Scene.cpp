@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
+#include <UI/imcxx/all_in_one.hpp>
+
 namespace Neon::Editor::Views
 {
     Scene::Scene() :
@@ -14,9 +16,10 @@ namespace Neon::Editor::Views
 
     void Scene::OnRender()
     {
-        if (ImGui::Begin(GetWidgetId().c_str()))
+        imcxx::window Window(GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+        if (!Window)
         {
+            return;
         }
-        ImGui::End();
     }
 } // namespace Neon::Editor::Views
