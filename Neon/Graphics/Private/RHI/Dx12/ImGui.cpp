@@ -200,12 +200,13 @@ namespace Neon::RHI::ImGuiRHI
         Style.WindowMinSize             = ImVec2(20.0f, 20.0f);
         Style.WindowTitleAlign          = ImVec2(0.5f, 0.5f);
         Style.WindowMenuButtonPosition  = ImGuiDir_None;
-        Style.ChildRounding             = 0.0f;
+        Style.WindowRounding            = 3.f;
+        Style.ChildRounding             = 2.f;
         Style.ChildBorderSize           = 1.0f;
-        Style.PopupRounding             = 0.0f;
+        Style.PopupRounding             = 4.f;
         Style.PopupBorderSize           = 1.0f;
         Style.FramePadding              = ImVec2(6.0f, 6.0f);
-        Style.FrameRounding             = 0.0f;
+        Style.FrameRounding             = 2.f;
         Style.FrameBorderSize           = 0.0f;
         Style.ItemSpacing               = ImVec2(12.0f, 6.0f);
         Style.ItemInnerSpacing          = ImVec2(6.0f, 3.0f);
