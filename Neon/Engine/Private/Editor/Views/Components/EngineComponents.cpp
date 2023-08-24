@@ -8,28 +8,28 @@
 
 namespace Neon::Editor
 {
-    bool CameraComponentHandler::Dispatch(
+    bool CameraComponentHandler::Draw(
         const flecs::entity&,
         const flecs::id& ComponentId)
     {
         return false;
     }
 
-    bool PhysicsComponentHandler::Dispatch(
+    bool PhysicsComponentHandler::Draw(
         const flecs::entity&,
         const flecs::id& ComponentId)
     {
         return false;
     }
 
-    bool SpriteComponentHandler::Dispatch(
+    bool SpriteComponentHandler::Draw(
         const flecs::entity&,
         const flecs::id& ComponentId)
     {
         return false;
     }
 
-    bool TransformComponentHandler::Dispatch(
+    bool TransformComponentHandler::Draw(
         const flecs::entity& Entity,
         const flecs::id&     ComponentId)
     {
@@ -72,7 +72,7 @@ namespace Neon::Editor
             }
         }
 
-        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Rotation, {}, {}, {}, std::nullopt))
+        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Rotation))
         {
             Transform.SetRotationEuler(glm::radians(Rotation));
         }

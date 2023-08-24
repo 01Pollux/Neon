@@ -39,7 +39,7 @@ namespace Neon::Editor::Views
         Scene::Component::Transform Tr;
         Tr.World.SetPosition({ 30.0f, 20.0f, 10.0f });
         Tr.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
-        B.set(Tr);
+        F.set(Tr);
 
         A.add<Scene::Editor::HideInEditor>();
         F.child_of(Root);
@@ -91,11 +91,6 @@ namespace Neon::Editor::Views
 
         if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
         {
-            if (ImGui::MenuItem("Rename"))
-            {
-                // TODO
-            }
-
             if (ImGui::MenuItem("Duplicate"))
             {
                 DeferredTask = [Entity]() mutable

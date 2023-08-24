@@ -179,7 +179,7 @@ namespace Neon::Editor
 
         for (auto& Handler : Handlers->second)
         {
-            if (Handler->Dispatch(Entity, ComponentId))
+            if (Handler->Draw(Entity, ComponentId))
             {
                 break;
             }

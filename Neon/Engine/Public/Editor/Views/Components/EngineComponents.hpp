@@ -12,7 +12,7 @@ namespace Neon::Editor
     class CameraComponentHandler : public IEditorComponentHandler
     {
     public:
-        bool Dispatch(
+        bool Draw(
             const flecs::entity& Entity,
             const flecs::id&     ComponentId) override;
     };
@@ -20,7 +20,7 @@ namespace Neon::Editor
     class PhysicsComponentHandler : public IEditorComponentHandler
     {
     public:
-        bool Dispatch(
+        bool Draw(
             const flecs::entity& Entity,
             const flecs::id&     ComponentId) override;
     };
@@ -28,7 +28,7 @@ namespace Neon::Editor
     class SpriteComponentHandler : public IEditorComponentHandler
     {
     public:
-        bool Dispatch(
+        bool Draw(
             const flecs::entity& Entity,
             const flecs::id&     ComponentId) override;
     };
@@ -36,7 +36,7 @@ namespace Neon::Editor
     class TransformComponentHandler : public IEditorComponentHandler
     {
     public:
-        bool Dispatch(
+        bool Draw(
             const flecs::entity& Entity,
             const flecs::id&     ComponentId) override;
     };

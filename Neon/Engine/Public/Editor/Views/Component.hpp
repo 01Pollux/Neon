@@ -15,9 +15,9 @@ namespace Neon::Editor
 
         /// <summary>
         /// Called when the component is being handled.
-        /// return true if the component is handled and stop the dispatching.s
+        /// return true if the component is handled and stop the dispatching.
         /// </summary>
-        virtual bool Dispatch(
+        virtual bool Draw(
             const flecs::entity& Entity,
             const flecs::id&     ComponentId) = 0;
     };
