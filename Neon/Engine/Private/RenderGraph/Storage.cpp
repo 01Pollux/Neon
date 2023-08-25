@@ -160,7 +160,10 @@ namespace Neon::RG
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second.Get();
 #ifndef NEON_DIST
-        RHI::RenameObject(Handle.get(), Id.GetName());
+        if (Handle.get()) [[likely]]
+        {
+            RHI::RenameObject(Handle.get(), Id.GetName());
+        }
 #endif
         m_ImportedResources.emplace(Id);
     }
@@ -180,17 +183,21 @@ namespace Neon::RG
 
     void GraphStorage::NewOutputImage()
     {
-        m_Resources.erase(ResourceResolver::GetOutputImageTag());
+        auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        auto& WindowSize  = RHI::ISwapchain::Get()->GetSize();
 
         auto Desc = RHI::ResourceDesc::Tex2D(
             ResourceResolver::GetSwapchainFormat(),
-            0, 0, 1, 1);
+            WindowSize.Width(), WindowSize.Height(), 1, 1);
         Desc.SetClearValue(Colors::Magenta);
+        Desc.Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
-        ImportTexture(
-            ResourceResolver::GetOutputImageTag(),
-            Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc)),
-            Desc.ClearValue);
+        OutputImage.Set(Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc)));
+        OutputImage.GetDesc() = Desc;
+
+#ifndef NEON_DIST
+        RHI::RenameObject(OutputImage.Get().get(), ResourceResolver::GetOutputImageTag().GetName());
+#endif
     }
 
     void GraphStorage::ReallocateResource(
@@ -201,8 +208,8 @@ namespace Neon::RG
         {
             auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
 
-            Desc.Width  = std::max(1, WindowSize.Width());
-            Desc.Height = std::max(1, WindowSize.Height());
+            Desc.Width  = WindowSize.Width();
+            Desc.Height = WindowSize.Height();
         }
 
         auto Iter = std::ranges::find_if(

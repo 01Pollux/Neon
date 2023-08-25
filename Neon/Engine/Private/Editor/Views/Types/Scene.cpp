@@ -76,9 +76,9 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto& FinalImage      = RenderGraph->GetStorage().GetOutputImage().Get();
-        auto  FrameDescriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-        auto  FinalImageSrv   = FrameDescriptor->Allocate(1);
+        auto& FinalImage       = RenderGraph->GetStorage().GetOutputImage().Get();
+        auto  StagedDescriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+        auto  FinalImageSrv    = StagedDescriptor->Allocate(1);
 
         FinalImageSrv.Heap->CreateShaderResourceView(
             FinalImageSrv.Offset,
