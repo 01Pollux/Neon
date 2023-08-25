@@ -10,6 +10,12 @@
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Graphs/Standard2D.hpp>
 
+// for testing: TODO remove
+#include <Renderer/Material/Material.hpp>
+#include <Renderer/Material/Builder.hpp>
+#include <Asset/Manager.hpp>
+#include <Asset/Types/Shader.hpp>
+
 namespace Neon::Editor
 {
     void EditorEngine::AddStandardEditorSystem()
@@ -55,6 +61,77 @@ namespace Neon::Editor
         A.add<Scene::Editor::HideInEditor>();
         F.child_of(Root);
         G.child_of(Root);
+
+        {
+
+            using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
+
+            auto               RocketShaderGuid = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
+            ShaderAssetTaskPtr RocketShader     = Asset::Manager::Load(RocketShaderGuid);
+
+            Renderer::GBufferMaterialBuilder BaseSpriteMaterial;
+
+            BaseSpriteMaterial
+                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
+                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+                .RootSignature(
+                    RHI::RootSignatureBuilder()
+                        .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView("g_SpriteData", 0, 1, RHI::ShaderVisibility::All)
+                        .AddDescriptorTable(
+                            RHI::RootDescriptorTable()
+                                .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
+                            RHI::ShaderVisibility::Pixel)
+                        .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+                        .AddStandardSamplers()
+                        .Build());
+
+            RHI::MShaderCompileFlags Flags;
+#if NEON_DEBUG
+            Flags.Set(RHI::EShaderCompileFlags::Debug);
+#endif
+
+            BaseSpriteMaterial
+                .VertexShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
+                .PixelShader(RocketShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
+
+            auto WorldMaterial = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+
+            auto WorldTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+            WorldMaterial->SetTexture("p_SpriteTextures", WorldTexture);
+
+            auto WallCreate =
+                [&](const char* Name, const Vector3& Position)
+            {
+                auto Wall = World.entity(Name).child_of(B);
+                {
+                    Scene::Component::Sprite SpriteComponent;
+                    {
+                        SpriteComponent.MaterialInstance = WorldMaterial;
+                        SpriteComponent.SpriteSize       = Vector2(100.f, 2.35f);
+                    }
+                    Wall.set(std::move(SpriteComponent));
+                    Wall.add<Scene::Component::Sprite::MainRenderer>();
+
+                    Scene::Component::Transform Transform;
+                    {
+                        Transform.World.SetPosition(Position);
+                    }
+                    Wall.set(std::move(Transform));
+
+                    if (0)
+                    {
+                        Wall.set(Scene::Component::CollisionShape{
+                            std::make_unique<btBoxShape>(btVector3(100.f, 2.35, 200.f) / 2.f) });
+
+                        auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall);
+                        StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Green));
+                    }
+                }
+            };
+
+            WallCreate("Ceiling", Vec::Forward<Vector3> * 0.f);
+        }
     }
 
     //
@@ -95,7 +172,7 @@ namespace Neon::Editor
 
             CameraComponent.Viewport.OrthographicSize = 50.0f;
             CameraComponent.Viewport.NearPlane        = -1.0f;
-            CameraComponent.Viewport.FarPlane         = 10.0f;
+            CameraComponent.Viewport.FarPlane         = 20.0f;
         }
         Camera.set(std::move(CameraComponent));
 

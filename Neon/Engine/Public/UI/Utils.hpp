@@ -245,10 +245,14 @@ namespace Neon::UI::Utils
         ImGui::PushID(std::addressof(DrawData.Value));
         bool Changed = false;
 
-        float RegionWidth =
-            (ImGui::GetContentRegionAvail().x - // Get space left for the region
-             ImGui::GetCursorPosX()) /          // Remove the settings button
-            _Ty::length();                      // Divide by the number of components
+        float TextSize = 0.f;
+        float Spacing  = ImGui::GetStyle().ItemSpacing.x * 2.f;
+        for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
+        {
+            TextSize += ImGui::CalcTextSize(DrawData.Names[i]).x + Spacing;
+        }
+
+        float RegionWidth = (ImGui::GetContentRegionAvail().x - TextSize) / _Ty::length();
 
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {
