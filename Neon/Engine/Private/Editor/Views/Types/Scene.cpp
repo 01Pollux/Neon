@@ -7,6 +7,7 @@
 #include <Scene/Component/Camera.hpp>
 #include <RenderGraph/RG.hpp>
 #include <RHI/GlobalDescriptors.hpp>
+#include <RHI/Resource/State.hpp>
 
 #include <UI/imcxx/all_in_one.hpp>
 
@@ -76,9 +77,15 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto& FinalImage       = RenderGraph->GetStorage().GetOutputImage().Get();
-        auto  StagedDescriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
-        auto  FinalImageSrv    = StagedDescriptor->Allocate(1);
+        auto& FinalImage = RenderGraph->GetStorage().GetOutputImage().Get();
+        // Transition FinalImage to SRV.
+        RHI::IResourceStateManager::Get()->TransitionResource(
+            FinalImage.get(),
+            RHI::EResourceState::PixelShaderResource);
+        RHI::IResourceStateManager::Get()->FlushBarriers();
+
+        auto StagedDescriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+        auto FinalImageSrv    = StagedDescriptor->Allocate(1);
 
         FinalImageSrv.Heap->CreateShaderResourceView(
             FinalImageSrv.Offset,
