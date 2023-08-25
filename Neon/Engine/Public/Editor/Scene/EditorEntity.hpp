@@ -34,4 +34,14 @@ namespace Neon::Scene::Editor
         {
         }
     };
+
+    /// <summary>
+    /// Tag for entities that should not be removed from editor's scene.
+    /// </summary>
+    struct EditorSceneDoNotRemove
+    {
+        NEON_EXPORT_FLECS(EditorSceneDoNotRemove, "Editor::EditorSceneDoNotRemove")
+        {
+        }
+    };
 } // namespace Neon::Scene::Editor

@@ -67,6 +67,7 @@ namespace Neon::Editor
         NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
+        NEON_REGISTER_FLECS(Scene::Editor::EditorSceneDoNotRemove);
 
         // By default, editor world is in editor mode
         World.add<Scene::Editor::WorldEditorMode>();
@@ -86,7 +87,7 @@ namespace Neon::Editor
         flecs::world World = GetLogic()->GetEntityWorld();
 
         auto RootEntity = EditorEngine::Get()->GetEditorRootEntity();
-        auto Camera     = World.entity("_EditorCamera").child_of(RootEntity);
+        auto Camera     = World.entity("Editor Camera").child_of(RootEntity);
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {
@@ -104,6 +105,8 @@ namespace Neon::Editor
             TransformComponent.World.SetPosition(Vec::Backward<Vector3> * 10.f);
         }
         Camera.set(std::move(TransformComponent));
+
+        Camera.add<Scene::Editor::EditorSceneDoNotRemove>();
 
         RootEntity.add<Scene::Component::MainCamera>(Camera);
     }

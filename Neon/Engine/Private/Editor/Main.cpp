@@ -13,7 +13,7 @@ NEON_MAIN(Argc, Argv)
 {
     Config::EngineConfig Config{
         .Window = { .Title = "Neon Editor" },
-        .Renderer{ .Device = { .EnableDebugLayer = true, .EnableGPUDebugger = true } }
+        .Renderer{ .Device = { .EnableDebugLayer = false, .EnableGPUDebugger = true } }
     };
 
     {

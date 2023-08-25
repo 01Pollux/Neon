@@ -17,6 +17,9 @@
 
 namespace Neon::Scene::Component
 {
+    /// <summary>
+    /// Tag component for entities that are part of the scene and should be rendered, updated, etc.
+    /// </summary>
     struct SceneEntity
     {
         NEON_EXPORT_FLECS(SceneEntity, "SceneEntity")
