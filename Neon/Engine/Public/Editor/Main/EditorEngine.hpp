@@ -158,9 +158,23 @@ namespace Neon::Editor
 
         /// <summary>
         /// Get the editor active root entity.
+        /// (either root entity if not in editor mode, or editor root entity if in editor mode)
         /// </summary>
         [[nodiscard]] flecs::entity GetEditorActiveRootEntity() const;
 
+        /// <summary>
+        /// Get the editor active root entity.
+        /// (either root entity if not in editor mode, or editor root entity if in editor mode)
+        /// </summary>
+        [[nodiscard]] flecs::entity GetRootEntity(
+            bool EditorMode) const;
+
+        /// <summary>
+        /// Check if the editor is in editor mode.
+        /// </summary>
+        [[nodiscard]] bool IsInEditorMode() const;
+
+    public:
         /// <summary>
         /// Get the content package.
         /// </summary>

@@ -203,7 +203,18 @@ namespace Neon::Editor
 
     flecs::entity EditorEngine::GetEditorActiveRootEntity() const
     {
+        return GetRootEntity(IsInEditorMode());
+    }
+
+    flecs::entity EditorEngine::GetRootEntity(
+        bool EditorMode) const
+    {
+        return EditorMode ? GetEditorRootEntity() : GetLogic()->GetEntityWorld().GetRootEntity();
+    }
+
+    bool EditorEngine::IsInEditorMode() const
+    {
         auto World = GetLogic()->GetEntityWorld();
-        return World.GetWorld().has<Scene::Editor::WorldEditorMode>() ? GetEditorRootEntity() : World.GetRootEntity();
+        return World.GetWorld().has<Scene::Editor::WorldEditorMode>();
     }
 } // namespace Neon::Editor

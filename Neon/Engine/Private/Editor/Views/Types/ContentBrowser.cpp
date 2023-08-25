@@ -74,8 +74,8 @@ namespace Neon::Editor::Views
             return;
         }
 
-        static int ViewSize = 96;
-        if (imcxx::slider("View Size", ViewSize, 64, 352))
+        static int ViewSize = 64;
+        if (imcxx::slider("View Size", ViewSize, 32, 352))
         {
             ViewSize = (ViewSize / 32) * 32;
         }

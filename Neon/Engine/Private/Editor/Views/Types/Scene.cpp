@@ -13,8 +13,10 @@
 
 namespace Neon::Editor::Views
 {
-    SceneDisplay::SceneDisplay() :
-        IEditorView(StandardViews::s_SceneViewWidgetId)
+    SceneDisplay::SceneDisplay(
+        bool IsEditorView) :
+        IEditorView(IsEditorView ? StandardViews::s_SceneViewWidgetId : StandardViews::s_GameViewWidgetId),
+        m_IsEditorView(IsEditorView)
     {
     }
 
@@ -58,7 +60,7 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto RootEntity = EditorEngine::Get()->GetEditorRootEntity();
+        auto RootEntity = EditorEngine::Get()->GetEditorActiveRootEntity();
         auto Camera     = RootEntity.target<Scene::Component::MainCamera>();
         if (!Camera) [[unlikely]]
         {
@@ -78,6 +80,7 @@ namespace Neon::Editor::Views
         }
 
         auto& FinalImage = RenderGraph->GetStorage().GetOutputImage().Get();
+
         // Transition FinalImage to SRV.
         RHI::IResourceStateManager::Get()->TransitionResource(
             FinalImage.get(),
@@ -93,9 +96,6 @@ namespace Neon::Editor::Views
 
         ImGui::Image(
             ImTextureID(FinalImageSrv.GetCpuHandle().Value),
-            ImGui::GetContentRegionAvail() /*,
-             ImVec2(0, 1),
-             ImVec2(1, 0)*/
-        );
+            ImGui::GetContentRegionAvail());
     }
 } // namespace Neon::Editor::Views

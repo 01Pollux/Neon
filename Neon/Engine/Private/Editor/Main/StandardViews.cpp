@@ -4,7 +4,6 @@
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
 #include <Editor/Views/Types/Console.hpp>
-#include <Editor/Views/Types/Game.hpp>
 #include <Editor/Views/Types/HierachyScene.hpp>
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
@@ -17,10 +16,10 @@ namespace Neon::Editor
     {
         RegisterView<Views::Console>("_Console", true);
         RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
-        RegisterView<Views::GameDisplay>("_GameDisplay", true);
         RegisterView<Views::SceneHierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
-        RegisterView<Views::SceneDisplay>("_SceneDisplay", true);
+        RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
+        RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", true, false);
     }
 
     bool EditorEngine::BeginEditorSpace()
@@ -83,7 +82,7 @@ namespace Neon::Editor
             // Build dock layout
             ImGuiID Center = DockerspaceId;
 
-            ImGuiID TopCenter = ImGui::DockBuilderSplitNode(Center, ImGuiDir_Up, .45f, nullptr, &Center);
+            ImGuiID TopCenter = ImGui::DockBuilderSplitNode(Center, ImGuiDir_Up, .75f, nullptr, &Center);
             ImGuiID Bottom    = Center;
 
             ImGuiID Left  = ImGui::DockBuilderSplitNode(TopCenter, ImGuiDir_Left, .25f, nullptr, &TopCenter);
