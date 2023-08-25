@@ -19,6 +19,34 @@ namespace Neon::Editor::Views
 
     void SceneDisplay::OnUpdate()
     {
+        auto Window = ImGui::FindWindowByName(GetWidgetId().c_str());
+        if (!Window) [[unlikely]]
+        {
+            return;
+        }
+
+        auto RootEntity = EditorEngine::Get()->GetEditorRootEntity();
+        auto Camera     = RootEntity.target<Scene::Component::MainCamera>();
+        if (!Camera) [[unlikely]]
+        {
+            return;
+        }
+
+        // Check if window is active and not collapsed to enable/disable camera.
+        if (Window->Hidden || Window->Collapsed) [[unlikely]]
+        {
+            if (Camera.enabled())
+            {
+                Camera.disable();
+            }
+        }
+        else
+        {
+            if (!Camera.enabled())
+            {
+                Camera.enable();
+            }
+        }
     }
 
     void SceneDisplay::OnRender()
@@ -58,8 +86,9 @@ namespace Neon::Editor::Views
 
         ImGui::Image(
             ImTextureID(FinalImageSrv.GetCpuHandle().Value),
-            ImGui::GetContentRegionAvail(),
-            ImVec2(0, 1),
-            ImVec2(1, 0));
+            ImGui::GetContentRegionAvail() /*,
+             ImVec2(0, 1),
+             ImVec2(1, 0)*/
+        );
     }
 } // namespace Neon::Editor::Views

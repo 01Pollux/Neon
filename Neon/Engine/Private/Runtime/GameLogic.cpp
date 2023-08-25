@@ -55,7 +55,7 @@ namespace Neon::Runtime
                     }
                 });
 
-        // Create physics camera render system.
+        // Create camera render system.
         m_CameraQuery =
             World.query_builder<Component::Camera>()
                 .term<Component::Camera>()
