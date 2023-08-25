@@ -141,7 +141,7 @@ namespace Neon::Editor
     void EditorEngine::RegisterEditorWorldComponents()
     {
         flecs::world World = GetLogic()->GetEntityWorld();
-        m_EditorRootEntity = World.entity("_EditorRoot");
+        m_EditorRootEntity = World.entity(EditorRootEntityName);
 
         NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);

@@ -18,6 +18,8 @@ namespace Neon::Editor
 {
     class EditorEngine : public Runtime::GameEngine
     {
+        static constexpr const char* EditorRootEntityName = "_EditorRoot";
+
     public:
         /// <summary>
         /// Get the singleton instance of the editor.

@@ -6,12 +6,15 @@ namespace Neon::Scene
 {
     struct EntityWorld
     {
+        static constexpr const char* RootEntityName = "_Root";
+
     public:
         EntityWorld();
 
         EntityWorld(
             flecs::world&& World) :
             m_World(std::exchange(World.m_world, {})),
+            m_RootEntity(World.lookup(RootEntityName)),
             m_Owned(std::exchange(World.m_owned, {}))
         {
         }
@@ -19,6 +22,7 @@ namespace Neon::Scene
         EntityWorld(
             const EntityWorld& Other) :
             m_World(Other.m_World),
+            m_RootEntity(Other.m_RootEntity),
             m_Owned(false)
         {
         }
@@ -26,6 +30,7 @@ namespace Neon::Scene
         EntityWorld(
             EntityWorld&& Other) noexcept :
             m_World(std::exchange(Other.m_World, {})),
+            m_RootEntity(std::exchange(Other.m_RootEntity, {})),
             m_Owned(std::exchange(Other.m_Owned, {}))
         {
         }
@@ -36,8 +41,9 @@ namespace Neon::Scene
             if (this != &Other)
             {
                 Release();
-                m_World = Other.m_World;
-                m_Owned = false;
+                m_World      = Other.m_World;
+                m_RootEntity = Other.m_RootEntity;
+                m_Owned      = false;
             }
             return *this;
         }
@@ -48,8 +54,9 @@ namespace Neon::Scene
             if (this != &Other)
             {
                 Release();
-                m_World = std::exchange(Other.m_World, {});
-                m_Owned = std::exchange(Other.m_Owned, {});
+                m_World      = std::exchange(Other.m_World, {});
+                m_RootEntity = std::exchange(Other.m_RootEntity, {});
+                m_Owned      = std::exchange(Other.m_Owned, {});
             }
             return *this;
         }

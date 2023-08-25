@@ -28,7 +28,7 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto RootEntity = EditorEngine::Get()->GetEditorRootEntity();
+        auto RootEntity = EditorEngine::Get()->GetRootEntity(m_IsEditorView);
         auto Camera     = RootEntity.target<Scene::Component::MainCamera>();
         if (!Camera) [[unlikely]]
         {
@@ -60,9 +60,9 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto RootEntity = EditorEngine::Get()->GetEditorActiveRootEntity();
+        auto RootEntity = EditorEngine::Get()->GetRootEntity(m_IsEditorView);
         auto Camera     = RootEntity.target<Scene::Component::MainCamera>();
-        if (!Camera) [[unlikely]]
+        if (!Camera || !Camera.enabled()) [[unlikely]]
         {
             return;
         }

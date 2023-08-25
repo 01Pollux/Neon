@@ -2,8 +2,7 @@
 #include <Scene/EntityWorld.hpp>
 #include <Scene/Component/Component.hpp>
 #include <Scene/Exports/Export.hpp>
-
-#include <Log/Logger.hpp>
+#include <Scene/Component/Camera.hpp>
 
 namespace Neon::Scene
 {
@@ -31,7 +30,8 @@ namespace Neon::Scene
         Exports::RegisterComponents(World);
         Exports::RegisterRelations(World);
 
-        m_RootEntity = World.entity("_Root");
+        // Create root entity with null main camera.
+        m_RootEntity = World.entity(RootEntityName);
     }
 
     void EntityWorld::Release()
