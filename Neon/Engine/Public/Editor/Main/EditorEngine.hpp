@@ -110,6 +110,11 @@ namespace Neon::Editor
 
     private:
         /// <summary>
+        /// Register the editor world components, camera.
+        /// </summary>
+        void AddStandardEditorSystem();
+
+        /// <summary>
         /// Register the editor world components.
         /// </summary>
         void RegisterEditorWorldComponents();
@@ -119,6 +124,12 @@ namespace Neon::Editor
         /// </summary>
         void AddStandardComponentHandlers();
 
+        /// <summary>
+        /// Add the editor camera.
+        /// </summary>
+        void AddEditorCamera();
+
+    private:
         /// <summary>
         /// Add the standard views to the editor.
         /// </summary>

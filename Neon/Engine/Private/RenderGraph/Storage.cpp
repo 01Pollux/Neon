@@ -24,6 +24,10 @@ namespace Neon::RG
     {
         FlushResources();
         m_Resources.clear();
+        // Importing null output image to allow to use it in the graph
+        ImportTexture(
+            ResourceResolver::GetOutputImageTag(),
+            nullptr);
     }
 
     bool GraphStorage::ContainsResource(

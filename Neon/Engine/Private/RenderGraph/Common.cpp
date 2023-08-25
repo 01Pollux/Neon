@@ -9,7 +9,7 @@ namespace Neon::RG
         const RHI::ClearOperationOpt& ClearValue) :
         m_Id(Id),
         m_Resource(Texture),
-        m_Desc(Texture->GetDesc())
+        m_Desc(Texture ? Texture->GetDesc() : RHI::ResourceDesc{})
     {
         m_Flags.Set(EResourceFlags::Imported);
         m_Desc.ClearValue = ClearValue;

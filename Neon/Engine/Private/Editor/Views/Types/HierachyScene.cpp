@@ -7,42 +7,11 @@
 
 #include <UI/imcxx/all_in_one.hpp>
 
-// TODO: remove, this is just for testing
-#include <Scene/Component/Transform.hpp>
-
 namespace Neon::Editor::Views
 {
     SceneHierachy::SceneHierachy() :
         IEditorView(StandardViews::s_HierachyViewWidgetId)
     {
-        auto Root = EditorEngine::Get()->GetEditorRootEntity();
-
-        auto A = World.entity("Unnamed Entity");
-        auto B = World.entity("B");
-        auto C = World.entity("C");
-        auto D = World.entity("D");
-        auto E = World.entity("E");
-        auto F = World.entity("F");
-        auto G = World.entity("G");
-
-        A.child_of(Root);
-        {
-            B.child_of(A);
-            C.child_of(A);
-            {
-                D.child_of(C);
-            }
-            E.child_of(A);
-        }
-
-        Scene::Component::Transform Tr;
-        Tr.World.SetPosition({ 30.0f, 20.0f, 10.0f });
-        Tr.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
-        F.set(Tr);
-
-        A.add<Scene::Editor::HideInEditor>();
-        F.child_of(Root);
-        G.child_of(Root);
     }
 
     static void DispalySceneObject(

@@ -1,9 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Runtime/GameLogic.hpp>
 #include <Window/Window.hpp>
-
-#include <Editor/Views/Components/EngineComponents.hpp>
-#include <Editor/Scene/EditorEntity.hpp>
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
@@ -17,23 +13,6 @@
 
 namespace Neon::Editor
 {
-    void EditorEngine::RegisterEditorWorldComponents()
-    {
-        flecs::world World = GetLogic()->GetEntityWorld();
-        m_EditorRootEntity = World.entity("_EditorRoot");
-
-        NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
-        NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
-        NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
-
-        World.add<Scene::Editor::WorldEditorMode>();
-    }
-
-    void EditorEngine::AddStandardComponentHandlers()
-    {
-        RegisterStandardComponentHandler<TransformComponentHandler, Scene::Component::Transform>();
-    }
-
     void EditorEngine::AddStandardViews()
     {
         RegisterView<Views::Console>("_Console", true);
@@ -317,17 +296,5 @@ namespace Neon::Editor
     void EditorEngine::EndEditorSpace()
     {
         ImGui::End();
-    }
-
-    flecs::entity EditorEngine::GetEditorRootEntity() const
-    {
-        flecs::world World = GetLogic()->GetEntityWorld();
-        return flecs::entity(World, m_EditorRootEntity);
-    }
-
-    flecs::entity EditorEngine::GetEditorActiveRootEntity() const
-    {
-        auto World = GetLogic()->GetEntityWorld();
-        return World.GetWorld().has<Scene::Editor::WorldEditorMode>() ? GetEditorRootEntity() : World.GetRootEntity();
     }
 } // namespace Neon::Editor
