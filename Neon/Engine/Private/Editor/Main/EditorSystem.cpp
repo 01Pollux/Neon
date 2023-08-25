@@ -119,6 +119,8 @@ namespace Neon::Editor
                     }
                     Wall.set(std::move(Transform));
 
+                    Wall.add<Scene::Component::SceneEntity>();
+
                     if (0)
                     {
                         Wall.set(Scene::Component::CollisionShape{
@@ -154,6 +156,9 @@ namespace Neon::Editor
 
     void EditorEngine::AddStandardComponentHandlers()
     {
+        RegisterStandardComponentHandler<CameraComponentHandler, Scene::Component::Camera>();
+        RegisterStandardComponentHandler<PhysicsComponentHandler, Scene::Component::CollisionObject>();
+        RegisterStandardComponentHandler<SpriteComponentHandler, Scene::Component::Sprite>();
         RegisterStandardComponentHandler<TransformComponentHandler, Scene::Component::Transform>();
     }
 

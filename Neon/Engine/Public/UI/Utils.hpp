@@ -223,12 +223,6 @@ namespace Neon::UI::Utils
         /// </summary>
         std::span<const char* const> Names         = DrawVectorPositionNames;
         std::optional<ImVec4>        PropertyColor = ImVec4{ 0.47f, 0.19f, 0.19f, 1.f };
-
-        constexpr DrawVectorData(
-            _Ty& Value) noexcept :
-            Value(Value)
-        {
-        }
     };
 
     /// <summary>
@@ -246,13 +240,12 @@ namespace Neon::UI::Utils
         bool Changed = false;
 
         float TextSize = 0.f;
-        float Spacing  = ImGui::GetStyle().ItemSpacing.x * 2.f;
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {
-            TextSize += ImGui::CalcTextSize(DrawData.Names[i]).x + Spacing;
+            TextSize += ImGui::CalcTextSize(DrawData.Names[i]).x;
         }
 
-        float RegionWidth = (ImGui::GetContentRegionAvail().x - TextSize) / _Ty::length();
+        float RegionWidth = (ImGui::GetContentRegionAvail().x - TextSize) / _Ty::length() - ImGui::GetStyle().ItemSpacing.x * 2.f;
 
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {

@@ -14,6 +14,7 @@ namespace Neon::Renderer
                 ->GetEntityWorld()
                 .GetWorld()
                 .query_builder<Component::Transform, Component::Sprite>()
+                .with<Scene::Component::SceneEntity>()
                 .with<Component::Sprite::MainRenderer>()
                 .term<Component::Transform>()
                 .in()

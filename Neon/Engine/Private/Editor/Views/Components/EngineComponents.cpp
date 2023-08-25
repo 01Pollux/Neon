@@ -16,6 +16,8 @@ namespace Neon::Editor
         return false;
     }
 
+    //
+
     bool PhysicsComponentHandler::Draw(
         const flecs::entity&,
         const flecs::id& ComponentId)
@@ -23,12 +25,93 @@ namespace Neon::Editor
         return false;
     }
 
+    //
+
     bool SpriteComponentHandler::Draw(
-        const flecs::entity&,
-        const flecs::id& ComponentId)
+        const flecs::entity& Entity,
+        const flecs::id&     ComponentId)
     {
-        return false;
+        auto HeaderInfo = UI::Utils::BeginComponentHeader("Sprite");
+        if (!HeaderInfo)
+        {
+            return true;
+        }
+
+        auto& Sprite  = *static_cast<Scene::Component::Sprite*>(Entity.get_mut(ComponentId));
+        bool  Changed = false;
+
+        //
+
+        UI::Utils::DrawComponentLabel("Material", false);
+
+        //
+
+        ImGui::Separator();
+
+        //
+
+        ImGui::Text("Texture Transform");
+        auto& TextureTransform = Sprite.TextureTransform;
+        auto& Position         = TextureTransform.GetPosition();
+        auto  Rotation         = glm::degrees(TextureTransform.GetRotationEuler());
+        auto  Scale            = TextureTransform.GetScale();
+
+        //
+
+        UI::Utils::DrawComponentLabel("Position");
+        if (UI::Utils::DragVectorComponent(Position))
+        {
+            Changed = true;
+        }
+
+        //
+
+        UI::Utils::DrawComponentLabel("Rotation");
+        if (UI::Utils::DragVectorComponent(Rotation))
+        {
+            Changed = true;
+            TextureTransform.SetRotationEuler(glm::radians(Rotation));
+        }
+
+        //
+
+        UI::Utils::DrawComponentLabel("Scale");
+        if (UI::Utils::DragVectorComponent(Scale))
+        {
+            Changed = true;
+            TextureTransform.SetScale(Scale);
+        }
+
+        //
+
+        ImGui::Separator();
+
+        //
+
+        UI::Utils::DrawComponentLabel("Color");
+        Changed |= UI::Utils::DragVectorComponent(UI::Utils::DrawVectorData{
+            .Value = Sprite.ModulationColor,
+            .Names = UI::Utils::DrawVectorColorNames });
+
+        //
+
+        UI::Utils::DrawComponentLabel("Sprite Size");
+        Changed |= UI::Utils::DragVectorComponent(Sprite.SpriteSize);
+
+        //
+
+
+        UI::Utils::EndComponentHeader();
+
+        if (Changed)
+        {
+            Entity.modified<Scene::Component::Transform>();
+        }
+
+        return true;
     }
+
+    //
 
     bool TransformComponentHandler::Draw(
         const flecs::entity& Entity,
@@ -40,8 +123,8 @@ namespace Neon::Editor
             return true;
         }
 
-        auto& Transform = Entity.get_mut<Scene::Component::Transform>()->World;
-        auto  Position  = Transform.GetPosition();
+        auto& Transform = static_cast<Scene::Component::Transform*>(Entity.get_mut(ComponentId))->World;
+        auto& Position  = Transform.GetPosition();
         auto  Rotation  = glm::degrees(Transform.GetRotationEuler());
         bool  Changed   = false;
 
@@ -63,7 +146,6 @@ namespace Neon::Editor
         if (UI::Utils::DragVectorComponent(Position))
         {
             Changed = true;
-            Transform.SetPosition(Position);
         }
 
         //
