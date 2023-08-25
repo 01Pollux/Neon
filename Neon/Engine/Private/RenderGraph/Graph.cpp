@@ -45,6 +45,8 @@ namespace Neon::RG
             return;
         }
 
+        m_Storage.NewOutputImage();
+
         for (auto& ImportedResource : m_Storage.m_ImportedResources)
         {
             auto& Handle = m_Storage.GetResourceMut(ImportedResource);
@@ -60,10 +62,13 @@ namespace Neon::RG
                 Level.Execute(ChainedCommandList);
             }
 
+            // In Editor mode, we won't copy immediately to the back buffer
+#ifndef NEON_EDITOR
             if (CopyToBackBuffer)
             {
                 m_BackBufferFinalizer.Dispatch(m_Storage, ChainedCommandList.Load());
             }
+#endif
         }
 
         m_Storage.FlushResources();
@@ -101,11 +106,9 @@ namespace Neon::RG
     }
 
     void RenderGraph::Build(
-        ResourceId                        FinalOutput,
         std::vector<GraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
-        m_BackBufferFinalizer.SetSource(std::move(FinalOutput));
     }
 
     //

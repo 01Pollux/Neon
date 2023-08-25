@@ -9,13 +9,13 @@
 
 namespace Neon::RG
 {
-    IRenderPass::ResourceResolver::ResourceResolver(
+    ResourceResolver::ResourceResolver(
         GraphStorage& Storage) :
         m_Storage(Storage)
     {
     }
 
-    void IRenderPass::ResourceResolver::CreateBuffer(
+    void ResourceResolver::CreateBuffer(
         const ResourceId&       Id,
         const RHI::BufferDesc&  Desc,
         RHI::GraphicsBufferType BufferType)
@@ -24,7 +24,7 @@ namespace Neon::RG
         m_ResourcesCreated.emplace(Id);
     }
 
-    void IRenderPass::ResourceResolver::CreateTexture(
+    void ResourceResolver::CreateTexture(
         const ResourceId&        Id,
         const RHI::ResourceDesc& Desc,
         MResourceFlags           Flags)
@@ -33,7 +33,7 @@ namespace Neon::RG
         m_ResourcesCreated.emplace(Id);
     }
 
-    void IRenderPass::ResourceResolver::CreateWindowTexture(
+    void ResourceResolver::CreateWindowTexture(
         const ResourceId&        Id,
         const RHI::ResourceDesc& Desc,
         MResourceFlags           Flags)
@@ -42,14 +42,14 @@ namespace Neon::RG
         CreateTexture(Id, Desc, std::move(Flags));
     }
 
-    void IRenderPass::ResourceResolver::WriteResourceEmpty(
+    void ResourceResolver::WriteResourceEmpty(
         const ResourceId& Id)
     {
         NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
         m_ResourcesWritten.emplace(Id);
     }
 
-    const ResourceViewId& IRenderPass::ResourceResolver::WriteResource(
+    const ResourceViewId& ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc)
     {
@@ -100,7 +100,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    const ResourceViewId& IRenderPass::ResourceResolver::WriteDstResource(
+    const ResourceViewId& ResourceResolver::WriteDstResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -112,14 +112,14 @@ namespace Neon::RG
         return ViewId;
     }
 
-    void IRenderPass::ResourceResolver::ReadResourceEmpty(
+    void ResourceResolver::ReadResourceEmpty(
         const ResourceId& Id)
     {
         NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
         m_ResourcesRead.emplace(Id);
     }
 
-    const ResourceViewId& IRenderPass::ResourceResolver::ReadResource(
+    const ResourceViewId& ResourceResolver::ReadResource(
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
         const RHI::DescriptorViewDesc& Desc)
@@ -180,7 +180,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    const ResourceViewId& IRenderPass::ResourceResolver::ReadSrcResource(
+    const ResourceViewId& ResourceResolver::ReadSrcResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
@@ -192,7 +192,7 @@ namespace Neon::RG
         return ViewId;
     }
 
-    void IRenderPass::ResourceResolver::ImportBuffer(
+    void ResourceResolver::ImportBuffer(
         const ResourceId&        Id,
         const Ptr<RHI::IBuffer>& Resource,
         RHI::GraphicsBufferType  BufferType)
@@ -200,7 +200,7 @@ namespace Neon::RG
         m_Storage.ImportBuffer(Id, Resource, BufferType);
     }
 
-    void IRenderPass::ResourceResolver::ImportTexture(
+    void ResourceResolver::ImportTexture(
         const ResourceId&             Id,
         const Ptr<RHI::ITexture>&     Resource,
         const RHI::ClearOperationOpt& ClearValue)
@@ -208,17 +208,17 @@ namespace Neon::RG
         m_Storage.ImportTexture(Id, Resource, ClearValue);
     }
 
-    RHI::EResourceFormat IRenderPass::ResourceResolver::GetSwapchainFormat()
+    RHI::EResourceFormat ResourceResolver::GetSwapchainFormat()
     {
         return RHI::ISwapchain::Get()->GetFormat();
     }
 
-    ResourceId IRenderPass::ResourceResolver::GetOutputImage()
+    ResourceId ResourceResolver::GetOutputImageTag()
     {
         return ResourceId(STR("OutputImage"));
     }
 
-    void IRenderPass::ResourceResolver::SetResourceState(
+    void ResourceResolver::SetResourceState(
         const ResourceViewId&      ViewId,
         const RHI::MResourceState& State,
         const RHI::MResourceFlags& Flags)

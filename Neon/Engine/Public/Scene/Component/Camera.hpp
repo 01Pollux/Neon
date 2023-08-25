@@ -125,7 +125,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Get the render graph of the camera.
         /// </summary>
-        RG::RenderGraph* GetRenderGraph();
+        RG::RenderGraph* GetRenderGraph() const;
 
         /// <summary>
         /// The viewport of the camera.

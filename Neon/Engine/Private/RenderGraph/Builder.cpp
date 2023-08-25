@@ -5,40 +5,13 @@
 
 namespace Neon::RG
 {
-    class InitializeOutputImage : public IRenderPass
-    {
-    public:
-        InitializeOutputImage() :
-            IRenderPass(STR("InitializeOutputImage"), PassQueueType::Unknown)
-        {
-        }
-
-        void ResolveResources(
-            ResourceResolver& Resolver) override
-        {
-            auto Desc = RHI::ResourceDesc::Tex2D(
-                ResourceResolver::GetSwapchainFormat(),
-                0, 0, 1, 1);
-            Desc.SetClearValue(Colors::Green);
-
-            Resolver.CreateTexture(
-                ResourceResolver::GetOutputImage(),
-                Desc,
-                MResourceFlags::FromEnum(EResourceFlags::WindowSizeDependent));
-        }
-    };
-
-    //
-
     GraphBuilder::GraphBuilder(
         RenderGraph& Context) :
         m_Context(Context)
     {
-        AddPass<InitializeOutputImage>();
     }
 
-    void GraphBuilder::Build(
-        ResourceId FinalOutput)
+    void GraphBuilder::Build()
     {
         BuildersListType Builders;
 
@@ -54,7 +27,7 @@ namespace Neon::RG
             auto& Builder = Builders[i];
             m_Passes[i]->ResolveResources(Builder.Resources);
         }
-        m_Context.Build(std::move(FinalOutput), BuildPasses(Builders));
+        m_Context.Build(BuildPasses(Builders));
     }
 
     auto GraphBuilder::BuildPasses(

@@ -30,6 +30,6 @@ namespace Neon::RG
         Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));
 #endif
 
-        Builder.Build(ResourceId(STR("GBufferAlbedo")));
+        Builder.Build();
     }
 } // namespace Neon::RG

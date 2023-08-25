@@ -70,6 +70,12 @@ namespace Neon::RG
 
     public:
         /// <summary>
+        /// Get output image
+        /// </summary>
+        [[nodiscard]] const ResourceHandle& GetOutputImage() const;
+
+    public:
+        /// <summary>
         /// Map global frame data to system memory
         /// </summary>
         [[nodiscard]] CameraFrameData& MapFrameData() const;
@@ -127,6 +133,11 @@ namespace Neon::RG
             const RHI::DescriptorViewDesc& Desc);
 
     private:
+        /// <summary>
+        /// Allocate a new output image for rendering
+        /// </summary>
+        void NewOutputImage();
+
         /// <summary>
         /// Allocate resource from the pool
         /// </summary>

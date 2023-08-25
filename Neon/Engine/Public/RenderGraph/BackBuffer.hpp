@@ -15,12 +15,6 @@ namespace Neon::RG
         BackBufferFinalizer();
 
         /// <summary>
-        /// Sets the source texture to copy from.
-        /// </summary>
-        void SetSource(
-            ResourceId Source);
-
-        /// <summary>
         /// Dispatches and render to the back buffer.
         /// </summary>
         void Dispatch(
@@ -28,7 +22,6 @@ namespace Neon::RG
             RHI::ICommandList*  CommandList);
 
     private:
-        ResourceId               m_SourceTexture;
         Ptr<Renderer::IMaterial> m_Material;
     };
 } // namespace Neon::RG

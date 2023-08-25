@@ -93,6 +93,11 @@ namespace Neon::RG
         std::unreachable();
     }
 
+    const ResourceHandle& GraphStorage::GetOutputImage() const
+    {
+        return GetResource(ResourceResolver::GetOutputImageTag());
+    }
+
     CameraFrameData& GraphStorage::MapFrameData() const
     {
         return *m_CameraFrameData->Map<CameraFrameData>();
@@ -168,6 +173,21 @@ namespace Neon::RG
     }
 
     //
+
+    void GraphStorage::NewOutputImage()
+    {
+        m_Resources.erase(ResourceResolver::GetOutputImageTag());
+
+        auto Desc = RHI::ResourceDesc::Tex2D(
+            ResourceResolver::GetSwapchainFormat(),
+            0, 0, 1, 1);
+        Desc.SetClearValue(Colors::Magenta);
+
+        ImportTexture(
+            ResourceResolver::GetOutputImageTag(),
+            Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc)),
+            Desc.ClearValue);
+    }
 
     void GraphStorage::ReallocateResource(
         ResourceHandle& Handle)

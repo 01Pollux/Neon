@@ -96,7 +96,7 @@ namespace Neon::Scene::Component
         return RenderGraph.get();
     }
 
-    RG::RenderGraph* Camera::GetRenderGraph()
+    RG::RenderGraph* Camera::GetRenderGraph() const
     {
         return RenderGraph.get();
     }

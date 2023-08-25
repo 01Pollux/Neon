@@ -49,21 +49,15 @@ namespace Neon::RG
                 .Build();
     }
 
-    void BackBufferFinalizer::SetSource(
-        ResourceId Source)
-    {
-        m_SourceTexture = std::move(Source);
-    }
-
     void BackBufferFinalizer::Dispatch(
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
-        auto StateManager  = RHI::IResourceStateManager::Get();
-        auto SourceTexture = Storage.GetResource(m_SourceTexture);
-        auto BackBuffer    = RHI::ISwapchain::Get()->GetBackBuffer();
+        auto  StateManager  = RHI::IResourceStateManager::Get();
+        auto& SourceTexture = Storage.GetOutputImage();
+        auto  BackBuffer    = RHI::ISwapchain::Get()->GetBackBuffer();
 
         // Transition to appropriate states
         {

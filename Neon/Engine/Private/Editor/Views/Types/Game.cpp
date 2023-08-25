@@ -3,16 +3,16 @@
 
 namespace Neon::Editor::Views
 {
-    Game::Game() :
+    GameDisplay::GameDisplay() :
         IEditorView(StandardViews::s_GameViewWidgetId)
     {
     }
 
-    void Game::OnUpdate()
+    void GameDisplay::OnUpdate()
     {
     }
 
-    void Game::OnRender()
+    void GameDisplay::OnRender()
     {
         if (ImGui::Begin(GetWidgetId().c_str()))
         {

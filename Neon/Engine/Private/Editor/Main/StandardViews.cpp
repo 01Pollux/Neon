@@ -20,7 +20,7 @@ namespace Neon::Editor
     void EditorEngine::RegisterEditorWorldComponents()
     {
         flecs::world World = GetLogic()->GetEntityWorld();
-        World.entity("_EditorRoot");
+        m_EditorRootEntity = World.entity("_EditorRoot");
 
         NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
@@ -38,10 +38,10 @@ namespace Neon::Editor
     {
         RegisterView<Views::Console>("_Console", true);
         RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
-        RegisterView<Views::Game>("_Game", true);
+        RegisterView<Views::GameDisplay>("_GameDisplay", true);
         RegisterView<Views::SceneHierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
-        RegisterView<Views::Scene>("_Scene", true);
+        RegisterView<Views::SceneDisplay>("_SceneDisplay", true);
     }
 
     bool EditorEngine::BeginEditorSpace()
@@ -73,8 +73,8 @@ namespace Neon::Editor
         bool IsMaximized = GetWindow()->IsMaximized();
         {
             imcxx::shared_style OverrideStyle(
-                    ImGuiStyleVar_WindowPadding, IsMaximized ? ImVec2{ 6.0f, 6.0f } : ImVec2{ 1.0f, 1.0f },
-                    ImGuiStyleVar_WindowBorderSize, 3.0f);
+                ImGuiStyleVar_WindowPadding, IsMaximized ? ImVec2{ 6.0f, 6.0f } : ImVec2{ 1.0f, 1.0f },
+                ImGuiStyleVar_WindowBorderSize, 3.0f);
             imcxx::shared_color OverrideBg(ImGuiCol_MenuBarBg, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
 
             EditorOpen = ImGui::Begin("Neon Editor", nullptr, EditorWindowFlags);
@@ -308,7 +308,6 @@ namespace Neon::Editor
             View->OnMenuBar();
         }
 
-
         m_IsTitlebarHovered &= !ImGui::IsAnyItemHovered();
 
         ImGui::PopStyleVar();
@@ -323,13 +322,12 @@ namespace Neon::Editor
     flecs::entity EditorEngine::GetEditorRootEntity() const
     {
         flecs::world World = GetLogic()->GetEntityWorld();
-        return World.lookup("_EditorRoot");
+        return flecs::entity(World, m_EditorRootEntity);
     }
 
     flecs::entity EditorEngine::GetEditorActiveRootEntity() const
     {
-        flecs::world World    = GetLogic()->GetEntityWorld();
-        const char*  RootName = World.has<Scene::Editor::WorldEditorMode>() ? "_EditorRoot" : "_Root";
-        return World.lookup(RootName);
+        auto World = GetLogic()->GetEntityWorld();
+        return World.GetWorld().has<Scene::Editor::WorldEditorMode>() ? GetEditorRootEntity() : World.GetRootEntity();
     }
 } // namespace Neon::Editor

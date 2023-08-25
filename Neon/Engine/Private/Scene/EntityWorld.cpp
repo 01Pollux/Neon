@@ -31,7 +31,7 @@ namespace Neon::Scene
         Exports::RegisterComponents(World);
         Exports::RegisterRelations(World);
 
-        World.entity("_Root");
+        m_RootEntity = World.entity("_Root");
     }
 
     void EntityWorld::Release()
@@ -53,6 +53,6 @@ namespace Neon::Scene
 
     flecs::entity EntityWorld::GetRootEntity()
     {
-        return GetWorld().lookup("_Root");
+        return flecs::entity(m_World, m_RootEntity);
     }
 } // namespace Neon::Scene

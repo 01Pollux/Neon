@@ -99,7 +99,6 @@ namespace Neon::RG
         /// Build levels and imported resources
         /// </summary>
         void Build(
-            ResourceId          FinalOutput,
             DepdencyLevelList&& Levels);
 
         /// <summary>
@@ -113,7 +112,9 @@ namespace Neon::RG
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
 
+#ifndef NEON_EDITOR
         BackBufferFinalizer m_BackBufferFinalizer;
+#endif
 
         std::mutex         m_RenderMutex, m_ComputeMutex;
         Asio::ThreadPool<> m_ThreadPool{ 3 };

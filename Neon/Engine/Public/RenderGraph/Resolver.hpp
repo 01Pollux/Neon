@@ -176,7 +176,7 @@ namespace Neon::RG
         /// <summary>
         /// Get output image id
         /// </summary>
-        [[nodiscard]] static ResourceId GetOutputImage();
+        [[nodiscard]] static ResourceId GetOutputImageTag();
 
     private:
         /// <summary>

@@ -4,10 +4,10 @@
 
 namespace Neon::Editor::Views
 {
-    class Scene : public IEditorView
+    class SceneDisplay : public IEditorView
     {
     public:
-        Scene();
+        SceneDisplay();
 
         void OnUpdate() override;
 

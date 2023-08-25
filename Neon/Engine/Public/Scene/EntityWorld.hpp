@@ -109,6 +109,7 @@ namespace Neon::Scene
 
     private:
         flecs::world_t* m_World;
+        flecs::entity_t m_RootEntity;
         bool            m_Owned = false;
     };
 } // namespace Neon::Scene

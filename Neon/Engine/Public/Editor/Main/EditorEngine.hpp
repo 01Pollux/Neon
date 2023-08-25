@@ -190,6 +190,11 @@ namespace Neon::Editor
         /// </summary>
         Asset::IAssetPackage* m_ContentPackage;
 
+        /// <summary>
+        /// The editor root entity.
+        /// </summary>
+        flecs::entity_t m_EditorRootEntity;
+
         bool m_IsTitlebarHovered = false;
     };
 } // namespace Neon::Editor

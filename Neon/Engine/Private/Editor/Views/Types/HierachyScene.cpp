@@ -7,6 +7,7 @@
 
 #include <UI/imcxx/all_in_one.hpp>
 
+// TODO: remove, this is just for testing
 #include <Scene/Component/Transform.hpp>
 
 namespace Neon::Editor::Views
@@ -14,9 +15,7 @@ namespace Neon::Editor::Views
     SceneHierachy::SceneHierachy() :
         IEditorView(StandardViews::s_HierachyViewWidgetId)
     {
-        flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
-
-        auto Root = World.lookup("_EditorRoot");
+        auto Root = EditorEngine::Get()->GetEditorRootEntity();
 
         auto A = World.entity("Unnamed Entity");
         auto B = World.entity("B");

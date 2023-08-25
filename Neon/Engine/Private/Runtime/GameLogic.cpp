@@ -100,7 +100,13 @@ namespace Neon::Runtime
 
                 if (auto RenderGraph = Camera.GetRenderGraph())
                 {
-                    RenderGraph->Run(MainCamera == Entity);
+                    RenderGraph->Run(
+#ifndef NEON_EDITOR
+                        MainCamera == Entity
+#else
+                        false
+#endif
+                    );
                 }
             });
     }
