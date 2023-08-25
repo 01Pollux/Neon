@@ -2,6 +2,7 @@
 #include <Editor/Views/Components/EngineComponents.hpp>
 
 #include <Editor/Main/EditorEngine.hpp>
+#include <Editor/Scene/EditorEntity.hpp>
 
 #include <UI/Utils.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -40,8 +41,11 @@ namespace Neon::Editor
         }
 
         auto& Transform = Entity.get_mut<Scene::Component::Transform>()->World;
-        auto& Position  = Transform.GetPosition();
+        auto  Position  = Transform.GetPosition();
         auto  Rotation  = glm::degrees(Transform.GetRotationEuler());
+        bool  Changed   = false;
+
+        //
 
         UI::Utils::DrawComponentLabel("Position");
         if (ImGui::IsItemHovered())
@@ -56,7 +60,13 @@ namespace Neon::Editor
             }
         }
 
-        bool Changed = UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Position);
+        if (UI::Utils::DragVectorComponent(Position))
+        {
+            Changed = true;
+            Transform.SetPosition(Position);
+        }
+
+        //
 
         UI::Utils::DrawComponentLabel("Rotation");
         if (ImGui::IsItemHovered())
@@ -71,10 +81,13 @@ namespace Neon::Editor
             }
         }
 
-        if (UI::Utils::DrawVectorComponent<UI::Utils::DrawVectorType::Drag>(Rotation))
+        if (UI::Utils::DragVectorComponent(Rotation))
         {
+            Changed = true;
             Transform.SetRotationEuler(glm::radians(Rotation));
         }
+
+        //
 
         UI::Utils::EndComponentHeader();
 

@@ -68,6 +68,7 @@ namespace Neon::Editor
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
 
+        // By default, editor world is in editor mode
         World.add<Scene::Editor::WorldEditorMode>();
     }
 

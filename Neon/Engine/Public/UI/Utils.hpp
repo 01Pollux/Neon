@@ -205,6 +205,32 @@ namespace Neon::UI::Utils
         "Roll"
     };
 
+    template<Vec::VectorType _Ty>
+    struct DrawVectorData
+    {
+        _Ty& Value = nullptr;
+
+        typename _Ty::value_type Min = _Ty::value_type(0);
+        typename _Ty::value_type Max = _Ty::value_type(0);
+
+        /// <summary>
+        /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+        /// </summary>
+        uint32_t Flags = 0;
+
+        /// <summary>
+        /// Names must be an array of _Ty::length strings.
+        /// </summary>
+        std::span<const char* const> Names         = DrawVectorPositionNames;
+        std::optional<ImVec4>        PropertyColor = ImVec4{ 0.47f, 0.19f, 0.19f, 1.f };
+
+        constexpr DrawVectorData(
+            _Ty& Value) noexcept :
+            Value(Value)
+        {
+        }
+    };
+
     /// <summary>
     /// Draw a vector component.
     ///
@@ -214,14 +240,9 @@ namespace Neon::UI::Utils
     /// </summary>
     template<DrawVectorType DrawType, Vec::VectorType _Ty>
     static bool DrawVectorComponent(
-        _Ty&                     Value,
-        typename _Ty::value_type Min           = _Ty::value_type(0),
-        typename _Ty::value_type Max           = _Ty::value_type(0),
-        uint32_t                 Flags         = 0,
-        std::optional<ImVec4>    PropertyColor = ImVec4{ 0.47f, 0.19f, 0.19f, 1.f },
-        const char* const        Names[]       = DrawVectorPositionNames)
+        DrawVectorData<_Ty> DrawData)
     {
-        ImGui::PushID(std::addressof(Value));
+        ImGui::PushID(std::addressof(DrawData.Value));
         bool Changed = false;
 
         float RegionWidth =
@@ -231,12 +252,12 @@ namespace Neon::UI::Utils
 
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {
-            if (PropertyColor) [[likely]]
+            if (DrawData.PropertyColor) [[likely]]
             {
-                ImGui::PushStyleColor(ImGuiCol_FrameBg, *PropertyColor);
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, *DrawData.PropertyColor);
             }
-            DrawTextBG(Names[i]);
-            if (PropertyColor) [[likely]]
+            DrawTextBG(DrawData.Names[i]);
+            if (DrawData.PropertyColor) [[likely]]
             {
                 ImGui::PopStyleColor();
             }
@@ -249,36 +270,44 @@ namespace Neon::UI::Utils
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    Changed |= ImGui::DragFloat("##Value", &Value[i], 0.1f, Min, Max);
+                    Changed |= ImGui::DragFloat("", &DrawData.Value[i], 0.1f, DrawData.Min, DrawData.Max);
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    Changed |= ImGui::DragInt("##Value", std::bit_cast<int*>(&Value[i]), 1, Min, Max);
+                    Changed |= ImGui::DragInt("", std::bit_cast<int*>(&DrawData.Value[i]), 1, DrawData.Min, DrawData.Max);
                 }
             }
             else if constexpr (DrawType == DrawVectorType::Input)
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    Changed |= ImGui::InputFloat("##Value", &Value[i]);
+                    Changed |= ImGui::InputFloat("", &DrawData.Value[i]);
+                    if (DrawData.Min < DrawData.Max)
+                    {
+                        DrawData.Value[i] = std::clamp(DrawData.Value[i], DrawData.Min, DrawData.Max);
+                    }
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    Changed |= ImGui::InputInt("##Value", std::bit_cast<int*>(&Value[i]));
+                    Changed |= ImGui::InputInt("", std::bit_cast<int*>(&DrawData.Value[i]));
+                    if (DrawData.Min < DrawData.Max)
+                    {
+                        DrawData.Value[i] = std::clamp(DrawData.Value[i], DrawData.Min, DrawData.Max);
+                    }
                 }
             }
             else if constexpr (DrawType == DrawVectorType::Slider)
             {
                 if constexpr (std::is_same_v<typename _Ty::value_type, float>)
                 {
-                    Changed |= ImGui::SliderFloat("##Value", &Value[i], Min, Max);
+                    Changed |= ImGui::SliderFloat("", &DrawData.Value[i], DrawData.Min, DrawData.Max);
                 }
                 else if constexpr (std::is_same_v<typename _Ty::value_type, int32_t> ||
                                    std::is_same_v<typename _Ty::value_type, uint32_t>)
                 {
-                    Changed |= ImGui::SliderInt("##Value", std::bit_cast<int*>(&Value[i]), Min, Max);
+                    Changed |= ImGui::SliderInt("", std::bit_cast<int*>(&DrawData.Value[i]), DrawData.Min, DrawData.Max);
                 }
             }
 
@@ -290,5 +319,89 @@ namespace Neon::UI::Utils
         }
         ImGui::PopID();
         return Changed;
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool DragVectorComponent(
+        DrawVectorData<_Ty> DrawData)
+    {
+        return DrawVectorComponent<DrawVectorType::Drag>(std::move(DrawData));
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool DragVectorComponent(
+        _Ty& Value)
+    {
+        return DrawVectorComponent<DrawVectorType::Drag>(DrawVectorData(Value));
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool InputVectorComponent(
+        DrawVectorData<_Ty> DrawData)
+    {
+        return DrawVectorComponent<DrawVectorType::Input>(std::move(DrawData));
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool InputVectorComponent(
+        _Ty& Value)
+    {
+        return DrawVectorComponent<DrawVectorType::Input>(DrawVectorData(Value));
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool SliderVectorComponent(
+        DrawVectorData<_Ty> DrawData)
+    {
+        return DrawVectorComponent<DrawVectorType::Slider>(std::move(DrawData));
+    }
+
+    /// <summary>
+    /// Draw a vector component.
+    ///
+    /// If Format is nullptr, the default format is used.
+    /// If Flags is 0, the default flags are used.
+    /// Flags are either ImGuiSliderFlags for slider+drag or ImGuiInputTextFlags for input.
+    /// </summary>
+    template<Vec::VectorType _Ty>
+    static bool SliderVectorComponent(
+        _Ty& Value)
+    {
+        return DrawVectorComponent<DrawVectorType::Slider>(DrawVectorData(Value));
     }
 } // namespace Neon::UI::Utils

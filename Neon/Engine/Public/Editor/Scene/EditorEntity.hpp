@@ -22,7 +22,7 @@ namespace Neon::Scene::Editor
         NEON_EXPORT_FLECS(SelectedForEditor, "Editor::SelectedForEditor")
         {
             Component.add(flecs::Exclusive);
-		}
+        }
     };
 
     /// <summary>
@@ -32,6 +32,6 @@ namespace Neon::Scene::Editor
     {
         NEON_EXPORT_FLECS(WorldEditorMode, "Editor::WorldEditorMode")
         {
-		}
+        }
     };
 } // namespace Neon::Scene::Editor
