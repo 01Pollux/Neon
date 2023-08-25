@@ -30,6 +30,12 @@ namespace Neon::RG
         Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));
 #endif
 
+        Builder.AddPass<CopyToTexturePass>(
+            CopyToTexturePass::CopyToTextureData{
+                .ViewName    = STR("GBufferAlbedoToFinal"),
+                .Source      = ResourceId(STR("GBufferAlbedo")),
+                .Destination = ResourceResolver::GetOutputImageTag() });
+
         Builder.Build();
     }
 } // namespace Neon::RG
