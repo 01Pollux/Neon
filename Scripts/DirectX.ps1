@@ -12,7 +12,7 @@ Write-Output "Copying DirectX Agility SDK libraries..."
 Remove-Item -Force -Recurse .\Deps\Libs\DxAgility -ErrorAction SilentlyContinue
 New-Item .\Deps\Libs\DxAgility -Type Directory | Out-Null
 Copy-Item -Force -Recurse .\tmp\Agility\build\native\bin\* .\Deps\Libs\DxAgility
-Remove-Item -Force -Recurse .\packages -ErrorAction SilentlyContinue
 
 Write-Output "Clearing DirectX Agility SDK files..."
 Remove-Item tmp\Agility -Recurse -Force
+Remove-Item -Force -Recurse .\packages -ErrorAction SilentlyContinue

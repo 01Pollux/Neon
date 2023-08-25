@@ -185,7 +185,6 @@ function common_neon_defines()
     defines "flecs_STATIC"
     defines "BT_USE_DOUBLE_PRECISION"
     defines "GLM_FORCE_LEFT_HANDED"
-    defines "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"
 end
 
 function common_neon_inc()

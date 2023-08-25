@@ -1,6 +1,7 @@
 #pragma once
 
 #include <UI/imcxx/all_in_one.hpp>
+#include <UI/WindowUtils.hpp>
 #include <UI/Fonts/FontAwesome5.hpp>
 
 #include <Core/BitMask.hpp>

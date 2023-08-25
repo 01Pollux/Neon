@@ -33,6 +33,3 @@ project "ImGui"
         "%{prj.location}",
 		"%{CommonDir.Deps.Inc}"
     }
-
-	defines "IMGUI_DISABLE_DEMO_WINDOWS"
-	defines "IMGUI_DISABLE_OBSOLETE_FUNCTIONS"

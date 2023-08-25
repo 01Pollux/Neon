@@ -13,7 +13,7 @@
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
-#include <UI/imcxx/all_in_one.hpp>
+#include <UI/WindowUtils.hpp>
 
 namespace Neon::Editor
 {
@@ -57,18 +57,11 @@ namespace Neon::Editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        constexpr ImGuiDockNodeFlags MainEditorWindowDockSpaceFlags =
-            ImGuiDockNodeFlags_None |
-            ImGuiDockNodeFlags_PassthruCentralNode;
-
         const ImGuiViewport* Viewport = ImGui::GetMainViewport();
 
         ImGui::SetNextWindowPos(Viewport->WorkPos);
         ImGui::SetNextWindowSize(Viewport->WorkSize);
         ImGui::SetNextWindowViewport(Viewport->ID);
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 
         // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
         // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
@@ -76,8 +69,23 @@ namespace Neon::Editor
         // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
         // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 
-        bool EditorOpen = ImGui::Begin("Neon Editor", nullptr, EditorWindowFlags);
-        ImGui::PopStyleVar(2);
+        bool EditorOpen;
+        bool IsMaximized = GetWindow()->IsMaximized();
+        {
+            imcxx::shared_style OverrideStyle(
+                    ImGuiStyleVar_WindowPadding, IsMaximized ? ImVec2{ 6.0f, 6.0f } : ImVec2{ 1.0f, 1.0f },
+                    ImGuiStyleVar_WindowBorderSize, 3.0f);
+            imcxx::shared_color OverrideBg(ImGuiCol_MenuBarBg, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+
+            EditorOpen = ImGui::Begin("Neon Editor", nullptr, EditorWindowFlags);
+        }
+
+        {
+            imcxx::shared_color BorderColor(ImGuiCol_Border, IM_COL32(50, 50, 50, 255));
+            // Draw window border if the window is not maximized
+            if (!IsMaximized)
+                UI::WindowUtils::RenderWindowOuterBorders(ImGui::GetCurrentWindow());
+        }
 
         // Submit the DockSpace
         ImGuiID DockerspaceId = ImGui::GetID("MainDockspace##NEON");
@@ -133,6 +141,10 @@ namespace Neon::Editor
 
             ImGui::DockBuilderFinish(DockerspaceId);
         }
+
+        constexpr ImGuiDockNodeFlags MainEditorWindowDockSpaceFlags =
+            ImGuiDockNodeFlags_None |
+            ImGuiDockNodeFlags_PassthruCentralNode;
 
         ImGui::DockSpace(DockerspaceId, {}, MainEditorWindowDockSpaceFlags);
         return EditorOpen;
