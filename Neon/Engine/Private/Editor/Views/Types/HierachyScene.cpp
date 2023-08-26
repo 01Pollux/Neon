@@ -9,6 +9,9 @@
 
 namespace Neon::Editor::Views
 {
+    /// <summary>
+    /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
+    /// </summary>
     [[nodiscard]] static flecs::filter<> GetChildrenFilter(
         flecs::entity Parent)
     {
