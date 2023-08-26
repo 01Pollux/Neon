@@ -96,20 +96,29 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Get the view matrix of the viewport.
         /// </summary>
-        [[nodiscard]] Matrix4x4 ViewMatrix(
-            const flecs::entity& OwningEntity) const;
+        [[nodiscard]] Matrix4x4 ViewMatrix() const;
 
         /// <summary>
         /// Get the view matrix of the viewport.
         /// </summary>
-        [[nodiscard]] Matrix4x4 ViewProjectionMatrix(
-            const flecs::entity& OwningEntity) const;
+        [[nodiscard]] Matrix4x4 ViewProjectionMatrix() const;
+
+        /// <summary>
+        /// Update the current position of the camera.
+        /// </summary>
+        void SetCurrentPosition(
+            const Vector3& NewPosition);
 
     private:
         /// <summary>
         /// The render graph of the camera.
         /// </summary>
         UPtr<RG::RenderGraph> RenderGraph;
+
+        /// <summary>
+        /// The current position of the camera.
+        /// </summary>
+        Vector3 m_CurrentPosition;
 
     public:
         /// <summary>

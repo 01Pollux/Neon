@@ -67,26 +67,29 @@ namespace Neon::Scene::Component
         return Viewport.ProjectionMatrix(Type);
     }
 
-    Matrix4x4 Camera::ViewMatrix(
-        const flecs::entity& OwningEntity) const
+    Matrix4x4 Camera::ViewMatrix() const
     {
-        auto TransformComponent = OwningEntity.get<Component::Transform>();
         return glm::lookAt(
-            TransformComponent->World.GetPosition(),
+            m_CurrentPosition,
             LookAt,
             Vec::Up<Vector3>);
     }
 
-    Matrix4x4 Camera::ViewProjectionMatrix(
-        const flecs::entity& OwningEntity) const
+    Matrix4x4 Camera::ViewProjectionMatrix() const
     {
-        return ViewMatrix(OwningEntity) * ProjectionMatrix();
+        return ViewMatrix() * ProjectionMatrix();
+    }
+
+    void Camera::SetCurrentPosition(
+        const Vector3& NewPosition)
+    {
+        m_CurrentPosition = NewPosition;
     }
 
     RG::RenderGraph* Camera::NewRenderGraph(
         const flecs::entity& OwningEntity)
     {
-        RenderGraph.reset(NEON_NEW RG::RenderGraph(OwningEntity));
+        RenderGraph.reset(NEON_NEW RG::RenderGraph);
         return RenderGraph.get();
     }
 

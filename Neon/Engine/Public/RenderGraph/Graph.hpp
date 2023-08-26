@@ -10,6 +10,12 @@
 
 #include <Asio/ThreadPool.hpp>
 
+namespace Neon::Scene::Component
+{
+    struct Camera;
+    struct Transform;
+} // namespace Neon::Scene::Component
+
 namespace Neon::RG
 {
     class IRenderPass;
@@ -67,9 +73,6 @@ namespace Neon::RG
         };
 
     public:
-        RenderGraph(
-            const flecs::entity& CameraEntity);
-
         /// <summary>
         /// Reset resource graph for recording
         /// </summary>
@@ -86,13 +89,20 @@ namespace Neon::RG
         [[nodiscard]] const GraphStorage& GetStorage() const noexcept;
 
         /// <summary>
+        /// Update camera buffer
+        /// </summary>
+        void Update(
+            const Scene::Component::Camera&    Camera,
+            const Scene::Component::Transform& Transform);
+
+        /// <summary>
         /// Run the graph
         /// For convinience, the graph will copy the final output to the back buffer
         /// The graph will also return the command list for us to handle ui rendering
         /// If CopyToBackBuffer is false, the function will return nullptr
         /// </summary>
-        void Run(
-            bool CopyToBackBuffer);
+        void Draw(
+            bool CopyToBackBuffer = false);
 
     private:
         /// <summary>
@@ -101,14 +111,7 @@ namespace Neon::RG
         void Build(
             DepdencyLevelList&& Levels);
 
-        /// <summary>
-        /// Update camera buffer
-        /// </summary>
-        [[nodiscard]] bool UpdateCameraBuffer();
-
     private:
-        flecs::entity m_CameraEntity;
-
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
 

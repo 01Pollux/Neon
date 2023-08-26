@@ -9,6 +9,7 @@
 
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
+#include <Scene/Component/Transform.hpp>
 #include <Scene/Exports/Export.hpp>
 
 #include <Log/Logger.hpp>
@@ -55,6 +56,26 @@ namespace Neon::Runtime
                     }
                 });
 
+        // Create camera position update system.
+        World.system<Component::Camera, Component::Transform>("CameraPositionUpdate")
+            .kind(flecs::PreUpdate)
+            .term<Component::Camera>()
+            .inout()
+            .term<Component::Transform>()
+            .in()
+            .each(
+                [](Component::Camera&          Camera,
+                   const Component::Transform& Transform)
+                {
+                    Camera.SetCurrentPosition(Transform.World.GetPosition());
+                    if (auto RenderGraph = Camera.GetRenderGraph())
+                    {
+                        RenderGraph->Update(
+                            Camera,
+                            Transform);
+                    }
+                });
+
         // Create camera render system.
         m_CameraQuery =
             World.query_builder<Component::Camera>()
@@ -82,10 +103,16 @@ namespace Neon::Runtime
 
     void GameLogic::Render()
     {
+#ifndef NEON_EDITOR
         auto MainCamera = m_EntityWorld.GetWorld().target<Component::MainCamera>();
+#endif
         m_CameraQuery.each(
-            [MainCamera](flecs::entity      Entity,
-                         Component::Camera& Camera)
+            [
+#ifndef NEON_EDITOR
+                MainCamera
+#endif
+        ](flecs::entity        Entity,
+            Component::Camera& Camera)
             {
                 auto& Size = RHI::ISwapchain::Get()->GetSize();
 
@@ -100,11 +127,9 @@ namespace Neon::Runtime
 
                 if (auto RenderGraph = Camera.GetRenderGraph())
                 {
-                    RenderGraph->Run(
+                    RenderGraph->Draw(
 #ifndef NEON_EDITOR
                         MainCamera == Entity
-#else
-                        false
 #endif
                     );
                 }

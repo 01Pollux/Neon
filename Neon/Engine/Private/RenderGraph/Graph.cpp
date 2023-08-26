@@ -15,12 +15,6 @@
 
 namespace Neon::RG
 {
-    RenderGraph::RenderGraph(
-        const flecs::entity& CameraEntity) :
-        m_CameraEntity(CameraEntity)
-    {
-    }
-
     GraphBuilder RenderGraph::Reset()
     {
         m_Storage.Reset();
@@ -37,14 +31,32 @@ namespace Neon::RG
         return m_Storage;
     }
 
-    void RenderGraph::Run(
+    void RenderGraph::Update(
+        const Scene::Component::Camera&    Camera,
+        const Scene::Component::Transform& Transform)
+    {
+        auto& CameraBuffer = m_Storage.MapFrameData();
+
+        CameraBuffer.World = glm::transpose(Transform.World.ToMat4x4());
+
+        CameraBuffer.View           = glm::transpose(Camera.ViewMatrix());
+        CameraBuffer.Projection     = glm::transpose(Camera.ProjectionMatrix());
+        CameraBuffer.ViewProjection = CameraBuffer.View * CameraBuffer.Projection;
+
+        CameraBuffer.ViewInverse           = glm::inverse(CameraBuffer.View);
+        CameraBuffer.ProjectionInverse     = glm::inverse(CameraBuffer.Projection);
+        CameraBuffer.ViewProjectionInverse = glm::inverse(CameraBuffer.ViewProjection);
+
+        CameraBuffer.EngineTime = float(Runtime::GameEngine::Get()->GetEngineTime());
+        CameraBuffer.GameTime   = float(Runtime::GameEngine::Get()->GetGameTime());
+        CameraBuffer.DeltaTime  = float(Runtime::GameEngine::Get()->GetDeltaTime());
+
+        m_Storage.UnmapFrameData();
+    }
+
+    void RenderGraph::Draw(
         bool CopyToBackBuffer)
     {
-        if (!UpdateCameraBuffer()) [[unlikely]]
-        {
-            return;
-        }
-
         m_Storage.NewOutputImage();
 
         for (auto& ImportedResource : m_Storage.m_ImportedResources)
@@ -72,37 +84,6 @@ namespace Neon::RG
         }
 
         m_Storage.FlushResources();
-    }
-
-    bool RenderGraph::UpdateCameraBuffer()
-    {
-        using namespace Scene;
-
-        auto CameraComponent = m_CameraEntity.get<Component::Camera>();
-        auto CameraTransform = m_CameraEntity.get<Component::Transform>();
-        if (!CameraComponent || !CameraTransform) [[unlikely]]
-        {
-            return false;
-        }
-
-        auto& CameraBuffer = m_Storage.MapFrameData();
-
-        CameraBuffer.World = glm::transpose(CameraTransform->World.ToMat4x4());
-
-        CameraBuffer.View           = glm::transpose(CameraComponent->ViewMatrix(m_CameraEntity));
-        CameraBuffer.Projection     = glm::transpose(CameraComponent->ProjectionMatrix());
-        CameraBuffer.ViewProjection = CameraBuffer.View * CameraBuffer.Projection;
-
-        CameraBuffer.ViewInverse           = glm::inverse(CameraBuffer.View);
-        CameraBuffer.ProjectionInverse     = glm::inverse(CameraBuffer.Projection);
-        CameraBuffer.ViewProjectionInverse = glm::inverse(CameraBuffer.ViewProjection);
-
-        CameraBuffer.EngineTime = float(Runtime::GameEngine::Get()->GetEngineTime());
-        CameraBuffer.GameTime   = float(Runtime::GameEngine::Get()->GetGameTime());
-        CameraBuffer.DeltaTime  = float(Runtime::GameEngine::Get()->GetDeltaTime());
-
-        m_Storage.UnmapFrameData();
-        return true;
     }
 
     void RenderGraph::Build(
