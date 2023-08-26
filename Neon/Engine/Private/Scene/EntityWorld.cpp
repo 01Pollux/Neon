@@ -4,6 +4,10 @@
 #include <Scene/Exports/Export.hpp>
 #include <Scene/Component/Camera.hpp>
 
+#include <Asio/Coroutines.hpp>
+#include <cppcoro/when_all.hpp>
+#include <cppcoro/sync_wait.hpp>
+
 namespace Neon::Scene
 {
     static std::mutex s_FlecsWorldMutex;
@@ -62,12 +66,15 @@ namespace Neon::Scene
         flecs::entity Entity,
         bool          WithChildren)
     {
-        if (WithChildren)
+        if (!WithChildren)
         {
+            // Using coroutines since we will be locking entity when iterating the children.
+            std::vector<Asio::CoLazy<>> Coroutines;
+
             // Move children to root entity.
             // and rename them to avoid name conflicts.
             Entity.children(
-                [Parent = Entity.parent()](flecs::entity Child)
+                [&Coroutines, Parent = Entity.parent()](flecs::entity Child)
                 {
                     StringU8 NewName{ Child.name() };
                     StringU8 NewNameTmp = NewName;
@@ -77,10 +84,20 @@ namespace Neon::Scene
                     {
                         NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
                     }
-                    Child.set_name(nullptr);
-                    Child.child_of(Parent);
-                    Child.set_name(NewName.c_str());
+
+                    Coroutines.emplace_back(
+                        [](flecs::entity Child,
+                           flecs::entity Parent,
+                           StringU8      NewName) mutable -> Asio::CoLazy<>
+                        {
+                            Child.set_name(nullptr);
+                            Child.child_of(Parent);
+                            Child.set_name(NewName.c_str());
+                            co_return;
+                        }(std::move(Child), Parent, std::move(NewName)));
                 });
+
+            cppcoro::sync_wait(cppcoro::when_all(std::move(Coroutines)));
         }
         Entity.destruct();
     }
@@ -95,14 +112,14 @@ namespace Neon::Scene
         StringU8 NewName{ Name ? Name : Entity.name() };
         StringU8 NewNameTmp = NewName;
 
-        Entity.set_name(nullptr);
-        auto NewEntity = Entity.clone();
-
         size_t Idx = 0;
         while (Parent.lookup(NewName.c_str()))
         {
             NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
         }
+
+        Entity.set_name(nullptr);
+        auto NewEntity = Entity.clone();
 
         Entity.set_name(OldName.c_str());
         NewEntity.set_name(NewName.c_str());

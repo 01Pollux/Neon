@@ -135,30 +135,10 @@ namespace Neon::Editor
         }
 
         // Finally, add runtime camera similar to editor camera
-        {
-            flecs::world World = GetLogic()->GetEntityWorld();
-
-            auto Camera = World.entity("Main Camera").child_of(GetRootEntity());
-
-            Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
-            {
-                RG::CreateStandard2DRenderGraph(CameraComponent, Camera);
-
-                CameraComponent.Viewport.OrthographicSize = 50.0f;
-                CameraComponent.Viewport.NearPlane        = -1.0f;
-                CameraComponent.Viewport.FarPlane         = 20.0f;
-            }
-            Camera.set(std::move(CameraComponent));
-
-            Scene::Component::Transform TransformComponent;
-            {
-                TransformComponent.World.SetRotationEuler(glm::radians(Vec::Right<Vector3> * -90.f));
-                TransformComponent.World.SetPosition(Vec::Backward<Vector3> * 10.f);
-            }
-            Camera.set(std::move(TransformComponent));
-
-            World.add<Scene::Component::MainCamera>(Camera);
-        }
+        World.add<Scene::Component::MainCamera>(
+            Scene::EntityWorld::CloneEntity(GetMainCamera(true), "Main Camera")
+                .child_of(GetRootEntity())
+                .remove<Scene::Editor::EditorSceneDoNotRemove>());
     }
 
     //

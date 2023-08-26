@@ -113,7 +113,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// The render graph of the camera.
         /// </summary>
-        UPtr<RG::RenderGraph> RenderGraph;
+        Ptr<RG::RenderGraph> RenderGraph;
 
         /// <summary>
         /// The current position of the camera.
