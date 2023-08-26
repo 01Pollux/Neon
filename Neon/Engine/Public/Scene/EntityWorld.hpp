@@ -78,6 +78,21 @@ namespace Neon::Scene
         [[nodiscard]] flecs::entity GetRootEntity();
 
     public:
+        /// <summary>
+        /// Delete the entity with or without children.
+        /// </summary>
+        static void DeleteEntity(
+            flecs::entity Entity,
+            bool          WithChildren = false);
+
+        /// <summary>
+        /// Clone the entity.
+        /// </summary>
+        static flecs::entity CloneEntity(
+            flecs::entity Entity,
+            const char*   Name = nullptr);
+
+    public:
         operator flecs::world_t*() const noexcept
         {
             return m_World;

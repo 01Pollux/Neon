@@ -154,22 +154,15 @@ namespace Neon::Editor
 
     public:
         /// <summary>
-        /// Get the editor root entity.
+        /// Get the editor active root entity.
         /// </summary>
-        [[nodiscard]] flecs::entity GetEditorRootEntity() const;
+        [[nodiscard]] flecs::entity GetRootEntity() const;
 
         /// <summary>
-        /// Get the editor active root entity.
-        /// (either root entity if not in editor mode, or editor root entity if in editor mode)
+        /// Get either the editor camera or the main camera.
         /// </summary>
-        [[nodiscard]] flecs::entity GetEditorActiveRootEntity() const;
-
-        /// <summary>
-        /// Get the editor active root entity.
-        /// (either root entity if not in editor mode, or editor root entity if in editor mode)
-        /// </summary>
-        [[nodiscard]] flecs::entity GetRootEntity(
-            bool EditorMode) const;
+        [[nodiscard]] flecs::entity GetMainCamera(
+            bool EditorCamera) const;
 
         /// <summary>
         /// Check if the editor is in editor mode.

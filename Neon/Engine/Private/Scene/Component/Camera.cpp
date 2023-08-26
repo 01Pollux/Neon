@@ -7,8 +7,6 @@
 
 namespace Neon::Scene::Component
 {
-    Camera::Camera() = default;
-
     Camera::Camera(
         CameraType Type) :
         Type(Type)
@@ -20,10 +18,6 @@ namespace Neon::Scene::Component
             Viewport.FarPlane    = 1.f;
         }
     }
-
-    NEON_CLASS_MOVE_IMPL(Camera);
-
-    Camera::~Camera() = default;
 
     float Camera::Viewport::AspectRatio() const
     {

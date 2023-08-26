@@ -32,8 +32,8 @@ namespace Neon::Editor
         //
 
         // This is test: TODO remove
-        flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
-        auto         Root  = EditorEngine::Get()->GetEditorRootEntity();
+        flecs::world World = GetLogic()->GetEntityWorld();
+        auto         Root  = GetRootEntity();
 
         auto A = World.entity("Unnamed Entity");
         auto B = World.entity("B");
@@ -134,6 +134,32 @@ namespace Neon::Editor
 
             WallCreate("Ceiling", Vec::Forward<Vector3> * 0.f);
         }
+
+        // Finally, add runtime camera similar to editor camera
+        {
+            flecs::world World = GetLogic()->GetEntityWorld();
+
+            auto Camera = World.entity("Main Camera").child_of(GetRootEntity());
+
+            Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
+            {
+                RG::CreateStandard2DRenderGraph(CameraComponent, Camera);
+
+                CameraComponent.Viewport.OrthographicSize = 50.0f;
+                CameraComponent.Viewport.NearPlane        = -1.0f;
+                CameraComponent.Viewport.FarPlane         = 20.0f;
+            }
+            Camera.set(std::move(CameraComponent));
+
+            Scene::Component::Transform TransformComponent;
+            {
+                TransformComponent.World.SetRotationEuler(glm::radians(Vec::Right<Vector3> * -90.f));
+                TransformComponent.World.SetPosition(Vec::Backward<Vector3> * 10.f);
+            }
+            Camera.set(std::move(TransformComponent));
+
+            World.add<Scene::Component::MainCamera>(Camera);
+        }
     }
 
     //
@@ -147,6 +173,7 @@ namespace Neon::Editor
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
         NEON_REGISTER_FLECS(Scene::Editor::EditorSceneDoNotRemove);
+        NEON_REGISTER_FLECS(Scene::Editor::EditorMainCamera);
 
         // By default, editor world is in editor mode
         World.add<Scene::Editor::WorldEditorMode>();
@@ -168,8 +195,7 @@ namespace Neon::Editor
     {
         flecs::world World = GetLogic()->GetEntityWorld();
 
-        auto RootEntity = EditorEngine::Get()->GetEditorRootEntity();
-        auto Camera     = World.entity("Editor Camera").child_of(RootEntity);
+        auto Camera = World.entity("Editor Camera").child_of(GetRootEntity());
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {
@@ -190,26 +216,22 @@ namespace Neon::Editor
 
         Camera.add<Scene::Editor::EditorSceneDoNotRemove>();
 
-        RootEntity.add<Scene::Component::MainCamera>(Camera);
+        World.add<Scene::Editor::EditorMainCamera>(Camera);
     }
 
     //
 
-    flecs::entity EditorEngine::GetEditorRootEntity() const
+    flecs::entity EditorEngine::GetRootEntity() const
+    {
+        return GetLogic()->GetEntityWorld().GetRootEntity();
+    }
+
+    flecs::entity EditorEngine::GetMainCamera(
+        bool EditorCamera) const
     {
         flecs::world World = GetLogic()->GetEntityWorld();
-        return flecs::entity(World, m_EditorRootEntity);
-    }
-
-    flecs::entity EditorEngine::GetEditorActiveRootEntity() const
-    {
-        return GetRootEntity(IsInEditorMode());
-    }
-
-    flecs::entity EditorEngine::GetRootEntity(
-        bool EditorMode) const
-    {
-        return EditorMode ? GetEditorRootEntity() : GetLogic()->GetEntityWorld().GetRootEntity();
+        return EditorCamera ? World.target<Scene::Editor::EditorMainCamera>()
+                            : World.target<Scene::Component::MainCamera>();
     }
 
     bool EditorEngine::IsInEditorMode() const

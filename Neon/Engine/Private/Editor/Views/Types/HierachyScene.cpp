@@ -53,30 +53,15 @@ namespace Neon::Editor::Views
             World.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
-        if (!Entity.has<Scene::Editor::EditorSceneDoNotRemove>())
+        if (!Entity.has<Scene::Editor::EditorSceneDoNotRemove>()) [[likely]]
         {
-
             if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
             {
                 if (ImGui::MenuItem("Duplicate"))
                 {
-                    DeferredTask = [Entity]() mutable
+                    DeferredTask = [Entity]
                     {
-                        auto Parent = Entity.parent();
-
-                        StringU8 OldName{ Entity.name() };
-                        StringU8 NewName{ Entity.name() };
-
-                        Entity.set_name(nullptr);
-                        auto NewEntity = Entity.clone();
-
-                        do
-                        {
-                            NewName += " (Copy)";
-                        } while (Parent.lookup(NewName.c_str()));
-
-                        Entity.set_name(OldName.c_str());
-                        NewEntity.set_name(NewName.c_str());
+                        Scene::EntityWorld::CloneEntity(Entity);
                     };
                 }
 
@@ -84,6 +69,7 @@ namespace Neon::Editor::Views
                 {
                     DeferredTask = [Entity]
                     {
+                        Scene::EntityWorld::DeleteEntity(Entity, true);
                         Entity.destruct();
                     };
                 }
@@ -93,12 +79,7 @@ namespace Neon::Editor::Views
                     // Delete only entity, and move children to parent.
                     DeferredTask = [Entity]
                     {
-                        Entity.children(
-                            [Parent = Entity.parent()](flecs::entity Child)
-                            {
-                                Child.child_of(Parent);
-                            });
-                        Entity.destruct();
+                        Scene::EntityWorld::DeleteEntity(Entity, false);
                     };
                 }
 
@@ -146,17 +127,20 @@ namespace Neon::Editor::Views
         flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
 
         // If we are in editor mode, we need to display the editor root entity.
-        auto Root = EditorEngine::Get()->GetEditorActiveRootEntity();
+        auto Root = EditorEngine::Get()->GetRootEntity();
 
-        std::move_only_function<void()> DeferredTask;
-        Root.children(
-            [&DeferredTask](flecs::entity Entity)
-            {
-                DispalySceneObject(Entity, DeferredTask);
-            });
-        if (DeferredTask)
+        // First we need to display the children of root entity.
         {
-            DeferredTask();
+            std::move_only_function<void()> DeferredTask;
+            Root.children(
+                [&DeferredTask](flecs::entity Entity)
+                {
+                    DispalySceneObject(Entity, DeferredTask);
+                });
+            if (DeferredTask)
+            {
+                DeferredTask();
+            }
         }
     }
 } // namespace Neon::Editor::Views

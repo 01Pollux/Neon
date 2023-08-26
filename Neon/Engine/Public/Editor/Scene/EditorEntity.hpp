@@ -4,8 +4,9 @@
 
 namespace Neon::Scene::Editor
 {
+    // TODO: remove this
     /// <summary>
-    /// Entities that exists in _EditorRoot/_Root and have this tag will be hidden in editor.
+    /// Entities that exists in Root and have this tag will be hidden in editor. (not visible in editor's scene)
     /// </summary>
     struct HideInEditor
     {
@@ -41,6 +42,16 @@ namespace Neon::Scene::Editor
     struct EditorSceneDoNotRemove
     {
         NEON_EXPORT_FLECS(EditorSceneDoNotRemove, "Editor::EditorSceneDoNotRemove")
+        {
+        }
+    };
+
+    /// <summary>
+    /// The main camera of the editor.
+    /// </summary>
+    struct EditorMainCamera
+    {
+        NEON_EXPORT_FLECS(EditorMainCamera, "Editor::EditorMainCamera")
         {
         }
     };

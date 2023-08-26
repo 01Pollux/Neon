@@ -18,7 +18,7 @@ namespace Neon::Editor
         RegisterView<Views::ContentBrowser>("_ContentBrowser", true);
         RegisterView<Views::SceneHierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
-        // RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
+        RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
         RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", true, false);
     }
 

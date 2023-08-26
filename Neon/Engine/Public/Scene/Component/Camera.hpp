@@ -4,6 +4,7 @@
 #include <Math/Matrix.hpp>
 
 #include <Scene/Component/Component.hpp>
+#include <RenderGraph/Graph.hpp>
 
 namespace Neon::RG
 {
@@ -83,14 +84,9 @@ namespace Neon::Scene::Component
                 CameraType Type) const;
         };
 
-        Camera();
+        Camera() = default;
         Camera(
             CameraType Type);
-
-        NEON_CLASS_NO_COPY(Camera);
-        NEON_CLASS_MOVE_DECL(Camera);
-
-        ~Camera();
 
         /// <summary>
         /// Get the projection matrix of the viewport.
@@ -153,6 +149,9 @@ namespace Neon::Scene::Component
         CameraType Type = CameraType::Perspective;
     };
 
+    /// <summary>
+    /// The main camera of the scene.
+    /// </summary>
     struct MainCamera
     {
         NEON_EXPORT_FLECS(MainCamera, "MainCamera")

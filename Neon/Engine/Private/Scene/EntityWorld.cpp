@@ -55,4 +55,58 @@ namespace Neon::Scene
     {
         return flecs::entity(m_World, m_RootEntity);
     }
+
+    //
+
+    void EntityWorld::DeleteEntity(
+        flecs::entity Entity,
+        bool          WithChildren)
+    {
+        if (WithChildren)
+        {
+            // Move children to root entity.
+            // and rename them to avoid name conflicts.
+            Entity.children(
+                [Parent = Entity.parent()](flecs::entity Child)
+                {
+                    StringU8 NewName{ Child.name() };
+                    StringU8 NewNameTmp = NewName;
+
+                    size_t Idx = 0;
+                    while (Parent.lookup(NewName.c_str()))
+                    {
+                        NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
+                    }
+                    Child.set_name(nullptr);
+                    Child.child_of(Parent);
+                    Child.set_name(NewName.c_str());
+                });
+        }
+        Entity.destruct();
+    }
+
+    flecs::entity EntityWorld::CloneEntity(
+        flecs::entity Entity,
+        const char*   Name)
+    {
+        auto Parent = Entity.parent();
+
+        StringU8 OldName{ Entity.name() };
+        StringU8 NewName{ Name ? Name : Entity.name() };
+        StringU8 NewNameTmp = NewName;
+
+        Entity.set_name(nullptr);
+        auto NewEntity = Entity.clone();
+
+        size_t Idx = 0;
+        while (Parent.lookup(NewName.c_str()))
+        {
+            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
+        }
+
+        Entity.set_name(OldName.c_str());
+        NewEntity.set_name(NewName.c_str());
+
+        return NewEntity;
+    }
 } // namespace Neon::Scene

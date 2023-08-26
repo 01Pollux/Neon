@@ -82,8 +82,6 @@ namespace Neon::Runtime
 
     void GameLogic::Render()
     {
-        auto RootEntity = m_EntityWorld.GetRootEntity();
-
         auto MainCamera = m_EntityWorld.GetWorld().target<Component::MainCamera>();
         m_CameraQuery.each(
             [MainCamera](flecs::entity      Entity,
