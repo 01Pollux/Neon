@@ -43,10 +43,7 @@ namespace Neon::Editor
         //
 
         UI::Utils::DrawComponentLabel("Material", false);
-
-        //
-
-        ImGui::Dummy({ 0.f, 5.f });
+        UI::Utils::PropertySpacing();
 
         //
 
@@ -64,16 +61,12 @@ namespace Neon::Editor
             Changed = true;
         }
 
-        //
-
         UI::Utils::DrawComponentLabel("Rotation");
         if (UI::Utils::DragVectorComponent(Rotation))
         {
             Changed = true;
             TextureTransform.SetRotationEuler(glm::radians(Rotation));
         }
-
-        //
 
         UI::Utils::DrawComponentLabel("Scale");
         if (UI::Utils::DragVectorComponent(Scale))
@@ -82,16 +75,12 @@ namespace Neon::Editor
             TextureTransform.SetScale(Scale);
         }
 
-        //
-
-        ImGui::Dummy({ 0.f, 5.f });
+        UI::Utils::PropertySpacing();
 
         //
 
         UI::Utils::DrawComponentLabel("Color");
         Changed |= UI::Utils::DrawColorPicker("##SpriteColor", Sprite.ModulationColor);
-
-        //
 
         UI::Utils::DrawComponentLabel("Sprite Size");
         Changed |= UI::Utils::DragVectorComponent(Sprite.SpriteSize);
@@ -144,8 +133,6 @@ namespace Neon::Editor
         {
             Changed = true;
         }
-
-        //
 
         UI::Utils::DrawComponentLabel("Rotation");
         if (ImGui::IsItemHovered())

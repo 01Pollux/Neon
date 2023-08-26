@@ -168,6 +168,14 @@ namespace Neon::UI::Utils
     }
 
     /// <summary>
+    /// Insert a dummy spacing for next property
+    /// </summary>
+    static void PropertySpacing()
+    {
+        ImGui::Dummy({ 0.f, 5.f });
+    }
+
+    /// <summary>
     /// Draws a component label with the given tooltip.
     /// </summary>
     void DrawComponentLabel(
