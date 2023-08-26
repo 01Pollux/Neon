@@ -6,7 +6,7 @@ function copy_file_to_target_dir(from_dir, folder, name)
     }
 end
 function copy_directory_to_target_dir(from_dir, to_dir)
-    filter "system:windows"
+    filter { "system:windows" }
         postbuildcommands
         {
     	    string.format("powershell rmdir -R $(targetdir)%s 2>nul", to_dir)
@@ -29,7 +29,7 @@ function copy_engine_resources_to(content_name, out_dir)
     copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
     copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.dll")
     copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.dll")
-    filter "configurations:not Dist"
+    filter { "configurations:not Dist" }
         copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
         copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
     filter {}
@@ -57,40 +57,52 @@ function common_add_pch(pch_file)
 end
 
 function select_launch_kind()
-    filter "configurations:Dist"
+    filter { "configurations:Dist" }
         kind "WindowedApp"
     filter {}
-    filter "configurations:not Dist"
+    filter { "configurations:not Dist" }
         kind "ConsoleApp"
     filter {}
 end
 
 function link_boost_inc()
-    filter "configurations:Debug"
+    filter { "configurations:Debug" }
+    includedirs
+		{
+			"%{CommonDir.Deps.Inc}/boost_def"
+		}
+    filter {}
+    filter { "configurations:Release" }
+    includedirs
+		{
+			"%{CommonDir.Deps.Inc}/boost_san"
+		}
+    filter {}
+    filter { "configurations:Dist" }
         includedirs
         {
             "%{CommonDir.Deps.Inc}/boost_def"
         }
     filter {}
-    filter "configurations:not Debug"
-        includedirs
-        {
-            "%{CommonDir.Deps.Inc}/boost_san"
-        }
-    filter {}
 end
 
 function link_boost_lib(lib_name)
-    filter "configurations:not Debug"
+    filter { "configurations:Debug" }
+    links
+        {
+            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
+        }
+    filter {}
+    filter { "configurations:Release" }
+    links
+        {
+            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
+        }
+    filter {}
+    filter { "configurations:Dist" }
         links
         {
             "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
-        }
-    filter {}
-    filter "configurations:Debug"
-        links
-        {
-            "boost_san/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
         }
     filter {}
 end

@@ -46,7 +46,7 @@ namespace Neon::Editor
 
         //
 
-        ImGui::Separator();
+        ImGui::Dummy({ 0.f, 5.f });
 
         //
 
@@ -84,14 +84,12 @@ namespace Neon::Editor
 
         //
 
-        ImGui::Separator();
+        ImGui::Dummy({ 0.f, 5.f });
 
         //
 
         UI::Utils::DrawComponentLabel("Color");
-        Changed |= UI::Utils::DragVectorComponent(UI::Utils::DrawVectorData{
-            .Value = Sprite.ModulationColor,
-            .Names = UI::Utils::DrawVectorColorNames });
+        Changed |= UI::Utils::DrawColorPicker("##SpriteColor", Sprite.ModulationColor);
 
         //
 
@@ -99,7 +97,6 @@ namespace Neon::Editor
         Changed |= UI::Utils::DragVectorComponent(Sprite.SpriteSize);
 
         //
-
 
         UI::Utils::EndComponentHeader();
 

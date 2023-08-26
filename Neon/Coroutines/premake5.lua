@@ -105,7 +105,7 @@ project "NeonCoroutines"
         "%{prj.location}/Private/cppcoro/spin_mutex.cpp"
     }
 
-    filter "system:windows"
+    filter { "system:windows" }
         links
         {
             "Synchronization.lib"
@@ -144,7 +144,7 @@ project "NeonCoroutines"
         }
     filter {}
 
-    filter "system:linux"
+    filter { "system:linux" }
         files
         {
             "%{CommonDir.Neon.Coroutines}/cppcoro/detail/linux.hpp",

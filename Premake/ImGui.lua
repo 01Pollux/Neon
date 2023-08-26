@@ -20,7 +20,7 @@ project "ImGui"
 		"backends/imgui_impl_glfw.cpp"
 	}
 
-	filter "system:windows"
+	filter {  }
 		files
 		{
 			"backends/imgui_impl_dx12.h",

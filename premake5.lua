@@ -7,9 +7,9 @@ workspace "Neon"
 
     configurations
     {
-        "Debug",
-        "Release",
-        "Dist"
+        "Debug", -- Edit and continue
+        "Release", -- Optimized + Asan
+        "Dist" -- Optimized + No symbols
     }
 
     flags
@@ -19,38 +19,38 @@ workspace "Neon"
     
     defines "NOMINMAX"
     
-	filter "system:windows"
+
+	filter { "system:windows" }
 		systemversion "latest"
 		defines "_WIN32"
 		defines "WIN32"
         defines "NEON_PLATFORM_WINDOWS"
     filter {}
+
             
-    filter "configurations:Debug"
+    filter { "configurations:Debug" }
         defines "NEON_DEBUG"
         runtime "Debug"
         symbols "On"
         editAndContinue "On"
+    filter {}
+
+    filter { "configurations:Release" }
+        defines "NEON_RELEASE"
+        runtime "Release"
+        symbols "On"
+        optimize "On"
         sanitize
         {
             "Address"
         }
     filter {}
 
-    filter "configurations:Release"
-        defines "NEON_RELEASE"
-        runtime "Release"
-        symbols "On"
-        optimize "On"
-        editAndContinue "On"
-    filter {}
-
-    filter "configurations:Dist"
+    filter { "configurations:Dist" }
         defines "NEON_DIST"
         runtime "Release"
         optimize "On"
         symbols "Off"
-        editAndContinue "Off"
     filter {}
     
 

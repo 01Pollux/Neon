@@ -9,7 +9,7 @@ project "NeonWindowing"
     common_add_pch("WindowPCH")
     common_neon()
     
-    filter "system:windows"
+    filter { "system:windows" }
         links
         {
             "Comctl32"

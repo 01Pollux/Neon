@@ -17,7 +17,7 @@ project "NeonGraphics"
         "%{CommonDir.Neon.Graphics}"
     }
 
-    filter "options:GraphicsAPI=Directx12"
+    filter { "options:GraphicsAPI=Directx12" }
 		defines
 		{
 			"NEON_GRAPHICS_DIRECTX12"

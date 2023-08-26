@@ -14,20 +14,17 @@ namespace Neon::UI::Utils
     /// <summary>
     /// Draw a text with a background color of ImGuiCol_FrameBg.
     /// </summary>
-    template<StringType _StrTy>
     void DrawTextBG(
-        const _StrTy& Text)
+        const char* Text,
+        const char* TextEnd = nullptr);
+
+    /// <summary>
+    /// Draw a text with a background color of ImGuiCol_FrameBg.
+    /// </summary>
+    void DrawTextBG(
+        const StringU8& Text)
     {
-        auto   DrawList  = ImGui::GetWindowDrawList();
-        ImVec2 Pos       = ImGui::GetCursorScreenPos();
-        ImVec2 Size      = ImGui::CalcTextSize(Text);
-        float  FrameSize = ImGui::GetStyle().FramePadding.y * 2.f;
-        ImVec2 EndPos    = { Pos.x + Size.x + FrameSize, Pos.y + Size.y + FrameSize };
-
-        DrawList->AddRectFilled(Pos, EndPos, ImGui::GetColorU32(ImGuiCol_FrameBg));
-        DrawList->AddText({ Pos.x + FrameSize / 2.f, Pos.y + FrameSize / 2.f }, ImGui::GetColorU32(ImGuiCol_Text), Text);
-
-        ImGui::Dummy(Size);
+        DrawTextBG(Text.c_str(), Text.c_str() + Text.size());
     }
 
     //
@@ -192,19 +189,6 @@ namespace Neon::UI::Utils
         "W"
     };
 
-    static constexpr const char* DrawVectorColorNames[] = {
-        "R",
-        "G",
-        "B",
-        "A"
-    };
-
-    static constexpr const char* DrawVectorRotationNames[] = {
-        "Pitch",
-        "Yaw",
-        "Roll"
-    };
-
     template<Vec::VectorType _Ty>
     struct DrawVectorData
     {
@@ -245,7 +229,7 @@ namespace Neon::UI::Utils
             TextSize += ImGui::CalcTextSize(DrawData.Names[i]).x;
         }
 
-        float RegionWidth = (ImGui::GetContentRegionAvail().x - TextSize) / _Ty::length() - ImGui::GetStyle().ItemSpacing.x * 2.f;
+        float RegionWidth = (ImGui::GetContentRegionAvail().x - TextSize) / _Ty::length() - (ImGui::GetStyle().ItemSpacing.x + ImGui::GetStyle().FramePadding.x + 1.5f);
 
         for (typename _Ty::length_type i = 0; i < _Ty::length(); i++)
         {
@@ -401,4 +385,48 @@ namespace Neon::UI::Utils
     {
         return DrawVectorComponent<DrawVectorType::Slider>(DrawVectorData(Value));
     }
+
+    /// <summary>
+    /// Draw a color picker.
+    /// </summary>
+    bool DrawColorPicker(
+        const char*         Name,
+        Color4&             Color,
+        ImGuiColorEditFlags Flags = ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoSmallPreview |
+                                    ImGuiColorEditFlags_AlphaBar |
+                                    ImGuiColorEditFlags_HDR);
+
+    /// <summary>
+    /// Draw a color picker.
+    /// </summary>
+    bool DrawColorPicker(
+        const char*         Name,
+        Color3&             Color,
+        ImGuiColorEditFlags Flags = ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoSmallPreview |
+                                    ImGuiColorEditFlags_AlphaBar |
+                                    ImGuiColorEditFlags_HDR);
+
+    /// <summary>
+    /// Draw a color picker.
+    /// </summary>
+    bool DrawColorPicker(
+        const char*         Name,
+        Color4U8&           Color,
+        ImGuiColorEditFlags Flags = ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoSmallPreview |
+                                    ImGuiColorEditFlags_AlphaBar |
+                                    ImGuiColorEditFlags_HDR);
+
+    /// <summary>
+    /// Draw a color picker.
+    /// </summary>
+    bool DrawColorPicker(
+        const char*         Name,
+        Color3U8&           Color,
+        ImGuiColorEditFlags Flags = ImGuiColorEditFlags_NoSidePreview |
+                                    ImGuiColorEditFlags_NoSmallPreview |
+                                    ImGuiColorEditFlags_AlphaBar |
+                                    ImGuiColorEditFlags_HDR);
 } // namespace Neon::UI::Utils
