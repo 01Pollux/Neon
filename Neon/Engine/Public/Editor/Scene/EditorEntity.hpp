@@ -4,17 +4,6 @@
 
 namespace Neon::Scene::Editor
 {
-    // TODO: remove this
-    /// <summary>
-    /// Entities that exists in Root and have this tag will be hidden in editor. (not visible in editor's scene)
-    /// </summary>
-    struct HideInEditor
-    {
-        NEON_EXPORT_FLECS(HideInEditor, "Editor::HideInEditor")
-        {
-        }
-    };
-
     /// <summary>
     /// Entites that have this tag will be selected in editor.
     /// </summary>

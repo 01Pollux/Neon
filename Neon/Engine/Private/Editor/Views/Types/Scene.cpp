@@ -28,25 +28,29 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto Camera = EditorEngine::Get()->GetMainCamera(m_IsEditorView);
-        if (!Camera) [[unlikely]]
+        // If we are in editor scene view, disable/enable camera based on window state.
+        if (m_IsEditorView)
         {
-            return;
-        }
-
-        // Check if window is active and not collapsed to enable/disable camera.
-        if (Window->Hidden || Window->Collapsed) [[unlikely]]
-        {
-            if (Camera.enabled())
+            auto Camera = EditorEngine::Get()->GetMainCamera(true);
+            if (!Camera) [[unlikely]]
             {
-                Camera.disable();
+                return;
             }
-        }
-        else
-        {
-            if (!Camera.enabled())
+
+            // Check if window is active and not collapsed to enable/disable camera.
+            if (Window->Hidden || Window->Collapsed) [[unlikely]]
             {
-                Camera.enable();
+                if (Camera.enabled())
+                {
+                    Camera.disable();
+                }
+            }
+            else
+            {
+                if (!Camera.enabled())
+                {
+                    Camera.enable();
+                }
             }
         }
     }

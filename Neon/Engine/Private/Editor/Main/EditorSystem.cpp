@@ -58,7 +58,6 @@ namespace Neon::Editor
         Tr.World.SetRotationEuler(glm::radians(Vec::Forward<Vector3> * -90.f));
         F.set(Tr);
 
-        A.add<Scene::Editor::HideInEditor>();
         F.child_of(Root);
         G.child_of(Root);
 
@@ -169,7 +168,6 @@ namespace Neon::Editor
         flecs::world World = GetLogic()->GetEntityWorld();
         m_EditorRootEntity = World.entity(EditorRootEntityName);
 
-        NEON_REGISTER_FLECS(Scene::Editor::HideInEditor);
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
         NEON_REGISTER_FLECS(Scene::Editor::EditorSceneDoNotRemove);

@@ -9,6 +9,17 @@
 
 namespace Neon::Editor::Views
 {
+    [[nodiscard]] static flecs::filter<> GetChildrenFilter(
+        flecs::entity Parent)
+    {
+        return Parent.world()
+            .filter_builder()
+            .term(flecs::ChildOf, Parent)
+            .term(flecs::Disabled)
+            .optional()
+            .build();
+    }
+
     SceneHierachy::SceneHierachy() :
         IEditorView(StandardViews::s_HierachyViewWidgetId)
     {
@@ -25,16 +36,19 @@ namespace Neon::Editor::Views
             ImGuiTreeNodeFlags_SpanFullWidth;
 
         // Create filter to check if entity has children.
-        auto ChidlrenFilter = Entity.world().filter_builder().term(flecs::ChildOf, Entity).build();
+        auto ChidlrenFilter = GetChildrenFilter(Entity);
+
+        // If entity has no children, mark it as leaf.
         if (!ChidlrenFilter.is_true())
         {
             TableFlags |= ImGuiTreeNodeFlags_Leaf;
         }
 
-        bool IsHiddenInEditor = Entity.has<Scene::Editor::HideInEditor>();
-        if (IsHiddenInEditor)
+        // If entity is disabled, Make the text gray.
+        bool IsDisabled = !Entity.enabled();
+        if (IsDisabled)
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
         }
 
         imcxx::tree_node HierachyNode(
@@ -42,7 +56,7 @@ namespace Neon::Editor::Views
             TableFlags,
             Entity.name());
 
-        if (IsHiddenInEditor)
+        if (IsDisabled)
         {
             ImGui::PopStyleColor();
         }
@@ -83,23 +97,23 @@ namespace Neon::Editor::Views
                     };
                 }
 
-                if (IsHiddenInEditor)
+                if (IsDisabled)
                 {
-                    if (ImGui::MenuItem("Show in Editor"))
+                    if (ImGui::MenuItem("Enable"))
                     {
                         DeferredTask = [Entity]() mutable
                         {
-                            Entity.remove<Scene::Editor::HideInEditor>();
+                            Entity.enable();
                         };
                     }
                 }
                 else
                 {
-                    if (ImGui::MenuItem("Hide in Editor"))
+                    if (ImGui::MenuItem("Disable"))
                     {
                         DeferredTask = [Entity]() mutable
                         {
-                            Entity.add<Scene::Editor::HideInEditor>();
+                            Entity.disable();
                         };
                     }
                 }
@@ -132,7 +146,7 @@ namespace Neon::Editor::Views
         // First we need to display the children of root entity.
         {
             std::move_only_function<void()> DeferredTask;
-            Root.children(
+            GetChildrenFilter(Root).each(
                 [&DeferredTask](flecs::entity Entity)
                 {
                     DispalySceneObject(Entity, DeferredTask);
