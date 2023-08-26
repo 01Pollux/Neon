@@ -75,7 +75,7 @@ namespace Neon::Editor::Views
         }
 
         static int ViewSize = 64;
-        if (imcxx::slider("View Size", ViewSize, 32, 352))
+        if (imcxx::slider{ "View Size", ViewSize, 32, 352 })
         {
             ViewSize = (ViewSize / 32) * 32;
         }
@@ -173,7 +173,7 @@ namespace Neon::Editor::Views
             ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
-        imcxx::popup Popup(imcxx::popup::context_window{}, "ContentBrowserPopup", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight);
+        imcxx::popup Popup{ imcxx::popup::context_window{}, "ContentBrowserPopup", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight };
         if (!Popup)
         {
             return;
@@ -181,13 +181,13 @@ namespace Neon::Editor::Views
 
         if (imcxx::menubar_item CreateMenu{ "Create" })
         {
-            if (ImGui::MenuItem("Folder"))
+            if (imcxx::menuitem_entry{ "Folder" })
             {
             }
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("C# Script"))
+            if (imcxx::menuitem_entry("C# Script"))
             {
             }
 
@@ -195,39 +195,39 @@ namespace Neon::Editor::Views
             {
                 if (imcxx::menubar_item CreateSprite{ "Sprite" })
                 {
-                    if (ImGui::MenuItem("Triangle"))
+                    if (imcxx::menuitem_entry{ "Triangle" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Quad"))
+                    if (imcxx::menuitem_entry{ "Quad" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Circle"))
+                    if (imcxx::menuitem_entry{ "Circle" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Polygon"))
+                    if (imcxx::menuitem_entry{ "Polygon" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Capsule"))
+                    if (imcxx::menuitem_entry{ "Capsule" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Hexagon-Flat"))
+                    if (imcxx::menuitem_entry{ "Hexagon-Flat" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Hexagon-Pointy"))
+                    if (imcxx::menuitem_entry{ "Hexagon-Pointy" })
                     {
                     }
 
-                    if (ImGui::MenuItem("9-Sliced"))
+                    if (imcxx::menuitem_entry{ "9-Sliced" })
                     {
                     }
 
-                    if (ImGui::MenuItem("Isometric Diamon"))
+                    if (imcxx::menuitem_entry{ "Isometric Diamon" })
                     {
                     }
                 }
@@ -236,46 +236,46 @@ namespace Neon::Editor::Views
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Show in Explorer", "Ctrl+Shift+Enter"))
+        if (imcxx::menuitem_entry{ "Show in Explorer", "Ctrl+Shift+Enter" })
         {
             FileSystem::OpenDirectoryInExplorer(m_DirectoryIterator.CurrentRoot());
         }
 
-        if (ImGui::MenuItem("Delete", "Del"))
+        if (imcxx::menuitem_entry{ "Delete", "Del" })
         {
         }
 
-        if (ImGui::MenuItem("Rename", "F2"))
+        if (imcxx::menuitem_entry{ "Rename", "F2" })
         {
         }
 
-        if (ImGui::MenuItem("Copy Path", "Ctrl+Shift+C"))
-        {
-            OS::SetClipboard(EditorEngine::Get()->GetWindowHandle(), m_DirectoryIterator.CurrentRoot().string());
-        }
-
-        ImGui::Separator();
-
-        if (ImGui::MenuItem("Import Asset...", "Ctrl+I"))
+        if (imcxx::menuitem_entry{ "Copy Path", "Ctrl+Shift+C" })
         {
             OS::SetClipboard(EditorEngine::Get()->GetWindowHandle(), m_DirectoryIterator.CurrentRoot().string());
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Copy", "Ctrl+C"))
+        if (imcxx::menuitem_entry{ "Import Asset...", "Ctrl+I" })
+        {
+            OS::SetClipboard(EditorEngine::Get()->GetWindowHandle(), m_DirectoryIterator.CurrentRoot().string());
+        }
+
+        ImGui::Separator();
+
+        if (imcxx::menuitem_entry{ "Copy", "Ctrl+C" })
         {
         }
 
-        if (ImGui::MenuItem("Cut", "Ctrl+X"))
+        if (imcxx::menuitem_entry{ "Cut", "Ctrl+X" })
         {
         }
 
-        if (ImGui::MenuItem("Paste", "Ctrl+V"))
+        if (imcxx::menuitem_entry{ "Paste", "Ctrl+V" })
         {
         }
 
-        if (ImGui::MenuItem("Duplicate", "Ctrl+D"))
+        if (imcxx::menuitem_entry{ "Duplicate", "Ctrl+D" })
         {
         }
     }

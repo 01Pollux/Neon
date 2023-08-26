@@ -109,18 +109,10 @@ namespace Neon::UI::Utils
         ComponentHeaderInfo Ret;
         const bool          IsActive = Togglable ? *Togglable : true;
 
-        // Check if the component is disabled
-        if (!IsActive)
         {
-            ImGui::BeginDisabled();
-        }
-
-        // Draw the header
-        Ret.IsOpen = ImGui::TreeNodeEx(Label, ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_Framed);
-
-        if (!IsActive)
-        {
-            ImGui::EndDisabled();
+            // Check if the component is disabled
+            imcxx::disabled Disabled{ !IsActive };
+            Ret.IsOpen = ImGui::TreeNodeEx(Label, ImGuiTreeNodeFlags_AllowOverlap | ImGuiTreeNodeFlags_Framed);
         }
 
         // Draw the settings button
@@ -128,13 +120,13 @@ namespace Neon::UI::Utils
         ImGui::SameLine(ImGui::GetWindowWidth() - FrameHeight);
 
         // Draw the settings button
-        if (ImGui::Button(ICON_FA_COG, { FrameHeight, FrameHeight }))
+        if (imcxx::button{ ICON_FA_COG, ImVec2{ FrameHeight, FrameHeight } })
         {
-            ImGui::OpenPopup("##ComponentSettings");
+            ImGui::OpenPopup("##ComponentOptions");
         }
 
         // Draw the settings popup
-        if (ImGui::BeginPopup("##ComponentSettings"))
+        if (imcxx::popup ComponentOptions{ "##ComponentOptions" })
         {
             for (auto& [ButtonName, Action] : {
                      std::pair{ "Copy", ComponentActionType::Copy },
@@ -145,7 +137,7 @@ namespace Neon::UI::Utils
                 bool ActionAllowed = Ret.AllowedActions.Test(Action);
 
                 imcxx::disabled Disabled(ActionAllowed);
-                if (ImGui::MenuItem(ButtonName))
+                if (imcxx::menuitem_entry{ ButtonName })
                 {
                     if (ActionAllowed)
                     {
@@ -153,7 +145,6 @@ namespace Neon::UI::Utils
                     }
                 }
             }
-            ImGui::EndPopup();
         }
 
         return Ret;

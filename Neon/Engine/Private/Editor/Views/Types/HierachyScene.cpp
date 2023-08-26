@@ -74,7 +74,7 @@ namespace Neon::Editor::Views
         {
             if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
             {
-                if (ImGui::MenuItem("Duplicate"))
+                if (imcxx::menuitem_entry{ "Duplicate" })
                 {
                     DeferredTask = [Entity]
                     {
@@ -82,7 +82,7 @@ namespace Neon::Editor::Views
                     };
                 }
 
-                if (ImGui::MenuItem("Delete (Recursive)"))
+                if (imcxx::menuitem_entry{ "Delete (Recursive)" })
                 {
                     DeferredTask = [Entity]
                     {
@@ -91,7 +91,7 @@ namespace Neon::Editor::Views
                     };
                 }
 
-                if (ImGui::MenuItem("Delete"))
+                if (imcxx::menuitem_entry{ "Delete" })
                 {
                     // Delete only entity, and move children to parent.
                     DeferredTask = [Entity]
@@ -102,7 +102,7 @@ namespace Neon::Editor::Views
 
                 if (IsDisabled)
                 {
-                    if (ImGui::MenuItem("Enable"))
+                    if (imcxx::menuitem_entry{ "Enable" })
                     {
                         DeferredTask = [Entity]() mutable
                         {
@@ -112,7 +112,7 @@ namespace Neon::Editor::Views
                 }
                 else
                 {
-                    if (ImGui::MenuItem("Disable"))
+                    if (imcxx::menuitem_entry{ "Disable" })
                     {
                         DeferredTask = [Entity]() mutable
                         {

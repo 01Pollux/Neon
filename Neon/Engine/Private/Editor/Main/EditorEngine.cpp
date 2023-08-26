@@ -176,6 +176,7 @@ namespace Neon::Editor
 
         for (auto& Handler : Handlers->second)
         {
+            imcxx::shared_item_id EntityPropId(std::bit_cast<void*>(Entity.raw_id()));
             if (Handler->Draw(Entity, ComponentId))
             {
                 break;

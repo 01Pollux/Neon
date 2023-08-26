@@ -93,7 +93,7 @@ namespace Neon::UI::Utils
         imcxx::shared_item_id Id(Name);
 
         auto Col = std::bit_cast<ImVec4*>(glm::value_ptr(Color));
-        if (ImGui::ColorButton("", *Col, Flags, ImVec2{ ImGui::GetContentRegionAvail().x, 0.f }))
+        if (imcxx::button{ imcxx::button::color{}, "", *Col, Flags, ImVec2{ ImGui::GetContentRegionAvail().x, 0.f } })
         {
             ImGui::OpenPopup("ColorPalette");
         }

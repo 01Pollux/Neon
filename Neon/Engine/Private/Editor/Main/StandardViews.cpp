@@ -186,54 +186,52 @@ namespace Neon::Editor
         }
         ImGui::SetCursorPos(CurPos);
 
-        if (ImGui::BeginMenu("File"))
+        if (imcxx::menubar_item FileMenu{ "File" })
         {
-            if (ImGui::MenuItem("New Scene", "Ctrl+N"))
+            if (imcxx::menuitem_entry{ "New Scene", "Ctrl+N" })
             {
             }
 
-            if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
+            if (imcxx::menuitem_entry{ "Open Scene...", "Ctrl+O" })
             {
             }
 
-            if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+            if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })
             {
             }
 
-            if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
+            if (imcxx::menuitem_entry{ "Save Scene As...", "Ctrl+Shift+S" })
             {
             }
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Exit", "Alt+F4"))
+            if (imcxx::menuitem_entry{ "Exit", "Alt+F4" })
             {
             }
-
-            ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Edit"))
+        if (imcxx::menubar_item EditMenu{ "Edit" })
         {
-            if (ImGui::MenuItem("Undo", "Ctrl+Z"))
+            if (imcxx::menuitem_entry{ "Undo", "Ctrl+Z" })
             {
             }
 
-            if (ImGui::MenuItem("Redo", "Ctrl+Y"))
+            if (imcxx::menuitem_entry{ "Redo", "Ctrl+Y" })
             {
             }
 
             ImGui::Separator();
 
-            if (ImGui::MenuItem("Cut", "Ctrl+X"))
+            if (imcxx::menuitem_entry{ "Cut", "Ctrl+X" })
             {
             }
 
-            if (ImGui::MenuItem("Copy", "Ctrl+C"))
+            if (imcxx::menuitem_entry{ "Copy", "Ctrl+C" })
             {
             }
 
-            if (ImGui::MenuItem("Paste", "Ctrl+V"))
+            if (imcxx::menuitem_entry{ "Paste", "Ctrl+V" })
             {
             }
 
@@ -253,19 +251,17 @@ namespace Neon::Editor
                 ImGui::Separator();
             }
 
-            if (ImGui::MenuItem("Delete", "Del"))
+            if (imcxx::menuitem_entry{ "Delete", "Del" })
             {
             }
-
-            ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Views"))
+        if (imcxx::menubar_item ViewMenu{ "Views" })
         {
             for (auto& [ViewId, View] : m_Views)
             {
                 bool IsOpen = IsViewOpen(ViewId);
-                if (ImGui::MenuItem(View->GetWidgetId().c_str(), nullptr, IsOpen))
+                if (imcxx::menuitem_entry{ View->GetWidgetId().c_str(), nullptr, IsOpen })
                 {
                     if (IsOpen)
                     {
@@ -277,8 +273,6 @@ namespace Neon::Editor
                     }
                 }
             }
-
-            ImGui::EndMenu();
         }
 
         for (auto& View : m_Views | std::views::values)
