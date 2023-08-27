@@ -74,6 +74,8 @@ function select_launch_kind()
     filter {}
 end
 
+--
+
 function link_boost_inc()
     filter { "configurations:Debug" }
     includedirs
@@ -114,6 +116,16 @@ function link_boost_lib(lib_name)
             "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
         }
     filter {}
+end
+
+--
+
+function link_mono_lib(lib_name)
+    links
+    {
+        "mono-2.0-sgen.lib",
+        "MonoPosixHelper.lib"
+    }
 end
 
 --

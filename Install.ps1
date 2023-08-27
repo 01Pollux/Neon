@@ -135,7 +135,7 @@ Copy-IncludePath "spdlog\include\spdlog" "." -Recurse
 
 $SrcPath = $(Get-DepSrcPath("Bullet3\src"))
 Get-ChildItem $SrcPath -Recurse -Filter "*.h" |
-Foreach {
+Foreach-Object {
     $Path = "Bullet3\" + ($_.FullName -Replace "^.*Bullet3\\src\\", "")
     Copy-IncludePathAbs $_.FullName $(Get-DepIncPath($Path))
 }
@@ -190,3 +190,17 @@ Copy-Item -Recurse $(Get-DepSrcPath("cppcoro\include")) "Neon/Coroutines/Public"
 Write-Output "Copying glfw files..."
 Remove-Directory $(Get-DepIncPath("glfw"))
 Copy-Item -Recurse $(Get-DepSrcPath("glfw\include\GLFW")) $(Get-DepIncPath("glfw"))
+
+
+#
+# Mono
+#
+Write-Output "Copying mono files..."
+Remove-Directory $(Get-DepIncPath("Mono"))
+
+Remove-Directory $(Get-DepLibPath("Mono"))
+Make-Directory $(Get-DepLibPath("Mono"))
+
+Copy-Item "Vendors\Mono\include" $(Get-DepIncPath("Mono")) -Force -Recurse
+Copy-Item "Vendors\Mono\bin"  $(Get-DepLibPath("Mono\bin")) -Force -Recurse
+Copy-Item "Vendors\Mono\lib"  $(Get-DepLibPath("Mono\lib")) -Force -Recurse
