@@ -5,6 +5,7 @@ function copy_file_to_target_dir(from_dir, folder, name)
         string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
     }
 end
+
 function copy_directory_to_target_dir(from_dir, to_dir)
     filter { "system:windows" }
         postbuildcommands
@@ -20,18 +21,26 @@ function copy_directory_to_target_dir(from_dir, to_dir)
 end
 
 function copy_engine_resources_to(content_name, out_dir)
+    -- Copy assets
     if content_name ~= nil then
         content_name = "%{wks.location}Contents/"..content_name;
         copy_directory_to_target_dir(content_name, out_dir);
 	end
 
-    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
-    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
-    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.dll")
-    copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.dll")
-    filter { "configurations:not Dist" }
-        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
-        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
+    copy_directory_to_target_dir("%{wks.location}Mono", "Managed")
+
+    filter { "system:windows" }
+        -- Copy dxcompiler.dll and dxil.dll
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxcompiler.dll")
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxC/bin/x64", "", "dxil.dll")
+        
+        -- Copy D3D12 Agility SDK
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.dll")
+        copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.dll")
+        filter { "configurations:not Dist" }
+            copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12Core.pdb")
+            copy_file_to_target_dir("%{CommonDir.Deps.Libs}/DxAgility/x64", "D3D12/", "D3D12SDKLayers.pdb")
+        filter {}
     filter {}
 end
 
