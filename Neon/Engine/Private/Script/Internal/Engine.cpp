@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 
 #include <Script/Internal/Engine.hpp>
+#include <Private/Script/Internal/Assembly.hpp>
 
 #include <Mono/jit/jit.h>
 #include <Mono/metadata/appdomain.h>
@@ -20,12 +21,12 @@
 
 namespace Neon::Scripting
 {
-    void Test();
-
     struct ScriptContext
     {
         MonoDomain* RootDomain{};
         MonoDomain* CurrentDomain{};
+
+        std::map<StringU8, CS::Assembly> LoadedAssemblies;
 
         /// <summary>
         /// Create a new domain.
@@ -137,9 +138,6 @@ namespace Neon::Scripting
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
         s_ScriptContext.NewDomain();
-        Test();
-        s_ScriptContext.NewDomain();
-        Test();
     }
 
     void Shutdown()
@@ -159,7 +157,7 @@ namespace Neon::Scripting
 
     //
 
-    MonoAssembly* LoadAssembly(
+    static MonoAssembly* LoadAssemblyFromFile(
         const char* Path)
     {
         std::ifstream     File(Path, std::ios::binary);
@@ -177,85 +175,28 @@ namespace Neon::Scripting
         return Assembly;
     }
 
-    void Test()
+    void LoadAssembly(
+        const char*     Name,
+        const StringU8& Path)
     {
-        constexpr const char* Path = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\Neon-CSharpTemplate\Neon-CSharpTemplate.dll)";
+        std::ifstream File(Path, std::ios::binary);
+        NEON_VALIDATE(File.is_open(), "Failed to open C# assembly: {}.", Path);
 
-        MonoAssembly* Assembly = LoadAssembly(Path);
-        MonoImage*    Image    = mono_assembly_get_image(Assembly);
+        s_ScriptContext.LoadedAssemblies.emplace(Name, CS::Assembly(Name, File));
+    }
 
-        {
-            auto Table = mono_image_get_table_info(Image, MONO_TABLE_TYPEDEF);
-            auto Rows  = mono_table_info_get_rows(Table);
-            for (uint32_t i = 0; i < Rows; i++)
-            {
-                MonoClass* Class = mono_class_get(Image, (i + 1) | MONO_TOKEN_TYPE_DEF);
-                auto       Name  = mono_class_get_name(Class);
-                printf("Class: %s\n", Name ? Name : "");
-
-                MonoClass* Nest = mono_class_get_nesting_type(Class);
-
-                if (Nest)
-                {
-                    auto NestName = mono_class_get_name(Nest);
-                    printf("Nest: %s\n", NestName ? NestName : "");
-                }
-                else
-                {
-                    auto Namespace = mono_class_get_namespace(Class);
-                    printf("Namespace: %s\n", Namespace ? Namespace : "");
-                }
-
-                auto Type     = mono_class_get_type(Class);
-                auto TypeName = mono_type_get_name(Type);
-                printf("Type: %s\n", TypeName ? TypeName : "");
-            }
-        }
-
-        MonoClass* Class = mono_class_from_name(Image, "Neon", "MonoTest");
-        NEON_VALIDATE(Class, "Failed to get class.");
-
-        MonoObject* Instance = mono_object_new(s_ScriptContext.CurrentDomain, Class);
-        NEON_VALIDATE(Instance, "Failed to create instance.");
-
-        mono_runtime_object_init(Instance);
-
-        auto FindMethod = [Class](const char* Name)
-        {
-            auto Desc = mono_method_desc_new(Name, false);
-            NEON_VALIDATE(Desc, "Failed to create method description.");
-
-            auto Method = mono_method_desc_search_in_class(Desc, Class);
-            NEON_VALIDATE(Method, "Failed to find method.");
-
-            mono_method_desc_free(Desc);
-
-            return Method;
-        };
-
-        auto Method1 = FindMethod(":Method1()");
-        NEON_VALIDATE(Method1, "Failed to get method.");
-
-        mono_runtime_invoke(Method1, Instance, nullptr, nullptr);
-
-        auto Method2 = FindMethod(":Method2(string)");
-        NEON_VALIDATE(Method2, "Failed to get method.");
-
-        MonoString* Arg = mono_string_new(s_ScriptContext.CurrentDomain, "Hello from C++!");
-
-        void* Args[]{ Arg };
-        mono_runtime_invoke(Method2, Instance, Args, nullptr);
+    void UnloadAssembly(
+        const char* Name)
+    {
+        s_ScriptContext.LoadedAssemblies.erase(Name);
     }
 
     //
 
     void ScriptContext::NewDomain()
     {
-        static StringU8 Name;
-        Name += "NeonDomain";
-
-        // char        DomainName[] = "Neon";
-        MonoDomain* Domain = mono_domain_create_appdomain(Name.data(), nullptr);
+        char        DomainName[] = "Neon";
+        MonoDomain* Domain       = mono_domain_create_appdomain(DomainName, nullptr);
         NEON_VALIDATE(Domain, "Failed to create domain.");
 
         mono_domain_set(Domain, true);
