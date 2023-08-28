@@ -73,11 +73,11 @@ namespace Neon::Runtime
     void GameEngine::Initialize(
         Config::EngineConfig Config)
     {
-        // Initialize and load assets packages
-        InitializeAssetSystem(Config);
-
         // Register the scripting system
         Scripting::Initialize(Config.Script);
+
+        // Initialize and load assets packages
+        InitializeAssetSystem(Config);
 
         // Initialize the window
         m_Window = std::make_unique<Windowing::WindowApp>(Config.Window);

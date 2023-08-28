@@ -16,6 +16,8 @@
 
 namespace Neon::Scripting
 {
+    void Test();
+
     struct ScriptContext
     {
         MonoDomain* Domain{};
@@ -108,6 +110,8 @@ namespace Neon::Scripting
 
         s_ScriptContext.IsMonoInitialized = true;
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
+
+        Test();
     }
 
     void Shutdown()
@@ -122,5 +126,12 @@ namespace Neon::Scripting
         {
             NEON_WARNING_TAG("Script", "Scripting engine was not initialized.");
         }
+    }
+
+    //
+
+    void Test()
+    {
+
     }
 } // namespace Neon::Scripting

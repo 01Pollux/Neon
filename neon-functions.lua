@@ -260,3 +260,14 @@ function setup_runtime_engine(asset_path_name)
     link_engine_library()
     copy_engine_resources(asset_path_name)
 end
+
+function setup_csharp_project()
+	kind "SharedLib"
+    language "C#"
+    dotnetframework "4.7.2"
+
+    targetdir ("%{wks.location}/bin/" .. OutputDir .. "/%{prj.name}")
+	objdir ("%{wks.location}/bin-int/" .. OutputDir .. "/%{prj.name}")
+
+    debugdir "$(targetdir)"
+end

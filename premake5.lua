@@ -18,7 +18,6 @@ workspace "Neon"
     }
     
     defines "NOMINMAX"
-    
 
 	filter { "system:windows" }
 		systemversion "latest"
@@ -88,5 +87,6 @@ workspace "Neon"
     group "Samples"
 --        include "Samples/BasicAsset"
 --        include "Samples/HelloWorld"
-        include "Samples/FlappyBirdClone"
+--        include "Samples/FlappyBirdClone"
+        include "Samples/CSharpTemplate"
     group ""
