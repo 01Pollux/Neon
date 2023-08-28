@@ -10,14 +10,14 @@
 	* Frameworks
 		- [ ] Modules can be extended / overridden depending on what the user wants.
 	* Graphics 
-		- [x] DirectX12
+		- [x] DirectX 12
 		- [ ] Vulkan
 		- [ ] Metal
 	* Window
-		- [x] Basic window 
-		- [ ] Customized window
-		- [ ] Editor
-		- [ ] Dockable window
+		* Basic window 
+		* Customized window
+		* Editor
+		* Dockable window
 	- [ ] Audio
 	* Input
 		- [ ] Basic pooling
@@ -35,39 +35,39 @@
 		* Private events
 		- [ ] Public events
 	* Scripting
-		- [ ] C# Support
+		* C# Support
 	* Concurrency
-		- [x] Thread pooling
-		- [x] Coroutines
+		* Thread pooling
+		* Coroutines
 	* Editor
 		- [ ] Compose Assets
 		- [ ] Prepare the runtime
 	* Runtime
-		- [ ] Run only on assets
-		- [ ] Can Run without any assets
-		- [ ] Extendable
+		* Run only on assets
+		* Can Run without any assets
+		* Extendable
 	* Resource Management
-		- [x] Async
-		- [x] Customizable Loaders, Savers, Exporters, Importers
-		- [x] Multiple packs and resource format
-		- [ ] Resource dependecy resolution
+		* Async
+		* Customizable Loaders, Savers, Exporters, Importers
+		* Multiple packs and resource format
+		* Resource dependecy resolution
 	* Rendering
 		- [ ] 2D
 		- [ ] 3D
 		- [ ] 2.5D
 		* Render graph
-			- [x] Automatic resource management
-			- [x] Automatic nodes dependecy resolution
+			* Automatic resource management
+			* Automatic nodes dependecy resolution
 		- [ ] GUI
-		- [ ] Frustum culling
-			* GPU Side
-			* CPU Side
+		- Frustum culling
+			- [ ] GPU Side
+			- [ ] CPU Side
 		- [ ] Ray tracing
 			* GPU Side
 			* CPU Side
 		- [ ] Post process effects
 		- [ ] Light management
-	- [ ] Scene
+	* Scene
 		* Game objects
 		* Components
 		* ECS (Flecs)
