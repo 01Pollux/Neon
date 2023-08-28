@@ -4,11 +4,13 @@
 
 #include <Mono/jit/jit.h>
 #include <Mono/metadata/appdomain.h>
+#include <Mono/metadata/attrdefs.h>
 #include <Mono/metadata/assembly.h>
 #include <Mono/metadata/exception.h>
 #include <Mono/metadata/mono-debug.h>
 #include <Mono/metadata/mono-config.h>
 #include <Mono/metadata/threads.h>
+#include <Mono/metadata/debug-helpers.h>
 
 #include <Mono/utils/mono-logger.h>
 
@@ -119,6 +121,7 @@ namespace Neon::Scripting
         if (s_ScriptContext.IsMonoInitialized)
         {
             NEON_TRACE_TAG("Script", "Scripting engine shutting down.");
+
             mono_jit_cleanup(s_ScriptContext.Domain);
             s_ScriptContext = {};
         }
@@ -132,6 +135,46 @@ namespace Neon::Scripting
 
     void Test()
     {
+        constexpr const char* Path = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\Neon-CSharpTemplate\Neon-CSharpTemplate.dll)";
 
+        MonoAssembly* Assembly = mono_domain_assembly_open(s_ScriptContext.Domain, Path);
+        NEON_VALIDATE(Assembly, "Failed to load assembly.");
+
+        MonoImage* Image = mono_assembly_get_image(Assembly);
+        NEON_VALIDATE(Image, "Failed to get assembly image.");
+
+        MonoClass* Class = mono_class_from_name(Image, "Neon", "MonoTest");
+        NEON_VALIDATE(Class, "Failed to get class.");
+
+        MonoObject* Instance = mono_object_new(s_ScriptContext.Domain, Class);
+        NEON_VALIDATE(Instance, "Failed to create instance.");
+
+        mono_runtime_object_init(Instance);
+
+        auto FindMethod = [Class](const char* Name)
+        {
+            auto Desc = mono_method_desc_new(Name, false);
+            NEON_VALIDATE(Desc, "Failed to create method description.");
+
+            auto Method = mono_method_desc_search_in_class(Desc, Class);
+            NEON_VALIDATE(Method, "Failed to find method.");
+
+            mono_method_desc_free(Desc);
+
+            return Method;
+        };
+
+        auto Method1 = FindMethod(":Method1()");
+        NEON_VALIDATE(Method1, "Failed to get method.");
+
+        mono_runtime_invoke(Method1, Instance, nullptr, nullptr);
+
+        auto Method2 = FindMethod(":Method2(string)");
+        NEON_VALIDATE(Method2, "Failed to get method.");
+
+        MonoString* Arg = mono_string_new(s_ScriptContext.Domain, "Hello from C++!");
+
+        void* Args[]{ Arg };
+        mono_runtime_invoke(Method2, Instance, Args, nullptr);
     }
 } // namespace Neon::Scripting

@@ -1,6 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 
-namespace Tests
+namespace Neon
 {
     class MonoTest
     {
@@ -47,20 +48,20 @@ namespace Tests
             Console.WriteLine("FROM C# : MonoppTest destroyed.");
         }
 
-        void Method1()
+        public void Method1()
         {
             Console.WriteLine("FROM C# : Hello Mono World from instance.");
         }
 
-        void Method2(string s)
+        public void Method2(string s)
         {
             Console.WriteLine("FROM C# : WithParam string: " + s);
         }
-        void Method3(int s)
+        public void Method3(int s)
         {
             Console.WriteLine("FROM C# : WithParam int: " + s);
         }
-        void Method4(int s, int s1)
+        public void Method4(int s, int s1)
         {
             Console.WriteLine("FROM C# : WithParam int, int: {0}, {1}", s, s1);
         }
