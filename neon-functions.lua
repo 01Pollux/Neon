@@ -123,8 +123,8 @@ end
 function link_mono_lib(lib_name)
     links
     {
-        "mono-2.0-sgen.lib",
-        "MonoPosixHelper.lib"
+        "Mono/lib/mono-2.0-sgen.lib",
+        "Mono/lib/MonoPosixHelper.lib"
     }
 end
 
@@ -168,6 +168,7 @@ function link_engine_library_no_engine()
         "%{CommonDir.Neon.Engine}"
     }
 
+    link_mono_lib()
     
     link_boost_lib("atomic")
     link_boost_lib("chrono")
