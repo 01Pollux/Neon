@@ -2,6 +2,7 @@
 
 #include <Script/Internal/Engine.hpp>
 #include <Private/Script/Internal/Assembly.hpp>
+#include <Private/Script/HandleManager.hpp>
 
 #include <Mono/jit/jit.h>
 #include <Mono/metadata/appdomain.h>
@@ -26,6 +27,8 @@ namespace Neon::Scripting
         MonoDomain* RootDomain{};
         MonoDomain* CurrentDomain{};
 
+        HandleManager HandleMan;
+
         std::map<StringU8, CS::Assembly> LoadedAssemblies;
 
         /// <summary>
@@ -35,6 +38,13 @@ namespace Neon::Scripting
 
         bool IsMonoInitialized : 1 = false;
     } static s_ScriptContext;
+
+    //
+
+    HandleManager* HandleManager::Get()
+    {
+        return &s_ScriptContext.HandleMan;
+    }
 
     //
 
@@ -146,6 +156,7 @@ namespace Neon::Scripting
         {
             NEON_TRACE_TAG("Script", "Scripting engine shutting down.");
 
+            s_ScriptContext.HandleMan.Shutdown();
             mono_jit_cleanup(s_ScriptContext.RootDomain);
             s_ScriptContext = {};
         }
