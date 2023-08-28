@@ -51,14 +51,14 @@ namespace Neon::Scripting
 
         if (Logger::ShouldLog(Severity))
         {
-            Logger::Log(Severity, LogDomain, Message);
+            Logger::LogMessage(Severity, Message);
         }
     }
 
     //
 
     void Initialize(
-        const ScriptConfig& Config)
+        const Config::ScriptConfig& Config)
     {
         mono_set_dirs(".", ".");
 

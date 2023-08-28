@@ -2,6 +2,7 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/GameLogic.hpp>
 #include <Runtime/DebugOverlay.hpp>
+#include <Script/Engine.hpp>
 
 //
 
@@ -37,11 +38,14 @@ namespace Neon::Runtime
         s_GameEngine = this;
 
         // Initialize the asset system
-        Neon::Asset::Storage::Initialize();
+        Asset::Storage::Initialize();
     }
 
     GameEngine::~GameEngine()
     {
+        // Unregister the scripting system
+        Scripting::Shutdown();
+
         // Shutdown the asset system
         Asset::Storage::Shutdown();
 
@@ -69,6 +73,9 @@ namespace Neon::Runtime
     void GameEngine::Initialize(
         Config::EngineConfig Config)
     {
+        // Register the scripting system
+        Scripting::Initialize(Config.Script);
+
         // Initialize and load assets packages
         InitializeAssetSystem(Config);
 

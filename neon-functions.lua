@@ -7,12 +7,14 @@ function copy_file_to_target_dir(from_dir, folder, name)
 end
 
 function copy_directory_to_target_dir(from_dir, to_dir)
-    filter { "system:windows" }
-        postbuildcommands
-        {
-    	    string.format("powershell rmdir -R $(targetdir)%s 2>nul", to_dir)
-        }
-    filter {}
+    if to_dir ~= "" then
+        filter { "system:windows" }
+            postbuildcommands
+            {
+        	    string.format("powershell rmdir -R $(targetdir)%s 2>nul", to_dir)
+            }
+        filter {}
+    end
     postbuildcommands
     {
         string.format('mkdir "$(targetdir)%s"', to_dir),
@@ -27,7 +29,8 @@ function copy_engine_resources_to(content_name, out_dir)
         copy_directory_to_target_dir(content_name, out_dir);
 	end
 
-    copy_directory_to_target_dir("%{wks.location}Mono", "Managed")
+    copy_directory_to_target_dir("%{wks.location}Vendors/Mono/bin", "")
+    copy_directory_to_target_dir("%{wks.location}Vendors/Mono/lib/mono", "mono")
 
     filter { "system:windows" }
         -- Copy dxcompiler.dll and dxil.dll
