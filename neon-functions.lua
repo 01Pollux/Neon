@@ -270,4 +270,11 @@ function setup_csharp_project()
 	objdir ("%{wks.location}/bin-int/" .. OutputDir .. "/%{prj.name}")
 
     debugdir "$(targetdir)"
+
+    files
+	{
+        "Private/**.cs",
+        "Public/**.cs",
+		"**.natvis"
+	}
 end

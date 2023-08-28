@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Neon
 {
-    class MonoTest
+    public class MonoTest
     {
         public int SomeField = 12;
 
