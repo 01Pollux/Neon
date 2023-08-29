@@ -1,8 +1,8 @@
 #include <EnginePCH.hpp>
 
 #include <Private/Script/Internal/Engine.hpp>
+#include <Private/Script/Calls.hpp>
 #include <Script/Internal/Utils.hpp>
-#include <Script/Internal/Class.hpp>
 
 #include <Mono/utils/mono-logger.h>
 #include <Log/Logger.hpp>
@@ -131,6 +131,8 @@ namespace Neon::Scripting
 #endif
 
         mono_thread_set_main(mono_thread_current());
+
+        CS::InternalCalls::Register();
 
         CS::ScriptContext::Get()->IsMonoInitialized = true;
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
