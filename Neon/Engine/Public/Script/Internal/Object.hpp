@@ -8,7 +8,7 @@ namespace Neon::Scripting::CS
     {
     public:
         Object(
-            MonoObject* Obj);
+            MonoObject* Obj = nullptr);
 
         /// <summary>
         /// Gets the assembly.

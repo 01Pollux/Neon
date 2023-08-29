@@ -1,9 +1,19 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Neon
 {
-    public class MonoTest
+    public class SomeClass
+    {
+        public int Function4(string str, float y)
+        {
+            Console.WriteLine(str);
+            return 1 + (int)y;
+        }
+    }
+
+    public class MonoTest : SomeClass
     {
         public int SomeField = 12;
 
@@ -42,6 +52,10 @@ namespace Neon
         public MonoTest()
         {
             Console.WriteLine("FROM C# : MonoppTest created.");
+        }
+        public MonoTest(int x, float y)
+        {
+            Console.WriteLine("FROM C# : MonoppTest created with params: {0}, {1}", x, y);
         }
         ~MonoTest()
         {
@@ -88,10 +102,11 @@ namespace Neon
             Console.WriteLine("FROM C# : String value: {0}", a);
         }
 
-        public static string Function4(string str)
-        {
-            return "The string value was: " + str;
-        }
+        //public new int Function4(string str, float y)
+        //{
+        //    Console.WriteLine(str);
+        //    return 10 + (int)y;
+        //}
 
         public static void Function5()
         {

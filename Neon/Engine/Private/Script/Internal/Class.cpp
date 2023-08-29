@@ -1,12 +1,26 @@
 #include <EnginePCH.hpp>
-#include <Private/Script/Internal/Class.hpp>
 #include <Private/Script/Internal/Engine.hpp>
-#include <Private/Script/Internal/Utils.hpp>
+#include <Script/Internal/Class.hpp>
+#include <Script/Internal/Utils.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::Scripting::CS
 {
+    void* ObjectInvokerArg<StringU8>::ToPtr(
+        StringU8& Obj)
+    {
+        return Utils::ToMonoString(Obj);
+    }
+
+    StringU8 ObjectInvokerArg<StringU8>::FromPtr(
+        MonoObject* Obj)
+    {
+        return Utils::FromMonoString(std::bit_cast<MonoString*>(Obj));
+    }
+
+    //
+
     Class::Class(
         MonoClass* Cls) :
         m_Class(Cls)
@@ -14,21 +28,45 @@ namespace Neon::Scripting::CS
         FetchMethods();
     }
 
+    const Class* Class::GetParent() const
+    {
+        return m_BaseClass;
+    }
+
     MonoClass* Class::GetClass() const
     {
         return m_Class;
     }
 
+    MonoObject* Class::Invoke(
+        MonoMethod*  Method,
+        MonoObject*  Obj,
+        const void** Parameters,
+        size_t       ParameterCount) const
+    {
+        MonoObject* Exception;
+        auto        Object = mono_runtime_invoke(Method, Obj, const_cast<void**>(Parameters), &Exception);
+        Utils::HandleException(Exception);
+        return Object;
+    }
+
     Object Class::New(
-        const char*  MethodName,
         const void** Parameters,
         size_t       ParameterCount) const
     {
         MonoObject* Obj = mono_object_new(ScriptContext::Get()->CurrentDomain, m_Class);
 
-        MonoMethod* Ctor = GetMethod(MethodName);
-        mono_runtime_invoke(Ctor, Obj, const_cast<void**>(Parameters), nullptr);
+        MonoMethod* Ctor = nullptr;
+        for (auto& Cur : GetMethods(".ctor"))
+        {
+            if (Cur.ParameterCount == ParameterCount)
+            {
+                Ctor = Cur.Method;
+                break;
+            }
+        }
 
+        Invoke(Ctor, Obj, Parameters, ParameterCount);
         return Obj;
     }
 
@@ -39,17 +77,24 @@ namespace Neon::Scripting::CS
         return Obj;
     }
 
-    MonoMethod* Class::GetMethod(
+    Asio::CoGenerator<MethodMetadata> Class::GetMethods(
         const StringU8& Name) const
     {
-        return GetMethod(StringUtils::Hash(Name));
+        return GetMethods(StringUtils::Hash(Name));
     }
 
-    MonoMethod* Class::GetMethod(
+    Asio::CoGenerator<MethodMetadata> Class::GetMethods(
         size_t NameHash) const
     {
-        auto Iter = m_Methods.find(NameHash);
-        return Iter != m_Methods.end() ? Iter->second : nullptr;
+        auto Cls = this;
+        do
+        {
+            auto Iter = Cls->m_Methods.find(NameHash);
+            for (; Iter != Cls->m_Methods.end() && Iter->first == NameHash; ++Iter)
+            {
+                co_yield static_cast<MethodMetadata>(Iter->second);
+            }
+        } while (Cls = Cls->GetParent());
     }
 
     //
@@ -59,25 +104,13 @@ namespace Neon::Scripting::CS
         void* Iter = nullptr;
         while (MonoMethod* Method = mono_class_get_methods(m_Class, &Iter))
         {
-            // Get method name with arguments
-            StringU8 MethodName = mono_method_get_name(Method);
-            MethodName += "(";
+            auto Signature = mono_method_signature(Method);
 
-            MonoMethodSignature* Signature = mono_method_signature(Method);
-            void*                SigIter   = nullptr;
-            uint32_t             i = 0, Count = mono_signature_get_param_count(Signature);
-            while (MonoType* Type = mono_signature_get_params(Signature, &SigIter))
-            {
-                MethodName += mono_type_get_name(Type);
-                if (i < Count - 1)
-                {
-                    MethodName += ", ";
-                }
-            }
-
-            MethodName += ")";
-
-            m_Methods.emplace(StringUtils::Hash(MethodName), Method);
+            m_Methods.emplace(
+                StringUtils::Hash(mono_method_get_name(Method)),
+                MethodMetadata{
+                    .Method         = Method,
+                    .ParameterCount = mono_signature_get_param_count(Signature) });
         }
     }
 } // namespace Neon::Scripting::CS

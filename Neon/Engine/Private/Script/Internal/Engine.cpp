@@ -1,8 +1,8 @@
 #include <EnginePCH.hpp>
 
 #include <Private/Script/Internal/Engine.hpp>
-#include <Private/Script/Internal/Utils.hpp>
-#include <Private/Script/Internal/Class.hpp>
+#include <Script/Internal/Utils.hpp>
+#include <Script/Internal/Class.hpp>
 
 #include <Mono/utils/mono-logger.h>
 #include <Log/Logger.hpp>
@@ -10,6 +10,8 @@
 
 namespace Neon::Scripting
 {
+    void Test();
+
     namespace CS
     {
         static ScriptContext s_ScriptContext;
@@ -136,6 +138,8 @@ namespace Neon::Scripting
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
         CS::ScriptContext::Get()->NewDomain();
+
+        Test();
     }
 
     void Shutdown()
@@ -157,28 +161,19 @@ namespace Neon::Scripting
     //
 
     GCHandle CreateScriptObject(
-        const char*  Name,
+        const char*  AssemblyName,
         const char*  TypeName,
-        const char*  CtorName,
         const void** Parameters,
         uint32_t     ParameterCount)
     {
-        auto AssemblyIter = CS::ScriptContext::Get()->LoadedAssemblies.find(Name);
-        if (AssemblyIter == CS::ScriptContext::Get()->LoadedAssemblies.end()) [[unlikely]]
-        {
-            NEON_ERROR_TAG("Script", "Failed to find assembly: {}.", Name);
-            return {};
-        }
-
-        auto& Assembly = AssemblyIter->second;
-        auto  Class    = Assembly.GetClass(TypeName);
-        if (!Class) [[unlikely]]
+        auto Cls = GetClass(AssemblyName, TypeName);
+        if (!Cls) [[unlikely]]
         {
             NEON_ERROR_TAG("Script", "Failed to find type: {}.", TypeName);
             return {};
         }
 
-        CS::Object Obj = CtorName ? Class->New(CtorName, Parameters, ParameterCount) : Class->New();
+        CS::Object Obj = ParameterCount ? Cls->New(Parameters, ParameterCount) : Cls->New();
         if (!Obj) [[unlikely]]
         {
             NEON_ERROR_TAG("Script", "Failed to create object: {}.", TypeName);
@@ -186,6 +181,21 @@ namespace Neon::Scripting
         }
 
         return CS::ScriptContext::Get()->HandleMgr.AddReference(Obj.GetObject());
+    }
+
+    const CS::Class* GetClass(
+        const char* AssemblyName,
+        const char* TypeName)
+    {
+        auto AssemblyIter = CS::ScriptContext::Get()->LoadedAssemblies.find(AssemblyName);
+        if (AssemblyIter == CS::ScriptContext::Get()->LoadedAssemblies.end()) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to find assembly: {}.", AssemblyName);
+            return {};
+        }
+
+        auto& Assembly = AssemblyIter->second;
+        return Assembly.GetClass(TypeName);
     }
 
     //
@@ -226,4 +236,32 @@ namespace Neon::Scripting
 
     //
 
+    void Test()
+    {
+        Scripting::LoadAssembly(
+            "ScriptingAssembly",
+            "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
+
+        int         IntParam   = 5;
+        auto        FloatParam = 3.14f;
+        const void* Params[]   = { &IntParam, &FloatParam };
+
+        auto Handle = Scripting::CreateScriptObject(
+            "ScriptingAssembly",
+            "Neon.MonoTest",
+            Params,
+            2);
+
+        auto Object = Handle.GetObject();
+        auto Cls    = Scripting::GetClass(
+            "ScriptingAssembly",
+            "Neon.MonoTest");
+
+        auto Func2 = Cls->GetMethods("Function4").begin()->Method;
+
+        CS::MethodInvoker<int, StringU8, float> Invoker(Cls, Func2);
+
+        auto va = Invoker(Object, "Hello world", 5);
+        printf("va: %d\n", va);
+    }
 } // namespace Neon::Scripting

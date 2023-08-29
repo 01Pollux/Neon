@@ -1,5 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Private/Script/Internal/Object.hpp>
+#include <Script/Internal/Object.hpp>
 
 namespace Neon::Scripting::CS
 {

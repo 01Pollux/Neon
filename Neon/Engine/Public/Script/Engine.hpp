@@ -2,6 +2,7 @@
 
 #include <Config/Script.hpp>
 #include <Script/Handle.hpp>
+#include <Script/Internal/Assembly.hpp>
 
 namespace Neon::Scripting
 {
@@ -22,7 +23,7 @@ namespace Neon::Scripting
     /// Creates a script object.
     /// </summary>
     GCHandle CreateScriptObject(
-        const char* Name,
+        const char* AssemblyName,
         const char* TypeName,
         void**      Parameters,
         uint32_t    ParameterCount);
@@ -30,12 +31,9 @@ namespace Neon::Scripting
     /// <summary>
     /// Creates a script object.
     /// </summary>
-    GCHandle CreateScriptObject(
-        const char*  Name,
-        const char*  TypeName,
-        const char*  CtorName,
-        const void** Parameters,
-        uint32_t     ParameterCount);
+    const CS::Class* GetClass(
+        const char* AssemblyName,
+        const char* TypeName);
 
     //
 

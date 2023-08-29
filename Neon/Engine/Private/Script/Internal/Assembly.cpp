@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
-#include <Private/Script/Internal/Assembly.hpp>
-#include <Private/Script/Internal/Utils.hpp>
+#include <Script/Internal/Assembly.hpp>
+#include <Script/Internal/Utils.hpp>
 
 #include <Mono/metadata/image.h>
 #include <Mono/metadata/tokentype.h>
@@ -59,10 +59,28 @@ namespace Neon::Scripting::CS
         auto    Table = mono_image_get_table_info(m_Image, MONO_TABLE_TYPEDEF);
         int32_t Rows  = mono_table_info_get_rows(Table);
 
+        std::unordered_map<MonoClass*, size_t> ClassIdMap;
+
         for (int i = 0; i < Rows; i++)
         {
-            MonoClass* Class = mono_class_get(m_Image, (i + 1) | MONO_TOKEN_TYPE_DEF);
-            m_Classes.emplace(StringUtils::Hash(Utils::GetClassName(Class)), Class);
+            auto Cls = mono_class_get(m_Image, (i + 1) | MONO_TOKEN_TYPE_DEF);
+            auto Id  = StringUtils::Hash(Utils::GetClassName(Cls));
+
+            m_Classes.emplace(Id, Cls);
+            ClassIdMap.emplace(Cls, Id);
+        }
+
+        for (auto& [ClsId, Cls] : m_Classes)
+        {
+            auto Parent = mono_class_get_parent(Cls.GetClass());
+            if (Parent)
+            {
+                auto ParentIter = ClassIdMap.find(Parent);
+                if (ParentIter != ClassIdMap.end())
+                {
+                    Cls.m_BaseClass = &m_Classes.at(ParentIter->second);
+                }
+            }
         }
     }
 } // namespace Neon::Scripting::CS

@@ -1,11 +1,49 @@
 #include <EnginePCH.hpp>
-#include <Private/Script/Internal/Utils.hpp>
 #include <Private/Script/Internal/Engine.hpp>
+#include <Script/Internal/Utils.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::Scripting::CS::Utils
 {
+    MonoObject* BoxValuePtr(
+        MonoClass* Cls,
+        void*      Ptr)
+    {
+        return mono_value_box(ScriptContext::Get()->CurrentDomain, Cls, Ptr);
+    }
+
+    void HandleException(
+        MonoObject* Exception)
+    {
+        if (Exception) [[unlikely]]
+        {
+            MonoClass* Cls  = mono_object_get_class(Exception);
+            MonoType*  Type = mono_class_get_type(Cls);
+
+            auto GetExceptionString = [Exception, Cls](
+                                          const char* Name) -> StringU8
+            {
+                MonoProperty* Property = mono_class_get_property_from_name(Cls, Name);
+
+                if (Property == nullptr)
+                    return "";
+
+                MonoMethod* Getter = mono_property_get_get_method(Property);
+                if (Getter == nullptr)
+                    return "";
+
+                return FromMonoString(std::bit_cast<MonoString*>(mono_runtime_invoke(Getter, Exception, NULL, NULL)));
+            };
+
+            NEON_ERROR_TAG("Script", "{}: {}. Source: {}, Stack trace: {}",
+                           mono_type_get_name(Type),
+                           GetExceptionString("Message"),
+                           GetExceptionString("Source"),
+                           GetExceptionString("StackTrace"));
+        }
+    }
+
     bool CheckMonoError(
         MonoError* Error)
     {
@@ -70,13 +108,18 @@ namespace Neon::Scripting::CS::Utils
     StringU8 FromMonoString(
         MonoString* Str)
     {
-        MonoError Err;
-        char*     CStr    = mono_string_to_utf8_checked(Str, &Err);
-        bool      Success = !CheckMonoError(&Err);
-        StringU8  Result(Success ? CStr : "");
-        if (Success)
+        int      StrLen = Str ? mono_string_length(Str) : 0;
+        StringU8 Result(StrLen, '\0');
+
+        if (StrLen)
         {
-            mono_free(CStr);
+            MonoError Err;
+            char*     CStr = mono_string_to_utf8_checked(Str, &Err);
+            if (!CheckMonoError(&Err))
+            {
+                Result.assign(CStr);
+                mono_free(CStr);
+            }
         }
         return Result;
     }

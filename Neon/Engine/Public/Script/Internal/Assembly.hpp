@@ -1,7 +1,7 @@
 #pragma once
 
 #include <istream>
-#include <Private/Script/Internal/Class.hpp>
+#include <Script/Internal/Class.hpp>
 
 typedef struct _MonoAssembly MonoAssembly;
 typedef struct _MonoImage    MonoImage;

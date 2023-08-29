@@ -2,7 +2,6 @@
 
 #include <Script/Engine.hpp>
 #include <Private/Script/HandleManager.hpp>
-#include <Private/Script/Internal/Assembly.hpp>
 
 typedef struct _MonoDomain MonoDomain;
 
