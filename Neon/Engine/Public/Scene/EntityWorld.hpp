@@ -9,6 +9,11 @@ namespace Neon::Scene
         static constexpr const char* RootEntityName = "_Root";
 
     public:
+        /// <summary>
+        /// Get the singleton instance of the entity world.
+        /// </summary>
+        [[nodiscard]] static EntityWorld* Get();
+
         EntityWorld();
 
         EntityWorld(

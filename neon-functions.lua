@@ -261,8 +261,10 @@ function setup_runtime_engine(asset_path_name)
     copy_engine_resources(asset_path_name)
 end
 
-function setup_csharp_project()
-	kind "SharedLib"
+--
+
+function setup_csharp_project_impl()
+    kind "SharedLib"
     language "C#"
     dotnetframework "4.7.2"
 
@@ -273,8 +275,15 @@ function setup_csharp_project()
 
     files
 	{
-        "Private/**.cs",
-        "Public/**.cs",
+        "**.cs",
 		"**.natvis"
+	}
+end
+
+function setup_csharp_project()
+	setup_csharp_project_impl()
+    links
+    {
+        "NeonEngineS"
 	}
 end

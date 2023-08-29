@@ -73,7 +73,7 @@ namespace Neon::Scripting::CS::Utils
         MonoClass* NestingType = mono_class_get_nesting_type(Class);
         if (NestingType)
         {
-            Str = GetClassName(NestingType) + "/" + ClassName;
+            Str = GetClassName(NestingType) + "." + ClassName;
         }
         else
         {

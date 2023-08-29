@@ -10,7 +10,9 @@
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
-#include <Scene/Exports/Export.hpp>
+
+#include <Scene/Component/Script.hpp>
+#include <Script/Engine.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -39,7 +41,6 @@ namespace Neon::Runtime
         // Create physics collision add/remove system.
         World.observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
-            .event(flecs::OnAdd)
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
             .each(
@@ -53,6 +54,30 @@ namespace Neon::Runtime
                     {
                         m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject.get());
                         m_PhysicsWorld->AddPhysicsObject(Object.BulletObject.get(), Object.Group, Object.Mask);
+                    }
+                });
+
+        // Create script add/remove system.
+        World.observer<Component::ScriptInstance>("Script(Add/Remove)")
+            .event(flecs::OnRemove)
+            .event(flecs::OnSet)
+            .each(
+                [this](flecs::iter& Iter, size_t Idx, Component::ScriptInstance& Instance)
+                {
+                    if (Iter.event() == flecs::OnRemove)
+                    {
+                        if (Instance.Handle)
+                        {
+                            Instance.Handle.Free();
+                            Instance.Handle = {};
+                        }
+                    }
+                    else if (Iter.event() == flecs::OnSet)
+                    {
+                        Instance.Handle = Scripting::CreateNeonScriptObject(
+                            Instance.AssemblyName.c_str(),
+                            Instance.ClassName.c_str(),
+                            Iter.entity(Idx));
                     }
                 });
 

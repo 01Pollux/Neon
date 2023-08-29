@@ -5,17 +5,15 @@
 
 namespace Neon::Scene::Component
 {
-    struct Script
+    struct ScriptInstance
     {
-        NEON_EXPORT_FLECS(Script, "Script")
+        NEON_EXPORT_FLECS(ScriptInstance, "ScriptInstance")
         {
         }
 
-        Script(
-            const char*   AssemblyName,
-            const char*   ClassName,
-            flecs::entity Entity);
+        StringU8 AssemblyName;
+        StringU8 ClassName;
 
-
+        Scripting::GCHandle Handle;
     };
 } // namespace Neon::Scene::Component

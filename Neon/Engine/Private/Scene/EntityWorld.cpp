@@ -8,17 +8,24 @@
 #include <cppcoro/when_all.hpp>
 #include <cppcoro/sync_wait.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Scene
 {
-    static std::mutex s_FlecsWorldMutex;
+    static EntityWorld* s_EntityWorld = nullptr;
+
+    EntityWorld* EntityWorld::Get()
+    {
+        return s_EntityWorld;
+    }
 
     EntityWorld::EntityWorld()
     {
-        {
-            std::scoped_lock Lock(s_FlecsWorldMutex);
-            m_World = ecs_init();
-            m_Owned = true;
-        }
+        NEON_ASSERT(!s_EntityWorld);
+        s_EntityWorld = this;
+
+        m_World = ecs_init();
+        m_Owned = true;
 
         // Register built-in modules.
         flecs::world World(m_World);
@@ -52,6 +59,12 @@ namespace Neon::Scene
         else
         {
             ecs_fini(m_World);
+        }
+
+        if (s_EntityWorld == this)
+        {
+            NEON_ASSERT(s_EntityWorld);
+            s_EntityWorld = nullptr;
         }
     }
 

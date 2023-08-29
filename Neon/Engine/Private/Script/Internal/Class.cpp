@@ -7,20 +7,6 @@
 
 namespace Neon::Scripting::CS
 {
-    void* ObjectInvokerArg<StringU8>::ToPtr(
-        StringU8& Obj)
-    {
-        return Utils::ToMonoString(Obj);
-    }
-
-    StringU8 ObjectInvokerArg<StringU8>::FromPtr(
-        MonoObject* Obj)
-    {
-        return Utils::FromMonoString(std::bit_cast<MonoString*>(Obj));
-    }
-
-    //
-
     Class::Class(
         MonoClass* Cls) :
         m_Class(Cls)
@@ -52,12 +38,11 @@ namespace Neon::Scripting::CS
 
     Object Class::New(
         std::span<const char*> ParameterTypes,
-        const void**           Parameters,
-        size_t                 ParameterCount) const
+        const void**           Parameters) const
     {
         MonoObject* Obj  = mono_object_new(ScriptContext::Get()->CurrentDomain, m_Class);
         MonoMethod* Ctor = FindMethod(".ctor", ParameterTypes);
-        Invoke(Ctor, Obj, Parameters, ParameterCount);
+        Invoke(Ctor, Obj, Parameters, ParameterTypes.size());
         return Obj;
     }
 
@@ -87,6 +72,8 @@ namespace Neon::Scripting::CS
             }
         } while (Cls = Cls->GetParent());
     }
+
+    //
 
     MonoMethod* Class::FindMethod(
         const char*            Name,

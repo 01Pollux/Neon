@@ -138,6 +138,9 @@ namespace Neon::Scripting
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
         CS::ScriptContext::Get()->NewDomain();
+
+        LoadAssembly("NeonEngineS", "../Neon-CSharpTemplate/NeonEngineS.dll");
+        LoadAssembly("CSharpTemplate", "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
     }
 
     void Shutdown()
@@ -162,8 +165,7 @@ namespace Neon::Scripting
         const char*            AssemblyName,
         const char*            TypeName,
         std::span<const char*> ParameterTypes,
-        const void**           Parameters,
-        uint32_t               ParameterCount)
+        const void**           Parameters)
     {
         auto Cls = GetClass(AssemblyName, TypeName);
         if (!Cls) [[unlikely]]
@@ -172,13 +174,36 @@ namespace Neon::Scripting
             return {};
         }
 
-        CS::Object Obj = ParameterCount ? Cls->New(ParameterTypes, Parameters, ParameterCount) : Cls->New();
+        CS::Object Obj = ParameterTypes.empty() ? Cls->New() : Cls->New(ParameterTypes, Parameters);
         if (!Obj) [[unlikely]]
         {
             NEON_ERROR_TAG("Script", "Failed to create object: {}.", TypeName);
             return {};
         }
 
+        return CS::ScriptContext::Get()->HandleMgr.AddReference(Obj.GetObject());
+    }
+
+    GCHandle CreateNeonScriptObject(
+        const char* AssemblyName,
+        const char* TypeName,
+        uint64_t    EntityID)
+    {
+        auto Cls = GetClass(AssemblyName, TypeName);
+        if (!Cls) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to find type: {}.", TypeName);
+            return {};
+        }
+
+        CS::Object Obj = Cls->New();
+        if (!Obj) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to create object: {}.", TypeName);
+            return {};
+        }
+
+        Obj.SetFieldAs<uint64_t>("Self", EntityID, true);
         return CS::ScriptContext::Get()->HandleMgr.AddReference(Obj.GetObject());
     }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Script/Internal/Object.hpp>
-#include <Mono/metadata/object.h>
 #include <Asio/Coroutines.hpp>
 
 typedef struct _MonoClass  MonoClass;
@@ -9,54 +8,6 @@ typedef struct _MonoMethod MonoMethod;
 
 namespace Neon::Scripting::CS
 {
-    template<typename _Ty>
-    struct ObjectInvokerArg
-    {
-        static void* ToPtr(
-            _Ty& Obj)
-        {
-            return std::addressof(Obj);
-        }
-
-        static _Ty FromPtr(
-            MonoObject* Obj)
-        {
-            return *std::bit_cast<_Ty*>(mono_object_unbox(Obj));
-        }
-    };
-
-    //
-
-    template<>
-    struct ObjectInvokerArg<StringU8>
-    {
-        static void* ToPtr(
-            StringU8& Obj);
-
-        static StringU8 FromPtr(
-            MonoObject* Obj);
-    };
-
-    //
-
-    template<>
-    struct ObjectInvokerArg<MonoObject*>
-    {
-        static void* ToPtr(
-            MonoObject* Obj)
-        {
-            return Obj;
-        }
-
-        static MonoObject* FromPtr(
-            MonoObject* Obj)
-        {
-            return Obj;
-        }
-    };
-
-    //
-
     struct MethodMetadata
     {
         MonoMethod*           Method;
@@ -95,8 +46,7 @@ namespace Neon::Scripting::CS
         /// </summary>
         [[nodiscard]] Object New(
             std::span<const char*> ParameterTypes,
-            const void**           Parameters,
-            size_t                 ParameterCount) const;
+            const void**           Parameters) const;
 
         /// <summary>
         /// Construct a new object with default constructor.
@@ -173,7 +123,7 @@ namespace Neon::Scripting::CS
             MonoObject* Obj,
             _Args&&... Args)
         {
-            const void* Parameters[] = { ObjectInvokerArg<_Args>::ToPtr(Args)... };
+            const void* Parameters[] = { ObjectMarshaller<_Args>::ToPtr(Args)... };
 
             if constexpr (std::is_same_v<_RetTy, void>)
             {
@@ -181,7 +131,7 @@ namespace Neon::Scripting::CS
             }
             else
             {
-                return ObjectInvokerArg<_RetTy>::FromPtr(
+                return ObjectMarshaller<_RetTy>::FromPtr(
                     m_Class->Invoke(m_Method, Obj, Parameters, sizeof...(Args)));
             }
         }

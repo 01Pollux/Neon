@@ -66,8 +66,16 @@ namespace Neon::Scripting::CS
             auto Cls = mono_class_get(m_Image, (i + 1) | MONO_TOKEN_TYPE_DEF);
             auto Id  = StringUtils::Hash(Utils::GetClassName(Cls));
 
+            switch (Id)
+            {
+            case StringUtils::Hash(".<Module>"):
+                continue;
+            }
+
             m_Classes.emplace(Id, Cls);
             ClassIdMap.emplace(Cls, Id);
+
+            printf ("Class: %s\n", Utils::GetClassName(Cls).c_str());
         }
 
         for (auto& [ClsId, Cls] : m_Classes)

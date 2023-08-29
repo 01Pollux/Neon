@@ -15,6 +15,7 @@
 #include <Renderer/Material/Builder.hpp>
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
+#include <Scene/Component/Script.hpp>
 
 namespace Neon::Editor
 {
@@ -128,6 +129,10 @@ namespace Neon::Editor
                         auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall);
                         StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Green));
                     }
+
+                    Wall.emplace<Scene::Component::ScriptInstance>(
+                        "CSharpTemplate",
+                        "Test.ComponentGetter");
                 }
             };
 

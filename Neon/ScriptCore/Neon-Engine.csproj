@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
-    <ProjectGuid>{BF9F37FA-2B01-1508-B46E-5BBA20CF4BC7}</ProjectGuid>
+    <ProjectGuid>{D82C045D-44E2-7C52-CDD6-7629398B7356}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon-CSharpTemplate</RootNamespace>
-    <AssemblyName>Neon-CSharpTemplate</AssemblyName>
+    <RootNamespace>Neon-Engine</RootNamespace>
+    <AssemblyName>Neon-Engine</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -18,8 +18,8 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\bin\Debug-windows-x86_64\Neon-CSharpTemplate\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\bin-int\Debug-windows-x86_64\Neon-CSharpTemplate\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\bin\Debug-windows-x86_64\Neon-Engine\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\bin-int\Debug-windows-x86_64\Neon-Engine\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>NOMINMAX;_WIN32;WIN32;NEON_PLATFORM_WINDOWS;NEON_DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -30,8 +30,8 @@
     <DebugType>pdbonly</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Release-windows-x86_64\Neon-CSharpTemplate\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\bin-int\Release-windows-x86_64\Neon-CSharpTemplate\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\bin\Release-windows-x86_64\Neon-Engine\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\bin-int\Release-windows-x86_64\Neon-Engine\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>NOMINMAX;_WIN32;WIN32;NEON_PLATFORM_WINDOWS;NEON_RELEASE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -42,8 +42,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\bin\Dist-windows-x86_64\Neon-CSharpTemplate\</OutputPath>
-    <BaseIntermediateOutputPath>..\..\bin-int\Dist-windows-x86_64\Neon-CSharpTemplate\</BaseIntermediateOutputPath>
+    <OutputPath>..\..\bin\Dist-windows-x86_64\Neon-Engine\</OutputPath>
+    <BaseIntermediateOutputPath>..\..\bin-int\Dist-windows-x86_64\Neon-Engine\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DefineConstants>NOMINMAX;_WIN32;WIN32;NEON_PLATFORM_WINDOWS;NEON_DIST</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -56,13 +56,10 @@
   <ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Dist|x64' ">
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Test\ComponentGetter.cs" />
+    <Compile Include="Neon\Object.cs" />
+    <Compile Include="Neon\Scene\EntityHandle.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Neon\ScriptCore\NeonEngineS.csproj">
-      <Project>{FEE19FF3-6A97-18E9-F38B-12C05F400FED}</Project>
-      <Name>NeonEngineS</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

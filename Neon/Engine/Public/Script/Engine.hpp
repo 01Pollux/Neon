@@ -25,9 +25,16 @@ namespace Neon::Scripting
     GCHandle CreateScriptObject(
         const char*            AssemblyName,
         const char*            TypeName,
-        std::span<const char*> ParameterTypes,
-        void**                 Parameters,
-        uint32_t               ParameterCount);
+        std::span<const char*> ParameterTypes = {},
+        void**                 Parameters     = nullptr);
+
+    /// <summary>
+    /// Creates a script object.
+    /// </summary>
+    GCHandle CreateNeonScriptObject(
+        const char* AssemblyName,
+        const char* TypeName,
+        uint64_t    EntityID);
 
     /// <summary>
     /// Creates a script object.

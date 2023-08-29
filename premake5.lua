@@ -72,6 +72,7 @@ workspace "Neon"
 
         
     group "Neon"
+        include "Neon/ScriptCore"
         include "Neon/Core"
         include "Neon/Coroutines"
         include "Neon/Resource"
