@@ -25,7 +25,6 @@ namespace Neon::Scripting::CS
         NEON_VALIDATE(Status == MONO_IMAGE_OK, "Failed to open C# assembly: {}.", mono_image_strerror(Status));
 
         mono_image_close(m_Image);
-
         FetchClasses();
     }
 
@@ -75,7 +74,7 @@ namespace Neon::Scripting::CS
             m_Classes.emplace(Id, Cls);
             ClassIdMap.emplace(Cls, Id);
 
-            printf ("Class: %s\n", Utils::GetClassName(Cls).c_str());
+            printf("Class: %s\n", Utils::GetClassName(Cls).c_str());
         }
 
         for (auto& [ClsId, Cls] : m_Classes)

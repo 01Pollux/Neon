@@ -139,7 +139,6 @@ namespace Neon::Scripting
 
         CS::ScriptContext::Get()->NewDomain();
 
-        LoadAssembly("NeonEngineS", "../Neon-CSharpTemplate/NeonEngineS.dll");
         LoadAssembly("CSharpTemplate", "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
     }
 
@@ -249,6 +248,7 @@ namespace Neon::Scripting
         std::ifstream File(Path, std::ios::binary);
         NEON_VALIDATE(File.is_open(), "Failed to open C# assembly: {}.", Path);
 
+        NEON_ASSERT(!CS::ScriptContext::Get()->LoadedAssemblies.contains(Name), "Assembly already loaded: {}.", Name);
         CS::ScriptContext::Get()->LoadedAssemblies.emplace(Name, CS::Assembly(Name, File));
     }
 
