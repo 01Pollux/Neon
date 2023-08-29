@@ -10,8 +10,6 @@
 
 namespace Neon::Scripting
 {
-    void Test();
-
     namespace CS
     {
         static ScriptContext s_ScriptContext;
@@ -138,8 +136,6 @@ namespace Neon::Scripting
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
         CS::ScriptContext::Get()->NewDomain();
-
-        Test();
     }
 
     void Shutdown()
@@ -233,40 +229,5 @@ namespace Neon::Scripting
         const char* Name)
     {
         CS::ScriptContext::Get()->LoadedAssemblies.erase(Name);
-    }
-
-    //
-
-    void Test()
-    {
-        Scripting::LoadAssembly(
-            "ScriptingAssembly",
-            "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
-
-        int  IntParam   = 5;
-        auto FloatParam = 3.14f;
-
-        std::array  Types    = { "System.Int32", "System.Single" };
-        const void* Params[] = { &IntParam, &FloatParam };
-
-        auto Handle = Scripting::CreateScriptObject(
-            "ScriptingAssembly",
-            "Neon.MonoTest",
-            Types,
-            Params,
-            2);
-
-        auto Object = Handle.GetObject();
-        auto Cls    = Scripting::GetClass(
-            "ScriptingAssembly",
-            "Neon.MonoTest");
-
-        std::array Types2 = { "System.String", "System.Single" };
-        auto       Func2  = Cls->FindMethod("Function4", Types2);
-
-        CS::MethodInvoker<int, StringU8, float> Invoker(Cls, Func2);
-
-        auto va = Invoker(Object, "Hello world", 5);
-        printf("va: %d\n", va);
     }
 } // namespace Neon::Scripting
