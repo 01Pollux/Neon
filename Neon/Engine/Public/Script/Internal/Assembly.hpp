@@ -29,7 +29,7 @@ namespace Neon::Scripting::CS
         /// Gets the class with the specified name.
         /// </summary>
         [[nodiscard]] const Class* GetClass(
-            const StringU8& Name) const;
+            const char* Name) const;
 
         /// <summary>
         /// Gets the class with the specified name.

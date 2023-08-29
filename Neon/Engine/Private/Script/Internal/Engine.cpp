@@ -161,10 +161,11 @@ namespace Neon::Scripting
     //
 
     GCHandle CreateScriptObject(
-        const char*  AssemblyName,
-        const char*  TypeName,
-        const void** Parameters,
-        uint32_t     ParameterCount)
+        const char*            AssemblyName,
+        const char*            TypeName,
+        std::span<const char*> ParameterTypes,
+        const void**           Parameters,
+        uint32_t               ParameterCount)
     {
         auto Cls = GetClass(AssemblyName, TypeName);
         if (!Cls) [[unlikely]]
@@ -173,7 +174,7 @@ namespace Neon::Scripting
             return {};
         }
 
-        CS::Object Obj = ParameterCount ? Cls->New(Parameters, ParameterCount) : Cls->New();
+        CS::Object Obj = ParameterCount ? Cls->New(ParameterTypes, Parameters, ParameterCount) : Cls->New();
         if (!Obj) [[unlikely]]
         {
             NEON_ERROR_TAG("Script", "Failed to create object: {}.", TypeName);
@@ -242,13 +243,16 @@ namespace Neon::Scripting
             "ScriptingAssembly",
             "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
 
-        int         IntParam   = 5;
-        auto        FloatParam = 3.14f;
-        const void* Params[]   = { &IntParam, &FloatParam };
+        int  IntParam   = 5;
+        auto FloatParam = 3.14f;
+
+        std::array  Types    = { "System.Int32", "System.Single" };
+        const void* Params[] = { &IntParam, &FloatParam };
 
         auto Handle = Scripting::CreateScriptObject(
             "ScriptingAssembly",
             "Neon.MonoTest",
+            Types,
             Params,
             2);
 
@@ -257,7 +261,8 @@ namespace Neon::Scripting
             "ScriptingAssembly",
             "Neon.MonoTest");
 
-        auto Func2 = Cls->GetMethods("Function4").begin()->Method;
+        std::array Types2 = { "System.String", "System.Single" };
+        auto       Func2  = Cls->FindMethod("Function4", Types2);
 
         CS::MethodInvoker<int, StringU8, float> Invoker(Cls, Func2);
 

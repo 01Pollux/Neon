@@ -40,7 +40,7 @@ namespace Neon::Scripting::CS
     }
 
     const Class* Assembly::GetClass(
-        const StringU8& Name) const
+        const char* Name) const
     {
         return GetClass(StringUtils::Hash(Name));
     }

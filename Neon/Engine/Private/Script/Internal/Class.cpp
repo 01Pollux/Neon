@@ -51,21 +51,12 @@ namespace Neon::Scripting::CS
     }
 
     Object Class::New(
-        const void** Parameters,
-        size_t       ParameterCount) const
+        std::span<const char*> ParameterTypes,
+        const void**           Parameters,
+        size_t                 ParameterCount) const
     {
-        MonoObject* Obj = mono_object_new(ScriptContext::Get()->CurrentDomain, m_Class);
-
-        MonoMethod* Ctor = nullptr;
-        for (auto& Cur : GetMethods(".ctor"))
-        {
-            if (Cur.ParameterCount == ParameterCount)
-            {
-                Ctor = Cur.Method;
-                break;
-            }
-        }
-
+        MonoObject* Obj  = mono_object_new(ScriptContext::Get()->CurrentDomain, m_Class);
+        MonoMethod* Ctor = FindMethod(".ctor", ParameterTypes);
         Invoke(Ctor, Obj, Parameters, ParameterCount);
         return Obj;
     }
@@ -77,13 +68,13 @@ namespace Neon::Scripting::CS
         return Obj;
     }
 
-    Asio::CoGenerator<MethodMetadata> Class::GetMethods(
-        const StringU8& Name) const
+    Asio::CoGenerator<const MethodMetadata&> Class::GetMethods(
+        const char* Name) const
     {
         return GetMethods(StringUtils::Hash(Name));
     }
 
-    Asio::CoGenerator<MethodMetadata> Class::GetMethods(
+    Asio::CoGenerator<const MethodMetadata&> Class::GetMethods(
         size_t NameHash) const
     {
         auto Cls = this;
@@ -92,9 +83,42 @@ namespace Neon::Scripting::CS
             auto Iter = Cls->m_Methods.find(NameHash);
             for (; Iter != Cls->m_Methods.end() && Iter->first == NameHash; ++Iter)
             {
-                co_yield static_cast<MethodMetadata>(Iter->second);
+                co_yield Iter->second;
             }
         } while (Cls = Cls->GetParent());
+    }
+
+    MonoMethod* Class::FindMethod(
+        const char*            Name,
+        std::span<const char*> ParameterTypes) const
+    {
+        return FindMethod(StringUtils::Hash(Name), ParameterTypes);
+    }
+
+    MonoMethod* Class::FindMethod(
+        size_t                 NameHash,
+        std::span<const char*> ParameterTypes) const
+    {
+        for (auto& Cur : GetMethods(NameHash))
+        {
+            if (Cur.Parameters.size() == ParameterTypes.size())
+            {
+                bool Matches = true;
+                for (size_t i = 0; i < ParameterTypes.size(); ++i)
+                {
+                    if (Cur.Parameters[i] != ParameterTypes[i])
+                    {
+                        Matches = false;
+                        break;
+                    }
+                }
+                if (Matches)
+                {
+                    return Cur.Method;
+                }
+            }
+        }
+        return nullptr;
     }
 
     //
@@ -104,13 +128,25 @@ namespace Neon::Scripting::CS
         void* Iter = nullptr;
         while (MonoMethod* Method = mono_class_get_methods(m_Class, &Iter))
         {
-            auto Signature = mono_method_signature(Method);
+            auto   Signature   = mono_method_signature(Method);
+            size_t ParamsCount = mono_signature_get_param_count(Signature);
+
+            std::vector<StringU8> Parameters;
+            Parameters.reserve(ParamsCount);
+
+            void* ParamIter = nullptr;
+            while (auto Param = mono_signature_get_params(Signature, &ParamIter))
+            {
+                auto TypeName = mono_type_get_name(Param);
+                Parameters.emplace_back(TypeName);
+                mono_free(TypeName);
+            }
 
             m_Methods.emplace(
                 StringUtils::Hash(mono_method_get_name(Method)),
                 MethodMetadata{
-                    .Method         = Method,
-                    .ParameterCount = mono_signature_get_param_count(Signature) });
+                    .Method     = Method,
+                    .Parameters = std::move(Parameters) });
         }
     }
 } // namespace Neon::Scripting::CS

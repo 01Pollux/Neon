@@ -39,10 +39,28 @@ namespace Neon::Scripting::CS
 
     //
 
+    template<>
+    struct ObjectInvokerArg<MonoObject*>
+    {
+        static void* ToPtr(
+            MonoObject* Obj)
+        {
+            return Obj;
+        }
+
+        static MonoObject* FromPtr(
+            MonoObject* Obj)
+        {
+            return Obj;
+        }
+    };
+
+    //
+
     struct MethodMetadata
     {
-        MonoMethod* Method;
-        uint32_t    ParameterCount;
+        MonoMethod*           Method;
+        std::vector<StringU8> Parameters;
     };
 
     class Class
@@ -76,8 +94,9 @@ namespace Neon::Scripting::CS
         /// Construct a new object with the specified constructor.
         /// </summary>
         [[nodiscard]] Object New(
-            const void** Parameters,
-            size_t       ParameterCount) const;
+            std::span<const char*> ParameterTypes,
+            const void**           Parameters,
+            size_t                 ParameterCount) const;
 
         /// <summary>
         /// Construct a new object with default constructor.
@@ -87,14 +106,29 @@ namespace Neon::Scripting::CS
         /// <summary>
         /// Gets the method with the specified name.
         /// </summary>
-        [[nodiscard]] Asio::CoGenerator<MethodMetadata> GetMethods(
-            const StringU8& Name) const;
+        [[nodiscard]] Asio::CoGenerator<const MethodMetadata&> GetMethods(
+            const char* Name) const;
 
         /// <summary>
         /// Gets the method with the specified name.
         /// </summary>
-        [[nodiscard]] Asio::CoGenerator<MethodMetadata> GetMethods(
+        [[nodiscard]] Asio::CoGenerator<const MethodMetadata&> GetMethods(
             size_t NameHash) const;
+
+    public:
+        /// <summary>
+        /// Gets the method with the specified name and parameter types.
+        /// </summary>
+        [[nodiscard]] MonoMethod* FindMethod(
+            const char*            Name,
+            std::span<const char*> ParameterTypes) const;
+
+        /// <summary>
+        /// Gets the method with the specified name and parameter types.
+        /// </summary>
+        [[nodiscard]] MonoMethod* FindMethod(
+            size_t                 NameHash,
+            std::span<const char*> ParameterTypes) const;
 
     private:
         /// <summary>
