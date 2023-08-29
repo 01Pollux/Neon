@@ -29,8 +29,9 @@ function copy_engine_resources_to(content_name, out_dir)
         copy_directory_to_target_dir(content_name, out_dir);
 	end
 
-    copy_directory_to_target_dir("%{wks.location}Vendors/Mono/bin", "")
-    copy_directory_to_target_dir("%{wks.location}Vendors/Mono/lib/mono", "mono")
+    copy_file_to_target_dir("%{wks.location}Vendors/Mono/bin", "", "mono-2.0-sgen.dll")
+    copy_file_to_target_dir("%{wks.location}Vendors/Mono/bin", "", "MonoPosixHelper.dll")
+    copy_directory_to_target_dir("%{wks.location}Vendors/Mono/lib/mono", "Managed/mono")
 
     filter { "system:windows" }
         -- Copy dxcompiler.dll and dxil.dll

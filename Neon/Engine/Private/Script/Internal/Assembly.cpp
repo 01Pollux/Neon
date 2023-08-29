@@ -67,14 +67,13 @@ namespace Neon::Scripting::CS
 
             switch (Id)
             {
+            default: [[likely]] break;
             case StringUtils::Hash(".<Module>"):
                 continue;
             }
 
             m_Classes.emplace(Id, Cls);
             ClassIdMap.emplace(Cls, Id);
-
-            printf("Class: %s\n", Utils::GetClassName(Cls).c_str());
         }
 
         for (auto& [ClsId, Cls] : m_Classes)

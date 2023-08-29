@@ -43,11 +43,6 @@ namespace Neon::Scripting::CS
         /// </summary>
         void FetchClasses();
 
-        /// <summary>
-        /// Loads all references of the assembly.
-        /// </summary>
-        void LoadReferences();
-
     private:
         MonoAssembly* m_Assembly;
         MonoImage*    m_Image;

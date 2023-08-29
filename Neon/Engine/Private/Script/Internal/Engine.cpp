@@ -72,6 +72,7 @@ namespace Neon::Scripting
         const Config::ScriptConfig& Config)
     {
         mono_set_dirs(".", ".");
+        mono_set_assemblies_path(".;./Managed/");
 
         constexpr const char* MonoConfig = R"(
 			<configuration>
