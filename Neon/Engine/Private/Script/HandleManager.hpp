@@ -8,8 +8,6 @@ namespace Neon::Scripting
     class HandleManager
     {
     public:
-        [[nodiscard]] static HandleManager* Get();
-
         /// <summary>
         /// Shuts down the handle manager.
         /// </summary>

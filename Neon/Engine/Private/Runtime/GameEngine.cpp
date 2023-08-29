@@ -2,7 +2,7 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/GameLogic.hpp>
 #include <Runtime/DebugOverlay.hpp>
-#include <Script/Internal/Engine.hpp>
+#include <Script/Engine.hpp>
 
 //
 

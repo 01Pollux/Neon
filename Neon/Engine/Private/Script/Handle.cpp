@@ -1,22 +1,22 @@
 #include <EnginePCH.hpp>
 #include <Script/Handle.hpp>
 
-#include <Private/Script/HandleManager.hpp>
+#include <Private/Script/Internal/Engine.hpp>
 
 namespace Neon::Scripting
 {
     MonoObject* GCHandle::GetObject() const
     {
-        return HandleManager::Get()->GetObject(*this);
+        return CS::ScriptContext::Get()->HandleMgr.GetObject(*this);
     }
 
     void GCHandle::Free()
     {
-        HandleManager::Get()->Free(*this);
+        CS::ScriptContext::Get()->HandleMgr.Free(*this);
     }
 
     bool GCHandle::IsAlive() const
     {
-        return HandleManager::Get()->IsAlive(*this);
+        return CS::ScriptContext::Get()->HandleMgr.IsAlive(*this);
     }
 } // namespace Neon::Scripting

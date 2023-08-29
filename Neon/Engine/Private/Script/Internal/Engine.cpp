@@ -1,50 +1,38 @@
 #include <EnginePCH.hpp>
 
-#include <Script/Internal/Engine.hpp>
-#include <Private/Script/Internal/Assembly.hpp>
-#include <Private/Script/HandleManager.hpp>
-
-#include <Mono/jit/jit.h>
-#include <Mono/metadata/appdomain.h>
-#include <Mono/metadata/attrdefs.h>
-#include <Mono/metadata/assembly.h>
-#include <Mono/metadata/exception.h>
-#include <Mono/metadata/mono-debug.h>
-#include <Mono/metadata/mono-config.h>
-#include <Mono/metadata/threads.h>
-#include <Mono/metadata/tokentype.h>
-#include <Mono/metadata/debug-helpers.h>
+#include <Private/Script/Internal/Engine.hpp>
+#include <Private/Script/Internal/Utils.hpp>
+#include <Private/Script/Internal/Class.hpp>
 
 #include <Mono/utils/mono-logger.h>
-
 #include <Log/Logger.hpp>
 #include <fstream>
 
 namespace Neon::Scripting
 {
-    struct ScriptContext
+    namespace CS
     {
-        MonoDomain* RootDomain{};
-        MonoDomain* CurrentDomain{};
+        static ScriptContext s_ScriptContext;
+        ScriptContext*       ScriptContext::Get()
+        {
+            return &s_ScriptContext;
+        }
 
-        HandleManager HandleMan;
+        void ScriptContext::NewDomain()
+        {
+            char        DomainName[] = "Neon";
+            MonoDomain* Domain       = mono_domain_create_appdomain(DomainName, nullptr);
+            NEON_VALIDATE(Domain, "Failed to create domain.");
 
-        std::map<StringU8, CS::Assembly> LoadedAssemblies;
+            mono_domain_set(Domain, true);
+            if (CurrentDomain)
+            {
+                mono_domain_unload(CurrentDomain);
+            }
 
-        /// <summary>
-        /// Create a new domain.
-        /// </summary>
-        void NewDomain();
-
-        bool IsMonoInitialized : 1 = false;
-    } static s_ScriptContext;
-
-    //
-
-    HandleManager* HandleManager::Get()
-    {
-        return &s_ScriptContext.HandleMan;
-    }
+            CurrentDomain = Domain;
+        }
+    } // namespace CS
 
     //
 
@@ -135,35 +123,69 @@ namespace Neon::Scripting
                 NEON_ERROR_TAG("Script", Text);
             });
 
-        s_ScriptContext.RootDomain = mono_jit_init_version("NeonRoot", Config.Version);
-        NEON_VALIDATE(s_ScriptContext.RootDomain, "Scripting engine failed to initialize.");
+        CS::ScriptContext::Get()->RootDomain = mono_jit_init_version("NeonRoot", Config.Version);
+        NEON_VALIDATE(CS::ScriptContext::Get()->RootDomain, "Scripting engine failed to initialize.");
 
 #ifdef NEON_DEBUG
-        mono_debug_domain_create(s_ScriptContext.RootDomain);
+        mono_debug_domain_create(CS::ScriptContext::Get()->RootDomain);
 #endif
 
         mono_thread_set_main(mono_thread_current());
 
-        s_ScriptContext.IsMonoInitialized = true;
+        CS::ScriptContext::Get()->IsMonoInitialized = true;
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
-        s_ScriptContext.NewDomain();
+        CS::ScriptContext::Get()->NewDomain();
     }
 
     void Shutdown()
     {
-        if (s_ScriptContext.IsMonoInitialized)
+        if (CS::ScriptContext::Get()->IsMonoInitialized)
         {
             NEON_TRACE_TAG("Script", "Scripting engine shutting down.");
 
-            s_ScriptContext.HandleMan.Shutdown();
-            mono_jit_cleanup(s_ScriptContext.RootDomain);
-            s_ScriptContext = {};
+            CS::ScriptContext::Get()->HandleMgr.Shutdown();
+            mono_jit_cleanup(CS::ScriptContext::Get()->RootDomain);
+            CS::s_ScriptContext = {};
         }
         else
         {
             NEON_WARNING_TAG("Script", "Scripting engine was not initialized.");
         }
+    }
+
+    //
+
+    GCHandle CreateScriptObject(
+        const char*  Name,
+        const char*  TypeName,
+        const char*  CtorName,
+        const void** Parameters,
+        uint32_t     ParameterCount)
+    {
+        auto AssemblyIter = CS::ScriptContext::Get()->LoadedAssemblies.find(Name);
+        if (AssemblyIter == CS::ScriptContext::Get()->LoadedAssemblies.end()) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to find assembly: {}.", Name);
+            return {};
+        }
+
+        auto& Assembly = AssemblyIter->second;
+        auto  Class    = Assembly.GetClass(TypeName);
+        if (!Class) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to find type: {}.", TypeName);
+            return {};
+        }
+
+        CS::Object Obj = CtorName ? Class->New(CtorName, Parameters, ParameterCount) : Class->New();
+        if (!Obj) [[unlikely]]
+        {
+            NEON_ERROR_TAG("Script", "Failed to create object: {}.", TypeName);
+            return {};
+        }
+
+        return CS::ScriptContext::Get()->HandleMgr.AddReference(Obj.GetObject());
     }
 
     //
@@ -193,29 +215,15 @@ namespace Neon::Scripting
         std::ifstream File(Path, std::ios::binary);
         NEON_VALIDATE(File.is_open(), "Failed to open C# assembly: {}.", Path);
 
-        s_ScriptContext.LoadedAssemblies.emplace(Name, CS::Assembly(Name, File));
+        CS::ScriptContext::Get()->LoadedAssemblies.emplace(Name, CS::Assembly(Name, File));
     }
 
     void UnloadAssembly(
         const char* Name)
     {
-        s_ScriptContext.LoadedAssemblies.erase(Name);
+        CS::ScriptContext::Get()->LoadedAssemblies.erase(Name);
     }
 
     //
 
-    void ScriptContext::NewDomain()
-    {
-        char        DomainName[] = "Neon";
-        MonoDomain* Domain       = mono_domain_create_appdomain(DomainName, nullptr);
-        NEON_VALIDATE(Domain, "Failed to create domain.");
-
-        mono_domain_set(Domain, true);
-        if (CurrentDomain)
-        {
-            mono_domain_unload(CurrentDomain);
-        }
-
-        CurrentDomain = Domain;
-    }
 } // namespace Neon::Scripting

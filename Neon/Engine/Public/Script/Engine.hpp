@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Config/Script.hpp>
+#include <Script/Handle.hpp>
 
 namespace Neon::Scripting
 {
@@ -14,6 +15,29 @@ namespace Neon::Scripting
     /// Shuts down the scripting engine.
     /// </summary>
     void Shutdown();
+
+    //
+
+    /// <summary>
+    /// Creates a script object.
+    /// </summary>
+    GCHandle CreateScriptObject(
+        const char* Name,
+        const char* TypeName,
+        void**      Parameters,
+        uint32_t    ParameterCount);
+
+    /// <summary>
+    /// Creates a script object.
+    /// </summary>
+    GCHandle CreateScriptObject(
+        const char*  Name,
+        const char*  TypeName,
+        const char*  CtorName,
+        const void** Parameters,
+        uint32_t     ParameterCount);
+
+    //
 
     /// <summary>
     /// Loads the assembly.
