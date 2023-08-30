@@ -138,7 +138,10 @@ namespace Neon::RG
         for (auto& Id : m_ResourcesToDestroy)
         {
             auto& Handle = Storage.GetResource(Id);
-            Storage.FreeResource(Handle);
+            if (!Handle.IsImported())
+            {
+                Storage.FreeResource(Handle);
+            }
         }
     }
 
