@@ -9,6 +9,7 @@ workspace "Neon"
     {
         "Debug", -- Edit and continue
         "Release", -- Optimized + Asan
+        "ReleaseOpt", -- Optimized + symbols
         "Dist" -- Optimized + No symbols
     }
 
@@ -43,6 +44,13 @@ workspace "Neon"
         {
             "Address"
         }
+    filter {}
+    
+    filter { "configurations:ReleaseOpt" }
+        defines "NEON_RELEASE"
+        runtime "Release"
+        symbols "On"
+        optimize "On"
     filter {}
 
     filter { "configurations:Dist" }

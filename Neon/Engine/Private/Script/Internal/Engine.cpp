@@ -139,8 +139,6 @@ namespace Neon::Scripting
         NEON_TRACE_TAG("Script", "Scripting engine initialized.");
 
         CS::ScriptContext::Get()->NewDomain();
-
-        LoadAssembly("CSharpTemplate", "../Neon-CSharpTemplate/Neon-CSharpTemplate.dll");
     }
 
     void Shutdown()

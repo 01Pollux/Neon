@@ -93,6 +93,12 @@ function link_boost_inc()
 			"%{CommonDir.Deps.Inc}/boost_san"
 		}
     filter {}
+    filter { "configurations:ReleaseOpt" }
+    includedirs
+		{
+			"%{CommonDir.Deps.Inc}/boost_def"
+		}
+    filter {}
     filter { "configurations:Dist" }
         includedirs
         {
@@ -103,15 +109,21 @@ end
 
 function link_boost_lib(lib_name)
     filter { "configurations:Debug" }
-    links
+        links
         {
             "boost_def/boost/libboost_"..lib_name.."-vc143-mt-sgd-x64-1_83.lib"
         }
     filter {}
     filter { "configurations:Release" }
-    links
+        links
         {
             "boost_san/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
+        }
+    filter {}
+    filter { "configurations:ReleaseOpt" }
+        links
+        {
+            "boost_def/boost/libboost_"..lib_name.."-vc143-mt-s-x64-1_83.lib"
         }
     filter {}
     filter { "configurations:Dist" }

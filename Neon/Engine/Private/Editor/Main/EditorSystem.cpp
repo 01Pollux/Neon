@@ -129,10 +129,6 @@ namespace Neon::Editor
                         auto StaticBody = Scene::Component::CollisionObject::AddStaticBody(Wall);
                         StaticBody->setCustomDebugColor(Physics::ToBullet3(Colors::Green));
                     }
-
-                    Wall.emplace<Scene::Component::ScriptInstance>(
-                        "CSharpTemplate",
-                        "Test.ComponentGetter");
                 }
             };
 
