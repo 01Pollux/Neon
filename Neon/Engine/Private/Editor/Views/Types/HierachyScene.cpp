@@ -23,11 +23,159 @@ namespace Neon::Editor::Views
             .build();
     }
 
-    SceneHierachy::SceneHierachy() :
-        IEditorView(StandardViews::s_HierachyViewWidgetId)
+    //
+
+    /// <summary>
+    /// Display a menu to create a new entity.
+    /// </summary>
+    static void DisplayCreateEntityMenu(
+        Scene::EntityHandle ParentEntHandle)
     {
+        if (imcxx::menuitem_entry{ "Empty" })
+        {
+            Scene::EntityHandle::Create(ParentEntHandle, "Empty entity");
+        }
+
+        if (imcxx::menubar_item Menu2D{ "2D" })
+        {
+            if (imcxx::menubar_item MenuSprite{ "Sprite" })
+            {
+                if (imcxx::menuitem_entry{ "Triangle" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Quad" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Circle" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Polygon" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Capsule" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Hexagon-Flat" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Hexagon-Pointy" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "9-Sliced" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Isometric Diamon" })
+                {
+                }
+            }
+
+            if (imcxx::menubar_item MenuPhysics{ "Physics" })
+            {
+                if (imcxx::menuitem_entry{ "Dynamic sprite" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Static sprite" })
+                {
+                }
+            }
+
+            if (imcxx::menubar_item MenuTilemap{ "Tilemap" })
+            {
+                if (imcxx::menuitem_entry{ "Hexagon-Flat" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Hexagon-Pointy" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Isometric" })
+                {
+                }
+
+                if (imcxx::menuitem_entry{ "Rectangular" })
+                {
+                }
+            }
+        }
+
+        if (imcxx::menubar_item Menu3D{ "3D" })
+        {
+            if (imcxx::menuitem_entry{ "Cube" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Sphere" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Capsule" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Cylinder" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Cone" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Plane" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Quad" })
+            {
+            }
+        }
+
+        if (imcxx::menubar_item MenuEffect{ "Effect" })
+        {
+        }
+
+        if (imcxx::menubar_item MenuLight{ "Light" })
+        {
+        }
+
+        if (imcxx::menubar_item MenuAudio{ "Audio" })
+        {
+        }
+
+        if (imcxx::menubar_item MenuUI{ "UI" })
+        {
+        }
+
+        if (imcxx::menubar_item MenuVolume{ "Volume" })
+        {
+        }
+
+        if (imcxx::menubar_item MenuCamera{ "Camera" })
+        {
+            if (imcxx::menuitem_entry{ "Generic" })
+            {
+            }
+
+            if (imcxx::menuitem_entry{ "Pixel perfect" })
+            {
+            }
+        }
     }
 
+    //
+
+    /// <summary>
+    /// Display a scene object in the hierachy view.
+    /// </summary>
     static void DispalySceneObject(
         Scene::EntityHandle              EntHandle,
         std::move_only_function<void()>& DeferredTask)
@@ -66,7 +214,7 @@ namespace Neon::Editor::Views
             ImGui::PopStyleColor();
         }
 
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
             flecs::world World = Scene::EntityWorld::Get();
             World.add<Scene::Editor::SelectedForEditor>(Entity);
@@ -121,6 +269,10 @@ namespace Neon::Editor::Views
                         };
                     }
                 }
+
+                ImGui::Separator();
+
+                DisplayCreateEntityMenu(Entity);
             }
         }
 
@@ -132,6 +284,13 @@ namespace Neon::Editor::Views
                     DispalySceneObject(Entity, DeferredTask);
                 });
         }
+    }
+
+    //
+
+    SceneHierachy::SceneHierachy() :
+        IEditorView(StandardViews::s_HierachyViewWidgetId)
+    {
     }
 
     void SceneHierachy::OnRender()
@@ -159,6 +318,11 @@ namespace Neon::Editor::Views
             {
                 DeferredTask();
             }
+        }
+
+        if (imcxx::popup Popup{ imcxx::popup::context_window{}, nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems })
+        {
+            DisplayCreateEntityMenu(Root);
         }
     }
 } // namespace Neon::Editor::Views

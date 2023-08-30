@@ -19,6 +19,19 @@ namespace Neon::Scene
         }
 
         /// <summary>
+        /// Create a new entity with unique name if needed.
+        /// </summary>
+        static EntityHandle Create(
+            const char* Name);
+
+        /// <summary>
+        /// Create a new entity with unique name if needed.
+        /// </summary>
+        static EntityHandle Create(
+            EntityHandle ParentHandle,
+            const char*  Name);
+
+        /// <summary>
         /// Get the entity.
         /// </summary>
         [[nodiscard]] flecs::entity Get() const noexcept;

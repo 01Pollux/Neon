@@ -43,6 +43,8 @@ namespace Neon::Runtime
 
     GameEngine::~GameEngine()
     {
+        Scene::EntityWorld::Shutdown();
+
         // Unregister the scripting system
         Scripting::Shutdown();
 

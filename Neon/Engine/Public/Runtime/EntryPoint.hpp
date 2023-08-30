@@ -33,7 +33,6 @@ namespace Neon::Runtime
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
-        Scene::EntityWorld::Shutdown();                        \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
@@ -55,7 +54,6 @@ namespace Neon::Runtime
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
-        Neon::Scene::EntityWorld::Shutdown();                  \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \

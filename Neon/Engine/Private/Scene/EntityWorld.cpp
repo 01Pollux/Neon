@@ -30,6 +30,44 @@ namespace Neon::Scene
 
     //
 
+    /// <summary>
+    /// Creates a unique entity name.
+    /// </summary>
+    [[nodiscard]] static StringU8 CreateUniqueEntityName(
+        const flecs::entity& Parent,
+        const char*          Name)
+    {
+        StringU8 NewName{ Name ? Name : " " };
+        StringU8 NewNameTmp = NewName;
+
+        size_t Idx = 0;
+        while (Parent.lookup(NewName.c_str()))
+        {
+            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
+        }
+
+        return NewName;
+    }
+
+    //
+
+    EntityHandle EntityHandle::Create(
+        const char* Name)
+    {
+        return Create(EntityWorld::GetRootEntity(), Name);
+    }
+
+    EntityHandle EntityHandle::Create(
+        EntityHandle ParentHandle,
+        const char*  Name)
+    {
+        flecs::entity Parent = ParentHandle;
+        return Parent
+            .world()
+            .entity(CreateUniqueEntityName(Parent, Name).c_str())
+            .child_of(Parent);
+    }
+
     flecs::entity EntityHandle::Get() const noexcept
     {
         return flecs::entity(EntityWorld::Get(), m_Entity);
@@ -49,14 +87,7 @@ namespace Neon::Scene
             Entity.children(
                 [&Coroutines, Parent = Entity.parent()](flecs::entity Child)
                 {
-                    StringU8 NewName{ Child.name() };
-                    StringU8 NewNameTmp = NewName;
-
-                    size_t Idx = 0;
-                    while (Parent.lookup(NewName.c_str()))
-                    {
-                        NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
-                    }
+                    StringU8 NewName{ CreateUniqueEntityName(Parent, Child.name()) };
 
                     Coroutines.emplace_back(
                         [](flecs::entity Child,
@@ -89,14 +120,7 @@ namespace Neon::Scene
                       Entity = Get();
 
         StringU8 OldName{ Entity.name() };
-        StringU8 NewName{ Name ? Name : Entity.name() };
-        StringU8 NewNameTmp = NewName;
-
-        size_t Idx = 0;
-        while (Parent.lookup(NewName.c_str()))
-        {
-            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
-        }
+        StringU8 NewName{ CreateUniqueEntityName(Parent, Name) };
 
         Entity.set_name(nullptr);
         auto NewEntity = Entity.clone();
