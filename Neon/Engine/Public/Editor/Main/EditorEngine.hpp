@@ -3,6 +3,7 @@
 #include <Runtime/GameEngine.hpp>
 #include <Editor/Views/View.hpp>
 #include <Editor/Views/Component.hpp>
+#include <Scene/RuntimeScene.hpp>
 
 #include <UI/Fonts/FontAwesome5.hpp>
 
@@ -18,8 +19,6 @@ namespace Neon::Editor
 {
     class EditorEngine : public Runtime::GameEngine
     {
-        static constexpr const char* EditorRootEntityName = "_EditorRoot";
-
     public:
         /// <summary>
         /// Get the singleton instance of the editor.
@@ -107,8 +106,8 @@ namespace Neon::Editor
         /// Dispatch the component handlers.
         /// </summary>
         void DispatchComponentHandlers(
-            const flecs::entity& Entity,
-            const flecs::id&     ComponentId);
+            Scene::EntityHandle EntHandle,
+            const flecs::id&    ComponentId);
 
     private:
         /// <summary>
@@ -156,12 +155,17 @@ namespace Neon::Editor
         /// <summary>
         /// Get the editor active root entity.
         /// </summary>
-        [[nodiscard]] flecs::entity GetRootEntity() const;
+        [[nodiscard]] const Scene::RuntimeScene& GetRuntimeScene() const;
+
+        /// <summary>
+        /// Get the editor active root entity.
+        /// </summary>
+        [[nodiscard]] const Scene::RuntimeScene& GetEditorScene() const;
 
         /// <summary>
         /// Get either the editor camera or the main camera.
         /// </summary>
-        [[nodiscard]] flecs::entity GetMainCamera(
+        [[nodiscard]] Scene::EntityHandle GetMainCamera(
             bool EditorCamera) const;
 
         /// <summary>
@@ -189,7 +193,7 @@ namespace Neon::Editor
             auto HandlerPtr = Handler.get();
             m_StandardComponentHandlers.emplace(std::move(Handler));
 
-            flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+            flecs::world World = Scene::EntityWorld::Get();
             for (auto ComponentId : { World.component<_Args>()... })
             {
                 RegisterComponentHandler(ComponentId, HandlerPtr);
@@ -210,10 +214,8 @@ namespace Neon::Editor
         /// </summary>
         Asset::IAssetPackage* m_ContentPackage;
 
-        /// <summary>
-        /// The editor root entity.
-        /// </summary>
-        flecs::entity_t m_EditorRootEntity;
+        Scene::RuntimeScene m_RuntimeScene;
+        Scene::RuntimeScene m_EditorScene;
 
         bool m_IsTitlebarHovered = false;
     };

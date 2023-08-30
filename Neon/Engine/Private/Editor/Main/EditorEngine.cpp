@@ -165,8 +165,8 @@ namespace Neon::Editor
     }
 
     void EditorEngine::DispatchComponentHandlers(
-        const flecs::entity& Entity,
-        const flecs::id&     ComponentId)
+        Scene::EntityHandle EntHandle,
+        const flecs::id&    ComponentId)
     {
         auto Handlers = m_ComponentHandlers.find(ComponentId);
         if (Handlers == m_ComponentHandlers.end())
@@ -176,8 +176,8 @@ namespace Neon::Editor
 
         for (auto& Handler : Handlers->second)
         {
-            imcxx::shared_item_id EntityPropId(std::bit_cast<void*>(Entity.raw_id()));
-            if (Handler->Draw(Entity, ComponentId))
+            imcxx::shared_item_id EntityPropId(std::bit_cast<void*>(EntHandle.GetId()));
+            if (Handler->Draw(EntHandle, ComponentId))
             {
                 break;
             }

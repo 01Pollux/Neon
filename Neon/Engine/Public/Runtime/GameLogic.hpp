@@ -54,17 +54,8 @@ namespace Neon::Runtime
             return m_PhysicsWorld.get();
         }
 
-        /// <summary>
-        /// Get the entity world.
-        /// </summary>
-        [[nodiscard]] Scene::EntityWorld GetEntityWorld() const
-        {
-            return m_EntityWorld;
-        }
-
     private:
         UPtr<Physics::World> m_PhysicsWorld;
-        Scene::EntityWorld   m_EntityWorld;
 
         flecs::query<
             Scene::Component::Camera>

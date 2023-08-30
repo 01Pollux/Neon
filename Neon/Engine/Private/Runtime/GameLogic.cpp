@@ -25,10 +25,9 @@ namespace Neon::Runtime
     GameLogic::GameLogic() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
-        flecs::world World = m_EntityWorld;
-
         // Create physics update system.
-        World.system("PhysicsUpdate")
+        EntityWorld::Get()
+            .system("PhysicsUpdate")
             .no_readonly()
             .kind(flecs::PreUpdate)
             .iter(
@@ -39,7 +38,8 @@ namespace Neon::Runtime
                 });
 
         // Create physics collision add/remove system.
-        World.observer<Component::CollisionObject>("Physics(Add/Remove)")
+        EntityWorld::Get()
+            .observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
@@ -58,7 +58,8 @@ namespace Neon::Runtime
                 });
 
         // Create script add/remove system.
-        World.observer<Component::ScriptInstance>("Script(Add/Remove)")
+        EntityWorld::Get()
+            .observer<Component::ScriptInstance>("Script(Add/Remove)")
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
             .each(
@@ -82,7 +83,8 @@ namespace Neon::Runtime
                 });
 
         // Create camera position update system.
-        World.system<Component::Camera, Component::Transform>("CameraPositionUpdate")
+        EntityWorld::Get()
+            .system<Component::Camera, Component::Transform>("CameraPositionUpdate")
             .kind(flecs::PreUpdate)
             .term<Component::Camera>()
             .inout()
@@ -103,17 +105,14 @@ namespace Neon::Runtime
 
         // Create camera render system.
         m_CameraQuery =
-            World.query_builder<Component::Camera>()
-                .term<Component::Camera>()
-                .inout()
-                .order_by(
-                    +[](flecs::entity_t,
-                        const Component::Camera* LhsCamera,
-                        flecs::entity_t,
-                        const Component::Camera* RhsCamera) -> int
-                    {
-                        return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
-                    })
+            EntityWorld::Get().query_builder<Component::Camera>().term<Component::Camera>().inout().order_by(
+                                                                                                       +[](flecs::entity_t,
+                                                                                                           const Component::Camera* LhsCamera,
+                                                                                                           flecs::entity_t,
+                                                                                                           const Component::Camera* RhsCamera) -> int
+                                                                                                       {
+                                                                                                           return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
+                                                                                                       })
                 .build();
     }
 
@@ -164,6 +163,6 @@ namespace Neon::Runtime
     void GameLogic::Update()
     {
         float DeltaTime = float(Runtime::GameEngine::Get()->GetDeltaTime());
-        ecs_progress(m_EntityWorld, DeltaTime);
+        EntityWorld::Get().progress(DeltaTime);
     }
 } // namespace Neon::Runtime

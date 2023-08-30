@@ -10,14 +10,16 @@
 namespace Neon::Editor
 {
     bool CameraComponentHandler::Draw(
-        const flecs::entity& Entity,
-        const flecs::id&     ComponentId)
+        Scene::EntityHandle EntHandle,
+        const flecs::id&    ComponentId)
     {
         auto HeaderInfo = UI::Utils::BeginComponentHeader("Camera");
         if (!HeaderInfo)
         {
             return true;
         }
+
+        flecs::entity Entity = EntHandle;
 
         auto& Camera  = *static_cast<Scene::Component::Camera*>(Entity.get_mut(ComponentId));
         bool  Changed = false;
@@ -173,24 +175,25 @@ namespace Neon::Editor
     //
 
     bool PhysicsComponentHandler::Draw(
-        const flecs::entity& Entity,
-        const flecs::id&     ComponentId)
+        Scene::EntityHandle EntHandle,
+        const flecs::id&    ComponentId)
     {
-
         return false;
     }
 
     //
 
     bool SpriteComponentHandler::Draw(
-        const flecs::entity& Entity,
-        const flecs::id&     ComponentId)
+        Scene::EntityHandle EntHandle,
+        const flecs::id&    ComponentId)
     {
         auto HeaderInfo = UI::Utils::BeginComponentHeader("Sprite");
         if (!HeaderInfo)
         {
             return true;
         }
+
+        flecs::entity Entity = EntHandle;
 
         auto& Sprite  = *static_cast<Scene::Component::Sprite*>(Entity.get_mut(ComponentId));
         bool  Changed = false;
@@ -255,14 +258,16 @@ namespace Neon::Editor
     //
 
     bool TransformComponentHandler::Draw(
-        const flecs::entity& Entity,
-        const flecs::id&     ComponentId)
+        Scene::EntityHandle EntHandle,
+        const flecs::id&    ComponentId)
     {
         auto HeaderInfo = UI::Utils::BeginComponentHeader("Transform");
         if (!HeaderInfo)
         {
             return true;
         }
+
+        flecs::entity Entity = EntHandle;
 
         auto& Transform = static_cast<Scene::Component::Transform*>(Entity.get_mut(ComponentId))->World;
         auto& Position  = Transform.GetPosition();

@@ -12,73 +12,33 @@
 
 namespace Neon::Scene
 {
-    static EntityWorld* s_EntityWorld = nullptr;
-
-    EntityWorld* EntityWorld::Get()
+    namespace Component::Impl
     {
-        return s_EntityWorld;
-    }
+        flecs::world GetWorld()
+        {
+            return EntityWorld::Get();
+        }
+    } // namespace Component::Impl
 
-    EntityWorld::EntityWorld()
+    struct WorldContext
     {
-        NEON_ASSERT(!s_EntityWorld);
-        s_EntityWorld = this;
+        flecs::entity_t RootEntity{};
+        flecs::world    World{};
+    };
 
-        m_World = ecs_init();
-        m_Owned = true;
-
-        // Register built-in modules.
-        flecs::world World(m_World);
-
-        World.init_builtin_components();
-
-#ifndef NEON_DIST
-        World.set<flecs::Rest>({});
-        World.import <flecs::monitor>();
-#endif
-
-        // Register components & relations.
-        Exports::RegisterComponents(World);
-        Exports::RegisterRelations(World);
-
-        // Create root entity with null main camera.
-        m_RootEntity = World.entity(RootEntityName);
-    }
-
-    void EntityWorld::Release()
-    {
-        if (!m_Owned || !m_World)
-        {
-            return;
-        }
-
-        if (ecs_stage_is_async(m_World))
-        {
-            ecs_async_stage_free(m_World);
-        }
-        else
-        {
-            ecs_fini(m_World);
-        }
-
-        if (s_EntityWorld == this)
-        {
-            NEON_ASSERT(s_EntityWorld);
-            s_EntityWorld = nullptr;
-        }
-    }
-
-    flecs::entity EntityWorld::GetRootEntity()
-    {
-        return flecs::entity(m_World, m_RootEntity);
-    }
+    static WorldContext* s_WorldContext = nullptr;
 
     //
 
-    void EntityWorld::DeleteEntity(
-        flecs::entity Entity,
-        bool          WithChildren)
+    flecs::entity EntityHandle::Get() const noexcept
     {
+        return flecs::entity(EntityWorld::Get(), m_Entity);
+    }
+
+    void EntityHandle::Delete(
+        bool WithChildren)
+    {
+        flecs::entity Entity = Get();
         if (!WithChildren)
         {
             // Using coroutines since we will be locking entity when iterating the children.
@@ -115,11 +75,18 @@ namespace Neon::Scene
         Entity.destruct();
     }
 
-    flecs::entity EntityWorld::CloneEntity(
-        flecs::entity Entity,
-        const char*   Name)
+    void EntityHandle::Clone(
+        const char* Name)
     {
-        auto Parent = Entity.parent();
+        Clone(Get().parent(), Name);
+    }
+
+    EntityHandle EntityHandle::Clone(
+        flecs::entity_t NewParent,
+        const char*     Name)
+    {
+        flecs::entity Parent = EntityHandle(NewParent),
+                      Entity = Get();
 
         StringU8 OldName{ Entity.name() };
         StringU8 NewName{ Name ? Name : Entity.name() };
@@ -138,5 +105,40 @@ namespace Neon::Scene
         NewEntity.set_name(NewName.c_str());
 
         return NewEntity;
+    }
+
+    //
+
+    void EntityWorld::Initialize()
+    {
+        NEON_ASSERT(!s_WorldContext);
+        s_WorldContext = new WorldContext;
+
+#ifndef NEON_DIST
+        s_WorldContext->World.set<flecs::Rest>({});
+        s_WorldContext->World.import <flecs::monitor>();
+#endif
+        // Register components & relations.
+        Exports::RegisterComponents(s_WorldContext->World);
+        Exports::RegisterRelations(s_WorldContext->World);
+
+        // Create root entity with null main camera.
+        s_WorldContext->RootEntity = s_WorldContext->World.entity("_Root");
+    }
+
+    void EntityWorld::Shutdown()
+    {
+        NEON_ASSERT(s_WorldContext);
+        delete s_WorldContext;
+    }
+
+    flecs::world EntityWorld::Get()
+    {
+        return s_WorldContext->World.get_world();
+    }
+
+    EntityHandle EntityWorld::GetRootEntity()
+    {
+        return s_WorldContext->RootEntity;
     }
 } // namespace Neon::Scene

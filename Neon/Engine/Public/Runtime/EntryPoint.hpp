@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
+#include <Scene/EntityWorld.hpp>
 #include <Config/Engine.hpp>
 
 #include <Log/Logger.hpp>
@@ -26,11 +27,13 @@ namespace Neon::Runtime
     {                                                          \
         Neon::Logger::Initialize();                            \
         std::atexit(&Neon::Logger::Shutdown);                  \
+        Neon::Scene::EntityWorld::Initialize();                \
                                                                \
         auto Engine = Neon::Runtime::Main(__argc, __wargv);    \
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
+        Scene::EntityWorld::Shutdown();                        \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \
@@ -46,11 +49,13 @@ namespace Neon::Runtime
     {                                                          \
         Neon::Logger::Initialize();                            \
         std::atexit(&Neon::Logger::Shutdown);                  \
+        Neon::Scene::EntityWorld::Initialize();                \
                                                                \
         auto Engine = Neon::Runtime::Main(argc, argv);         \
         Engine->Run();                                         \
         Engine.reset();                                        \
                                                                \
+        Neon::Scene::EntityWorld::Shutdown();                  \
         return 0;                                              \
     }                                                          \
     Neon::UPtr<Neon::Runtime::GameEngine> Neon::Runtime::Main( \

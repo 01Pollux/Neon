@@ -31,7 +31,7 @@ namespace Neon::Editor::Views
         // If we are in editor scene view, disable/enable camera based on window state.
         if (m_IsEditorView)
         {
-            auto Camera = EditorEngine::Get()->GetMainCamera(true);
+            flecs::entity Camera = EditorEngine::Get()->GetMainCamera(true);
             if (!Camera) [[unlikely]]
             {
                 return;
@@ -63,7 +63,7 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto Camera = EditorEngine::Get()->GetMainCamera(m_IsEditorView);
+        flecs::entity Camera = EditorEngine::Get()->GetMainCamera(m_IsEditorView);
         if (!Camera || !Camera.enabled()) [[unlikely]]
         {
             return;

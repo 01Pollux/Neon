@@ -13,31 +13,31 @@ namespace Neon::Editor
     {
     public:
         bool Draw(
-            const flecs::entity& Entity,
-            const flecs::id&     ComponentId) override;
+            Scene::EntityHandle EntHandle,
+            const flecs::id&    ComponentId) override;
     };
 
     class PhysicsComponentHandler : public IEditorComponentHandler
     {
     public:
         bool Draw(
-            const flecs::entity& Entity,
-            const flecs::id&     ComponentId) override;
+            Scene::EntityHandle EntHandle,
+            const flecs::id&    ComponentId) override;
     };
 
     class SpriteComponentHandler : public IEditorComponentHandler
     {
     public:
         bool Draw(
-            const flecs::entity& Entity,
-            const flecs::id&     ComponentId) override;
+            Scene::EntityHandle EntHandle,
+            const flecs::id&    ComponentId) override;
     };
 
     class TransformComponentHandler : public IEditorComponentHandler
     {
     public:
         bool Draw(
-            const flecs::entity& Entity,
-            const flecs::id&     ComponentId) override;
+            Scene::EntityHandle EntHandle,
+            const flecs::id&    ComponentId) override;
     };
 } // namespace Neon::Editor

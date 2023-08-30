@@ -4,139 +4,106 @@
 
 namespace Neon::Scene
 {
-    struct EntityWorld
+    struct EntityHandle
     {
-        static constexpr const char* RootEntityName = "_Root";
+    public:
+        EntityHandle(
+            flecs::entity_t Entity = {}) noexcept :
+            m_Entity(Entity)
+        {
+        }
+        EntityHandle(
+            flecs::entity Entity) noexcept :
+            m_Entity(Entity)
+        {
+        }
+
+        /// <summary>
+        /// Get the entity.
+        /// </summary>
+        [[nodiscard]] flecs::entity Get() const noexcept;
+
+        /// <summary>
+        /// Get the entity id.
+        /// </summary>
+        [[nodiscard]] flecs::entity_t GetId() const noexcept
+        {
+            return m_Entity;
+        }
 
     public:
         /// <summary>
-        /// Get the singleton instance of the entity world.
+        /// Delete the entity.
         /// </summary>
-        [[nodiscard]] static EntityWorld* Get();
-
-        EntityWorld();
-
-        EntityWorld(
-            flecs::world&& World) :
-            m_World(std::exchange(World.m_world, {})),
-            m_RootEntity(World.lookup(RootEntityName)),
-            m_Owned(std::exchange(World.m_owned, {}))
-        {
-        }
-
-        EntityWorld(
-            const EntityWorld& Other) :
-            m_World(Other.m_World),
-            m_RootEntity(Other.m_RootEntity),
-            m_Owned(false)
-        {
-        }
-
-        EntityWorld(
-            EntityWorld&& Other) noexcept :
-            m_World(std::exchange(Other.m_World, {})),
-            m_RootEntity(std::exchange(Other.m_RootEntity, {})),
-            m_Owned(std::exchange(Other.m_Owned, {}))
-        {
-        }
-
-        EntityWorld& operator=(
-            const EntityWorld& Other)
-        {
-            if (this != &Other)
-            {
-                Release();
-                m_World      = Other.m_World;
-                m_RootEntity = Other.m_RootEntity;
-                m_Owned      = false;
-            }
-            return *this;
-        }
-
-        EntityWorld& operator=(
-            EntityWorld&& Other) noexcept
-        {
-            if (this != &Other)
-            {
-                Release();
-                m_World      = std::exchange(Other.m_World, {});
-                m_RootEntity = std::exchange(Other.m_RootEntity, {});
-                m_Owned      = std::exchange(Other.m_Owned, {});
-            }
-            return *this;
-        }
-
-        ~EntityWorld()
-        {
-            Release();
-        }
+        void Delete(
+            bool WithChildren = false);
 
         /// <summary>
-        /// Release the world.
+        /// Clones the entity into the same parent.
         /// </summary>
-        void Release();
+        void Clone(
+            const char* Name = nullptr);
+
+        /// <summary>
+        /// Clones the entity.
+        /// </summary>
+        EntityHandle Clone(
+            flecs::entity_t NewParent,
+            const char*     Name = nullptr);
 
     public:
-        /// <summary>
-        /// Get the root entity.
-        /// </summary>
-        [[nodiscard]] flecs::entity GetRootEntity();
-
-    public:
-        /// <summary>
-        /// Delete the entity with or without children.
-        /// </summary>
-        static void DeleteEntity(
-            flecs::entity Entity,
-            bool          WithChildren = false);
-
-        /// <summary>
-        /// Clone the entity.
-        /// </summary>
-        static flecs::entity CloneEntity(
-            flecs::entity Entity,
-            const char*   Name = nullptr);
-
-    public:
-        operator flecs::world_t*() const noexcept
+        operator flecs::entity_t() const noexcept
         {
-            return m_World;
+            return Get();
         }
 
-        operator flecs::world_t*() noexcept
+        operator flecs::entity_t() noexcept
         {
-            return m_World;
+            return m_Entity;
         }
 
-        operator flecs::world() const noexcept
+        operator flecs::entity() const noexcept
         {
-            return GetWorld();
+            return Get();
         }
 
-        operator flecs::world() noexcept
+        operator flecs::entity() noexcept
         {
-            return GetWorld();
+            return Get();
         }
 
-        /// <summary>
-        /// Get the world.
-        /// </summary>
-        [[nodiscard]] flecs::world GetWorld() const noexcept
+        operator bool() const noexcept
         {
-            return flecs::world(m_World);
-        }
-
-        /// <summary>
-        /// Get the world.
-        /// </summary>
-        [[nodiscard]] flecs::world GetWorld() noexcept
-        {
-            return flecs::world(m_World);
+            return m_Entity != 0;
         }
 
     private:
-        flecs::world_t* m_World;
-        flecs::entity_t m_RootEntity;
-        bool            m_Owned = false;
+        flecs::entity_t m_Entity{};
+    };
+
+    //
+
+    struct EntityWorld
+    {
+    public:
+        /// <summary>
+        /// Create a global entity world.
+        /// </summary>
+        static void Initialize();
+
+        /// <summary>
+        /// Release the global entity world.
+        /// </summary>
+        static void Shutdown();
+
+        /// <summary>
+        /// Get the singleton instance of the entity world.
+        /// </summary>
+        [[nodiscard]] static flecs::world Get();
+
+        /// <summary>
+        /// Get the root entity.
+        /// </summary>
+        [[nodiscard]] static EntityHandle GetRootEntity();
     };
 } // namespace Neon::Scene

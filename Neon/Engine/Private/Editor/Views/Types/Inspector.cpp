@@ -3,7 +3,7 @@
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Scene/EditorEntity.hpp>
-#include <Runtime/GameLogic.hpp>
+#include <Scene/EntityWorld.hpp>
 
 #include <UI/imcxx/all_in_one.hpp>
 
@@ -22,7 +22,7 @@ namespace Neon::Editor::Views
             return;
         }
 
-        flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+        flecs::world World = Scene::EntityWorld::Get();
 
         auto SelectedEntity = World.target<Scene::Editor::SelectedForEditor>();
         if (!SelectedEntity)

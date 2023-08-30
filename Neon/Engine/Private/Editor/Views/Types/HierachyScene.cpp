@@ -13,7 +13,7 @@ namespace Neon::Editor::Views
     /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
     /// </summary>
     [[nodiscard]] static flecs::filter<> GetChildrenFilter(
-        flecs::entity Parent)
+        const flecs::entity& Parent)
     {
         return Parent.world()
             .filter_builder()
@@ -29,9 +29,11 @@ namespace Neon::Editor::Views
     }
 
     static void DispalySceneObject(
-        flecs::entity                    Entity,
+        Scene::EntityHandle              EntHandle,
         std::move_only_function<void()>& DeferredTask)
     {
+        flecs::entity Entity = EntHandle;
+
         ImGuiTableFlags TableFlags =
             ImGuiTreeNodeFlags_OpenOnDoubleClick |
             ImGuiTreeNodeFlags_OpenOnArrow |
@@ -66,7 +68,7 @@ namespace Neon::Editor::Views
 
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
         {
-            flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+            flecs::world World = Scene::EntityWorld::Get();
             World.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
@@ -76,27 +78,26 @@ namespace Neon::Editor::Views
             {
                 if (imcxx::menuitem_entry{ "Duplicate" })
                 {
-                    DeferredTask = [Entity]
+                    DeferredTask = [EntHandle]() mutable
                     {
-                        Scene::EntityWorld::CloneEntity(Entity);
+                        EntHandle.Clone();
                     };
                 }
 
                 if (imcxx::menuitem_entry{ "Delete (Recursive)" })
                 {
-                    DeferredTask = [Entity]
+                    DeferredTask = [EntHandle]() mutable
                     {
-                        Scene::EntityWorld::DeleteEntity(Entity, true);
-                        Entity.destruct();
+                        EntHandle.Delete(true);
                     };
                 }
 
                 if (imcxx::menuitem_entry{ "Delete" })
                 {
                     // Delete only entity, and move children to parent.
-                    DeferredTask = [Entity]
+                    DeferredTask = [EntHandle]() mutable
                     {
-                        Scene::EntityWorld::DeleteEntity(Entity, false);
+                        EntHandle.Delete(false);
                     };
                 }
 
@@ -141,10 +142,10 @@ namespace Neon::Editor::Views
             return;
         }
 
-        flecs::world World = EditorEngine::Get()->GetLogic()->GetEntityWorld();
+        flecs::world World = Scene::EntityWorld::Get();
 
         // If we are in editor mode, we need to display the editor root entity.
-        auto Root = EditorEngine::Get()->GetRootEntity();
+        auto Root = Scene::EntityWorld::GetRootEntity();
 
         // First we need to display the children of root entity.
         {
