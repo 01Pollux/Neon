@@ -9,6 +9,9 @@
 #include <Editor/Views/Types/Inspector.hpp>
 #include <Editor/Views/Types/Scene.hpp>
 
+#include <Asset/Storage.hpp>
+#include <Asset/Types/RuntimeScene.hpp>
+
 #include <UI/WindowUtils.hpp>
 
 namespace Neon::Editor
@@ -206,18 +209,34 @@ namespace Neon::Editor
                 // TODO: use Project::GetContentDir() instead
                 const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
 
-                auto Paths = FileSystem::SaveFile(
+                auto Path = FileSystem::SaveFile(
                     GetWindowHandle(),
                     STR("Save scene"),
                     ContentDir,
                     Filters);
 
-                if (Paths.empty())
+                if (Path.empty())
                 {
                     return;
                 }
 
-                m_EditorScene.Serialize();
+                if (Path.extension() != STR(".nscene"))
+                {
+                    Path += ".nscene";
+                }
+
+                auto RelativePath = std::filesystem::relative(Path, ContentDir);
+                auto Asset = std::make_shared<Asset::RuntimeSceneAsset>(
+                    Asset::Handle::Random(),
+                    RelativePath.string());
+
+                m_EditorScene.Apply(
+                    Scene::RuntimeScene::MergeType::Merge,
+                    Asset->GetScene().GetRoot());
+
+                Asset::Storage::SaveAsset(
+                    { .Asset            = std::static_pointer_cast<Asset::IAsset>(Asset),
+                      .PreferredPackage = m_ContentPackage });
             };
 
             if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })

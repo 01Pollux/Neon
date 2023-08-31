@@ -46,17 +46,17 @@ namespace Neon::Scene
     }
 
     void RuntimeScene::Apply(
-        MergeType Type)
+        MergeType Type) const
     {
         Apply(Type, EntityWorld::GetRootEntity());
     }
 
     void RuntimeScene::Apply(
         MergeType    Type,
-        EntityHandle DestRoot)
+        EntityHandle DestRoot) const
     {
         NEON_ASSERT(DestRoot, "Root entity cannot be null.");
-        NEON_ASSERT(DestRoot != m_RootEntity, "Cannot apply a scene to itself.");
+        NEON_ASSERT(DestRoot.GetId() != m_RootEntity.GetId(), "Cannot apply a scene to itself.");
         NEON_ASSERT(Type == MergeType::Merge || Type == MergeType::Replace, "Invalid merge type.");
 
         flecs::entity ThisRootEnt = m_RootEntity;
@@ -87,7 +87,7 @@ namespace Neon::Scene
 
         for (auto& Child : Children)
         {
-            Child.Clone(DestRoot);
+            Child.Clone(DestRoot, Child.Get().name());
         }
     }
 } // namespace Neon::Scene

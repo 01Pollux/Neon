@@ -29,14 +29,14 @@ namespace Neon::Scene
         /// Apply the scene to the world.
         /// </summary>
         void Apply(
-            MergeType Type);
+            MergeType Type) const;
 
         /// <summary>
         /// Apply the scene to the root.
         /// </summary>
         void Apply(
             MergeType    Type,
-            EntityHandle DestRoot);
+            EntityHandle DestRoot) const;
 
     private:
         EntityHandle m_RootEntity;

@@ -304,7 +304,7 @@ namespace Neon::Editor::Views
         flecs::world World = Scene::EntityWorld::Get();
 
         // If we are in editor mode, we need to display the editor root entity.
-        auto Root = Scene::EntityWorld::GetRootEntity();
+        auto Root = Editor::EditorEngine::Get()->GetActiveScene().GetRoot();
 
         // First we need to display the children of root entity.
         {

@@ -178,7 +178,7 @@ namespace Neon::Asset
                     if (Iter == m_AssetMeta.end())
                     {
                         Iter = m_AssetMeta.emplace(AssetGuid, AssetMetaDataDef(AssetGuid, CurrentAsset->GetPath())).first;
-                        Iter->second.SetPath(StringUtils::Format("{}/{}{}", m_RootPath.string(), CurrentAsset->GetPath(), AssetMetaDataDef::s_MetaFileExtension));
+                        Iter->second.SetPath(StringUtils::Format("{}{}", CurrentAsset->GetPath(), AssetMetaDataDef::s_MetaFileExtension));
                     }
                     Metadata = &Iter->second;
                 }

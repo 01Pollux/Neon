@@ -121,12 +121,17 @@ namespace Neon::Editor
         /// <summary>
         /// Get the editor active root entity.
         /// </summary>
-        [[nodiscard]] const Scene::RuntimeScene& GetRuntimeScene() const;
+        [[nodiscard]] const Scene::RuntimeScene& GetActiveScene() const;
 
         /// <summary>
         /// Get the editor active root entity.
         /// </summary>
-        [[nodiscard]] const Scene::RuntimeScene& GetEditorScene() const;
+        [[nodiscard]] const Scene::RuntimeScene& GetCurrentScene() const;
+        
+        /// <summary>
+        /// Get the editor camera.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetEditorCamera() const;
 
         /// <summary>
         /// Get either the editor camera or the main camera.
@@ -156,6 +161,8 @@ namespace Neon::Editor
         /// TODO: move it to ProjectInstance.
         /// </summary>
         Asset::IAssetPackage* m_ContentPackage;
+
+        Scene::EntityHandle m_EditorCamera;
 
         Scene::RuntimeScene m_RuntimeScene;
         Scene::RuntimeScene m_EditorScene;

@@ -5,6 +5,7 @@
 
 #include <Window/Window.hpp>
 #include <Asset/Packs/Directory.hpp>
+#include <Asset/Storage.hpp>
 
 #include <imgui/imgui.h>
 #include <Log/Logger.hpp>

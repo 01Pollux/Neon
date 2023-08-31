@@ -41,7 +41,8 @@ namespace Neon::Editor
     void EditorEngine::AddEditorCamera()
     {
         flecs::world  World  = Scene::EntityWorld::Get();
-        flecs::entity Camera = Scene::EntityHandle::Create("Editor Camera");
+        flecs::entity Camera = World.entity();
+        m_EditorCamera       = Camera;
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {
@@ -67,14 +68,19 @@ namespace Neon::Editor
 
     //
 
-    const Scene::RuntimeScene& EditorEngine::GetRuntimeScene() const
+    const Scene::RuntimeScene& EditorEngine::GetActiveScene() const
     {
-        return m_RuntimeScene;
+        return IsInEditorMode() ? m_EditorScene : m_RuntimeScene;
     }
 
-    const Scene::RuntimeScene& EditorEngine::GetEditorScene() const
+    const Scene::RuntimeScene& EditorEngine::GetCurrentScene() const
     {
         return m_EditorScene;
+    }
+
+    flecs::entity EditorEngine::GetEditorCamera() const
+    {
+        return m_EditorCamera;
     }
 
     Scene::EntityHandle EditorEngine::GetMainCamera(

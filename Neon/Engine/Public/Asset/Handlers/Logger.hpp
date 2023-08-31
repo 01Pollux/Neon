@@ -5,23 +5,5 @@
 
 namespace Neon::Asset
 {
-    class LoggerAsset::Handler : public IAssetHandler
-    {
-    public:
-        bool CanHandle(
-            const Ptr<IAsset>& Asset) override;
-
-        Ptr<IAsset> Load(
-            std::istream&                  Stream,
-            const Asset::DependencyReader& DepReader,
-            const Handle&                  AssetGuid,
-            StringU8                       Path,
-            const AssetMetaData&           LoaderData) override;
-
-        void Save(
-            std::iostream&     Stream,
-            DependencyWriter&  DepWriter,
-            const Ptr<IAsset>& Asset,
-            AssetMetaData&     LoaderData) override;
-    };
+    NEON_STANDARD_ASSET_HANDLER(LoggerAsset::Handler);
 } // namespace Neon::Asset

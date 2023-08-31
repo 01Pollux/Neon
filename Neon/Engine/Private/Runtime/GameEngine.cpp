@@ -9,13 +9,14 @@
 #include <Asset/Manager.hpp>
 #include <Asset/Storage.hpp>
 
-#include <Asset/Handlers/TextFile.hpp>
 #include <Asset/Handlers/Json.hpp>
-#include <Asset/Handlers/PropertyTree.hpp>
 #include <Asset/Handlers/Logger.hpp>
-#include <Asset/Handlers/Texture.hpp>
+#include <Asset/Handlers/PropertyTree.hpp>
 #include <Asset/Handlers/RootSignature.hpp>
+#include <Asset/Handlers/RuntimeScene.hpp>
 #include <Asset/Handlers/Shader.hpp>
+#include <Asset/Handlers/Texture.hpp>
+#include <Asset/Handlers/TextFile.hpp>
 
 //
 
@@ -176,13 +177,14 @@ namespace Neon::Runtime
     void GameEngine::InitializeAssetSystem(
         Config::EngineConfig& Config)
     {
-        Asset::Storage::RegisterHandler<Asset::TextFileAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::JsonAsset::Handler>();
-        Asset::Storage::RegisterHandler<Asset::PropertyTreeAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::LoggerAsset::Handler>();
-        Asset::Storage::RegisterHandler<Asset::TextureAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::PropertyTreeAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::RootSignatureAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::RuntimeSceneAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::ShaderAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::TextFileAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::TextureAsset::Handler>();
 
         //
 

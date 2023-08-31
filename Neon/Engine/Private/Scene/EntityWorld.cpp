@@ -123,10 +123,13 @@ namespace Neon::Scene
         StringU8 NewName{ CreateUniqueEntityName(Parent, Name) };
 
         Entity.set_name(nullptr);
+
         auto NewEntity = Entity.clone();
+        NewEntity.child_of(Parent);
 
         Entity.set_name(OldName.c_str());
         NewEntity.set_name(NewName.c_str());
+
 
         return NewEntity;
     }
