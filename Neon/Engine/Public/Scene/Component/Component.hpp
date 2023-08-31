@@ -23,18 +23,23 @@ namespace Neon::Scene::Component::Impl
         flecs::entity Component)
 
 #if NEON_EDITOR
-#define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                  \
-    static void RegisterFlecs()                                   \
-    {                                                             \
-        extern void Insecptor_Component_On##Class(                \
-            flecs::entity_t, flecs::id_t);                        \
-        _HandleComponent(                                         \
-            Neon::Scene::Component::Impl::GetWorld()              \
-                .component<Class>(Name)                           \
-                .emplace<Neon::Scene::Component::EditorMetaData>( \
-                    &Insecptor_Component_On##Class));             \
-    }                                                             \
-    static void _HandleComponent(                                 \
+#define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                                             \
+    static void RegisterFlecs()                                                              \
+    {                                                                                        \
+        extern void Insecptor_Component_On##Class(                                           \
+            flecs::entity_t, flecs::id_t);                                                   \
+        _HandleComponent(                                                                    \
+            Neon::Scene::Component::Impl::GetWorld()                                         \
+                .component<Class>(Name)                                                      \
+                .emplace<Neon::Scene::Component::EditorMetaData>(                            \
+                    &Insecptor_Component_On##Class,                                          \
+                    [](flecs::entity_t Ent, flecs::id_t Id)                                  \
+                    {                                                                        \
+                        flecs::entity Entity(Neon::Scene::Component::Impl::GetWorld(), Ent); \
+                        Entity.set<Class>({});                                               \
+                    }));                                                                     \
+    }                                                                                        \
+    static void _HandleComponent(                                                            \
         flecs::entity Component)
 #else
 #define NEON_EXPORT_FLECS_COMPONENT NEON_EXPORT_FLECS
@@ -59,6 +64,11 @@ namespace Neon::Scene::Component
         /// Callback for when the component is being inspected.
         /// </summary>
         mutable std::move_only_function<void(flecs::entity_t, flecs::id_t)> RenderOnInsecptorCallback;
+
+        /// <summary>
+        /// Callback when the component is added to an entity.
+        /// </summary>
+        mutable std::move_only_function<void(flecs::entity_t, flecs::id_t)> OnAddInitialize;
 
         /// <summary>
         /// Wether or not this component should be added to the entity editor.

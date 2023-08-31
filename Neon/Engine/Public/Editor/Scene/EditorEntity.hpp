@@ -16,6 +16,16 @@ namespace Neon::Scene::Editor
     };
 
     /// <summary>
+    /// Tag for entities that are assets and not part of the scene.
+    /// </summary>
+    struct EditorAsset
+    {
+        NEON_EXPORT_FLECS(EditorAsset, "Editor::EditorAsset")
+        {
+        }
+    };
+
+    /// <summary>
     /// World tag that indicates that the world is in editor mode.
     /// </summary>
     struct WorldEditorMode

@@ -7,6 +7,8 @@
 
 #include <UI/imcxx/all_in_one.hpp>
 
+#include <Scene/Component/Transform.hpp>
+
 namespace Neon::Editor::Views
 {
     Inspector::Inspector() :
@@ -30,9 +32,8 @@ namespace Neon::Editor::Views
             return;
         }
 
-        bool DrawAddComponent = false;
         SelectedEntity.each(
-            [&SelectedEntity, &DrawAddComponent](flecs::id ComponentId)
+            [&SelectedEntity](flecs::id ComponentId)
             {
                 auto Component = Scene::EntityWorld::Get().component(ComponentId);
                 if (!Component)
@@ -40,7 +41,7 @@ namespace Neon::Editor::Views
                     return;
                 }
 
-                auto MetaData  = Component.get<Scene::Component::EditorMetaData>();
+                auto MetaData = Component.get<Scene::Component::EditorMetaData>();
                 if (!MetaData)
                 {
                     return;
@@ -55,8 +56,6 @@ namespace Neon::Editor::Views
                         UI::Utils::EndComponentHeader();
                         ImGui::Separator();
                     }
-
-                    DrawAddComponent = true;
                 }
                 else
                 {
@@ -64,11 +63,14 @@ namespace Neon::Editor::Views
                 }
             });
 
-        if (DrawAddComponent)
+        if (!SelectedEntity.has<Scene::Editor::EditorAsset>())
         {
             // Set button in middle of screen and takes about 75% of the width
             constexpr float ButtonWidth = 140.f;
-            float           Size        = ImGui::GetWindowWidth();
+            constexpr float PopupWidth  = ButtonWidth * 1.8f;
+            constexpr float PopupHeight = ButtonWidth * 2.4f;
+
+            float Size = ImGui::GetWindowWidth();
 
             ImGui::SetCursorPosX((Size - ButtonWidth) / 2.0f);
             ImGui::SetNextItemWidth(Size * 0.75f);
@@ -78,24 +80,72 @@ namespace Neon::Editor::Views
                 ImGui::OpenPopup("##AddComponent");
             }
 
-            if (imcxx::popup AddComponent{ "##AddComponent" })
+            auto PopupPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
+            PopupPos.x += (Size - PopupWidth) / 2.0f;
+
+            ImGui::SetNextWindowPos(PopupPos);
+            ImGui::SetNextWindowSize(ImVec2{ PopupWidth, PopupHeight });
+            if (imcxx::popup AddComponent{ "##AddComponent", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove })
             {
-                Scene::EntityWorld::Get().each(
-                    flecs::Any,
-                    [&SelectedEntity](
-                        flecs::entity ComponentId)
+                if (imcxx::table ComponentTable{ "", 2, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingStretchSame })
+                {
+                    constexpr auto ComlumnFlags = ImGuiTableColumnFlags_WidthStretch;
+
+                    ComponentTable.setup(
+                        imcxx::table::setup_no_headers{},
+                        imcxx::table::setup_info{
+                            "Icon", ComlumnFlags | ImGuiTableColumnFlags_NoSort, ButtonWidth * 0.15f },
+                        imcxx::table::setup_info{
+                            "Name", ComlumnFlags | ImGuiTableColumnFlags_DefaultSort, ButtonWidth * 0.85f });
+
+                    ecs_term_t Term = {
+                        .id = flecs::Any
+                    };
+                    ecs_iter_t Iter = ecs_term_iter(Scene::EntityWorld::Get(), &Term);
+
+                    while (ecs_term_next(&Iter))
                     {
-                        if (!SelectedEntity.has(ComponentId))
+                        for (size_t i = 0; i < Iter.count; ++i)
                         {
-                            if (auto MetaData = ComponentId.get<Scene::Component::EditorMetaData>())
+                            flecs::entity ComponentId(Scene::EntityWorld::Get(), Iter.entities[i]);
+                            if (SelectedEntity.has(ComponentId))
                             {
-                                if (MetaData->IsSceneComponent)
+                                continue;
+                            }
+
+                            auto MetaData = ComponentId.get<Scene::Component::EditorMetaData>();
+                            if (!MetaData || !MetaData->IsSceneComponent)
+                            {
+                                continue;
+                            }
+
+                            ComponentTable.next_column();
+                            ImGui::Text("");
+                            bool IsClicked = ImGui::IsItemClicked();
+
+                            ComponentTable.next_column();
+                            ImGui::TextUnformatted(ComponentId.name().c_str());
+                            IsClicked |= ImGui::IsItemClicked();
+
+                            if (IsClicked)
+                            {
+                                if (MetaData->OnAddInitialize)
                                 {
-                                    ImGui::TextUnformatted(ComponentId.name().c_str());
+                                    MetaData->OnAddInitialize(SelectedEntity, ComponentId);
                                 }
+                                ImGui::CloseCurrentPopup();
+                                break;
                             }
                         }
-                    });
+                    }
+
+                    Scene::EntityWorld::Get().each(
+                        flecs::Any,
+                        [&SelectedEntity, &ComponentTable](
+                            flecs::entity ComponentId) {
+
+                        });
+                }
             }
         }
     }

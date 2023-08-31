@@ -43,6 +43,7 @@ namespace imcxx
 		{}
 
 		struct setup_no_row {};
+		struct setup_no_headers {};
 		struct setup_info
 		{
 			const char* label;
@@ -68,6 +69,24 @@ namespace imcxx
 		{
 			table_setup_impl(args...);
 			ImGui::TableHeadersRow();
+		}
+		
+		/// <summary>
+		/// Tables: Headers & Columns declaration
+		/// - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
+		/// - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
+		///   Headers are required to perform: reordering, sorting, and opening the context menu.
+		///   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
+		/// - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
+		///   some advanced use cases (e.g. adding custom widgets in header row).
+		/// - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+		/// 
+		/// _Args can be either a c-string, 'std::string', 'std::string_view' or 'setup_info'
+		/// </summary>
+		template<typename ..._Args>
+		void setup(setup_no_headers, const _Args&... args)
+		{
+			table_setup_impl(args...);
 		}
 		
 		/// <summary>
