@@ -2,7 +2,6 @@
 
 #include <Runtime/GameEngine.hpp>
 #include <Editor/Views/View.hpp>
-#include <Editor/Views/Component.hpp>
 #include <Scene/RuntimeScene.hpp>
 
 #include <UI/Fonts/FontAwesome5.hpp>
@@ -81,34 +80,6 @@ namespace Neon::Editor
         void CloseView(
             const StringU8& Name);
 
-    public:
-        /// <summary>
-        /// Register the component handler.
-        /// </summary>
-        void RegisterComponentHandler(
-            const flecs::id&         ComponentId,
-            IEditorComponentHandler* Handler);
-
-        /// <summary>
-        /// Unregister the component handler.
-        /// </summary>
-        void UnregisterComponentHandler(
-            const flecs::id&         ComponentId,
-            IEditorComponentHandler* Handler);
-
-        /// <summary>
-        /// Unregister the component handler.
-        /// </summary>
-        void UnregisterComponentHandler(
-            IEditorComponentHandler* Handler);
-
-        /// <summary>
-        /// Dispatch the component handlers.
-        /// </summary>
-        void DispatchComponentHandlers(
-            Scene::EntityHandle EntHandle,
-            const flecs::id&    ComponentId);
-
     private:
         /// <summary>
         /// Register the editor world components, camera.
@@ -119,11 +90,6 @@ namespace Neon::Editor
         /// Register the editor world components.
         /// </summary>
         void RegisterEditorWorldComponents();
-
-        /// <summary>
-        /// Add the standard component handlers.
-        /// </summary>
-        void AddStandardComponentHandlers();
 
         /// <summary>
         /// Add the editor camera.
@@ -183,31 +149,8 @@ namespace Neon::Editor
         }
 
     private:
-        /// <summary>
-        /// Helper function to register the standard component handler.
-        /// </summary>
-        template<typename _Ty, typename... _Args>
-        void RegisterStandardComponentHandler()
-        {
-            auto Handler    = std::make_unique<_Ty>();
-            auto HandlerPtr = Handler.get();
-            m_StandardComponentHandlers.emplace(std::move(Handler));
-
-            flecs::world World = Scene::EntityWorld::Get();
-            for (auto ComponentId : { World.component<_Args>()... })
-            {
-                RegisterComponentHandler(ComponentId, HandlerPtr);
-            }
-        }
-
-    private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
-
-        std::set<UPtr<IEditorComponentHandler>> m_StandardComponentHandlers;
-
-        std::unordered_map<uint64_t, std::vector<IEditorComponentHandler*>> m_ComponentHandlers;
-
-        std::unordered_set<IEditorView*> m_OpenViews;
+        std::unordered_set<IEditorView*>                m_OpenViews;
 
         /// <summary>
         /// TODO: move it to ProjectInstance.

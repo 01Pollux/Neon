@@ -7,7 +7,7 @@ namespace Neon::Scene::Component
 {
     struct ScriptInstance
     {
-        NEON_EXPORT_FLECS(ScriptInstance, "ScriptInstance")
+        NEON_EXPORT_FLECS_COMPONENT(ScriptInstance, "Script Instance")
         {
         }
 

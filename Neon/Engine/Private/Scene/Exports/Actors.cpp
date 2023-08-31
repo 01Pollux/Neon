@@ -36,6 +36,7 @@ namespace Neon::Scene::Exports
     void RegisterActorRelations(
         flecs::world& World)
     {
+        NEON_REGISTER_FLECS(Component::EditorMetaData);
         NEON_REGISTER_FLECS(Component::SceneEntity);
         NEON_REGISTER_FLECS(Component::MainCamera);
         NEON_REGISTER_FLECS(Component::Sprite::MainRenderer);

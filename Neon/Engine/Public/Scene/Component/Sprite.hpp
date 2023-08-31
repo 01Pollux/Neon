@@ -8,7 +8,7 @@ namespace Neon::Scene::Component
 {
     struct Sprite
     {
-        NEON_EXPORT_FLECS(Sprite, "Sprite")
+        NEON_EXPORT_FLECS_COMPONENT(Sprite, "Sprite")
         {
         }
 

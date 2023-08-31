@@ -109,7 +109,7 @@ namespace Neon::Scene::Component
 
     struct CollisionShape
     {
-        NEON_EXPORT_FLECS(CollisionShape, "Collision Shape")
+        NEON_EXPORT_FLECS_COMPONENT(CollisionShape, "Collision Shape")
         {
         }
 
@@ -118,7 +118,7 @@ namespace Neon::Scene::Component
 
     struct CollisionObject
     {
-        NEON_EXPORT_FLECS(CollisionObject, "Collision Object")
+        NEON_EXPORT_FLECS_COMPONENT(CollisionObject, "Collision Object")
         {
         }
 

@@ -1,26 +1,17 @@
 #include <EnginePCH.hpp>
-#include <Editor/Views/Components/EngineComponents.hpp>
+#include <Scene/Component/Camera.hpp>
+#include <Scene/EntityWorld.hpp>
 
-#include <Editor/Main/EditorEngine.hpp>
-#include <Editor/Scene/EditorEntity.hpp>
-
+#include <Math/Transform.hpp>
 #include <UI/Utils.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Neon::Editor
 {
-    bool CameraComponentHandler::Draw(
-        Scene::EntityHandle EntHandle,
-        const flecs::id&    ComponentId)
+    static void Insecptor_Component_OnCamera(
+        flecs::entity Entity,
+        flecs::id_t   ComponentId)
     {
-        auto HeaderInfo = UI::Utils::BeginComponentHeader("Camera");
-        if (!HeaderInfo)
-        {
-            return true;
-        }
-
-        flecs::entity Entity = EntHandle;
-
         auto& Camera  = *static_cast<Scene::Component::Camera*>(Entity.get_mut(ComponentId));
         bool  Changed = false;
 
@@ -162,166 +153,16 @@ namespace Neon::Editor
 
         //
 
-        UI::Utils::EndComponentHeader();
-
         if (Changed)
         {
-            Entity.modified<Scene::Component::Transform>();
+            Entity.modified<Scene::Component::Camera>();
         }
-
-        return true;
-    }
-
-    //
-
-    bool PhysicsComponentHandler::Draw(
-        Scene::EntityHandle EntHandle,
-        const flecs::id&    ComponentId)
-    {
-        return false;
-    }
-
-    //
-
-    bool SpriteComponentHandler::Draw(
-        Scene::EntityHandle EntHandle,
-        const flecs::id&    ComponentId)
-    {
-        auto HeaderInfo = UI::Utils::BeginComponentHeader("Sprite");
-        if (!HeaderInfo)
-        {
-            return true;
-        }
-
-        flecs::entity Entity = EntHandle;
-
-        auto& Sprite  = *static_cast<Scene::Component::Sprite*>(Entity.get_mut(ComponentId));
-        bool  Changed = false;
-
-        //
-
-        UI::Utils::DrawComponentLabel("Material", false);
-        UI::Utils::PropertySpacing();
-
-        //
-
-        ImGui::Text("Texture Transform");
-        auto& TextureTransform = Sprite.TextureTransform;
-        auto& Position         = TextureTransform.GetPosition();
-        auto  Rotation         = glm::degrees(TextureTransform.GetRotationEuler());
-        auto  Scale            = TextureTransform.GetScale();
-
-        //
-
-        UI::Utils::DrawComponentLabel("Position");
-        if (UI::Utils::DragVectorComponent(Position))
-        {
-            Changed = true;
-        }
-
-        UI::Utils::DrawComponentLabel("Rotation");
-        if (UI::Utils::DragVectorComponent(Rotation))
-        {
-            Changed = true;
-            TextureTransform.SetRotationEuler(glm::radians(Rotation));
-        }
-
-        UI::Utils::DrawComponentLabel("Scale");
-        if (UI::Utils::DragVectorComponent(Scale))
-        {
-            Changed = true;
-            TextureTransform.SetScale(Scale);
-        }
-
-        UI::Utils::PropertySpacing();
-
-        //
-
-        UI::Utils::DrawComponentLabel("Color");
-        Changed |= UI::Utils::DrawColorPicker("##SpriteColor", Sprite.ModulationColor);
-
-        UI::Utils::DrawComponentLabel("Sprite Size");
-        Changed |= UI::Utils::DragVectorComponent(Sprite.SpriteSize);
-
-        //
-
-        UI::Utils::EndComponentHeader();
-
-        if (Changed)
-        {
-            Entity.modified<Scene::Component::Transform>();
-        }
-
-        return true;
-    }
-
-    //
-
-    bool TransformComponentHandler::Draw(
-        Scene::EntityHandle EntHandle,
-        const flecs::id&    ComponentId)
-    {
-        auto HeaderInfo = UI::Utils::BeginComponentHeader("Transform");
-        if (!HeaderInfo)
-        {
-            return true;
-        }
-
-        flecs::entity Entity = EntHandle;
-
-        auto& Transform = static_cast<Scene::Component::Transform*>(Entity.get_mut(ComponentId))->World;
-        auto& Position  = Transform.GetPosition();
-        auto  Rotation  = glm::degrees(Transform.GetRotationEuler());
-        bool  Changed   = false;
-
-        //
-
-        UI::Utils::DrawComponentLabel("Position");
-        if (ImGui::IsItemHovered())
-        {
-            if (imcxx::tooltip Tooltip{})
-            {
-                ImGui::Text(
-                    "Global: (%.3f, %.3f, %.3f)",
-                    Position.x,
-                    Position.y,
-                    Position.z);
-            }
-        }
-
-        if (UI::Utils::DragVectorComponent(Position))
-        {
-            Changed = true;
-        }
-
-        UI::Utils::DrawComponentLabel("Rotation");
-        if (ImGui::IsItemHovered())
-        {
-            if (imcxx::tooltip Tooltip{})
-            {
-                ImGui::Text(
-                    "Global: (%.3f, %.3f, %.3f)",
-                    Rotation.x,
-                    Rotation.y,
-                    Rotation.z);
-            }
-        }
-
-        if (UI::Utils::DragVectorComponent(Rotation))
-        {
-            Changed = true;
-            Transform.SetRotationEuler(glm::radians(Rotation));
-        }
-
-        //
-
-        UI::Utils::EndComponentHeader();
-
-        if (Changed)
-        {
-            Entity.modified<Scene::Component::Transform>();
-        }
-
-        return true;
     }
 } // namespace Neon::Editor
+
+void Insecptor_Component_OnCamera(
+    flecs::entity_t EntityId,
+    flecs::id_t     ComponentId)
+{
+    Neon::Editor::Insecptor_Component_OnCamera(Neon::Scene::EntityHandle(EntityId),ComponentId);
+}

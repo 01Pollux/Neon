@@ -2,7 +2,6 @@
 #include <Runtime/GameLogic.hpp>
 #include <Editor/Main/EditorEngine.hpp>
 
-#include <Editor/Views/Components/EngineComponents.hpp>
 #include <Editor/Scene/EditorEntity.hpp>
 
 #include <Scene/Component/Transform.hpp>
@@ -10,22 +9,12 @@
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Graphs/Standard2D.hpp>
 
-// for testing: TODO remove
-#include <Renderer/Material/Material.hpp>
-#include <Renderer/Material/Builder.hpp>
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
-#include <Scene/Component/Script.hpp>
-
 namespace Neon::Editor
 {
     void EditorEngine::AddStandardEditorSystem()
     {
         // Register editor world components
         RegisterEditorWorldComponents();
-
-        // Register component handlers
-        AddStandardComponentHandlers();
 
         // Register editor's main camera
         AddEditorCamera();
@@ -48,22 +37,10 @@ namespace Neon::Editor
 
     //
 
-    void EditorEngine::AddStandardComponentHandlers()
-    {
-        RegisterStandardComponentHandler<CameraComponentHandler, Scene::Component::Camera>();
-        RegisterStandardComponentHandler<PhysicsComponentHandler, Scene::Component::CollisionObject>();
-        RegisterStandardComponentHandler<SpriteComponentHandler, Scene::Component::Sprite>();
-        RegisterStandardComponentHandler<TransformComponentHandler, Scene::Component::Transform>();
-    }
-
-    //
-
     void EditorEngine::AddEditorCamera()
     {
-        flecs::entity Root  = Scene::EntityWorld::GetRootEntity();
-        flecs::world  World = Scene::EntityWorld::Get();
-
-        auto Camera = World.entity("Editor Camera").child_of(Root);
+        flecs::world  World  = Scene::EntityWorld::Get();
+        flecs::entity Camera = Scene::EntityHandle::Create("Editor Camera");
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
         {

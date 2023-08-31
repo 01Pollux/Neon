@@ -21,7 +21,7 @@ namespace Neon::Scene::Component
 
     struct Camera
     {
-        NEON_EXPORT_FLECS(Camera, "Camera")
+        NEON_EXPORT_FLECS_COMPONENT(Camera, "Camera")
         {
         }
 

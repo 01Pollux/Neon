@@ -7,7 +7,7 @@ namespace Neon::Scene::Component
 {
     struct Transform
     {
-        NEON_EXPORT_FLECS(Transform, "Transform")
+        NEON_EXPORT_FLECS_COMPONENT(Transform, "Transform")
         {
         }
 

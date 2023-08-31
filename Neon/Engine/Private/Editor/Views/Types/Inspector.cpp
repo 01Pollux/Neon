@@ -30,10 +30,73 @@ namespace Neon::Editor::Views
             return;
         }
 
+        bool DrawAddComponent = false;
         SelectedEntity.each(
-            [&SelectedEntity](flecs::id ComponentId)
+            [&SelectedEntity, &DrawAddComponent](flecs::id ComponentId)
             {
-                EditorEngine::Get()->DispatchComponentHandlers(SelectedEntity, ComponentId);
+                auto Component = Scene::EntityWorld::Get().component(ComponentId);
+                if (!Component)
+                {
+                    return;
+                }
+
+                auto MetaData  = Component.get<Scene::Component::EditorMetaData>();
+                if (!MetaData)
+                {
+                    return;
+                }
+
+                if (MetaData->IsSceneComponent)
+                {
+                    auto HeaderInfo = UI::Utils::BeginComponentHeader(Component.name().c_str());
+                    if (HeaderInfo)
+                    {
+                        MetaData->RenderOnInsecptorCallback(SelectedEntity, ComponentId);
+                        UI::Utils::EndComponentHeader();
+                        ImGui::Separator();
+                    }
+
+                    DrawAddComponent = true;
+                }
+                else
+                {
+                    MetaData->RenderOnInsecptorCallback(SelectedEntity, ComponentId);
+                }
             });
+
+        if (DrawAddComponent)
+        {
+            // Set button in middle of screen and takes about 75% of the width
+            constexpr float ButtonWidth = 140.f;
+            float           Size        = ImGui::GetWindowWidth();
+
+            ImGui::SetCursorPosX((Size - ButtonWidth) / 2.0f);
+            ImGui::SetNextItemWidth(Size * 0.75f);
+
+            if (imcxx::button{ "Add Component", { ButtonWidth, 0.f } })
+            {
+                ImGui::OpenPopup("##AddComponent");
+            }
+
+            if (imcxx::popup AddComponent{ "##AddComponent" })
+            {
+                Scene::EntityWorld::Get().each(
+                    flecs::Any,
+                    [&SelectedEntity](
+                        flecs::entity ComponentId)
+                    {
+                        if (!SelectedEntity.has(ComponentId))
+                        {
+                            if (auto MetaData = ComponentId.get<Scene::Component::EditorMetaData>())
+                            {
+                                if (MetaData->IsSceneComponent)
+                                {
+                                    ImGui::TextUnformatted(ComponentId.name().c_str());
+                                }
+                            }
+                        }
+                    });
+            }
+        }
     }
 } // namespace Neon::Editor::Views

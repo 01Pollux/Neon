@@ -143,8 +143,8 @@ namespace Neon::Scene
         s_WorldContext->World.import <flecs::monitor>();
 #endif
         // Register components & relations.
-        Exports::RegisterComponents(s_WorldContext->World);
         Exports::RegisterRelations(s_WorldContext->World);
+        Exports::RegisterComponents(s_WorldContext->World);
 
         // Create root entity with null main camera.
         s_WorldContext->RootEntity = s_WorldContext->World.entity("_Root");
