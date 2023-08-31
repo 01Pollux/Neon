@@ -98,7 +98,7 @@ namespace Neon::Editor::Views
                         imcxx::table::setup_info{
                             "Name", ComlumnFlags | ImGuiTableColumnFlags_DefaultSort, ButtonWidth * 0.85f });
 
-                    ecs_term_t Term = {
+                    ecs_term_t Term{
                         .id = flecs::Any
                     };
                     ecs_iter_t Iter = ecs_term_iter(Scene::EntityWorld::Get(), &Term);
@@ -138,13 +138,6 @@ namespace Neon::Editor::Views
                             }
                         }
                     }
-
-                    Scene::EntityWorld::Get().each(
-                        flecs::Any,
-                        [&SelectedEntity, &ComponentTable](
-                            flecs::entity ComponentId) {
-
-                        });
                 }
             }
         }

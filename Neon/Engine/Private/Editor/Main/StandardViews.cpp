@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Window/Window.hpp>
+#include <FileSystem/Dialog.hpp>
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Views/Types/ContentBrowser.hpp>
@@ -196,12 +197,45 @@ namespace Neon::Editor
             {
             }
 
-            if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })
+            auto SaveSceneAs = [this]()
             {
+                std::vector Filters{
+                    FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.nscene") },
+                };
+
+                // TODO: use Project::GetContentDir() instead
+                const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
+
+                auto Paths = FileSystem::SaveFile(
+                    GetWindowHandle(),
+                    STR("Save scene"),
+                    ContentDir,
+                    Filters);
+
+                if (Paths.empty())
+                {
+                    return;
+                }
+
+                m_EditorScene.Serialize();
+            };
+
+            if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })
+            { /*
+                 if (Project::Get()->GetCurrentScenePath().empty())
+                 {
+                     SaveSceneAs();
+                 }
+                 else
+                 {
+                     Project::Get()->SerializeCurrentScene();
+                 }*/
+                SaveSceneAs();
             }
 
             if (imcxx::menuitem_entry{ "Save Scene As...", "Ctrl+Shift+S" })
             {
+                SaveSceneAs();
             }
 
             ImGui::Separator();

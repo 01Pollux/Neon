@@ -15,18 +15,18 @@
 
 namespace Neon::FileSystem
 {
-#define RETURN_IF_FAILED(Hr)                                                                    \
-    if (FAILED(Hr))                                                                             \
-    {                                                                                           \
-        NEON_ERROR("Failed to create file dialog instance with error code: {0}", uint64_t(Hr)); \
-        return Paths;                                                                           \
+#define RETURN_IF_FAILED(Hr)                                                                      \
+    if (FAILED(Hr))                                                                               \
+    {                                                                                             \
+        NEON_ERROR("Failed to create file dialog instance with error code: {0:X}", uint64_t(Hr)); \
+        return Paths;                                                                             \
     }
 
     std::vector<std::filesystem::path> OpenFile(
         GLFWwindow*                  Window,
         const String&                Title,
         const std::filesystem::path& InitialAbsoluteDir,
-        std::span<FileDialogFilter>  Filter)
+        std::span<FileDialogFilter>  Filters)
     {
         std::vector<std::filesystem::path> Paths;
         WinAPI::ComPtr<IFileDialog>        Dialog;
@@ -37,10 +37,9 @@ namespace Neon::FileSystem
             CLSCTX_INPROC_SERVER,
             IID_PPV_ARGS(&Dialog)));
 
-        FILEOPENDIALOGOPTIONS Options;
-        RETURN_IF_FAILED(Dialog->GetOptions(&Options));
-
         // Set the file dialog to multiselect
+        FILEOPENDIALOGOPTIONS Options = 0;
+        RETURN_IF_FAILED(Dialog->GetOptions(&Options));
         RETURN_IF_FAILED(Dialog->SetOptions(Options | FOS_ALLOWMULTISELECT | FOS_PICKFOLDERS));
 
         Dialog->SetTitle(Title.c_str());
@@ -65,42 +64,43 @@ namespace Neon::FileSystem
         }
 
         {
-            std::vector<COMDLG_FILTERSPEC> FilterSpec;
-            FilterSpec.reserve(Filter.size());
+            std::vector<COMDLG_FILTERSPEC> FilterSpecs;
+            FilterSpecs.reserve(Filters.size());
 
-            for (const FileDialogFilter& FilterItem : Filter)
+            for (const FileDialogFilter& FilterItem : Filters)
             {
-                FilterSpec.emplace_back(
+                FilterSpecs.emplace_back(
                     COMDLG_FILTERSPEC{
                         .pszName = FilterItem.Description,
                         .pszSpec = FilterItem.Extension });
             }
 
-            Dialog->SetFileTypes(UINT(Filter.size()), FilterSpec.data());
+            Dialog->SetFileTypes(UINT(FilterSpecs.size()), FilterSpecs.data());
             Dialog->SetFileTypeIndex(0);
         }
 
-        RETURN_IF_FAILED(Dialog->Show(WindowHandle));
-
-        WinAPI::ComPtr<IShellItemArray> Result;
-        WinAPI::ComPtr<IFileOpenDialog> FileOpenDialog;
-
-        RETURN_IF_FAILED(Dialog.As(&FileOpenDialog));
-        RETURN_IF_FAILED(FileOpenDialog->GetResults(&Result));
-
-        DWORD Count = 0;
-        RETURN_IF_FAILED(Result->GetCount(&Count));
-
-        for (DWORD i = 0; i < Count; ++i)
+        if (SUCCEEDED(Dialog->Show(WindowHandle)))
         {
-            WinAPI::ComPtr<IShellItem> Item;
-            RETURN_IF_FAILED(Result->GetItemAt(i, &Item));
+            WinAPI::ComPtr<IShellItemArray> Result;
+            WinAPI::ComPtr<IFileOpenDialog> FileOpenDialog;
 
-            PWSTR Path = nullptr;
-            RETURN_IF_FAILED(Item->GetDisplayName(SIGDN_FILESYSPATH, &Path));
+            RETURN_IF_FAILED(Dialog.As(&FileOpenDialog));
+            RETURN_IF_FAILED(FileOpenDialog->GetResults(&Result));
 
-            Paths.emplace_back(Path);
-            CoTaskMemFree(Path);
+            DWORD Count = 0;
+            RETURN_IF_FAILED(Result->GetCount(&Count));
+
+            for (DWORD i = 0; i < Count; ++i)
+            {
+                WinAPI::ComPtr<IShellItem> Item;
+                RETURN_IF_FAILED(Result->GetItemAt(i, &Item));
+
+                PWSTR Path = nullptr;
+                RETURN_IF_FAILED(Item->GetDisplayName(SIGDN_FILESYSPATH, &Path));
+
+                Paths.emplace_back(Path);
+                CoTaskMemFree(Path);
+            }
         }
 
         return Paths;
@@ -108,16 +108,18 @@ namespace Neon::FileSystem
 
 #undef RETURN_IF_FAILED
 
-#define RETURN_IF_FAILED(Hr)                                                                    \
-    if (FAILED(Hr))                                                                             \
-    {                                                                                           \
-        NEON_ERROR("Failed to create file dialog instance with error code: {0}", uint64_t(Hr)); \
-        return Path;                                                                            \
+#define RETURN_IF_FAILED(Hr)                                                                      \
+    if (FAILED(Hr))                                                                               \
+    {                                                                                             \
+        NEON_ERROR("Failed to create file dialog instance with error code: {0:X}", uint64_t(Hr)); \
+        return Path;                                                                              \
     }
 
     std::filesystem::path SaveFile(
+        GLFWwindow*                  Window,
+        const String&                Title,
         const std::filesystem::path& InitialAbsoluteDir,
-        std::span<FileDialogFilter>  Filter)
+        std::span<FileDialogFilter>  Filters)
     {
         std::filesystem::path       Path;
         WinAPI::ComPtr<IFileDialog> Dialog;
@@ -128,11 +130,7 @@ namespace Neon::FileSystem
             CLSCTX_INPROC_SERVER,
             IID_PPV_ARGS(&Dialog)));
 
-        FILEOPENDIALOGOPTIONS Options;
-        RETURN_IF_FAILED(Dialog->GetOptions(&Options));
-
-        // Set the file dialog to multiselect
-        RETURN_IF_FAILED(Dialog->SetOptions(Options | FOS_ALLOWMULTISELECT | FOS_PICKFOLDERS));
+        Dialog->SetTitle(Title.c_str());
 
         if (!InitialAbsoluteDir.empty())
         {
@@ -147,35 +145,42 @@ namespace Neon::FileSystem
             }
         }
 
+        HWND WindowHandle = nullptr;
+        if (Window)
         {
-            std::vector<COMDLG_FILTERSPEC> FilterSpec;
-            FilterSpec.reserve(Filter.size());
+            WindowHandle = glfwGetWin32Window(Window);
+        }
 
-            for (const FileDialogFilter& FilterItem : Filter)
+        {
+            std::vector<COMDLG_FILTERSPEC> FilterSpecs;
+            FilterSpecs.reserve(Filters.size());
+
+            for (const FileDialogFilter& FilterItem : Filters)
             {
-                FilterSpec.emplace_back(
+                FilterSpecs.emplace_back(
                     COMDLG_FILTERSPEC{
                         .pszName = FilterItem.Description,
                         .pszSpec = FilterItem.Extension });
             }
 
-            Dialog->SetFileTypes(UINT(Filter.size()), FilterSpec.data());
+            Dialog->SetFileTypes(UINT(Filters.size()), FilterSpecs.data());
             Dialog->SetFileTypeIndex(0);
         }
 
-        RETURN_IF_FAILED(Dialog->Show(nullptr));
+        if (SUCCEEDED(Dialog->Show(WindowHandle)))
+        {
+            WinAPI::ComPtr<IShellItem>      Result;
+            WinAPI::ComPtr<IFileSaveDialog> FileSaveDialog;
 
-        WinAPI::ComPtr<IShellItem>      Result;
-        WinAPI::ComPtr<IFileSaveDialog> FileSaveDialog;
+            RETURN_IF_FAILED(Dialog.As(&FileSaveDialog));
+            RETURN_IF_FAILED(FileSaveDialog->GetResult(&Result));
 
-        RETURN_IF_FAILED(Dialog.As(&FileSaveDialog));
-        RETURN_IF_FAILED(FileSaveDialog->GetResult(&Result));
+            PWSTR PathStr = nullptr;
+            RETURN_IF_FAILED(Result->GetDisplayName(SIGDN_FILESYSPATH, &PathStr));
 
-        PWSTR PathStr = nullptr;
-        RETURN_IF_FAILED(Result->GetDisplayName(SIGDN_FILESYSPATH, &PathStr));
-
-        Path = PathStr;
-        CoTaskMemFree(PathStr);
+            Path = PathStr;
+            CoTaskMemFree(PathStr);
+        }
 
         return Path;
     }

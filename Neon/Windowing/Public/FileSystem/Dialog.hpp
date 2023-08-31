@@ -21,13 +21,14 @@ namespace Neon::FileSystem
         GLFWwindow*                  Window,
         const String&                Title,
         const std::filesystem::path& InitialAbsoluteDir,
-        std::span<FileDialogFilter>  Filter);
+        std::span<FileDialogFilter>  Filters);
 
     /// <summary>
     /// Save file dialog and return path to the target file
     /// </summary>
     [[nodiscard]] std::filesystem::path SaveFile(
         GLFWwindow*                  Window,
+        const String&                Title,
         const std::filesystem::path& InitialAbsoluteDir,
-        std::span<FileDialogFilter>  Filter);
+        std::span<FileDialogFilter>  Filters);
 } // namespace Neon::FileSystem

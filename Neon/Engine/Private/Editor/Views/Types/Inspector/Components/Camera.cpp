@@ -135,20 +135,9 @@ namespace Neon::Editor
         {
             imcxx::indent Indenting;
 
-            if (imcxx::input{ "Look At", glm::value_ptr(Camera.LookAt) })
-            {
-                Changed = true;
-            }
-
-            if (imcxx::input{ "Cull Mask", Camera.CullMask })
-            {
-                Changed = true;
-            }
-
-            if (imcxx::input{ "Render Priority", Camera.RenderPriority })
-            {
-                Changed = true;
-            }
+            Changed |= imcxx::input{ "Look At", glm::value_ptr(Camera.LookAt) };
+            Changed |= imcxx::input{ "Cull Mask", Camera.CullMask };
+            Changed |= imcxx::input{ "Render Priority", Camera.RenderPriority };
         }
 
         //
@@ -164,5 +153,5 @@ void Insecptor_Component_OnCamera(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Insecptor_Component_OnCamera(Neon::Scene::EntityHandle(EntityId),ComponentId);
+    Neon::Editor::Insecptor_Component_OnCamera(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }

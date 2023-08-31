@@ -39,3 +39,8 @@ project "NeonEditor"
 	common_dir_setup()
     common_add_pch("EnginePCH")
     common_neon()
+    
+    links
+    {
+        "NeonWindowing"
+    }
