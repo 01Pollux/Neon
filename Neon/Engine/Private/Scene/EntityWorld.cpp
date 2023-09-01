@@ -89,8 +89,9 @@ namespace Neon::Scene
         const char*  Name)
     {
         return EntityWorld::Get()
-            .entity(CreateUniqueEntityName(Name).c_str())
-            .add<Scene::Component::SceneEntity>(SceneHandle);
+            .entity()
+            .add<Scene::Component::SceneEntity>(SceneHandle)
+            .set_name(CreateUniqueEntityName(Name).c_str());
     }
 
     EntityHandle EntityHandle::Create(
@@ -99,11 +100,11 @@ namespace Neon::Scene
         const char*  Name)
     {
         flecs::entity Parent = ParentHandle;
-        return Parent
-            .world()
-            .entity(CreateUniqueEntityName(Parent, Name).c_str())
+        return EntityWorld::Get()
+            .entity()
             .add<Scene::Component::SceneEntity>(SceneHandle)
-            .child_of(Parent);
+            .child_of(Parent)
+            .set_name(CreateUniqueEntityName(Parent, Name).c_str());
     }
 
     //
@@ -259,5 +260,36 @@ namespace Neon::Scene
     flecs::world EntityWorld::Get()
     {
         return s_WorldContext->World.get_world();
+    }
+
+    flecs::filter_builder<> EntityWorld::GetChildrenFilter(
+        EntityHandle Parent)
+    {
+        return Get()
+            .filter_builder()
+            .term(flecs::ChildOf, Parent)
+            .term(flecs::Disabled)
+            .optional();
+    }
+
+    flecs::filter_builder<> EntityWorld::GetRootFilter(
+        EntityHandle SceneTag)
+    {
+        return Get()
+            .filter_builder()
+            .with(flecs::ChildOf, 0)
+            .with<Scene::Component::SceneEntity>(SceneTag)
+            .first();
+    }
+
+    flecs::entity EntityWorld::GetCurrentSceneTag()
+    {
+        return Get().target<Scene::Component::WorldSceneTag>();
+    }
+
+    void EntityWorld::SetCurrentSceneTag(
+        flecs::entity Tag)
+    {
+        Get().add<Scene::Component::WorldSceneTag>(Tag);
     }
 } // namespace Neon::Scene

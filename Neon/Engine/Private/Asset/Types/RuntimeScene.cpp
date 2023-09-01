@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/RuntimeScene.hpp>
+#include <Scene/Component/Component.hpp>
 
 #include <boost/serialization/map.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -8,17 +9,86 @@
 namespace Neon::Asset
 {
     /// <summary>
-    /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
+    /// Load an entity and its children.
     /// </summary>
-    [[nodiscard]] static flecs::filter<> GetChildrenFilter(
-        const flecs::entity& Parent)
+    static void LoadEntityFromArchiveImpl(
+        Scene::EntityHandle            SceneTag,
+        boost::archive::text_iarchive& Archive,
+        Scene::EntityHandle            Entity)
     {
-        return Parent.world()
-            .filter_builder()
-            .term(flecs::ChildOf, Parent)
-            .term(flecs::Disabled)
-            .optional()
-            .build();
+        StringU8 Json;
+        Archive >> Json;
+
+        Entity.Get().from_json(Json.c_str());
+
+        uint32_t Count;
+        Archive >> Count;
+
+        for (uint32_t i = 0; i < Count; i++)
+        {
+            flecs::entity Child = Scene::EntityHandle::Create(SceneTag, Entity);
+            LoadEntityFromArchiveImpl(SceneTag, Archive, Child);
+        }
+    }
+
+    /// <summary>
+    /// Load an entity and its children.
+    /// </summary>
+    static void LoadEntityFromArchive(
+        boost::archive::text_iarchive& Archive,
+        RuntimeSceneAsset*             Asset)
+    {
+        uint32_t Count;
+        Archive >> Count;
+
+        auto SceneTag = Asset->GetScene().GetTag();
+
+        for (uint32_t i = 0; i < Count; i++)
+        {
+            flecs::entity Child = Scene::EntityHandle::Create(SceneTag);
+            LoadEntityFromArchiveImpl(SceneTag, Archive, Child);
+        }
+    }
+
+    //
+
+    /// <summary>
+    /// Save an entity and its children.
+    /// </summary>
+    static void SaveEntityToArchiveImpl(
+        boost::archive::text_oarchive& Archive,
+        flecs::entity                  Entity)
+    {
+        Archive << StringU8{ Entity.to_json() };
+
+        auto ChidlrenFilter = Scene::EntityWorld::GetChildrenFilter(Entity).build();
+        Archive << uint32_t(ChidlrenFilter.count());
+
+        ChidlrenFilter.each(
+            [&Archive](const flecs::entity& Child)
+            {
+                SaveEntityToArchiveImpl(Archive, Child);
+            });
+    }
+
+    /// <summary>
+    /// Save an entity and its children.
+    /// </summary>
+    static void SaveEntityToArchive(
+        boost::archive::text_oarchive& Archive,
+        RuntimeSceneAsset*             Asset)
+    {
+        auto SceneTag   = Asset->GetScene().GetTag();
+        auto RootFilter = Scene::EntityWorld::GetRootFilter(SceneTag).build();
+
+        uint32_t Count = RootFilter.count();
+        Archive << Count;
+
+        RootFilter.each(
+            [&Archive](const flecs::entity& Entity)
+            {
+                SaveEntityToArchiveImpl(Archive, Entity);
+            });
     }
 
     //
@@ -36,15 +106,12 @@ namespace Neon::Asset
         StringU8             Path,
         const AssetMetaData& LoaderData)
     {
+        auto Asset = std::make_shared<RuntimeSceneAsset>(AssetGuid, std::move(Path));
+
         boost::archive::text_iarchive Archive(Stream);
+        LoadEntityFromArchive(Archive, Asset.get());
 
-        StringU8 Json;
-        Archive >> Json;
-
-        flecs::world World;
-        World.from_json(Json.c_str());
-
-        return std::make_shared<RuntimeSceneAsset>(AssetGuid, std::move(Path));
+        return Asset;
     }
 
     void RuntimeSceneAsset::Handler::Save(
@@ -53,13 +120,9 @@ namespace Neon::Asset
         const Ptr<IAsset>& Asset,
         AssetMetaData&     LoaderData)
     {
-        auto RuntimeSceneAsset = static_cast<Asset::RuntimeSceneAsset*>(Asset.get());
+        auto SceneAsset = static_cast<Asset::RuntimeSceneAsset*>(Asset.get());
 
-        // auto World = RuntimeSceneAsset->GetScene().GetWorld();
-
-        // boost::archive::text_oarchive Archive(Stream);
-
-        // auto Json = World.to_json();
-        // Archive << StringU8(Json.c_str(), Json.size());
+        boost::archive::text_oarchive Archive(Stream);
+        SaveEntityToArchive(Archive, SceneAsset);
     }
 } // namespace Neon::Asset

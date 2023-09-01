@@ -10,32 +10,30 @@
 namespace Neon::Editor::Views
 {
     /// <summary>
-    /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
-    /// </summary>
-    [[nodiscard]] static flecs::filter<> GetChildrenFilter(
-        const flecs::entity& Parent)
-    {
-        return Parent.world()
-            .filter_builder()
-            .term(flecs::ChildOf, Parent)
-            .term(flecs::Disabled)
-            .optional()
-            .build();
-    }
-
-    //
-
-    /// <summary>
     /// Display a menu to create a new entity.
     /// </summary>
     static void DisplayCreateEntityMenu(
-        const flecs::entity& ParentEntHandle)
+        const flecs::entity&             ParentEntHandle,
+        std::move_only_function<void()>& DeferredTask)
     {
         if (imcxx::menuitem_entry{ "Empty" })
         {
-            if (ParentEntHandle)
+            DeferredTask = [ParentEntHandle]()
             {
-            }
+                if (ParentEntHandle)
+                {
+                    Scene::EntityHandle::Create(
+                        Scene::EntityWorld::GetCurrentSceneTag(),
+                        ParentEntHandle,
+                        "Unnamed Entity");
+                }
+                else
+                {
+                    Scene::EntityHandle::Create(
+                        Scene::EntityWorld::GetCurrentSceneTag(),
+                        "Unnamed Entity");
+                }
+            };
         }
 
         if (imcxx::menubar_item Menu2D{ "2D" })
@@ -191,7 +189,7 @@ namespace Neon::Editor::Views
             ImGuiTreeNodeFlags_SpanFullWidth;
 
         // Create filter to check if entity has children.
-        auto ChidlrenFilter = GetChildrenFilter(Entity);
+        auto ChidlrenFilter = Scene::EntityWorld::GetChildrenFilter(Entity).build();
 
         // If entity has no children, mark it as leaf.
         if (!ChidlrenFilter.is_true())
@@ -274,7 +272,7 @@ namespace Neon::Editor::Views
 
                 ImGui::Separator();
 
-                DisplayCreateEntityMenu(Entity);
+                DisplayCreateEntityMenu(Entity, DeferredTask);
             }
         }
 
@@ -303,31 +301,29 @@ namespace Neon::Editor::Views
             return;
         }
 
-        flecs::world World = Scene::EntityWorld::Get();
-
-        auto RootFilter = World.filter_builder()
-                              .with(flecs::ChildOf, 0)
-                              .with<Scene::Component::SceneEntity>()
-                              .first()
+        auto RootFilter = Scene::EntityWorld::GetRootFilter(
+                              Scene::EntityWorld::GetCurrentSceneTag())
                               .build();
 
         // First we need to display the children of root entity.
+        std::move_only_function<void()> DeferredTask;
+
         {
-            std::move_only_function<void()> DeferredTask;
             RootFilter.each(
                 [&DeferredTask](flecs::entity Entity)
                 {
                     DispalySceneObject(Entity, DeferredTask);
                 });
-            if (DeferredTask)
-            {
-                DeferredTask();
-            }
         }
 
         if (imcxx::popup Popup{ imcxx::popup::context_window{}, nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems })
         {
-            DisplayCreateEntityMenu(flecs::entity::null());
+            DisplayCreateEntityMenu(flecs::entity::null(), DeferredTask);
+        }
+
+        if (DeferredTask)
+        {
+            DeferredTask();
         }
     }
 } // namespace Neon::Editor::Views

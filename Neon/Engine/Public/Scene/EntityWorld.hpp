@@ -23,7 +23,7 @@ namespace Neon::Scene
         /// </summary>
         static EntityHandle Create(
             EntityHandle SceneHandle,
-            const char*  Name);
+            const char*  Name = nullptr);
 
         /// <summary>
         /// Create a new entity with unique name if needed.
@@ -31,7 +31,7 @@ namespace Neon::Scene
         static EntityHandle Create(
             EntityHandle SceneHandle,
             EntityHandle ParentHandle,
-            const char*  Name);
+            const char*  Name = nullptr);
 
         /// <summary>
         /// Get the entity.
@@ -50,7 +50,7 @@ namespace Neon::Scene
         /// <summary>
         /// Get scene tag.
         /// </summary>
-        EntityHandle GetSceneTag() const;
+        [[nodiscard]] EntityHandle GetSceneTag() const;
 
         /// <summary>
         /// Delete the entity.
@@ -129,5 +129,29 @@ namespace Neon::Scene
         /// Get the singleton instance of the entity world.
         /// </summary>
         [[nodiscard]] static flecs::world Get();
+
+    public:
+        /// <summary>
+        /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
+        /// </summary>
+        [[nodiscard]] static flecs::filter_builder<> GetChildrenFilter(
+            EntityHandle Parent);
+
+        /// <summary>
+        /// Create a filter to get all root entities with a scene tag.
+        /// </summary>
+        [[nodiscard]] static flecs::filter_builder<> GetRootFilter(
+            EntityHandle SceneTag);
+
+        /// <summary>
+        /// Get the active scene.
+        /// </summary>
+        [[nodiscard]] static flecs::entity GetCurrentSceneTag();
+
+        /// <summary>
+        /// Set the active scene.
+        /// </summary>
+        [[nodiscard]] static void SetCurrentSceneTag(
+            flecs::entity Tag);
     };
 } // namespace Neon::Scene

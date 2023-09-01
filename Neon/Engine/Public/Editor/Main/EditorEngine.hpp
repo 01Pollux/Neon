@@ -121,13 +121,13 @@ namespace Neon::Editor
         /// <summary>
         /// Get the editor active root entity.
         /// </summary>
-        [[nodiscard]] const Scene::RuntimeScene& GetActiveScene() const;
+        [[nodiscard]] flecs::entity GetActiveSceneTag() const;
 
         /// <summary>
         /// Get the editor active root entity.
         /// </summary>
         [[nodiscard]] const Scene::RuntimeScene& GetCurrentScene() const;
-        
+
         /// <summary>
         /// Get the editor camera.
         /// </summary>

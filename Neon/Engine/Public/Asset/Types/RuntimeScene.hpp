@@ -20,6 +20,14 @@ namespace Neon::Asset
             return m_Scene;
         }
 
+        /// <summary>
+        /// Get the log tags.
+        /// </summary>
+        auto& GetScene() noexcept
+        {
+            return m_Scene;
+        }
+
     private:
         Scene::RuntimeScene m_Scene;
     };

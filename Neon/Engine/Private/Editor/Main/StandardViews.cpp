@@ -224,7 +224,7 @@ namespace Neon::Editor
                     Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneAsset(Asset::Manager::Load(MetaData.GetGuid()));
                     File.close();
 
-                    SceneAsset->GetScene().ApplyTo(Neon::Scene::RuntimeScene::MergeType::Replace);
+                    SceneAsset->GetScene().ApplyToRoot(Neon::Scene::RuntimeScene::MergeType::Replace);
                 }
             }
 
@@ -270,7 +270,9 @@ namespace Neon::Editor
                         RelativePath.string());
                 }
 
-                m_EditorScene.ApplyTo(Neon::Scene::RuntimeScene::MergeType::Replace);
+                m_EditorScene.ApplyToScene(
+                    Neon::Scene::RuntimeScene::MergeType::Replace,
+                    Asset->GetScene());
 
                 Asset::Storage::SaveAsset(
                     { .Asset            = std::static_pointer_cast<Asset::IAsset>(Asset),

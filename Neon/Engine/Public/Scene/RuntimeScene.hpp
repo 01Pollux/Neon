@@ -23,28 +23,40 @@ namespace Neon::Scene
         /// <summary>
         /// Apply the scene to the world.
         /// </summary>
-        void ApplyTo(
+        void ApplyToRoot(
             MergeType Type) const;
+
+        /// <summary>
+        /// Apply the scene to the world.
+        /// </summary>
+        void ApplyToScene(
+            MergeType     Type,
+            RuntimeScene& Other) const;
+
+        /// <summary>
+        /// Get the tag of the scene.
+        /// </summary>
+        [[nodiscard]] EntityHandle GetTag() const;
 
     public:
         /// <summary>
         /// Add an entity to the scene.
         /// </summary>
         EntityHandle CreateEntity(
-            const char* Name);
+            const char* Name) const;
 
         /// <summary>
         /// Add an entity to the scene.
         /// If the entity belongs to another scene, it will be transferred to this scene.
         /// </summary>
         void AddEntity(
-            EntityHandle EntHandle);
+            EntityHandle EntHandle) const;
 
         /// <summary>
         /// Clone an entity from another scene.
         /// </summary>
         void CloneEntity(
-            EntityHandle EntHandle);
+            EntityHandle EntHandle) const;
 
     private:
         /// <summary>
@@ -53,6 +65,6 @@ namespace Neon::Scene
         void Release();
 
     private:
-        EntityHandle m_SceneTag;
+        EntityHandle m_SceneTag{};
     };
 } // namespace Neon::Scene

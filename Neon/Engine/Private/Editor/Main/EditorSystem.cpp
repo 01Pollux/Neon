@@ -64,13 +64,15 @@ namespace Neon::Editor
         Camera.add<Scene::Editor::EditorSceneDoNotRemove>();
 
         World.add<Scene::Editor::EditorMainCamera>(Camera);
+
+        m_EditorScene.ApplyToRoot(Neon::Scene::RuntimeScene::MergeType::Replace);
     }
 
     //
 
-    const Scene::RuntimeScene& EditorEngine::GetActiveScene() const
+    flecs::entity EditorEngine::GetActiveSceneTag() const
     {
-        return IsInEditorMode() ? m_EditorScene : m_RuntimeScene;
+        return IsInEditorMode() ? Scene::EntityWorld::GetCurrentSceneTag() : m_EditorScene.GetTag().Get();
     }
 
     const Scene::RuntimeScene& EditorEngine::GetCurrentScene() const

@@ -89,6 +89,16 @@ namespace Neon::Scene::Component
     };
 
     /// <summary>
+    /// Pair for world for identifying active scene.
+    /// </summary>
+    struct WorldSceneTag
+    {
+        NEON_EXPORT_FLECS(WorldSceneTag, "WorldSceneTag")
+        {
+        }
+    };
+
+    /// <summary>
     /// Tag for entities that are part of the certain scene and should be rendered, updated, etc.
     /// </summary>
     struct ActiveSceneEntity
