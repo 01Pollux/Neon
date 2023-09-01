@@ -44,8 +44,6 @@ namespace Neon::Runtime
 
     GameEngine::~GameEngine()
     {
-        Scene::EntityWorld::Shutdown();
-
         // Unregister the scripting system
         Scripting::Shutdown();
 
@@ -57,6 +55,9 @@ namespace Neon::Runtime
 
         // Shutdown the debug overlay
         Runtime::DebugOverlay::Destroy();
+
+        // Shutdown the entity world
+        Scene::EntityWorld::Shutdown();
 
         // Shutdown the renderer
         RHI::IRenderDevice::Destroy();

@@ -38,7 +38,7 @@ namespace Neon::Scene
         const flecs::entity& Parent,
         const char*          Name)
     {
-        StringU8 NewName{ Name ? Name : " " };
+        StringU8 NewName{ Name ? Name : "Unnamed Entity" };
         StringU8 NewNameTmp = NewName;
 
         if (Parent)

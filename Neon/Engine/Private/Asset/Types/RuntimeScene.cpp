@@ -6,6 +6,8 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Asset
 {
     /// <summary>
@@ -14,19 +16,51 @@ namespace Neon::Asset
     static void LoadEntityFromArchiveImpl(
         Scene::EntityHandle            SceneTag,
         boost::archive::text_iarchive& Archive,
-        Scene::EntityHandle            Entity)
+        Scene::EntityHandle            EntHandle)
     {
-        StringU8 Json;
-        Archive >> Json;
+        flecs::entity Entity = EntHandle;
 
-        Entity.Get().from_json(Json.c_str());
+        StringU8 Name;
+        Archive >> Name;
+        Entity.set_name(Name.c_str());
+
+        uint64_t Id;
+        do
+        {
+            Archive >> Id;
+            if (!Id)
+            {
+                break;
+            }
+
+            auto Component = Scene::EntityWorld::Get().component(Id);
+            if (!Component)
+            {
+                NEON_ERROR("Missing entity component with id: {0}", Id);
+                continue;
+            }
+
+            auto Serializer = Component.get<Scene::Component::ComponentSerializer>();
+            if (!Serializer)
+            {
+                NEON_ERROR("Missing entity component serializer with id: {0}", Id);
+                continue;
+            }
+
+            Entity.add(Component);
+            Serializer->Deserialize(Archive, Entity, Component);
+        } while (true);
 
         uint32_t Count;
         Archive >> Count;
 
+        for (int i = 0; i < Count; i++)
+            printf("*");
+        printf("Count: %d -- %s\n", Count, Name.c_str());
+
         for (uint32_t i = 0; i < Count; i++)
         {
-            flecs::entity Child = Scene::EntityHandle::Create(SceneTag, Entity);
+            flecs::entity Child = Scene::EntityHandle::Create(SceneTag, EntHandle);
             LoadEntityFromArchiveImpl(SceneTag, Archive, Child);
         }
     }
@@ -42,7 +76,7 @@ namespace Neon::Asset
         Archive >> Count;
 
         auto SceneTag = Asset->GetScene().GetTag();
-
+        
         for (uint32_t i = 0; i < Count; i++)
         {
             flecs::entity Child = Scene::EntityHandle::Create(SceneTag);
@@ -59,12 +93,33 @@ namespace Neon::Asset
         boost::archive::text_oarchive& Archive,
         flecs::entity                  Entity)
     {
-        Archive << StringU8{ Entity.to_json() };
+        Archive << StringU8(Entity.name());
 
-        auto ChidlrenFilter = Scene::EntityWorld::GetChildrenFilter(Entity).build();
-        Archive << uint32_t(ChidlrenFilter.count());
+        Entity.each(
+            [&Archive, &Entity](flecs::id ComponentId)
+            {
+                auto Component = Scene::EntityWorld::Get().component(ComponentId);
+                if (!Component)
+                {
+                    return;
+                }
 
-        ChidlrenFilter.each(
+                auto Serializer = Component.get<Scene::Component::ComponentSerializer>();
+                if (!Serializer)
+                {
+                    return;
+                }
+
+                Archive << uint64_t(ComponentId.raw_id());
+                Serializer->Serialize(Archive, Entity, ComponentId);
+            });
+
+        Archive << uint64_t(0);
+
+        auto ChildrenFilter = Scene::EntityWorld::GetChildrenFilter(Entity).build();
+        Archive << uint32_t(ChildrenFilter.count());
+
+        ChildrenFilter.each(
             [&Archive](const flecs::entity& Child)
             {
                 SaveEntityToArchiveImpl(Archive, Child);
@@ -81,8 +136,7 @@ namespace Neon::Asset
         auto SceneTag   = Asset->GetScene().GetTag();
         auto RootFilter = Scene::EntityWorld::GetRootFilter(SceneTag).build();
 
-        uint32_t Count = RootFilter.count();
-        Archive << Count;
+        Archive << uint32_t(RootFilter.count());
 
         RootFilter.each(
             [&Archive](const flecs::entity& Entity)

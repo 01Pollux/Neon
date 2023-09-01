@@ -4,6 +4,9 @@
 #include <flecs/flecs.h>
 #include <functional>
 
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+
 namespace Neon::Scene::Component::Impl
 {
     /// <summary>
@@ -78,6 +81,15 @@ namespace Neon::Scene::Component
     };
 
     /// <summary>
+    /// Tag for components for serialisation/deserialisation.
+    /// </summary>
+    struct ComponentSerializer
+    {
+        mutable std::move_only_function<void(boost::archive::text_oarchive&, flecs::entity_t, flecs::id_t)> Serialize;
+        mutable std::move_only_function<void(boost::archive::text_iarchive&, flecs::entity_t, flecs::id_t)> Deserialize;
+    };
+
+    /// <summary>
     /// Pair for entities that are part of a certain scene.
     /// </summary>
     struct SceneEntity
@@ -95,6 +107,7 @@ namespace Neon::Scene::Component
     {
         NEON_EXPORT_FLECS(WorldSceneTag, "WorldSceneTag")
         {
+            Component.add(flecs::Exclusive);
         }
     };
 
