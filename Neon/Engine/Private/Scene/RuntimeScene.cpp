@@ -1,93 +1,109 @@
 #include <EnginePCH.hpp>
 #include <Scene/RuntimeScene.hpp>
 #include <Scene/EntityWorld.hpp>
+#include <Scene/Component/Component.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::Scene
 {
-    RuntimeScene::RuntimeScene()
+    RuntimeScene::RuntimeScene() :
+        m_SceneTag(EntityWorld::Get().entity())
     {
-        m_RootEntity = EntityWorld::Get().entity();
     }
 
-    RuntimeScene& Neon::Scene::RuntimeScene::operator=(
+    RuntimeScene& RuntimeScene::operator=(
         RuntimeScene&& Other) noexcept
     {
         if (this != &Other)
         {
-            try
-            {
-                if (m_RootEntity)
-                {
-                    m_RootEntity.Get().destruct();
-                }
-                m_RootEntity = std::exchange(Other.m_RootEntity, {});
-            }
-            catch (...)
-            {
-                m_RootEntity = {};
-            }
+            Release();
+            m_SceneTag = std::move(Other.m_SceneTag);
         }
         return *this;
     }
 
     RuntimeScene::~RuntimeScene()
     {
-        if (m_RootEntity)
-        {
-            m_RootEntity.Get().destruct();
-        }
+        Release();
     }
 
-    EntityHandle RuntimeScene::GetRoot() const
-    {
-        return m_RootEntity;
-    }
-
-    void RuntimeScene::Apply(
+    void RuntimeScene::ApplyTo(
         MergeType Type) const
     {
-        Apply(Type, EntityWorld::GetRootEntity());
-    }
-
-    void RuntimeScene::Apply(
-        MergeType    Type,
-        EntityHandle DestRoot) const
-    {
-        NEON_ASSERT(DestRoot, "Root entity cannot be null.");
-        NEON_ASSERT(DestRoot.GetId() != m_RootEntity.GetId(), "Cannot apply a scene to itself.");
         NEON_ASSERT(Type == MergeType::Merge || Type == MergeType::Replace, "Invalid merge type.");
 
-        flecs::entity ThisRootEnt = m_RootEntity;
-        flecs::entity DestRootEnt = DestRoot;
+        auto World    = EntityWorld::Get();
+        auto SceneTag = EntityWorld::Get().component<Scene::Component::SceneEntity>();
 
-        // Delete all the children of the root entity.
-        std::vector<EntityHandle> Children;
+        // Replace the scene tag for the world to our scene tag.
         if (Type == MergeType::Replace)
         {
-            DestRootEnt.children(
-                [&Children](flecs::entity Child)
-                {
-                    Children.push_back(Child);
-                });
-            for (auto& Child : Children)
-            {
-                ecs_delete(EntityWorld::Get(), Child);
-            }
-            Children.clear();
+            World.add(SceneTag, m_SceneTag);
         }
-
-        // Iterate through all the entities in the root and copy them to the scene.
-        ThisRootEnt.children(
-            [&Children](flecs::entity Child)
-            {
-                Children.push_back(Child);
-            });
-
-        for (auto& Child : Children)
+        else
         {
-            Child.Clone(DestRoot, Child.Get().name());
+            // Check if the scene tag is already present in the world.
+            if (!World.has(SceneTag, m_SceneTag))
+            {
+                World.add(SceneTag, m_SceneTag);
+            }
+            // Else clone the entities from the scene to the world.
+            else
+            {
+                auto OtherScene = World.target(SceneTag);
+
+                // Copy our scene entities to the world.
+                std::vector<EntityHandle> Entities;
+                World.filter_builder()
+                    .with(SceneTag, m_SceneTag)
+                    .build()
+                    .each([&Entities](flecs::entity_t EntHandle)
+                          { Entities.push_back(EntHandle); });
+
+                for (auto& EntHandle : Entities)
+                {
+                    EntHandle.CloneToRoot(m_SceneTag);
+                }
+            }
+        }
+    }
+
+    //
+
+    EntityHandle RuntimeScene::CreateEntity(
+        const char* Name)
+    {
+        auto EntHandle = EntityHandle::Create(m_SceneTag, Name);
+        AddEntity(EntHandle);
+        return EntHandle;
+    }
+
+    void RuntimeScene::AddEntity(
+        EntityHandle EntHandle)
+    {
+        flecs::entity Entity = EntHandle;
+        Entity.add<Scene::Component::SceneEntity>(m_SceneTag);
+    }
+
+    void RuntimeScene::CloneEntity(
+        EntityHandle EntHandle)
+    {
+        EntHandle.CloneToRoot(m_SceneTag);
+    }
+
+    //
+
+    void RuntimeScene::Release()
+    {
+        if (m_SceneTag)
+        {
+            auto          SceneTag = EntityWorld::Get().component<Scene::Component::SceneEntity>();
+            flecs::entity Scene    = m_SceneTag;
+
+            // Remove entities that are tagged with the scene tag.
+            EntityWorld::Get().delete_with(SceneTag, Scene);
+            Scene.destruct();
         }
     }
 } // namespace Neon::Scene

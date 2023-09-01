@@ -29,11 +29,13 @@ namespace Neon::Editor::Views
     /// Display a menu to create a new entity.
     /// </summary>
     static void DisplayCreateEntityMenu(
-        Scene::EntityHandle ParentEntHandle)
+        const flecs::entity& ParentEntHandle)
     {
         if (imcxx::menuitem_entry{ "Empty" })
         {
-            Scene::EntityHandle::Create(ParentEntHandle, "Empty entity");
+            if (ParentEntHandle)
+            {
+            }
         }
 
         if (imcxx::menubar_item Menu2D{ "2D" })
@@ -228,7 +230,7 @@ namespace Neon::Editor::Views
                 {
                     DeferredTask = [EntHandle]() mutable
                     {
-                        EntHandle.Clone();
+                        EntHandle.CloneToParent(EntHandle.GetSceneTag());
                     };
                 }
 
@@ -303,13 +305,16 @@ namespace Neon::Editor::Views
 
         flecs::world World = Scene::EntityWorld::Get();
 
-        // If we are in editor mode, we need to display the editor root entity.
-        auto Root = Editor::EditorEngine::Get()->GetActiveScene().GetRoot();
+        auto RootFilter = World.filter_builder()
+                              .with(flecs::ChildOf, 0)
+                              .with<Scene::Component::SceneEntity>()
+                              .first()
+                              .build();
 
         // First we need to display the children of root entity.
         {
             std::move_only_function<void()> DeferredTask;
-            GetChildrenFilter(Root).each(
+            RootFilter.each(
                 [&DeferredTask](flecs::entity Entity)
                 {
                     DispalySceneObject(Entity, DeferredTask);
@@ -322,7 +327,7 @@ namespace Neon::Editor::Views
 
         if (imcxx::popup Popup{ imcxx::popup::context_window{}, nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems })
         {
-            DisplayCreateEntityMenu(Root);
+            DisplayCreateEntityMenu(flecs::entity::null());
         }
     }
 } // namespace Neon::Editor::Views

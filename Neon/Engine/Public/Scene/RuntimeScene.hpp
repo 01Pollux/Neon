@@ -21,24 +21,38 @@ namespace Neon::Scene
 
     public:
         /// <summary>
-        /// Get the root entity of the scene.
-        /// </summary>
-        [[nodiscard]] EntityHandle GetRoot() const;
-
-        /// <summary>
         /// Apply the scene to the world.
         /// </summary>
-        void Apply(
+        void ApplyTo(
             MergeType Type) const;
 
+    public:
         /// <summary>
-        /// Apply the scene to the root.
+        /// Add an entity to the scene.
         /// </summary>
-        void Apply(
-            MergeType    Type,
-            EntityHandle DestRoot) const;
+        EntityHandle CreateEntity(
+            const char* Name);
+
+        /// <summary>
+        /// Add an entity to the scene.
+        /// If the entity belongs to another scene, it will be transferred to this scene.
+        /// </summary>
+        void AddEntity(
+            EntityHandle EntHandle);
+
+        /// <summary>
+        /// Clone an entity from another scene.
+        /// </summary>
+        void CloneEntity(
+            EntityHandle EntHandle);
 
     private:
-        EntityHandle m_RootEntity;
+        /// <summary>
+        /// Release the scene.
+        /// </summary>
+        void Release();
+
+    private:
+        EntityHandle m_SceneTag;
     };
 } // namespace Neon::Scene

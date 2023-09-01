@@ -78,11 +78,22 @@ namespace Neon::Scene::Component
     };
 
     /// <summary>
-    /// Tag component for entities that are part of the scene and should be rendered, updated, etc.
+    /// Pair for entities that are part of a certain scene.
     /// </summary>
     struct SceneEntity
     {
         NEON_EXPORT_FLECS(SceneEntity, "SceneEntity")
+        {
+            Component.add(flecs::Exclusive);
+        }
+    };
+
+    /// <summary>
+    /// Tag for entities that are part of the certain scene and should be rendered, updated, etc.
+    /// </summary>
+    struct ActiveSceneEntity
+    {
+        NEON_EXPORT_FLECS(ActiveSceneEntity, "ActiveSceneEntity")
         {
         }
     };

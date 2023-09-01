@@ -10,7 +10,9 @@
 #include <Editor/Views/Types/Scene.hpp>
 
 #include <Asset/Storage.hpp>
+#include <Asset/Manager.hpp>
 #include <Asset/Types/RuntimeScene.hpp>
+#include <fstream>
 
 #include <UI/WindowUtils.hpp>
 
@@ -198,22 +200,50 @@ namespace Neon::Editor
 
             if (imcxx::menuitem_entry{ "Open Scene...", "Ctrl+O" })
             {
+                std::array Filters{
+                    FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.namd") },
+                };
+
+                // TODO: use Project::Get()->GetContentDir() instead
+                const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
+
+                FileSystem::FileDialog Dialog{
+                    .Window     = GetWindowHandle(),
+                    .Title      = STR("Open scene"),
+                    .InitialDir = ContentDir,
+                    .Filters    = Filters
+                };
+                auto Path = Dialog.OpenFile();
+
+                const bool ValidPath = !Path.empty();
+                if (ValidPath)
+                {
+                    std::ifstream           File(Path);
+                    Asset::AssetMetaDataDef MetaData(File);
+
+                    Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneAsset(Asset::Manager::Load(MetaData.GetGuid()));
+                    File.close();
+
+                    SceneAsset->GetScene().ApplyTo(Neon::Scene::RuntimeScene::MergeType::Replace);
+                }
             }
 
-            auto SaveSceneAs = [this]()
+            auto SaveSceneAs = [this](bool TrySavingExisting)
             {
-                std::vector Filters{
+                std::array Filters{
                     FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.nscene") },
                 };
 
-                // TODO: use Project::GetContentDir() instead
+                // TODO: use Project::Get()->GetContentDir() instead
                 const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
 
-                auto Path = FileSystem::SaveFile(
-                    GetWindowHandle(),
-                    STR("Save scene"),
-                    ContentDir,
-                    Filters);
+                FileSystem::FileDialog Dialog{
+                    .Window     = GetWindowHandle(),
+                    .Title      = STR("Open scene"),
+                    .InitialDir = ContentDir,
+                    .Filters    = Filters
+                };
+                auto Path = Dialog.SaveFile();
 
                 if (Path.empty())
                 {
@@ -226,13 +256,21 @@ namespace Neon::Editor
                 }
 
                 auto RelativePath = std::filesystem::relative(Path, ContentDir);
-                auto Asset = std::make_shared<Asset::RuntimeSceneAsset>(
-                    Asset::Handle::Random(),
-                    RelativePath.string());
 
-                m_EditorScene.Apply(
-                    Scene::RuntimeScene::MergeType::Merge,
-                    Asset->GetScene().GetRoot());
+                Ptr<Asset::RuntimeSceneAsset> Asset;
+                if (TrySavingExisting)
+                {
+                    // TODO
+                    // Asset = Project::Get()->GetCurrentAsset();
+                }
+                if (!Asset)
+                {
+                    Asset = std::make_shared<Asset::RuntimeSceneAsset>(
+                        Asset::Handle::Random(),
+                        RelativePath.string());
+                }
+
+                m_EditorScene.ApplyTo(Neon::Scene::RuntimeScene::MergeType::Replace);
 
                 Asset::Storage::SaveAsset(
                     { .Asset            = std::static_pointer_cast<Asset::IAsset>(Asset),
@@ -240,21 +278,13 @@ namespace Neon::Editor
             };
 
             if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })
-            { /*
-                 if (Project::Get()->GetCurrentScenePath().empty())
-                 {
-                     SaveSceneAs();
-                 }
-                 else
-                 {
-                     Project::Get()->SerializeCurrentScene();
-                 }*/
-                SaveSceneAs();
+            {
+                SaveSceneAs(true);
             }
 
             if (imcxx::menuitem_entry{ "Save Scene As...", "Ctrl+Shift+S" })
             {
-                SaveSceneAs();
+                SaveSceneAs(false);
             }
 
             ImGui::Separator();

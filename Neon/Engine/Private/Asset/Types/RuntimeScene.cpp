@@ -36,23 +36,15 @@ namespace Neon::Asset
         StringU8             Path,
         const AssetMetaData& LoaderData)
     {
-        auto Asset = std::make_shared<RuntimeSceneAsset>(AssetGuid, std::move(Path));
-        auto Root  = Asset->GetScene().GetRoot().Get();
-
         boost::archive::text_iarchive Archive(Stream);
 
-        int32_t Size;
-        Archive >> Size;
-        std::string JsonString;
-        for (int32_t i = 0; i < Size; ++i)
-        {
-            Archive >> JsonString;
-            flecs::entity Entity;
-            Entity.from_json(JsonString.c_str());
-            Entity.child_of(Root);
-        }
+        StringU8 Json;
+        Archive >> Json;
 
-        return Asset;
+        flecs::world World;
+        World.from_json(Json.c_str());
+
+        return std::make_shared<RuntimeSceneAsset>(AssetGuid, std::move(Path));
     }
 
     void RuntimeSceneAsset::Handler::Save(
@@ -63,19 +55,11 @@ namespace Neon::Asset
     {
         auto RuntimeSceneAsset = static_cast<Asset::RuntimeSceneAsset*>(Asset.get());
 
-        auto Root = RuntimeSceneAsset->GetScene().GetRoot().Get();
+        // auto World = RuntimeSceneAsset->GetScene().GetWorld();
 
-        boost::archive::text_oarchive Archive(Stream);
+        // boost::archive::text_oarchive Archive(Stream);
 
-        auto Filter = GetChildrenFilter(Root);
-        Archive << int32_t(Filter.count());
-
-        std::string JsonString;
-        Filter.each(
-            [&Archive, &JsonString](flecs::entity Entity)
-            {
-                JsonString = ecs_entity_to_json(Entity.world(), Entity, nullptr);
-                Archive << JsonString;
-            });
+        // auto Json = World.to_json();
+        // Archive << StringU8(Json.c_str(), Json.size());
     }
 } // namespace Neon::Asset

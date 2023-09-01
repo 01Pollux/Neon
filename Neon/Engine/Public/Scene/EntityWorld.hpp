@@ -22,12 +22,14 @@ namespace Neon::Scene
         /// Create a new entity with unique name if needed.
         /// </summary>
         static EntityHandle Create(
-            const char* Name);
+            EntityHandle SceneHandle,
+            const char*  Name);
 
         /// <summary>
         /// Create a new entity with unique name if needed.
         /// </summary>
         static EntityHandle Create(
+            EntityHandle SceneHandle,
             EntityHandle ParentHandle,
             const char*  Name);
 
@@ -46,6 +48,11 @@ namespace Neon::Scene
 
     public:
         /// <summary>
+        /// Get scene tag.
+        /// </summary>
+        EntityHandle GetSceneTag() const;
+
+        /// <summary>
         /// Delete the entity.
         /// </summary>
         void Delete(
@@ -54,15 +61,24 @@ namespace Neon::Scene
         /// <summary>
         /// Clones the entity into the same parent.
         /// </summary>
-        void Clone(
-            const char* Name = nullptr);
+        EntityHandle CloneToParent(
+            EntityHandle SceneHandle,
+            const char*  Name = nullptr) const;
 
         /// <summary>
         /// Clones the entity.
         /// </summary>
-        EntityHandle Clone(
+        EntityHandle CloneTo(
+            EntityHandle    SceneHandle,
             flecs::entity_t NewParent,
-            const char*     Name = nullptr);
+            const char*     Name = nullptr) const;
+
+        /// <summary>
+        /// Clones the entity.
+        /// </summary>
+        EntityHandle CloneToRoot(
+            EntityHandle SceneHandle,
+            const char*  Name = nullptr) const;
 
     public:
         operator flecs::entity_t() const noexcept
@@ -113,10 +129,5 @@ namespace Neon::Scene
         /// Get the singleton instance of the entity world.
         /// </summary>
         [[nodiscard]] static flecs::world Get();
-
-        /// <summary>
-        /// Get the root entity.
-        /// </summary>
-        [[nodiscard]] static EntityHandle GetRootEntity();
     };
 } // namespace Neon::Scene
