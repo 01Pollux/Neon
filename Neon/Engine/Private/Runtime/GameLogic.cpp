@@ -25,8 +25,10 @@ namespace Neon::Runtime
     GameLogic::GameLogic() :
         m_PhysicsWorld(std::make_unique<Physics::World>())
     {
+        auto World = EntityWorld::Get();
+
         // Create physics update system.
-        EntityWorld::Get()
+        World
             .system("PhysicsUpdate")
             .no_readonly()
             .kind(flecs::PreUpdate)
@@ -38,7 +40,7 @@ namespace Neon::Runtime
                 });
 
         // Create physics collision add/remove system.
-        EntityWorld::Get()
+        World
             .observer<Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
             .event(flecs::OnRemove)
@@ -58,7 +60,7 @@ namespace Neon::Runtime
                 });
 
         // Create script add/remove system.
-        EntityWorld::Get()
+        World
             .observer<Component::ScriptInstance>("Script(Add/Remove)")
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
@@ -83,7 +85,7 @@ namespace Neon::Runtime
                 });
 
         // Create camera position update system.
-        EntityWorld::Get()
+        World
             .system<Component::Camera, Component::Transform>("CameraPositionUpdate")
             .kind(flecs::PreUpdate)
             .term<Component::Camera>()
@@ -105,14 +107,18 @@ namespace Neon::Runtime
 
         // Create camera render system.
         m_CameraQuery =
-            EntityWorld::Get().query_builder<Component::Camera>().term<Component::Camera>().inout().order_by(
-                                                                                                       +[](flecs::entity_t,
-                                                                                                           const Component::Camera* LhsCamera,
-                                                                                                           flecs::entity_t,
-                                                                                                           const Component::Camera* RhsCamera) -> int
-                                                                                                       {
-                                                                                                           return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
-                                                                                                       })
+            World
+                .query_builder<Component::Camera>()
+                .term<Component::Camera>()
+                .inout()
+                .order_by(
+                    +[](flecs::entity_t,
+                        const Component::Camera* LhsCamera,
+                        flecs::entity_t,
+                        const Component::Camera* RhsCamera) -> int
+                    {
+                        return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
+                    })
                 .build();
     }
 
