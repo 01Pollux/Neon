@@ -24,26 +24,26 @@ namespace Neon::Asset
         Archive >> Name;
         Entity.set_name(Name.c_str());
 
-        uint64_t Id;
+        StringU8 TypeName;
         do
         {
-            Archive >> Id;
-            if (!Id)
+            Archive >> TypeName;
+            if (TypeName.empty())
             {
                 break;
             }
 
-            auto Component = Scene::EntityWorld::Get().component(Id);
+            auto Component = Scene::EntityWorld::Get().lookup(TypeName.c_str());
             if (!Component)
             {
-                NEON_ERROR("Missing entity component with id: {0}", Id);
+                NEON_ERROR("Missing entity component with name: {}", TypeName);
                 continue;
             }
 
             auto Serializer = Component.get<Scene::Component::ComponentSerializer>();
             if (!Serializer)
             {
-                NEON_ERROR("Missing entity component serializer with id: {0}", Id);
+                NEON_ERROR("Missing entity component serializer with name: {}", TypeName);
                 continue;
             }
 
@@ -106,11 +106,11 @@ namespace Neon::Asset
                     return;
                 }
 
-                Archive << uint64_t(ComponentId.raw_id());
+                Archive << StringU8(ComponentId.str());
                 Serializer->Serialize(Archive, Entity, ComponentId);
             });
 
-        Archive << uint64_t(0);
+        Archive << StringU8();
 
         auto ChildrenFilter = Scene::EntityWorld::GetChildrenFilter(Entity).build();
         Archive << uint32_t(ChildrenFilter.count());

@@ -268,7 +268,7 @@ namespace Neon::Editor::Views
             World.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
-        if (0 && !EditingName && !Entity.has<Scene::Editor::EditorSceneDoNotRemove>()) [[likely]]
+        if (!EditingName && !Entity.has<Scene::Editor::EditorSceneDoNotRemove>()) [[likely]]
         {
             if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
             {
