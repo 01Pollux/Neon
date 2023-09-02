@@ -54,10 +54,6 @@ namespace Neon::Asset
         uint32_t Count;
         Archive >> Count;
 
-        for (int i = 0; i < Count; i++)
-            printf("*");
-        printf("Count: %d -- %s\n", Count, Name.c_str());
-
         for (uint32_t i = 0; i < Count; i++)
         {
             flecs::entity Child = Scene::EntityHandle::Create(SceneTag, EntHandle);
@@ -76,7 +72,7 @@ namespace Neon::Asset
         Archive >> Count;
 
         auto SceneTag = Asset->GetScene().GetTag();
-        
+
         for (uint32_t i = 0; i < Count; i++)
         {
             flecs::entity Child = Scene::EntityHandle::Create(SceneTag);

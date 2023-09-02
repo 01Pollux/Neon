@@ -38,7 +38,7 @@ namespace Neon::Scene
         const flecs::entity& Parent,
         const char*          Name)
     {
-        StringU8 NewName{ Name ? Name : "Unnamed Entity" };
+        StringU8 NewName{ Name ? Name : "Entity" };
         StringU8 NewNameTmp = NewName;
 
         if (Parent)
@@ -70,16 +70,7 @@ namespace Neon::Scene
     [[nodiscard]] static StringU8 CreateUniqueEntityName(
         const char* Name)
     {
-        StringU8 NewName{ Name ? Name : " " };
-        StringU8 NewNameTmp = NewName;
-
-        size_t Idx = 0;
-        while (EntityWorld::Get().lookup(NewName.c_str()))
-        {
-            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
-        }
-
-        return NewName;
+        return CreateUniqueEntityName({}, Name);
     }
 
     //
@@ -114,10 +105,23 @@ namespace Neon::Scene
         return flecs::entity(EntityWorld::Get(), m_Entity);
     }
 
+    //
+
     EntityHandle EntityHandle::GetSceneTag() const
     {
         return Get().target<Scene::Component::SceneEntity>();
     }
+
+    void EntityHandle::SetName(
+        const char* Name)
+    {
+        auto Entity = Get();
+        auto Parent = Entity.parent();
+
+        Entity.set_name(CreateUniqueEntityName(Parent, Name).c_str());
+    }
+
+    //
 
     void EntityHandle::Delete(
         bool WithChildren)

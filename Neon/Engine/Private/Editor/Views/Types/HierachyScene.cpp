@@ -1,7 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Types/HierachyScene.hpp>
 
-#include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Scene/EditorEntity.hpp>
 #include <Runtime/GameLogic.hpp>
 
@@ -24,14 +23,12 @@ namespace Neon::Editor::Views
                 {
                     Scene::EntityHandle::Create(
                         Scene::EntityWorld::GetCurrentSceneTag(),
-                        ParentEntHandle,
-                        "Unnamed Entity");
+                        ParentEntHandle);
                 }
                 else
                 {
                     Scene::EntityHandle::Create(
-                        Scene::EntityWorld::GetCurrentSceneTag(),
-                        "Unnamed Entity");
+                        Scene::EntityWorld::GetCurrentSceneTag());
                 }
             };
         }
@@ -173,10 +170,7 @@ namespace Neon::Editor::Views
 
     //
 
-    /// <summary>
-    /// Display a scene object in the hierachy view.
-    /// </summary>
-    static void DispalySceneObject(
+    void SceneHierachy::DispalySceneObject(
         Scene::EntityHandle              EntHandle,
         std::move_only_function<void()>& DeferredTask)
     {
@@ -186,6 +180,7 @@ namespace Neon::Editor::Views
             ImGuiTreeNodeFlags_OpenOnDoubleClick |
             ImGuiTreeNodeFlags_OpenOnArrow |
             ImGuiTreeNodeFlags_SpanAvailWidth |
+            ImGuiTreeNodeFlags_FramePadding |
             ImGuiTreeNodeFlags_SpanFullWidth;
 
         // Create filter to check if entity has children.
@@ -196,6 +191,10 @@ namespace Neon::Editor::Views
         {
             TableFlags |= ImGuiTreeNodeFlags_Leaf;
         }
+        else
+        {
+            // TableFlags |= ImGuiTreeNodeFlags_Bullet;
+        }
 
         // If entity is disabled, Make the text gray.
         bool IsDisabled = !Entity.enabled();
@@ -204,10 +203,59 @@ namespace Neon::Editor::Views
             ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
         }
 
+        auto Name = Entity.name();
+
+        ImGui::SetNextItemAllowOverlap();
         imcxx::tree_node HierachyNode(
             std::bit_cast<void*>(Entity.raw_id()),
             TableFlags,
-            Entity.name());
+            m_EntityToRename == Entity ? "" : Name.c_str());
+
+        bool EditingName = false;
+        {
+            static char Buffer[256];
+
+            // If we clicked F2 or double click on this entity, set it as the entity to rename.
+            if (ImGui::IsItemFocused())
+            {
+                if (ImGui::IsKeyPressed(ImGuiKey_F2) ||
+                    ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    m_EntityToRename = Entity;
+                    auto Name        = Entity.name();
+                    strncpy_s(Buffer, Name.c_str(), Name.size());
+                }
+                else if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+                {
+                    DeferredTask = [Entity]() mutable
+                    {
+                        Entity.destruct();
+                    };
+                }
+            }
+
+            if (m_EntityToRename == Entity)
+            {
+                if (ImGui::IsKeyPressed(ImGuiKey_Escape)) [[unlikely]]
+                {
+                    m_EntityToRename = {};
+                }
+                else
+                {
+                    ImGui::SameLine();
+                    EditingName = true;
+
+                    if (ImGui::InputText("##Name", Buffer, int(std::size(Buffer)), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+                    {
+                        DeferredTask = [Entity]() mutable
+                        {
+                            Scene::EntityHandle(Entity).SetName(Buffer);
+                        };
+                        m_EntityToRename = {};
+                    }
+                }
+            }
+        }
 
         if (IsDisabled)
         {
@@ -220,7 +268,7 @@ namespace Neon::Editor::Views
             World.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
-        if (!Entity.has<Scene::Editor::EditorSceneDoNotRemove>()) [[likely]]
+        if (0 && !EditingName && !Entity.has<Scene::Editor::EditorSceneDoNotRemove>()) [[likely]]
         {
             if (imcxx::popup EditEntity{ imcxx::popup::context_item{} })
             {
@@ -279,7 +327,7 @@ namespace Neon::Editor::Views
         if (HierachyNode)
         {
             ChidlrenFilter.each(
-                [&DeferredTask](flecs::entity Entity)
+                [this, &DeferredTask](flecs::entity Entity)
                 {
                     DispalySceneObject(Entity, DeferredTask);
                 });
@@ -301,6 +349,11 @@ namespace Neon::Editor::Views
             return;
         }
 
+        if (m_EntityToRename && !m_EntityToRename.is_alive())
+        {
+            m_EntityToRename = {};
+        }
+
         auto RootFilter = Scene::EntityWorld::GetRootFilter(
                               Scene::EntityWorld::GetCurrentSceneTag())
                               .build();
@@ -310,7 +363,7 @@ namespace Neon::Editor::Views
 
         {
             RootFilter.each(
-                [&DeferredTask](flecs::entity Entity)
+                [this, &DeferredTask](flecs::entity Entity)
                 {
                     DispalySceneObject(Entity, DeferredTask);
                 });

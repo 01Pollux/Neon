@@ -53,6 +53,13 @@ namespace Neon::Scene
         [[nodiscard]] EntityHandle GetSceneTag() const;
 
         /// <summary>
+        /// Ssafely set the entity name.
+        /// </summary>
+        void SetName(
+            const char* Name);
+
+    public:
+        /// <summary>
         /// Delete the entity.
         /// </summary>
         void Delete(
