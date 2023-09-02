@@ -77,3 +77,18 @@ namespace Neon
         inline constexpr _Ty Identity{ 0, 0, 0, 1 };
     } // namespace Vec
 } // namespace Neon
+
+namespace boost::serialization
+{
+    template<typename _Archive, Neon::Vec::VectorType _Ty>
+    void serialize(
+        _Archive& Archive,
+        _Ty&      Vec,
+        uint32_t)
+    {
+        for (typename _Ty::length_type i = 0; i < Vec.length(); i++)
+        {
+            Archive& Vec[i];
+        }
+    }
+} // namespace boost::serialization

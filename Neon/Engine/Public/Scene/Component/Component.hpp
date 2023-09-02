@@ -48,6 +48,43 @@ namespace Neon::Scene::Component::Impl
 #define NEON_EXPORT_FLECS_COMPONENT NEON_EXPORT_FLECS
 #endif
 
+//
+
+#define NEON_COMPONENT_SERIALIZE_FUNC(Class, SerializeFuncName, DeserializefuncName)      \
+    Component.emplace<Neon::Scene::Component::ComponentSerializer>(                       \
+        [](boost::archive::text_oarchive& Archive, flecs::entity_t EntityId, flecs::id_t) \
+        {                                                                                 \
+            flecs::entity Ent(Neon::Scene::Component::Impl::GetWorld(), EntityId);        \
+            const_cast<Class*>(Ent.get<Class>())->SerializeFuncName(Archive, Ent);        \
+        },                                                                                \
+        [](boost::archive::text_iarchive& Archive, flecs::entity_t EntityId, flecs::id_t) \
+        {                                                                                 \
+            flecs::entity Ent(Neon::Scene::Component::Impl::GetWorld(), EntityId);        \
+            Ent.get_mut<Class>()->DeserializefuncName(Archive, Ent);                      \
+            Ent.modified<Class>();                                                        \
+        })
+
+#define NEON_COMPONENT_SERIALIZE(Class)       NEON_COMPONENT_SERIALIZE_FUNC(Class, Serialize, Serialize)
+#define NEON_COMPONENT_SERIALIZE_SPLIT(Class) NEON_COMPONENT_SERIALIZE_FUNC(Class, SerializeTo, SerializeFrom)
+
+#define NEON_COMPONENT_SERIALIZE_IMPL \
+    template<typename _Archive>       \
+    void Serialize(                   \
+        _Archive&     Archive,        \
+        flecs::entity Entity)
+
+#define NEON_COMPONENT_SERIALIZE_SPLIT_IMPL \
+    void SerializeTo(                       \
+        _Archive&     Archive,              \
+        flecs::entity Entity)
+
+#define NEON_COMPONENT_DESERIALIZE_SPLIT_IMPL \
+    void SerializeFrom(                       \
+        _Archive&     Archive,                \
+        flecs::entity Entity)
+
+//
+
 #define NEON_REGISTER_FLECS(ClassName) \
     ClassName::RegisterFlecs();
 

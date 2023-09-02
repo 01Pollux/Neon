@@ -259,6 +259,16 @@ namespace Neon
         }
 
     private:
+        friend class boost::serialization::access;
+        template<typename _Archive>
+        void serialize(
+            _Archive& Archive,
+            uint32_t)
+        {
+            Archive& m_Basis& m_Position;
+        }
+
+    private:
         Matrix3x3 m_Basis;
         Vector3   m_Position;
     };

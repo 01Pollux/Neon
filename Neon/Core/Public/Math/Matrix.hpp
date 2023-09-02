@@ -31,3 +31,18 @@ namespace Neon
         inline constexpr _Ty Identity{ 1.f };
     } // namespace Mat
 } // namespace Neon
+
+namespace boost::serialization
+{
+    template<typename _Archive, Neon::Mat::MatrixType _Ty>
+    void serialize(
+        _Archive& Archive,
+        _Ty&      Mat,
+        uint32_t)
+    {
+        for (typename _Ty::length_type i = 0; i < Mat.length(); i++)
+        {
+            Archive& Mat[i];
+        }
+    }
+} // namespace boost::serialization

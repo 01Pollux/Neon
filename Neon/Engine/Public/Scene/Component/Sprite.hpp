@@ -8,8 +8,14 @@ namespace Neon::Scene::Component
 {
     struct Sprite
     {
+        NEON_COMPONENT_SERIALIZE_IMPL
+        {
+            Archive& TextureTransform& SpriteSize& ModulationColor;
+        }
+
         NEON_EXPORT_FLECS_COMPONENT(Sprite, "Sprite")
         {
+            NEON_COMPONENT_SERIALIZE(Sprite);
         }
 
         /// <summary>
