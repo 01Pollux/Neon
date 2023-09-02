@@ -72,7 +72,7 @@ namespace Neon::Editor
 
     flecs::entity EditorEngine::GetActiveSceneTag() const
     {
-        return IsInEditorMode() ? Scene::EntityWorld::GetCurrentSceneTag() : m_EditorScene.GetTag().Get();
+        return IsInEditorMode() ? Scene::EntityWorld::GetCurrentScenerRoot() : m_EditorScene.GetRoot().Get();
     }
 
     const Scene::RuntimeScene& EditorEngine::GetCurrentScene() const

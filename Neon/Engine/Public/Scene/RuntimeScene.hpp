@@ -36,22 +36,9 @@ namespace Neon::Scene
         /// <summary>
         /// Get the tag of the scene.
         /// </summary>
-        [[nodiscard]] EntityHandle GetTag() const;
+        [[nodiscard]] EntityHandle GetRoot() const;
 
     public:
-        /// <summary>
-        /// Add an entity to the scene.
-        /// </summary>
-        EntityHandle CreateEntity(
-            const char* Name) const;
-
-        /// <summary>
-        /// Add an entity to the scene.
-        /// If the entity belongs to another scene, it will be transferred to this scene.
-        /// </summary>
-        void AddEntity(
-            EntityHandle EntHandle) const;
-
         /// <summary>
         /// Clone an entity from another scene.
         /// </summary>
@@ -65,6 +52,6 @@ namespace Neon::Scene
         void Release();
 
     private:
-        EntityHandle m_SceneTag{};
+        EntityHandle m_RootEntity{};
     };
 } // namespace Neon::Scene

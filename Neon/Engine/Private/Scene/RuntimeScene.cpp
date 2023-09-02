@@ -27,7 +27,7 @@ namespace Neon::Scene
     }
 
     RuntimeScene::RuntimeScene() :
-        m_SceneTag(EntityWorld::Get().entity(RandomEntityName().c_str()))
+        m_RootEntity(EntityWorld::Get().entity(RandomEntityName().c_str()))
     {
     }
 
@@ -37,7 +37,7 @@ namespace Neon::Scene
         if (this != &Other)
         {
             Release();
-            m_SceneTag = std::move(Other.m_SceneTag);
+            m_RootEntity = std::move(Other.m_RootEntity);
         }
         return *this;
     }
@@ -52,35 +52,34 @@ namespace Neon::Scene
     {
         NEON_ASSERT(Type == RuntimeScene::MergeType::Merge || Type == RuntimeScene::MergeType::Replace, "Invalid merge type.");
 
-        auto World    = EntityWorld::Get();
-        auto SceneTag = EntityWorld::Get().component<Scene::Component::WorldSceneTag>();
+        auto World     = EntityWorld::Get();
+        auto SceneRoot = EntityWorld::Get().component<Scene::Component::WorldSceneRoot>();
 
         // Replace the scene tag for the world to our scene tag.
         if (Type == RuntimeScene::MergeType::Replace)
         {
-            World.add(SceneTag, m_SceneTag);
+            World.add(SceneRoot, m_RootEntity);
         }
         else
         {
             // Check if the scene tag is already present in the world.
-            auto DestScene = World.target(SceneTag);
-            if (!DestScene)
+            auto CurRoot = World.target(SceneRoot);
+            if (!CurRoot)
             {
-                World.add(SceneTag, m_SceneTag);
+                World.add(SceneRoot, m_RootEntity);
             }
             else
             {
                 // Copy our scene entities to the world.
                 std::vector<EntityHandle> Entities;
-                World.filter_builder()
-                    .with(SceneTag, m_SceneTag)
+                EntityWorld::GetChildrenFilter(m_RootEntity)
                     .build()
                     .each([&Entities](flecs::entity_t EntHandle)
                           { Entities.push_back(EntHandle); });
 
                 for (auto& EntHandle : Entities)
                 {
-                    EntHandle.CloneToRoot(DestScene);
+                    EntHandle.CloneToRoot(CurRoot);
                 }
             }
         }
@@ -98,65 +97,51 @@ namespace Neon::Scene
         if (Type == RuntimeScene::MergeType::Replace)
         {
             OtherScene.Release();
-            OtherScene.m_SceneTag = EntityWorld::Get().entity(RandomEntityName().c_str());
+            OtherScene.m_RootEntity = EntityWorld::Get().entity(RandomEntityName().c_str());
         }
 
         std::vector<EntityHandle> Entities;
-        EntityWorld::Get()
-            .filter_builder()
-            .with(SceneTag, m_SceneTag)
+        EntityWorld::GetChildrenFilter(m_RootEntity)
             .build()
             .each([&Entities](flecs::entity_t EntHandle)
                   { Entities.push_back(EntHandle); });
 
         for (auto& EntHandle : Entities)
         {
-            EntHandle.CloneToRoot(OtherScene.m_SceneTag);
+            OtherScene.CloneEntity(EntHandle);
         }
     }
 
-    EntityHandle RuntimeScene::GetTag() const
+    EntityHandle RuntimeScene::GetRoot() const
     {
-        return m_SceneTag;
+        return m_RootEntity;
     }
 
     //
 
-    EntityHandle RuntimeScene::CreateEntity(
-        const char* Name) const
-    {
-        auto EntHandle = EntityHandle::Create(m_SceneTag, Name);
-        AddEntity(EntHandle);
-        return EntHandle;
-    }
-
-    void RuntimeScene::AddEntity(
-        EntityHandle EntHandle) const
-    {
-        flecs::entity Entity = EntHandle;
-        Entity.add<Scene::Component::SceneEntity>(m_SceneTag);
-    }
-
     void RuntimeScene::CloneEntity(
         EntityHandle EntHandle) const
     {
-        EntHandle.CloneToRoot(m_SceneTag);
+        EntHandle.CloneToRoot(m_RootEntity);
     }
 
     //
 
     void RuntimeScene::Release()
     {
-        if (m_SceneTag)
+        if (m_RootEntity)
         {
-            auto          SceneTag = EntityWorld::Get().component<Scene::Component::SceneEntity>();
-            flecs::entity Scene    = m_SceneTag;
+            auto World    = EntityWorld::Get();
+            auto SceneTag = World.component<Scene::Component::SceneEntity>();
+
+            flecs::entity Root = m_RootEntity;
+            World.remove<Scene::Component::WorldSceneRoot>(Root);
 
             // Remove entities that are tagged with the scene tag.
-            EntityWorld::Get().delete_with(SceneTag, Scene);
-            Scene.destruct();
+            EntityWorld::Get().delete_with(SceneTag, Root);
+            Root.destruct();
 
-            m_SceneTag = {};
+            m_RootEntity = {};
         }
     }
 } // namespace Neon::Scene

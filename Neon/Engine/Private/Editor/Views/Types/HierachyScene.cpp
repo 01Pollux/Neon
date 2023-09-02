@@ -22,13 +22,13 @@ namespace Neon::Editor::Views
                 if (ParentEntHandle)
                 {
                     Scene::EntityHandle::Create(
-                        Scene::EntityWorld::GetCurrentSceneTag(),
+                        Scene::EntityWorld::GetCurrentScenerRoot(),
                         ParentEntHandle);
                 }
                 else
                 {
                     Scene::EntityHandle::Create(
-                        Scene::EntityWorld::GetCurrentSceneTag());
+                        Scene::EntityWorld::GetCurrentScenerRoot());
                 }
             };
         }
@@ -276,7 +276,7 @@ namespace Neon::Editor::Views
                 {
                     DeferredTask = [EntHandle]() mutable
                     {
-                        EntHandle.CloneToParent(EntHandle.GetSceneTag());
+                        EntHandle.CloneToParent(EntHandle.GetContainingScene());
                     };
                 }
 
@@ -354,8 +354,8 @@ namespace Neon::Editor::Views
             m_EntityToRename = {};
         }
 
-        auto RootFilter = Scene::EntityWorld::GetRootFilter(
-                              Scene::EntityWorld::GetCurrentSceneTag())
+        auto RootFilter = Scene::EntityWorld::GetChildrenFilter(
+                              Scene::EntityWorld::GetCurrentScenerRoot())
                               .build();
 
         // First we need to display the children of root entity.

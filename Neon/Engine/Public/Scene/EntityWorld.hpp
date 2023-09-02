@@ -22,14 +22,14 @@ namespace Neon::Scene
         /// Create a new entity with unique name if needed.
         /// </summary>
         static EntityHandle Create(
-            EntityHandle SceneHandle,
+            EntityHandle SceneRoot,
             const char*  Name = nullptr);
 
         /// <summary>
         /// Create a new entity with unique name if needed.
         /// </summary>
         static EntityHandle Create(
-            EntityHandle SceneHandle,
+            EntityHandle SceneRoot,
             EntityHandle ParentHandle,
             const char*  Name = nullptr);
 
@@ -50,7 +50,7 @@ namespace Neon::Scene
         /// <summary>
         /// Get scene tag.
         /// </summary>
-        [[nodiscard]] EntityHandle GetSceneTag() const;
+        [[nodiscard]] EntityHandle GetContainingScene() const;
 
         /// <summary>
         /// Ssafely set the entity name.
@@ -69,23 +69,42 @@ namespace Neon::Scene
         /// Clones the entity into the same parent.
         /// </summary>
         EntityHandle CloneToParent(
-            EntityHandle SceneHandle,
-            const char*  Name = nullptr) const;
+            EntityHandle SceneRoot,
+            const char*  Name) const;
+
+        /// <summary>
+        /// Clones the entity into the same parent.
+        /// </summary>
+        EntityHandle CloneToParent(
+            EntityHandle SceneRoot) const;
 
         /// <summary>
         /// Clones the entity.
         /// </summary>
         EntityHandle CloneTo(
-            EntityHandle    SceneHandle,
+            EntityHandle    SceneRoot,
             flecs::entity_t NewParent,
-            const char*     Name = nullptr) const;
+            const char*     Name) const;
+
+        /// <summary>
+        /// Clones the entity.
+        /// </summary>
+        EntityHandle CloneTo(
+            EntityHandle    SceneRoot,
+            flecs::entity_t NewParent) const;
 
         /// <summary>
         /// Clones the entity.
         /// </summary>
         EntityHandle CloneToRoot(
-            EntityHandle SceneHandle,
-            const char*  Name = nullptr) const;
+            EntityHandle SceneRoot,
+            const char*  Name) const;
+
+        /// <summary>
+        /// Clones the entity.
+        /// </summary>
+        EntityHandle CloneToRoot(
+            EntityHandle SceneRoot) const;
 
     public:
         operator flecs::entity_t() const noexcept
@@ -145,20 +164,14 @@ namespace Neon::Scene
             EntityHandle Parent);
 
         /// <summary>
-        /// Create a filter to get all root entities with a scene tag.
-        /// </summary>
-        [[nodiscard]] static flecs::filter_builder<> GetRootFilter(
-            EntityHandle SceneTag);
-
-        /// <summary>
         /// Get the active scene.
         /// </summary>
-        [[nodiscard]] static flecs::entity GetCurrentSceneTag();
+        [[nodiscard]] static flecs::entity GetCurrentScenerRoot();
 
         /// <summary>
         /// Set the active scene.
         /// </summary>
-        [[nodiscard]] static void SetCurrentSceneTag(
+        [[nodiscard]] static void SetCurrentSceneRoot(
             flecs::entity Tag);
     };
 } // namespace Neon::Scene

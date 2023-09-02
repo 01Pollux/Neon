@@ -41,22 +41,10 @@ namespace Neon::Scene
         StringU8 NewName{ Name ? Name : "Entity" };
         StringU8 NewNameTmp = NewName;
 
-        if (Parent)
+        size_t Idx = 0;
+        while (Parent.lookup(NewName.c_str()))
         {
-            size_t Idx = 0;
-            while (Parent.lookup(NewName.c_str()))
-            {
-                NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
-            }
-        }
-        else
-        {
-            auto   World = EntityWorld::Get();
-            size_t Idx   = 0;
-            while (World.lookup(NewName.c_str()))
-            {
-                NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
-            }
+            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
         }
 
         return NewName;
@@ -64,36 +52,22 @@ namespace Neon::Scene
 
     //
 
-    /// <summary>
-    /// Creates a unique entity name.
-    /// </summary>
-    [[nodiscard]] static StringU8 CreateUniqueEntityName(
-        const char* Name)
-    {
-        return CreateUniqueEntityName({}, Name);
-    }
-
-    //
-
     EntityHandle EntityHandle::Create(
-        EntityHandle SceneHandle,
+        EntityHandle SceneRoot,
         const char*  Name)
     {
-        return EntityWorld::Get()
-            .entity()
-            .add<Scene::Component::SceneEntity>(SceneHandle)
-            .set_name(CreateUniqueEntityName(Name).c_str());
+        return Create(SceneRoot, SceneRoot, Name);
     }
 
     EntityHandle EntityHandle::Create(
-        EntityHandle SceneHandle,
+        EntityHandle SceneRoot,
         EntityHandle ParentHandle,
         const char*  Name)
     {
         flecs::entity Parent = ParentHandle;
         return EntityWorld::Get()
             .entity()
-            .add<Scene::Component::SceneEntity>(SceneHandle)
+            .add<Scene::Component::SceneEntity>(SceneRoot)
             .child_of(Parent)
             .set_name(CreateUniqueEntityName(Parent, Name).c_str());
     }
@@ -107,7 +81,7 @@ namespace Neon::Scene
 
     //
 
-    EntityHandle EntityHandle::GetSceneTag() const
+    EntityHandle EntityHandle::GetContainingScene() const
     {
         return Get().target<Scene::Component::SceneEntity>();
     }
@@ -162,7 +136,7 @@ namespace Neon::Scene
     /// Clones an entity and all its children.
     /// </summary>
     [[nodiscard]] static EntityHandle CloneEntityInternal(
-        EntityHandle              SceneHandle,
+        EntityHandle              SceneRoot,
         EntityHandle              EntHandle,
         EntityHandle              NewParentHandle,
         const flecs::string_view& Name)
@@ -184,7 +158,7 @@ namespace Neon::Scene
         Entity.set_name(OldName.c_str());
         NewEntity
             .set_name(NewName.c_str())
-            .add<Scene::Component::SceneEntity>(SceneHandle);
+            .add<Scene::Component::SceneEntity>(SceneRoot);
 
         return NewEntity;
     }
@@ -193,12 +167,12 @@ namespace Neon::Scene
     /// Clones an entity and all its children while also executing a callback for each entity.
     /// </summary>
     [[nodiscard]] static Asio::CoLazy<EntityHandle> CloneEntity(
-        EntityHandle              SceneHandle,
+        EntityHandle              SceneRoot,
         EntityHandle              EntHandle,
         EntityHandle              NewParentHandle,
         const flecs::string_view& Name)
     {
-        auto NewEntity = CloneEntityInternal(SceneHandle, EntHandle, NewParentHandle, Name);
+        auto NewEntity = CloneEntityInternal(SceneRoot, EntHandle, NewParentHandle, Name);
 
         std::vector<EntityHandle> Children;
         EntHandle.Get().children(
@@ -209,7 +183,7 @@ namespace Neon::Scene
 
         for (flecs::entity Child : Children)
         {
-            co_await CloneEntity(SceneHandle, Child, NewEntity, Child.name());
+            co_await CloneEntity(SceneRoot, Child, NewEntity, Child.name());
         }
 
         co_return NewEntity;
@@ -218,25 +192,45 @@ namespace Neon::Scene
     //
 
     EntityHandle EntityHandle::CloneToParent(
-        EntityHandle SceneHandle,
+        EntityHandle SceneRoot,
         const char*  Name) const
     {
-        return CloneTo(SceneHandle, Get().parent(), Name);
+        return CloneTo(SceneRoot, Get().parent(), Name);
+    }
+
+    EntityHandle EntityHandle::CloneToParent(
+        EntityHandle SceneRoot) const
+    {
+        auto Entity = Get();
+        return CloneTo(SceneRoot, Entity.parent(), Entity.name());
     }
 
     EntityHandle EntityHandle::CloneTo(
-        EntityHandle    SceneHandle,
+        EntityHandle    SceneRoot,
         flecs::entity_t NewParent,
         const char*     Name) const
     {
-        return cppcoro::sync_wait(CloneEntity(SceneHandle, *this, NewParent, flecs::string_view{ Name }));
+        return cppcoro::sync_wait(CloneEntity(SceneRoot, *this, NewParent, flecs::string_view{ Name }));
+    }
+
+    EntityHandle EntityHandle::CloneTo(
+        EntityHandle    SceneRoot,
+        flecs::entity_t NewParent) const
+    {
+        return CloneTo(SceneRoot, NewParent, Get().name());
     }
 
     EntityHandle EntityHandle::CloneToRoot(
-        EntityHandle SceneHandle,
+        EntityHandle SceneRoot,
         const char*  Name) const
     {
-        return CloneTo(SceneHandle, flecs::entity::null(), Name);
+        return CloneTo(SceneRoot, SceneRoot, Name);
+    }
+
+    EntityHandle EntityHandle::CloneToRoot(
+        EntityHandle SceneRoot) const
+    {
+        return CloneTo(SceneRoot, SceneRoot, Get().name());
     }
 
     //
@@ -276,24 +270,14 @@ namespace Neon::Scene
             .optional();
     }
 
-    flecs::filter_builder<> EntityWorld::GetRootFilter(
-        EntityHandle SceneTag)
+    flecs::entity EntityWorld::GetCurrentScenerRoot()
     {
-        return Get()
-            .filter_builder()
-            .with(flecs::ChildOf, 0)
-            .with<Scene::Component::SceneEntity>(SceneTag)
-            .first();
+        return Get().target<Scene::Component::WorldSceneRoot>();
     }
 
-    flecs::entity EntityWorld::GetCurrentSceneTag()
-    {
-        return Get().target<Scene::Component::WorldSceneTag>();
-    }
-
-    void EntityWorld::SetCurrentSceneTag(
+    void EntityWorld::SetCurrentSceneRoot(
         flecs::entity Tag)
     {
-        Get().add<Scene::Component::WorldSceneTag>(Tag);
+        Get().add<Scene::Component::WorldSceneRoot>(Tag);
     }
 } // namespace Neon::Scene

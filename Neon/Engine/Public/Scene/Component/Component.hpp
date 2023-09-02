@@ -91,6 +91,7 @@ namespace Neon::Scene::Component
 
     /// <summary>
     /// Pair for entities that are part of a certain scene.
+    /// Value is the scene root entity.
     /// </summary>
     struct SceneEntity
     {
@@ -102,10 +103,11 @@ namespace Neon::Scene::Component
 
     /// <summary>
     /// Pair for world for identifying active scene.
+    /// Value is the scene root entity.
     /// </summary>
-    struct WorldSceneTag
+    struct WorldSceneRoot
     {
-        NEON_EXPORT_FLECS(WorldSceneTag, "WorldSceneTag")
+        NEON_EXPORT_FLECS(WorldSceneRoot, "WorldSceneRoot")
         {
             Component.add(flecs::Exclusive);
         }

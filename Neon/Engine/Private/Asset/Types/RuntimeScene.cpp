@@ -14,7 +14,7 @@ namespace Neon::Asset
     /// Load an entity and its children.
     /// </summary>
     static void LoadEntityFromArchiveImpl(
-        Scene::EntityHandle            SceneTag,
+        Scene::EntityHandle            SceneRoot,
         boost::archive::text_iarchive& Archive,
         Scene::EntityHandle            EntHandle)
     {
@@ -56,8 +56,8 @@ namespace Neon::Asset
 
         for (uint32_t i = 0; i < Count; i++)
         {
-            flecs::entity Child = Scene::EntityHandle::Create(SceneTag, EntHandle);
-            LoadEntityFromArchiveImpl(SceneTag, Archive, Child);
+            flecs::entity Child = Scene::EntityHandle::Create(SceneRoot, EntHandle);
+            LoadEntityFromArchiveImpl(SceneRoot, Archive, Child);
         }
     }
 
@@ -71,12 +71,12 @@ namespace Neon::Asset
         uint32_t Count;
         Archive >> Count;
 
-        auto SceneTag = Asset->GetScene().GetTag();
+        auto SceneRoot = Asset->GetScene().GetRoot();
 
         for (uint32_t i = 0; i < Count; i++)
         {
-            flecs::entity Child = Scene::EntityHandle::Create(SceneTag);
-            LoadEntityFromArchiveImpl(SceneTag, Archive, Child);
+            flecs::entity Child = Scene::EntityHandle::Create(SceneRoot);
+            LoadEntityFromArchiveImpl(SceneRoot, Archive, Child);
         }
     }
 
@@ -129,8 +129,7 @@ namespace Neon::Asset
         boost::archive::text_oarchive& Archive,
         RuntimeSceneAsset*             Asset)
     {
-        auto SceneTag   = Asset->GetScene().GetTag();
-        auto RootFilter = Scene::EntityWorld::GetRootFilter(SceneTag).build();
+        auto RootFilter = Scene::EntityWorld::GetChildrenFilter(Asset->GetScene().GetRoot()).build();
 
         Archive << uint32_t(RootFilter.count());
 
