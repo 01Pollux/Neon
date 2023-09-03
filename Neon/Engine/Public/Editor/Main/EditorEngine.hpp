@@ -3,6 +3,7 @@
 #include <Runtime/GameEngine.hpp>
 #include <Editor/Views/View.hpp>
 #include <Scene/RuntimeScene.hpp>
+#include <Editor/Project/Manager.hpp>
 
 #include <UI/Fonts/FontAwesome5.hpp>
 
@@ -146,6 +147,14 @@ namespace Neon::Editor
 
     public:
         /// <summary>
+        /// Get the project manager.
+        /// </summary>
+        [[nodiscard]] ProjectManager* GetProjectManager()
+        {
+            return &m_ProjectManager;
+        }
+
+        /// <summary>
         /// Get the content package.
         /// </summary>
         [[nodiscard]] Asset::IAssetPackage* GetContentPackage() const
@@ -156,6 +165,8 @@ namespace Neon::Editor
     private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
         std::unordered_set<IEditorView*>                m_OpenViews;
+
+        ProjectManager m_ProjectManager;
 
         /// <summary>
         /// TODO: move it to ProjectInstance.

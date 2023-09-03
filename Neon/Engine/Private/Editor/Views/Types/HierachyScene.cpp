@@ -193,7 +193,7 @@ namespace Neon::Editor::Views
         }
         else
         {
-            // TableFlags |= ImGuiTreeNodeFlags_Bullet;
+             TableFlags |= ImGuiTreeNodeFlags_Bullet;
         }
 
         // If entity is disabled, Make the text gray.
