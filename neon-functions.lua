@@ -164,6 +164,7 @@ function link_engine_library_no_engine()
         "glfw",
         "Flecs",
         "spdlog",
+        "ZipLib",
 
         "NeonCore",
         "NeonCoroutines",
@@ -218,7 +219,6 @@ function link_engine_library_no_engine()
     link_boost_lib("url")
     link_boost_lib("wave")
     link_boost_lib("wserialization")
-    link_boost_lib("zlib")
 end
 
 function link_engine_library(with_engine)

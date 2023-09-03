@@ -78,6 +78,9 @@ workspace "Neon"
         include "Deps/Externals/libogg-1.3.0"
         include "Deps/Externals/vorbis"
 
+    group "Dependencies/Other"
+        include "Deps/Externals/ZipLib"
+    
         
     group "Neon"
         include "Neon/ScriptCore"

@@ -17,9 +17,13 @@ Function Copy-IncludePathAbs {
     Param
     (
         [Parameter(Mandatory = $true)][string]$SrcPath,
-        [Parameter(Mandatory = $true)][string]$DstPath
+        [Parameter(Mandatory = $true)][string]$DstPath,
+        [switch]$Recurse,
+        [switch]$MakeNewFile=$true
     )
-    New-Item -ItemType File -Path $DstPath -Force | Out-Null
+    if ($MakeNewFile -Eq $true) {
+        New-Item -ItemType File -Path $DstPath -Force | Out-Null
+    }
     Copy-Item -Recurse $SrcPath $DstPath -Force -ErrorVariable CapturedErrors -ErrorAction SilentlyContinue
     $CapturedErrors | foreach-object { if ($_ -notmatch "already exists") { write-error $_ } }
 }
@@ -29,10 +33,9 @@ Function Copy-IncludePath {
     (
         [Parameter(Mandatory = $true)][string]$SrcPath,
         [Parameter(Mandatory = $true)][string]$DstPath,
-        [switch]$Recurse
+        [switch]$Recurse=$false
     )
-    Copy-Item -Recurse:$Recurse $(Get-DepSrcPath($SrcPath)) $(Get-DepIncPath($DstPath)) -ErrorVariable CapturedErrors -ErrorAction SilentlyContinue
-    $CapturedErrors | foreach-object { if ($_ -notmatch "already exists") { write-error $_ } }
+    Copy-IncludePathAbs $(Get-DepSrcPath($SrcPath)) $(Get-DepIncPath($DstPath)) -Recurse:$Recurse -MakeNewFile:$false
 }
 
 Function Remove-Directory {
@@ -51,6 +54,15 @@ Function Make-Directory {
 
 # Initialize premake + include files
 
+#
+# ZipLib
+#
+Write-Output "Copying ZipLib files..."
+Remove-Directory $(Get-DepIncPath("ZipLib"))
+Make-Directory $(Get-DepIncPath("ZipLib"))
+
+Copy-IncludePath "ZipLib\*" "ZipLib\" -Recurse
+
 
 #
 # flecs
@@ -59,8 +71,11 @@ Write-Output "Copying flecs files..."
 Copy-Item Premake\flecs.lua $(Get-DepSrcPath("flecs\premake5.lua"))
 
 Remove-Directory $(Get-DepIncPath("flecs"))
-Copy-Item -Recurse $(Get-DepSrcPath("flecs\include")) $(Get-DepIncPath("flecs"))
+Make-Directory $(Get-DepIncPath("flecs"))
+
+Copy-IncludePath "flecs\include\*" "flecs\" -Recurse
 Get-ChildItem -Path Deps/Externals/flecs -Filter project.json -Recurse | Remove-Item -Force
+
 
 #
 # ImGui
@@ -72,9 +87,9 @@ Make-Directory $(Get-DepIncPath("ImGui\misc"))
 
 Copy-Item Premake\ImGui.lua $(Get-DepSrcPath("ImGui\premake5.lua"))
 
-Copy-IncludePath "ImGui\backends\*.h" "ImGui\backends" -Recurse
-Copy-IncludePath "ImGui\*.h" "ImGui"
-Copy-IncludePath "ImGui\misc" "ImGui" -Recurse
+Copy-IncludePath "ImGui\*" "ImGui\"
+Copy-IncludePath "ImGui\misc\*" "ImGui\" -Recurse
+Copy-IncludePath "ImGui\backends\*" "ImGui\backends\" -Recurse
 
 
 #
@@ -86,8 +101,8 @@ Make-Directory $(Get-DepIncPath("LibOgg\ogg"))
 
 Copy-Item Premake\LibOgg.lua $(Get-DepSrcPath("libogg-1.3.0\premake5.lua"))
 
-Copy-IncludePath "libogg-1.3.0\include\ogg\*.h" "LibOgg\ogg"
-Copy-IncludePath "libogg-1.3.0\include\ogg\*.h" "LibOgg"
+Copy-IncludePath "libogg-1.3.0\include\ogg\*" "LibOgg\ogg\" -Recurse
+Copy-IncludePath "libogg-1.3.0\include\ogg\*" "LibOgg\" -Recurse
 
 
 #
@@ -99,7 +114,8 @@ Make-Directory $(Get-DepIncPath("Vorbis"))
 
 Copy-Item Premake\LibVorbis.lua $(Get-DepSrcPath("vorbis\premake5.lua"))
 
-Copy-IncludePath "vorbis\include\vorbis\*.h" "Vorbis"
+Copy-IncludePath "vorbis\include\vorbis\*" "Vorbis\" -Recurse
+
 
 #
 # Bullet3
@@ -120,6 +136,13 @@ Copy-Item Premake\Bullet3\BulletInverseDynamics.lua $(Get-DepSrcPath("Bullet3\sr
 Copy-Item Premake\Bullet3\BulletSoftBody.lua $(Get-DepSrcPath("Bullet3\src\BulletSoftBody\premake5.lua"))
 Copy-Item Premake\Bullet3\LinearMath.lua $(Get-DepSrcPath("Bullet3\src\LinearMath\premake5.lua"))
 
+$SrcPath = $(Get-DepSrcPath("Bullet3\src"))
+Get-ChildItem $SrcPath -Recurse -Filter "*.h" |
+Foreach-Object {
+    $Path = "Bullet3\" + ($_.FullName -Replace "^.*Bullet3\\src\\", "")
+    Copy-IncludePathAbs $_.FullName $(Get-DepIncPath($Path)) -Recurse
+}
+
 
 #
 # spdlog
@@ -130,15 +153,8 @@ Make-Directory $(Get-DepIncPath("spdlog"))
 
 Copy-Item Premake\spdlog.lua $(Get-DepSrcPath("spdlog\premake5.lua"))
 
-Copy-IncludePath "spdlog\include\spdlog" "." -Recurse
+Copy-IncludePath "spdlog\include\spdlog\*" "spdlog\" -Recurse
 
-
-$SrcPath = $(Get-DepSrcPath("Bullet3\src"))
-Get-ChildItem $SrcPath -Recurse -Filter "*.h" |
-Foreach-Object {
-    $Path = "Bullet3\" + ($_.FullName -Replace "^.*Bullet3\\src\\", "")
-    Copy-IncludePathAbs $_.FullName $(Get-DepIncPath($Path))
-}
 
 #
 # DirectX
@@ -147,11 +163,11 @@ Remove-Directory $(Get-DepIncPath("DX"))
 Make-Directory $(Get-DepIncPath("DX"))
 
 Write-Output "Copying DirectX Header files..."
-Copy-IncludePath "DirectX-Headers\include\directx\*.h" "DX"
-Copy-IncludePath "DirectX-Headers\include\dxguids\*.h" "DX"
-Copy-IncludePath "DirectX-Headers\include\wsl\stubs" "DX" -Recurse
-Copy-IncludePath "DirectX-Headers\include\wsl\winadapter.h" "DX"
-Copy-IncludePath "DirectX-Headers\include\wsl\wrladapter.h" "DX"
+Copy-IncludePath "DirectX-Headers\include\directx\*.h" "DX\"
+Copy-IncludePath "DirectX-Headers\include\dxguids\*.h" "DX\"
+Copy-IncludePath "DirectX-Headers\include\wsl\winadapter.h" "DX\"
+Copy-IncludePath "DirectX-Headers\include\wsl\wrladapter.h" "DX\"
+
 
 #
 # DirectX Compiler
@@ -166,6 +182,7 @@ Write-Output "Copying DxC files..."
 Copy-Item "Vendors\DxC\inc\*.h" $(Get-DepIncPath("DxC"))
 Copy-Item "Vendors\DxC\bin"  $(Get-DepLibPath("DxC\bin")) -Force -Recurse
 Copy-Item "Vendors\DxC\lib"  $(Get-DepLibPath("DxC\lib")) -Force -Recurse
+
 
 #
 # GLM

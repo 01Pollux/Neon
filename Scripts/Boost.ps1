@@ -28,7 +28,7 @@ Push-Location -Path .\boost -StackName "BoostTempPath"
 
 # Boost with address sanitizer
 
-.\b2 architecture=x86 address-model=64 address-sanitizer=on debug-symbols=on leak-sanitizer=on undefined-sanitizer=on runtime-link=static threading=multi -sBZIP2_SOURCE="../../Deps/Externals/bzip2" -sZLIB_SOURCE="../../Deps/Externals/zlib"
+.\b2 architecture=x86 address-model=64 address-sanitizer=on debug-symbols=on leak-sanitizer=on undefined-sanitizer=on runtime-link=static threading=multi
 
 Pop-Location -StackName "BoostTempPath"
 Pop-Location -StackName "TempPath"
@@ -38,7 +38,7 @@ Copy-Boost "[Sanitizer]" "boost_san"
 
 Push-Location -Path .\tmp -StackName "TempPath"
 Push-Location -Path .\boost -StackName "BoostTempPath"
-.\b2 architecture=x86 address-model=64 runtime-link=static threading=multi -sBZIP2_SOURCE="../../Deps/Externals/bzip2" -sZLIB_SOURCE="../../Deps/Externals/zlib"
+.\b2 architecture=x86 address-model=64 runtime-link=static threading=multi
 
 Pop-Location -StackName "BoostTempPath"
 Pop-Location -StackName "TempPath"

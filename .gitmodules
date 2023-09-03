@@ -35,3 +35,6 @@
 [submodule "Deps/Externals/glfw"]
 	path = Deps/Externals/glfw
 	url = https://github.com/01Pollux/glfw
+[submodule "Deps/Externals/ZipLib"]
+	path = Deps/Externals/ZipLib
+	url = https://github.com/01Pollux/ZipLib.git
