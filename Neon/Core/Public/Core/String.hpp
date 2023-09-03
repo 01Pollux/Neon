@@ -24,7 +24,8 @@ namespace Neon
     template<typename _Ty>
     concept StringType = std::is_same_v<_Ty, StringU8> || std::is_same_v<_Ty, String> ||
                          std::is_same_v<_Ty, StringU8View> || std::is_same_v<_Ty, StringView> ||
-                         std::is_same_v<_Ty, const char*> || std::is_same_v<_Ty, const wchar_t*>;
+                         std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::decay_t<_Ty>>>, char> ||
+                         std::is_same_v<std::remove_cv_t<std::remove_pointer_t<std::decay_t<_Ty>>>, wchar_t>;
 } // namespace Neon
 
 namespace Neon::StringUtils
@@ -157,7 +158,9 @@ namespace Neon::StringUtils
     //
 
     // compile-time hash
-    [[nodiscard]] constexpr size_t Hash(const char* Str)
+    template<StringType _Ty>
+    [[nodiscard]] constexpr size_t Hash(
+        const _Ty& Str)
     {
         size_t Hash = Impl::_Hash_Basis;
         for (size_t i = 0; Str[i]; i++)
@@ -167,56 +170,4 @@ namespace Neon::StringUtils
         }
         return Hash;
     }
-
-    // compile-time hash
-    [[nodiscard]] constexpr size_t Hash(const wchar_t* Str)
-    {
-        size_t Hash = Impl::_Hash_Basis;
-        for (size_t i = 0; Str[i]; i++)
-        {
-            Hash ^= Str[i];
-            Hash *= Impl::_Hash_Prime;
-        }
-        return Hash;
-    }
-
-    // run-time hash
-    [[nodiscard]] constexpr size_t Hash(const StringU8& Str)
-    {
-        size_t Hash = Impl::_Hash_Basis;
-        for (char i : Str)
-        {
-            Hash ^= i;
-            Hash *= Impl::_Hash_Prime;
-        }
-        return Hash;
-    }
-    // run-time hash
-    [[nodiscard]] constexpr size_t Hash(const String& Str)
-    {
-        size_t Hash = Impl::_Hash_Basis;
-        for (wchar_t i : Str)
-        {
-            Hash ^= i;
-            Hash *= Impl::_Hash_Prime;
-        }
-        return Hash;
-    }
-
-    inline namespace Literals
-    {
-        constexpr size_t operator"" _hash(
-            const char* Str,
-            size_t)
-        {
-            return Hash(Str);
-        }
-
-        constexpr size_t operator"" _hash(
-            const wchar_t* Str,
-            size_t)
-        {
-            return Hash(Str);
-        }
-    } // namespace Literals
 } // namespace Neon::StringUtils

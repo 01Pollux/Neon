@@ -10,7 +10,8 @@ namespace Neon::Editor
     }
 
     void ProjectManager::NewEmptyProject(
-        const std::filesystem::path& ProjectPath)
+        const std::filesystem::path& ProjectPath,
+        ProjectConfig                Config)
     {
         if (m_CurrentProject)
         {
@@ -19,7 +20,7 @@ namespace Neon::Editor
         }
 
         m_CurrentProject = std::make_unique<Project>(ProjectPath);
-        m_CurrentProject->Load();
+        m_CurrentProject->LoadEmpty(std::move(Config));
     }
 
     Project* ProjectManager::GetActive() const

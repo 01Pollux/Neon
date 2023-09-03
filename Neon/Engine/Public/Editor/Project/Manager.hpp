@@ -19,7 +19,8 @@ namespace Neon::Editor
         /// Creates a new project.
         /// </summary>
         void NewEmptyProject(
-            const std::filesystem::path& ProjectPath);
+            const std::filesystem::path& ProjectPath,
+            ProjectConfig                Config);
 
         /// <summary>
         /// Gets the current project.

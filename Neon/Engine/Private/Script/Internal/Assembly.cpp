@@ -67,7 +67,8 @@ namespace Neon::Scripting::CS
 
             switch (Id)
             {
-            default: [[likely]] break;
+            default:
+                [[likely]] break;
             case StringUtils::Hash(".<Module>"):
                 continue;
             }
