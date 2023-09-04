@@ -126,6 +126,7 @@ namespace Neon::Runtime
         // Create an observer for entities that are part of scene
         World.observer("SceneObserver")
             .term<Component::WorldSceneRoot>(flecs::Wildcard)
+            .singleton()
             .event(flecs::OnAdd)
             .event(flecs::OnRemove)
             .iter(
