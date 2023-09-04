@@ -15,11 +15,7 @@ namespace Neon::Editor
     void EditorEngine::Initialize(
         Config::EditorConfig Config)
     {
-        auto ContentPackage = std::make_unique<Asset::DirectoryAssetPackage>("Content");
-        m_ContentPackage    = ContentPackage.get();
-
         Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Editor"));
-        Config.Resource.AssetPackages.emplace_back(std::move(ContentPackage));
 
         auto StartupProjectPath = std::move(Config.StartupProjectPath);
         auto NewProjectName     = std::move(Config.NewProjectName);

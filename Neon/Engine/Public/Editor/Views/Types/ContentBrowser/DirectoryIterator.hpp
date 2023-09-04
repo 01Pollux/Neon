@@ -21,6 +21,7 @@ namespace Neon::Editor::Views::CB
         using FileAssetList = std::vector<FileAssetMetaPair>;
         using DirectoryList = std::vector<std::filesystem::path>;
 
+        DirectoryIterator() = default;
         DirectoryIterator(
             const StringU8& RootPath);
 

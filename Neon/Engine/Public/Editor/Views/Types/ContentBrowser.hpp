@@ -5,14 +5,8 @@
 
 #include <IO/FileWatcher.hpp>
 
-namespace Neon::Asset
-{
-    class IAssetPackage;
-} // namespace Neon::Asset
-
 namespace Neon::Editor::Views
 {
-
     class ContentBrowser : public IEditorView
     {
         class FileListener
@@ -47,8 +41,8 @@ namespace Neon::Editor::Views
 
     private:
         FileListener      m_Listener;
-        efsw::FileWatcher m_FileWatcher;
-        efsw::WatchID     m_ContentID;
+        efsw::FileWatcher m_FileWatcher{};
+        efsw::WatchID     m_ContentID{};
 
         CB::DirectoryIterator m_DirectoryIterator;
     };

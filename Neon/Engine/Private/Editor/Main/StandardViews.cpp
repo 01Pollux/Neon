@@ -234,13 +234,10 @@ namespace Neon::Editor
                     FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.nscene") },
                 };
 
-                // TODO: use Project::Get()->GetContentDir() instead
-                const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
-
                 FileSystem::FileDialog Dialog{
                     .Window     = GetWindowHandle(),
                     .Title      = STR("Open scene"),
-                    .InitialDir = ContentDir,
+                    .InitialDir = Project::Get()->GetContentDirectoryPath(),
                     .Filters    = Filters
                 };
                 auto Path = Dialog.SaveFile();
@@ -255,7 +252,7 @@ namespace Neon::Editor
                     Path += ".nscene";
                 }
 
-                auto RelativePath = std::filesystem::relative(Path, ContentDir);
+                auto RelativePath = std::filesystem::relative(Path, Dialog.InitialDir);
 
                 Ptr<Asset::RuntimeSceneAsset> Asset;
                 if (TrySavingExisting)
@@ -274,9 +271,7 @@ namespace Neon::Editor
                     Neon::Scene::RuntimeScene::MergeType::Replace,
                     Asset->GetScene());
 
-                Asset::Storage::SaveAsset(
-                    { .Asset            = std::static_pointer_cast<Asset::IAsset>(Asset),
-                      .PreferredPackage = m_ContentPackage });
+                Project::Get()->SaveAsset(Asset);
             };
 
             if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })

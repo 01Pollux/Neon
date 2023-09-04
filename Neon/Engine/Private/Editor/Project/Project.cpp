@@ -75,6 +75,23 @@ namespace Neon::Editor
 
     //
 
+    Asset::IAssetPackage* Project::GetContentPackage() noexcept
+    {
+        return m_ContentPackage;
+    }
+
+    //
+
+    void Project::SaveAsset(
+        const Ptr<Asset::IAsset>& Asset)
+    {
+        Asset::Storage::SaveAsset(
+            { .Asset            = Asset,
+              .PreferredPackage = m_ContentPackage });
+    }
+
+    //
+
     void Project::Save()
     {
         auto ProjectPath = GetProjectConfigPath();

@@ -18,8 +18,6 @@ namespace Neon::Editor::Views
         efsw::Action       Action,
         std::string        OldFileName)
     {
-        auto ContentPackage = Editor::EditorEngine::Get()->GetContentPackage();
-
         switch (Action)
         {
         case efsw::Action::Add:
@@ -59,11 +57,12 @@ namespace Neon::Editor::Views
     //
 
     ContentBrowser::ContentBrowser() :
-        IEditorView(StandardViews::s_ContentBrowserWidgetId),
-        m_ContentID(m_FileWatcher.addWatch("Content", &m_Listener, true)),
-        m_DirectoryIterator("Content")
+        IEditorView(StandardViews::s_ContentBrowserWidgetId)
     {
-        m_FileWatcher.watch();
+        /*,
+        m_ContentID(m_FileWatcher.addWatch(Project::Get()->GetContentDirectoryPath().string(), &m_Listener, true)),
+        m_DirectoryIterator(Project::Get()->GetContentDirectoryPath().string())
+        */
     }
 
     void ContentBrowser::OnRender()
@@ -86,7 +85,7 @@ namespace Neon::Editor::Views
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
 
-        auto ContentPackage = Editor::EditorEngine::Get()->GetContentPackage();
+        auto ContentPackage = Project::Get()->GetContentPackage();
 
         if (imcxx::table Table{ "Data", Columns })
         {

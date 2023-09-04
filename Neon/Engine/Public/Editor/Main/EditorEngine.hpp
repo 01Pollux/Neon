@@ -156,29 +156,15 @@ namespace Neon::Editor
             return &m_ProjectManager;
         }
 
-        /// <summary>
-        /// Get the content package.
-        /// </summary>
-        [[nodiscard]] Asset::IAssetPackage* GetContentPackage() const
-        {
-            return m_ContentPackage;
-        }
-
     private:
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
         std::unordered_set<IEditorView*>                m_OpenViews;
 
-        ProjectManager m_ProjectManager;
-
-        /// <summary>
-        /// TODO: move it to ProjectInstance.
-        /// </summary>
-        Asset::IAssetPackage* m_ContentPackage;
-
         Scene::EntityHandle m_EditorCamera;
-
         Scene::RuntimeScene m_RuntimeScene;
         Scene::RuntimeScene m_EditorScene;
+
+        ProjectManager m_ProjectManager;
 
         bool m_IsTitlebarHovered = false;
     };

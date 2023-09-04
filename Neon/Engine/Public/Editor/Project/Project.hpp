@@ -78,6 +78,30 @@ namespace Neon::Editor
         /// </summary>
         [[nodiscard]] ProjectConfig& GetConfig() noexcept;
 
+    public:
+        /// <summary>
+        /// Gets the content package.
+        /// </summary>
+        Asset::IAssetPackage* GetContentPackage() noexcept;
+
+    public:
+        /// <summary>
+        /// Save an asset.
+        /// </summary>
+        void SaveAsset(
+            const Ptr<Asset::IAsset>& Asset);
+
+        /// <summary>
+        /// Save an asset.
+        /// </summary>
+        template<typename _Ty>
+            requires(std::derived_from<_Ty, Asset::IAsset> && !std::is_same_v<_Ty, Asset::IAsset>)
+        void SaveAsset(
+            const Ptr<_Ty>& Asset)
+        {
+            SaveAsset(std::static_pointer_cast<Asset::IAsset>(Asset));
+        }
+
     private:
         /// <summary>
         /// Loads the project.
