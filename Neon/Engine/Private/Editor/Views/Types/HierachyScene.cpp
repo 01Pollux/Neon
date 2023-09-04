@@ -177,7 +177,6 @@ namespace Neon::Editor::Views
         flecs::entity Entity = EntHandle;
 
         ImGuiTableFlags TableFlags =
-            ImGuiTreeNodeFlags_OpenOnDoubleClick |
             ImGuiTreeNodeFlags_OpenOnArrow |
             ImGuiTreeNodeFlags_SpanAvailWidth |
             ImGuiTreeNodeFlags_FramePadding |
@@ -189,11 +188,7 @@ namespace Neon::Editor::Views
         // If entity has no children, mark it as leaf.
         if (!ChidlrenFilter.is_true())
         {
-            TableFlags |= ImGuiTreeNodeFlags_Leaf;
-        }
-        else
-        {
-             TableFlags |= ImGuiTreeNodeFlags_Bullet;
+            TableFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
         }
 
         // If entity is disabled, Make the text gray.
@@ -213,8 +208,6 @@ namespace Neon::Editor::Views
 
         bool EditingName = false;
         {
-            static char Buffer[256];
-
             // If we clicked F2 or double click on this entity, set it as the entity to rename.
             if (ImGui::IsItemFocused())
             {
@@ -223,7 +216,7 @@ namespace Neon::Editor::Views
                 {
                     m_EntityToRename = Entity;
                     auto Name        = Entity.name();
-                    strncpy_s(Buffer, Name.c_str(), Name.size());
+                    strncpy_s(m_RenameBuffer, Name.c_str(), Name.size());
                 }
                 else if (ImGui::IsKeyPressed(ImGuiKey_Delete))
                 {
@@ -245,11 +238,13 @@ namespace Neon::Editor::Views
                     ImGui::SameLine();
                     EditingName = true;
 
-                    if (ImGui::InputText("##Name", Buffer, int(std::size(Buffer)), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue))
+                    // If user pressed enter, or clicked outside the text box, rename the entity.
+                    if (ImGui::InputText("##Name", m_RenameBuffer, int(std::size(m_RenameBuffer)), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue) ||
+                        (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) && ImGui::IsMouseClicked(ImGuiMouseButton_Left)))
                     {
-                        DeferredTask = [Entity]() mutable
+                        DeferredTask = [this, Entity]() mutable
                         {
-                            Scene::EntityHandle(Entity).SetName(Buffer);
+                            Scene::EntityHandle(Entity).SetName(m_RenameBuffer);
                         };
                         m_EntityToRename = {};
                     }
