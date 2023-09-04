@@ -20,8 +20,8 @@
 		* Dockable window
 	- [ ] Audio
 	* Input
-		- [ ] Basic pooling
-		- [ ] Input hooking
+		* Basic pooling
+		* Input hooking
 	* Math types
 		* Vector
 		* Matrix
@@ -33,7 +33,7 @@
 		* File logging
 	* Event system
 		* Private events
-		- [ ] Public events
+		* Public events
 	* Scripting
 		* C# Support
 	* Concurrency
