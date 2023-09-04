@@ -35,3 +35,7 @@
 [submodule "Deps/Externals/ZipLib"]
 	path = Deps/Externals/ZipLib
 	url = https://github.com/01Pollux/ZipLib.git
+[submodule "Deps/Externals/flecs"]
+	path = Deps/Externals/flecs
+	url = https://github.com/01Pollux/flecs
+	branch = main
