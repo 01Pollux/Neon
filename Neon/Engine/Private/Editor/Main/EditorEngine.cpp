@@ -1,7 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Project/DefaultFonts.hpp>
-#include <Editor/Profile/Manager.hpp>
 
 #include <Window/Window.hpp>
 #include <Asset/Packs/Directory.hpp>
@@ -24,27 +23,6 @@ namespace Neon::Editor
 
         GameEngine::Initialize(std::move(Config));
 
-        GetWindow()->OnWindowTitleHitTest().Listen(
-            [this](const Vector2I& MousePos, bool& WasHit)
-            {
-                WasHit = m_IsTitlebarHovered;
-            });
-
-        // Load the default fonts
-        LoadDefaultFonts();
-
-        // Load profile
-        // TODO: Load from config
-        ProfileManager::Load(Asset::Handle::FromString("1f212ba0-6313-4452-8dec-92b34f7b21e3"));
-
-        // Register editor system
-        AddStandardEditorSystem();
-
-        // Register views
-        AddStandardViews();
-
-        //
-
         if (!NewProjectName.empty())
         {
             ProjectManager::Get()->NewEmptyProject(StartupProjectPath, { .Name = std::move(NewProjectName) });
@@ -57,6 +35,21 @@ namespace Neon::Editor
                 ProjectManager::Get()->NewEmptyProject(StartupProjectPath);
             }
         }
+
+        GetWindow()->OnWindowTitleHitTest().Listen(
+            [this](const Vector2I& MousePos, bool& WasHit)
+            {
+                WasHit = m_IsTitlebarHovered;
+            });
+
+        // Load the default fonts
+        LoadDefaultFonts();
+
+        // Register editor system
+        AddStandardEditorSystem();
+
+        // Register views
+        AddStandardViews();
     }
 
     void EditorEngine::PreUpdate()

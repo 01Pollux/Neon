@@ -17,6 +17,10 @@ namespace Neon::Editor
         VersionType Version = VersionType(1, 0, 0);
 
         Asset::Handle StartupScene;
+        /// <summary>
+        /// Default profile to use when no profile is selected.
+        /// </summary>
+        Asset::Handle CurrentProfile = Asset::Handle::FromString("1f212ba0-6313-4452-8dec-92b34f7b21e3");
 
         float AssemblyAutoReloadInterval = 5.f;
         float AutoSaveInterval           = 25.f;

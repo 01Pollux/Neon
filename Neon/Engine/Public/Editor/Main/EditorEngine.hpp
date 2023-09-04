@@ -2,6 +2,7 @@
 
 #include <Runtime/GameEngine.hpp>
 #include <Scene/RuntimeScene.hpp>
+#include <Utils/Signal.hpp>
 
 #include <Editor/Main/Config.hpp>
 #include <Editor/Views/View.hpp>
@@ -12,10 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace Neon::Asset
-{
-    class IAssetPackage;
-} // namespace Neon::Asset
+//
 
 namespace Neon::Editor
 {

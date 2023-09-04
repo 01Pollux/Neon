@@ -57,12 +57,10 @@ namespace Neon::Editor::Views
     //
 
     ContentBrowser::ContentBrowser() :
-        IEditorView(StandardViews::s_ContentBrowserWidgetId)
-    {
-        /*,
+        IEditorView(StandardViews::s_ContentBrowserWidgetId),
         m_ContentID(m_FileWatcher.addWatch(Project::Get()->GetContentDirectoryPath().string(), &m_Listener, true)),
         m_DirectoryIterator(Project::Get()->GetContentDirectoryPath().string())
-        */
+    {
     }
 
     void ContentBrowser::OnRender()

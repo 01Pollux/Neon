@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Editor/Project/Manager.hpp>
+#include <Editor/Profile/Manager.hpp>
 
 #include <Asset/Packs/Directory.hpp>
 #include <Asset/Storage.hpp>
@@ -108,7 +109,9 @@ namespace Neon::Editor
 
         Config.put("Project.Name", m_Config.Name);
         Config.put("Project.Version", m_Config.Version.ToString());
+
         Config.put("Project.Start Scene", m_Config.StartupScene.ToString());
+        Config.put("Project.Current Profile", m_Config.CurrentProfile.ToString());
 
         Config.put("Project.Assembly Auto Reload", m_Config.AssemblyAutoReload);
         Config.put("Project.Assembly Auto Reload Interval", m_Config.AssemblyAutoReloadInterval);
@@ -155,6 +158,17 @@ namespace Neon::Editor
             NEON_TRACE("No startup scene specified");
         }
 
+        if (auto ProfileStr = Config.get_optional<std::string>("Project.Current Profile"))
+        {
+            m_Config.CurrentProfile = Asset::Handle::FromString(ProfileStr.get());
+            NEON_TRACE("Current profile: {}", m_Config.CurrentProfile.ToString());
+        }
+        else
+        {
+            NEON_TRACE("Default profile is being used");
+        }
+        ProfileManager::Load(m_Config.CurrentProfile);
+
         m_Config.AssemblyAutoReload         = Config.get<bool>("Project.Assembly Auto Reload", true);
         m_Config.AssemblyAutoReloadInterval = Config.get<float>("Project.Assembly Auto Reload Interval", 1.0f);
 
@@ -191,8 +205,6 @@ namespace Neon::Editor
     {
         NEON_TRACE("Loading empty project: {}", GetProjectDirectoryPath().string());
         m_Config = std::move(Config);
-
-        //
 
         {
             auto File = ZipFile::Open("Templates/Empty.ntarch", false);
@@ -233,6 +245,8 @@ namespace Neon::Editor
                 Entry->CloseDecompressionStream();
             }
         }
+
+        ProfileManager::Load(m_Config.CurrentProfile);
 
         Save();
         NEON_TRACE("Loaded project: {} ({})", m_Config.Name, m_Config.Version.ToString());

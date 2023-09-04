@@ -41,8 +41,8 @@ namespace Neon::Editor::Views
 
     private:
         FileListener      m_Listener;
-        efsw::FileWatcher m_FileWatcher{};
-        efsw::WatchID     m_ContentID{};
+        efsw::FileWatcher m_FileWatcher;
+        efsw::WatchID     m_ContentID;
 
         CB::DirectoryIterator m_DirectoryIterator;
     };
