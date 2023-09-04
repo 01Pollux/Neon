@@ -6,6 +6,8 @@
 
 #include <fstream>
 #include <boost/property_tree/ini_parser.hpp>
+#include <ZipLib/ZipFile.h>
+
 #include <Log/Logger.hpp>
 
 //
@@ -168,18 +170,47 @@ namespace Neon::Editor
 
         //
 
-        // Unzip from /Templates/Empty.ntzip
         {
-            std::ifstream EmptyTemplate("Templates/Empty.ntzip", std::ios_base::in | std::ios_base::binary);
-            if (!EmptyTemplate.is_open())
+            auto File = ZipFile::Open("Templates/Empty.ntarch", false);
+
+            for (auto& [EntryName, Entry] : File->GetEntries())
             {
-                NEON_ERROR("Failed to open empty project template");
-                return;
+                if (Entry->IsDirectory())
+                {
+                    continue;
+                }
+
+                auto& Stream = *Entry->GetDecompressionStream();
+                auto  Path   = GetProjectDirectoryPath() / EntryName;
+
+                if (auto ParentPath = Path.parent_path(); !std::filesystem::exists(ParentPath))
+                    std::filesystem::create_directories(ParentPath);
+
+                std::ofstream OutFile(Path, std::ios::binary | std::ios::trunc);
+                if (!OutFile.is_open())
+                {
+                    NEON_ERROR("Failed to open file: {}", Path.string());
+                    continue;
+                }
+
+                if (EntryName == "ProjectFiles/premake5.lua")
+                {
+                    std::string Line;
+                    while (std::getline(Stream, Line))
+                    {
+                        StringUtils::Replace(Line, "PROJECT_NAME", m_Config.Name);
+                        OutFile << Line << '\n';
+                    }
+                }
+                else
+                {
+                    OutFile << Stream.rdbuf();
+                }
+                Entry->CloseDecompressionStream();
             }
         }
 
-        //
-
+        Save();
         NEON_TRACE("Loaded project: {} ({})", m_Config.Name, m_Config.Version.ToString());
     }
 

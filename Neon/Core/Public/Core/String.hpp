@@ -146,6 +146,20 @@ namespace Neon::StringUtils
 
     //
 
+    [[nodiscard]] constexpr void Replace(
+        StringU8&       Str,
+        StringU8View    Token,
+        const StringU8& Value) noexcept
+    {
+        auto It = Str.find(Token);
+        if (It != std::string::npos)
+        {
+            Str.replace(It, Token.size(), Value);
+        }
+    }
+
+    //
+
     namespace Impl
     {
         // https://github.com/elanthis/constexpr-hash-demo/blob/master/test.cpp

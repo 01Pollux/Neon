@@ -41,6 +41,10 @@ namespace Neon::Editor
 
         // Register views
         AddStandardViews();
+
+        //
+
+        ProjectManager::Get()->NewEmptyProject("D:\\Prj", { .Name = "Testing" });
     }
 
     void EditorEngine::PreUpdate()
