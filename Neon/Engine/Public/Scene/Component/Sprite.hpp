@@ -29,9 +29,11 @@ namespace Neon::Scene::Component
             }
         };
 
-        Ptr<Renderer::IMaterial> MaterialInstance = nullptr;
+        Sprite();
+
+        Ptr<Renderer::IMaterial> MaterialInstance;
         AffineTransformMatrix    TextureTransform;
-        Vector2                  SpriteSize;
+        Vector2                  SpriteSize{ 1.0f, 1.0f };
         Color4                   ModulationColor = Colors::White;
     };
 } // namespace Neon::Scene::Component

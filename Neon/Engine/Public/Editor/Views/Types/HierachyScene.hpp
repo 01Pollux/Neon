@@ -22,7 +22,7 @@ namespace Neon::Editor::Views
             std::move_only_function<void()>& DeferredTask);
 
     private:
-        char          m_RenameBuffer[256];
+        char          m_RenameBuffer[256]{};
         flecs::entity m_EntityToRename;
     };
 } // namespace Neon::Editor::Views

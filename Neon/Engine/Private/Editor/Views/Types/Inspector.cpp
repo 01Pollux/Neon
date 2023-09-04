@@ -84,8 +84,11 @@ namespace Neon::Editor::Views
             PopupPos.x += (Size - PopupWidth) / 2.0f;
 
             ImGui::SetNextWindowPos(PopupPos);
-            ImGui::SetNextWindowSize(ImVec2{ PopupWidth, PopupHeight });
-            if (imcxx::popup AddComponent{ "##AddComponent", ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove })
+            ImGui::SetNextWindowSize(ImVec2{ PopupWidth, 0.f });
+
+            // Set window max size
+            ImGui::SetNextWindowSizeConstraints(ImVec2{ PopupWidth, PopupHeight / 8.f }, ImVec2{ PopupWidth, PopupHeight });
+            if (imcxx::popup AddComponent{ "##AddComponent", ImGuiWindowFlags_NoMove })
             {
                 if (imcxx::table ComponentTable{ "", 2, ImGuiTableFlags_Sortable | ImGuiTableFlags_SizingStretchSame })
                 {
@@ -124,8 +127,7 @@ namespace Neon::Editor::Views
                             bool IsClicked = ImGui::IsItemClicked();
 
                             ComponentTable.next_column();
-                            ImGui::TextUnformatted(ComponentId.name().c_str());
-                            IsClicked |= ImGui::IsItemClicked();
+                            IsClicked |= ImGui::Selectable(ComponentId.name().c_str());
 
                             if (IsClicked)
                             {

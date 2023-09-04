@@ -232,5 +232,4 @@ namespace Neon::Renderer
         std::vector<IMaterial*>                  m_Materials;
         std::unordered_map<IMaterial*, uint32_t> m_MaterialMap;
     };
-
 } // namespace Neon::Renderer

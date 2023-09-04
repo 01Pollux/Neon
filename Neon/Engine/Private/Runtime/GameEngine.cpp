@@ -24,6 +24,7 @@
 #include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 #include <RHI/ImGui.hpp>
+#include <Renderer/Material/Shared.hpp>
 
 //
 
@@ -59,6 +60,9 @@ namespace Neon::Runtime
         // Shutdown the entity world
         Scene::EntityWorld::Shutdown();
 
+        // Shutdown the shared materials
+        Renderer::SharedMaterials::Shutdown();
+
         // Shutdown the renderer
         RHI::IRenderDevice::Destroy();
 
@@ -92,6 +96,9 @@ namespace Neon::Runtime
 
         //  Initialize the debug overlay
         Runtime::DebugOverlay::Create();
+
+        // Initialize the shared materials
+        Renderer::SharedMaterials::Initialize();
 
         // Initialize the game logic
         m_Logic = std::make_unique<GameLogic>();
