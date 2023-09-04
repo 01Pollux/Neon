@@ -2,6 +2,8 @@
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Project/Manager.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Editor
 {
     ProjectManager* ProjectManager::Get()
@@ -13,12 +15,8 @@ namespace Neon::Editor
         const std::filesystem::path& ProjectPath,
         ProjectConfig                Config)
     {
-        if (m_CurrentProject)
-        {
-            m_CurrentProject->Unload();
-            m_CurrentProject = nullptr;
-        }
-
+        // Currently we only support one project at a time, if we want to load another project, we will have to launch another instance of the editor
+        NEON_ASSERT(!m_CurrentProject);
         m_CurrentProject = std::make_unique<Project>(ProjectPath, true);
         m_CurrentProject->LoadEmpty(std::move(Config));
     }
@@ -26,16 +24,11 @@ namespace Neon::Editor
     bool ProjectManager::OpenProject(
         const std::filesystem::path& ProjectPath)
     {
-        if (m_CurrentProject)
-        {
-            m_CurrentProject->Unload();
-            m_CurrentProject = nullptr;
-        }
-
+        // Currently we only support one project at a time, if we want to load another project, we will have to launch another instance of the editor
+        NEON_ASSERT(!m_CurrentProject);
         m_CurrentProject = std::make_unique<Project>(ProjectPath, false);
         if (!m_CurrentProject->Load())
         {
-            m_CurrentProject->Unload();
             m_CurrentProject = nullptr;
             return false;
         }

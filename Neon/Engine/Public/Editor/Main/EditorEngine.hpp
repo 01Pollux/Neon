@@ -160,7 +160,6 @@ namespace Neon::Editor
 
         Scene::EntityHandle m_EditorCamera;
         Scene::RuntimeScene m_RuntimeScene;
-        Scene::RuntimeScene m_EditorScene;
 
         ProjectManager m_ProjectManager;
 

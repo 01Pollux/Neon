@@ -2,6 +2,8 @@
 #include <Asset/Metadata.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::Asset
 {
     AssetMetaDataDef::AssetMetaDataDef(
@@ -89,12 +91,15 @@ namespace Neon::Asset
 
     StringU8 AssetMetaDataDef::GetPath() const
     {
-        return m_MetaData.get<StringU8>("Path");
+        auto Path = m_MetaData.get<StringU8>("Path");
+        NEON_VALIDATE(!(Path.empty() || Path.starts_with("..")), "Path '{}' cannot be empty or start with '..'", Path);
+        return Path;
     }
 
     void AssetMetaDataDef::SetPath(
         StringU8 Path)
     {
+        NEON_VALIDATE(!(Path.empty() || Path.starts_with("..")), "Path '{}' cannot be empty or start with '..'", Path);
         m_MetaData.put("Path", std::move(Path));
     }
 

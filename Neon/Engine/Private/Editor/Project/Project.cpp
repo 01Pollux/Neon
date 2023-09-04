@@ -4,6 +4,7 @@
 
 #include <Asset/Packs/Directory.hpp>
 #include <Asset/Storage.hpp>
+#include <Asset/Manager.hpp>
 
 #include <fstream>
 #include <boost/property_tree/ini_parser.hpp>
@@ -14,8 +15,6 @@
 //
 
 namespace bpt = boost::property_tree;
-
-//
 
 namespace Neon::Editor
 {
@@ -36,6 +35,9 @@ namespace Neon::Editor
 
     Project::~Project()
     {
+        Unload();
+
+        m_ContentPackage->Export().get();
         Asset::Storage::Unmount(m_ContentPackage);
         m_ContentPackage = nullptr;
     }
@@ -110,7 +112,14 @@ namespace Neon::Editor
         Config.put("Project.Name", m_Config.Name);
         Config.put("Project.Version", m_Config.Version.ToString());
 
-        Config.put("Project.Start Scene", m_Config.StartupScene.ToString());
+        if (m_Config.StartupScene && !m_Config.StartupScene->GetPath().empty())
+        {
+            Config.put("Project.Start Scene", m_Config.StartupScene->GetGuid().ToString());
+        }
+        else
+        {
+            Config.put("Project.Start Scene", Asset::Handle::NullString);
+        }
         Config.put("Project.Current Profile", m_Config.CurrentProfile.ToString());
 
         Config.put("Project.Assembly Auto Reload", m_Config.AssemblyAutoReload);
@@ -128,6 +137,44 @@ namespace Neon::Editor
         bpt::write_ini(ConfigFile, Config);
         NEON_TRACE("Saved project: {} ({})", m_Config.Name, m_Config.Version.ToString());
     }
+
+    //
+
+    const Ptr<Asset::RuntimeSceneAsset>& Project::GetActiveScene() const
+    {
+        return m_Config.StartupScene;
+    }
+
+    void Project::ActivateCurrentScene()
+    {
+        m_Config.StartupScene->GetScene().ApplyToRoot(Scene::RuntimeScene::MergeType::Replace);
+    }
+
+    void Project::SetActiveScene(
+        const Ptr<Asset::RuntimeSceneAsset>& Scene)
+    {
+        m_Config.StartupScene = Scene;
+        ActivateCurrentScene();
+    }
+
+    void Project::CreateNewScene()
+    {
+        SetActiveScene(std::make_shared<Asset::RuntimeSceneAsset>(
+            Asset::Handle::Random(), ""));
+    }
+
+    void Project::SceneDirty(
+        bool State)
+    {
+        m_SceneIsDirty = State;
+    }
+
+    bool Project::IsSceneDirty() const
+    {
+        return m_SceneIsDirty;
+    }
+
+    //
 
     bool Project::Load()
     {
@@ -148,13 +195,19 @@ namespace Neon::Editor
         m_Config.Name    = Config.get<std::string>("Project.Name", "Unnamed Project");
         m_Config.Version = Config.get<std::string>("Project.Version", "1.0.0");
 
+        Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneTask;
         if (auto StartScene = Config.get_optional<std::string>("Project.Start Scene"))
         {
-            m_Config.StartupScene = Asset::Handle::FromString(StartScene.get());
-            NEON_TRACE("Startup scene: {}", m_Config.StartupScene.ToString());
+            auto SceneGuid = Asset::Handle::FromString(StartScene.get());
+            if (SceneGuid != Asset::Handle::Null)
+            {
+                SceneTask = Asset::Manager::Load(SceneGuid);
+                NEON_TRACE("Startup scene: {}", StartScene.get());
+            }
         }
-        else
+        if (!SceneTask)
         {
+            CreateNewScene();
             NEON_TRACE("No startup scene specified");
         }
 
@@ -195,6 +248,11 @@ namespace Neon::Editor
         Stream >> Rotation.y;
         Stream.ignore();
         Stream >> Rotation.z;
+
+        if (SceneTask)
+        {
+            SetActiveScene(SceneTask.Get());
+        }
 
         NEON_TRACE("Loaded project: {} ({})", m_Config.Name, m_Config.Version.ToString());
         return true;
@@ -246,6 +304,7 @@ namespace Neon::Editor
             }
         }
 
+        CreateNewScene();
         ProfileManager::Load(m_Config.CurrentProfile);
 
         Save();

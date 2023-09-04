@@ -26,6 +26,12 @@ namespace Neon::Asset
         [[nodiscard]] const StringU8& GetPath() const noexcept;
 
         /// <summary>
+        /// Set the asset path.
+        /// </summary>
+        [[nodiscard]] void SetPath(
+            StringU8 Path) noexcept;
+
+        /// <summary>
         /// Query if the asset is dirty.
         /// </summary>
         [[nodiscard]] bool IsDirty() const noexcept;
@@ -42,70 +48,7 @@ namespace Neon::Asset
         bool         m_IsDirty = true;
     };
 
-    struct AssetSoftMove
-    {
-    };
-
-    struct AssetHardMove
-    {
-    };
-
-    template<typename _Ty = IAsset>
-        requires std::is_base_of_v<IAsset, _Ty>
-    struct AssetPtr
-    {
-    public:
-        AssetPtr(std::nullptr_t) noexcept
-        {
-        }
-
-        AssetPtr(
-            Ptr<_Ty> Asset = nullptr) :
-            m_Asset(std::move(Asset))
-        {
-        }
-
-        template<typename _OTy>
-            requires std::is_base_of_v<IAsset, _Ty>
-        AssetPtr(
-            Ptr<_OTy> Asset,
-            AssetSoftMove) :
-            m_Asset(std::static_pointer_cast<_Ty>(std::move(Asset)))
-        {
-        }
-
-        template<typename _OTy>
-            requires std::is_base_of_v<IAsset, _Ty>
-        AssetPtr(
-            Ptr<_OTy> Asset,
-            AssetHardMove) :
-            m_Asset(std::dynamic_pointer_cast<_Ty>(std::move(Asset)))
-        {
-        }
-
-        [[nodiscard]] operator bool() const noexcept
-        {
-            return m_Asset != nullptr;
-        }
-
-        [[nodiscard]] bool operator!() const noexcept
-        {
-            return !operator bool();
-        }
-
-        [[nodiscard]] auto& Get() const noexcept
-        {
-            return m_Asset;
-        }
-
-        [[nodiscard]] auto& operator->() const noexcept
-        {
-            return Get();
-        }
-
-    private:
-        Ptr<_Ty> m_Asset;
-    };
+    //
 
     template<typename _Ty = IAsset>
         requires std::is_base_of_v<IAsset, _Ty>
@@ -120,10 +63,26 @@ namespace Neon::Asset
         }
 
         AssetTaskPtr(
-            AssetPtr<_Ty> Asset) :
+            Ptr<_Ty> Asset) :
             m_Asset(std::move(Asset))
         {
         }
+
+        //
+
+        void operator=(
+            std::future<Ptr<IAsset>> Asset) noexcept
+        {
+            m_Asset = std::move(Asset);
+        }
+
+        void operator=(
+            Ptr<_Ty> Asset) noexcept
+        {
+            m_Asset = std::move(Asset);
+        }
+
+        //
 
         [[nodiscard]] operator bool() const noexcept
         {
@@ -149,7 +108,20 @@ namespace Neon::Asset
             return Get();
         }
 
+        [[nodiscard]] const Ptr<_Ty>& operator*() const
+        {
+            return Get();
+        }
+
+        [[nodiscard]] operator const Ptr<_Ty>&() const noexcept
+        {
+            return Get();
+        }
+
     private:
-        mutable std::variant<std::future<Ptr<IAsset>>, Ptr<_Ty>> m_Asset;
+        mutable std::variant<
+            std::future<Ptr<IAsset>>,
+            Ptr<_Ty>>
+            m_Asset;
     };
 } // namespace Neon::Asset

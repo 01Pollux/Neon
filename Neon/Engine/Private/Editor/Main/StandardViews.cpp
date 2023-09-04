@@ -204,13 +204,10 @@ namespace Neon::Editor
                     FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.namd") },
                 };
 
-                // TODO: use Project::Get()->GetContentDir() instead
-                const char* ContentDir = R"(D:\Dev\Neon\bin\Debug-windows-x86_64\NeonEditor\Content)";
-
                 FileSystem::FileDialog Dialog{
                     .Window     = GetWindowHandle(),
                     .Title      = STR("Open scene"),
-                    .InitialDir = ContentDir,
+                    .InitialDir = Project::Get()->GetContentDirectoryPath(),
                     .Filters    = Filters
                 };
                 auto Path = Dialog.OpenFile();
@@ -224,54 +221,64 @@ namespace Neon::Editor
                     Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneAsset(Asset::Manager::Load(MetaData.GetGuid()));
                     File.close();
 
-                    SceneAsset->GetScene().ApplyToRoot(Neon::Scene::RuntimeScene::MergeType::Replace);
+                    Project::Get()->SetActiveScene(SceneAsset);
                 }
             }
 
             auto SaveSceneAs = [this](bool TrySavingExisting)
             {
-                std::array Filters{
-                    FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.nscene") },
-                };
-
-                FileSystem::FileDialog Dialog{
-                    .Window     = GetWindowHandle(),
-                    .Title      = STR("Open scene"),
-                    .InitialDir = Project::Get()->GetContentDirectoryPath(),
-                    .Filters    = Filters
-                };
-                auto Path = Dialog.SaveFile();
-
-                if (Path.empty())
-                {
-                    return;
-                }
-
-                if (Path.extension() != STR(".nscene"))
-                {
-                    Path += ".nscene";
-                }
-
-                auto RelativePath = std::filesystem::relative(Path, Dialog.InitialDir);
-
                 Ptr<Asset::RuntimeSceneAsset> Asset;
+
                 if (TrySavingExisting)
                 {
-                    // TODO
-                    // Asset = Project::Get()->GetCurrentAsset();
+                    Asset = Project::Get()->GetActiveScene();
+                    if (Asset->GetPath().empty())
+                    {
+                        Asset = nullptr;
+                    }
                 }
+
                 if (!Asset)
                 {
-                    Asset = std::make_shared<Asset::RuntimeSceneAsset>(
-                        Asset::Handle::Random(),
-                        RelativePath.string());
+                    std::array Filters{
+                        FileSystem::FileDialogFilter{ STR("Neon Scene"), STR("*.nscene") },
+                    };
+
+                    FileSystem::FileDialog Dialog{
+                        .Window     = GetWindowHandle(),
+                        .Title      = STR("Open scene"),
+                        .InitialDir = Project::Get()->GetContentDirectoryPath(),
+                        .Filters    = Filters
+                    };
+                    auto Path = Dialog.SaveFile();
+
+                    if (Path.empty())
+                    {
+                        return;
+                    }
+
+                    if (Path.extension() != STR(".nscene"))
+                    {
+                        Path += ".nscene";
+                    }
+
+                    auto RelativePath = std::filesystem::relative(Path, Dialog.InitialDir);
+                    if (TrySavingExisting)
+                    {
+                        Asset = Project::Get()->GetActiveScene();
+                        Asset->SetPath(RelativePath.string());
+                    }
+                    else
+                    {
+                        Asset = std::make_shared<Asset::RuntimeSceneAsset>(
+                            Asset::Handle::Random(),
+                            RelativePath.string());
+                    }
                 }
 
-                m_EditorScene.ApplyToScene(
-                    Neon::Scene::RuntimeScene::MergeType::Replace,
-                    Asset->GetScene());
-
+                Asset->MarkDirty();
                 Project::Get()->SaveAsset(Asset);
+                Project::Get()->SceneDirty(false);
             };
 
             if (imcxx::menuitem_entry{ "Save Scene", "Ctrl+S" })

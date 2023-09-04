@@ -13,7 +13,8 @@ namespace Neon::Asset
     class IAsset;
     struct Handle : boost::uuids::uuid
     {
-        static const Handle Null;
+        static const Handle          Null;
+        static inline const StringU8 NullString = "00000000-0000-0000-0000-000000000000";
 
         /// <summary>
         /// Generate asset handle from string

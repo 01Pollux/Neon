@@ -2,6 +2,7 @@
 
 #include <Core/Version.hpp>
 #include <Asset/Handle.hpp>
+#include <Asset/Types/RuntimeScene.hpp>
 #include <filesystem>
 
 namespace Neon::Asset
@@ -16,7 +17,8 @@ namespace Neon::Editor
         StringU8    Name    = "New Project";
         VersionType Version = VersionType(1, 0, 0);
 
-        Asset::Handle StartupScene;
+        Ptr<Asset::RuntimeSceneAsset> StartupScene;
+
         /// <summary>
         /// Default profile to use when no profile is selected.
         /// </summary>
@@ -106,6 +108,39 @@ namespace Neon::Editor
             SaveAsset(std::static_pointer_cast<Asset::IAsset>(Asset));
         }
 
+    public:
+        /// <summary>
+        /// Gets the active scene.
+        /// </summary>
+        [[nodiscard]] const Ptr<Asset::RuntimeSceneAsset>& GetActiveScene() const;
+
+        /// <summary>
+        /// Activates the current scene.
+        /// </summary>
+        void ActivateCurrentScene();
+
+        /// <summary>
+        /// Sets the active scene.
+        /// </summary>
+        void SetActiveScene(
+            const Ptr<Asset::RuntimeSceneAsset>& Scene);
+
+        /// <summary>
+        /// Creates a new scene.
+        /// </summary>
+        void CreateNewScene();
+
+        /// <summary>
+        /// Mark the scene as dirty.
+        /// </summary>
+        void SceneDirty(
+            bool State = true);
+
+        /// <summary>
+        /// Check if the scene is dirty.
+        /// </summary>
+        [[nodiscard]] bool IsSceneDirty() const;
+
     private:
         /// <summary>
         /// Loads the project.
@@ -129,5 +164,7 @@ namespace Neon::Editor
         Asset::IAssetPackage* m_ContentPackage;
 
         ProjectConfig m_Config;
+
+        bool m_SceneIsDirty = false;
     };
 } // namespace Neon::Editor
