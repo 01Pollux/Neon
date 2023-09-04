@@ -20,7 +20,13 @@ namespace Neon::Editor
         /// </summary>
         void NewEmptyProject(
             const std::filesystem::path& ProjectPath,
-            ProjectConfig                Config);
+            ProjectConfig                Config = {});
+
+        /// <summary>
+        /// Opens a project.
+        /// </summary>
+        bool OpenProject(
+            const std::filesystem::path& ProjectPath);
 
         /// <summary>
         /// Gets the current project.

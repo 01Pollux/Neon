@@ -19,8 +19,27 @@ namespace Neon::Editor
             m_CurrentProject = nullptr;
         }
 
-        m_CurrentProject = std::make_unique<Project>(ProjectPath);
+        m_CurrentProject = std::make_unique<Project>(ProjectPath, true);
         m_CurrentProject->LoadEmpty(std::move(Config));
+    }
+
+    bool ProjectManager::OpenProject(
+        const std::filesystem::path& ProjectPath)
+    {
+        if (m_CurrentProject)
+        {
+            m_CurrentProject->Unload();
+            m_CurrentProject = nullptr;
+        }
+
+        m_CurrentProject = std::make_unique<Project>(ProjectPath, false);
+        if (!m_CurrentProject->Load())
+        {
+            m_CurrentProject->Unload();
+            m_CurrentProject = nullptr;
+            return false;
+        }
+        return true;
     }
 
     Project* ProjectManager::GetActive() const

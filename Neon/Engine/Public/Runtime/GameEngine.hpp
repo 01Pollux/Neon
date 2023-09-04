@@ -35,7 +35,7 @@ namespace Neon::Runtime
         /// <summary>
         /// Called when the engine is initialized.
         /// </summary>
-        virtual void Initialize(
+        void Initialize(
             Config::EngineConfig Config);
 
         /// <summary>

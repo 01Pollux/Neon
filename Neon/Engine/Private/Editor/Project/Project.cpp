@@ -19,9 +19,15 @@ namespace bpt = boost::property_tree;
 namespace Neon::Editor
 {
     Project::Project(
-        const std::filesystem::path& ProjectPath) :
+        const std::filesystem::path& ProjectPath,
+        bool                         LoadEmpty) :
         m_ProjectPath(ProjectPath)
     {
+        if (LoadEmpty && std::filesystem::exists(ProjectPath))
+        {
+            std::filesystem::remove_all(ProjectPath);
+        }
+
         auto ContentPackage = std::make_unique<Asset::DirectoryAssetPackage>(GetContentDirectoryPath());
         m_ContentPackage    = ContentPackage.get();
         Asset::Storage::Mount(std::move(ContentPackage));
@@ -103,7 +109,7 @@ namespace Neon::Editor
         NEON_TRACE("Saved project: {} ({})", m_Config.Name, m_Config.Version.ToString());
     }
 
-    void Project::Load()
+    bool Project::Load()
     {
         auto ProjectPath = GetProjectConfigPath();
         NEON_TRACE("Loading project: {}", ProjectPath.string());
@@ -112,7 +118,7 @@ namespace Neon::Editor
         if (!ConfigFile.is_open())
         {
             NEON_ERROR("Failed to open project config file");
-            return;
+            return false;
         }
 
         bpt::ptree Config;
@@ -160,6 +166,7 @@ namespace Neon::Editor
         Stream >> Rotation.z;
 
         NEON_TRACE("Loaded project: {} ({})", m_Config.Name, m_Config.Version.ToString());
+        return true;
     }
 
     void Project::LoadEmpty(

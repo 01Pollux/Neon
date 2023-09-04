@@ -11,9 +11,9 @@ namespace bpo = boost::program_options;
 
 NEON_MAIN(Argc, Argv)
 {
-    Config::EngineConfig Config{
-        .Window = { .Title = "Neon Editor" },
-        .Renderer{ .Device = { .EnableDebugLayer = true, .EnableGPUDebugger = true /*, .EnableGpuBasedValidation = true*/ } }
+    Config::EditorConfig Config{
+        { .Window = { .Title = "Neon Editor" },
+          .Renderer{ .Device = { .EnableDebugLayer = true, .EnableGPUDebugger = true /*, .EnableGpuBasedValidation = true*/ } } }
     };
 
     {
@@ -44,17 +44,38 @@ NEON_MAIN(Argc, Argv)
 
             "start-in-middle,sim", bpo::value<bool>()->default_value(true)->notifier([&](bool Val)
                                                                                      { Config.Window.StartInMiddle = Val; }),
-            "Start window in the middle of the screen");
+            "Start window in the middle of the screen")(
+
+            "project-path,p", bpo::value<StringU8>()->notifier([&](const StringU8& Val)
+                                                               { Config.StartupProjectPath = Val; }),
+            "Project path (containing .neon file) to load")(
+
+            "new-project-name,n", bpo::value<StringU8>()->notifier([&](const StringU8& Val)
+                                                                   { Config.NewProjectName = Val; }),
+            "Creates a new project with name");
 
         bpo::variables_map Vars;
-        bpo::store(bpo::parse_command_line(Argc, Argv, Description), Vars);
+
+        try
+        {
+            bpo::store(bpo::parse_command_line(Argc, Argv, Description), Vars);
+        }
+        catch (const bpo::error& Error)
+        {
+            NEON_FATAL(Error.what());
+            return nullptr;
+        }
+
         bpo::notify(Vars);
 
         if (Vars.count("help"))
         {
             std::cout << Description << std::endl;
-            return 0;
+            return nullptr;
         }
+
+        NEON_ASSERT(Config.Window.Size.x > 0 && Config.Window.Size.y > 0, "Invalid window size");
+        NEON_ASSERT(!Config.StartupProjectPath.empty(), "No project path or name specified");
     }
 
     return RunEngine<Editor::EditorEngine>(std::move(Config));

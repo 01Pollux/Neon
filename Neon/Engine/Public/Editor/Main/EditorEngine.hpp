@@ -1,8 +1,10 @@
 #pragma once
 
 #include <Runtime/GameEngine.hpp>
-#include <Editor/Views/View.hpp>
 #include <Scene/RuntimeScene.hpp>
+
+#include <Editor/Main/Config.hpp>
+#include <Editor/Views/View.hpp>
 #include <Editor/Project/Manager.hpp>
 
 #include <UI/Fonts/FontAwesome5.hpp>
@@ -29,7 +31,7 @@ namespace Neon::Editor
         }
 
         void Initialize(
-            Config::EngineConfig Config) override;
+            Config::EditorConfig Config);
 
         void PreUpdate() override;
 

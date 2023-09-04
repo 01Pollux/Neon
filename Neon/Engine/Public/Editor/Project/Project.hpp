@@ -34,7 +34,8 @@ namespace Neon::Editor
 
     public:
         Project(
-            const std::filesystem::path& ProjectPath);
+            const std::filesystem::path& ProjectPath,
+            bool                         LoadEmpty);
         NEON_CLASS_NO_COPY(Project);
         NEON_CLASS_NO_MOVE(Project);
         ~Project();
@@ -81,7 +82,7 @@ namespace Neon::Editor
         /// <summary>
         /// Loads the project.
         /// </summary>
-        void Load();
+        bool Load();
 
         /// <summary>
         /// Loads an empty project.

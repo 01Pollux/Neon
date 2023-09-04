@@ -13,13 +13,18 @@
 namespace Neon::Editor
 {
     void EditorEngine::Initialize(
-        Config::EngineConfig Config)
+        Config::EditorConfig Config)
     {
         auto ContentPackage = std::make_unique<Asset::DirectoryAssetPackage>("Content");
         m_ContentPackage    = ContentPackage.get();
 
         Config.Resource.AssetPackages.emplace_back(std::make_unique<Asset::DirectoryAssetPackage>("Editor"));
         Config.Resource.AssetPackages.emplace_back(std::move(ContentPackage));
+
+        auto StartupProjectPath = std::move(Config.StartupProjectPath);
+        auto NewProjectName     = std::move(Config.NewProjectName);
+
+        NEON_ASSERT(!StartupProjectPath.empty(), "No project path specified");
 
         GameEngine::Initialize(std::move(Config));
 
@@ -44,7 +49,18 @@ namespace Neon::Editor
 
         //
 
-        ProjectManager::Get()->NewEmptyProject("D:\\Prj", { .Name = "Testing" });
+        if (!NewProjectName.empty())
+        {
+            ProjectManager::Get()->NewEmptyProject(StartupProjectPath, { .Name = std::move(NewProjectName) });
+        }
+        else
+        {
+            if (!ProjectManager::Get()->OpenProject(StartupProjectPath))
+            {
+                NEON_WARNING("Editor", "Failed to open project: {}, Creating new one", StartupProjectPath);
+                ProjectManager::Get()->NewEmptyProject(StartupProjectPath);
+            }
+        }
     }
 
     void EditorEngine::PreUpdate()
