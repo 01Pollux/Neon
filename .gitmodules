@@ -10,9 +10,6 @@
 [submodule "Deps/Externals/DirectX-Headers"]
 	path = Deps/Externals/DirectX-Headers
 	url = https://github.com/01Pollux/DirectX-Headers
-[submodule "Deps/Externals/flecs"]
-	path = Deps/Externals/flecs
-	url = https://github.com/01Pollux/flecs.git
 [submodule "Deps/Externals/libogg-1.3.0"]
 	path = Deps/Externals/libogg-1.3.0
 	url = https://github.com/01Pollux/libogg-1.3.0
