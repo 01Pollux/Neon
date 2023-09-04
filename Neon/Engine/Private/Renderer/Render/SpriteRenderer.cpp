@@ -13,7 +13,7 @@ namespace Neon::Renderer
             Scene::EntityWorld::Get()
                 .query_builder<Component::Transform, Component::Sprite>()
                 .with<Component::ActiveSceneEntity>()
-                .with<Component::Sprite::MainRenderer>()
+                .without<Component::Sprite::CustomRenderer>()
                 .term<Component::Transform>()
                 .in()
                 .term<Component::Sprite>()

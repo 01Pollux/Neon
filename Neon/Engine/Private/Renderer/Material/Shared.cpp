@@ -50,7 +50,10 @@ namespace Neon::Renderer
                 .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
                 .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
-            s_DefaultMaterials[Type::LitSprite] = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+            auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+            Material->SetTexture("p_SpriteTextures", RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D));
+
+            s_DefaultMaterials[Type::LitSprite] = std::move(Material);
         }
     }
 

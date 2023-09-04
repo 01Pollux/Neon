@@ -19,12 +19,12 @@ namespace Neon::Scene::Component
         }
 
         /// <summary>
-        /// Tag component for the main renderer of a sprite.
+        /// Tag component for the custom renderer of a sprite.
         /// Used for query in gbuffer rendering pass for sprites.
         /// </summary>
-        struct MainRenderer
+        struct CustomRenderer
         {
-            NEON_EXPORT_FLECS(MainRenderer, "Sprite_MainRenderer")
+            NEON_EXPORT_FLECS(CustomRenderer, "Sprite_CustomRenderer")
             {
             }
         };

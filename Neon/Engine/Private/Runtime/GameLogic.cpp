@@ -16,6 +16,8 @@
 
 #include <Log/Logger.hpp>
 
+#include <Scene/RuntimeScene.hpp>
+
 namespace Neon::Runtime
 {
     static std::mutex s_FlecsWorldMutex;
@@ -120,6 +122,32 @@ namespace Neon::Runtime
                         return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
                     })
                 .build();
+
+        // Create an observer for entities that are part of scene
+        World.observer("SceneObserver")
+            .term<Component::WorldSceneRoot>(flecs::Wildcard)
+            .event(flecs::OnAdd)
+            .event(flecs::OnRemove)
+            .iter(
+                [this](flecs::iter& Iter)
+                {
+                    auto World  = Iter.world();
+                    auto Target = World.target<Component::WorldSceneRoot>();
+                    auto Filter = World.filter_builder()
+                                      .with<Component::SceneEntity>(Target)
+                                      .build();
+
+                    if (Iter.event() == flecs::OnAdd)
+                    {
+                        Filter.each([](flecs::entity Entity)
+                                    { Entity.add<Component::ActiveSceneEntity>(); });
+                    }
+                    else
+                    {
+                        Filter.each([](flecs::entity Entity)
+                                    { Entity.remove<Component::ActiveSceneEntity>(); });
+                    }
+                });
     }
 
     GameLogic::~GameLogic() = default;

@@ -2,6 +2,8 @@
 #include <Scene/Component/Sprite.hpp>
 #include <Renderer/Material/Shared.hpp>
 
+#include <RHI/Resource/Resource.hpp>
+
 namespace Neon::Scene::Component
 {
     Sprite::Sprite()
