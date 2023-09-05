@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
-#include <Asset/Handler.hpp>
 #include <RHI/Resource/Resource.hpp>
 
 namespace Neon::Asset

@@ -4,6 +4,7 @@
 
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
+#include <RHI/Resource/Resource.hpp>
 
 #include <Log/Logger.hpp>
 

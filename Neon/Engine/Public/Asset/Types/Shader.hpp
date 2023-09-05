@@ -1,11 +1,8 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
-#include <RHI/Shader.hpp>
-
-#include <Asset/Asset.hpp>
 #include <Asset/Handler.hpp>
-#include <RHI/Resource/Resource.hpp>
+#include <RHI/Shader.hpp>
 
 namespace Neon::Asset
 {
@@ -22,7 +19,7 @@ namespace Neon::Asset
         /// <summary>
         /// Load the shader cache from settings
         /// </summary>
-        UPtr<RHI::IShader> LoadShader(
+        [[nodiscard]] UPtr<RHI::IShader> LoadShader(
             const RHI::ShaderCompileDesc& Desc);
 
         /// <summary>

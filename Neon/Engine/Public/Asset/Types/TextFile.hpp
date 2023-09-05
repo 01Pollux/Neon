@@ -1,8 +1,6 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
-
-#include <Core/String.hpp>
 #include <optional>
 
 namespace Neon::Asset
