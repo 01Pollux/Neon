@@ -226,4 +226,4 @@ Write-Output "Copying AssImp files..."
 Remove-Directory $(Get-DepIncPath("AssImp"))
 Make-Directory $(Get-DepIncPath("AssImp"))
 
-Copy-Item "Vendors\AssImp\include\assimp\*" $(Get-DepIncPath("AssImp")) -Force -Recurse
+Copy-Item "Vendors\AssImp\include\*" $(Get-DepIncPath("AssImp")) -Force -Recurse

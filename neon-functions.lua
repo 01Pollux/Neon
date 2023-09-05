@@ -39,7 +39,7 @@ function copy_engine_resources_to(content_name, out_dir)
         filter { "configurations:Debug" }
             copy_file_to_target_dir("%{wks.location}Vendors/AssImp/bin/windows/Debug", "", "assimp-vc143-mtd.dll")
         filter {}
-        filter { "configurations:not Debug" }
+        filter { "configurations:Release or ReleaseOpt" }
             copy_file_to_target_dir("%{wks.location}Vendors/AssImp/bin/windows/Release", "", "assimp-vc143-mt.dll")
         filter {}
     filter {}
@@ -165,7 +165,7 @@ function link_assimp_lib()
                 "%{wks.location}/Vendors/AssImp/bin/windows/Debug/assimp-vc143-mtd.lib"
             }
         filter {}
-        filter { "configurations:not Debug" }
+        filter { "configurations:Release or ReleaseOpt" }
             links
             {
                 "%{wks.location}/Vendors/AssImp/bin/windows/Release/assimp-vc143-mt.lib"

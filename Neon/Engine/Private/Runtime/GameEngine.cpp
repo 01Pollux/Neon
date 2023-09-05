@@ -11,6 +11,7 @@
 
 #include <Asset/Handlers/Json.hpp>
 #include <Asset/Handlers/Logger.hpp>
+#include <Asset/Handlers/Model.hpp>
 #include <Asset/Handlers/PropertyTree.hpp>
 #include <Asset/Handlers/RootSignature.hpp>
 #include <Asset/Handlers/RuntimeScene.hpp>
@@ -187,6 +188,7 @@ namespace Neon::Runtime
     {
         Asset::Storage::RegisterHandler<Asset::JsonAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::LoggerAsset::Handler>();
+        Asset::Storage::RegisterHandler<Asset::ModelAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::PropertyTreeAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::RootSignatureAsset::Handler>();
         Asset::Storage::RegisterHandler<Asset::RuntimeSceneAsset::Handler>();

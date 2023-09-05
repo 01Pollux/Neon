@@ -62,6 +62,8 @@ namespace Neon::Renderer
 
     class Model
     {
+        friend class Asset::ModelAsset::Handler;
+
     public:
         using SubmeshList    = std::vector<SubMeshData>;
         using SubmeshRefList = std::vector<uint32_t>;
