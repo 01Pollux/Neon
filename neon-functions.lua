@@ -1,6 +1,7 @@
 function copy_file_to_target_dir(from_dir, folder, name)
     postbuildcommands
     {
+        string.format("{ECHO} Copying %s/%s to $(targetdir)%s%s", from_dir, name, folder, name),
         string.format('if not exist "$(targetdir)%s" mkdir "$(targetdir)%s"', folder, folder),
         string.format("{COPYFILE} %s/%s $(targetdir)%s%s", from_dir, name, folder, name)
     }
@@ -17,6 +18,7 @@ function copy_directory_to_target_dir(from_dir, to_dir)
     end
     postbuildcommands
     {
+        string.format("{ECHO} Copying %s to $(targetdir)%s", from_dir, to_dir),
         string.format('mkdir "$(targetdir)%s"', to_dir),
         string.format("{COPY} %s $(targetdir)%s", from_dir, to_dir)
     }
@@ -32,6 +34,15 @@ function copy_engine_resources_to(content_name, out_dir)
     copy_file_to_target_dir("%{wks.location}Vendors/Mono/bin", "", "mono-2.0-sgen.dll")
     copy_file_to_target_dir("%{wks.location}Vendors/Mono/bin", "", "MonoPosixHelper.dll")
     copy_directory_to_target_dir("%{wks.location}Vendors/Mono/lib/mono", "Managed/mono")
+
+    filter { "system:windows" }
+        filter { "configurations:Debug" }
+            copy_file_to_target_dir("%{wks.location}Vendors/AssImp/bin/windows/Debug", "", "assimp-vc143-mtd.dll")
+        filter {}
+        filter { "configurations:not Debug" }
+            copy_file_to_target_dir("%{wks.location}Vendors/AssImp/bin/windows/Release", "", "assimp-vc143-mt.dll")
+        filter {}
+    filter {}
 
     filter { "system:windows" }
         -- Copy dxcompiler.dll and dxil.dll
@@ -136,12 +147,31 @@ end
 
 --
 
-function link_mono_lib(lib_name)
+function link_mono_lib()
     links
     {
-        "Mono/lib/mono-2.0-sgen.lib",
-        "Mono/lib/MonoPosixHelper.lib"
+        "%{wks.location}/Vendors/Mono/lib/mono-2.0-sgen.lib",
+        "%{wks.location}/Vendors/Mono/lib/MonoPosixHelper.lib"
     }
+end
+
+--
+
+function link_assimp_lib()
+    filter { "system:windows" }
+        filter { "configurations:Debug" }
+            links
+            {
+                "%{wks.location}/Vendors/AssImp/bin/windows/Debug/assimp-vc143-mtd.lib"
+            }
+        filter {}
+        filter { "configurations:not Debug" }
+            links
+            {
+                "%{wks.location}/Vendors/AssImp/bin/windows/Release/assimp-vc143-mt.lib"
+            }
+        filter {}
+    filter {}
 end
 
 --
@@ -186,6 +216,7 @@ function link_engine_library_no_engine()
     }
 
     link_mono_lib()
+    link_assimp_lib()
     
     link_boost_lib("atomic")
     link_boost_lib("chrono")

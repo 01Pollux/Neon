@@ -214,10 +214,16 @@ Copy-Item -Recurse $(Get-DepSrcPath("glfw\include\GLFW")) $(Get-DepIncPath("glfw
 #
 Write-Output "Copying mono files..."
 Remove-Directory $(Get-DepIncPath("Mono"))
-
-Remove-Directory $(Get-DepLibPath("Mono"))
-Make-Directory $(Get-DepLibPath("Mono"))
+Make-Directory $(Get-DepIncPath("AssImp"))
 
 Copy-Item "Vendors\Mono\include" $(Get-DepIncPath("Mono")) -Force -Recurse
-Copy-Item "Vendors\Mono\bin"  $(Get-DepLibPath("Mono\bin")) -Force -Recurse
-Copy-Item "Vendors\Mono\lib"  $(Get-DepLibPath("Mono\lib")) -Force -Recurse
+
+
+#
+# AssImp
+#
+Write-Output "Copying AssImp files..."
+Remove-Directory $(Get-DepIncPath("AssImp"))
+Make-Directory $(Get-DepIncPath("AssImp"))
+
+Copy-Item "Vendors\AssImp\include\assimp\*" $(Get-DepIncPath("AssImp")) -Force -Recurse
