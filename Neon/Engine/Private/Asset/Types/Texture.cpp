@@ -42,15 +42,12 @@ namespace Neon::Asset
                 m_ImageInfo.Data = m_ImageData.get();
             }
         }
+        m_Texture = RHI::SSyncTexture(ImageInfo);
         MarkDirty();
     }
 
-    Ptr<RHI::ITexture> TextureAsset::GetTexture() const
+    const RHI::SSyncTexture& TextureAsset::GetTexture() const
     {
-        if (!m_Texture)
-        {
-            m_Texture = RHI::PendingResource(m_ImageInfo).Access<RHI::ITexture>(RHI::CommandQueueType::Graphics);
-        }
         return m_Texture;
     }
 

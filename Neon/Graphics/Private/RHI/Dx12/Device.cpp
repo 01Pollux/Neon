@@ -437,9 +437,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        PendingResource MagentaTexture2D(Desc2D, Subresource2D);
-        PendingResource MagentaTexture3D(Desc3D, Subresource3D);
-        PendingResource MagentaTextureCube(DescCube, SubresourceCube);
+        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D);
+        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D);
+        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube);
 
         //
 
@@ -448,9 +448,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        PendingResource WhiteTexture2D(Desc2D, Subresource2D);
-        PendingResource WhiteTexture3D(Desc3D, Subresource3D);
-        PendingResource WhiteTextureCube(DescCube, SubresourceCube);
+        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D);
+        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D);
+        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube);
 
         //
 
@@ -459,17 +459,17 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        PendingResource BlackTexture2D(Desc2D, Subresource2D);
-        PendingResource BlackTexture3D(Desc3D, Subresource3D);
-        PendingResource BlackTextureCube(DescCube, SubresourceCube);
+        SSyncTexture BlackTexture2D(Desc2D, Subresource2D);
+        SSyncTexture BlackTexture3D(Desc3D, Subresource3D);
+        SSyncTexture BlackTextureCube(DescCube, SubresourceCube);
 
         //
 
         auto CommandQueue = m_Swapchain->GetQueue(CommandQueueType::Graphics);
 
-        auto LoadTexture = [this, CommandQueue](PendingResource& Resource, DefaultTextures Type, const wchar_t* Name)
+        auto LoadTexture = [this, CommandQueue](SSyncTexture& Resource, DefaultTextures Type, const wchar_t* Name)
         {
-            auto& Object = m_DefaultTextures[size_t(Type)] = Resource.Access<ITexture>(CommandQueue);
+            auto& Object = m_DefaultTextures[size_t(Type)] = Resource;
             RHI::RenameObject(Object.get(), Name);
             Dx12ResourceStateManager::Get()->TransitionResource(Object.get(), MResourceState_AllShaderResource);
         };

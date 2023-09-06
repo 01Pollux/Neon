@@ -40,6 +40,8 @@ namespace Neon::RHI
 
                     while (!Token.stop_requested())
                     {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
                         std::unique_lock Lock(m_QueueMutex);
                         if (!m_TaskWaiter.wait(Lock, Token, [this]
                                                { return !m_Queue.empty(); }))
@@ -50,7 +52,7 @@ namespace Neon::RHI
                         ThrowIfFailed(Context.CommandAllocator->Reset());
                         ThrowIfFailed(Context.CommandList->Reset(Context.CommandAllocator.Get(), nullptr));
 
-#if !NEON_DIST
+#ifndef NEON_DIST
                         try
                         {
                             for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
@@ -81,7 +83,6 @@ namespace Neon::RHI
                         m_CopyFence.WaitCPU(m_CopyId);
 
                         m_CopyId++;
-                        Lock.unlock();
                     }
                 },
                 i);

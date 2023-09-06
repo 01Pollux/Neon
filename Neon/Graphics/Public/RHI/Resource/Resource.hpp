@@ -2,7 +2,7 @@
 
 #include <Math/Vector.hpp>
 #include <RHI/Resource/Common.hpp>
-#include <RHI/Commands/Common.hpp>
+#include <RHI/Swapchain.hpp>
 #include <variant>
 #include <span>
 
@@ -310,128 +310,160 @@ namespace Neon::RHI
             DefaultTextures Type);
     };
 
-    /// TODO: Rework and remove PendingResource!!!
-    class PendingResource
+    //
+
+    /// <summary>
+    /// Upload resource asynchronously and wait for it to be ready when accessed.
+    /// </summary>
+    template<typename _ResourceTy, bool _Owning>
+    class SyncGpuResourceT
     {
     public:
-        PendingResource(
-            const ResourceDesc&              Desc,
-            std::span<const SubresourceDesc> Subresources)
-        {
-            uint64_t CopyId = 0;
-            m_Resource      = UPtr<ITexture>(ITexture::Create(
-                Desc,
-                Subresources,
-                CopyId));
-            m_CopyId        = CopyId;
-        }
+        using ResourcePtr = std::conditional_t<_Owning, UPtr<_ResourceTy>, Ptr<_ResourceTy>>;
 
-        PendingResource(
-            const TextureRawImage& ImageData)
-        {
-            uint64_t CopyId = 0;
-            m_Resource      = UPtr<ITexture>(ITexture::Create(
-                ImageData,
-                CopyId));
-            m_CopyId        = CopyId;
-        }
+        SyncGpuResourceT() = default;
 
-        PendingResource(
-            Ptr<IGpuResource>       Texture,
-            std::optional<uint64_t> CopyId) :
-            m_Resource(std::move(Texture)),
+        SyncGpuResourceT(
+            ResourcePtr Resource,
+            uint64_t    CopyId) :
+            m_Resource(std::move(Resource)),
             m_CopyId(CopyId)
         {
         }
 
-        /// <summary>
-        /// Returns the texture once it has been created.
-        /// </summary>
-        Ptr<IGpuResource> Access(
-            ICommandQueue* Queue) const;
-
-        /// <summary>
-        /// Returns the texture once it has been created.
-        /// </summary>
-        Ptr<IGpuResource> Access(
-            RHI::CommandQueueType QueueType) const;
-
-        /// <summary>
-        /// Returns the texture once it has been created.
-        /// </summary>
-        template<typename _Ty>
-            requires std::derived_from<_Ty, IGpuResource>
-        auto Access(
-            ICommandQueue* Queue) const
+        SyncGpuResourceT(
+            Ptr<IGpuResource> Resource) :
+            m_Resource(std::move(Resource))
         {
-            return std::dynamic_pointer_cast<_Ty>(Access(Queue));
+        }
+
+    public:
+        /// <summary>
+        /// Returns the resource after it has been copied.
+        /// </summary>
+        [[nodiscard]] const ResourcePtr& operator->() const
+        {
+            return Get();
         }
 
         /// <summary>
-        /// Returns the texture once it has been created.
+        /// Returns the resource after it has been copied.
         /// </summary>
-        template<typename _Ty>
-            requires std::derived_from<_Ty, IGpuResource>
-        auto Access(
-            RHI::CommandQueueType QueueType) const
+        [[nodiscard]] ResourcePtr& operator->()
         {
-            return std::dynamic_pointer_cast<_Ty>(Access(QueueType));
+            return Get();
         }
 
-    private:
-        Ptr<IGpuResource> m_Resource;
+        /// <summary>
+        /// Returns the resource after it has been copied.
+        /// </summary>
+        [[nodiscard]] operator const ResourcePtr&() const
+        {
+            return Get();
+        }
 
-        mutable std::optional<uint64_t> m_CopyId;
+        /// <summary>
+        /// Returns the resource after it has been copied.
+        /// </summary>
+        [[nodiscard]] const ResourcePtr& Get() const
+        {
+            WaitForCopy();
+            return m_Resource;
+        }
+
+        /// <summary>
+        /// Returns the resource after it has been copied.
+        /// </summary>
+        [[nodiscard]] ResourcePtr Release()
+        {
+            WaitForCopy();
+            return std::move(m_Resource);
+        }
+
+    protected:
+        /// <summary>
+        /// Wait for copy operation to complete.
+        /// </summary>
+        void WaitForCopy() const
+        {
+            if (m_CopyId && m_Resource) [[unlikely]]
+            {
+                auto DirectQueue  = ISwapchain::Get()->GetQueue(RHI::CommandQueueType::Graphics);
+                auto ComputeQueue = ISwapchain::Get()->GetQueue(RHI::CommandQueueType::Compute);
+
+                ISwapchain::Get()->WaitForCopy(DirectQueue, m_CopyId);
+                ISwapchain::Get()->WaitForCopy(ComputeQueue, m_CopyId);
+
+                m_CopyId = 0;
+            }
+        }
+
+    protected:
+        ResourcePtr      m_Resource;
+        mutable uint64_t m_CopyId = 0;
     };
 
-    ////
+    template<bool _Owning>
+    class SyncBufferT : public SyncGpuResourceT<IBuffer, _Owning>
+    {
+    public:
+        using SyncGpuResourceT<IBuffer, _Owning>::SyncGpuResourceT;
 
-    ///// <summary>
-    ///// Upload resource asynchronously and wait for it to be ready when accessed.
-    ///// </summary>
-    // template<typename _ResourceTy, bool _Owning>
-    // class GpuResourceUT
-    //{
-    // public:
-    //     using ResourcePtr = std::conditional_t<_Owning, UPtr<GpuResourceUT>, SPtr<GpuResourceUT>>;
+        SyncBufferT(
+            const BufferDesc& Buffer)
+        {
+            this->m_Resource.reset(IBuffer::Create(
+                Buffer));
+        }
 
-    //    GpuResourceUT() = default;
+        SyncBufferT(
+            const ResourceDesc&    Desc,
+            const SubresourceDesc& Subresources)
+        {
+            this->m_Resource.reset(IBuffer::Create(
+                Desc,
+                Subresources,
+                this->m_CopyId));
+        }
+    };
 
-    //    GpuResourceUT(
-    //        const TextureRawImage& ImageData)
-    //    {
-    //    }
+    template<bool _Owning>
+    class SyncTextureT : public SyncGpuResourceT<ITexture, _Owning>
+    {
+    public:
+        using SyncGpuResourceT<ITexture, _Owning>::SyncGpuResourceT;
 
-    //    GpuResourceUT(
-    //        const ResourceDesc& Desc);
+        SyncTextureT(
+            const TextureRawImage& ImageData)
+        {
+            this->m_Resource.reset(ITexture::Create(
+                ImageData,
+                this->m_CopyId));
+        }
 
-    //    GpuResourceUT(
-    //        Ptr<IGpuResource> Resource,
-    //        uint64_t          CopyId);
+        SyncTextureT(
+            const ResourceDesc& Desc)
+        {
+            this->m_Resource.reset(ITexture::Create(
+                Desc));
+        }
 
-    //    GpuResourceUT(
-    //        Ptr<IGpuResource> Resource);
+        SyncTextureT(
+            const ResourceDesc&              Desc,
+            std::span<const SubresourceDesc> Subresources)
+        {
+            this->m_Resource.reset(ITexture::Create(
+                Desc,
+                Subresources,
+                this->m_CopyId));
+        }
+    };
 
-    // protected:
-    //     ResourcePtr m_Resource;
-    //     uint64_t    m_CopyId = 0;
-    // };
+    //
 
-    // template<bool _Owning>
-    // class BufferUT : public GpuResourceUT<IBuffer, _Owning>
-    //{
-    // public:
-    //     BufferUT(
-    //         const BufferDesc& Buffer)
-    //     {
-    //         m_Resource = ResourcePtr(IBuffer::Create(
-    //             Buffer));
-    //     }
+    using SSyncBuffer = SyncBufferT<false>;
+    using USyncBuffer = SyncBufferT<true>;
 
-    //    BufferUT(
-    //        const ResourceDesc&    Desc,
-    //        const SubresourceDesc& Subresources)
-    //    {
-    //    }
-    //};
+    using SSyncTexture = SyncTextureT<false>;
+    using USyncTexture = SyncTextureT<true>;
 } // namespace Neon::RHI

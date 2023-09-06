@@ -248,13 +248,12 @@ namespace Neon::Asset
             {
             }
 
-            // TODO: Use IBuffer::Create to create static buffer rather than dynamic buffer
             auto VertexBuffer = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(
                 RHI::BufferDesc{
-                    .Size    = sizeof(Renderer::MeshVertex) * Vertices.size() }));
+                    .Size = sizeof(Renderer::MeshVertex) * Vertices.size() }));
             auto IndexBuffer  = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(
                 RHI::BufferDesc{
-                     .Size    = sizeof(Renderer::MeshVertex) * Vertices.size() }));
+                     .Size = sizeof(Renderer::MeshVertex) * Vertices.size() }));
 
             VertexBuffer->Write(0, Vertices.data(), sizeof(Renderer::MeshVertex) * Vertices.size());
             IndexBuffer->Write(0, Indices.data(), sizeof(uint32_t) * Indices.size());

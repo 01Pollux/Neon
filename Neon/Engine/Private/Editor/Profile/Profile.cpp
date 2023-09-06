@@ -32,7 +32,7 @@ namespace Neon::Editor
         auto Handle     = Descriptor->Allocate(1);
 
         Handle->CreateShaderResourceView(
-            Handle.Offset, Texture.get());
+            Handle.Offset, Texture.Get().get());
 
         return m_LoadedTextures[Guid] = std::bit_cast<ImTextureID>(Handle.GetCpuHandle());
     }
