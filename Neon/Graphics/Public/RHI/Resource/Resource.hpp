@@ -367,7 +367,7 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] const ResourcePtr& Get() const
         {
-            WaitForCopy();
+            WaitForUpload();
             return m_Resource;
         }
 
@@ -376,15 +376,14 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] ResourcePtr Release()
         {
-            WaitForCopy();
+            WaitForUpload();
             return std::move(m_Resource);
         }
 
-    protected:
         /// <summary>
         /// Wait for copy operation to complete.
         /// </summary>
-        void WaitForCopy() const
+        void WaitForUpload() const
         {
             if (m_CopyId && m_Resource) [[unlikely]]
             {
@@ -417,13 +416,59 @@ namespace Neon::RHI
         }
 
         SyncBufferT(
-            const ResourceDesc&    Desc,
+            const BufferDesc&      Desc,
             const SubresourceDesc& Subresources)
         {
             this->m_Resource.reset(IBuffer::Create(
                 Desc,
                 Subresources,
                 this->m_CopyId));
+        }
+
+        SyncBufferT(
+            const BufferDesc& Desc,
+            const void*       Data) :
+            SyncBufferT(Desc,
+                        SubresourceDesc{
+                            .Data       = Data,
+                            .RowPitch   = Desc.Size,
+                            .SlicePitch = Desc.Size })
+        {
+        }
+    };
+
+    template<bool _Owning>
+    class SyncUploadBufferT : public SyncGpuResourceT<IUploadBuffer, _Owning>
+    {
+    public:
+        using SyncGpuResourceT<IUploadBuffer, _Owning>::SyncGpuResourceT;
+
+        SyncUploadBufferT(
+            const BufferDesc& Buffer)
+        {
+            this->m_Resource.reset(IUploadBuffer::Create(
+                Buffer));
+        }
+
+        SyncUploadBufferT(
+            const BufferDesc&      Desc,
+            const SubresourceDesc& Subresources)
+        {
+            this->m_Resource.reset(IUploadBuffer::Create(
+                Desc,
+                Subresources,
+                this->m_CopyId));
+        }
+
+        SyncUploadBufferT(
+            const BufferDesc& Desc,
+            const void*       Data) :
+            SyncUploadBufferT(Desc,
+                              SubresourceDesc{
+                                  .Data       = Data,
+                                  .RowPitch   = Desc.Size,
+                                  .SlicePitch = Desc.Size })
+        {
         }
     };
 
@@ -463,6 +508,9 @@ namespace Neon::RHI
 
     using SSyncBuffer = SyncBufferT<false>;
     using USyncBuffer = SyncBufferT<true>;
+
+    using SSyncUploadBuffer = SyncUploadBufferT<false>;
+    using USyncUploadBuffer = SyncUploadBufferT<true>;
 
     using SSyncTexture = SyncTextureT<false>;
     using USyncTexture = SyncTextureT<true>;

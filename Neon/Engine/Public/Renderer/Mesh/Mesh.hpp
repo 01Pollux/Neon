@@ -62,7 +62,7 @@ namespace Neon::Renderer
         using SubmeshList    = std::vector<SubMeshData>;
         using MeshNodeList   = std::vector<MeshNode>;
         using SubmeshRefList = std::vector<uint32_t>;
-        using GPUBuffer      = UPtr<RHI::IBuffer>;
+        using GPUBuffer      = RHI::USyncBuffer;
         using MaterialsTable = std::vector<Ptr<IMaterial>>;
 
     public:

@@ -174,6 +174,11 @@ namespace Neon::Runtime
         return m_Logic.get();
     }
 
+    Asio::ThreadPool<>& GameEngine::GetThreadPool() noexcept
+    {
+        return m_ThreadPool;
+    }
+
     void GameEngine::LoadPacks(
         Config::EngineConfig& Config)
     {
