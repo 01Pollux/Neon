@@ -2,6 +2,11 @@
 
 #include <Editor/Views/View.hpp>
 
+namespace Neon::Asset
+{
+    class IAsset;
+}
+
 namespace Neon::Editor::Views
 {
     class Console : public IEditorView
@@ -12,5 +17,8 @@ namespace Neon::Editor::Views
         void OnUpdate() override;
 
         void OnRender() override;
+
+    private:
+        Ptr<Asset::IAsset> m_Asset;
     };
 } // namespace Neon::Editor::Views

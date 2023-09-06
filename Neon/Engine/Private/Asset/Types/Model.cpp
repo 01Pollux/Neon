@@ -53,7 +53,7 @@ namespace Neon::Asset
         aiNode*                        AINode,
         Renderer::Model::SubmeshList&  Submeshes,
         Renderer::Model::MeshNodeList& MeshNode,
-        uint32_t                       ParentIndex     = 0,
+        uint32_t                       ParentIndex     = std::numeric_limits<uint32_t>::max(),
         const Matrix4x4&               ParentTransform = Mat::Identity<Matrix4x4>)
     {
         Renderer::MeshNode Node{
@@ -78,7 +78,7 @@ namespace Neon::Asset
 
         for (uint32_t i = 0; i < AINode->mNumChildren; i++)
         {
-            uint32_t ChildIndex = static_cast<uint32_t>(MeshNode.size()) - 1;
+            uint32_t ChildIndex = static_cast<uint32_t>(MeshNode.size());
             MeshNode[NodeIndex].Children.push_back(ChildIndex);
             TraverseAISubMesh(AINode->mChildren[i], Submeshes, MeshNode, NodeIndex, FinalTransform);
         }
@@ -301,7 +301,6 @@ namespace Neon::Asset
                 }
 
                 MeshNodes.reserve(AIScene->mNumMeshes);
-                MeshNodes.emplace_back();
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
 
                 VertexBuffer = RHI::USyncBuffer(

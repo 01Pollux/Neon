@@ -18,6 +18,13 @@ namespace Neon
         {
         }
 
+        TransformMatrixT(
+            const Matrix4x4& Transform) :
+            m_Basis(Transform),
+            m_Position(Transform[3])
+        {
+        }
+
     public:
         /// <summary>
         /// Get basis of transform

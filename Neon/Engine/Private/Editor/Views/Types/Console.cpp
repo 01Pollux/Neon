@@ -6,8 +6,36 @@
 #include <Asset/Handlers/Model.hpp>
 #include <fstream>
 
+#include <Scene/Component/Transform.hpp>
+
 namespace Neon::Editor::Views
 {
+    void BuildSceneModel(
+        const Scene::EntityHandle&  SceneRoot,
+        const Scene::EntityHandle&  ParentEntity,
+        const Ptr<Renderer::Model>& Model,
+        uint32_t                    NodeIndex = 0)
+    {
+        auto& Node = Model->GetNode(NodeIndex);
+
+        flecs::entity Entity = Scene::EntityHandle::Create(SceneRoot, ParentEntity, Node.Name.c_str());
+
+        Entity.emplace<Scene::Component::Transform>(Node.Transform);
+
+        for (auto& Child : Node.Children)
+        {
+            BuildSceneModel(SceneRoot, Entity, Model, Child);
+        }
+    }
+
+    void CreateSceneModel(
+        const Ptr<Renderer::Model>& Model)
+    {
+        auto& CurScene = Project::Get()->GetActiveScene()->GetScene();
+
+        BuildSceneModel(CurScene.GetRoot(), CurScene.GetRoot(), Model);
+    }
+
     Console::Console() :
         IEditorView(StandardViews::s_ConsoleViewWidgetId)
     {
@@ -33,8 +61,6 @@ namespace Neon::Editor::Views
 
             std::ifstream FbxFile(R"(D:\Ph\Room #1.fbx)", std::ios::binary);
 
-            auto t0 = std::chrono::high_resolution_clock::now();
-
             auto Asset = std::dynamic_pointer_cast<Asset::ModelAsset>(
                 Handler.Load(
                     FbxFile,
@@ -43,12 +69,9 @@ namespace Neon::Editor::Views
                     R"(D:\Ph\Room #1.fbx)",
                     {}));
 
-            auto t1 = std::chrono::high_resolution_clock::now();
+            m_Asset = Asset;
 
-            auto Duration = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
-            printf("Time: %lld\n", Duration);
-
-            auto m = Asset->GetModel();
+            CreateSceneModel(Asset->GetModel());
 
             auto p = Asset->GetGuid();
             // Project::Get()->ImportAsset();
