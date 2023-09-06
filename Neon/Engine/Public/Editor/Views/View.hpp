@@ -96,7 +96,7 @@ namespace Neon::Editor
             m_WidgetId = std::move(WidgetId);
         }
 
-    private:
+    protected:
         StringU8 m_WidgetId;
     };
 } // namespace Neon::Editor

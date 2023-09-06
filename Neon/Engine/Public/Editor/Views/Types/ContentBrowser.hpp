@@ -13,12 +13,21 @@ namespace Neon::Editor::Views
             : public efsw::FileWatchListener
         {
         public:
+            FileListener(
+                ContentBrowser* Browser) :
+                m_Browser(Browser)
+            {
+            }
+
             void handleFileAction(
                 efsw::WatchID      WatchId,
                 const std::string& dir,
                 const std::string& FileName,
                 efsw::Action       Action,
                 std::string        OldFileName) override;
+
+        private:
+            ContentBrowser* m_Browser;
         };
 
     public:

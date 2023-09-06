@@ -69,6 +69,7 @@ namespace Neon::Editor::Views::CB
             return m_Directories;
         }
 
+    public:
         /// <summary>
         /// Get the current root directory.
         /// </summary>

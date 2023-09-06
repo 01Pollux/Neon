@@ -1,7 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Editor/Views/Types/ContentBrowser/DirectoryIterator.hpp>
-#include <fstream>
 
+#include <fstream>
 #include <Log/Logger.hpp>
 
 namespace Neon::Editor::Views::CB
@@ -83,6 +83,8 @@ namespace Neon::Editor::Views::CB
 
         ScanDirectories(CurrentRoot(), m_Files, m_Directories);
     }
+
+    //
 
     std::filesystem::path DirectoryIterator::CurrentRoot() const noexcept
     {

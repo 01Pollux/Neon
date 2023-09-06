@@ -55,6 +55,7 @@ namespace Neon::Editor
     void EditorEngine::PreUpdate()
     {
         GameEngine::PreUpdate();
+
         for (auto& View : m_OpenViews)
         {
             View->OnUpdate();
