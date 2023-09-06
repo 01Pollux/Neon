@@ -58,7 +58,7 @@ namespace Neon::RHI
         struct CommandListInstance
         {
             WinAPI::ComPtr<ID3D12GraphicsCommandList> Dx12CmdList;
-            std::unique_ptr<Dx12CommandList>         CommandList;
+            std::unique_ptr<Dx12CommandList>          CommandList;
 
             CommandListInstance(
                 ID3D12CommandAllocator* Allocator,
@@ -259,7 +259,7 @@ namespace Neon::RHI
         /// Enqueue resource to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Dx12Buffer::Handle& Handle);
+            const GraphicsMemoryAllocator::Handle& Handle);
 
         /// <summary>
         /// Enqueue descriptor to be released at the end of the frame.

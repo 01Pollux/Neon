@@ -16,7 +16,8 @@
 namespace Neon::RG
 {
     GraphStorage::GraphStorage() :
-        m_CameraFrameData(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 255), .Alignment = 255 }))
+        // TODO: use pool?
+        m_CameraFrameData(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 255) }))
     {
     }
 
@@ -124,7 +125,7 @@ namespace Neon::RG
         const RHI::BufferDesc&  Desc,
         RHI::GraphicsBufferType Type)
     {
-        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, RHI::ResourceDesc::Buffer(Desc.Size, Desc.Alignment, Desc.Flags), {}, Type));
+        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, RHI::ResourceDesc::Buffer(Desc.Size, Desc.Flags), {}, Type));
         NEON_ASSERT(HandleIter.second, "Resource already exists");
     }
 
@@ -235,10 +236,8 @@ namespace Neon::RG
             if (Desc.Type == RHI::ResourceType::Buffer)
             {
                 RHI::BufferDesc BufferDesc{
-                    .Size      = Desc.Width,
-                    .Alignment = Desc.Alignment,
-                    .Flags     = Desc.Flags,
-                    .UsePool   = false
+                    .Size  = Desc.Width,
+                    .Flags = Desc.Flags
                 };
                 switch (Handle.GetBufferType())
                 {

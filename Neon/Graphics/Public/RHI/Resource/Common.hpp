@@ -53,17 +53,17 @@ namespace Neon::RHI
 
     struct CpuDescriptorHandle
     {
-        uint64_t Value;
+        uint64_t Value{};
     };
 
     struct GpuDescriptorHandle
     {
-        uint64_t Value;
+        uint64_t Value{};
     };
 
     struct GpuResourceHandle
     {
-        uint64_t Value;
+        uint64_t Value{};
     };
 
     static constexpr uint32_t Resource_AllSubresources = ~0u;
@@ -404,12 +404,11 @@ namespace Neon::RHI
         /// </summary>
         static ResourceDesc Buffer(
             size_t               Size,
-            uint32_t             Alignment = 0,
-            const MResourceFlags Flags     = {})
+            const MResourceFlags Flags = {})
         {
             return {
                 .Width     = Size,
-                .Alignment = Alignment,
+                .Alignment = 65536,
                 .Flags     = Flags,
                 .Type      = ResourceType::Buffer,
                 .Layout    = ResourceLayout::RowMajor

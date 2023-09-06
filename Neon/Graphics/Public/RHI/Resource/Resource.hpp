@@ -50,11 +50,6 @@ namespace Neon::RHI
         virtual ~IGpuResource() = default;
 
         /// <summary>
-        /// Get desc of the resource.
-        /// </summary>
-        [[nodiscard]] virtual const ResourceDesc& GetDesc() const = 0;
-
-        /// <summary>
         /// Query the footprint of the resource.
         /// </summary>
         virtual void QueryFootprint(
@@ -64,7 +59,38 @@ namespace Neon::RHI
             SubresourceFootprint* OutFootprint,
             uint32_t*             NumRows,
             size_t*               RowSizeInBytes,
-            size_t*               TotalBytes) const = 0;
+            size_t*               LinearSize) const = 0;
+
+        /// <summary>
+        /// Copy the subresources to the resource
+        /// </summary>
+        virtual void CopyFrom(
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> Subresources,
+            uint64_t&                        CopyId) = 0;
+
+        /// <summary>
+        /// Copy the subresource to the resource
+        /// </summary>
+        void CopyFrom(
+            uint32_t               FirstSubresource,
+            const SubresourceDesc& Subresource,
+            uint64_t&              CopyId)
+        {
+            std::array Subresources = { Subresource };
+            CopyFrom(FirstSubresource, Subresources, CopyId);
+        }
+
+        /// <summary>
+        /// Get desc of the resource.
+        /// </summary>
+        [[nodiscard]] const ResourceDesc& GetDesc() const
+        {
+            return m_Desc;
+        }
+
+    protected:
+        ResourceDesc m_Desc;
     };
 
     //
@@ -72,9 +98,7 @@ namespace Neon::RHI
     struct BufferDesc
     {
         size_t         Size;
-        uint32_t       Alignment = 1;
         MResourceFlags Flags;
-        bool           UsePool : 1 = true;
     };
 
     class IBuffer : public virtual IGpuResource
@@ -87,6 +111,14 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static IBuffer* Create(
             const BufferDesc& Desc);
+
+        /// <summary>
+        /// Creates a readback buffer.
+        /// </summary>
+        [[nodiscard]] static IBuffer* Create(
+            const BufferDesc&      Desc,
+            const SubresourceDesc& Subresource,
+            uint64_t&              CopyId);
 
         /// <summary>
         /// Get the size of the buffer in bytes.
@@ -112,6 +144,14 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static IUploadBuffer* Create(
             const BufferDesc& Desc);
+
+        /// <summary>
+        /// Creates a readback buffer.
+        /// </summary>
+        [[nodiscard]] static IUploadBuffer* Create(
+            const BufferDesc&      Desc,
+            const SubresourceDesc& Subresource,
+            uint64_t&              CopyId);
 
         /// <summary>
         /// Makes the buffer available for reading/writing by the CPU.
@@ -343,4 +383,55 @@ namespace Neon::RHI
 
         mutable std::optional<uint64_t> m_CopyId;
     };
+
+    ////
+
+    ///// <summary>
+    ///// Upload resource asynchronously and wait for it to be ready when accessed.
+    ///// </summary>
+    // template<typename _ResourceTy, bool _Owning>
+    // class GpuResourceUT
+    //{
+    // public:
+    //     using ResourcePtr = std::conditional_t<_Owning, UPtr<GpuResourceUT>, SPtr<GpuResourceUT>>;
+
+    //    GpuResourceUT() = default;
+
+    //    GpuResourceUT(
+    //        const TextureRawImage& ImageData)
+    //    {
+    //    }
+
+    //    GpuResourceUT(
+    //        const ResourceDesc& Desc);
+
+    //    GpuResourceUT(
+    //        Ptr<IGpuResource> Resource,
+    //        uint64_t          CopyId);
+
+    //    GpuResourceUT(
+    //        Ptr<IGpuResource> Resource);
+
+    // protected:
+    //     ResourcePtr m_Resource;
+    //     uint64_t    m_CopyId = 0;
+    // };
+
+    // template<bool _Owning>
+    // class BufferUT : public GpuResourceUT<IBuffer, _Owning>
+    //{
+    // public:
+    //     BufferUT(
+    //         const BufferDesc& Buffer)
+    //     {
+    //         m_Resource = ResourcePtr(IBuffer::Create(
+    //             Buffer));
+    //     }
+
+    //    BufferUT(
+    //        const ResourceDesc&    Desc,
+    //        const SubresourceDesc& Subresources)
+    //    {
+    //    }
+    //};
 } // namespace Neon::RHI

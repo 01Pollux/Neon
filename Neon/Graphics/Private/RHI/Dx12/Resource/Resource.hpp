@@ -17,9 +17,12 @@ namespace Neon::RHI
             SubresourceFootprint* OutFootprint,
             uint32_t*             NumRows,
             size_t*               RowSizeInBytes,
-            size_t*               TotalBytes) const;
+            size_t*               LinearSize) const override;
 
-        const ResourceDesc& GetDesc() const override;
+        void CopyFrom(
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> Subresources,
+            uint64_t&                        CopyId) override;
 
         /// <summary>
         /// Get the underlying D3D12 resource.
@@ -34,7 +37,6 @@ namespace Neon::RHI
     protected:
         WinAPI::ComPtr<ID3D12Resource>      m_Resource;
         WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
-        ResourceDesc                        m_Desc;
     };
 
     class Dx12Buffer : public virtual IBuffer,
@@ -43,18 +45,16 @@ namespace Neon::RHI
         friend class FrameResource;
 
     public:
-        struct Handle
-        {
-            WinAPI::ComPtr<ID3D12Resource> Resource;
-            size_t                         Offset;
-            size_t                         Size;
-            GraphicsBufferType             Type;
-            D3D12_RESOURCE_FLAGS           Flags;
-        };
+        Dx12Buffer(
+            const BufferDesc&      Desc,
+            const SubresourceDesc* Subresource,
+            uint64_t*              CopyId,
+            GraphicsBufferType     Type);
 
         Dx12Buffer(
-            const BufferDesc&  Desc,
-            GraphicsBufferType Type);
+            size_t               Size,
+            D3D12_RESOURCE_FLAGS Flags,
+            GraphicsBufferType   Type);
 
         NEON_CLASS_NO_COPY(Dx12Buffer);
         NEON_CLASS_MOVE(Dx12Buffer);
@@ -90,7 +90,9 @@ namespace Neon::RHI
     {
     public:
         Dx12UploadBuffer(
-            const BufferDesc& Desc);
+            const BufferDesc&      Desc,
+            const SubresourceDesc* Subresource,
+            uint64_t*              CopyId);
 
         uint8_t* Map() override;
 
@@ -160,13 +162,6 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] size_t GetTextureCopySize(
             uint32_t SubresourcesCount);
-
-        /// <summary>
-        /// Copy the subresources to the texture.
-        /// </summary>
-        void CopyFrom(
-            std::span<const SubresourceDesc> Subresources,
-            uint64_t&                        CopyId);
 
     protected:
         ClearOperationOpt m_ClearValue;

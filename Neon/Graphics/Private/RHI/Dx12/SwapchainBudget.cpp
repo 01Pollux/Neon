@@ -37,7 +37,7 @@ namespace Neon::RHI
     }
 
     void Dx12Swapchain::SafeRelease(
-        const Dx12Buffer::Handle& Handle)
+        const GraphicsMemoryAllocator::Handle& Handle)
     {
         m_FrameManager->SafeRelease(Handle);
     }

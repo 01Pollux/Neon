@@ -7,55 +7,42 @@
 namespace Neon::RHI
 {
     GraphicsMemoryAllocator::BuddyBlock::BuddyBlock(
-        Dx12ResourceStateManager& StateManager,
-        D3D12MA::Allocator*       GpuAllocator,
-        GraphicsBufferType        Type,
-        D3D12_RESOURCE_FLAGS      Flags,
-        size_t                    SizeOfBuffer) :
+        Dx12ResourceStateManager&     StateManager,
+        D3D12MA::Allocator*           GpuAllocator,
+        IGlobalBufferPool::BufferType Type,
+        size_t                        SizeOfBuffer) :
         Allocator(SizeOfBuffer),
         StateManager(StateManager)
     {
-        D3D12_RESOURCE_STATES    InitialState;
-        D3D12MA::ALLOCATION_DESC AllocDesc{};
+        RHI::GraphicsBufferType BufferType;
+        D3D12_RESOURCE_FLAGS    Flags{};
 
         switch (Type)
         {
-        case GraphicsBufferType::Default:
-            InitialState       = D3D12_RESOURCE_STATE_COMMON;
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-            break;
-        case GraphicsBufferType::Upload:
-            InitialState       = D3D12_RESOURCE_STATE_GENERIC_READ;
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
-            break;
-        case GraphicsBufferType::Readback:
-            InitialState       = D3D12_RESOURCE_STATE_COPY_DEST;
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+        case IGlobalBufferPool::BufferType::ReadOnly:
+            BufferType = RHI::GraphicsBufferType::Readback;
             Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+            break;
+        case IGlobalBufferPool::BufferType::ReadWrite:
+        case IGlobalBufferPool::BufferType::ReadWriteGPUR:
+        case IGlobalBufferPool::BufferType::ReadWriteGPURW:
+            BufferType = RHI::GraphicsBufferType::Upload;
+            if (Type == IGlobalBufferPool::BufferType::ReadWrite)
+            {
+                Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+            }
+            else if (Type == IGlobalBufferPool::BufferType::ReadWriteGPURW)
+            {
+                Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
             break;
         default:
             std::unreachable();
         }
 
-        auto ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(
-            SizeOfBuffer,
-            Flags);
+        this->Buffer = std::make_unique<Dx12Buffer>(SizeOfBuffer, Flags, BufferType);
 
-        ThrowIfFailed(GpuAllocator->CreateResource(
-            &AllocDesc,
-            &ResourceDesc,
-            InitialState,
-            nullptr,
-            &this->Allocation,
-            IID_PPV_ARGS(&Resource)));
-
-        StateManager.StartTrakingResource(Resource.Get(), InitialState);
-        RenameObject(Resource, STR("GraphicsMemoryAllocator::Buffer"));
-    }
-
-    GraphicsMemoryAllocator::BuddyBlock::~BuddyBlock()
-    {
-        StateManager.StopTrakingResource(Resource.Get());
+        RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::Buffer"));
     }
 
     RHI::GraphicsMemoryAllocator::GraphicsMemoryAllocator()
@@ -70,34 +57,41 @@ namespace Neon::RHI
         CreateAllocator(&Desc, &m_Allocator);
     }
 
+    void GraphicsMemoryAllocator::Shutdown()
+    {
+        std::scoped_lock BufferLock(m_PoolMutex);
+        for (auto& Allocator : m_BufferAllocators)
+        {
+            Allocator.BufferPools.clear();
+        }
+    }
+
     D3D12MA::Allocator* GraphicsMemoryAllocator::GetMA() const
     {
         return m_Allocator.Get();
     }
 
-    Dx12Buffer::Handle GraphicsMemoryAllocator::AllocateBuffer(
-        GraphicsBufferType   Type,
-        size_t               BufferSize,
-        size_t               Alignement,
-        D3D12_RESOURCE_FLAGS Flags)
+    auto GraphicsMemoryAllocator::AllocateBuffer(
+        IGlobalBufferPool::BufferType Type,
+        size_t                        BufferSize,
+        size_t                        Alignement) -> Handle
     {
         NEON_ASSERT(Alignement > 0);
 
-        std::scoped_lock BufferLock(m_PoolMutex);
-        BufferSize = Math::AlignUp(BufferSize, Alignement);
+        auto& Allocator = m_BufferAllocators[int(Type)];
+        BufferSize      = Math::AlignUp(BufferSize, Alignement);
 
-        auto& Allocator = m_BufferAllocators[Flags][static_cast<size_t>(Type)];
+        std::scoped_lock BufferLock(m_PoolMutex);
 
         for (auto Iter = Allocator.BufferPools.begin(); Iter != Allocator.BufferPools.end(); Iter++)
         {
             if (auto Hndl = Iter->Allocator.Allocate(BufferSize, Alignement))
             {
                 return {
-                    .Resource = Iter->Resource,
+                    .Resource = Iter->Buffer.get(),
                     .Offset   = Hndl.Offset,
                     .Size     = Hndl.Size,
-                    .Type     = Type,
-                    .Flags    = Flags
+                    .Type     = Type
                 };
             }
         }
@@ -111,32 +105,31 @@ namespace Neon::RHI
             Allocator.SizeOfBuffer,
             D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
 
-        auto& Block         = Allocator.BufferPools.emplace_back(m_StateManager, GetMA(), Type, Flags, Allocator.SizeOfBuffer);
+        auto& Block         = Allocator.BufferPools.emplace_back(m_StateManager, GetMA(), Type, Allocator.SizeOfBuffer);
         auto [Offset, Size] = Block.Allocator.Allocate(BufferSize, Alignement);
 
         return {
-            .Resource = Block.Resource,
+            .Resource = Block.Buffer.get(),
             .Offset   = Offset,
             .Size     = Size,
-            .Type     = Type,
-            .Flags    = Flags
+            .Type     = Type
         };
     }
 
     void GraphicsMemoryAllocator::FreeBuffers(
-        std::span<Dx12Buffer::Handle> Handles)
+        std::span<Handle> Handles)
     {
         std::scoped_lock BufferLock(m_PoolMutex);
-
-        for (auto& Data : Handles)
+        for (auto Hndl : Handles)
         {
-            auto& Allocator = m_BufferAllocators[Data.Flags][static_cast<size_t>(Data.Type)];
             bool  Exists    = false;
+            auto& Allocator = m_BufferAllocators[int(Hndl.Type)];
+
             for (auto& Block : Allocator.BufferPools)
             {
-                if (Data.Resource == Block.Resource)
+                if (Hndl.Resource == Block.Buffer.get())
                 {
-                    Block.Allocator.Free({ .Offset = Data.Offset, .Size = Data.Size });
+                    Block.Allocator.Free({ .Offset = Hndl.Offset, .Size = Hndl.Size });
                     Exists = true;
                     break;
                 }

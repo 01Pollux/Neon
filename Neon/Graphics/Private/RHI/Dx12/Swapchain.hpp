@@ -87,7 +87,7 @@ namespace Neon::RHI
         /// Enqueue buffer to be released at the end of the frame.
         /// </summary>
         void SafeRelease(
-            const Dx12Buffer::Handle& Handle);
+            const GraphicsMemoryAllocator::Handle& Handle);
 
         /// <summary>
         /// Enqueue descriptor to be released at the end of the frame.

@@ -172,16 +172,27 @@ namespace Neon::RHI
         const uint32_t Alignment =
             Type == ViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
 
-        UPtr<IUploadBuffer> Buffer{ IUploadBuffer::Create({ .Size = Size, .Alignment = Alignment }) };
+        IGlobalBufferPool::BufferType BufferType;
+        switch (Type)
+        {
+        case ViewType::Cbv:
+        case ViewType::Srv:
+            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPUR;
+            break;
+        case ViewType::Uav:
+            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPURW;
+            break;
+        }
 
-        auto BufferData = Buffer->Map();
-        std::copy_n(static_cast<const uint8_t*>(Data), Size, BufferData);
-        Buffer->Unmap();
-
+        UBufferPoolHandle Buffer(
+            Size,
+            Alignment,
+            BufferType);
+        dynamic_cast<IUploadBuffer*>(Buffer.Buffer)->Write(0, Data, Size);
         SetResourceView(
             Type,
             RootIndex,
-            Buffer->GetHandle());
+            Buffer.GetGpuHandle());
     }
 
     void Dx12CommonCommandList::Reset()

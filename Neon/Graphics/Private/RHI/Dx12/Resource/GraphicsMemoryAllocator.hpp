@@ -3,6 +3,7 @@
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <Private/RHI/Dx12/Resource/State.hpp>
 #include <Private/RHI/Dx12/Resource/Resource.hpp>
+#include <RHI/GlobalBuffer.hpp>
 
 #include <Allocator/Buddy.hpp>
 #include <Private/Windows/API/WinPtr.hpp>
@@ -16,24 +17,28 @@ namespace Neon::RHI
 
     class GraphicsMemoryAllocator
     {
+    public:
+        struct Handle
+        {
+            IBuffer*                      Resource;
+            size_t                        Offset;
+            size_t                        Size;
+            IGlobalBufferPool::BufferType Type;
+        };
+
+    private:
         struct BuddyBlock
         {
-            Dx12ResourceStateManager&           StateManager;
-            WinAPI::ComPtr<ID3D12Resource>      Resource;
-            WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
+            Dx12ResourceStateManager& StateManager;
+            UPtr<Dx12Buffer>          Buffer;
 
             Allocator::BuddyAllocator Allocator;
 
             BuddyBlock(
-                Dx12ResourceStateManager& StateManager,
-                D3D12MA::Allocator*       GpuAllocator,
-                GraphicsBufferType        Type,
-                D3D12_RESOURCE_FLAGS      Flags,
-                size_t                    SizeOfBuffer);
-
-            NEON_CLASS_NO_COPY(BuddyBlock);
-            NEON_CLASS_NO_MOVE(BuddyBlock);
-            ~BuddyBlock();
+                Dx12ResourceStateManager&     StateManager,
+                D3D12MA::Allocator*           GpuAllocator,
+                IGlobalBufferPool::BufferType Type,
+                size_t                        SizeOfBuffer);
         };
 
         struct BufferAllocator
@@ -42,11 +47,15 @@ namespace Neon::RHI
             std::list<BuddyBlock> BufferPools;
         };
 
-        using BufferAllocatorsType   = std::array<BufferAllocator, size_t(GraphicsBufferType::Count)>;
-        using BufferAllocatorByFlags = std::map<D3D12_RESOURCE_FLAGS, BufferAllocatorsType>;
+        using BufferAllocatorByFlags = std::array<BufferAllocator, size_t(IGlobalBufferPool::BufferType::Count)>;
 
     public:
         GraphicsMemoryAllocator();
+
+        /// <summary>
+        /// Shutdown allocator and free all resources
+        /// </summary>
+        void Shutdown();
 
         /// <summary>
         /// Get allocator
@@ -56,17 +65,16 @@ namespace Neon::RHI
         /// <summary>
         /// Allocate buffer of size
         /// </summary>
-        [[nodiscard]] Dx12Buffer::Handle AllocateBuffer(
-            GraphicsBufferType   Type,
-            size_t               BufferSize,
-            size_t               Alignement,
-            D3D12_RESOURCE_FLAGS Flags);
+        [[nodiscard]] Handle AllocateBuffer(
+            IGlobalBufferPool::BufferType Type,
+            size_t                        BufferSize,
+            size_t                        Alignement);
 
         /// <summary>
         /// Free current buffer handle
         /// </summary>
         void FreeBuffers(
-            std::span<Dx12Buffer::Handle> Handles);
+            std::span<Handle> Hndl);
 
     public:
         /// <summary>

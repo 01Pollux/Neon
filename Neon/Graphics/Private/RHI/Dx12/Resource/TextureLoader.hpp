@@ -37,7 +37,7 @@ namespace Neon::RHI
         TextureLoader(
             WinAPI::ComPtr<ID3D12Resource>      Texture,
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-            std::span<const SubresourceDesc>   Subresources);
+            std::span<const SubresourceDesc>    Subresources);
 
     private:
         uint64_t          m_UploadId;

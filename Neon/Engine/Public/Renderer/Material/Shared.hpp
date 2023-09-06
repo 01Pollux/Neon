@@ -8,7 +8,8 @@ namespace Neon::Renderer
     {
         enum class Type : uint8_t
         {
-            LitSprite
+            Lit,
+            LitSprite,
         };
 
         /// <summary>

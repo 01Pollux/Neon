@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/Model.hpp>
+#include <Renderer/Material/Shared.hpp>
 
 #ifndef NEON_DIST
 #include <AssImp/Importer.hpp>
@@ -135,9 +136,9 @@ namespace Neon::Asset
             std::vector<Renderer::MeshVertex> Vertices;
             std::vector<uint32_t>             Indices;
 
-            uint32_t VerticesCount = 0, IndicesCount = 0;
             if (AIScene->HasMeshes())
             {
+                uint32_t VerticesCount = 0, IndicesCount = 0;
                 Submeshes.reserve(AIScene->mNumMeshes);
 
                 for (uint32_t i = 0; i < AIScene->mNumMeshes; i++)
@@ -204,15 +205,56 @@ namespace Neon::Asset
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
             }
 
+            if (AIScene->HasMaterials())
+            {
+                Materials.reserve(AIScene->mNumMaterials);
+                auto LitMaterial = Renderer::SharedMaterials::Get(Renderer::SharedMaterials::Type::Lit);
+
+                for (uint32_t i = 0; i < AIScene->mNumMaterials; i++)
+                {
+                    aiMaterial* AIMaterial = AIScene->mMaterials[i];
+                    auto&       Material   = Materials.emplace_back(LitMaterial->CreateInstance());
+
+                    NEON_TRACE_TAG("Model", "Loading material %s", AIMaterial->GetName().C_Str());
+
+                    aiString TexturePath;
+                    for (auto [Type, Tag] : {
+                             std::pair{ aiTextureType_DIFFUSE, "Diffuse" },
+                             std::pair{ aiTextureType_SPECULAR, "Specular" },
+                             std::pair{ aiTextureType_NORMALS, "Normal" },
+                             std::pair{ aiTextureType_EMISSIVE, "Emissive" } })
+                    {
+                        if (AIMaterial->GetTexture(Type, 0, &TexturePath))
+                        {
+                            if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
+                            {
+                                auto Texture = RHI::ITexture::Create(
+                                    RHI::ResourceDesc::Tex2D(
+                                        RHI::EResourceFormat::R8G8B8A8_UNorm,
+                                        AITexture->mWidth,
+                                        AITexture->mHeight,
+                                        1));
+
+                                //
+                            }
+                            else
+                            {
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+            }
+
             // TODO: Use IBuffer::Create to create static buffer rather than dynamic buffer
             auto VertexBuffer = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(
                 RHI::BufferDesc{
-                    .Size    = sizeof(Renderer::MeshVertex) * Vertices.size(),
-                    .UsePool = false }));
+                    .Size    = sizeof(Renderer::MeshVertex) * Vertices.size() }));
             auto IndexBuffer  = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(
                 RHI::BufferDesc{
-                     .Size    = sizeof(Renderer::MeshVertex) * Vertices.size(),
-                     .UsePool = false }));
+                     .Size    = sizeof(Renderer::MeshVertex) * Vertices.size() }));
 
             VertexBuffer->Write(0, Vertices.data(), sizeof(Renderer::MeshVertex) * Vertices.size());
             IndexBuffer->Write(0, Indices.data(), sizeof(uint32_t) * Indices.size());

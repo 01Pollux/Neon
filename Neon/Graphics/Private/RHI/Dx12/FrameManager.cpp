@@ -305,7 +305,7 @@ namespace Neon::RHI
     }
 
     void FrameManager::SafeRelease(
-        const Dx12Buffer::Handle& Handle)
+        const GraphicsMemoryAllocator::Handle& Handle)
     {
         std::scoped_lock Lock(m_StaleResourcesMutex[1]);
         auto&            Frame = *m_FrameResources[m_FrameIndex];

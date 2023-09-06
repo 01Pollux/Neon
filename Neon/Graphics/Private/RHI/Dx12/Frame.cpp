@@ -61,7 +61,7 @@ namespace Neon::RHI
     }
 
     void FrameResource::SafeRelease(
-        const Dx12Buffer::Handle& Handle)
+        const GraphicsMemoryAllocator::Handle& Handle)
     {
         m_Buffers.emplace_back(Handle);
     }

@@ -16,8 +16,9 @@ namespace Neon::RHI
         SubresourceFootprint* OutFootprint,
         uint32_t*             NumRows,
         size_t*               RowSizeInBytes,
-        size_t*               TotalBytes) const
+        size_t*               LinearSize) const
     {
+        // TODO: Use this->GetDx12Desc(); instead (convert to D3D12_RESOURCE_DESC), since we know the resource
         auto Desc = m_Resource->GetDesc();
 
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT Footprint{};
@@ -31,7 +32,7 @@ namespace Neon::RHI
             OutFootprint ? &Footprint : nullptr,
             NumRows,
             RowSizeInBytes,
-            TotalBytes);
+            LinearSize);
 
         if (OutFootprint)
         {
@@ -44,9 +45,62 @@ namespace Neon::RHI
         }
     }
 
-    const ResourceDesc& Dx12GpuResource::GetDesc() const
+    void Dx12GpuResource::CopyFrom(
+        uint32_t                         FirstSubresource,
+        std::span<const SubresourceDesc> Subresources,
+        uint64_t&                        CopyId)
     {
-        return m_Desc;
+        struct SubresourceDescGuard
+        {
+            std::vector<SubresourceDesc>            Subresources;
+            std::vector<std::unique_ptr<uint8_t[]>> Datas;
+
+            SubresourceDescGuard() = default;
+            NEON_CLASS_NO_COPY(SubresourceDescGuard);
+            NEON_CLASS_MOVE(SubresourceDescGuard);
+            ~SubresourceDescGuard() = default;
+        };
+
+        auto Guard = std::make_shared<SubresourceDescGuard>();
+
+        Guard->Subresources = Subresources |
+                              std::ranges::to<std::vector<SubresourceDesc>>();
+        Guard->Datas.reserve(Subresources.size());
+        for (auto& Subresource : Guard->Subresources)
+        {
+            size_t Size    = Subresource.SlicePitch;
+            auto   NewData = Guard->Datas.emplace_back(std::make_unique<uint8_t[]>(Size)).get();
+            std::copy_n(std::bit_cast<uint8_t*>(Subresource.Data), Size, std::bit_cast<uint8_t*>(NewData));
+            Subresource.Data = NewData;
+        }
+
+        CopyId = Dx12Swapchain::Get()->RequestCopy(
+            [SubreourcesGuard = std::move(Guard)](ICopyCommandList* CommandList,
+                                                  Dx12GpuResource*  Resource)
+            {
+                size_t TotalBytes;
+                Resource->QueryFootprint(
+                    0,
+                    uint32_t(SubreourcesGuard->Subresources.size()),
+                    0,
+                    nullptr,
+                    nullptr,
+                    nullptr,
+                    &TotalBytes);
+
+                UBufferPoolHandle Handle(
+                    TotalBytes,
+                    1,
+                    RHI::IGlobalBufferPool::BufferType::ReadWrite);
+
+                CommandList->CopySubresources(
+                    Resource,
+                    static_cast<IGpuResource*>(Handle.Buffer),
+                    Handle.Offset,
+                    0,
+                    SubreourcesGuard->Subresources);
+            },
+            this);
     }
 
     ID3D12Resource* Dx12GpuResource::GetResource() const
@@ -64,85 +118,88 @@ namespace Neon::RHI
     IBuffer* IBuffer::Create(
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12Buffer(Desc, GraphicsBufferType::Default);
+        return NEON_NEW Dx12Buffer(Desc, nullptr, nullptr, GraphicsBufferType::Default);
+    }
+
+    IBuffer* IBuffer::Create(
+        const BufferDesc&      Desc,
+        const SubresourceDesc& Subresource,
+        uint64_t&              CopyId)
+    {
+        return NEON_NEW Dx12Buffer(Desc, &Subresource, &CopyId, GraphicsBufferType::Default);
     }
 
     Dx12Buffer::Dx12Buffer(
-        const BufferDesc&  Desc,
-        GraphicsBufferType Type) :
+        const BufferDesc&      Desc,
+        const SubresourceDesc* Subresource,
+        uint64_t*              CopyId,
+        GraphicsBufferType     Type) :
+        Dx12Buffer(Desc.Size, CastResourceFlags(Desc.Flags), Type)
+    {
+        if (Subresource)
+        {
+            CopyFrom(0, { Subresource, 1 }, *CopyId);
+        }
+    }
+
+    Dx12Buffer::Dx12Buffer(
+        size_t               Size,
+        D3D12_RESOURCE_FLAGS Flags,
+        GraphicsBufferType   Type) :
         m_Type(Type)
     {
-        m_Desc.Alignment = Desc.Alignment;
-
         auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
-        if (Desc.UsePool)
+
+        D3D12_RESOURCE_STATES    InitialState;
+        D3D12MA::ALLOCATION_DESC AllocDesc{};
+
+        switch (Type)
         {
-            auto Buffer = Allocator->AllocateBuffer(Type, Desc.Size, size_t(m_Desc.Alignment), CastResourceFlags(Desc.Flags));
-
-            m_Resource   = Buffer.Resource;
-            m_Desc.Width = Desc.Size;
-            m_Offset     = Buffer.Offset;
-            m_Desc.Flags = CastResourceFlags(Buffer.Flags);
+        case GraphicsBufferType::Default:
+            InitialState       = D3D12_RESOURCE_STATE_COMMON;
+            AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+            break;
+        case GraphicsBufferType::Upload:
+            InitialState       = D3D12_RESOURCE_STATE_GENERIC_READ;
+            AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+            break;
+        case GraphicsBufferType::Readback:
+            InitialState       = D3D12_RESOURCE_STATE_COPY_DEST;
+            AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+            Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+            break;
+        default:
+            std::unreachable();
         }
-        else
-        {
-            D3D12_RESOURCE_STATES    InitialState;
-            D3D12MA::ALLOCATION_DESC AllocDesc{};
 
-            auto Flags = CastResourceFlags(Desc.Flags);
+        auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Size, Flags, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
+        m_Desc        = ResourceDesc::Buffer(Dx12Desc.Width, CastResourceFlags(Flags));
 
-            switch (Type)
-            {
-            case GraphicsBufferType::Default:
-                InitialState       = D3D12_RESOURCE_STATE_COMMON;
-                AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-                break;
-            case GraphicsBufferType::Upload:
-                InitialState       = D3D12_RESOURCE_STATE_GENERIC_READ;
-                AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
-                break;
-            case GraphicsBufferType::Readback:
-                InitialState       = D3D12_RESOURCE_STATE_COPY_DEST;
-                AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
-                Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-                break;
-            default:
-                std::unreachable();
-            }
+        ThrowIfFailed(Allocator->GetMA()->CreateResource(
+            &AllocDesc,
+            &Dx12Desc,
+            InitialState,
+            nullptr,
+            &m_Allocation,
+            IID_PPV_ARGS(&m_Resource)));
 
-            {
-                auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Desc.Size, Flags);
-                m_Desc        = ResourceDesc::Buffer(Dx12Desc.Width, uint32_t(Dx12Desc.Alignment), CastResourceFlags(Flags));
-                ThrowIfFailed(Allocator->GetMA()->CreateResource(
-                    &AllocDesc,
-                    &Dx12Desc,
-                    InitialState,
-                    nullptr,
-                    &m_Allocation,
-                    IID_PPV_ARGS(&m_Resource)));
-                Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
-            }
-        }
+        Dx12RenderDevice::Get()->GetDevice()->GetCopyableFootprints(
+            &Dx12Desc,
+            0,
+            1,
+            0,
+            nullptr,
+            nullptr,
+            nullptr,
+            &m_Desc.Width);
+
+        Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
     }
 
     Dx12Buffer::~Dx12Buffer()
     {
-        if (!m_Allocation) [[likely]]
-        {
-            Handle Buffer{
-                .Resource = std::move(m_Resource),
-                .Offset   = m_Offset,
-                .Size     = m_Desc.Width,
-                .Type     = m_Type,
-                .Flags    = CastResourceFlags(m_Desc.Flags)
-            };
-            Dx12Swapchain::Get()->SafeRelease(Buffer);
-        }
-        else
-        {
-            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
-            Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
-        }
+        Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
+        Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
     }
 
     size_t Dx12Buffer::GetSize() const
@@ -170,12 +227,22 @@ namespace Neon::RHI
     IUploadBuffer* IUploadBuffer::Create(
         const BufferDesc& Desc)
     {
-        return NEON_NEW Dx12UploadBuffer(Desc);
+        return NEON_NEW Dx12UploadBuffer(Desc, nullptr, nullptr);
+    }
+
+    IUploadBuffer* IUploadBuffer::Create(
+        const BufferDesc&      Desc,
+        const SubresourceDesc& Subresource,
+        uint64_t&              CopyId)
+    {
+        return NEON_NEW Dx12UploadBuffer(Desc, &Subresource, &CopyId);
     }
 
     Dx12UploadBuffer::Dx12UploadBuffer(
-        const BufferDesc& Desc) :
-        Dx12Buffer(Desc, GraphicsBufferType::Upload)
+        const BufferDesc&      Desc,
+        const SubresourceDesc* Subresource,
+        uint64_t*              CopyId) :
+        Dx12Buffer(Desc, Subresource, CopyId, GraphicsBufferType::Upload)
     {
     }
 
@@ -201,7 +268,7 @@ namespace Neon::RHI
 
     Dx12ReadbackBuffer::Dx12ReadbackBuffer(
         const BufferDesc& Desc) :
-        Dx12Buffer(Desc, GraphicsBufferType::Readback)
+        Dx12Buffer(Desc, nullptr, nullptr, GraphicsBufferType::Readback)
     {
     }
 
@@ -366,7 +433,7 @@ namespace Neon::RHI
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
         if (!Subresources.empty())
         {
-            CopyFrom(Subresources, *CopyId);
+            CopyFrom(0, Subresources, *CopyId);
         }
     }
 
@@ -392,7 +459,7 @@ namespace Neon::RHI
         uint64_t&                           CopyId) :
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
     {
-        CopyFrom(Subresources, CopyId);
+        CopyFrom(0, Subresources, CopyId);
     }
 
     Dx12Texture::~Dx12Texture()
@@ -503,52 +570,6 @@ namespace Neon::RHI
             &TotalBytes);
 
         return TotalBytes;
-    }
-
-    void Dx12Texture::CopyFrom(
-        std::span<const SubresourceDesc> Subresources,
-        uint64_t&                        CopyId)
-    {
-        struct SubresourceDescGuard
-        {
-            std::vector<SubresourceDesc>            Subresources;
-            std::vector<std::unique_ptr<uint8_t[]>> Datas;
-
-            SubresourceDescGuard() = default;
-            NEON_CLASS_NO_COPY(SubresourceDescGuard);
-            NEON_CLASS_MOVE(SubresourceDescGuard);
-            ~SubresourceDescGuard() = default;
-        };
-
-        auto Guard = std::make_shared<SubresourceDescGuard>();
-
-        Guard->Subresources = Subresources |
-                              std::ranges::to<std::vector<SubresourceDesc>>();
-        Guard->Datas.reserve(Subresources.size());
-        for (auto& Subresource : Guard->Subresources)
-        {
-            size_t Size    = Subresource.SlicePitch;
-            auto   NewData = Guard->Datas.emplace_back(std::make_unique<uint8_t[]>(Size)).get();
-            std::copy_n(std::bit_cast<uint8_t*>(Subresource.Data), Size, std::bit_cast<uint8_t*>(NewData));
-            Subresource.Data = NewData;
-        }
-
-        CopyId = Dx12Swapchain::Get()->RequestCopy(
-            [SubreourcesGuard = std::move(Guard)](ICopyCommandList* CommandList,
-                                                  Dx12Texture*      Texture)
-            {
-                Dx12UploadBuffer Buffer{
-                    { .Size = Texture->GetTextureCopySize(uint32_t(SubreourcesGuard->Subresources.size())) }
-                };
-
-                CommandList->CopySubresources(
-                    Texture,
-                    static_cast<IGpuResource*>(&Buffer),
-                    0,
-                    0,
-                    SubreourcesGuard->Subresources);
-            },
-            this);
     }
 
     const Ptr<ITexture>& ITexture::GetDefault(

@@ -1,5 +1,6 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/GlobalDescriptors.hpp>
 
 #include <Log/Logger.hpp>
 
