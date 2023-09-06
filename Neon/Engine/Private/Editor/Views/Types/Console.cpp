@@ -33,6 +33,8 @@ namespace Neon::Editor::Views
 
             std::ifstream FbxFile(R"(D:\Ph\Room #1.fbx)", std::ios::binary);
 
+            auto t0 = std::chrono::high_resolution_clock::now();
+
             auto Asset = std::dynamic_pointer_cast<Asset::ModelAsset>(
                 Handler.Load(
                     FbxFile,
@@ -40,6 +42,11 @@ namespace Neon::Editor::Views
                     Asset::Handle::Random(),
                     R"(D:\Ph\Room #1.fbx)",
                     {}));
+
+            auto t1 = std::chrono::high_resolution_clock::now();
+
+            auto Duration = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
+            printf("Time: %lld\n", Duration);
 
             auto m = Asset->GetModel();
 

@@ -136,76 +136,13 @@ namespace Neon::Asset
             std::vector<Renderer::MeshVertex> Vertices;
             std::vector<uint32_t>             Indices;
 
-            if (AIScene->HasMeshes())
-            {
-                uint32_t VerticesCount = 0, IndicesCount = 0;
-                Submeshes.reserve(AIScene->mNumMeshes);
+            //
 
-                for (uint32_t i = 0; i < AIScene->mNumMeshes; i++)
-                {
-                    aiMesh* AIMesh = AIScene->mMeshes[i];
+            using TextureMap         = std::unordered_map<aiTextureType, RHI::SSyncTexture>;
+            using MaterialTextureMap = std::unordered_map<Renderer::IMaterial*, TextureMap>;
 
-                    uint32_t VertexCount = AIMesh->mNumVertices;
-                    Vertices.reserve(Vertices.size() + VertexCount);
-
-                    AABoundingBox3D Box;
-                    for (uint32_t j = 0; j < VertexCount; j++)
-                    {
-                        Vector3 Position(AIMesh->mVertices[j].x, AIMesh->mVertices[j].y, AIMesh->mVertices[j].z);
-                        Box.Expand(Position);
-
-                        auto& Vertex = Vertices.emplace_back(
-                            Renderer::MeshVertex{
-                                .Position = Position,
-                                .Normal   = Vector3(AIMesh->mNormals[j].x, AIMesh->mNormals[j].y, AIMesh->mNormals[j].z) });
-
-                        if (AIMesh->HasTangentsAndBitangents())
-                        {
-                            Vertex.Tangent   = Vector3(AIMesh->mTangents[j].x, AIMesh->mTangents[j].y, AIMesh->mTangents[j].z);
-                            Vertex.Bitangent = Vector3(AIMesh->mBitangents[j].x, AIMesh->mBitangents[j].y, AIMesh->mBitangents[j].z);
-                        }
-
-                        if (AIMesh->HasTextureCoords(0))
-                        {
-                            Vertex.TexCoord = Vector2(AIMesh->mTextureCoords[0][j].x, AIMesh->mTextureCoords[0][j].y);
-                        }
-                    }
-
-                    uint32_t OldIndexCount = uint32_t(Indices.size());
-
-                    for (uint32_t j = 0; j < AIMesh->mNumFaces; j++)
-                    {
-                        aiFace& Face = AIMesh->mFaces[j];
-                        for (uint32_t k = 0; k < Face.mNumIndices; k++)
-                        {
-                            Indices.emplace_back(Face.mIndices[k]);
-                        }
-                    }
-
-                    uint32_t IndexCount = uint32_t(Indices.size()) - OldIndexCount;
-
-                    Submeshes.emplace_back(
-                        Renderer::SubMeshData{
-                            .AABB          = std::move(Box),
-                            .VertexCount   = VertexCount,
-                            .IndexCount    = IndexCount,
-                            .VertexOffset  = VerticesCount,
-                            .IndexOffset   = IndicesCount,
-                            .MaterialIndex = AIMesh->mMaterialIndex });
-
-                    VerticesCount += VertexCount;
-                    IndicesCount += IndexCount;
-
-                    NEON_VALIDATE(AIMesh->HasPositions(), "Mesh has no positions");
-                    NEON_VALIDATE(AIMesh->HasNormals(), "Mesh has no normals");
-                }
-
-                MeshNodes.reserve(AIScene->mNumMeshes);
-                MeshNodes.emplace_back();
-                TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
-            }
-
-            auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+            // Deferred loading of textures until we process all meshes.
+            MaterialTextureMap MaterialsToSet;
 
             std::map<aiTextureType, const char*> TextureKvList{
                 std::pair{ aiTextureType_DIFFUSE, "p_AlbedoMap" },
@@ -213,78 +150,156 @@ namespace Neon::Asset
                 std::pair{ aiTextureType_EMISSIVE, "p_EmissiveMap" }
             };
 
-            if (AIScene->HasMaterials())
+            // Process materials.
             {
-                Materials.reserve(AIScene->mNumMaterials);
-                auto LitMaterial = Renderer::SharedMaterials::Get(Renderer::SharedMaterials::Type::Lit);
+                auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
 
-                for (uint32_t i = 0; i < AIScene->mNumMaterials; i++)
+                if (AIScene->HasMaterials())
                 {
-                    aiMaterial* AIMaterial = AIScene->mMaterials[i];
-                    auto&       Material   = Materials.emplace_back(LitMaterial->CreateInstance());
+                    Materials.reserve(AIScene->mNumMaterials);
+                    auto LitMaterial = Renderer::SharedMaterials::Get(Renderer::SharedMaterials::Type::Lit);
 
-                    NEON_TRACE_TAG("Model", "Loading material {}", AIMaterial->GetName().C_Str());
-
-                    std::unordered_map<aiTextureType, RHI::SSyncTexture> TexturesToSet;
-
-                    aiString TexturePath;
-                    for (auto& [Type, Tag] : TextureKvList)
+                    for (uint32_t i = 0; i < AIScene->mNumMaterials; i++)
                     {
-                        if (AIMaterial->GetTexture(Type, 0, &TexturePath))
+                        aiMaterial* AIMaterial = AIScene->mMaterials[i];
+                        auto&       Material   = Materials.emplace_back(LitMaterial->CreateInstance());
+
+                        NEON_TRACE_TAG("Model", "Loading material {}", AIMaterial->GetName().C_Str());
+
+                        TextureMap TexturesToSet;
+
+                        aiString TexturePath;
+                        for (auto& [Type, Tag] : TextureKvList)
                         {
-                            NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
-
-                            if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
+                            if (AIMaterial->GetTexture(Type, 0, &TexturePath))
                             {
-                                std::array Subresources{
-                                    RHI::SubresourceDesc{
-                                        .Data       = AITexture->pcData,
-                                        .RowPitch   = AITexture->mWidth * 4,
-                                        .SlicePitch = AITexture->mWidth * AITexture->mHeight * 4 }
-                                };
+                                NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
 
-                                auto Texture = RHI::SSyncTexture(
-                                    RHI::ResourceDesc::Tex2D(
-                                        RHI::EResourceFormat::R8G8B8A8_UNorm,
-                                        AITexture->mWidth,
-                                        AITexture->mHeight,
-                                        1),
-                                    Subresources);
-                                TexturesToSet.emplace(Type, std::move(Texture));
-                            }
-                            else
-                            {
-                                std::fstream File(TexturePath.C_Str(), std::ios::in | std::ios::binary);
-                                if (File.is_open())
+                                if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
                                 {
-                                    std::vector<uint8_t> Data((std::istreambuf_iterator<char>(File)), std::istreambuf_iterator<char>());
-
-                                    RHI::TextureRawImage ImageInfo{
-                                        .Data = Data.data(),
-                                        .Size = Data.size(),
-                                        .Type = RHI::TextureRawImage::Format::Png
+                                    std::array Subresources{
+                                        RHI::SubresourceDesc{
+                                            .Data       = AITexture->pcData,
+                                            .RowPitch   = AITexture->mWidth * 4,
+                                            .SlicePitch = AITexture->mWidth * AITexture->mHeight * 4 }
                                     };
 
-                                    TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo));
+                                    auto Texture = RHI::SSyncTexture(
+                                        RHI::ResourceDesc::Tex2D(
+                                            RHI::EResourceFormat::R8G8B8A8_UNorm,
+                                            AITexture->mWidth,
+                                            AITexture->mHeight,
+                                            1),
+                                        Subresources);
+                                    TexturesToSet.emplace(Type, std::move(Texture));
                                 }
                                 else
                                 {
-                                    NEON_WARNING("Failed to load texture '{}'", TexturePath.C_Str());
+                                    std::fstream File(TexturePath.C_Str(), std::ios::in | std::ios::binary);
+                                    if (File.is_open())
+                                    {
+                                        std::vector<uint8_t> Data((std::istreambuf_iterator<char>(File)), std::istreambuf_iterator<char>());
+
+                                        RHI::TextureRawImage ImageInfo{
+                                            .Data = Data.data(),
+                                            .Size = Data.size(),
+                                            .Type = RHI::TextureRawImage::Format::Png
+                                        };
+
+                                        TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo));
+                                    }
+                                    else
+                                    {
+                                        NEON_WARNING("Failed to load texture '{}'", TexturePath.C_Str());
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    for (auto& [Type, Texture] : TexturesToSet)
-                    {
-                        Material->SetTexture(TextureKvList[Type], Texture.Get());
+                        MaterialsToSet.emplace(Material.get(), std::move(TexturesToSet));
                     }
                 }
+                else
+                {
+                    // We dont have any materials, so we create a default one
+                }
             }
-            else
+
+            //
+
+            // Process nodes
             {
-                // We dont have any materials, so we create a default one
+                if (AIScene->HasMeshes())
+                {
+                    uint32_t VerticesCount = 0, IndicesCount = 0;
+                    Submeshes.reserve(AIScene->mNumMeshes);
+
+                    for (uint32_t i = 0; i < AIScene->mNumMeshes; i++)
+                    {
+                        aiMesh* AIMesh = AIScene->mMeshes[i];
+
+                        uint32_t VertexCount = AIMesh->mNumVertices;
+                        Vertices.reserve(Vertices.size() + VertexCount);
+
+                        AABoundingBox3D Box;
+                        for (uint32_t j = 0; j < VertexCount; j++)
+                        {
+                            Vector3 Position(AIMesh->mVertices[j].x, AIMesh->mVertices[j].y, AIMesh->mVertices[j].z);
+                            Box.Expand(Position);
+
+                            auto& Vertex = Vertices.emplace_back(
+                                Renderer::MeshVertex{
+                                    .Position = Position,
+                                    .Normal   = Vector3(AIMesh->mNormals[j].x, AIMesh->mNormals[j].y, AIMesh->mNormals[j].z) });
+
+                            if (AIMesh->HasTangentsAndBitangents())
+                            {
+                                Vertex.Tangent   = Vector3(AIMesh->mTangents[j].x, AIMesh->mTangents[j].y, AIMesh->mTangents[j].z);
+                                Vertex.Bitangent = Vector3(AIMesh->mBitangents[j].x, AIMesh->mBitangents[j].y, AIMesh->mBitangents[j].z);
+                            }
+
+                            if (AIMesh->HasTextureCoords(0))
+                            {
+                                Vertex.TexCoord = Vector2(AIMesh->mTextureCoords[0][j].x, AIMesh->mTextureCoords[0][j].y);
+                            }
+                        }
+
+                        uint32_t OldIndexCount = uint32_t(Indices.size());
+
+                        for (uint32_t j = 0; j < AIMesh->mNumFaces; j++)
+                        {
+                            aiFace& Face = AIMesh->mFaces[j];
+                            for (uint32_t k = 0; k < Face.mNumIndices; k++)
+                            {
+                                Indices.emplace_back(Face.mIndices[k]);
+                            }
+                        }
+
+                        uint32_t IndexCount = uint32_t(Indices.size()) - OldIndexCount;
+
+                        Submeshes.emplace_back(
+                            Renderer::SubMeshData{
+                                .AABB          = std::move(Box),
+                                .VertexCount   = VertexCount,
+                                .IndexCount    = IndexCount,
+                                .VertexOffset  = VerticesCount,
+                                .IndexOffset   = IndicesCount,
+                                .MaterialIndex = AIMesh->mMaterialIndex });
+
+                        VerticesCount += VertexCount;
+                        IndicesCount += IndexCount;
+
+                        NEON_VALIDATE(AIMesh->HasPositions(), "Mesh has no positions");
+                        NEON_VALIDATE(AIMesh->HasNormals(), "Mesh has no normals");
+                    }
+
+                    MeshNodes.reserve(AIScene->mNumMeshes);
+                    MeshNodes.emplace_back();
+                    TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
+                }
             }
+
+            //
 
             auto VertexBuffer = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(
                 RHI::BufferDesc{
@@ -295,6 +310,16 @@ namespace Neon::Asset
 
             VertexBuffer->Write(0, Vertices.data(), sizeof(Renderer::MeshVertex) * Vertices.size());
             IndexBuffer->Write(0, Indices.data(), sizeof(uint32_t) * Indices.size());
+
+            //
+
+            for (auto& [Material, Textures] : MaterialsToSet)
+            {
+                for (auto& [Type, Texture] : Textures)
+                {
+                    Material->SetTexture(TextureKvList[Type], Texture.Get());
+                }
+            }
 
             Model = std::make_shared<Renderer::Model>(
                 std::move(VertexBuffer),
