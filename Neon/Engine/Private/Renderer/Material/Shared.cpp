@@ -21,7 +21,56 @@ namespace Neon::Renderer
         const auto         LitSpriteShaderGuid = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
         ShaderAssetTaskPtr LitSpriteShader(Asset::Manager::Load(LitSpriteShaderGuid));
 
+        const auto         LitShaderGuid = Asset::Handle::FromString("7fd1137c-ad31-4f83-8c35-6d2246f66bd2");
+        ShaderAssetTaskPtr LitShader(Asset::Manager::Load(LitSpriteShaderGuid));
+
         //
+
+        auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+
+        //
+
+        // Lit
+        {
+            Renderer::GBufferMaterialBuilder BaseSpriteMaterial;
+
+            BaseSpriteMaterial
+                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
+                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+                .RootSignature(
+                    RHI::RootSignatureBuilder()
+                        .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView("v_InstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("p_MaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddDescriptorTable(
+                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1, true), RHI::ShaderVisibility::Pixel)
+                        .AddDescriptorTable(
+                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1, true), RHI::ShaderVisibility::Pixel)
+                        .AddDescriptorTable(
+                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1, true), RHI::ShaderVisibility::Pixel)
+                        .AddDescriptorTable(
+                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1, true), RHI::ShaderVisibility::Pixel)
+                        .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+                        .AddStandardSamplers()
+                        .Build());
+
+            RHI::MShaderCompileFlags Flags;
+#if NEON_DEBUG
+            Flags.Set(RHI::EShaderCompileFlags::Debug);
+#endif
+
+            BaseSpriteMaterial
+                .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
+                .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
+
+            auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+            Material->SetTexture("p_AlbedoMap", WhiteTexture);
+            Material->SetTexture("p_NormalMap", WhiteTexture);
+            Material->SetTexture("p_SpecularMap", WhiteTexture);
+            Material->SetTexture("p_EmissiveMap", WhiteTexture);
+
+            s_DefaultMaterials[Type::Lit] = std::move(Material);
+        }
 
         // Unlit sprite
         {
@@ -52,7 +101,7 @@ namespace Neon::Renderer
                 .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
             auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
-            Material->SetTexture("p_SpriteTextures", RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D));
+            Material->SetTexture("p_SpriteTextures", WhiteTexture);
 
             s_DefaultMaterials[Type::LitSprite] = std::move(Material);
         }

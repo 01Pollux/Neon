@@ -208,10 +208,9 @@ namespace Neon::Asset
             auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
 
             std::map<aiTextureType, const char*> TextureKvList{
-                std::pair{ aiTextureType_DIFFUSE, "Diffuse" },
-                std::pair{ aiTextureType_SPECULAR, "Specular" },
-                std::pair{ aiTextureType_NORMALS, "Normal" },
-                std::pair{ aiTextureType_EMISSIVE, "Emissive" }
+                std::pair{ aiTextureType_DIFFUSE, "p_AlbedoMap" },
+                std::pair{ aiTextureType_NORMALS, "p_NormalMap" },
+                std::pair{ aiTextureType_EMISSIVE, "p_EmissiveMap" }
             };
 
             if (AIScene->HasMaterials())
@@ -224,16 +223,17 @@ namespace Neon::Asset
                     aiMaterial* AIMaterial = AIScene->mMaterials[i];
                     auto&       Material   = Materials.emplace_back(LitMaterial->CreateInstance());
 
-                    NEON_TRACE_TAG("Model", "Loading material %s", AIMaterial->GetName().C_Str());
+                    NEON_TRACE_TAG("Model", "Loading material {}", AIMaterial->GetName().C_Str());
 
                     std::unordered_map<aiTextureType, RHI::SSyncTexture> TexturesToSet;
-                    std::unordered_set<aiTextureType>                    MissingTexturesToSet;
 
                     aiString TexturePath;
                     for (auto& [Type, Tag] : TextureKvList)
                     {
                         if (AIMaterial->GetTexture(Type, 0, &TexturePath))
                         {
+                            NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
+
                             if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
                             {
                                 std::array Subresources{
@@ -269,19 +269,10 @@ namespace Neon::Asset
                                 }
                                 else
                                 {
-                                    NEON_WARNING("Failed to load texture {}", TexturePath.C_Str());
+                                    NEON_WARNING("Failed to load texture '{}'", TexturePath.C_Str());
                                 }
                             }
                         }
-                        else
-                        {
-                            MissingTexturesToSet.emplace(Type);
-                        }
-                    }
-
-                    for (auto& Type : MissingTexturesToSet)
-                    {
-                        Material->SetTexture(TextureKvList[Type], WhiteTexture);
                     }
 
                     for (auto& [Type, Texture] : TexturesToSet)
