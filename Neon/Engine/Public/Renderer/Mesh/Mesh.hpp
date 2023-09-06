@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Core/Neon.hpp>
-#include <Math/Vector.hpp>
+#include <Math/AABB.hpp>
 #include <Math/Matrix.hpp>
-
+#include <RHI/Resource/Resource.hpp>
 #include <vector>
 
 namespace Neon
@@ -29,46 +29,56 @@ namespace Neon::Renderer
         Vector2 TexCoord;
     };
 
-    class SubMeshData
+    struct SubMeshData
     {
-    public:
-        SubMeshData(
-            const Matrix4x4& Transform,
-            uint32_t         VertexCount,
-            uint32_t         IndexCount,
-            uint32_t         VertexOffset,
-            uint32_t         IndexOffset,
-            uint32_t         MaterialIndex) :
-            m_Transform(Transform),
-            m_VertexCount(VertexCount),
-            m_IndexCount(IndexCount),
-            m_VertexOffset(VertexOffset),
-            m_IndexOffset(IndexOffset),
-            m_MaterialIndex(MaterialIndex)
-        {
-        }
+        Matrix4x4       Transform = Mat::Identity<Matrix4x4>;
+        AABoundingBox3D AABB;
 
-    private:
-        Matrix4x4 m_Transform;
+        uint32_t VertexCount;
+        uint32_t IndexCount;
 
-        uint32_t m_VertexCount;
-        uint32_t m_IndexCount;
+        uint32_t VertexOffset;
+        uint32_t IndexOffset;
 
-        uint32_t m_VertexOffset;
-        uint32_t m_IndexOffset;
-
-        uint32_t m_MaterialIndex;
+        uint32_t MaterialIndex;
     };
+
+    //
+
+    struct MeshNode
+    {
+        uint32_t              Parent = std::numeric_limits<uint32_t>::max();
+        std::vector<uint32_t> Children;
+        std::vector<uint32_t> Submeshes;
+        Matrix4x4             Transform = Mat::Identity<Matrix4x4>;
+        StringU8              Name;
+    };
+
+    //
 
     class Model
     {
-        friend class Asset::ModelAsset::Handler;
-
     public:
         using SubmeshList    = std::vector<SubMeshData>;
+        using MeshNodeList   = std::vector<MeshNode>;
         using SubmeshRefList = std::vector<uint32_t>;
         using GPUBuffer      = UPtr<RHI::IBuffer>;
         using MaterialsTable = std::vector<Ptr<IMaterial>>;
+
+    public:
+        Model(
+            GPUBuffer&&      VertexBuffer,
+            GPUBuffer&&      IndexBuffer,
+            SubmeshList&&    Submeshes,
+            MeshNodeList&&   Nodes,
+            MaterialsTable&& Materials) noexcept :
+            m_VertexBuffer(std::move(VertexBuffer)),
+            m_IndexBuffer(std::move(IndexBuffer)),
+            m_Submeshes(std::move(Submeshes)),
+            m_Nodes(std::move(Nodes)),
+            m_Materials(std::move(Materials))
+        {
+        }
 
     public:
         /// <summary>
@@ -87,12 +97,56 @@ namespace Neon::Renderer
             return m_Materials;
         }
 
+        /// <summary>
+        /// Get root node of the model.
+        /// </summary>
+        const auto& GetRootNode() const noexcept
+        {
+            return m_Nodes[0];
+        }
+
+        /// <summary>
+        /// Get nodes of the model.
+        /// </summary>
+        const auto& GetNodes() const noexcept
+        {
+            return m_Nodes;
+        }
+
+        /// <summary>
+        /// Get nodes of the model.
+        /// </summary>
+        const auto& GetNode(
+            uint32_t Index) const noexcept
+        {
+            return m_Nodes[Index];
+        }
+
+        /// <summary>
+        /// Get vertex buffer of the model.
+        /// </summary>
+        const auto& GetVertexBuffer() const noexcept
+        {
+            return m_VertexBuffer;
+        }
+
+        /// <summary>
+        /// Get index buffer of the model.
+        /// </summary>
+        const auto& GetIndexBuffer() const noexcept
+        {
+            return m_IndexBuffer;
+        }
+
     private:
         GPUBuffer      m_VertexBuffer;
         GPUBuffer      m_IndexBuffer;
         MaterialsTable m_Materials;
         SubmeshList    m_Submeshes;
+        MeshNodeList   m_Nodes;
     };
+
+    //
 
     class StaticMesh
     {
