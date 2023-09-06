@@ -205,6 +205,15 @@ namespace Neon::Asset
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
             }
 
+            auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+
+            std::map<aiTextureType, const char*> TextureKvList{
+                std::pair{ aiTextureType_DIFFUSE, "Diffuse" },
+                std::pair{ aiTextureType_SPECULAR, "Specular" },
+                std::pair{ aiTextureType_NORMALS, "Normal" },
+                std::pair{ aiTextureType_EMISSIVE, "Emissive" }
+            };
+
             if (AIScene->HasMaterials())
             {
                 Materials.reserve(AIScene->mNumMaterials);
@@ -217,35 +226,73 @@ namespace Neon::Asset
 
                     NEON_TRACE_TAG("Model", "Loading material %s", AIMaterial->GetName().C_Str());
 
+                    std::unordered_map<aiTextureType, RHI::SSyncTexture> TexturesToSet;
+                    std::unordered_set<aiTextureType>                    MissingTexturesToSet;
+
                     aiString TexturePath;
-                    for (auto [Type, Tag] : {
-                             std::pair{ aiTextureType_DIFFUSE, "Diffuse" },
-                             std::pair{ aiTextureType_SPECULAR, "Specular" },
-                             std::pair{ aiTextureType_NORMALS, "Normal" },
-                             std::pair{ aiTextureType_EMISSIVE, "Emissive" } })
+                    for (auto& [Type, Tag] : TextureKvList)
                     {
                         if (AIMaterial->GetTexture(Type, 0, &TexturePath))
                         {
                             if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
                             {
-                                auto Texture = RHI::ITexture::Create(
+                                std::array Subresources{
+                                    RHI::SubresourceDesc{
+                                        .Data       = AITexture->pcData,
+                                        .RowPitch   = AITexture->mWidth * 4,
+                                        .SlicePitch = AITexture->mWidth * AITexture->mHeight * 4 }
+                                };
+
+                                auto Texture = RHI::SSyncTexture(
                                     RHI::ResourceDesc::Tex2D(
                                         RHI::EResourceFormat::R8G8B8A8_UNorm,
                                         AITexture->mWidth,
                                         AITexture->mHeight,
-                                        1));
-
-                                //
+                                        1),
+                                    Subresources);
+                                TexturesToSet.emplace(Type, std::move(Texture));
                             }
                             else
                             {
+                                std::fstream File(TexturePath.C_Str(), std::ios::in | std::ios::binary);
+                                if (File.is_open())
+                                {
+                                    std::vector<uint8_t> Data((std::istreambuf_iterator<char>(File)), std::istreambuf_iterator<char>());
+
+                                    RHI::TextureRawImage ImageInfo{
+                                        .Data = Data.data(),
+                                        .Size = Data.size(),
+                                        .Type = RHI::TextureRawImage::Format::Png
+                                    };
+
+                                    TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo));
+                                }
+                                else
+                                {
+                                    NEON_WARNING("Failed to load texture {}", TexturePath.C_Str());
+                                }
                             }
                         }
+                        else
+                        {
+                            MissingTexturesToSet.emplace(Type);
+                        }
+                    }
+
+                    for (auto& Type : MissingTexturesToSet)
+                    {
+                        Material->SetTexture(TextureKvList[Type], WhiteTexture);
+                    }
+
+                    for (auto& [Type, Texture] : TexturesToSet)
+                    {
+                        Material->SetTexture(TextureKvList[Type], Texture.Get());
                     }
                 }
             }
             else
             {
+                // We dont have any materials, so we create a default one
             }
 
             auto VertexBuffer = UPtr<RHI::IUploadBuffer>(RHI::IUploadBuffer::Create(

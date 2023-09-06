@@ -1,10 +1,12 @@
 #include <EnginePCH.hpp>
-#include <Editor/Views/Types/Scene.hpp>
-
-#include <Editor/Main/EditorEngine.hpp>
 #include <Runtime/GameLogic.hpp>
 
+#include <Editor/Views/Types/Scene.hpp>
+#include <Editor/Main/EditorEngine.hpp>
+
 #include <Scene/Component/Camera.hpp>
+#include <Editor/Scene/EditorEntity.hpp>
+
 #include <RenderGraph/RG.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 #include <RHI/Resource/State.hpp>
@@ -31,7 +33,7 @@ namespace Neon::Editor::Views
         // If we are in editor scene view, disable/enable camera based on window state.
         if (m_IsEditorView)
         {
-            flecs::entity Camera = EditorEngine::Get()->GetMainCamera(true);
+            flecs::entity Camera = Scene::EntityWorld::Get().target<Scene::Editor::EditorMainCamera>();
             if (!Camera) [[unlikely]]
             {
                 return;
@@ -63,7 +65,8 @@ namespace Neon::Editor::Views
             return;
         }
 
-        flecs::entity Camera = EditorEngine::Get()->GetMainCamera(m_IsEditorView);
+        // TODO: option to switch camera.
+        flecs::entity Camera = Scene::EntityWorld::Get().target<Scene::Editor::EditorMainCamera>();
         if (!Camera || !Camera.enabled()) [[unlikely]]
         {
             return;

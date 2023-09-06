@@ -78,14 +78,6 @@ namespace Neon::Editor
         return m_EditorCamera;
     }
 
-    Scene::EntityHandle EditorEngine::GetMainCamera(
-        bool EditorCamera) const
-    {
-        flecs::world World = Scene::EntityWorld::Get();
-        return EditorCamera ? World.target<Scene::Editor::EditorMainCamera>()
-                            : World.target<Scene::Component::MainCamera>();
-    }
-
     bool EditorEngine::IsInEditorMode() const
     {
         flecs::world World = Scene::EntityWorld::Get();

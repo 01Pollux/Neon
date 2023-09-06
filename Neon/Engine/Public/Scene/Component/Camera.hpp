@@ -157,15 +157,4 @@ namespace Neon::Scene::Component
         /// </summary>
         CameraType Type = CameraType::Perspective;
     };
-
-    /// <summary>
-    /// The main camera of the scene.
-    /// </summary>
-    struct MainCamera
-    {
-        NEON_EXPORT_FLECS(MainCamera, "MainCamera")
-        {
-            Component.add(flecs::Exclusive);
-        }
-    };
 } // namespace Neon::Scene::Component

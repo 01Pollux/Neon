@@ -5,8 +5,6 @@ project "NeonEngine"
     staticruntime "On"
     architecture "x64"
 
-    link_engine_library_no_engine()
-    
 	common_dir_setup()
     common_add_pch("EnginePCH")
     common_neon()
@@ -20,8 +18,8 @@ project "NeonEngine"
 
     removefiles
     {
-        "{%prj.location}/Public/Editor/**",
-        "{%prj.location}/Private/Editor/**"
+        "**/Editor/**.hpp",
+        "**/Editor/**.cpp",
     }
 
    

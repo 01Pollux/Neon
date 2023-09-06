@@ -135,12 +135,6 @@ namespace Neon::Editor
         [[nodiscard]] flecs::entity GetEditorCamera() const;
 
         /// <summary>
-        /// Get either the editor camera or the main camera.
-        /// </summary>
-        [[nodiscard]] Scene::EntityHandle GetMainCamera(
-            bool EditorCamera) const;
-
-        /// <summary>
         /// Check if the editor is in editor mode.
         /// </summary>
         [[nodiscard]] bool IsInEditorMode() const;

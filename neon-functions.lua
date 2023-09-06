@@ -203,18 +203,6 @@ function link_engine_library_no_engine()
         "NeonGraphics",
     }
 
-    includedirs
-    {
-        "%{CommonDir.Deps.Inc}/Bullet3",
-
-        "%{CommonDir.Neon.Core}",
-        "%{CommonDir.Neon.Coroutines}",
-        "%{CommonDir.Neon.Windowing}",
-        "%{CommonDir.Neon.Graphics}",
-        "%{CommonDir.Neon.Resource}",
-        "%{CommonDir.Neon.Engine}"
-    }
-
     link_mono_lib()
     link_assimp_lib()
     
@@ -286,8 +274,16 @@ function common_neon()
 
     includedirs
     {
+        "%{CommonDir.Deps.Inc}/Bullet3",
         "%{CommonDir.Deps.Inc}",
-        "%{prj.location}"
+        "%{prj.location}",
+
+        "%{CommonDir.Neon.Core}",
+        "%{CommonDir.Neon.Coroutines}",
+        "%{CommonDir.Neon.Windowing}",
+        "%{CommonDir.Neon.Graphics}",
+        "%{CommonDir.Neon.Resource}",
+        "%{CommonDir.Neon.Engine}"
     }
 end
 

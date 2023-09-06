@@ -40,7 +40,6 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_FLECS(Component::SceneEntity);
         NEON_REGISTER_FLECS(Component::WorldSceneRoot);
         NEON_REGISTER_FLECS(Component::ActiveSceneEntity);
-        NEON_REGISTER_FLECS(Component::MainCamera);
         NEON_REGISTER_FLECS(Component::Sprite::CustomRenderer);
     }
 } // namespace Neon::Scene::Exports
