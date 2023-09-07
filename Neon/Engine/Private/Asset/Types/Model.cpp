@@ -12,8 +12,6 @@
 #include <AssImp/Logger.hpp>
 #include <AssImp/LogStream.hpp>
 #include <AssImp/DefaultLogger.hpp>
-
-#include <vector>
 #endif
 
 #include <Log/Logger.hpp>
@@ -54,13 +52,13 @@ namespace Neon::Asset
     /// Traverse an AssImp node and add it to the model as a mesh node.
     /// </summary>
     static void TraverseAISubMesh(
-        aiNode*                        AINode,
-        Renderer::Model::SubmeshList&  Submeshes,
-        Renderer::Model::MeshNodeList& MeshNode,
-        uint32_t                       ParentIndex     = std::numeric_limits<uint32_t>::max(),
-        const Matrix4x4&               ParentTransform = Mat::Identity<Matrix4x4>)
+        aiNode*                   AINode,
+        Mdl::Model::SubmeshList&  Submeshes,
+        Mdl::Model::MeshNodeList& MeshNode,
+        uint32_t                  ParentIndex     = std::numeric_limits<uint32_t>::max(),
+        const Matrix4x4&          ParentTransform = Mat::Identity<Matrix4x4>)
     {
-        Renderer::MeshNode Node{
+        Mdl::MeshNode Node{
             .Parent    = ParentIndex,
             .Transform = FromAiMatrix(AINode->mTransformation),
             .Name      = StringU8(AINode->mName.data, AINode->mName.length)
@@ -169,7 +167,7 @@ namespace Neon::Asset
             return nullptr;
         }
 
-        Ptr<Renderer::Model> Model;
+        Ptr<Mdl::Model> Model;
 
         auto Extension = Path.substr(ExtensionIndex + 1);
         switch (StringUtils::Hash(Extension))
@@ -196,12 +194,12 @@ namespace Neon::Asset
                 return nullptr;
             }
 
-            Renderer::Model::SubmeshList    Submeshes;
-            Renderer::Model::MeshNodeList   MeshNodes;
-            Renderer::Model::MaterialsTable Materials;
+            Mdl::Model::SubmeshList    Submeshes;
+            Mdl::Model::MeshNodeList   MeshNodes;
+            Mdl::Model::MaterialsTable Materials;
 
-            std::vector<Renderer::MeshVertex> Vertices;
-            std::vector<uint32_t>             Indices;
+            std::vector<Mdl::MeshVertex> Vertices;
+            std::vector<uint32_t>        Indices;
 
             //
 
@@ -320,7 +318,7 @@ namespace Neon::Asset
                         Box.Expand(Position);
 
                         auto& Vertex = Vertices.emplace_back(
-                            Renderer::MeshVertex{
+                            Mdl::MeshVertex{
                                 .Position = Position,
                                 .Normal   = Vector3(AIMesh->mNormals[j].x, AIMesh->mNormals[j].y, AIMesh->mNormals[j].z) });
 
@@ -350,7 +348,7 @@ namespace Neon::Asset
                     uint32_t IndexCount = uint32_t(Indices.size()) - OldIndexCount;
 
                     Submeshes.emplace_back(
-                        Renderer::SubMeshData{
+                        Mdl::SubMeshData{
                             .AABB          = std::move(Box),
                             .VertexCount   = VertexCount,
                             .IndexCount    = IndexCount,
@@ -369,7 +367,7 @@ namespace Neon::Asset
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
 
                 VertexBuffer = RHI::USyncBuffer(
-                    RHI::BufferDesc(sizeof(Renderer::MeshVertex) * Vertices.size()),
+                    RHI::BufferDesc(sizeof(Mdl::MeshVertex) * Vertices.size()),
                     Vertices.data());
 
                 IndexBuffer = RHI::USyncBuffer(
@@ -392,7 +390,7 @@ namespace Neon::Asset
                 }
             }
 
-            Model = std::make_shared<Renderer::Model>(
+            Model = std::make_shared<Mdl::Model>(
                 std::move(VertexBuffer),
                 std::move(IndexBuffer),
                 std::move(Submeshes),

@@ -11,10 +11,10 @@
 namespace Neon::Editor::Views
 {
     void BuildSceneModel(
-        const Scene::EntityHandle&  SceneRoot,
-        const Scene::EntityHandle&  ParentEntity,
-        const Ptr<Renderer::Model>& Model,
-        uint32_t                    NodeIndex = 0)
+        const Scene::EntityHandle& SceneRoot,
+        const Scene::EntityHandle& ParentEntity,
+        const Ptr<Mdl::Model>&     Model,
+        uint32_t                   NodeIndex = 0)
     {
         auto& Node = Model->GetNode(NodeIndex);
 
@@ -29,7 +29,7 @@ namespace Neon::Editor::Views
     }
 
     void CreateSceneModel(
-        const Ptr<Renderer::Model>& Model)
+        const Ptr<Mdl::Model>& Model)
     {
         auto& CurScene = Project::Get()->GetActiveScene()->GetScene();
 
@@ -72,9 +72,6 @@ namespace Neon::Editor::Views
             m_Asset = Asset;
 
             CreateSceneModel(Asset->GetModel());
-
-            auto p = Asset->GetGuid();
-            // Project::Get()->ImportAsset();
         }
     }
 } // namespace Neon::Editor::Views

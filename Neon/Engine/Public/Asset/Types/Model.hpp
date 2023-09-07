@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Asset/Asset.hpp>
-#include <Renderer/Mesh/Mesh.hpp>
+#include <Mdl/Model.hpp>
 
 namespace Neon::Asset
 {
@@ -11,7 +11,7 @@ namespace Neon::Asset
         class Handler;
 
         ModelAsset(
-            Ptr<Renderer::Model> Model,
+            Ptr<Mdl::Model> Model,
             const Handle&        AssetGuid,
             StringU8             Path) :
             IAsset(AssetGuid, Path),
@@ -22,12 +22,12 @@ namespace Neon::Asset
         /// <summary>
         /// Get the model from this asset.
         /// </summary>
-        [[nodiscard]] const Ptr<Renderer::Model>& GetModel() const
+        [[nodiscard]] const Ptr<Mdl::Model>& GetModel() const
         {
             return m_Model;
         }
 
     private:
-        Ptr<Renderer::Model> m_Model;
+        Ptr<Mdl::Model> m_Model;
     };
 } // namespace Neon::Asset
