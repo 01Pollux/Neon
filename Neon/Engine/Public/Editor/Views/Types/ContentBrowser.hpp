@@ -3,6 +3,9 @@
 #include <Editor/Views/View.hpp>
 #include <Editor/Views/Types/ContentBrowser/DirectoryIterator.hpp>
 
+#include <Scene/EntityWorld.hpp>
+#include <Editor/Scene/ContentBrowser.hpp>
+
 #include <IO/FileWatcher.hpp>
 
 namespace Neon::Editor::Views
@@ -32,6 +35,8 @@ namespace Neon::Editor::Views
 
     public:
         ContentBrowser();
+        NEON_CLASS_NO_COPYMOVE(ContentBrowser);
+        ~ContentBrowser();
 
         void OnRender() override;
 
@@ -58,6 +63,11 @@ namespace Neon::Editor::Views
         /// </summary>
         void DrawSearchBar();
 
+        /// <summary>
+        /// Display the items in the current directory.
+        /// </summary>
+        void DrawItems();
+
     private:
         FileListener      m_Listener;
         efsw::FileWatcher m_FileWatcher;
@@ -66,5 +76,7 @@ namespace Neon::Editor::Views
         CB::DirectoryIterator m_DirectoryIterator;
 
         ImGuiTextFilter m_SearchFilter;
+
+        Scene::EntityHandle m_ContentBrowserEntity;
     };
 } // namespace Neon::Editor::Views

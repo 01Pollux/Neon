@@ -83,4 +83,17 @@ namespace Neon::Editor
         flecs::world World = Scene::EntityWorld::Get();
         return World.has<Scene::Editor::WorldEditorMode>();
     }
+
+    flecs::entity EditorEngine::CreateEditorEntity(
+        const char* Name)
+    {
+        return Scene::EntityHandle::Create(m_EditorScene.GetRoot(), Name);
+    }
+
+    flecs::entity EditorEngine::CreateEditorEntity(
+        const flecs::entity& Parent,
+        const char*          Name)
+    {
+        return Scene::EntityHandle::Create(m_EditorScene.GetRoot(), Parent, Name);
+    }
 } // namespace Neon::Editor

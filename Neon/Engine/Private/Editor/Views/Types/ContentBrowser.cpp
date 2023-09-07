@@ -60,10 +60,52 @@ namespace Neon::Editor::Views
         IEditorView(StandardViews::s_ContentBrowserWidgetId),
         m_Listener(this),
         m_ContentID(m_FileWatcher.addWatch(Project::Get()->GetContentDirectoryPath().string(), &m_Listener, true)),
-        m_DirectoryIterator(Project::Get()->GetContentDirectoryPath().string())
+        m_DirectoryIterator(Project::Get()->GetContentDirectoryPath().string()),
+        m_ContentBrowserEntity(Editor::EditorEngine::Get()->CreateEditorEntity("Content Browser"))
     {
+        using CBI = Scene::Editor::ContentBrowserItem;
+
+        NEON_REGISTER_FLECS(CBI);
+        NEON_REGISTER_FLECS_ENUM(CBI::ItemType);
+        NEON_REGISTER_FLECS_ENUM(CBI::ItemOpType);
+
+        //
+
+        // TODO: unfinished, will be used for asset management as well as content browser operations
+        for (auto& Path : std::filesystem::recursive_directory_iterator(Project::Get()->GetContentDirectoryPath()))
+        {
+            auto          RelPath = std::filesystem::relative(Path, Project::Get()->GetContentDirectoryPath()).string();
+            flecs::entity Entity;
+
+            Entity = Editor::EditorEngine::Get()->CreateEditorEntity(
+                m_ContentBrowserEntity,
+                RelPath.c_str());
+
+            Entity.emplace<CBI>(Path.path().stem().string(), std::move(RelPath));
+            Entity.set<CBI::ItemOpType>(CBI::ItemOpType::None);
+
+            if (Path.is_directory())
+            {
+                Entity.set<CBI::ItemType>({ CBI::ItemType::Directory });
+            }
+            else
+            {
+                Entity.set<CBI::ItemType>({ CBI::ItemType::File });
+            }
+        }
+
+        //
+
         m_FileWatcher.watch();
     }
+
+    ContentBrowser::~ContentBrowser()
+    {
+        m_FileWatcher.removeWatch(m_ContentID);
+        m_ContentBrowserEntity.Delete(true);
+    }
+
+    //
 
     void ContentBrowser::OnRender()
     {
@@ -73,15 +115,10 @@ namespace Neon::Editor::Views
             return;
         }
 
-        constexpr int ViewSize = 96;
-        const int     Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
-
         imcxx::shared_style BrowserStyle(
             ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f),
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
-
-        auto ContentPackage = Project::Get()->GetContentPackage();
 
         {
             DrawRootDirectories();
@@ -89,68 +126,7 @@ namespace Neon::Editor::Views
             DrawSearchBar();
         }
 
-        if (imcxx::table Table{ "DirectoryInfo", Columns })
-        {
-            for (auto& File : m_DirectoryIterator.GetAllFiles())
-            {
-                auto FileName = File.Path->stem().string();
-                if (!m_SearchFilter.PassFilter(FileName.c_str(), FileName.c_str() + FileName.size()))
-                {
-                    continue;
-                }
-
-                if (!Table.next_column())
-                {
-                    continue;
-                }
-
-                auto Extension   = File.Path->has_extension() ? StringUtils::ToLower(File.Path->extension().string()) : "";
-                auto TextureInfo = GetImageIcon(Extension, File.IsFile);
-
-                ImVec4 IconTint(1.f, 1.f, 1.f, 1.f);
-                if (File.IsFile)
-                {
-                    // ContentPackage->GetGuidOfPath(*File.Path);
-                    if (!File.MetaData || ContentPackage->GetGuidOfPath(File.Path->string()).is_nil())
-                    {
-                        IconTint = ImVec4(1.f, 0.5f, 0.5f, 1.f);
-                    }
-                }
-
-                imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
-                ImGui::ImageButton(
-                    FileName.c_str(),
-                    TextureInfo.TextureID,
-                    { float(ViewSize), float(ViewSize) },
-                    TextureInfo.MinUV,
-                    TextureInfo.MaxUV,
-                    {},
-                    IconTint);
-
-                bool ItemSelected = ImGui::IsItemHovered() &&
-                                    (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) ||
-                                     ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)));
-
-                ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
-                ImGui::TextWrapped(FileName.c_str());
-
-                ItemSelected |= ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
-
-                if (ItemSelected)
-                {
-                    if (File.IsFile)
-                    {
-                        // Open Asset
-                    }
-                    else
-                    {
-                        m_DirectoryIterator.Visit(*File.Path);
-                        return;
-                    }
-                }
-            }
-        }
-
+        DrawItems();
         DisplayPopup();
     }
 
@@ -365,5 +341,91 @@ namespace Neon::Editor::Views
         ImGui::SetNextItemWidth(Size);
         if (ImGui::InputTextWithHint("##SearchBar", "(inc, -exc)", m_SearchFilter.InputBuf, IM_ARRAYSIZE(m_SearchFilter.InputBuf)))
             m_SearchFilter.Build();
+    }
+
+    void ContentBrowser::DrawItems()
+    {
+        auto BeginDnd = [](const char* Name, const char* Type, const char* Path) -> bool
+        {
+            if (!ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+            {
+                return false;
+            }
+
+            ImGui::SetDragDropPayload(Type, Path, strlen(Path) + 1);
+            ImGui::Text(Name);
+            ImGui::EndDragDropSource();
+
+            return true;
+        };
+
+        constexpr int ViewSize = 96;
+        const int     Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
+
+        imcxx::table Table{ "DirectoryInfo", Columns };
+        if (!Table)
+        {
+            return;
+        }
+
+        auto ContentPackage = Project::Get()->GetContentPackage();
+
+        for (auto& File : m_DirectoryIterator.GetAllFiles())
+        {
+            auto FileName = File.Path->stem().string();
+            if (!m_SearchFilter.PassFilter(FileName.c_str(), FileName.c_str() + FileName.size()))
+            {
+                continue;
+            }
+
+            if (!Table.next_column())
+            {
+                continue;
+            }
+
+            auto Extension   = File.Path->has_extension() ? StringUtils::ToLower(File.Path->extension().string()) : "";
+            auto TextureInfo = GetImageIcon(Extension, File.IsFile);
+
+            ImVec4 IconTint(1.f, 1.f, 1.f, 1.f);
+            if (File.IsFile)
+            {
+                if (!File.MetaData || ContentPackage->GetGuidOfPath(File.Path->string()).is_nil())
+                {
+                    IconTint = ImVec4(1.f, 0.5f, 0.5f, 1.f);
+                }
+            }
+
+            imcxx::shared_color OverrideIcon(ImGuiCol_Button, ImVec4{});
+            ImGui::ImageButton(
+                FileName.c_str(),
+                TextureInfo.TextureID,
+                { float(ViewSize), float(ViewSize) },
+                TextureInfo.MinUV,
+                TextureInfo.MaxUV,
+                {},
+                IconTint);
+
+            bool ItemSelected = ImGui::IsItemHovered() &&
+                                (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) ||
+                                 ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)));
+
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
+            ImGui::TextWrapped(FileName.c_str());
+
+            ItemSelected |= ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+
+            if (ItemSelected)
+            {
+                if (File.IsFile)
+                {
+                    // Open Asset
+                }
+                else
+                {
+                    m_DirectoryIterator.Visit(*File.Path);
+                    return;
+                }
+            }
+        }
     }
 } // namespace Neon::Editor::Views

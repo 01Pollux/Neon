@@ -125,11 +125,6 @@ namespace Neon::Editor
         [[nodiscard]] flecs::entity GetActiveSceneTag() const;
 
         /// <summary>
-        /// Get the editor active root entity.
-        /// </summary>
-        [[nodiscard]] const Scene::RuntimeScene& GetCurrentScene() const;
-
-        /// <summary>
         /// Get the editor camera.
         /// </summary>
         [[nodiscard]] flecs::entity GetEditorCamera() const;
@@ -138,6 +133,19 @@ namespace Neon::Editor
         /// Check if the editor is in editor mode.
         /// </summary>
         [[nodiscard]] bool IsInEditorMode() const;
+
+        /// <summary>
+        /// Create an editor entity.
+        /// </summary>
+        flecs::entity CreateEditorEntity(
+            const char* Name);
+
+        /// <summary>
+        /// Create an editor entity.
+        /// </summary>
+        flecs::entity CreateEditorEntity(
+            const flecs::entity& Parent,
+            const char*          Name);
 
     public:
         /// <summary>
@@ -154,6 +162,7 @@ namespace Neon::Editor
 
         Scene::EntityHandle m_EditorCamera;
         Scene::RuntimeScene m_RuntimeScene;
+        Scene::RuntimeScene m_EditorScene;
 
         ProjectManager m_ProjectManager;
 

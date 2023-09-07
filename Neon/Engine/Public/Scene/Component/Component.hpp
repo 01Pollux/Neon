@@ -25,6 +25,16 @@ namespace Neon::Scene::Component::Impl
     static void _HandleComponent(                    \
         flecs::entity Component)
 
+#define NEON_EXPORT_FLECS_ENUM(Enum, Name)           \
+    static void Enum##_RegisterFlecs()               \
+    {                                                \
+        Enum##_HandleComponent(                      \
+            Neon::Scene::Component::Impl::GetWorld() \
+                .component<Enum>(Name));             \
+    }                                                \
+    static void Enum##_HandleComponent(              \
+        flecs::entity Component)
+
 #if NEON_EDITOR
 #define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                                             \
     static void RegisterFlecs()                                                              \
@@ -86,7 +96,10 @@ namespace Neon::Scene::Component::Impl
 //
 
 #define NEON_REGISTER_FLECS(ClassName) \
-    ClassName::RegisterFlecs();
+    ClassName::RegisterFlecs()
+
+#define NEON_REGISTER_FLECS_ENUM(Enum) \
+    Enum##_RegisterFlecs()
 
 namespace Neon::Scene::Component
 {
