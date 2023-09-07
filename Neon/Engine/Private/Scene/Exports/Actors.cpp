@@ -8,6 +8,10 @@
 
 #include <Scene/Component/Camera.hpp>
 
+#include <Scene/Component/Script.hpp>
+
+#include <Scene/Component/Mesh.hpp>
+
 #include <Scene/Component/Physics.hpp>
 
 namespace Neon::Scene::Exports
@@ -20,6 +24,10 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_FLECS(Component::Sprite);
 
         NEON_REGISTER_FLECS(Component::Camera);
+
+        NEON_REGISTER_FLECS(Component::ScriptInstance);
+
+        NEON_REGISTER_FLECS(Component::MeshInstance);
 
         NEON_REGISTER_FLECS(Component::CollisionEnter);
         NEON_REGISTER_FLECS(Component::CollisionStay);

@@ -38,7 +38,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionEnter
     {
-        NEON_EXPORT_FLECS(CollisionEnter, "Collision Enter")
+        NEON_EXPORT_FLECS(CollisionEnter, "CollisionEnter")
         {
         }
 
@@ -50,7 +50,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionStay
     {
-        NEON_EXPORT_FLECS(CollisionStay, "Collision Stay")
+        NEON_EXPORT_FLECS(CollisionStay, "CollisionStay")
         {
         }
 
@@ -62,7 +62,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct CollisionExit
     {
-        NEON_EXPORT_FLECS(CollisionExit, "Collision Exit")
+        NEON_EXPORT_FLECS(CollisionExit, "CollisionExit")
         {
         }
 
@@ -74,7 +74,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerEnter
     {
-        NEON_EXPORT_FLECS(TriggerEnter, "Trigger Enter")
+        NEON_EXPORT_FLECS(TriggerEnter, "TriggerEnter")
         {
         }
 
@@ -86,7 +86,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerStay
     {
-        NEON_EXPORT_FLECS(TriggerStay, "Trigger Stay")
+        NEON_EXPORT_FLECS(TriggerStay, "TriggerStay")
         {
         }
 
@@ -98,7 +98,7 @@ namespace Neon::Scene::Component
     /// </summary>
     struct TriggerExit
     {
-        NEON_EXPORT_FLECS(TriggerExit, "Trigger Exit")
+        NEON_EXPORT_FLECS(TriggerExit, "TriggerExit")
         {
         }
 
@@ -109,7 +109,7 @@ namespace Neon::Scene::Component
 
     struct CollisionShape
     {
-        NEON_EXPORT_FLECS_COMPONENT(CollisionShape, "Collision Shape")
+        NEON_EXPORT_FLECS_COMPONENT(CollisionShape, "CollisionShape")
         {
         }
 
@@ -118,7 +118,7 @@ namespace Neon::Scene::Component
 
     struct CollisionObject
     {
-        NEON_EXPORT_FLECS_COMPONENT(CollisionObject, "Collision Object")
+        NEON_EXPORT_FLECS_COMPONENT(CollisionObject, "CollisionObject")
         {
         }
 

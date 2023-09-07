@@ -39,17 +39,9 @@ namespace Neon::Mdl
 
     public:
         /// <summary>
-        /// Get submeshes of the model.
-        /// </summary>
-        const auto& GetSubmeshes() const noexcept
-        {
-            return m_Submeshes;
-        }
-
-        /// <summary>
         /// Get materials of the model.
         /// </summary>
-        const auto& GetMaterials() const noexcept
+        [[nodiscard]] const auto& GetMaterials() const noexcept
         {
             return m_Materials;
         }
@@ -57,7 +49,7 @@ namespace Neon::Mdl
         /// <summary>
         /// Get root node of the model.
         /// </summary>
-        const auto& GetRootNode() const noexcept
+        [[nodiscard]] const auto& GetRootNode() const noexcept
         {
             return m_Nodes[0];
         }
@@ -65,7 +57,7 @@ namespace Neon::Mdl
         /// <summary>
         /// Get nodes of the model.
         /// </summary>
-        const auto& GetNodes() const noexcept
+        [[nodiscard]] const auto& GetNodes() const noexcept
         {
             return m_Nodes;
         }
@@ -73,16 +65,33 @@ namespace Neon::Mdl
         /// <summary>
         /// Get nodes of the model.
         /// </summary>
-        const auto& GetNode(
+        [[nodiscard]] const auto& GetNode(
             uint32_t Index) const noexcept
         {
             return m_Nodes[Index];
         }
 
         /// <summary>
+        /// Get submeshes of the model.
+        /// </summary>
+        [[nodiscard]] const auto& GetSubmeshes() const noexcept
+        {
+            return m_Submeshes;
+        }
+
+        /// <summary>
+        /// Get submeshes of the model.
+        /// </summary>
+        [[nodiscard]] const auto& GetSubmesh(
+            uint32_t Index) const noexcept
+        {
+            return m_Submeshes[Index];
+        }
+
+        /// <summary>
         /// Get vertex buffer of the model.
         /// </summary>
-        const auto& GetVertexBuffer() const noexcept
+        [[nodiscard]] const auto& GetVertexBuffer() const noexcept
         {
             return m_VertexBuffer;
         }
@@ -90,7 +99,7 @@ namespace Neon::Mdl
         /// <summary>
         /// Get index buffer of the model.
         /// </summary>
-        const auto& GetIndexBuffer() const noexcept
+        [[nodiscard]] const auto& GetIndexBuffer() const noexcept
         {
             return m_IndexBuffer;
         }

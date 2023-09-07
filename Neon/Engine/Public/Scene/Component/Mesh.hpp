@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Scene/Component/Component.hpp>
-#include <Model/Mesh.hpp>
+#include <Mdl/Mesh.hpp>
 
 namespace Neon::Scene::Component
 {
@@ -9,17 +9,13 @@ namespace Neon::Scene::Component
     {
         NEON_COMPONENT_SERIALIZE_IMPL
         {
-            Archive& AssemblyName& ClassName;
         }
 
-        NEON_EXPORT_FLECS_COMPONENT(ScriptInstance, "Script Instance")
+        NEON_EXPORT_FLECS_COMPONENT(MeshInstance, "MeshInstance")
         {
-            NEON_COMPONENT_SERIALIZE(ScriptInstance);
+            NEON_COMPONENT_SERIALIZE(MeshInstance);
         }
 
-        StringU8 AssemblyName;
-        StringU8 ClassName;
-
-        Scripting::GCHandle Handle;
+        Mdl::Mesh Mesh;
     };
 } // namespace Neon::Scene::Component

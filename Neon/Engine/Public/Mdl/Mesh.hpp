@@ -8,32 +8,42 @@ namespace Neon::Mdl
     class Mesh
     {
     public:
+        Mesh() = default;
+
         Mesh(
-            const Ptr<Model>&       Model,
-            Model::SubmeshRefList&& Submeshes) :
+            const Ptr<Model>& Model,
+            uint32_t          Submesh) :
             m_Model(Model),
-            m_Submeshes(std::move(Submeshes))
+            m_Submesh(Submesh)
         {
         }
 
         /// <summary>
         /// Get model of the mesh.
         /// </summary>
-        const auto& GetModel() const noexcept
+        [[nodiscard]] const auto& GetModel() const noexcept
         {
             return m_Model;
         }
 
         /// <summary>
-        /// Get submeshes of the model.
+        /// Get submesh index of the mesh.
         /// </summary>
-        const auto& GetSubmeshes() const noexcept
+        [[nodiscard]] uint32_t GetSubmeshIndex() const noexcept
         {
-            return m_Submeshes;
+            return m_Submesh;
+        }
+
+        /// <summary>
+        /// Get submesh index of the mesh.
+        /// </summary>
+        [[nodiscard]] const auto& GetSubmesh() const noexcept
+        {
+            return m_Model->GetSubmesh(m_Submesh);
         }
 
     private:
-        Ptr<Model>            m_Model;
-        Model::SubmeshRefList m_Submeshes;
+        Ptr<Model> m_Model;
+        uint32_t   m_Submesh = std::numeric_limits<uint32_t>::max();
     };
 } // namespace Neon::Mdl

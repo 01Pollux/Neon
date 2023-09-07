@@ -119,14 +119,16 @@ namespace Neon::UI::Utils
         float FrameHeight = ImGui::GetFrameHeight();
         ImGui::SameLine(ImGui::GetWindowWidth() - FrameHeight);
 
+        imcxx::shared_item_id Id{ Label };
+
         // Draw the settings button
         if (imcxx::button{ ICON_FA_COG, ImVec2{ FrameHeight, FrameHeight } })
         {
-            ImGui::OpenPopup("##ComponentOptions");
+            ImGui::OpenPopup("");
         }
 
         // Draw the settings popup
-        if (imcxx::popup ComponentOptions{ "##ComponentOptions" })
+        if (imcxx::popup ComponentOptions{ "" })
         {
             for (auto& [ButtonName, Action] : {
                      std::pair{ "Copy", ComponentActionType::Copy },

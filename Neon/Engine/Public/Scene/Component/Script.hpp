@@ -12,7 +12,7 @@ namespace Neon::Scene::Component
             Archive& AssemblyName& ClassName;
         }
 
-        NEON_EXPORT_FLECS_COMPONENT(ScriptInstance, "Script Instance")
+        NEON_EXPORT_FLECS_COMPONENT(ScriptInstance, "ScriptInstance")
         {
             NEON_COMPONENT_SERIALIZE(ScriptInstance);
         }
