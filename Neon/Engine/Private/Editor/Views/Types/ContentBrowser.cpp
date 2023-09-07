@@ -73,12 +73,8 @@ namespace Neon::Editor::Views
             return;
         }
 
-        static int ViewSize = 64;
-        if (imcxx::slider{ "View Size", ViewSize, 32, 352 })
-        {
-            ViewSize = (ViewSize / 32) * 32;
-        }
-        const int Columns = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
+        static int ViewSize = 96;
+        const int  Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
 
         imcxx::shared_style BrowserStyle(
             ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f),
@@ -116,8 +112,27 @@ namespace Neon::Editor::Views
                         {},
                         IconTint);
 
+                    bool ItemSelected = ImGui::IsItemHovered() &&
+                                        (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) ||
+                                         ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter)));
+
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (ViewSize - ImGui::CalcTextSize(FileName.c_str()).x) / 2.0f);
                     ImGui::TextWrapped(FileName.c_str());
+
+                    ItemSelected |= ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+
+                    if (ItemSelected)
+                    {
+                        if (File.IsFile)
+                        {
+                            // Open Asset
+                        }
+                        else
+                        {
+                            m_DirectoryIterator.Visit(*File.Path);
+                            break;
+                        }
+                    }
                 }
             }
         }

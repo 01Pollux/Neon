@@ -23,13 +23,13 @@ namespace Neon::Editor::Views::CB
 
         DirectoryIterator() = default;
         DirectoryIterator(
-            const StringU8& RootPath);
+            const std::filesystem::path& RootPath);
 
         /// <summary>
         /// Visits the next the directory.
         /// </summary>
         void Visit(
-            const StringU8& Directory);
+            const std::filesystem::path& Directory);
 
         /// <summary>
         /// Goes back to the previous directory.
@@ -73,7 +73,7 @@ namespace Neon::Editor::Views::CB
         /// <summary>
         /// Get the current root directory.
         /// </summary>
-        [[nodiscard]] std::filesystem::path CurrentRoot() const noexcept;
+        [[nodiscard]] const std::filesystem::path& CurrentRoot() const noexcept;
 
         struct FileResult
         {
