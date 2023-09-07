@@ -4,10 +4,10 @@
 
 #include <Core/String.hpp>
 #include <Asio/Coroutines.hpp>
+#include <FileSystem/Path.hpp>
 
 #include <unordered_set>
 #include <stack>
-#include <filesystem>
 
 namespace Neon::Editor::Views::CB
 {
@@ -73,7 +73,7 @@ namespace Neon::Editor::Views::CB
         /// <summary>
         /// Get the current root directory.
         /// </summary>
-        [[nodiscard]] const std::filesystem::path& CurrentRoot() const noexcept;
+        [[nodiscard]] std::filesystem::path CurrentRoot() const noexcept;
 
         struct FileResult
         {

@@ -8,6 +8,7 @@ namespace Neon::Asset
     class DirectoryAssetPackage : public IAssetPackage
     {
         using AssetMetaMap = std::unordered_map<Handle, AssetMetaDataDef>;
+        using AssetPathMap = std::unordered_map<StringU8, Handle>;
 
     public:
         DirectoryAssetPackage(
@@ -26,6 +27,13 @@ namespace Neon::Asset
         bool RemoveAsset(
             const Asset::Handle& AssetGuid) override;
 
+    public:
+        /// <summary>
+        /// Get asset's guid from a path, or returns an empty guid if not found.
+        /// </summary>
+        const Asset::Handle& GetGuidOfPath(
+            const StringU8& Path) const;
+
     protected:
         Ptr<IAsset> LoadAsset(
             const Asset::Handle& AssetGuid) override;
@@ -40,5 +48,6 @@ namespace Neon::Asset
     private:
         std::filesystem::path m_RootPath;
         AssetMetaMap          m_AssetMeta;
+        AssetPathMap          m_AssetPath;
     };
 } // namespace Neon::Asset

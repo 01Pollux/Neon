@@ -78,7 +78,7 @@ namespace Neon::Editor
 
     //
 
-    Asset::IAssetPackage* Project::GetContentPackage() noexcept
+    Asset::DirectoryAssetPackage* Project::GetContentPackage() noexcept
     {
         return m_ContentPackage;
     }

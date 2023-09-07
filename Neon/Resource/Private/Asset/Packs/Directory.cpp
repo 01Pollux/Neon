@@ -104,6 +104,7 @@ namespace Neon::Asset
 #endif
                 }
 
+                m_AssetPath.emplace(Metadata.GetAssetPath().string(), Guid);
                 m_AssetMeta.emplace(Guid, std::move(Metadata));
             }
         }
@@ -178,6 +179,7 @@ namespace Neon::Asset
                     if (Iter == m_AssetMeta.end())
                     {
                         Iter = m_AssetMeta.emplace(AssetGuid, AssetMetaDataDef(AssetGuid, CurrentAsset->GetPath())).first;
+                        m_AssetPath.emplace(CurrentAsset->GetPath(), AssetGuid);
                         Iter->second.SetPath(StringUtils::Format("{}{}", CurrentAsset->GetPath(), AssetMetaDataDef::s_MetaFileExtension));
                     }
                     Metadata = &Iter->second;
@@ -251,7 +253,23 @@ namespace Neon::Asset
         const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
-        return m_Cache.erase(AssetGuid) > 0 && m_AssetMeta.erase(AssetGuid) > 0;
+        m_Cache.erase(AssetGuid);
+        auto Iter = m_AssetMeta.find(AssetGuid);
+        if (Iter != m_AssetMeta.end())
+        {
+            m_AssetPath.erase(Iter->second.GetPath());
+            m_AssetMeta.erase(Iter);
+            return true;
+        }
+        return false;
+    }
+
+    const Asset::Handle& DirectoryAssetPackage::GetGuidOfPath(
+        const StringU8& Path) const
+    {
+        RLock Lock(m_CacheMutex);
+        auto  Iter = m_AssetPath.find(Path);
+        return Iter != m_AssetPath.end() ? Iter->second : Asset::Handle::Null;
     }
 
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(

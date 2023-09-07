@@ -96,7 +96,8 @@ namespace Neon::Editor::Views
                     ImVec4 IconTint(1.f, 1.f, 1.f, 1.f);
                     if (File.IsFile)
                     {
-                        if (!File.MetaData || !ContentPackage->ContainsAsset(File.MetaData->GetGuid()))
+                        // ContentPackage->GetGuidOfPath(*File.Path);
+                        if (!File.MetaData || ContentPackage->GetGuidOfPath(File.Path->string()).is_nil())
                         {
                             IconTint = ImVec4(1.f, 0.5f, 0.5f, 1.f);
                         }
@@ -130,7 +131,7 @@ namespace Neon::Editor::Views
                         else
                         {
                             m_DirectoryIterator.Visit(*File.Path);
-                            break;
+                            return;
                         }
                     }
                 }

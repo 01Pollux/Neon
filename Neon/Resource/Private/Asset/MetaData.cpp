@@ -86,7 +86,7 @@ namespace Neon::Asset
 
     std::filesystem::path AssetMetaDataDef::GetAssetPath() const
     {
-        return std::filesystem::path(GetPath()).replace_extension("");
+        return FileSystem::ConvertToUnixPath(std::filesystem::path(GetPath()).replace_extension(""));
     }
 
     StringU8 AssetMetaDataDef::GetPath() const

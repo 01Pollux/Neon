@@ -7,6 +7,7 @@
 namespace Neon::Editor::Views::CB
 {
     static void ScanDirectories(
+        const std::filesystem::path&      RootPath,
         const std::filesystem::path&      Path,
         DirectoryIterator::FileAssetList& Files,
         DirectoryIterator::DirectoryList& Directories)
@@ -16,10 +17,12 @@ namespace Neon::Editor::Views::CB
 
         for (const auto& Entry : std::filesystem::directory_iterator(Path))
         {
+            auto RelEntry = FileSystem::ConvertToUnixPath(std::filesystem::relative(Entry.path(), RootPath));
+
             // If the entry is a directory
             if (Entry.is_directory())
             {
-                Directories.emplace_back(Entry.path());
+                Directories.emplace_back(RelEntry);
             }
             // If the file is not a meta data file
             else if (Entry.is_regular_file() && Entry.path().extension() != Asset::AssetMetaDataDef::s_MetaFileExtensionW)
@@ -27,14 +30,31 @@ namespace Neon::Editor::Views::CB
                 std::ifstream MetaDataFile(Entry.path().wstring() + Asset::AssetMetaDataDef::s_MetaFileExtensionW);
                 if (!MetaDataFile)
                 {
-                    Files.emplace_back(Entry.path(), std::nullopt);
+                    Files.emplace_back(RelEntry, std::nullopt);
                 }
                 else
                 {
-                    Files.emplace_back(Entry.path(), MetaDataFile);
+                    Files.emplace_back(RelEntry, MetaDataFile);
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Builds a path from a root path and a list of parent directories.
+    /// </summary>
+    [[nodiscard]] static std::filesystem::path BuildPath(
+        const std::filesystem::path&       RootPath,
+        const DirectoryIterator::RootList& ParentDirectories)
+    {
+        auto Path = RootPath;
+
+        for (const auto& Directory : ParentDirectories)
+        {
+            Path /= Directory;
+        }
+
+        return Path;
     }
 
     //
@@ -43,7 +63,7 @@ namespace Neon::Editor::Views::CB
         const std::filesystem::path& RootPath) :
         m_RootPath(RootPath)
     {
-        ScanDirectories(m_RootPath, m_Files, m_Directories);
+        ScanDirectories(m_RootPath, m_RootPath, m_Files, m_Directories);
     }
 
     void DirectoryIterator::Visit(
@@ -54,7 +74,7 @@ namespace Neon::Editor::Views::CB
                     "Directory does not exist.");
 
         m_ParentDirectories.emplace_back(Directory);
-        ScanDirectories(CurrentRoot(), m_Files, m_Directories);
+        ScanDirectories(m_RootPath, CurrentRoot(), m_Files, m_Directories);
     }
 
     void DirectoryIterator::GoBack(
@@ -67,14 +87,14 @@ namespace Neon::Editor::Views::CB
             m_ParentDirectories.pop_back();
         }
 
-        ScanDirectories(CurrentRoot(), m_Files, m_Directories);
+        ScanDirectories(m_RootPath, CurrentRoot(), m_Files, m_Directories);
     }
 
     //
 
-    const std::filesystem::path& DirectoryIterator::CurrentRoot() const noexcept
+    std::filesystem::path DirectoryIterator::CurrentRoot() const noexcept
     {
-        return m_ParentDirectories.empty() ? m_RootPath : m_ParentDirectories.back();
+        return BuildPath(m_RootPath, m_ParentDirectories);
     }
 
     auto DirectoryIterator::GetAllFiles() const noexcept -> Asio::CoGenerator<FileResult>

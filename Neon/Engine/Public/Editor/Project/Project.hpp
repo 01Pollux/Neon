@@ -1,14 +1,12 @@
 #pragma once
 
 #include <Core/Version.hpp>
-#include <Asset/Handle.hpp>
-#include <Asset/Types/RuntimeScene.hpp>
-#include <filesystem>
 
-namespace Neon::Asset
-{
-    class IAssetPackage;
-} // namespace Neon::Asset
+#include <Asset/Handle.hpp>
+#include <Asset/Packs/Directory.hpp>
+#include <Asset/Types/RuntimeScene.hpp>
+
+#include <filesystem>
 
 namespace Neon::Editor
 {
@@ -88,7 +86,7 @@ namespace Neon::Editor
         /// <summary>
         /// Gets the content package.
         /// </summary>
-        Asset::IAssetPackage* GetContentPackage() noexcept;
+        Asset::DirectoryAssetPackage* GetContentPackage() noexcept;
 
     public:
         /// <summary>
@@ -161,7 +159,7 @@ namespace Neon::Editor
     private:
         std::filesystem::path m_ProjectPath;
 
-        Asset::IAssetPackage* m_ContentPackage;
+        Asset::DirectoryAssetPackage* m_ContentPackage;
 
         ProjectConfig m_Config;
 
