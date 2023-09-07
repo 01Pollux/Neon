@@ -9,6 +9,10 @@
 #include <AssImp/postprocess.h>
 #include <AssImp/scene.h>
 
+#include <AssImp/Logger.hpp>
+#include <AssImp/LogStream.hpp>
+#include <AssImp/DefaultLogger.hpp>
+
 #include <vector>
 #endif
 
@@ -84,6 +88,65 @@ namespace Neon::Asset
         }
     }
 
+    struct AssimpLogStream : public Assimp::LogStream
+    {
+        static void InitializeOnce();
+
+        virtual void write(
+            const char* Message) override
+        {
+            StringU8 MessageStr(Message);
+            StringU8 Type;
+
+            size_t Offset = 0;
+
+            // Text string is built like this: "Type, Message", split it up.
+            size_t TypeEnd = MessageStr.find_first_of(", ");
+            if (TypeEnd != StringU8::npos) [[likely]]
+            {
+                Type   = MessageStr.substr(0, TypeEnd);
+                Offset = TypeEnd + 2;
+
+                // Remove the space after the comma.
+                if (Offset < MessageStr.size() && MessageStr[Offset] == ' ') [[likely]]
+                {
+                    Offset++;
+                }
+                MessageStr = MessageStr.substr(Offset);
+            }
+
+            static std::map<StringU8, Logger::LogSeverity> Severities{
+                { "Warn", Logger::LogSeverity::Warning },
+                { "Info", Logger::LogSeverity::Info },
+                { "Debug", Logger::LogSeverity::Trace }
+            };
+
+            Logger::LogSeverity Severity = Logger::LogSeverity::Error;
+
+            auto Iter = Severities.find(Type);
+            if (Iter != Severities.end()) [[likely]]
+            {
+                Severity = Iter->second;
+            }
+
+            Neon::Logger::LogTag(Severity, "Assimp", MessageStr);
+        }
+    };
+
+    void AssimpLogStream::InitializeOnce()
+    {
+        static AssimpLogStream s_AssimpLogStream;
+        if (Assimp::DefaultLogger::isNullLogger()) [[unlikely]]
+        {
+#if NEON_DEBUG
+            Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE);
+            Assimp::DefaultLogger::get()->attachStream(&s_AssimpLogStream, Assimp::Logger::Debugging | Assimp::Logger::Info | Assimp::Logger::Warn | Assimp::Logger::Err);
+#else
+            Assimp::DefaultLogger::create("", Assimp::Logger::NORMAL);
+            Assimp::DefaultLogger::get()->attachStream(&s_AssimpLogStream, Assimp::Logger::Warn | Assimp::Logger::Err);
+#endif
+        }
+    }
 #endif
 
     bool ModelAsset::Handler::CanHandle(
@@ -117,6 +180,8 @@ namespace Neon::Asset
 #ifndef NEON_DIST
         default:
         {
+            AssimpLogStream::InitializeOnce();
+
             Assimp::Importer Importer;
             Importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
 

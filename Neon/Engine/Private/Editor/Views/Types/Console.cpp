@@ -59,14 +59,14 @@ namespace Neon::Editor::Views
 
             Asset::DependencyReader Reader;
 
-            std::ifstream FbxFile(R"(D:\Ph\Room #1.fbx)", std::ios::binary);
+            std::ifstream FbxFile(R"(D:\Ph\TestScene.fbx)", std::ios::binary);
 
             auto Asset = std::dynamic_pointer_cast<Asset::ModelAsset>(
                 Handler.Load(
                     FbxFile,
                     Reader,
                     Asset::Handle::Random(),
-                    R"(D:\Ph\Room #1.fbx)",
+                    R"(D:\Ph\TestScene.fbx)",
                     {}));
 
             m_Asset = Asset;
