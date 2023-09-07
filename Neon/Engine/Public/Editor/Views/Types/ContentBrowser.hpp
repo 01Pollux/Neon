@@ -74,9 +74,11 @@ namespace Neon::Editor::Views
         efsw::WatchID     m_ContentID;
 
         CB::DirectoryIterator m_DirectoryIterator;
-
-        ImGuiTextFilter m_SearchFilter;
+        ImGuiTextFilter       m_SearchFilter;
 
         Scene::EntityHandle m_ContentBrowserEntity;
+        Scene::EntityHandle m_RootToView;
+
+        std::vector<Asio::CoLazy<>> m_DeferredFileActions;
     };
 } // namespace Neon::Editor::Views

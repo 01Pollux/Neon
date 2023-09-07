@@ -40,8 +40,5 @@ namespace Neon::Scene::Editor
         NEON_EXPORT_FLECS(ContentBrowserItem, "Editor::ContentBrowserItem")
         {
         }
-
-        StringU8 Name;
-        StringU8 Path;
     };
 } // namespace Neon::Scene::Editor

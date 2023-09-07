@@ -3,6 +3,9 @@
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Profile/Manager.hpp>
 
+#include <cppcoro/sync_wait.hpp>
+#include <cppcoro/when_all.hpp>
+
 #include <FileSystem/File.hpp>
 #include <OS/Clipboard.hpp>
 
@@ -11,6 +14,67 @@
 
 namespace Neon::Editor::Views
 {
+    using CBI = Scene::Editor::ContentBrowserItem;
+
+    //
+
+    /// <summary>
+    /// Add Content Browser Item to the entity
+    /// </summary>
+    static void AddCBIEntityImpl(
+        const flecs::entity&         BrowserEntity,
+        const std::filesystem::path& RelativePath,
+        bool                         IsDirectory)
+    {
+        flecs::entity TrueParent =
+            RelativePath.has_parent_path() ? BrowserEntity.lookup(RelativePath.parent_path().string().c_str()) : BrowserEntity;
+
+        auto Entity = Editor::EditorEngine::Get()->CreateEditorEntity(
+            TrueParent,
+            FileSystem::ConvertToUnixPath(RelativePath).string().c_str());
+
+        Entity.add<CBI>();
+        Entity.set<CBI::ItemOpType>(CBI::ItemOpType::None);
+
+        if (IsDirectory)
+        {
+            Entity.set<CBI::ItemType>({ CBI::ItemType::Directory });
+        }
+        else
+        {
+            Entity.set<CBI::ItemType>({ CBI::ItemType::File });
+        }
+    }
+
+    /// <summary>
+    /// Add Content Browser Item to the entity
+    /// </summary>
+    static void AddCBIEntity(
+        const flecs::entity&         BrowserEntity,
+        const std::filesystem::path& AbsolutePath,
+        bool                         IsDirectory)
+    {
+        auto RelPath = std::filesystem::relative(AbsolutePath, Project::Get()->GetContentDirectoryPath()).string();
+
+        AddCBIEntityImpl(BrowserEntity, RelPath, IsDirectory);
+
+        if (IsDirectory)
+        {
+            for (auto& Iter : std::filesystem::recursive_directory_iterator(AbsolutePath))
+            {
+                if (!Iter.is_regular_file() && !Iter.is_directory())
+                {
+                    return;
+                }
+
+                auto RelPath = std::filesystem::relative(Iter, Project::Get()->GetContentDirectoryPath()).string();
+                AddCBIEntityImpl(BrowserEntity, RelPath, Iter.is_directory());
+            }
+        }
+    }
+
+    //
+
     void ContentBrowser::FileListener::handleFileAction(
         efsw::WatchID      WatchId,
         const std::string& dir,
@@ -18,40 +82,59 @@ namespace Neon::Editor::Views
         efsw::Action       Action,
         std::string        OldFileName)
     {
+        auto Path    = std::filesystem::path(dir) / FileName;
+        auto RelPath = std::filesystem::relative(Path, Project::Get()->GetContentDirectoryPath()).string();
+
+        bool IsDirectory = std::filesystem::is_directory(Path);
+
+        Asio::CoLazy<> Coroutine;
         switch (Action)
         {
         case efsw::Action::Add:
         {
-            // Add Asset to m_ContentPack
-            // Find asset handler
-
+            Coroutine = [](ContentBrowser*       Browser,
+                           std::filesystem::path Path,
+                           bool                  IsDirectory) -> Asio::CoLazy<>
+            {
+                Browser->m_DirectoryIterator.DeferRefresh(Path.parent_path());
+                AddCBIEntity(Browser->m_ContentBrowserEntity, Path, IsDirectory);
+                co_return;
+            }(m_Browser, std::move(Path), IsDirectory);
             break;
         }
 
         case efsw::Action::Delete:
         {
-            // Remove file from m_ContentPack
+            Coroutine = [](ContentBrowser* Browser,
+                           StringU8        Path) -> Asio::CoLazy<>
+            {
+                Browser->m_DirectoryIterator.DeferRefresh(Path);
+                flecs::entity       BrowserEntity = Browser->m_ContentBrowserEntity;
+                Scene::EntityHandle Entity        = BrowserEntity.lookup(Path.c_str());
+                if (Entity)
+                {
+                    Entity.Delete(true);
+                }
+                co_return;
+            }(m_Browser, std::move(RelPath));
             break;
         }
 
         case efsw::Action::Modified:
         {
-            // Get Asset from m_ContentPack
-            // Update Asset
-            break;
+            return;
         }
 
         case efsw::Action::Moved:
         {
-            // Get Asset from m_ContentPack
-            // Remove Asset from m_ContentPack
-            // Add Asset to m_ContentPack
-            break;
+            return;
         }
 
         default:
             break;
         }
+
+        m_Browser->m_DeferredFileActions.emplace_back(std::move(Coroutine));
     }
 
     //
@@ -61,37 +144,23 @@ namespace Neon::Editor::Views
         m_Listener(this),
         m_ContentID(m_FileWatcher.addWatch(Project::Get()->GetContentDirectoryPath().string(), &m_Listener, true)),
         m_DirectoryIterator(Project::Get()->GetContentDirectoryPath().string()),
-        m_ContentBrowserEntity(Editor::EditorEngine::Get()->CreateEditorEntity("Content Browser"))
+        m_ContentBrowserEntity(Editor::EditorEngine::Get()->CreateEditorEntity("ContentBrowser")),
+        m_RootToView(m_ContentBrowserEntity)
     {
-        using CBI = Scene::Editor::ContentBrowserItem;
-
         NEON_REGISTER_FLECS(CBI);
         NEON_REGISTER_FLECS_ENUM(CBI::ItemType);
         NEON_REGISTER_FLECS_ENUM(CBI::ItemOpType);
 
         //
 
-        // TODO: unfinished, will be used for asset management as well as content browser operations
-        for (auto& Path : std::filesystem::recursive_directory_iterator(Project::Get()->GetContentDirectoryPath()))
+        for (auto& Iter : std::filesystem::directory_iterator(Project::Get()->GetContentDirectoryPath()))
         {
-            auto          RelPath = std::filesystem::relative(Path, Project::Get()->GetContentDirectoryPath()).string();
-            flecs::entity Entity;
-
-            Entity = Editor::EditorEngine::Get()->CreateEditorEntity(
-                m_ContentBrowserEntity,
-                RelPath.c_str());
-
-            Entity.emplace<CBI>(Path.path().stem().string(), std::move(RelPath));
-            Entity.set<CBI::ItemOpType>(CBI::ItemOpType::None);
-
-            if (Path.is_directory())
+            if (!Iter.is_regular_file() && !Iter.is_directory())
             {
-                Entity.set<CBI::ItemType>({ CBI::ItemType::Directory });
+                return;
             }
-            else
-            {
-                Entity.set<CBI::ItemType>({ CBI::ItemType::File });
-            }
+
+            AddCBIEntity(m_ContentBrowserEntity, Iter, Iter.is_directory());
         }
 
         //
@@ -119,6 +188,15 @@ namespace Neon::Editor::Views
             ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 8.0f),
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
+
+        try
+        {
+            cppcoro::sync_wait(cppcoro::when_all(std::move(m_DeferredFileActions)));
+            m_DirectoryIterator.Update();
+        }
+        catch (...)
+        {
+        }
 
         {
             DrawRootDirectories();
@@ -181,6 +259,7 @@ namespace Neon::Editor::Views
             ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f),
             ImGuiStyleVar_CellPadding, ImVec2(10.0f, 2.0f));
+
         imcxx::popup Popup{ imcxx::popup::context_window{}, "ContentBrowserPopup", ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight };
         if (!Popup)
         {
@@ -345,20 +424,6 @@ namespace Neon::Editor::Views
 
     void ContentBrowser::DrawItems()
     {
-        auto BeginDnd = [](const char* Name, const char* Type, const char* Path) -> bool
-        {
-            if (!ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-            {
-                return false;
-            }
-
-            ImGui::SetDragDropPayload(Type, Path, strlen(Path) + 1);
-            ImGui::Text(Name);
-            ImGui::EndDragDropSource();
-
-            return true;
-        };
-
         constexpr int ViewSize = 96;
         const int     Columns  = std::clamp(int(ImGui::GetContentRegionAvail().x / ViewSize), 1, 64);
 

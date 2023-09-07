@@ -23,7 +23,9 @@ namespace Neon::Scene
     [[nodiscard]] static StringU8 RandomEntityName()
     {
         auto Guid = boost::uuids::random_generator()();
-        return boost::uuids::to_string(Guid);
+        auto Name = boost::uuids::to_string(Guid);
+        std::replace(Name.begin(), Name.end(), '-', '_');
+        return Name;
     }
 
     RuntimeScene::RuntimeScene() :

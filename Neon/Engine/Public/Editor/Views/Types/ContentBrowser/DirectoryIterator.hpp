@@ -6,6 +6,7 @@
 #include <Asio/Coroutines.hpp>
 #include <FileSystem/Path.hpp>
 
+#include <unordered_map>
 #include <unordered_set>
 #include <stack>
 
@@ -18,8 +19,8 @@ namespace Neon::Editor::Views::CB
         using FileAssetMetaPair   = std::pair<std::filesystem::path, AssetMetaDataDefOpt>;
 
         using RootList      = std::vector<std::filesystem::path>;
-        using FileAssetList = std::vector<FileAssetMetaPair>;
-        using DirectoryList = std::vector<std::filesystem::path>;
+        using FileAssetList = std::unordered_map<std::filesystem::path, AssetMetaDataDefOpt>;
+        using DirectoryList = std::unordered_set<std::filesystem::path>;
 
         DirectoryIterator() = default;
         DirectoryIterator(
@@ -77,11 +78,22 @@ namespace Neon::Editor::Views::CB
             return m_Directories;
         }
 
+        /// <summary>
+        /// Refresh the current directory if needed.
+        /// </summary>
+        void DeferRefresh(
+            const std::filesystem::path& Path);
+
     public:
+        /// <summary>
+        /// Update the directory iterator.
+        /// </summary>
+        void Update();
+
         /// <summary>
         /// Get the current root directory.
         /// </summary>
-        [[nodiscard]] std::filesystem::path CurrentRoot() const noexcept;
+        [[nodiscard]] const std::filesystem::path& CurrentRoot() const noexcept;
 
         struct FileResult
         {
@@ -99,9 +111,12 @@ namespace Neon::Editor::Views::CB
 
     private:
         const std::filesystem::path m_RootPath;
+        std::filesystem::path       m_CurrentRoot;
 
         RootList      m_ParentDirectories;
         FileAssetList m_Files;
         DirectoryList m_Directories;
+
+        bool m_DeferRefresh = false;
     };
 } // namespace Neon::Editor::Views::CB

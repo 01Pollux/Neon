@@ -44,7 +44,7 @@ namespace Neon::Scene
         size_t Idx = 0;
         while (Parent.lookup(NewName.c_str()))
         {
-            NewName = StringUtils::Format("{} ({})", NewNameTmp, ++Idx);
+            NewName = StringUtils::Format("{}_{}", NewNameTmp, ++Idx);
         }
 
         return NewName;
