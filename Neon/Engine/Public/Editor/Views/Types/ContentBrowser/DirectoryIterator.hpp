@@ -54,6 +54,14 @@ namespace Neon::Editor::Views::CB
         }
 
         /// <summary>
+        /// Get the main root directory.
+        /// </summary>
+        [[nodiscard]] auto& GetMainRoot() const noexcept
+        {
+            return m_RootPath;
+        }
+
+        /// <summary>
         /// Get files in the current directory.
         /// </summary>
         [[nodiscard]] auto& GetFiles() const noexcept

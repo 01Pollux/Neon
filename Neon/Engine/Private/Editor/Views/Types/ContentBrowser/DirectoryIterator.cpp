@@ -80,14 +80,16 @@ namespace Neon::Editor::Views::CB
     void DirectoryIterator::GoBack(
         size_t Steps)
     {
-        NEON_ASSERT(Steps <= m_ParentDirectories.size(), "Steps is greater than the number of parent directories.");
-
-        for (size_t i = 0; i < Steps; ++i)
+        if (Steps)
         {
-            m_ParentDirectories.pop_back();
-        }
+            NEON_ASSERT(Steps <= m_ParentDirectories.size(), "Steps is greater than the number of parent directories.");
 
-        ScanDirectories(m_RootPath, CurrentRoot(), m_Files, m_Directories);
+            m_ParentDirectories.erase(
+                m_ParentDirectories.end() - Steps,
+                m_ParentDirectories.end());
+
+            ScanDirectories(m_RootPath, CurrentRoot(), m_Files, m_Directories);
+        }
     }
 
     //

@@ -48,11 +48,23 @@ namespace Neon::Editor::Views
         /// </summary>
         void DisplayPopup();
 
+        /// <summary>
+        /// Display the root directories.
+        /// </summary>
+        void DrawRootDirectories();
+
+        /// <summary>
+        /// Display the search bar.
+        /// </summary>
+        void DrawSearchBar();
+
     private:
         FileListener      m_Listener;
         efsw::FileWatcher m_FileWatcher;
         efsw::WatchID     m_ContentID;
 
         CB::DirectoryIterator m_DirectoryIterator;
+
+        ImGuiTextFilter m_SearchFilter;
     };
 } // namespace Neon::Editor::Views
