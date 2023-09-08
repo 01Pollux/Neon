@@ -65,11 +65,16 @@ namespace Neon::Scene
         const char*  Name)
     {
         flecs::entity Parent = ParentHandle;
-        return EntityWorld::Get()
-            .entity()
-            .add<Scene::Component::SceneEntity>(SceneRoot)
+
+        auto Entity = EntityWorld::Get().entity();
+        Entity.add<Component::SceneEntity>(SceneRoot)
             .child_of(Parent)
             .set_name(CreateUniqueEntityName(Parent, Name).c_str());
+        if (EntityWorld::GetCurrentScenerRoot() == SceneRoot)
+        {
+            Entity.add<Component::ActiveSceneEntity>();
+        }
+        return Entity;
     }
 
     //

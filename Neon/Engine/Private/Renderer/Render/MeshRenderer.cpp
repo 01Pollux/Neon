@@ -3,6 +3,7 @@
 #include <Scene/EntityWorld.hpp>
 
 #include <RHI/Resource/Views/Shader.hpp>
+#include <RHI/GlobalBuffer.hpp>
 
 namespace Component = Neon::Scene::Component;
 
@@ -55,29 +56,22 @@ namespace Neon::Renderer
         m_MeshQuery.destruct();
     }
 
+    //
+
+    struct PerObjectData
+    {
+        Matrix4x4 World;
+    };
+
     void MeshRenderer::Render(
         RHI::GpuResourceHandle     CameraBuffer,
         RHI::IGraphicsCommandList* CommandList)
     {
         if (m_MeshQuery.is_true())
         {
-            bool WasSet = false;
-
-            auto SetGlobalsOnce = [&WasSet, CameraBuffer](const Ptr<Renderer::IMaterial>& Material)
-            {
-                if (!WasSet) [[likely]]
-                {
-                    return;
-                }
-
-                WasSet = true;
-                Material->SetResourceView(
-                    "g_FrameData",
-                    CameraBuffer);
-            };
-
             m_MeshQuery.iter(
                 [this,
+                 CameraBuffer,
                  CommandList](flecs::iter&                   Iter,
                               const Component::Transform*    Transform,
                               const Component::MeshInstance* Mesh)
@@ -92,6 +86,24 @@ namespace Neon::Renderer
 
                         auto  MatIdx   = Submesh.MaterialIndex;
                         auto& Material = Model->GetMaterial(MatIdx);
+
+                        Material->SetResourceView(
+                            "g_FrameData",
+                            CameraBuffer);
+
+                        RHI::UBufferPoolHandle Buffer(
+                            Math::AlignUp(sizeof(PerObjectData), RHI::ConstantBufferAlignement),
+                            RHI::ConstantBufferAlignement,
+                            RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
+                        {
+                            auto Data   = std::bit_cast<PerObjectData*>(Buffer.AsUpload()->Map() + Buffer.Offset);
+                            Data->World = CurTransform.World.ToMat4x4Transposed();
+                            Buffer.AsUpload()->Unmap();
+                        }
+
+                        Material->SetResourceView(
+                            "v_PerObjectData",
+                            Buffer.GetGpuHandle());
 
                         Material->Apply(CommandList);
 
@@ -108,6 +120,9 @@ namespace Neon::Renderer
                             IndexBuffer.Get().get(),
                             Submesh.IndexOffset,
                             Submesh.IndexCount);
+
+                        CommandList->SetPrimitiveTopology(
+                            Submesh.Topology);
 
                         CommandList->SetVertexBuffer(0, VertexView);
                         CommandList->SetIndexBuffer(IndexView);

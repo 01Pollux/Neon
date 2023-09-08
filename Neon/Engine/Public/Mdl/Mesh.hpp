@@ -11,8 +11,8 @@ namespace Neon::Mdl
         Mesh() = default;
 
         Mesh(
-            const Ptr<Model>& Model,
-            uint32_t          Submesh) :
+            const Ptr<Model>&   Model,
+            Model::SubmeshIndex Submesh) :
             m_Model(Model),
             m_Submesh(Submesh)
         {
@@ -43,7 +43,7 @@ namespace Neon::Mdl
         }
 
     private:
-        Ptr<Model> m_Model;
-        uint32_t   m_Submesh = std::numeric_limits<uint32_t>::max();
+        Ptr<Model>          m_Model;
+        Model::SubmeshIndex m_Submesh = Model::InvalidSubmeshIndex;
     };
 } // namespace Neon::Mdl

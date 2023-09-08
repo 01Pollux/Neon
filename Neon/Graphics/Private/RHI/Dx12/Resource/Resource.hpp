@@ -94,6 +94,10 @@ namespace Neon::RHI
             const SubresourceDesc* Subresource,
             uint64_t*              CopyId);
 
+        Dx12UploadBuffer(
+            size_t               Size,
+            D3D12_RESOURCE_FLAGS Flags);
+
         uint8_t* Map() override;
 
         void Unmap() override;
@@ -107,6 +111,10 @@ namespace Neon::RHI
     public:
         Dx12ReadbackBuffer(
             const BufferDesc& Desc);
+
+        Dx12ReadbackBuffer(
+            size_t               Size,
+            D3D12_RESOURCE_FLAGS Flags);
 
         uint8_t* Map() override;
 

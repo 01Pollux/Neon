@@ -14,19 +14,19 @@ namespace Neon::RHI
         Allocator(SizeOfBuffer),
         StateManager(StateManager)
     {
-        RHI::GraphicsBufferType BufferType;
-        D3D12_RESOURCE_FLAGS    Flags{};
+        D3D12_RESOURCE_FLAGS Flags{};
 
         switch (Type)
         {
         case IGlobalBufferPool::BufferType::ReadOnly:
-            BufferType = RHI::GraphicsBufferType::Readback;
             Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+
+            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12ReadbackBuffer(SizeOfBuffer, Flags)));
+            RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::ReabackBuffer"));
             break;
         case IGlobalBufferPool::BufferType::ReadWrite:
         case IGlobalBufferPool::BufferType::ReadWriteGPUR:
         case IGlobalBufferPool::BufferType::ReadWriteGPURW:
-            BufferType = RHI::GraphicsBufferType::Upload;
             if (Type == IGlobalBufferPool::BufferType::ReadWrite)
             {
                 Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
@@ -35,14 +35,13 @@ namespace Neon::RHI
             {
                 Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
             }
+
+            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12UploadBuffer(SizeOfBuffer, Flags)));
+            RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::UploadBuffer"));
             break;
         default:
             std::unreachable();
         }
-
-        this->Buffer = std::make_unique<Dx12Buffer>(SizeOfBuffer, Flags, BufferType);
-
-        RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::Buffer"));
     }
 
     RHI::GraphicsMemoryAllocator::GraphicsMemoryAllocator()

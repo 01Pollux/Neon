@@ -347,6 +347,20 @@ namespace Neon::Asset
 
                     uint32_t IndexCount = uint32_t(Indices.size()) - OldIndexCount;
 
+                    RHI::PrimitiveTopology Toplogy = RHI::PrimitiveTopology::Undefined;
+                    switch (AIMesh->mPrimitiveTypes & (aiPrimitiveType_POINT | aiPrimitiveType_LINE | aiPrimitiveType_TRIANGLE))
+                    {
+                    case aiPrimitiveType_POINT:
+                        Toplogy = RHI::PrimitiveTopology::PointList;
+                        break;
+                    case aiPrimitiveType_LINE:
+                        Toplogy = RHI::PrimitiveTopology::LineList;
+                        break;
+                    case aiPrimitiveType_TRIANGLE:
+                        Toplogy = RHI::PrimitiveTopology::TriangleList;
+                        break;
+                    }
+
                     Submeshes.emplace_back(
                         Mdl::SubMeshData{
                             .AABB          = std::move(Box),
@@ -354,7 +368,8 @@ namespace Neon::Asset
                             .IndexCount    = IndexCount,
                             .VertexOffset  = VerticesCount,
                             .IndexOffset   = IndicesCount,
-                            .MaterialIndex = AIMesh->mMaterialIndex });
+                            .MaterialIndex = AIMesh->mMaterialIndex,
+                            .Topology      = Toplogy });
 
                     VerticesCount += VertexCount;
                     IndicesCount += IndexCount;
@@ -372,7 +387,7 @@ namespace Neon::Asset
 
                 IndexBuffer = RHI::USyncBuffer(
                     RHI::BufferDesc(sizeof(uint32_t) * Indices.size()),
-                    Vertices.data());
+                    Indices.data());
             }
 
             //

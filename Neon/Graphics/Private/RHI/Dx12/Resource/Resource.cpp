@@ -246,6 +246,13 @@ namespace Neon::RHI
     {
     }
 
+    Dx12UploadBuffer::Dx12UploadBuffer(
+        size_t               Size,
+        D3D12_RESOURCE_FLAGS Flags) :
+        Dx12Buffer(Size, Flags, GraphicsBufferType::Upload)
+    {
+    }
+
     uint8_t* Dx12UploadBuffer::Map()
     {
         void* MappedData = nullptr;
@@ -269,6 +276,13 @@ namespace Neon::RHI
     Dx12ReadbackBuffer::Dx12ReadbackBuffer(
         const BufferDesc& Desc) :
         Dx12Buffer(Desc, nullptr, nullptr, GraphicsBufferType::Readback)
+    {
+    }
+
+    Dx12ReadbackBuffer::Dx12ReadbackBuffer(
+        size_t               Size,
+        D3D12_RESOURCE_FLAGS Flags) :
+        Dx12Buffer(Size, Flags, GraphicsBufferType::Readback)
     {
     }
 

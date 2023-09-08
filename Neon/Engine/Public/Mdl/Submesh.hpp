@@ -6,6 +6,7 @@
 #include <Math/AABB.hpp>
 #include <Math/Matrix.hpp>
 
+#include <RHI/Resource/Common.hpp>
 #include <vector>
 
 namespace Neon::Mdl
@@ -30,7 +31,8 @@ namespace Neon::Mdl
         uint32_t VertexOffset;
         uint32_t IndexOffset;
 
-        uint32_t MaterialIndex;
+        uint32_t               MaterialIndex;
+        RHI::PrimitiveTopology Topology = RHI::PrimitiveTopology::Undefined;
     };
 
     struct MeshNode

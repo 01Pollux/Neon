@@ -44,6 +44,24 @@ namespace Neon::RHI
                 size_t     Size,
                 size_t     Alignement,
                 BufferType Type);
+
+            /// <summary>
+            /// Cast to an upload buffer
+            /// </summary>
+            /// <returns></returns>
+            [[nodiscard]] IUploadBuffer* AsUpload() const noexcept
+            {
+                return dynamic_cast<IUploadBuffer*>(this->Buffer);
+            }
+
+            /// <summary>
+            /// Cast to a readback buffer
+            /// </summary>
+            /// <returns></returns>
+            [[nodiscard]] IReadbackBuffer* AsReadBack() const noexcept
+            {
+                return dynamic_cast<IReadbackBuffer*>(this->Buffer);
+            }
         };
 
         /// <summary>
@@ -123,5 +141,4 @@ namespace Neon::RHI
             }
         }
     };
-
 } // namespace Neon::RHI

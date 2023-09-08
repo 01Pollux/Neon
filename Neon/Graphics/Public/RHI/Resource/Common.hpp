@@ -698,4 +698,9 @@ namespace Neon::RHI
         PatchList_31,
         PatchList_32
     };
+
+    /// <summary>
+    /// Alignment for constant buffers (in bytes)
+    /// </summary>
+    static constexpr size_t ConstantBufferAlignement = 256;
 } // namespace Neon::RHI

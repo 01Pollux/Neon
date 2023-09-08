@@ -21,8 +21,35 @@ namespace Neon::Editor::Views
 
         flecs::entity Entity = Scene::EntityHandle::Create(SceneRoot, ParentEntity, Node.Name.c_str());
 
-        Entity.emplace<Scene::Component::Transform>(Node.Transform);
-        Entity.emplace<Scene::Component::MeshInstance>(Mdl::Mesh{ Model, NodeIndex });
+        switch (Node.Submeshes.size())
+        {
+        // No submeshes, do nothing
+        case 0:
+            break;
+        // If we have only one submesh, create it on top of the entity
+        case 1:
+        {
+            Entity.emplace<Scene::Component::Transform>(Node.Transform);
+            Entity.emplace<Scene::Component::MeshInstance>(Mdl::Mesh{ Model, Node.Submeshes[0] });
+
+            break;
+        }
+        // If we have more than one submesh, create a child entity for each submesh
+        default:
+        {
+            size_t NameIndex = 0;
+            for (Mdl::Model::SubmeshIndex SubmeshIdx : Node.Submeshes)
+            {
+                auto Name = StringUtils::Format("{}__Sub{}", Node.Name, NameIndex++);
+
+                flecs::entity Child = Scene::EntityHandle::Create(SceneRoot, Entity, Name.c_str());
+                Child.emplace<Scene::Component::Transform>(Node.Transform);
+                Child.emplace<Scene::Component::MeshInstance>(Mdl::Mesh{ Model, SubmeshIdx });
+            }
+
+            break;
+        }
+        }
 
         for (auto& Child : Node.Children)
         {

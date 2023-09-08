@@ -22,26 +22,17 @@ struct PerFrameData
 struct PerObjectData
 {
 	matrix World;
-	matrix TextureTransform;
-	int MaterialIndex;
-	int3 _Pad;
 };
-
-struct PerMaterialData
-{
-	int AlbedoMapIndex;
-	int NormalMapIndex;
-	int SpecularMapIndex;
-	int EmissiveMapIndex;
-};;
 
 //
 
 struct VSInput
 {
-	float2 Position : POSITION;
-	float2 TexCoord : TEX_COORD;
-	int InstanceIndex : INSTANCE_INDEX;
+	float3 Position : POSITION;
+	float3 Normal : NORMAL;
+	float3 Tangent : TANGENT;
+	float3 Bitangent : BITANGENT;
+	float2 TexCoord : TEXCOORD;
 };
 
 struct PSInput
@@ -49,7 +40,6 @@ struct PSInput
 	float4 Position : SV_POSITION;
 	float2 PositionInScene : POSITION;
 	float2 TexCoord : TEX_COORD;
-	nointerpolation int MaterialIndex : MATERIAL_INDEX;
 };
 
 struct PSOutput
@@ -58,6 +48,9 @@ struct PSOutput
 	float4 Normal : SV_TARGET1;
 	float4 Emissive : SV_TARGET2;
 };
+
+
+//
 
 PSOutput GBufferPack(
 	float4 Albedo,
@@ -81,18 +74,18 @@ ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
 // Vertex Shader
 // --------------------
 
-StructuredBuffer<PerObjectData> v_InstanceData : register(t0, space1);
+ConstantBuffer<PerObjectData> v_PerObjectData : register(b1, space1);
 
 PSInput VS_Main(VSInput Vs)
 {
 	PSInput Ps;
 	Ps.Position = mul(
-		mul(float4(Vs.Position, 0.f, 1.f),
-			v_InstanceData[Vs.InstanceIndex].World),
+		mul(
+			float4(Vs.Position, 1.f),
+			v_PerObjectData.World),
 		g_FrameData.ViewProjection);
 	Ps.PositionInScene = Ps.Position.xy;
-	Ps.TexCoord = mul(float4(Vs.TexCoord, 0.f, 1.f), v_InstanceData[Vs.InstanceIndex].TextureTransform).xy;
-	Ps.MaterialIndex = v_InstanceData[Vs.InstanceIndex].MaterialIndex;
+	Ps.TexCoord = Vs.TexCoord;
 	return Ps;
 }
 
@@ -100,12 +93,10 @@ PSInput VS_Main(VSInput Vs)
 // Pixel Shader
 // --------------------
 
-StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space1);
-
-Texture2D<float4> p_AlbedoMap[] : register(t0, space2);
-Texture2D<float4> p_NormalMap[] : register(t0, space3);
-Texture2D<float4> p_SpecularMap[] : register(t0, space4);
-Texture2D<float4> p_EmissiveMap[] : register(t0, space5);
+Texture2D<float4> p_AlbedoMap : register(t0, space2);
+Texture2D<float4> p_NormalMap : register(t0, space3);
+Texture2D<float4> p_SpecularMap : register(t0, space4);
+Texture2D<float4> p_EmissiveMap : register(t0, space5);
 
 SamplerState p_Sampler_PointWrap : register(s0, space0);
 SamplerState p_Sampler_PointClamp : register(s1, space0);
@@ -117,10 +108,10 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 [earlydepthstencil]
 PSOutput PS_Main(PSInput Ps)
 {
-	Texture2D AlbedoMap = p_AlbedoMap[p_MaterialData[Ps.MaterialIndex].AlbedoMapIndex];
-	Texture2D NormalMap = p_NormalMap[p_MaterialData[Ps.MaterialIndex].NormalMapIndex];
-	Texture2D SpecularMap = p_SpecularMap[p_MaterialData[Ps.MaterialIndex].SpecularMapIndex];
-	Texture2D EmissiveMap = p_EmissiveMap[p_MaterialData[Ps.MaterialIndex].EmissiveMapIndex];
+	Texture2D AlbedoMap = p_AlbedoMap;
+	Texture2D NormalMap = p_NormalMap;
+	Texture2D SpecularMap = p_SpecularMap;
+	Texture2D EmissiveMap = p_EmissiveMap;
 
 	float4 Albedo = AlbedoMap.Sample(p_Sampler_LinearWrap, Ps.TexCoord);
 	clip(Albedo.a - 0.1f);

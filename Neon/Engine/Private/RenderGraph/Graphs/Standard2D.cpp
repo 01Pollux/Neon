@@ -9,6 +9,7 @@
 //
 
 #include <Renderer/Render/SpriteRenderer.hpp>
+#include <Renderer/Render/MeshRenderer.hpp>
 
 //
 
@@ -24,6 +25,7 @@ namespace Neon::RG
         auto& GBuffer = Builder.AddPass<GBufferPass>();
         {
             GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
+            GBuffer.AttachRenderer<Renderer::MeshRenderer>();
         }
 
 #ifndef NEON_DIST

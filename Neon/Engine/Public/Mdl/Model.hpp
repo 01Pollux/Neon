@@ -16,9 +16,12 @@ namespace Neon::Mdl
     class Model
     {
     public:
+        using SubmeshIndex                        = uint32_t;
+        static constexpr auto InvalidSubmeshIndex = std::numeric_limits<SubmeshIndex>::max();
+
         using SubmeshList    = std::vector<SubMeshData>;
         using MeshNodeList   = std::vector<MeshNode>;
-        using SubmeshRefList = std::vector<uint32_t>;
+        using SubmeshRefList = std::vector<SubmeshIndex>;
         using GPUBuffer      = RHI::USyncBuffer;
         using MaterialsTable = std::vector<Ptr<Renderer::IMaterial>>;
 
@@ -92,7 +95,7 @@ namespace Neon::Mdl
         /// Get material of the model.
         /// </summary>
         [[nodiscard]] const auto& GetMaterial(
-            uint32_t Index) const noexcept
+            SubmeshIndex Index) const noexcept
         {
             return m_Materials[Index];
         }

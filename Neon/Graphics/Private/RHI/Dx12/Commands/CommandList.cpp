@@ -391,7 +391,7 @@ namespace Neon::RHI
         D3D12_INDEX_BUFFER_VIEW IndexBuffer{
             .BufferLocation = View.Get().Handle.Value,
             .SizeInBytes    = View.Get().Size,
-            .Format         = DXGI_FORMAT_R16_UINT
+            .Format         = View.Get().Is32Bit ? DXGI_FORMAT_R32_UINT : DXGI_FORMAT_R16_UINT
         };
         m_CommandList->IASetIndexBuffer(&IndexBuffer);
     }

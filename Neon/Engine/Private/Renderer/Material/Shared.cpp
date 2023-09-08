@@ -18,11 +18,11 @@ namespace Neon::Renderer
 
         //
 
+        const auto         LitShaderGuid = Asset::Handle::FromString("7fd1137c-ad31-4f83-8c35-6d2246f66bd2");
+        ShaderAssetTaskPtr LitShader(Asset::Manager::Load(LitShaderGuid));
+
         const auto         LitSpriteShaderGuid = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
         ShaderAssetTaskPtr LitSpriteShader(Asset::Manager::Load(LitSpriteShaderGuid));
-
-        const auto         LitShaderGuid = Asset::Handle::FromString("7fd1137c-ad31-4f83-8c35-6d2246f66bd2");
-        ShaderAssetTaskPtr LitShader(Asset::Manager::Load(LitSpriteShaderGuid));
 
         //
 
@@ -40,16 +40,15 @@ namespace Neon::Renderer
                 .RootSignature(
                     RHI::RootSignatureBuilder()
                         .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("v_InstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("p_MaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddConstantBufferView("v_PerObjectData", 1, 1, RHI::ShaderVisibility::Vertex)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1), RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());
@@ -60,8 +59,8 @@ namespace Neon::Renderer
 #endif
 
             BaseSpriteMaterial
-                .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
-                .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
+                .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
+                .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
             auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
             Material->SetTexture("p_AlbedoMap", WhiteTexture);
