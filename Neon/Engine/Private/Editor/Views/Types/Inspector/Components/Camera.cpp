@@ -135,7 +135,6 @@ namespace Neon::Editor
         {
             imcxx::indent Indenting;
 
-            Changed |= imcxx::input{ "Look At", glm::value_ptr(Camera.LookAt) };
             Changed |= imcxx::input{ "Cull Mask", Camera.CullMask };
             Changed |= imcxx::input{ "Render Priority", Camera.RenderPriority };
         }

@@ -40,7 +40,7 @@ namespace Neon::Scene::Component
             /// <summary>
             /// The field of view of the viewport.
             /// </summary>
-            float FieldOfView = 80.0f;
+            float FieldOfView = 45.0f;
 
             /// <summary>
             /// The width and height of the viewport.
@@ -118,7 +118,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// The current position of the camera.
         /// </summary>
-        Vector3 m_CurrentPosition;
+        Vector3 m_CurrentPosition = Vec::Zero<Vector3>;
 
     public:
         /// <summary>
@@ -138,9 +138,19 @@ namespace Neon::Scene::Component
         Viewport Viewport;
 
         /// <summary>
-        /// The position for the camera to look at.
+        /// The forward vector of the camera.
         /// </summary>
-        Vector3 LookAt = Vec::Zero<Vector3>;
+        Vector3 Forward = Vec::Forward<Vector3>;
+
+        /// <summary>
+        /// The right vector of the camera.
+        /// </summary>
+        Vector3 Right = Vec::Right<Vector3>;
+
+        /// <summary>
+        /// The up vector of the camera.
+        /// </summary>
+        Vector3 Up = Vec::Up<Vector3>;
 
         /// <summary>
         /// The culling mask of the camera.

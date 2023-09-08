@@ -71,8 +71,8 @@ namespace Neon::Scene::Component
     {
         return glm::lookAt(
             m_CurrentPosition,
-            LookAt,
-            Vec::Up<Vector3>);
+            m_CurrentPosition + Forward,
+            Up);
     }
 
     Matrix4x4 Camera::ViewProjectionMatrix() const
@@ -85,6 +85,8 @@ namespace Neon::Scene::Component
     {
         m_CurrentPosition = NewPosition;
     }
+
+    //
 
     RG::RenderGraph* Camera::NewRenderGraph(
         const flecs::entity& OwningEntity)

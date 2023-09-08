@@ -25,8 +25,15 @@ namespace Neon::Editor
         float AssemblyAutoReloadInterval = 5.f;
         float AutoSaveInterval           = 25.f;
 
-        Vector3 EditorCameraPosition = Vector3(0.f, 0.f, 5.f);
+        //
+
+        Vector3 EditorCameraPosition = Vector3(0.f, 0.f, -25.f);
         Vector3 EditorCameraRotation = Vector3(0.f, 0.f, 0.f);
+
+        float EditorCameraFOV   = 45.f;
+        float EditorCameraSpeed = 5.f;
+
+        //
 
         bool AssemblyAutoReload = true;
         bool AutoSave           = true;
@@ -48,6 +55,11 @@ namespace Neon::Editor
         /// Gets the current project.
         /// </summary>
         [[nodiscard]] static Project* Get();
+
+        /// <summary>
+        /// Gets the current project.
+        /// </summary>
+        [[nodiscard]] static const ProjectConfig& Config();
 
     public:
         /// <summary>

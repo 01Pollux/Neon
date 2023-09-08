@@ -120,15 +120,21 @@ namespace Neon::Editor
 
     public:
         /// <summary>
-        /// Get the editor active root entity.
-        /// </summary>
-        [[nodiscard]] flecs::entity GetActiveSceneTag() const;
-
-        /// <summary>
         /// Get the editor camera.
         /// </summary>
         [[nodiscard]] flecs::entity GetEditorCamera() const;
 
+        /// <summary>
+        /// Get currently active camera.
+        /// For now, it's the editor camera, but in the future, we will have ability to switch cameras.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetActiveCamera() const;
+
+    public:
+        /// <summary>
+        /// Get the editor active root entity.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetActiveSceneTag() const;
         /// <summary>
         /// Check if the editor is in editor mode.
         /// </summary>

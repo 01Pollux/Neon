@@ -31,14 +31,21 @@ namespace Neon::Editor
 
     //
 
-    flecs::entity EditorEngine::GetActiveSceneTag() const
-    {
-        return IsInEditorMode() ? Scene::EntityWorld::GetCurrentScenerRoot() : m_RuntimeScene.GetRoot().Get();
-    }
-
     flecs::entity EditorEngine::GetEditorCamera() const
     {
         return m_EditorCamera;
+    }
+
+    flecs::entity EditorEngine::GetActiveCamera() const
+    {
+        return m_EditorCamera;
+    }
+
+    //
+
+    flecs::entity EditorEngine::GetActiveSceneTag() const
+    {
+        return IsInEditorMode() ? Scene::EntityWorld::GetCurrentScenerRoot() : m_RuntimeScene.GetRoot().Get();
     }
 
     bool EditorEngine::IsInEditorMode() const

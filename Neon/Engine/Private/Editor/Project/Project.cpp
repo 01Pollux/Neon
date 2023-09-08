@@ -47,6 +47,11 @@ namespace Neon::Editor
         return ProjectManager::Get()->GetActive();
     }
 
+    const ProjectConfig& Project::Config()
+    {
+        return Project::Get()->GetConfig();
+    }
+
     //
 
     const std::filesystem::path& Project::GetProjectDirectoryPath() const
@@ -128,11 +133,18 @@ namespace Neon::Editor
         Config.put("Project.Auto Save", m_Config.AutoSave);
         Config.put("Project.Auto Save Interval", m_Config.AutoSaveInterval);
 
+        //
+
         const auto& Position = m_Config.EditorCameraPosition;
         Config.put("Editor.Camera Position", StringUtils::Format("{}, {}, {}", Position.x, Position.y, Position.z));
 
         const auto& Rotation = m_Config.EditorCameraRotation;
         Config.put("Editor.Camera Rotation", StringUtils::Format("{}, {}, {}", Rotation.x, Rotation.y, Rotation.z));
+
+        Config.put("Editor.Camera FOV", m_Config.EditorCameraFOV);
+        Config.put("Editor.Camera Speed", m_Config.EditorCameraSpeed);
+
+        //
 
         bpt::write_ini(ConfigFile, Config);
         NEON_TRACE("Saved project: {} ({})", m_Config.Name, m_Config.Version.ToString());
@@ -228,8 +240,10 @@ namespace Neon::Editor
         m_Config.AutoSave         = Config.get<bool>("Project.Auto Save", true);
         m_Config.AutoSaveInterval = Config.get<float>("Project.Auto Save Interval", 25.0f);
 
+        //
+
         StringU8 Tmp;
-        Tmp = Config.get<StringU8>("Editor.Camera Position", "0.0, 0.0, 0.0");
+        Tmp = Config.get<StringU8>("Editor.Camera Position", "0.0, 0.0, -25.0");
         std::stringstream Stream(Tmp);
 
         auto& Position = m_Config.EditorCameraPosition;
@@ -248,6 +262,11 @@ namespace Neon::Editor
         Stream >> Rotation.y;
         Stream.ignore();
         Stream >> Rotation.z;
+
+        m_Config.EditorCameraFOV   = Config.get<float>("Editor.Camera FOV", 45.0f);
+        m_Config.EditorCameraSpeed = Config.get<float>("Editor.Camera Speed", 5.0f);
+
+        //
 
         if (SceneTask)
         {
