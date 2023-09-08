@@ -71,4 +71,9 @@ namespace Neon::Input
     /// Check if mouse is hovering over a rect.
     /// </summary>
     [[nodiscard]] Vector2 GetMousePos();
+
+    /// <summary>
+    /// Check if mouse is hovering over a rect.
+    /// </summary>
+    [[nodiscard]] Vector2 GetMouseDelta();
 } // namespace Neon::Input

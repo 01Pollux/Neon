@@ -317,4 +317,10 @@ namespace Neon::Input
         auto Pos = ImGui::GetMousePos();
         return Vector2(Pos.x, Pos.y);
     }
+
+    Vector2 GetMouseDelta()
+    {
+        ImGuiIO& IO = ImGui::GetIO();
+        return Vector2(IO.MouseDelta.x, IO.MouseDelta.y);
+    }
 } // namespace Neon::Input

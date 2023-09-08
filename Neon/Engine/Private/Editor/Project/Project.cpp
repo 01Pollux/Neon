@@ -142,7 +142,8 @@ namespace Neon::Editor
         Config.put("Editor.Camera Rotation", StringUtils::Format("{}, {}, {}", Rotation.x, Rotation.y, Rotation.z));
 
         Config.put("Editor.Camera FOV", m_Config.EditorCameraFOV);
-        Config.put("Editor.Camera Speed", m_Config.EditorCameraSpeed);
+        Config.put("Editor.Camera Keyboard Speed", m_Config.EditorCameraKeyboardSpeed);
+        Config.put("Editor.Camera Mouse Speed", m_Config.EditorCameraMouseSpeed);
 
         //
 
@@ -263,8 +264,9 @@ namespace Neon::Editor
         Stream.ignore();
         Stream >> Rotation.z;
 
-        m_Config.EditorCameraFOV   = Config.get<float>("Editor.Camera FOV", 45.0f);
-        m_Config.EditorCameraSpeed = Config.get<float>("Editor.Camera Speed", 5.0f);
+        m_Config.EditorCameraFOV           = Config.get<float>("Editor.Camera FOV", 45.0f);
+        m_Config.EditorCameraKeyboardSpeed = Config.get<float>("Editor.Camera Keyboard Speed", 5.0f);
+        m_Config.EditorCameraMouseSpeed    = Config.get<float>("Editor.Camera Mouse Speed", 5.0f);
 
         //
 

@@ -30,8 +30,9 @@ namespace Neon::Editor
         Vector3 EditorCameraPosition = Vector3(0.f, 0.f, -25.f);
         Vector3 EditorCameraRotation = Vector3(0.f, 0.f, 0.f);
 
-        float EditorCameraFOV   = 45.f;
-        float EditorCameraSpeed = 5.f;
+        float EditorCameraFOV           = 45.f;
+        float EditorCameraKeyboardSpeed = 5.f;
+        float EditorCameraMouseSpeed    = 5.f;
 
         //
 

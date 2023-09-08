@@ -2,7 +2,9 @@
 
 #include <Math/Vector.hpp>
 #include <Math/Matrix.hpp>
+
 #include <glm/gtx/matrix_interpolation.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace Neon
 {
@@ -160,6 +162,121 @@ namespace Neon
             float          Angle) noexcept
         {
             SetRotation(glm::angleAxis(Angle, Axis));
+        }
+
+    public:
+        /// <summary>
+        /// Get right direction of transform
+        /// </summary>
+        [[nodiscard]] Vector3 GetRightDir() const noexcept
+        {
+            if constexpr (_IsAffine)
+            {
+                return glm::normalize(GetBasis()[0]);
+            }
+            else
+            {
+                return GetBasis()[0];
+            }
+        }
+
+        /// <summary>
+        /// Get right direction of transform
+        /// </summary>
+        [[nodiscard]] Vector3 GetUpDir() const noexcept
+        {
+            if constexpr (_IsAffine)
+            {
+                return glm::normalize(GetBasis()[1]);
+            }
+            else
+            {
+                return GetBasis()[1];
+            }
+        }
+
+        /// <summary>
+        /// Get right direction of transform
+        /// </summary>
+        [[nodiscard]] Vector3 GetLookDir() const noexcept
+        {
+            if constexpr (_IsAffine)
+            {
+                return glm::normalize(GetBasis()[2]);
+            }
+            else
+            {
+                return GetBasis()[2];
+            }
+        }
+
+    public:
+        /// <summary>
+        /// Apply pitch rotation to transform
+        /// </summary>
+        void AppendPitch(
+            float Delta)
+        {
+            auto& Right = GetBasis()[0];
+            auto& Up    = GetBasis()[1];
+            auto& Look  = GetBasis()[2];
+
+            Matrix4x4 Rotation = glm::rotate(Delta, Right);
+
+            Look = Rotation * Vector4(Look, 0.f);
+            Up   = Rotation * Vector4(Up, 0.f);
+
+            if constexpr (!_IsAffine)
+            {
+                Look = glm::normalize(Look);
+                Up   = glm::normalize(Up);
+            }
+        }
+
+        /// <summary>
+        /// Apply yaw rotation to transform
+        /// </summary>
+        void AppendYaw(
+            float Delta)
+        {
+            auto& Right = GetBasis()[0];
+            auto& Up    = GetBasis()[1];
+            auto& Look  = GetBasis()[2];
+
+            Matrix4x4 Rotation = glm::rotate(Delta, Vec::Up<Vector3>);
+
+            Right = Rotation * Vector4(Right, 0.f);
+            Look  = Rotation * Vector4(Look, 0.f);
+            Up    = Rotation * Vector4(Up, 0.f);
+
+            if constexpr (!_IsAffine)
+            {
+                Right = glm::normalize(Right);
+                Look  = glm::normalize(Look);
+                Up    = glm::normalize(Up);
+            }
+        }
+
+        /// <summary>
+        /// Apply roll rotation to transform
+        /// </summary>
+        void AppendRoll(
+            float Delta)
+        {
+            auto& Right = GetBasis()[0];
+            auto& Up    = GetBasis()[1];
+            auto& Look  = GetBasis()[2];
+
+            Matrix4x4 Rotation = glm::rotate(Delta, Look);
+
+            Right = Rotation * Vector4(Right, 0.f);
+            Up    = Rotation * Vector4(Up, 0.f);
+
+            if constexpr (!_IsAffine)
+            {
+                Right = glm::normalize(Right);
+                Up    = glm::normalize(Up);
+            }
         }
 
     public:

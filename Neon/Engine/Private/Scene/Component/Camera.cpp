@@ -67,25 +67,6 @@ namespace Neon::Scene::Component
         return Viewport.ProjectionMatrix(Type);
     }
 
-    Matrix4x4 Camera::ViewMatrix() const
-    {
-        return glm::lookAt(
-            m_CurrentPosition,
-            m_CurrentPosition + Forward,
-            Up);
-    }
-
-    Matrix4x4 Camera::ViewProjectionMatrix() const
-    {
-        return ViewMatrix() * ProjectionMatrix();
-    }
-
-    void Camera::SetCurrentPosition(
-        const Vector3& NewPosition)
-    {
-        m_CurrentPosition = NewPosition;
-    }
-
     //
 
     RG::RenderGraph* Camera::NewRenderGraph(

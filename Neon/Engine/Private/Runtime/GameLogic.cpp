@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Physics/World.hpp>
 
+#include <Script/Engine.hpp>
 #include <Runtime/GameLogic.hpp>
 #include <Runtime/GameEngine.hpp>
 
@@ -10,13 +11,9 @@
 #include <Scene/Component/Physics.hpp>
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
-
 #include <Scene/Component/Script.hpp>
-#include <Script/Engine.hpp>
 
 #include <Log/Logger.hpp>
-
-#include <Scene/RuntimeScene.hpp>
 
 namespace Neon::Runtime
 {
@@ -91,14 +88,13 @@ namespace Neon::Runtime
             .system<Component::Camera, Component::Transform>("CameraPositionUpdate")
             .kind(flecs::PreUpdate)
             .term<Component::Camera>()
-            .inout()
+            .in()
             .term<Component::Transform>()
             .in()
             .each(
                 [](Component::Camera&          Camera,
                    const Component::Transform& Transform)
                 {
-                    Camera.SetCurrentPosition(Transform.World.GetPosition());
                     if (auto RenderGraph = Camera.GetRenderGraph())
                     {
                         RenderGraph->Update(

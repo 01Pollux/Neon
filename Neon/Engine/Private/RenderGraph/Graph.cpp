@@ -37,9 +37,18 @@ namespace Neon::RG
     {
         auto& CameraBuffer = m_Storage.MapFrameData();
 
-        CameraBuffer.World = glm::transpose(Transform.World.ToMat4x4());
+        auto Rotation = Transform.World.GetRotation();
+        auto Forward  = Rotation * Vec::Forward<Vector3>;
+        auto Up       = Rotation * Vec::Up<Vector3>;
 
-        CameraBuffer.View           = glm::transpose(Camera.ViewMatrix());
+        auto View = glm::lookAt(
+            Transform.World.GetPosition(),
+            Transform.World.GetPosition() + Forward,
+            Up);
+
+        CameraBuffer.World = Transform.World.ToMat4x4Transposed();
+
+        CameraBuffer.View           = glm::transpose(View);
         CameraBuffer.Projection     = glm::transpose(Camera.ProjectionMatrix());
         CameraBuffer.ViewProjection = CameraBuffer.View * CameraBuffer.Projection;
 

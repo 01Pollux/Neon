@@ -93,32 +93,11 @@ namespace Neon::Scene::Component
         /// </summary>
         [[nodiscard]] Matrix4x4 ProjectionMatrix() const;
 
-        /// <summary>
-        /// Get the view matrix of the viewport.
-        /// </summary>
-        [[nodiscard]] Matrix4x4 ViewMatrix() const;
-
-        /// <summary>
-        /// Get the view matrix of the viewport.
-        /// </summary>
-        [[nodiscard]] Matrix4x4 ViewProjectionMatrix() const;
-
-        /// <summary>
-        /// Update the current position of the camera.
-        /// </summary>
-        void SetCurrentPosition(
-            const Vector3& NewPosition);
-
     private:
         /// <summary>
         /// The render graph of the camera.
         /// </summary>
         Ptr<RG::RenderGraph> RenderGraph;
-
-        /// <summary>
-        /// The current position of the camera.
-        /// </summary>
-        Vector3 m_CurrentPosition = Vec::Zero<Vector3>;
 
     public:
         /// <summary>
@@ -136,21 +115,6 @@ namespace Neon::Scene::Component
         /// The viewport of the camera.
         /// </summary>
         Viewport Viewport;
-
-        /// <summary>
-        /// The forward vector of the camera.
-        /// </summary>
-        Vector3 Forward = Vec::Forward<Vector3>;
-
-        /// <summary>
-        /// The right vector of the camera.
-        /// </summary>
-        Vector3 Right = Vec::Right<Vector3>;
-
-        /// <summary>
-        /// The up vector of the camera.
-        /// </summary>
-        Vector3 Up = Vec::Up<Vector3>;
 
         /// <summary>
         /// The culling mask of the camera.
