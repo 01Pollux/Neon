@@ -39,14 +39,6 @@ namespace Neon::Mdl
 
     public:
         /// <summary>
-        /// Get materials of the model.
-        /// </summary>
-        [[nodiscard]] const auto& GetMaterials() const noexcept
-        {
-            return m_Materials;
-        }
-
-        /// <summary>
         /// Get root node of the model.
         /// </summary>
         [[nodiscard]] const auto& GetRootNode() const noexcept
@@ -86,6 +78,23 @@ namespace Neon::Mdl
             uint32_t Index) const noexcept
         {
             return m_Submeshes[Index];
+        }
+
+        /// <summary>
+        /// Get materials of the model.
+        /// </summary>
+        [[nodiscard]] const auto& GetMaterials() const noexcept
+        {
+            return m_Materials;
+        }
+
+        /// <summary>
+        /// Get material of the model.
+        /// </summary>
+        [[nodiscard]] const auto& GetMaterial(
+            uint32_t Index) const noexcept
+        {
+            return m_Materials[Index];
         }
 
         /// <summary>

@@ -41,6 +41,18 @@ namespace Neon::RHI::Views
         }
 
         /// <summary>
+        /// Append a vertex buffer view.
+        /// </summary>
+        template<typename _Ty>
+        void AppendOffset(
+            GpuResourceHandle BaseHandle,
+            uint32_t          Offset,
+            uint32_t          Count)
+        {
+            Append({ BaseHandle.Value + Offset * sizeof(_Ty) }, sizeof(_Ty), sizeof(_Ty) * Count);
+        }
+
+        /// <summary>
         /// Get the views.
         /// </summary>
         [[nodiscard]] auto& GetViews() const noexcept
@@ -75,9 +87,9 @@ namespace Neon::RHI::Views
 
         Index(
             GpuResourceHandle Handle,
-            size_t            Count,
+            size_t            Size,
             bool              Is32Bit = false) :
-            m_View{ Handle, uint32_t(Count), Is32Bit }
+            m_View{ Handle, uint32_t(Size), Is32Bit }
         {
         }
 
@@ -91,5 +103,45 @@ namespace Neon::RHI::Views
 
     private:
         View m_View;
+    };
+
+    struct IndexU16 : public Index
+    {
+        IndexU16() = default;
+
+        IndexU16(
+            IBuffer* Buffer,
+            uint32_t Offset,
+            uint32_t Count) :
+            Index(Buffer, Offset * sizeof(uint32_t), Count * sizeof(uint16_t), false)
+        {
+        }
+
+        IndexU16(
+            GpuResourceHandle Handle,
+            uint32_t          Count) :
+            Index(Handle, Count * sizeof(uint16_t), false)
+        {
+        }
+    };
+
+    struct IndexU32 : public Index
+    {
+        IndexU32() = default;
+
+        IndexU32(
+            IBuffer* Buffer,
+            uint32_t Offset,
+            uint32_t Count) :
+            Index(Buffer, Offset * sizeof(uint32_t), Count * sizeof(uint32_t), true)
+        {
+        }
+
+        IndexU32(
+            GpuResourceHandle Handle,
+            uint32_t          Count) :
+            Index(Handle, Count * sizeof(uint32_t), true)
+        {
+        }
     };
 } // namespace Neon::RHI::Views

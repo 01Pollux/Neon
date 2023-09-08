@@ -363,9 +363,7 @@ namespace Neon::Renderer
     void Material::Apply(
         RHI::ICommonCommandList* CommandList)
     {
-        MaterialTable Table;
-        Table.Append(this);
-        Table.Apply(CommandList);
+        MaterialTable::ApplyOne(this, CommandList);
     }
 
     void Material::ApplyAll(
@@ -673,14 +671,32 @@ namespace Neon::Renderer
         return Iter->second;
     }
 
+    //
+
     void MaterialTable::Apply(
+        RHI::ICommonCommandList* CommandList)
+    {
+        Apply(GetFirstMaterial(), m_Materials, CommandList);
+    }
+
+    void MaterialTable::ApplyOne(
+        IMaterial*               Material,
+        RHI::ICommonCommandList* CommandList)
+    {
+        Apply(Material, { &Material, 1 }, CommandList);
+    }
+
+    //
+
+    void MaterialTable::Apply(
+        IMaterial*               FirstMaterial,
+        std::span<IMaterial*>    Materials,
         RHI::ICommonCommandList* CommandList)
     {
         std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
         std::vector<uint32_t>                       DescriptorOffsets;
 
         uint32_t ResourceDescriptorSize = 0, SamplerDescriptorSize = 0;
-        auto     FirstMaterial = GetFirstMaterial();
 
         // Function helper to insert descriptor to batch and accumulate size
         auto InsertToDescriptorBatch =
@@ -753,7 +769,7 @@ namespace Neon::Renderer
 
             if (Param.Descriptor.Instanced)
             {
-                for (auto& CurMaterial : m_Materials)
+                for (auto& CurMaterial : Materials)
                 {
                     InsertToDescriptorBatch(CurMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
                 }

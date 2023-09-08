@@ -223,9 +223,25 @@ namespace Neon::Renderer
         }
 
         /// <summary>
-        /// Bind the materials into the command list.
+        /// Bind the material into the command list.
         /// </summary>
         void Apply(
+            RHI::ICommonCommandList* CommandList);
+
+        /// <summary>
+        /// Bind the material into the command list.
+        /// </summary>
+        static void ApplyOne(
+            IMaterial*               Material,
+            RHI::ICommonCommandList* CommandList);
+
+    private:
+        /// <summary>
+        /// Bind the materials into the command list.
+        /// </summary>
+        static void Apply(
+            IMaterial*               FirstMaterial,
+            std::span<IMaterial*>    Materials,
             RHI::ICommonCommandList* CommandList);
 
     private:
