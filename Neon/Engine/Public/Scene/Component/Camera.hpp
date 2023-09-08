@@ -40,7 +40,7 @@ namespace Neon::Scene::Component
             /// <summary>
             /// The field of view of the viewport.
             /// </summary>
-            float FieldOfView = 45.0f;
+            float FieldOfView = 80.0f;
 
             /// <summary>
             /// The width and height of the viewport.

@@ -9,6 +9,15 @@
 
 namespace Neon::RHI
 {
+    Dx12GpuResource::~Dx12GpuResource()
+    {
+        if (m_Resource)
+        {
+            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
+            Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
+        }
+    }
+
     void Dx12GpuResource::QueryFootprint(
         uint32_t              FirstSubresource,
         uint32_t              SubresourceCount,
@@ -113,6 +122,16 @@ namespace Neon::RHI
         return m_Allocation.Get();
     }
 
+    void Dx12GpuResource::SilentRelease()
+    {
+        if (m_Resource)
+        {
+            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
+            m_Resource   = nullptr;
+            m_Allocation = nullptr;
+        }
+    }
+
     //
 
     IBuffer* IBuffer::Create(
@@ -194,12 +213,6 @@ namespace Neon::RHI
             &m_Desc.Width);
 
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
-    }
-
-    Dx12Buffer::~Dx12Buffer()
-    {
-        Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
-        Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
     }
 
     size_t Dx12Buffer::GetSize() const
@@ -474,15 +487,6 @@ namespace Neon::RHI
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
     {
         CopyFrom(0, Subresources, CopyId);
-    }
-
-    Dx12Texture::~Dx12Texture()
-    {
-        if (m_Resource)
-        {
-            Dx12ResourceStateManager::Get()->StopTrakingResource(m_Resource.Get());
-            Dx12Swapchain::Get()->SafeRelease(m_Resource, m_Allocation);
-        }
     }
 
     Vector3I Dx12Texture::GetDimensions() const

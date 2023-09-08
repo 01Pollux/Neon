@@ -44,6 +44,11 @@ namespace Neon::RHI
         }
     }
 
+    GraphicsMemoryAllocator::BuddyBlock::~BuddyBlock()
+    {
+        Buffer->SilentRelease();
+    }
+
     RHI::GraphicsMemoryAllocator::GraphicsMemoryAllocator()
     {
         auto Dx12Device  = Dx12RenderDevice::Get()->GetDevice();

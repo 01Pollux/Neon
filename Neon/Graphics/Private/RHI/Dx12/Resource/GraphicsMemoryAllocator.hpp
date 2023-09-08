@@ -39,6 +39,8 @@ namespace Neon::RHI
                 D3D12MA::Allocator*           GpuAllocator,
                 IGlobalBufferPool::BufferType Type,
                 size_t                        SizeOfBuffer);
+
+            ~BuddyBlock();
         };
 
         struct BufferAllocator

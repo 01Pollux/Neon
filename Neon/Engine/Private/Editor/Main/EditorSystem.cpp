@@ -44,13 +44,12 @@ namespace Neon::Editor
         flecs::entity Camera = World.entity("_Editor Camera_");
         m_EditorCamera       = Camera;
 
-        Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Orthographic);
+        Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Perspective);
         {
             RG::CreateStandard2DRenderGraph(CameraComponent, Camera);
 
-            CameraComponent.Viewport.OrthographicSize = 50.0f;
-            CameraComponent.Viewport.NearPlane        = -1.0f;
-            CameraComponent.Viewport.FarPlane         = 20.0f;
+            CameraComponent.Viewport.ClientHeight = true;
+            CameraComponent.Viewport.ClientWidth  = true;
         }
         Camera.set(std::move(CameraComponent));
 

@@ -128,9 +128,9 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::Shudown()
     {
-        m_MemoryAllocator->Shutdown();
         m_DefaultTextures = {};
         m_Swapchain->Shutdown();
+        m_MemoryAllocator->Shutdown();
         m_Swapchain       = nullptr;
         m_MemoryAllocator = nullptr;
     }

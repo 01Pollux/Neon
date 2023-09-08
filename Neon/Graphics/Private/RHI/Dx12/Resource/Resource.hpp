@@ -10,6 +10,8 @@ namespace Neon::RHI
     class Dx12GpuResource : public virtual IGpuResource
     {
     public:
+        ~Dx12GpuResource();
+
         void QueryFootprint(
             uint32_t              FirstSubresource,
             uint32_t              SubresourceCount,
@@ -34,6 +36,11 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] D3D12MA::Allocation* GetAllocation() const;
 
+        /// <summary>
+        /// Release the underlying D3D12 resource without enqueueing a delete.
+        /// </summary>
+        void SilentRelease();
+
     protected:
         WinAPI::ComPtr<ID3D12Resource>      m_Resource;
         WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
@@ -55,11 +62,6 @@ namespace Neon::RHI
             size_t               Size,
             D3D12_RESOURCE_FLAGS Flags,
             GraphicsBufferType   Type);
-
-        NEON_CLASS_NO_COPY(Dx12Buffer);
-        NEON_CLASS_MOVE(Dx12Buffer);
-
-        ~Dx12Buffer() override;
 
         size_t GetSize() const override;
 
@@ -142,11 +144,6 @@ namespace Neon::RHI
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>    Subresources,
             uint64_t&                           CopyId);
-
-        NEON_CLASS_NO_COPY(Dx12Texture);
-        NEON_CLASS_MOVE(Dx12Texture);
-
-        ~Dx12Texture() override;
 
         Vector3I GetDimensions() const override;
 
