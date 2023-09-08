@@ -44,14 +44,4 @@ namespace Neon::Scene::Editor
         {
         }
     };
-
-    /// <summary>
-    /// The main camera of the editor.
-    /// </summary>
-    struct EditorMainCamera
-    {
-        NEON_EXPORT_FLECS(EditorMainCamera, "Editor::EditorMainCamera")
-        {
-        }
-    };
 } // namespace Neon::Scene::Editor

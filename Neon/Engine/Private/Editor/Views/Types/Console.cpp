@@ -82,7 +82,7 @@ namespace Neon::Editor::Views
             return;
         }
 
-        if (ImGui::Button("Test import"))
+        if (ImGui::Button("Test Import"))
         {
             Asset::ModelAsset::Handler Handler;
 
