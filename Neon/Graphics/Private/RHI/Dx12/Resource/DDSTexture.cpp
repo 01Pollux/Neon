@@ -611,13 +611,14 @@ namespace Neon::RHI
     //
 
     TextureLoader TextureLoader::LoadDDS(
-        const uint8_t* Data,
-        size_t         DataSize)
+        const uint8_t*             Data,
+        size_t                     DataSize,
+        const RHI::MResourceState& InitialState)
     {
         WinAPI::ComPtr<ID3D12Resource>      Texture;
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
-        std::vector<SubresourceDesc>       TextureDataToUpload;
-        std::unique_ptr<uint8_t[]>         TextureDecodedData;
+        std::vector<SubresourceDesc>        TextureDataToUpload;
+        std::unique_ptr<uint8_t[]>          TextureDecodedData;
 
         ThrowIfFailed(DDS::LoadDDSTextureFromMemoryEx(
             Dx12RenderDevice::Get()->GetAllocator()->GetMA(),
@@ -629,6 +630,6 @@ namespace Neon::RHI
             &Allocation,
             TextureDataToUpload));
 
-        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload);
+        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload, InitialState);
     }
 } // namespace Neon::RHI

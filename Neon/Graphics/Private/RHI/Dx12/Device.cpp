@@ -437,9 +437,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D);
-        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D);
-        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube);
+        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
+        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
+        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
 
         //
 
@@ -448,9 +448,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D);
-        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D);
-        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube);
+        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
+        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
+        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
 
         //
 
@@ -459,9 +459,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture BlackTexture2D(Desc2D, Subresource2D);
-        SSyncTexture BlackTexture3D(Desc3D, Subresource3D);
-        SSyncTexture BlackTextureCube(DescCube, SubresourceCube);
+        SSyncTexture BlackTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
+        SSyncTexture BlackTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
+        SSyncTexture BlackTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
 
         //
 
@@ -471,7 +471,6 @@ namespace Neon::RHI
         {
             auto& Object = m_DefaultTextures[size_t(Type)] = Resource;
             RHI::RenameObject(Object.get(), Name);
-            Dx12ResourceStateManager::Get()->TransitionResource(Object.get(), MResourceState_AllShaderResource);
         };
 
         LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D, STR("_Magenta2D"));

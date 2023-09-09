@@ -429,7 +429,7 @@ namespace Neon::RHI
 
             // Create input stream for memory
             WinAPI::ComPtr<IWICStream> stream;
-            HRESULT                   hr = pWIC->CreateStream(stream.GetAddressOf());
+            HRESULT                    hr = pWIC->CreateStream(stream.GetAddressOf());
             if (FAILED(hr))
                 return hr;
 
@@ -458,13 +458,14 @@ namespace Neon::RHI
     //
 
     TextureLoader TextureLoader::LoadWIC(
-        const uint8_t* Data,
-        size_t         DataSize)
+        const uint8_t*             Data,
+        size_t                     DataSize,
+        const RHI::MResourceState& InitialState)
     {
         WinAPI::ComPtr<ID3D12Resource>      Texture;
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation;
-        std::vector<SubresourceDesc>       TextureDataToUpload;
-        std::unique_ptr<uint8_t[]>         TextureDecodedData;
+        std::vector<SubresourceDesc>        TextureDataToUpload;
+        std::unique_ptr<uint8_t[]>          TextureDecodedData;
 
         ThrowIfFailed(WIC::LoadAndDecodeWICTextureFromMemoryEx(
             Dx12RenderDevice::Get()->GetAllocator()->GetMA(),
@@ -477,6 +478,6 @@ namespace Neon::RHI
             TextureDecodedData,
             TextureDataToUpload));
 
-        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload);
+        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload, InitialState);
     }
 } // namespace Neon::RHI

@@ -1,6 +1,6 @@
 {
-  "Guid": "7fd1137c-ad31-4f83-8c35-6d2246f66bd2",
-  "Path": "Shaders/Engine/Lighting/Lit.hlsl.namd",
+  "Guid": "a9e5e62f-cb0a-41b8-b6a2-318a558d30dd",
+  "Path": "Shaders/Engine/Lighting/SSAO.hlsl.namd",
   "Loader": "",
   "Dependencies": "",
   "LoaderId": "15635213787607061289",

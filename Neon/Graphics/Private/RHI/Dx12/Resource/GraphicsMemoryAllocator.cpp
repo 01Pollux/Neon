@@ -21,7 +21,7 @@ namespace Neon::RHI
         case IGlobalBufferPool::BufferType::ReadOnly:
             Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
 
-            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12ReadbackBuffer(SizeOfBuffer, Flags)));
+            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12ReadbackBuffer(SizeOfBuffer, Flags, IReadbackBuffer::DefaultResourcestate)));
             RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::ReabackBuffer"));
             break;
         case IGlobalBufferPool::BufferType::ReadWrite:
@@ -36,7 +36,7 @@ namespace Neon::RHI
                 Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
             }
 
-            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12UploadBuffer(SizeOfBuffer, Flags)));
+            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12UploadBuffer(SizeOfBuffer, Flags, Dx12UploadBuffer::DefaultResourcestate)));
             RHI::RenameObject(this->Buffer.get(), STR("GraphicsMemoryAllocator::UploadBuffer"));
             break;
         default:

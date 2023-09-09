@@ -17,8 +17,14 @@ namespace Neon::RHI
     TextureLoader::TextureLoader(
         WinAPI::ComPtr<ID3D12Resource>      Texture,
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-        std::span<const SubresourceDesc>    Subresources) :
-        m_Texture(std::make_unique<Dx12Texture>(std::move(Texture), std::move(Allocation), Subresources, m_UploadId))
+        std::span<const SubresourceDesc>    Subresources,
+        const RHI::MResourceState&          InitialState) :
+        m_Texture(std::make_unique<Dx12Texture>(
+            std::move(Texture),
+            std::move(Allocation),
+            Subresources,
+            m_UploadId,
+            InitialState))
     {
     }
 } // namespace Neon::RHI

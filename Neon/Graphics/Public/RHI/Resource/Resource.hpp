@@ -65,9 +65,10 @@ namespace Neon::RHI
         /// Copy the subresources to the resource
         /// </summary>
         virtual void CopyFrom(
-            uint32_t                         FirstSubresource,
-            std::span<const SubresourceDesc> Subresources,
-            uint64_t&                        CopyId) = 0;
+            uint32_t                           FirstSubresource,
+            std::span<const SubresourceDesc>   Subresources,
+            uint64_t&                          CopyId,
+            std::optional<RHI::MResourceState> InitialState = std::nullopt) = 0;
 
         /// <summary>
         /// Copy the subresource to the resource
@@ -104,21 +105,25 @@ namespace Neon::RHI
     class IBuffer : public virtual IGpuResource
     {
     public:
+        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
+
         using IGpuResource::IGpuResource;
 
         /// <summary>
         /// Creates a buffer.
         /// </summary>
         [[nodiscard]] static IBuffer* Create(
-            const BufferDesc& Desc);
+            const BufferDesc&          Desc,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Creates a readback buffer.
         /// </summary>
         [[nodiscard]] static IBuffer* Create(
-            const BufferDesc&      Desc,
-            const SubresourceDesc& Subresource,
-            uint64_t&              CopyId);
+            const BufferDesc&          Desc,
+            const SubresourceDesc&     Subresource,
+            uint64_t&                  CopyId,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Get the size of the buffer in bytes.
@@ -137,21 +142,24 @@ namespace Neon::RHI
     class IUploadBuffer : public virtual IBuffer
     {
     public:
+        static constexpr auto DefaultResourcestate = RHI::MResourceState_GenericRead;
         using IBuffer::IBuffer;
 
         /// <summary>
         /// Creates an upload buffer.
         /// </summary>
         [[nodiscard]] static IUploadBuffer* Create(
-            const BufferDesc& Desc);
+            const BufferDesc&          Desc,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Creates a readback buffer.
         /// </summary>
         [[nodiscard]] static IUploadBuffer* Create(
-            const BufferDesc&      Desc,
-            const SubresourceDesc& Subresource,
-            uint64_t&              CopyId);
+            const BufferDesc&          Desc,
+            const SubresourceDesc&     Subresource,
+            uint64_t&                  CopyId,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Makes the buffer available for reading/writing by the CPU.
@@ -192,13 +200,16 @@ namespace Neon::RHI
     class IReadbackBuffer : public virtual IBuffer
     {
     public:
+        static constexpr auto DefaultResourcestate = BitMask_Or(RHI::EResourceState::CopyDest);
+
         using IBuffer::IBuffer;
 
         /// <summary>
         /// Creates a readback buffer.
         /// </summary>
         [[nodiscard]] static IReadbackBuffer* Create(
-            const BufferDesc& Desc);
+            const BufferDesc&          Desc,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Makes the buffer available for reading by the CPU.
@@ -256,13 +267,15 @@ namespace Neon::RHI
     class ITexture : public virtual IGpuResource
     {
     public:
+        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
         using IGpuResource::IGpuResource;
 
         /// <summary>
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            const ResourceDesc& Desc);
+            const ResourceDesc&        Desc,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Creates a texture.
@@ -270,14 +283,16 @@ namespace Neon::RHI
         [[nodiscard]] static ITexture* Create(
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
-            uint64_t&                        CopyId);
+            uint64_t&                        CopyId,
+            const RHI::MResourceState&       InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Creates a texture.
         /// </summary>
         [[nodiscard]] static ITexture* Create(
-            const TextureRawImage& ImageData,
-            uint64_t&              CopyId);
+            const TextureRawImage&     ImageData,
+            uint64_t&                  CopyId,
+            const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
         /// Returns the dimensions of the texture.
@@ -409,33 +424,41 @@ namespace Neon::RHI
         using SyncGpuResourceT<IBuffer, _Owning>::SyncGpuResourceT;
 
         SyncBufferT(
-            const BufferDesc& Buffer)
+            const BufferDesc&          Buffer,
+            const RHI::MResourceState& InitialState = IBuffer::DefaultResourcestate)
         {
             this->m_Resource.reset(IBuffer::Create(
-                Buffer));
+                Buffer,
+                InitialState));
         }
 
         SyncBufferT(
-            const BufferDesc&      Desc,
-            const SubresourceDesc& Subresources)
+            const BufferDesc&          Desc,
+            const SubresourceDesc&     Subresources,
+            const RHI::MResourceState& InitialState = IBuffer::DefaultResourcestate)
         {
             this->m_Resource.reset(IBuffer::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId));
+                this->m_CopyId,
+                InitialState));
         }
 
         SyncBufferT(
-            const BufferDesc& Desc,
-            const void*       Data) :
+            const BufferDesc&          Desc,
+            const void*                Data,
+            const RHI::MResourceState& InitialState = IBuffer::DefaultResourcestate) :
             SyncBufferT(Desc,
                         SubresourceDesc{
                             .Data       = Data,
                             .RowPitch   = Desc.Size,
-                            .SlicePitch = Desc.Size })
+                            .SlicePitch = Desc.Size },
+                        InitialState)
         {
         }
     };
+
+    //
 
     template<bool _Owning>
     class SyncUploadBufferT : public SyncGpuResourceT<IUploadBuffer, _Owning>
@@ -444,33 +467,41 @@ namespace Neon::RHI
         using SyncGpuResourceT<IUploadBuffer, _Owning>::SyncGpuResourceT;
 
         SyncUploadBufferT(
-            const BufferDesc& Buffer)
+            const BufferDesc&          Buffer,
+            const RHI::MResourceState& InitialState = IUploadBuffer::DefaultResourcestate)
         {
             this->m_Resource.reset(IUploadBuffer::Create(
-                Buffer));
+                Buffer,
+                InitialState));
         }
 
         SyncUploadBufferT(
-            const BufferDesc&      Desc,
-            const SubresourceDesc& Subresources)
+            const BufferDesc&          Desc,
+            const SubresourceDesc&     Subresources,
+            const RHI::MResourceState& InitialState = IUploadBuffer::DefaultResourcestate)
         {
             this->m_Resource.reset(IUploadBuffer::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId));
+                this->m_CopyId,
+                InitialState));
         }
 
         SyncUploadBufferT(
-            const BufferDesc& Desc,
-            const void*       Data) :
+            const BufferDesc&          Desc,
+            const void*                Data,
+            const RHI::MResourceState& InitialState = IUploadBuffer::DefaultResourcestate) :
             SyncUploadBufferT(Desc,
                               SubresourceDesc{
                                   .Data       = Data,
                                   .RowPitch   = Desc.Size,
-                                  .SlicePitch = Desc.Size })
+                                  .SlicePitch = Desc.Size },
+                              InitialState)
         {
         }
     };
+
+    //
 
     template<bool _Owning>
     class SyncTextureT : public SyncGpuResourceT<ITexture, _Owning>
@@ -479,28 +510,34 @@ namespace Neon::RHI
         using SyncGpuResourceT<ITexture, _Owning>::SyncGpuResourceT;
 
         SyncTextureT(
-            const TextureRawImage& ImageData)
+            const TextureRawImage& ImageData,
+            RHI::MResourceState    InitialState = RHI::MResourceState_Common)
         {
             this->m_Resource.reset(ITexture::Create(
                 ImageData,
-                this->m_CopyId));
+                this->m_CopyId,
+                std::move(InitialState)));
         }
 
         SyncTextureT(
-            const ResourceDesc& Desc)
+            const ResourceDesc& Desc,
+            RHI::MResourceState InitialState = RHI::MResourceState_Common)
         {
             this->m_Resource.reset(ITexture::Create(
-                Desc));
+                Desc,
+                std::move(InitialState)));
         }
 
         SyncTextureT(
             const ResourceDesc&              Desc,
-            std::span<const SubresourceDesc> Subresources)
+            std::span<const SubresourceDesc> Subresources,
+            RHI::MResourceState              InitialState = RHI::MResourceState_Common)
         {
             this->m_Resource.reset(ITexture::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId));
+                this->m_CopyId,
+                std::move(InitialState)));
         }
     };
 

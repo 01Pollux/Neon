@@ -107,11 +107,11 @@ namespace Neon::RHI
     static constexpr inline MResourceState MResourceState_Common;
     static constexpr inline MResourceState MResourceState_Present;
 
-    static inline MResourceState MResourceState_AllShaderResource = BitMask_Or(
+    static constexpr inline MResourceState MResourceState_AllShaderResource = BitMask_Or(
         EResourceState::NonPixelShaderResource,
         EResourceState::PixelShaderResource);
 
-    static inline MResourceState MResourceState_GenericRead = BitMask_Or(
+    static constexpr inline MResourceState MResourceState_GenericRead = BitMask_Or(
         EResourceState::VertexAndConstantBuffer,
         EResourceState::IndexBuffer,
         EResourceState::NonPixelShaderResource,
