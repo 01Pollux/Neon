@@ -5,8 +5,10 @@
 
 namespace Neon::RG
 {
-    class AmbientPass : public IRenderPass
+    class AmbientPass : public ComputeRenderPass<AmbientPass>
     {
+        friend class RenderPass;
+
     public:
         AmbientPass();
 
@@ -14,8 +16,8 @@ namespace Neon::RG
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
-        void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList) override;
+        void DispatchTyped(
+            const GraphStorage&       Storage,
+            RHI::IComputeCommandList* CommandList);
     };
 } // namespace Neon::RG

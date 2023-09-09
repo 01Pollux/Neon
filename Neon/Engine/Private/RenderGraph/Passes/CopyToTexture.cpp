@@ -24,7 +24,7 @@ namespace Neon::RG
 {
     CopyToTexturePass::CopyToTexturePass(
         CopyToTextureData Data) :
-        IRenderPass(STR("CopyToTexturePass"), PassQueueType::Direct),
+        RenderPass(STR("CopyToTexturePass")),
         m_Data(std::move(Data))
     {
         // TODO: Load from asset rather than hardcoding
@@ -62,12 +62,10 @@ namespace Neon::RG
         Resolver.WriteRenderTarget(m_Data.Destination.CreateView(m_Data.ViewName));
     }
 
-    void CopyToTexturePass::Dispatch(
-        const GraphStorage& Storage,
-        RHI::ICommandList*  CommandList)
+    void CopyToTexturePass::DispatchTyped(
+        const GraphStorage&        Storage,
+        RHI::IGraphicsCommandList* CommandList)
     {
-        auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
-
         Ptr<Renderer::IMaterial> Material;
         switch (m_Data.Blend)
         {
@@ -86,9 +84,9 @@ namespace Neon::RG
             "p_CopySource",
             Storage.GetResource(m_Data.Source).Get());
 
-        Material->Apply(RenderCommandList);
+        Material->Apply(CommandList);
 
-        RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
-        RenderCommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
+        CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
+        CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
     }
 } // namespace Neon::RG

@@ -8,7 +8,7 @@ namespace Neon::RG
 {
     DebugPass::DebugPass(
         ResourceId DrawTarget) :
-        IRenderPass(STR("DebugPass"), PassQueueType::Direct),
+        RenderPass(STR("DebugPass")),
         m_DrawTarget(std::move(DrawTarget))
     {
     }
@@ -24,12 +24,12 @@ namespace Neon::RG
                 .ClearType = RHI::ERTClearType::Ignore });
     }
 
-    void DebugPass::Dispatch(
-        const GraphStorage& Storage,
-        RHI::ICommandList*  CommandList)
+    void DebugPass::DispatchTyped(
+        const GraphStorage&        Storage,
+        RHI::IGraphicsCommandList* CommandList)
     {
         Runtime::DebugOverlay::Render(
-            dynamic_cast<RHI::IGraphicsCommandList*>(CommandList),
+            CommandList,
             Storage.GetFrameDataHandle());
     }
 } // namespace Neon::RG

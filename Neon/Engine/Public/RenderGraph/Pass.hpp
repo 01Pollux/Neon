@@ -107,4 +107,45 @@ namespace Neon::RG
     };
 
     using ResourceResolver = IRenderPass::ResourceResolver;
+
+    //
+
+    template<typename _Ty, PassQueueType _Type>
+    class TypedRenderPass : public IRenderPass
+    {
+    public:
+        using RenderPass = TypedRenderPass<_Ty, _Type>;
+
+        TypedRenderPass(
+            String     PassName,
+            MPassFlags Flags = {}) :
+            IRenderPass(std::move(PassName), _Type, std::move(Flags))
+        {
+        }
+
+        void Dispatch(
+            const GraphStorage& Graph,
+            RHI::ICommandList*  CommandList) final
+        {
+            if constexpr (_Type == PassQueueType::Unknown)
+            {
+                static_cast<_Ty*>(this)->DispatchTyped(Graph);
+            }
+            else if constexpr (_Type == PassQueueType::Direct)
+            {
+                static_cast<_Ty*>(this)->DispatchTyped(Graph, dynamic_cast<RHI::IGraphicsCommandList*>(CommandList));
+            }
+            else if constexpr (_Type == PassQueueType::Compute)
+            {
+                static_cast<_Ty*>(this)->DispatchTyped(Graph, dynamic_cast<RHI::IComputeCommandList*>(CommandList));
+            }
+        }
+    };
+
+    template<typename _Ty>
+    using GenericRenderPass = TypedRenderPass<_Ty, PassQueueType::Unknown>;
+    template<typename _Ty>
+    using GraphicsRenderPass = TypedRenderPass<_Ty, PassQueueType::Direct>;
+    template<typename _Ty>
+    using ComputeRenderPass = TypedRenderPass<_Ty, PassQueueType::Compute>;
 } // namespace Neon::RG

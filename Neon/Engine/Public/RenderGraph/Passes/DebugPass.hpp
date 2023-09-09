@@ -5,8 +5,10 @@
 
 namespace Neon::RG
 {
-    class DebugPass : public IRenderPass
+    class DebugPass : public GraphicsRenderPass<DebugPass>
     {
+        friend class RenderPass;
+
     public:
         DebugPass(
             ResourceId DrawTarget);
@@ -15,9 +17,9 @@ namespace Neon::RG
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
-        void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList) override;
+        void DispatchTyped(
+            const GraphStorage&        Storage,
+            RHI::IGraphicsCommandList* CommandList);
 
     private:
         ResourceId m_DrawTarget;

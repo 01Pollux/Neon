@@ -6,8 +6,10 @@
 
 namespace Neon::RG
 {
-    class GBufferPass : public IRenderPass
+    class GBufferPass : public GraphicsRenderPass<GBufferPass>
     {
+        friend class RenderPass;
+
     public:
         static constexpr RHI::EResourceFormat RenderTargetsFormats[] = {
             RHI::EResourceFormat::R8G8B8A8_UNorm, // Albedo
@@ -40,9 +42,9 @@ namespace Neon::RG
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
-        void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList) override;
+        void DispatchTyped(
+            const GraphStorage&        Storage,
+            RHI::IGraphicsCommandList* CommandList);
 
     private:
         std::vector<UPtr<Renderer::IRenderer>> m_Renderers;

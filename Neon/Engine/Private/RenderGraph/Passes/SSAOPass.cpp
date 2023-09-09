@@ -5,7 +5,7 @@
 namespace Neon::RG
 {
     SSAOPass::SSAOPass() :
-        IRenderPass(STR("SSAOPass"), RG::PassQueueType::Compute)
+        RenderPass(STR("SSAOPass"))
     {
     }
 
@@ -14,9 +14,9 @@ namespace Neon::RG
     {
     }
 
-    void SSAOPass::Dispatch(
-        const GraphStorage& Storage,
-        RHI::ICommandList*  CommandList)
+    void SSAOPass::DispatchTyped(
+        const GraphStorage&       Storage,
+        RHI::IComputeCommandList* CommandList)
     {
     }
 } // namespace Neon::RG

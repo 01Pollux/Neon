@@ -10,8 +10,10 @@ namespace Neon::Renderer
 
 namespace Neon::RG
 {
-    class CopyToTexturePass : public IRenderPass
+    class CopyToTexturePass : public GraphicsRenderPass<CopyToTexturePass>
     {
+        friend class RenderPass;
+
     public:
         enum class BlendMode : uint8_t
         {
@@ -39,9 +41,9 @@ namespace Neon::RG
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
-        void Dispatch(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList) override;
+        void DispatchTyped(
+            const GraphStorage&        Storage,
+            RHI::IGraphicsCommandList* CommandList);
 
     private:
         CopyToTextureData m_Data;

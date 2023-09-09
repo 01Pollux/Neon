@@ -6,7 +6,7 @@
 namespace Neon::RG
 {
     GBufferPass::GBufferPass() :
-        IRenderPass(STR("GBufferPass"), PassQueueType::Direct)
+        RenderPass(STR("GBufferPass"))
     {
     }
 
@@ -80,9 +80,9 @@ namespace Neon::RG
         }
     }
 
-    void GBufferPass::Dispatch(
-        const GraphStorage& Storage,
-        RHI::ICommandList*  CommandList)
+    void GBufferPass::DispatchTyped(
+        const GraphStorage&        Storage,
+        RHI::IGraphicsCommandList* CommandList)
     {
         auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
 
