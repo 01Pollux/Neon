@@ -3,6 +3,8 @@
 #include <RenderGraph/Graphs/Standard.hpp>
 
 #include <RenderGraph/Passes/GBufferPass.hpp>
+#include <RenderGraph/Passes/SSAOPass.hpp>
+#include <RenderGraph/Passes/AmbientPass.hpp>
 #include <RenderGraph/Passes/DebugPass.hpp>
 #include <RenderGraph/Passes/CopyToTexture.hpp>
 
@@ -15,7 +17,7 @@
 
 namespace Neon::RG
 {
-    void CreateStandard2DRenderGraph(
+    void CreateStandard3DRenderGraph(
         Scene::Component::Camera& CameraComponent,
         const flecs::entity&      Camera)
     {
@@ -27,6 +29,9 @@ namespace Neon::RG
             GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
             GBuffer.AttachRenderer<Renderer::MeshRenderer>();
         }
+
+        Builder.AddPass<SSAOPass>();
+        Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
         Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));

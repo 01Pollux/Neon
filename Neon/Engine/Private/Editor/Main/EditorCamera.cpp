@@ -7,7 +7,7 @@
 #include <Scene/Component/Camera.hpp>
 
 #include <RenderGraph/RG.hpp>
-#include <RenderGraph/Graphs/Standard2D.hpp>
+#include <RenderGraph/Graphs/Standard.hpp>
 
 #include <Input/System.hpp>
 
@@ -73,7 +73,7 @@ namespace Neon::Editor
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Perspective);
         {
             CameraComponent.Viewport.FieldOfView = Project::Config().EditorCameraFOV;
-            RG::CreateStandard2DRenderGraph(CameraComponent, Camera);
+            RG::CreateStandard3DRenderGraph(CameraComponent, Camera);
         }
         Camera.set(std::move(CameraComponent));
 
