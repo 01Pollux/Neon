@@ -153,7 +153,7 @@ namespace Neon::RHI
             MacrosCombined.emplace_back(StringUtils::Format(
                 STR("{}{}"),
                 Key,
-                Value.empty() ? STR("=1") : Value));
+                Value.empty() ? STR("=1") : (L'=' + Value)));
             Options.emplace_back(STR("-D"));
             Options.emplace_back(MacrosCombined.back().c_str());
         }
@@ -342,6 +342,9 @@ namespace Neon::RHI
 
         switch (Stage)
         {
+        case ShaderStage::Compute:
+            Model = STR("cs");
+            break;
         case ShaderStage::Vertex:
             Model = STR("vs");
             break;
@@ -357,6 +360,8 @@ namespace Neon::RHI
         case ShaderStage::Pixel:
             Model = STR("ps");
             break;
+        default:
+            std::unreachable();
         }
 
         switch (Profile)
@@ -382,6 +387,8 @@ namespace Neon::RHI
         case ShaderProfile::SP_6_6:
             Model += STR("_6_6");
             break;
+        default:
+            std::unreachable();
         }
 
         return Model;

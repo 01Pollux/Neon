@@ -51,6 +51,14 @@ namespace Neon::RG
         }
 
         /// <summary>
+        /// Called before executing the barriers for passes.
+        /// </summary>
+        virtual void PreDispatch(
+            const GraphStorage&)
+        {
+        }
+
+        /// <summary>
         /// Called when the render pass wants to dispatch.
         /// </summary>
         virtual void Dispatch(

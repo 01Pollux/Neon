@@ -164,22 +164,22 @@ namespace Neon::RHI
     //
 
     void Dx12CommonCommandList::SetDynamicResourceView(
-        ViewType    Type,
-        uint32_t    RootIndex,
-        const void* Data,
-        size_t      Size)
+        CstResourceViewType Type,
+        uint32_t            RootIndex,
+        const void*         Data,
+        size_t              Size)
     {
         const uint32_t Alignment =
-            Type == ViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
+            Type == CstResourceViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
 
         IGlobalBufferPool::BufferType BufferType;
         switch (Type)
         {
-        case ViewType::Cbv:
-        case ViewType::Srv:
+        case CstResourceViewType::Cbv:
+        case CstResourceViewType::Srv:
             BufferType = IGlobalBufferPool::BufferType::ReadWriteGPUR;
             break;
-        case ViewType::Uav:
+        case CstResourceViewType::Uav:
             BufferType = IGlobalBufferPool::BufferType::ReadWriteGPURW;
             break;
         }
@@ -188,7 +188,9 @@ namespace Neon::RHI
             Size,
             Alignment,
             BufferType);
-        dynamic_cast<IUploadBuffer*>(Buffer.Buffer)->Write(0, Data, Size);
+
+        Buffer.AsUpload()->Write(0, Data, Size);
+
         SetResourceView(
             Type,
             RootIndex,
@@ -229,24 +231,24 @@ namespace Neon::RHI
     }
 
     void Dx12GraphicsCommandList::SetResourceView(
-        ViewType          Type,
-        uint32_t          RootIndex,
-        GpuResourceHandle Handle)
+        CstResourceViewType Type,
+        uint32_t            RootIndex,
+        GpuResourceHandle   Handle)
     {
         D3D12_GPU_VIRTUAL_ADDRESS Dx12Handle{ Handle.Value };
         switch (Type)
         {
-        case ViewType::Cbv:
+        case CstResourceViewType::Cbv:
             m_CommandList->SetGraphicsRootConstantBufferView(
                 RootIndex,
                 Dx12Handle);
             break;
-        case ViewType::Srv:
+        case CstResourceViewType::Srv:
             m_CommandList->SetGraphicsRootShaderResourceView(
                 RootIndex,
                 Dx12Handle);
             break;
-        case ViewType::Uav:
+        case CstResourceViewType::Uav:
             m_CommandList->SetGraphicsRootUnorderedAccessView(
                 RootIndex,
                 Dx12Handle);
@@ -471,24 +473,24 @@ namespace Neon::RHI
     }
 
     void Dx12ComputeCommandList::SetResourceView(
-        ViewType          Type,
-        uint32_t          RootIndex,
-        GpuResourceHandle Handle)
+        CstResourceViewType Type,
+        uint32_t            RootIndex,
+        GpuResourceHandle   Handle)
     {
         D3D12_GPU_VIRTUAL_ADDRESS Dx12Handle{ Handle.Value };
         switch (Type)
         {
-        case ViewType::Cbv:
+        case CstResourceViewType::Cbv:
             m_CommandList->SetComputeRootConstantBufferView(
                 RootIndex,
                 Dx12Handle);
             break;
-        case ViewType::Srv:
+        case CstResourceViewType::Srv:
             m_CommandList->SetComputeRootShaderResourceView(
                 RootIndex,
                 Dx12Handle);
             break;
-        case ViewType::Uav:
+        case CstResourceViewType::Uav:
             m_CommandList->SetComputeRootUnorderedAccessView(
                 RootIndex,
                 Dx12Handle);

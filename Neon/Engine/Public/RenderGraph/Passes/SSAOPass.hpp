@@ -9,10 +9,8 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
-        struct Params
+        struct ParamsType
         {
-            std::vector<Vector4> Samples;
-
             float Radius           = 1.f;
             float Bias             = 0.01f;
             float Magnitude        = 1.5f;
@@ -99,6 +97,9 @@ namespace Neon::RG
         void GenerateNoise();
 
     protected:
+        void PreDispatch(
+            const GraphStorage&);
+
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
@@ -107,9 +108,51 @@ namespace Neon::RG
             RHI::IComputeCommandList* CommandList);
 
     private:
-        RHI::USyncTexture m_NoiseTexture;
+        /// <summary>
+        /// Get the SSAO parameters.
+        /// </summary>
+        [[nodiscard]] const ParamsType* GetSSAOParams() const
+        {
+            return std::launder(std::bit_cast<ParamsType*>(m_Params.get()));
+        }
+
+        /// <summary>
+        /// Get the SSAO parameters.
+        /// </summary>
+        [[nodiscard]] ParamsType* GetSSAOParams() noexcept
+        {
+            return std::launder(std::bit_cast<ParamsType*>(m_Params.get()));
+        }
+
+        /// <summary>
+        /// Get the SSAO samples.
+        /// </summary>
+        [[nodiscard]] Vector4* GetSSAOSamples()
+        {
+            return std::launder(std::bit_cast<Vector4*>(std::bit_cast<uint8_t*>(this) + sizeof(*this)));
+        }
+
+        /// <summary>
+        /// Get the SSAO params size.
+        /// </summary>
+        [[nodiscard]] size_t GetParamsSize() const noexcept
+        {
+            return sizeof(ParamsType) + sizeof(Vector4) * m_SampleCount;
+        }
+
+    private:
+        RHI::SSyncTexture m_NoiseTexture;
+        RHI::USyncBuffer  m_SamplesBuffer;
 
         Ptr<Renderer::IMaterial> m_Material;
-        Params                   m_Params;
+
+        /// <summary>
+        /// Raw blob containing the SSAO parameters.
+        /// Layout:
+        /// sizeof(ParamsType) + sizeof(Vector4) * SampleCount
+        /// </summary>
+        std::unique_ptr<uint8_t[]> m_Params;
+
+        size_t m_SampleCount = 0;
     };
 } // namespace Neon::RG

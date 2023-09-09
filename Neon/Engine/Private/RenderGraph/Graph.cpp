@@ -133,6 +133,11 @@ namespace Neon::RG
             Storage.CreateViews(Handle);
         }
 
+        for (auto& PassInfo : m_Passes)
+        {
+            PassInfo.Pass->PreDispatch(Storage);
+        }
+
         ExecuteBarriers(ChainedCommandList);
         ExecutePasses(ChainedCommandList);
 
@@ -215,7 +220,7 @@ namespace Neon::RG
                     RHI::CpuDescriptorHandle RtvHandle;
 
                     auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
-                    auto& ViewDesc = std::get<std::optional<RHI::RTVDesc>>(Storage.GetResourceView(RtvViewId, &RtvHandle));
+                    auto& ViewDesc = std::get<RHI::RTVDescOpt>(Storage.GetResourceView(RtvViewId, &RtvHandle));
 
                     auto& Desc = Handle.GetDesc();
                     RtvHandles.emplace_back(RtvHandle);
@@ -241,7 +246,7 @@ namespace Neon::RG
                 if (DepthStencil)
                 {
                     auto& Handle   = Storage.GetResource(DepthStencil->GetResource());
-                    auto& ViewDesc = std::get<std::optional<RHI::DSVDesc>>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
+                    auto& ViewDesc = std::get<RHI::DSVDescOpt>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
                     auto& Desc     = Handle.GetDesc();
 
                     std::optional<float>   Depth;

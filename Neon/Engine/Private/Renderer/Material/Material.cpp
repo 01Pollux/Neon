@@ -4,6 +4,7 @@
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
+#include <RHI/GlobalBuffer.hpp>
 
 #include <RHI/Resource/Views/ConstantBuffer.hpp>
 #include <RHI/Resource/Views/ShaderResource.hpp>
@@ -84,22 +85,22 @@ namespace Neon::Renderer
             {
                 auto& Root = Param.Root;
 
-                RHI::ICommonCommandList::ViewType ViewType;
+                RHI::CstResourceViewType ViewType;
                 switch (Root.Type)
                 {
                 case RHI::RootParameter::RootType::ConstantBuffer:
                 {
-                    ViewType = RHI::ICommonCommandList::ViewType::Cbv;
+                    ViewType = RHI::CstResourceViewType::Cbv;
                     break;
                 }
                 case RHI::RootParameter::RootType::ShaderResource:
                 {
-                    ViewType = RHI::ICommonCommandList::ViewType::Srv;
+                    ViewType = RHI::CstResourceViewType::Srv;
                     break;
                 }
                 case RHI::RootParameter::RootType::UnorderedAccess:
                 {
-                    ViewType = RHI::ICommonCommandList::ViewType::Uav;
+                    ViewType = RHI::CstResourceViewType::Uav;
                     break;
                 }
                 default:
@@ -461,25 +462,25 @@ namespace Neon::Renderer
                         View.Bind(Desc, DescriptorOffset);
                     },
                     [&Handle, &Resource, DescriptorOffset](
-                        const std::optional<RHI::SRVDesc>& Desc)
+                        const RHI::SRVDescOpt& Desc)
                     {
                         RHI::Views::ShaderResource View{ Handle };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     },
                     [&Handle, &Resource, &UavCounter, DescriptorOffset](
-                        const std::optional<RHI::UAVDesc>& Desc)
+                        const RHI::UAVDescOpt& Desc)
                     {
                         RHI::Views::UnorderedAccess View{ Handle };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
                     },
                     [&Handle, &Resource, DescriptorOffset](
-                        const std::optional<RHI::RTVDesc>& Desc)
+                        const RHI::RTVDescOpt& Desc)
                     {
                         RHI::Views::RenderTarget View{ Handle };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     },
                     [&Handle, &Resource, DescriptorOffset](
-                        const std::optional<RHI::DSVDesc>& Desc)
+                        const RHI::DSVDescOpt& Desc)
                     {
                         RHI::Views::DepthStencil View{ Handle };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
@@ -561,6 +562,41 @@ namespace Neon::Renderer
         {
             NEON_WARNING_TAG("Material", "'{}' is not a resource view", Name);
         }
+    }
+
+    void Material::SetDynamicResourceView(
+        const StringU8&          Name,
+        RHI::CstResourceViewType Type,
+        const void*              Data,
+        size_t                   Size)
+    {
+        const uint32_t Alignment =
+            Type == RHI::CstResourceViewType::Cbv ? 256 : 1;
+
+        using PoolBufferType = RHI::IGlobalBufferPool::BufferType;
+
+        PoolBufferType BufferType;
+        switch (Type)
+        {
+        case RHI::CstResourceViewType::Cbv:
+        case RHI::CstResourceViewType::Srv:
+            BufferType = PoolBufferType::ReadWriteGPUR;
+            break;
+        case RHI::CstResourceViewType::Uav:
+            BufferType = PoolBufferType::ReadWriteGPURW;
+            break;
+        }
+
+        RHI::UBufferPoolHandle Buffer(
+            Size,
+            Alignment,
+            BufferType);
+
+        Buffer.AsUpload()->Write(0, Data, Size);
+
+        SetResourceView(
+            Name,
+            Buffer.GetGpuHandle());
     }
 
     void Material::SetResourceSize(

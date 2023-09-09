@@ -16,7 +16,6 @@
 namespace Neon::RG
 {
     GraphStorage::GraphStorage() :
-        // TODO: use pool?
         m_CameraFrameData(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 255) }))
     {
     }
@@ -102,6 +101,19 @@ namespace Neon::RG
     {
         return GetResource(ResourceResolver::GetOutputImageTag());
     }
+
+    Size2I GraphStorage::GetOutputImageSize() const
+    {
+        return m_OutputImageSize ? *m_OutputImageSize : RHI::ISwapchain::Get()->GetSize();
+    }
+
+    void GraphStorage::SetOutputImageSize(
+        std::optional<Size2I> Size)
+    {
+        m_OutputImageSize = std::move(Size);
+    }
+
+    //
 
     CameraFrameData& GraphStorage::MapFrameData() const
     {
@@ -304,25 +316,25 @@ namespace Neon::RG
                         View.Bind(Desc);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::SRVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const RHI::SRVDescOpt& Desc)
                     {
                         RHI::Views::ShaderResource View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::UAVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const RHI::UAVDescOpt& Desc)
                     {
                         RHI::Views::UnorderedAccess View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::RTVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const RHI::RTVDescOpt& Desc)
                     {
                         RHI::Views::RenderTarget View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::RenderTargetView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
                         ViewDescHandle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const std::optional<RHI::DSVDesc>& Desc)
+                    [&ViewDescHandle, Resource, this](const RHI::DSVDescOpt& Desc)
                     {
                         RHI::Views::DepthStencil View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::DepthStencilView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);

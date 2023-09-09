@@ -109,14 +109,14 @@ void CS_Main(
 	float2 Resolution = c_PerFrameData.ScreenResolution * c_SSAOParams.ResolutionFactor;
 	float2 UV = DTID.xy / Resolution;
 	
-	float3 Normal = c_NormalMap.Sample(c_Sampler_LinearClamp, UV).xyz;
+	float3 Normal = c_NormalMap.SampleLevel(c_Sampler_LinearClamp, UV, 0.f).xyz;
 	Normal = Normal * 2.f - 1.f;
 	Normal = normalize(Normal);
 	
-	float Depth = c_DepthMap.Sample(c_Sampler_LinearClamp, UV).x;
+	float Depth = c_DepthMap.SampleLevel(c_Sampler_LinearClamp, UV, 0.f).x;
 	float3 Position = UVToViewPosition(UV, Depth);
 	
-	float3 Random = normalize(c_NoiseMap.Sample(c_Sampler_LinearWrap, UV).xyz * 2.f - 1.f);
+	float3 Random = normalize(c_NoiseMap.SampleLevel(c_Sampler_LinearWrap, UV, 0.f).xyz * 2.f - 1.f);
 	
 	float3 Tangent = normalize(Random - Normal * dot(Random, Normal));
 	float3 Bitangent = cross(Normal, Tangent);
@@ -133,7 +133,7 @@ void CS_Main(
 		float3 SampleUV = mul(float4(SamplePos, 1.f), c_PerFrameData.ViewProjection).xyw;
 		SampleUV.xy = ((SampleUV.xy / SampleUV.z) * .5f * float2(1.f, -1.f) + .5f);
 		
-		float SampleDepth = c_DepthMap.Sample(c_Sampler_LinearClamp, SampleUV.xy);
+		float SampleDepth = c_DepthMap.SampleLevel(c_Sampler_LinearClamp, SampleUV.xy, 0.f);
 		SampleDepth = UVToViewPosition(SampleUV.xy, SampleDepth).z;
 		
 		float Occluded = step(SampleDepth + c_SSAOParams.Bias, SamplePos.z);

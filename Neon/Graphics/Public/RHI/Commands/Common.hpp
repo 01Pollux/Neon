@@ -8,4 +8,11 @@ namespace Neon::RHI
         Compute,
         Copy
     };
+
+    enum class CstResourceViewType : uint8_t
+    {
+        Cbv,
+        Srv,
+        Uav
+    };
 } // namespace Neon::RHI

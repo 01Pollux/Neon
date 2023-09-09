@@ -66,13 +66,13 @@ namespace Neon::RG
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
-                [&State, &Flags](const std::optional<RHI::UAVDesc>& Desc)
+                [&State, &Flags](const RHI::UAVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::RTVDesc>& Desc)
+                [&State, &Flags, this, &ViewId](const RHI::RTVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::RenderTarget);
@@ -80,7 +80,7 @@ namespace Neon::RG
 
                     m_RenderTargets.emplace_back(ViewId);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>& Desc)
+                [&State, &Flags, this, &ViewId](const RHI::DSVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthWrite);
@@ -137,17 +137,17 @@ namespace Neon::RG
                 {
                     State.Set(RHI::EResourceState::ConstantBuffer);
                 },
-                [&State, &Flags](const std::optional<RHI::SRVDesc>& Desc)
+                [&State, &Flags](const RHI::SRVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                 },
-                [&State, &Flags](const std::optional<RHI::UAVDesc>& Desc)
+                [&State, &Flags](const RHI::UAVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const std::optional<RHI::DSVDesc>& Desc)
+                [&State, &Flags, this, &ViewId](const RHI::DSVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthRead);

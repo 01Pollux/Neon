@@ -61,10 +61,10 @@ namespace Neon::RHI
 
     public:
         void SetDynamicResourceView(
-            ViewType    Type,
-            uint32_t    RootIndex,
-            const void* Data,
-            size_t      Size) override;
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size) override;
 
     public:
         /// <summary>
@@ -115,9 +115,9 @@ namespace Neon::RHI
             size_t      DestOffset = 0) override;
 
         void SetResourceView(
-            ViewType          Type,
-            uint32_t          RootIndex,
-            GpuResourceHandle Handle) override;
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle) override;
 
         void SetDescriptorTable(
             uint32_t            RootIndex,
@@ -167,9 +167,9 @@ namespace Neon::RHI
             size_t      DestOffset = 0) override;
 
         void SetResourceView(
-            ViewType          Type,
-            uint32_t          RootIndex,
-            GpuResourceHandle Handle) override;
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle) override;
 
         void SetDescriptorTable(
             uint32_t            RootIndex,

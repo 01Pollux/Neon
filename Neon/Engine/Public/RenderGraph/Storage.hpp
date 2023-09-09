@@ -74,6 +74,17 @@ namespace Neon::RG
         /// </summary>
         [[nodiscard]] const ResourceHandle& GetOutputImage() const;
 
+        /// <summary>
+        /// Get output image size
+        /// </summary>
+        [[nodiscard]] Size2I GetOutputImageSize() const;
+
+        /// <summary>
+        /// Set output image size
+        /// </summary>
+        [[nodiscard]] void SetOutputImageSize(
+            std::optional<Size2I> Size);
+
     public:
         /// <summary>
         /// Map global frame data to system memory
@@ -172,5 +183,7 @@ namespace Neon::RG
         ResourceMapType          m_Resources;
         std::set<ResourceId>     m_ImportedResources;
         InactiveResourceListType m_InactiveResources;
+
+        std::optional<Size2I> m_OutputImageSize;
     };
 } // namespace Neon::RG

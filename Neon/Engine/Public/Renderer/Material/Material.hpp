@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <RHI/Resource/Descriptor.hpp>
+#include <RHI/Commands/Common.hpp>
 
 #include <map>
 #include <vector>
@@ -64,17 +65,17 @@ namespace Neon::Renderer
         /// Set the material's resource.
         /// </summary>
         virtual void SetResource(
-            const std::string&             Name,
+            const StringU8&                Name,
             const Ptr<RHI::IGpuResource>&  Resource,
             const RHI::DescriptorViewDesc& Desc,
             uint32_t                       ArrayIndex = 0,
-            const Ptr<RHI::IGpuResource>&  UavCounter = nullptr) = 0;
+            const Ptr<RHI::IGpuResource>&  Counter    = nullptr) = 0;
 
         /// <summary>
         /// Set the material's resource as a sampler.
         /// </summary>
         virtual void SetResource(
-            const std::string&      Name,
+            const StringU8&         Name,
             const RHI::SamplerDesc& Desc,
             uint32_t                ArrayIndex = 0) = 0;
 
@@ -82,17 +83,26 @@ namespace Neon::Renderer
         /// Set the material's resource as a sampler.
         /// </summary>
         virtual void SetResourceView(
-            const std::string&     Name,
+            const StringU8&        Name,
             RHI::GpuResourceHandle Handle) = 0;
+
+        /// <summary>
+        /// Set the material's resource as a sampler.
+        /// </summary>
+        virtual void SetDynamicResourceView(
+            const StringU8&          Name,
+            RHI::CstResourceViewType Type,
+            const void*              Data,
+            size_t                   Size) = 0;
 
         /// <summary>
         /// Set the material's resource as a constant.
         /// </summary>
         virtual void SetConstant(
-            const std::string& Name,
-            const void*        Data,
-            size_t             Size,
-            uint32_t           Offset = 0) = 0;
+            const StringU8& Name,
+            const void*     Data,
+            size_t          Size,
+            uint32_t        Offset = 0) = 0;
 
         /// <summary>
         /// Set the material's resource size.
@@ -108,7 +118,7 @@ namespace Neon::Renderer
         /// Set the material's resource as a constant buffer view.
         /// </summary>
         void SetConstantBuffer(
-            const std::string&            Name,
+            const StringU8&               Name,
             const Ptr<RHI::IGpuResource>& Resource,
             const RHI::CBVDesc&           Desc,
             uint32_t                      ArrayIndex = 0)
@@ -120,9 +130,9 @@ namespace Neon::Renderer
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetTexture(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
-            const std::optional<RHI::SRVDesc>& Desc       = std::nullopt,
+            const RHI::SRVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
@@ -132,9 +142,9 @@ namespace Neon::Renderer
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetStructuredBuffer(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
-            const std::optional<RHI::SRVDesc>& Desc       = std::nullopt,
+            const RHI::SRVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetTexture(Name, Resource, Desc, ArrayIndex);
@@ -144,9 +154,9 @@ namespace Neon::Renderer
         /// Set the material's resource as an unordered access view.
         /// </summary>
         void SetUnorderedAcess(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
-            const std::optional<RHI::UAVDesc>& Desc       = std::nullopt,
+            const RHI::UAVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
@@ -156,10 +166,10 @@ namespace Neon::Renderer
         /// Set the material's resource as an unordered access view.
         /// </summary>
         void SetUnorderedAcess(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
             const Ptr<RHI::IGpuResource>&      Counter,
-            const std::optional<RHI::UAVDesc>& Desc       = std::nullopt,
+            const RHI::UAVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex, Counter);
@@ -169,9 +179,9 @@ namespace Neon::Renderer
         /// Set the material's resource as a render target view.
         /// </summary>
         void SetRenderTarget(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
-            const std::optional<RHI::RTVDesc>& Desc       = std::nullopt,
+            const RHI::RTVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
@@ -181,9 +191,9 @@ namespace Neon::Renderer
         /// Set the material's resource as a depth stencil view.
         /// </summary>
         void SetDepthStencil(
-            const std::string&                 Name,
+            const StringU8&                    Name,
             const Ptr<RHI::IGpuResource>&      Resource,
-            const std::optional<RHI::DSVDesc>& Desc       = std::nullopt,
+            const RHI::DSVDescOpt& Desc       = std::nullopt,
             uint32_t                           ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);

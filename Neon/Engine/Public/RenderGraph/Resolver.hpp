@@ -83,7 +83,7 @@ namespace Neon::RG
         /// </summary>
         const ResourceViewId& WriteResource(
             const ResourceViewId&       ViewId,
-            std::optional<RHI::UAVDesc> Desc = std::nullopt)
+            RHI::UAVDescOpt Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -93,7 +93,7 @@ namespace Neon::RG
         /// </summary>
         const ResourceViewId& WriteRenderTarget(
             const ResourceViewId&       ViewId,
-            std::optional<RHI::RTVDesc> Desc = std::nullopt)
+            RHI::RTVDescOpt Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -103,7 +103,7 @@ namespace Neon::RG
         /// </summary>
         const ResourceViewId& WriteDepthStencil(
             const ResourceViewId&       ViewId,
-            std::optional<RHI::DSVDesc> Desc = std::nullopt)
+            RHI::DSVDescOpt Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -135,7 +135,7 @@ namespace Neon::RG
         const ResourceViewId& ReadTexture(
             const ResourceViewId&       ViewId,
             ResourceReadAccess          ReadAccess,
-            std::optional<RHI::SRVDesc> Desc = std::nullopt)
+            RHI::SRVDescOpt Desc = std::nullopt)
         {
             return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -146,7 +146,7 @@ namespace Neon::RG
         const ResourceViewId& ReadDepthStencil(
             const ResourceViewId&       ViewId,
             ResourceReadAccess          ReadAccess,
-            std::optional<RHI::DSVDesc> Desc = std::nullopt)
+            RHI::DSVDescOpt Desc = std::nullopt)
         {
             return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
         }

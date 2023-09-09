@@ -43,11 +43,11 @@ namespace Neon::RG
         };
 
         std::array RenderTargets{
-            std::pair{ ResourceId(STR("GBufferAlbedo")), MakeResourceDesc(0) },
-            std::pair{ ResourceId(STR("GBufferNormal")), MakeResourceDesc(1) },
-            std::pair{ ResourceId(STR("GBufferEmissive")), MakeResourceDesc(2) },
+            std::pair{ ResourceId(ResourceNames[0]), MakeResourceDesc(0) },
+            std::pair{ ResourceId(ResourceNames[1]), MakeResourceDesc(1) },
+            std::pair{ ResourceId(ResourceNames[2]), MakeResourceDesc(2) },
 
-            std::pair{ ResourceId(STR("GBufferDepth")), MakeResourceDesc(3, true) },
+            std::pair{ ResourceId(ResourceNames[3]), MakeResourceDesc(3, true) },
         };
         static_assert(RenderTargets.size() == std::size(RenderTargetsFormats), "RenderTargetsFormats and RenderTargets must have the same size");
 

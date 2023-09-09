@@ -83,14 +83,20 @@ namespace Neon::Renderer
             uint32_t                ArrayIndex = 0) override;
 
         void SetConstant(
-            const std::string& Name,
-            const void*        Data,
-            size_t             Size,
-            uint32_t           Offset) override;
+            const StringU8& Name,
+            const void*     Data,
+            size_t          Size,
+            uint32_t        Offset) override;
 
         void SetResourceView(
-            const std::string&     Name,
+            const StringU8&        Name,
             RHI::GpuResourceHandle Handle) override;
+
+        void SetDynamicResourceView(
+            const StringU8&          Name,
+            RHI::CstResourceViewType Type,
+            const void*              Data,
+            size_t                   Size) override;
 
         void SetResourceSize(
             const StringU8& Name,
@@ -104,8 +110,8 @@ namespace Neon::Renderer
 
         struct RootEntry
         {
-            RHI::GpuResourceHandle            Handle{};
-            RHI::ICommonCommandList::ViewType ViewType;
+            RHI::GpuResourceHandle   Handle{};
+            RHI::CstResourceViewType ViewType;
         };
 
         struct DescriptorEntry

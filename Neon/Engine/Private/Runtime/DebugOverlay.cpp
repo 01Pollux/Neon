@@ -265,7 +265,7 @@ namespace Neon::Runtime
         VertexBuffers.back()->Unmap();
 
         CommandList->SetRootSignature(Material->GetRootSignature());
-        CommandList->SetResourceView(RHI::IGraphicsCommandList::ViewType::Cbv, 0, PerFrameData);
+        CommandList->SetResourceView(RHI::CstResourceViewType::Cbv, 0, PerFrameData);
 
         CommandList->SetPipelineState(Material->GetPipelineState());
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);

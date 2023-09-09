@@ -55,7 +55,7 @@ namespace Neon::RHI
     struct CBVDesc
     {
         GpuResourceHandle Resource;
-        size_t            Size;
+        size_t            Size = 0;
     };
 
     //
@@ -64,37 +64,37 @@ namespace Neon::RHI
     {
         struct Buffer
         {
-            size_t   FirstElement;
-            uint32_t Count;
-            uint32_t SizeOfStruct;
-            bool     Raw : 1;
+            size_t   FirstElement = 0;
+            uint32_t Count        = 0;
+            uint32_t SizeOfStruct = 0;
+            bool     Raw : 1      = false;
         };
 
         struct Texture1D
         {
-            uint32_t MostDetailedMip;
-            uint32_t MipLevels;
-            float    MinLODClamp;
+            uint32_t MostDetailedMip = 0;
+            uint32_t MipLevels       = 1;
+            float    MinLODClamp     = 0.f;
         };
 
         struct Texture1DArray : Texture1D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2D
         {
-            uint32_t MostDetailedMip;
-            uint32_t MipLevels;
-            uint32_t PlaneSlice;
-            float    MinLODClamp;
+            uint32_t MostDetailedMip = 0;
+            uint32_t MipLevels       = 1;
+            uint32_t PlaneSlice      = 0;
+            float    MinLODClamp     = 0.f;
         };
 
         struct Texture2DArray : Texture2D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2DMS
@@ -104,14 +104,14 @@ namespace Neon::RHI
         struct Texture2DMSArray : Texture2DMS
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture3D
         {
-            uint32_t MostDetailedMip;
-            uint32_t MipLevels;
-            float    MinLODClamp;
+            uint32_t MostDetailedMip = 0;
+            uint32_t MipLevels       = 1;
+            float    MinLODClamp     = 0.f;
         };
 
         struct TextureCube : Texture3D
@@ -121,7 +121,7 @@ namespace Neon::RHI
         struct TextureCubeArray : TextureCube
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct RaytracingAccelerationStructure
@@ -156,41 +156,41 @@ namespace Neon::RHI
     {
         struct Buffer
         {
-            size_t   FirstElement;
-            uint32_t Count;
-            uint32_t SizeOfStruct;
-            size_t   CounterOffset;
-            bool     Raw : 1;
+            size_t   FirstElement  = 0;
+            uint32_t Count         = 0;
+            uint32_t SizeOfStruct  = 0;
+            size_t   CounterOffset = 0;
+            bool     Raw : 1       = false;
         };
 
         struct Texture1D
         {
-            uint32_t MipSlice;
+            uint32_t MipSlice = 0;
         };
 
         struct Texture1DArray : Texture1D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2D
         {
-            uint32_t MipSlice;
-            uint32_t PlaneSlice;
+            uint32_t MipSlice   = 0;
+            uint32_t PlaneSlice = 0;
         };
 
         struct Texture2DArray : Texture2D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture3D
         {
-            uint32_t MipSlice;
-            uint32_t FirstWSlice;
-            uint32_t Size;
+            uint32_t MipSlice    = 0;
+            uint32_t FirstWSlice = 0;
+            uint32_t Size        = 0;
         };
 
         using ViewVariant = std::variant<
@@ -227,31 +227,31 @@ namespace Neon::RHI
     {
         struct Buffer
         {
-            size_t   FirstElement;
-            uint32_t Count;
+            size_t   FirstElement = 0;
+            uint32_t Count        = 0;
         };
 
         struct Texture1D
         {
-            uint32_t MipSlice;
+            uint32_t MipSlice = 0;
         };
 
         struct Texture1DArray : Texture1D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2D
         {
-            uint32_t MipSlice;
-            uint32_t PlaneSlice;
+            uint32_t MipSlice   = 0;
+            uint32_t PlaneSlice = 0;
         };
 
         struct Texture2DArray : Texture2D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2DMS
@@ -261,14 +261,14 @@ namespace Neon::RHI
         struct Texture2DMSArray : Texture2DMS
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture3D
         {
-            uint32_t MipSlice;
-            uint32_t FirstWSlice;
-            uint32_t WSize;
+            uint32_t MipSlice    = 0;
+            uint32_t FirstWSlice = 0;
+            uint32_t WSize       = 0;
         };
 
         using ViewVariant = std::variant<
@@ -322,24 +322,24 @@ namespace Neon::RHI
     {
         struct Texture1D
         {
-            uint32_t MipSlice;
+            uint32_t MipSlice = 0;
         };
 
         struct Texture1DArray : Texture1D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2D
         {
-            uint32_t MipSlice;
+            uint32_t MipSlice = 0;
         };
 
         struct Texture2DArray : Texture2D
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         struct Texture2DMS
@@ -349,7 +349,7 @@ namespace Neon::RHI
         struct Texture2DMSArray : Texture2DMS
         {
             uint32_t StartSlice = 0;
-            uint32_t Size;
+            uint32_t Size       = 0;
         };
 
         using ViewVariant = std::variant<
@@ -379,13 +379,18 @@ namespace Neon::RHI
 
     //
 
+    using SRVDescOpt = std::optional<SRVDesc>;
+    using UAVDescOpt = std::optional<UAVDesc>;
+    using RTVDescOpt = std::optional<RTVDesc>;
+    using DSVDescOpt = std::optional<DSVDesc>;
+
     using DescriptorViewDesc = std::variant<
         std::monostate,
         CBVDesc,
-        std::optional<SRVDesc>,
-        std::optional<UAVDesc>,
-        std::optional<RTVDesc>,
-        std::optional<DSVDesc>>;
+        SRVDescOpt,
+        UAVDescOpt,
+        RTVDescOpt,
+        DSVDescOpt>;
 
     //
 

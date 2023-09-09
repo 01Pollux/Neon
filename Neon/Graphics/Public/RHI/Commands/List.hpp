@@ -121,13 +121,6 @@ namespace Neon::RHI
     class ICommonCommandList : public virtual ICommandList
     {
     public:
-        enum class ViewType : uint8_t
-        {
-            Cbv,
-            Srv,
-            Uav
-        };
-
         /// <summary>
         /// Set root signature
         /// </summary>
@@ -154,18 +147,18 @@ namespace Neon::RHI
         /// Set resource view in root signature
         /// </summary>
         virtual void SetResourceView(
-            ViewType          Type,
-            uint32_t          RootIndex,
-            GpuResourceHandle Handle) = 0;
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle) = 0;
 
         /// <summary>
         /// Allocate from dynamic buffer and set resource view in root signature
         /// </summary>
         virtual void SetDynamicResourceView(
-            ViewType    Type,
-            uint32_t    RootIndex,
-            const void* Data,
-            size_t      Size) = 0;
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size) = 0;
 
         /// <summary>
         /// Set descriptor table in root signature
