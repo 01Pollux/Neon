@@ -32,7 +32,7 @@ namespace Neon::RG
         struct ChainedCommandList
         {
             RHI::ICommonCommandList* CommandList = nullptr;
-            bool                     IsDirect    = false;
+            bool                     IsDirect    = true;
 
             RHI::GraphicsCommandContext RenderContext;
             RHI::ComputeCommandContext  ComputeContext;
@@ -53,7 +53,8 @@ namespace Neon::RG
             /// <summary>
             /// Get the previously available command list or append new one
             /// </summary>
-            [[nodiscard]] RHI::ICommonCommandList* Load();
+            [[nodiscard]] RHI::ICommonCommandList* Load(
+                bool Direct);
 
             /// <summary>
             /// Prepare the command list for recording

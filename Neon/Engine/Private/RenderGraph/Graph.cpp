@@ -166,7 +166,7 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        StateManager->FlushBarriers(ChainedCommandList.Load());
+        StateManager->FlushBarriers(ChainedCommandList.Load(ChainedCommandList.IsDirect));
     }
 
     //
@@ -177,7 +177,9 @@ namespace Neon::RG
         // If we have more than one pass, we need to synchronize them
         // therefore we need to flush the chained command list we previously created
         const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
-        const bool ShouldFlush = m_Passes.size() > 1 || (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect);
+        const bool ShouldFlush = m_Passes.size() > 1 ||
+                                 (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect) ||
+                                 (ChainedCommandList.ComputeContext.Size() && ChainedCommandList.RenderContext.Size());
         if (ShouldFlush)
         {
             ChainedCommandList.Flush();
@@ -205,7 +207,7 @@ namespace Neon::RG
                 }
                 else
                 {
-                    RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(ChainedCommandList.Load());
+                    RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(ChainedCommandList.Load(true));
                 }
                 CommandList = RenderCommandList;
 
@@ -346,11 +348,11 @@ namespace Neon::RG
                 if (Threaded && ShouldFlush)
                 {
                     std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    CommandList = ChainedCommandList.RenderContext.Append();
+                    CommandList = ChainedCommandList.ComputeContext.Append();
                 }
                 else
                 {
-                    CommandList = ChainedCommandList.Load();
+                    CommandList = ChainedCommandList.Load(false);
                 }
                 break;
             }
@@ -405,15 +407,25 @@ namespace Neon::RG
         }
     }
 
-    RHI::ICommonCommandList* RenderGraph::ChainedCommandList::Load()
+    //
+
+    RHI::ICommonCommandList* RenderGraph::ChainedCommandList::Load(
+        bool Direct)
     {
         if (CommandList) [[likely]]
         {
             return CommandList;
         }
 
-        IsDirect           = true;
-        return CommandList = RenderContext.Append();
+        if (IsDirect = Direct)
+        {
+            CommandList = RenderContext.Append();
+        }
+        else
+        {
+            CommandList = ComputeContext.Append();
+        }
+        return CommandList;
     }
 
     void RenderGraph::ChainedCommandList::Preload(
@@ -427,7 +439,7 @@ namespace Neon::RG
             }
             Flush();
         }
-        if (IsDirect)
+        if (this->IsDirect = IsDirect)
         {
             CommandList = RenderContext.Append();
         }
@@ -435,7 +447,6 @@ namespace Neon::RG
         {
             CommandList = ComputeContext.Append();
         }
-        this->IsDirect = IsDirect;
     }
 
     void RenderGraph::ChainedCommandList::Flush()

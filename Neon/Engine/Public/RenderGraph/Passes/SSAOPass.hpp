@@ -129,7 +129,7 @@ namespace Neon::RG
         /// </summary>
         [[nodiscard]] Vector4* GetSSAOSamples()
         {
-            return std::launder(std::bit_cast<Vector4*>(std::bit_cast<uint8_t*>(this) + sizeof(*this)));
+            return std::launder(std::bit_cast<Vector4*>(std::bit_cast<uint8_t*>(m_Params.get()) + sizeof(ParamsType)));
         }
 
         /// <summary>
