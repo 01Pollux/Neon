@@ -409,14 +409,16 @@ namespace Neon::RHI
 
     void Dx12RenderDevice::CreateDefaultTextures()
     {
-        // Debug miplevels
         auto Desc2D   = ResourceDesc::Tex2D(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
         auto Desc3D   = ResourceDesc::Tex3D(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
         auto DescCube = ResourceDesc::TexCube(EResourceFormat::R8G8B8A8_UNorm, 1, 1, 1);
 
         SubresourceDesc Subresource{
-            .RowPitch   = 4,
-            .SlicePitch = 4,
+            RHI::ComputeSubresource(
+                RHI::EResourceFormat::R8G8B8A8_UNorm,
+                nullptr,
+                1,
+                1)
         };
         std::span<SubresourceDesc>     Subresource2D{};
         std::span<SubresourceDesc>     Subresource3D{};

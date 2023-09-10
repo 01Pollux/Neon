@@ -1,4 +1,6 @@
 #include <EnginePCH.hpp>
+#include <Math/Common.hpp>
+
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Storage.hpp>
 

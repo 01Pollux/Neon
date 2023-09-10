@@ -182,10 +182,11 @@ namespace Neon::RG
         }
 
         std::array Subresource{
-            RHI::SubresourceDesc{
-                .Data       = NoiseData.data(),
-                .RowPitch   = 8 * sizeof(Vector4),
-                .SlicePitch = 0 }
+            RHI::ComputeSubresource(
+                RHI::EResourceFormat::R32G32B32A32_Float,
+                NoiseData.data(),
+                8,
+                8)
         };
 
         m_NoiseTexture = RHI::SSyncTexture(

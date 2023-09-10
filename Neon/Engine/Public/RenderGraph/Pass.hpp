@@ -1,13 +1,7 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
-
-namespace Neon::RHI
-{
-    class ICommandList;
-    class IGraphicsCommandList;
-    class IComputeCommandList;
-} // namespace Neon::RHI
+#include <RHI/Commands/List.hpp>
 
 namespace Neon::RG
 {

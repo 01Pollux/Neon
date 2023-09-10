@@ -44,6 +44,229 @@ namespace Neon::RHI
 
     //
 
+    namespace CSubresourceFlags
+    {
+        // BC formats with malformed mipchain blocks smaller than 4x4
+        static uint32_t Bad_Dxtn_Tails = 1 << 0;
+
+        // Override with a legacy 24 bits-per-pixel format size
+        static uint32_t Override_With_24BPP = 1 << 1;
+
+        // Override with a legacy 16 bits-per-pixel format size
+        static uint32_t Override_With_16BPP = 1 << 2;
+
+        // Override with a legacy 8 bits-per-pixel format size
+        static uint32_t Override_With_8BPP = 1 << 3;
+
+        // Assume pitch is DWORD aligned instead of BYTE aligned
+        static uint32_t Assume_Dword_Aligned = 1 << 4;
+
+        // Assume pitch is 16-byte aligned instead of BYTE aligned
+        static uint32_t Assume_Word_Aligned = 1 << 4;
+
+        // Assume pitch is 32-byte aligned instead of BYTE aligned
+        static uint32_t Assume_32_Bytes_Aligned = 1 << 4;
+
+        // Assume pitch is 64-byte aligned instead of BYTE aligned
+        static uint32_t Assume_64_Bytes_Aligned = 1 << 4;
+
+        // Assume pitch is 4096-byte aligned instead of BYTE aligned
+        static uint32_t Assume_4K_Bytes_Aligned = 1 << 4;
+    } // namespace CSubresourceFlags
+
+    /// <summary>
+    /// Computes the image row pitch in bytes, and the slice ptich (size in bytes of the image)
+    /// based on DXGI format, width, and height
+    /// https://github.com/microsoft/DirectXTex/blob/main/DirectXTex/DirectXTexUtil.cpp#L918
+    /// </summary>
+    [[nodiscard]] static SubresourceDesc ComputeSubresource(
+        EResourceFormat Format,
+        const void*     Data,
+        uint32_t        Width,
+        uint32_t        Height,
+        uint32_t        Flags = 0)
+    {
+        SubresourceDesc Desc{ .Data = Data };
+        switch (Format)
+        {
+        case EResourceFormat::BC1_Typeless:
+        case EResourceFormat::BC1_UNorm:
+        case EResourceFormat::BC1_UNorm_SRGB:
+        case EResourceFormat::BC4_Typeless:
+        case EResourceFormat::BC4_UNorm:
+        case EResourceFormat::BC4_SNorm:
+            if (Flags & CSubresourceFlags::Bad_Dxtn_Tails)
+            {
+                const size_t nbw = Width >> 2;
+                const size_t nbh = Height >> 2;
+                Desc.RowPitch    = std::max<uint64_t>(1u, uint64_t(nbw) * 8u);
+                Desc.SlicePitch  = std::max<uint64_t>(1u, Desc.RowPitch * uint64_t(nbh));
+            }
+            else
+            {
+                const uint64_t nbw = std::max<uint64_t>(1u, (uint64_t(Width) + 3u) / 4u);
+                const uint64_t nbh = std::max<uint64_t>(1u, (uint64_t(Height) + 3u) / 4u);
+                Desc.RowPitch      = nbw * 8u;
+                Desc.SlicePitch    = Desc.RowPitch * nbh;
+            }
+            break;
+
+        case EResourceFormat::BC2_Typeless:
+        case EResourceFormat::BC2_UNorm:
+        case EResourceFormat::BC2_UNorm_SRGB:
+        case EResourceFormat::BC3_Typeless:
+        case EResourceFormat::BC3_UNorm:
+        case EResourceFormat::BC3_UNorm_SRGB:
+        case EResourceFormat::BC5_Typeless:
+        case EResourceFormat::BC5_UNorm:
+        case EResourceFormat::BC5_SNorm:
+        case EResourceFormat::BC6H_Typeless:
+        case EResourceFormat::BC6H_UF16:
+        case EResourceFormat::BC6H_SF16:
+        case EResourceFormat::BC7_Typeless:
+        case EResourceFormat::BC7_UNorm:
+        case EResourceFormat::BC7_UNorm_SRGB:
+            if (Flags & CSubresourceFlags::Bad_Dxtn_Tails)
+            {
+                const size_t nbw = Width >> 2;
+                const size_t nbh = Height >> 2;
+                Desc.RowPitch    = std::max<uint64_t>(1u, uint64_t(nbw) * 16u);
+                Desc.SlicePitch  = std::max<uint64_t>(1u, Desc.RowPitch * uint64_t(nbh));
+            }
+            else
+            {
+                const uint64_t nbw = std::max<uint64_t>(1u, (uint64_t(Width) + 3u) / 4u);
+                const uint64_t nbh = std::max<uint64_t>(1u, (uint64_t(Height) + 3u) / 4u);
+                Desc.RowPitch      = nbw * 16u;
+                Desc.SlicePitch    = Desc.RowPitch * nbh;
+            }
+            break;
+
+        case EResourceFormat::R8G8_B8G8_UNorm:
+        case EResourceFormat::G8R8_G8B8_UNorm:
+        case EResourceFormat::YUY2:
+            Desc.RowPitch   = ((uint64_t(Width) + 1u) >> 1) * 4u;
+            Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+            break;
+
+        case EResourceFormat::Y210:
+        case EResourceFormat::Y216:
+            Desc.RowPitch   = ((uint64_t(Width) + 1u) >> 1) * 8u;
+            Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+            break;
+
+        case EResourceFormat::NV12:
+        case EResourceFormat::Opaque_420:
+            if ((Height % 2) != 0) [[unlikely]]
+            {
+                Desc.Data = nullptr;
+                break;
+            }
+            Desc.RowPitch   = ((uint64_t(Width) + 1u) >> 1) * 2u;
+            Desc.SlicePitch = Desc.RowPitch * (uint64_t(Height) + ((uint64_t(Height) + 1u) >> 1));
+            break;
+
+        case EResourceFormat::P010:
+        case EResourceFormat::P016:
+            if ((Height % 2) != 0) [[unlikely]]
+            {
+                Desc.Data = nullptr;
+                break;
+            }
+            [[fallthrough]];
+
+        case EResourceFormat::NV11:
+            Desc.RowPitch   = ((uint64_t(Width) + 3u) >> 2) * 4u;
+            Desc.SlicePitch = Desc.RowPitch * uint64_t(Height) * 2u;
+            break;
+
+        case EResourceFormat::P208:
+            Desc.RowPitch   = ((uint64_t(Width) + 1u) >> 1) * 2u;
+            Desc.SlicePitch = Desc.RowPitch * uint64_t(Height) * 2u;
+            break;
+
+        case EResourceFormat::V208:
+            if ((Height % 2) != 0) [[unlikely]]
+            {
+                Desc.Data = nullptr;
+                break;
+            }
+            Desc.RowPitch   = uint64_t(Width);
+            Desc.SlicePitch = Desc.RowPitch * (uint64_t(Height) + (((uint64_t(Height) + 1u) >> 1) * 2u));
+            break;
+
+        case EResourceFormat::V408:
+            Desc.RowPitch   = uint64_t(Width);
+            Desc.SlicePitch = Desc.RowPitch * (uint64_t(Height) + (uint64_t(Height >> 1) * 4u));
+            break;
+
+        default:
+        {
+            size_t BPP;
+
+            if (Flags & CSubresourceFlags::Override_With_24BPP)
+                BPP = 24;
+            else if (Flags & CSubresourceFlags::Override_With_16BPP)
+                BPP = 16;
+            else if (Flags & CSubresourceFlags::Override_With_8BPP)
+                BPP = 8;
+            else
+                BPP = BitsPerPixel(Format);
+
+            if (!BPP)
+            {
+                Desc.Data = nullptr;
+                break;
+            }
+
+            if (Flags & (CSubresourceFlags::Assume_Dword_Aligned |
+                         CSubresourceFlags::Assume_Word_Aligned |
+                         CSubresourceFlags::Assume_32_Bytes_Aligned |
+                         CSubresourceFlags::Assume_64_Bytes_Aligned |
+                         CSubresourceFlags::Assume_4K_Bytes_Aligned))
+            {
+                if (Flags & CSubresourceFlags::Assume_4K_Bytes_Aligned)
+                {
+                    Desc.RowPitch   = ((uint64_t(Width) * BPP + 32767u) / 32768u) * 4096u;
+                    Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+                }
+                else if (Flags & CSubresourceFlags::Assume_64_Bytes_Aligned)
+                {
+                    Desc.RowPitch   = ((uint64_t(Width) * BPP + 511u) / 512u) * 64u;
+                    Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+                }
+                else if (Flags & CSubresourceFlags::Assume_32_Bytes_Aligned)
+                {
+                    Desc.RowPitch   = ((uint64_t(Width) * BPP + 255u) / 256u) * 32u;
+                    Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+                }
+                else if (Flags & CSubresourceFlags::Assume_Word_Aligned)
+                {
+                    Desc.RowPitch   = ((uint64_t(Width) * BPP + 127u) / 128u) * 16u;
+                    Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+                }
+                else // DWORD alignment
+                {
+                    // Special computation for some incorrectly created DDS files based on
+                    // legacy DirectDraw assumptions about Desc.RowPitch alignment
+                    Desc.RowPitch   = ((uint64_t(Width) * BPP + 31u) / 32u) * sizeof(uint32_t);
+                    Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+                }
+            }
+            else
+            {
+                // Default byte alignment
+                Desc.RowPitch   = (uint64_t(Width) * BPP + 7u) / 8u;
+                Desc.SlicePitch = Desc.RowPitch * uint64_t(Height);
+            }
+            break;
+        }
+        }
+        return Desc;
+    }
+
+    //
+
     class IGpuResource
     {
     public:

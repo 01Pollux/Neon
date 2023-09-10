@@ -101,7 +101,7 @@ namespace Neon::RHI
 
                 UBufferPoolHandle Handle(
                     TotalBytes,
-                    1,
+                    256,
                     RHI::IGlobalBufferPool::BufferType::ReadWrite);
 
                 CommandList->CopySubresources(

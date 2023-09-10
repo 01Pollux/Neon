@@ -1,12 +1,9 @@
 #pragma once
 
-#include <flecs/flecs.h>
-
 #include <RenderGraph/Storage.hpp>
 #include <RenderGraph/Pass.hpp>
 
-#include <RHI/Commands/Context.hpp>
-
+#include <RHI/Fence.hpp>
 #include <Asio/ThreadPool.hpp>
 
 namespace Neon::Scene::Component
@@ -46,8 +43,10 @@ namespace Neon::RG
             /// Flush command lists
             /// </summary>
             void Flush(
-                size_t GraphicsCount,
-                size_t ComputeCount);
+                uint32_t FenceValue,
+                size_t   GraphicsCount,
+                size_t   ComputeCount,
+                bool     Reset);
 
             /// <summary>
             /// End command list context
@@ -76,7 +75,21 @@ namespace Neon::RG
             /// </summary>
             [[nodiscard]] size_t GetComputeCount() const noexcept;
 
+            /// <summary>
+            /// Wait for the fence
+            /// </summary>
+            void Wait(
+                size_t Value);
+
+            /// <summary>
+            /// Signal the fence
+            /// </summary>
+            void Signal(
+                size_t Value);
+
         private:
+            UPtr<RHI::IFence> m_Fence;
+
             std::vector<RHI::IGraphicsCommandList*> m_GraphicsCommandList;
             std::vector<RHI::IComputeCommandList*>  m_ComputeCommandList;
         };
@@ -165,7 +178,9 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            GraphDepdencyLevel* PrevLevel) const;
+            uint32_t            FenceValue,
+            GraphDepdencyLevel* PrevLevel,
+            bool                Reset) const;
 
     private:
         /// <summary>

@@ -246,6 +246,157 @@ namespace Neon::RHI
         SamplerFeedback_MipRegionUsed_Opaque,
     };
 
+    /// <summary>
+    /// Returns the number of bits per pixel for a given format.
+    /// </summary>
+    static constexpr size_t BitsPerPixel(
+        EResourceFormat Format) noexcept
+    {
+        switch (Format)
+        {
+        case EResourceFormat::R32G32B32A32_Typeless:
+        case EResourceFormat::R32G32B32A32_Float:
+        case EResourceFormat::R32G32B32A32_UInt:
+        case EResourceFormat::R32G32B32A32_SInt:
+            return 128;
+
+        case EResourceFormat::R32G32B32_Typeless:
+        case EResourceFormat::R32G32B32_Float:
+        case EResourceFormat::R32G32B32_UInt:
+        case EResourceFormat::R32G32B32_SInt:
+            return 96;
+
+        case EResourceFormat::R16G16B16A16_Typeless:
+        case EResourceFormat::R16G16B16A16_Float:
+        case EResourceFormat::R16G16B16A16_UNorm:
+        case EResourceFormat::R16G16B16A16_UInt:
+        case EResourceFormat::R16G16B16A16_SNorm:
+        case EResourceFormat::R16G16B16A16_SInt:
+        case EResourceFormat::R32G32_Typeless:
+        case EResourceFormat::R32G32_Float:
+        case EResourceFormat::R32G32_UInt:
+        case EResourceFormat::R32G32_SInt:
+        case EResourceFormat::R32G8X24_Typeless:
+        case EResourceFormat::D32_Float_S8X24_UInt:
+        case EResourceFormat::R32_Float_X8X24_Typeless:
+        case EResourceFormat::X32_Typeless_G8X24_UInt:
+        case EResourceFormat::Y416:
+        case EResourceFormat::Y210:
+        case EResourceFormat::Y216:
+            return 64;
+
+        case EResourceFormat::R10G10B10A2_Typeless:
+        case EResourceFormat::R10G10B10A2_UNorm:
+        case EResourceFormat::R10G10B10A2_UInt:
+        case EResourceFormat::R11G11B10_Float:
+        case EResourceFormat::R8G8B8A8_Typeless:
+        case EResourceFormat::R8G8B8A8_UNorm:
+        case EResourceFormat::R8G8B8A8_UNorm_SRGB:
+        case EResourceFormat::R8G8B8A8_UInt:
+        case EResourceFormat::R8G8B8A8_SNorm:
+        case EResourceFormat::R8G8B8A8_SInt:
+        case EResourceFormat::R16G16_Typeless:
+        case EResourceFormat::R16G16_Float:
+        case EResourceFormat::R16G16_UNorm:
+        case EResourceFormat::R16G16_UInt:
+        case EResourceFormat::R16G16_SNorm:
+        case EResourceFormat::R16G16_SInt:
+        case EResourceFormat::R32_Typeless:
+        case EResourceFormat::D32_Float:
+        case EResourceFormat::R32_Float:
+        case EResourceFormat::R32_UInt:
+        case EResourceFormat::R32_SInt:
+        case EResourceFormat::R24G8_Typeless:
+        case EResourceFormat::D24_UNorm_S8_UInt:
+        case EResourceFormat::R24_UNorm_X8_Typeless:
+        case EResourceFormat::X24_Typeless_G8_UInt:
+        case EResourceFormat::R9G9B9E5_SharedExp:
+        case EResourceFormat::R8G8_B8G8_UNorm:
+        case EResourceFormat::G8R8_G8B8_UNorm:
+        case EResourceFormat::B8G8R8A8_UNorm:
+        case EResourceFormat::B8G8R8X8_UNorm:
+        case EResourceFormat::R10G10B10_XR_Bias_A2_UNorm:
+        case EResourceFormat::B8G8R8A8_Typeless:
+        case EResourceFormat::B8G8R8A8_UNorm_SRGB:
+        case EResourceFormat::B8G8R8X8_Typeless:
+        case EResourceFormat::B8G8R8X8_UNorm_SRGB:
+        case EResourceFormat::AYUV:
+        case EResourceFormat::Y410:
+        case EResourceFormat::YUY2:
+            return 32;
+
+        case EResourceFormat::P010:
+        case EResourceFormat::P016:
+        case EResourceFormat::V408:
+            return 24;
+
+        case EResourceFormat::R8G8_Typeless:
+        case EResourceFormat::R8G8_UNorm:
+        case EResourceFormat::R8G8_UInt:
+        case EResourceFormat::R8G8_SNorm:
+        case EResourceFormat::R8G8_SInt:
+        case EResourceFormat::R16_Typeless:
+        case EResourceFormat::R16_Float:
+        case EResourceFormat::D16_UNorm:
+        case EResourceFormat::R16_UNorm:
+        case EResourceFormat::R16_UInt:
+        case EResourceFormat::R16_SNorm:
+        case EResourceFormat::R16_SInt:
+        case EResourceFormat::B5G6R5_UNorm:
+        case EResourceFormat::B5G5R5A1_UNorm:
+        case EResourceFormat::A8P8:
+        case EResourceFormat::B4G4R4A4_UNorm:
+        case EResourceFormat::P208:
+        case EResourceFormat::V208:
+            return 16;
+
+        case EResourceFormat::NV12:
+        case EResourceFormat::Opaque_420:
+        case EResourceFormat::NV11:
+            return 12;
+
+        case EResourceFormat::R8_Typeless:
+        case EResourceFormat::R8_UNorm:
+        case EResourceFormat::R8_UInt:
+        case EResourceFormat::R8_SNorm:
+        case EResourceFormat::R8_SInt:
+        case EResourceFormat::A8_UNorm:
+        case EResourceFormat::BC2_Typeless:
+        case EResourceFormat::BC2_UNorm:
+        case EResourceFormat::BC2_UNorm_SRGB:
+        case EResourceFormat::BC3_Typeless:
+        case EResourceFormat::BC3_UNorm:
+        case EResourceFormat::BC3_UNorm_SRGB:
+        case EResourceFormat::BC5_Typeless:
+        case EResourceFormat::BC5_UNorm:
+        case EResourceFormat::BC5_SNorm:
+        case EResourceFormat::BC6H_Typeless:
+        case EResourceFormat::BC6H_UF16:
+        case EResourceFormat::BC6H_SF16:
+        case EResourceFormat::BC7_Typeless:
+        case EResourceFormat::BC7_UNorm:
+        case EResourceFormat::BC7_UNorm_SRGB:
+        case EResourceFormat::AI44:
+        case EResourceFormat::IA44:
+        case EResourceFormat::P8:
+            return 8;
+
+        case EResourceFormat::R1_UNorm:
+            return 1;
+
+        case EResourceFormat::BC1_Typeless:
+        case EResourceFormat::BC1_UNorm:
+        case EResourceFormat::BC1_UNorm_SRGB:
+        case EResourceFormat::BC4_Typeless:
+        case EResourceFormat::BC4_UNorm:
+        case EResourceFormat::BC4_SNorm:
+            return 4;
+
+        default:
+            return 0;
+        }
+    }
+
     using ShaderInputLayout = std::vector<std::pair<StringU8, EResourceFormat>>;
 
     //

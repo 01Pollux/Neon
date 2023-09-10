@@ -251,11 +251,12 @@ namespace Neon::Asset
                                     {
                                         std::array Subresources{
                                             RHI::SubresourceDesc{
-                                                .Data       = AITexture->pcData,
-                                                .RowPitch   = AITexture->mWidth * 4,
-                                                .SlicePitch = AITexture->mWidth * AITexture->mHeight * 4 }
+                                                RHI::ComputeSubresource(
+                                                    RHI::EResourceFormat::R8G8B8A8_UNorm,
+                                                    AITexture->pcData,
+                                                    AITexture->mWidth,
+                                                    AITexture->mHeight) }
                                         };
-
                                         auto Texture = RHI::SSyncTexture(
                                             RHI::ResourceDesc::Tex2D(
                                                 RHI::EResourceFormat::R8G8B8A8_UNorm,
