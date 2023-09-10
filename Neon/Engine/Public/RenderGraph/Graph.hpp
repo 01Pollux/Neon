@@ -43,10 +43,9 @@ namespace Neon::RG
             /// Flush command lists
             /// </summary>
             void Flush(
-                uint32_t FenceValue,
-                size_t   GraphicsCount,
-                size_t   ComputeCount,
-                bool     Reset);
+                size_t GraphicsCount,
+                size_t ComputeCount,
+                bool   Reset);
 
             /// <summary>
             /// End command list context
@@ -178,9 +177,7 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            uint32_t            FenceValue,
-            GraphDepdencyLevel* PrevLevel,
-            bool                Reset) const;
+            bool Reset) const;
 
     private:
         /// <summary>

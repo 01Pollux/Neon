@@ -79,11 +79,7 @@ namespace Neon::RG
 
         for (size_t i = 0; i < m_Levels.size(); i++)
         {
-            auto ThisLevel = &m_Levels[i];
-            auto PrevLevel = (i > 0) ? &m_Levels[i - 1] : nullptr;
-
-            m_CommandListContext.Wait(i);
-            ThisLevel->Execute(i, PrevLevel, (i + 1) != m_Levels.size());
+            m_Levels[i].Execute((i + 1) != m_Levels.size());
         }
 
         m_CommandListContext.End();
@@ -198,14 +194,12 @@ namespace Neon::RG
     }
 
     void RenderGraph::CommandListContext::Flush(
-        uint32_t FenceValue,
-        size_t   GraphicsCount,
-        size_t   ComputeCount,
-        bool     Reset)
+        size_t GraphicsCount,
+        size_t ComputeCount,
+        bool   Reset)
     {
         FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount, Reset);
         FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount, Reset);
-        Signal(FenceValue);
     }
 
     void RenderGraph::CommandListContext::End()
@@ -297,9 +291,7 @@ namespace Neon::RG
     }
 
     void GraphDepdencyLevel::Execute(
-        uint32_t            FenceValue,
-        GraphDepdencyLevel* PrevLevel,
-        bool                Reset) const
+        bool Reset) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -313,11 +305,6 @@ namespace Neon::RG
         for (auto& PassInfo : m_Passes)
         {
             PassInfo.Pass->PreDispatch(Storage);
-        }
-
-        if (m_FlushCommands && PrevLevel)
-        {
-            m_Context.m_CommandListContext.Flush(FenceValue, PrevLevel->m_GraphicsCount, PrevLevel->m_ComputeCount, true);
         }
 
         ExecuteBarriers();
@@ -334,7 +321,7 @@ namespace Neon::RG
                 StateManager->FlushBarriers(FirstCommandList);
                 if (m_FlushCommands)
                 {
-                    m_Context.m_CommandListContext.Flush(FenceValue, 1, 0, true);
+                    m_Context.m_CommandListContext.Flush(1, 0, true);
                 }
             }
             else
@@ -343,7 +330,7 @@ namespace Neon::RG
                 StateManager->FlushBarriers(FirstCommandList);
                 if (m_FlushCommands)
                 {
-                    m_Context.m_CommandListContext.Flush(FenceValue, 0, 1, true);
+                    m_Context.m_CommandListContext.Flush(0, 1, true);
                 }
             }
         }
@@ -352,7 +339,7 @@ namespace Neon::RG
 
         if (m_FlushCommands)
         {
-            m_Context.m_CommandListContext.Flush(FenceValue, m_GraphicsCount, m_ComputeCount, Reset);
+            m_Context.m_CommandListContext.Flush(m_GraphicsCount, m_ComputeCount, Reset);
         }
 
         for (auto& Id : m_ResourcesToDestroy)
@@ -378,6 +365,8 @@ namespace Neon::RG
                 State,
                 ViewId.GetSubresourceIndex());
         }
+
+        RHI::ICommonCommandList* FirstCommandList = nullptr;
     }
 
     //
