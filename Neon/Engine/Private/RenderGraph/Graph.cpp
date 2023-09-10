@@ -4,6 +4,7 @@
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/Resource/State.hpp>
+#include <RHI/Commands/Queue.hpp>
 
 #include <Runtime/GameEngine.hpp>
 #include <Scene/Component/Transform.hpp>
@@ -63,8 +64,7 @@ namespace Neon::RG
         m_Storage.UnmapFrameData();
     }
 
-    void RenderGraph::Draw(
-        bool CopyToBackBuffer)
+    void RenderGraph::Draw()
     {
         m_Storage.NewOutputImage();
 
@@ -74,15 +74,17 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
 
-        // We will cache the command contexts to avoid submitting single command list per pass + barrier flush
-        {
-            ChainedCommandList ChainedCommandList;
+        m_CommandListContext.Begin();
 
-            for (auto& Level : m_Levels)
-            {
-                Level.Execute(ChainedCommandList);
-            }
+        for (size_t i = 0; i < m_Levels.size(); i++)
+        {
+            auto ThisLevel = &m_Levels[i];
+            auto PrevLevel = (i > 0) ? &m_Levels[i - 1] : nullptr;
+
+            ThisLevel->Execute(PrevLevel);
         }
+
+        m_CommandListContext.End();
 
         m_Storage.FlushResources();
     }
@@ -91,6 +93,136 @@ namespace Neon::RG
         std::vector<GraphDepdencyLevel>&& Levels)
     {
         m_Levels = std::move(Levels);
+
+        uint32_t MaxGraphics = 0, MaxCompute = 0;
+        for (size_t i = 0; i < m_Levels.size(); i++)
+        {
+            auto ThisLevel = &m_Levels[i];
+            auto NextLevel = (i + 1 < m_Levels.size()) ? &m_Levels[i + 1] : nullptr;
+
+            bool ShouldNotFlush =
+                NextLevel &&
+                ThisLevel->m_Passes.size() == 1 &&
+                NextLevel->m_Passes.size() == 1 &&
+                ThisLevel->m_Passes[0].Pass->GetQueueType() == NextLevel->m_Passes[0].Pass->GetQueueType();
+
+            // The only case where we should not flush is that when we have two passes in a row that are on the same queue
+            ThisLevel->m_FlushCommands = !ShouldNotFlush;
+
+            MaxGraphics = std::max(MaxGraphics, ThisLevel->m_GraphicsCount);
+            MaxCompute  = std::max(MaxCompute, ThisLevel->m_ComputeCount);
+        }
+
+        m_CommandListContext = CommandListContext(MaxGraphics, MaxCompute);
+    }
+
+    //
+
+    /// <summary>
+    /// Allocates a vector of command lists of type _Ty
+    /// </summary>
+    template<RHI::CommandQueueType _Queue, typename _Ty>
+    static void AllocateCommandLists(
+        std::vector<_Ty>& List)
+    {
+        if (!List.empty())
+        {
+            auto Queue    = RHI::ISwapchain::Get()->GetQueue(_Queue);
+            auto Commands = Queue->AllocateCommandLists(_Queue, List.size());
+            std::transform(Commands.begin(), Commands.end(), List.begin(), [](auto& Command)
+                           { return dynamic_cast<_Ty>(Command); });
+        }
+    }
+
+    /// <summary>
+    /// Flushes a vector of command lists of type _Ty
+    /// </summary>
+    template<RHI::CommandQueueType _Queue, typename _Ty>
+    static void FreeCommandLists(
+        const std::vector<_Ty>& List)
+    {
+        if (List.size())
+        {
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
+
+            std::vector<RHI::ICommandList*> Commands;
+            Commands.reserve(List.size());
+            std::transform(List.begin(), List.end(), std::back_inserter(Commands), [](auto& Command)
+                           { return dynamic_cast<RHI::ICommandList*>(Command); });
+            Queue->FreeCommandLists(_Queue, Commands);
+        }
+    }
+
+    /// <summary>
+    /// Flushes and reset a vector of command lists of type _Ty
+    /// </summary>
+    template<RHI::CommandQueueType _Queue, typename _Ty>
+    static void FlushCommandLists(
+        const std::vector<_Ty*>& List,
+        size_t                   Count)
+    {
+        if (Count)
+        {
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
+
+            std::vector<RHI::ICommandList*> Commands;
+            Commands.reserve(Count);
+            std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
+                           { return dynamic_cast<RHI::ICommandList*>(Command); });
+            Queue->Upload(Commands);
+            Queue->Reset(_Queue, Commands);
+        }
+    }
+
+    //
+    RenderGraph::CommandListContext::CommandListContext(
+        uint32_t MaxGraphicsCount,
+        uint32_t MaxComputeCount)
+    {
+        m_GraphicsCommandList.resize(MaxGraphicsCount);
+        m_ComputeCommandList.resize(MaxComputeCount);
+    }
+
+    void RenderGraph::CommandListContext::Begin()
+    {
+        AllocateCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList);
+        AllocateCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList);
+    }
+
+    void RenderGraph::CommandListContext::Flush(
+        size_t GraphicsCount,
+        size_t ComputeCount)
+    {
+        FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
+        FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+    }
+
+    void RenderGraph::CommandListContext::End()
+    {
+        FreeCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList);
+        FreeCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList);
+    }
+
+    RHI::IGraphicsCommandList* RenderGraph::CommandListContext::GetGraphics(
+        size_t Index)
+    {
+        return m_GraphicsCommandList[Index];
+    }
+
+    RHI::IComputeCommandList* RenderGraph::CommandListContext::GetCompute(
+        size_t Index)
+    {
+        return m_ComputeCommandList[Index];
+    }
+
+    size_t RenderGraph::CommandListContext::GetGraphicsCount() const noexcept
+    {
+        return m_GraphicsCommandList.size();
+    }
+
+    size_t RenderGraph::CommandListContext::GetComputeCount() const noexcept
+    {
+        return m_ComputeCommandList.size();
     }
 
     //
@@ -101,8 +233,6 @@ namespace Neon::RG
     {
     }
 
-    //
-
     void GraphDepdencyLevel::AddPass(
         UPtr<IRenderPass>                             Pass,
         std::vector<ResourceViewId>                   RenderTargets,
@@ -111,6 +241,16 @@ namespace Neon::RG
         std::set<ResourceId>                          ResourceToDestroy,
         std::map<ResourceViewId, RHI::MResourceState> States)
     {
+        switch (Pass->GetQueueType())
+        {
+        case PassQueueType::Direct:
+            m_GraphicsCount++;
+            break;
+        case PassQueueType::Compute:;
+            m_ComputeCount++;
+            break;
+        }
+
         m_Passes.emplace_back(std::move(Pass), std::move(RenderTargets), std::move(DepthStencil));
         m_ResourcesToCreate.merge(std::move(ResourceToCreate));
         m_ResourcesToDestroy.merge(std::move(ResourceToDestroy));
@@ -122,7 +262,7 @@ namespace Neon::RG
     }
 
     void GraphDepdencyLevel::Execute(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+        GraphDepdencyLevel* PrevLevel) const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -138,8 +278,18 @@ namespace Neon::RG
             PassInfo.Pass->PreDispatch(Storage);
         }
 
-        ExecuteBarriers(ChainedCommandList);
-        ExecutePasses(ChainedCommandList);
+        if (m_FlushCommands && PrevLevel)
+        {
+            m_Context.m_CommandListContext.Flush(PrevLevel->m_GraphicsCount, PrevLevel->m_ComputeCount);
+        }
+
+        ExecuteBarriers();
+        ExecutePasses();
+
+        if (m_FlushCommands)
+        {
+            m_Context.m_CommandListContext.Flush(m_GraphicsCount, m_ComputeCount);
+        }
 
         for (auto& Id : m_ResourcesToDestroy)
         {
@@ -151,8 +301,7 @@ namespace Neon::RG
         }
     }
 
-    void GraphDepdencyLevel::ExecuteBarriers(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+    void GraphDepdencyLevel::ExecuteBarriers() const
     {
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
@@ -166,29 +315,37 @@ namespace Neon::RG
                 ViewId.GetSubresourceIndex());
         }
 
-        StateManager->FlushBarriers(ChainedCommandList.Load(ChainedCommandList.IsDirect));
+        RHI::ICommonCommandList* FirstCommandList = nullptr;
+
+        bool UsingGraphics = m_Context.m_CommandListContext.GetGraphicsCount() > 0;
+        if (UsingGraphics)
+        {
+            FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
+            StateManager->FlushBarriers(FirstCommandList);
+            if (m_FlushCommands)
+            {
+                m_Context.m_CommandListContext.Flush(1, 0);
+            }
+        }
+        else
+        {
+            FirstCommandList = m_Context.m_CommandListContext.GetCompute(0);
+            StateManager->FlushBarriers(FirstCommandList);
+            if (m_FlushCommands)
+            {
+                m_Context.m_CommandListContext.Flush(0, 1);
+            }
+        }
     }
 
     //
 
-    void GraphDepdencyLevel::ExecutePasses(
-        RenderGraph::ChainedCommandList& ChainedCommandList) const
+    void GraphDepdencyLevel::ExecutePasses() const
     {
-        // If we have more than one pass, we need to synchronize them
-        // therefore we need to flush the chained command list we previously created
-        const bool IsDirect    = m_Passes[0].Pass->GetQueueType() == PassQueueType::Direct;
-        const bool ShouldFlush = m_Passes.size() > 1 ||
-                                 (ChainedCommandList.CommandList && IsDirect != ChainedCommandList.IsDirect) ||
-                                 (ChainedCommandList.ComputeContext.Size() && ChainedCommandList.RenderContext.Size());
-        if (ShouldFlush)
-        {
-            ChainedCommandList.Flush();
-        }
-
         auto DispatchTask =
-            [this, &ChainedCommandList, ShouldFlush](
-                size_t PassIndex,
-                bool   Threaded)
+            [this](
+                size_t   PassIndex,
+                uint32_t CommandIndex)
         {
             auto& [RenderPass, RenderTargets, DepthStencil] = m_Passes[PassIndex];
             auto& Storage                                   = m_Context.GetStorage();
@@ -199,17 +356,8 @@ namespace Neon::RG
             {
             case PassQueueType::Direct:
             {
-                RHI::IGraphicsCommandList* RenderCommandList;
-                if (Threaded && ShouldFlush)
-                {
-                    std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    RenderCommandList = ChainedCommandList.RenderContext.Append();
-                }
-                else
-                {
-                    RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(ChainedCommandList.Load(true));
-                }
-                CommandList = RenderCommandList;
+                auto RenderCommandList = m_Context.m_CommandListContext.GetGraphics(CommandIndex);
+                CommandList            = RenderCommandList;
 
                 std::vector<RHI::CpuDescriptorHandle> RtvHandles;
                 RtvHandles.reserve(RenderTargets.size());
@@ -345,15 +493,7 @@ namespace Neon::RG
 
             case PassQueueType::Compute:
             {
-                if (Threaded && ShouldFlush)
-                {
-                    std::scoped_lock Lock(m_Context.m_RenderMutex);
-                    CommandList = ChainedCommandList.ComputeContext.Append();
-                }
-                else
-                {
-                    CommandList = ChainedCommandList.Load(false);
-                }
+                CommandList = m_Context.m_CommandListContext.GetCompute(CommandIndex);
                 break;
             }
             }
@@ -364,113 +504,37 @@ namespace Neon::RG
             RenderPass->Dispatch(Storage, CommandList);
         };
 
-        if (m_Passes.size())
-        {
 #ifdef NEON_RENDER_GRAPH_THREADED
-            std::vector<std::future<void>> Futures;
-            Futures.reserve(m_Passes.size());
+        std::vector<std::future<void>> Futures;
+        Futures.reserve(m_Passes.size());
 #endif
 
-            for (size_t i = 0; i < m_Passes.size(); i++)
+        uint32_t ComputeCommandIndex = 0, GraphicsCommandIndex = 0;
+
+        for (size_t i = 0; i < m_Passes.size(); i++)
+        {
+            if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown ||
+                m_Passes[i].Pass->GetPassFlags().Test(EPassFlags::Cull))
             {
-                if (m_Passes[i].Pass->GetQueueType() == PassQueueType::Unknown ||
-                    m_Passes[i].Pass->GetPassFlags().Test(EPassFlags::Cull))
-                {
-                    continue;
-                }
+                continue;
+            }
+
+            uint32_t& CommandIndex = m_Passes[i].Pass->GetQueueType() == PassQueueType::Direct ? GraphicsCommandIndex : ComputeCommandIndex;
 
 #ifdef NEON_RENDER_GRAPH_THREADED
-                Futures.emplace_back(m_Context.m_ThreadPool.enqueue(DispatchTask, i, true));
+            Futures.emplace_back(m_Context.m_ThreadPool.enqueue(DispatchTask, i, CommandIndex));
 #else
-                DispatchTask(i, true);
+            DispatchTask(i, CommandIndex);
 #endif
-            }
+
+            CommandIndex++;
+        }
 
 #ifdef NEON_RENDER_GRAPH_THREADED
-            for (auto& Future : Futures)
-            {
-                Future.get();
-            }
+        for (auto& Future : Futures)
+        {
+            Future.get();
+        }
 #endif
-
-            ChainedCommandList.FlushOrDelay();
-        }
-        // Here we can just execute in the current thread rather than spawning a new one
-        else
-        {
-            if (m_Passes[0].Pass->GetQueueType() != PassQueueType::Unknown &&
-                !m_Passes[0].Pass->GetPassFlags().Test(EPassFlags::Cull))
-            {
-                ChainedCommandList.Preload(IsDirect);
-                DispatchTask(0, false);
-            }
-        }
-    }
-
-    //
-
-    RHI::ICommonCommandList* RenderGraph::ChainedCommandList::Load(
-        bool Direct)
-    {
-        if (CommandList) [[likely]]
-        {
-            return CommandList;
-        }
-
-        if (IsDirect = Direct)
-        {
-            CommandList = RenderContext.Append();
-        }
-        else
-        {
-            CommandList = ComputeContext.Append();
-        }
-        return CommandList;
-    }
-
-    void RenderGraph::ChainedCommandList::Preload(
-        bool IsDirect)
-    {
-        if (CommandList)
-        {
-            if (this->IsDirect == IsDirect)
-            {
-                return;
-            }
-            Flush();
-        }
-        if (this->IsDirect = IsDirect)
-        {
-            CommandList = RenderContext.Append();
-        }
-        else
-        {
-            CommandList = ComputeContext.Append();
-        }
-    }
-
-    void RenderGraph::ChainedCommandList::Flush()
-    {
-        CommandList = nullptr;
-        RenderContext.Upload();
-        ComputeContext.Upload();
-    }
-
-    void RenderGraph::ChainedCommandList::FlushOrDelay()
-    {
-        if (RenderContext.Size() == 1)
-        {
-            IsDirect    = true;
-            CommandList = RenderContext[0];
-        }
-        else if (ComputeContext.Size() == 1)
-        {
-            IsDirect    = false;
-            CommandList = ComputeContext[0];
-        }
-        else
-        {
-            Flush();
-        }
     }
 } // namespace Neon::RG

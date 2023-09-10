@@ -2,6 +2,7 @@
 
 #include <RenderGraph/Pass.hpp>
 #include <RenderGraph/Graph.hpp>
+#include <Renderer/Material/Material.hpp>
 
 namespace Neon::RG
 {

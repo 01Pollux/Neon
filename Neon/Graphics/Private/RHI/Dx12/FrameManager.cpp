@@ -245,6 +245,7 @@ namespace Neon::RHI
         size_t                  Count)
     {
         NEON_ASSERT(Type != D3D12_COMMAND_LIST_TYPE_COPY);
+        NEON_ASSERT(Count);
 
         std::vector<ICommandList*> Result;
         Result.reserve(Count);
@@ -280,6 +281,7 @@ namespace Neon::RHI
         D3D12_COMMAND_LIST_TYPE  Type,
         std::span<ICommandList*> Commands)
     {
+        NEON_ASSERT(!Commands.empty());
         NEON_ASSERT(!Commands.empty());
 
         auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];

@@ -4,7 +4,6 @@
 
 #include <RenderGraph/Storage.hpp>
 #include <RenderGraph/Pass.hpp>
-#include <RenderGraph/BackBuffer.hpp>
 
 #include <RHI/Commands/Context.hpp>
 
@@ -29,48 +28,57 @@ namespace Neon::RG
         friend class GraphBuilder;
         using DepdencyLevelList = std::vector<GraphDepdencyLevel>;
 
-        struct ChainedCommandList
+        class CommandListContext
         {
-            RHI::ICommonCommandList* CommandList = nullptr;
-            bool                     IsDirect    = true;
+        public:
+            CommandListContext() = default;
 
-            RHI::GraphicsCommandContext RenderContext;
-            RHI::ComputeCommandContext  ComputeContext;
-
-            template<bool _IsDirect>
-            [[nodiscard]] auto NewCommandList()
-            {
-                if constexpr (_IsDirect)
-                {
-                    return RenderContext.Append();
-                }
-                else
-                {
-                    return ComputeContext.Append();
-                }
-            }
+            CommandListContext(
+                uint32_t MaxGraphicsCount,
+                uint32_t MaxComputeCount);
 
             /// <summary>
-            /// Get the previously available command list or append new one
+            /// Begin command list context
             /// </summary>
-            [[nodiscard]] RHI::ICommonCommandList* Load(
-                bool Direct);
+            void Begin();
 
             /// <summary>
-            /// Prepare the command list for recording
+            /// Flush command lists
             /// </summary>
-            [[nodiscard]] void Preload(
-                bool IsDirect);
+            void Flush(
+                size_t GraphicsCount,
+                size_t ComputeCount);
 
             /// <summary>
-            /// Flush the command list to the queue
+            /// End command list context
             /// </summary>
-            void Flush();
+            void End();
 
             /// <summary>
-            /// Flush if there are more than 2 command lists, else delay for next execution
+            /// Get graphics command list
             /// </summary>
-            void FlushOrDelay();
+            [[nodiscard]] RHI::IGraphicsCommandList* GetGraphics(
+                size_t Index);
+
+            /// <summary>
+            /// Get graphics command list
+            /// </summary>
+            [[nodiscard]] RHI::IComputeCommandList* GetCompute(
+                size_t Index);
+
+            /// <summary>
+            /// Get graphics command list count
+            /// </summary>
+            [[nodiscard]] size_t GetGraphicsCount() const noexcept;
+
+            /// <summary>
+            /// Get compute command list count
+            /// </summary>
+            [[nodiscard]] size_t GetComputeCount() const noexcept;
+
+        private:
+            std::vector<RHI::IGraphicsCommandList*> m_GraphicsCommandList;
+            std::vector<RHI::IComputeCommandList*>  m_ComputeCommandList;
         };
 
     public:
@@ -99,11 +107,8 @@ namespace Neon::RG
         /// <summary>
         /// Run the graph
         /// For convinience, the graph will copy the final output to the back buffer
-        /// The graph will also return the command list for us to handle ui rendering
-        /// If CopyToBackBuffer is false, the function will return nullptr
         /// </summary>
-        void Draw(
-            bool CopyToBackBuffer = false);
+        void Draw();
 
     private:
         /// <summary>
@@ -116,9 +121,7 @@ namespace Neon::RG
         GraphStorage      m_Storage;
         DepdencyLevelList m_Levels;
 
-#ifndef NEON_EDITOR
-        BackBufferFinalizer m_BackBufferFinalizer;
-#endif
+        CommandListContext m_CommandListContext;
 
         std::mutex         m_RenderMutex, m_ComputeMutex;
         Asio::ThreadPool<> m_ThreadPool{ 3 };
@@ -128,6 +131,14 @@ namespace Neon::RG
 
     class GraphDepdencyLevel
     {
+        friend class RenderGraph;
+
+        struct RenderPassInfo
+        {
+            UPtr<IRenderPass>             Pass;
+            std::vector<ResourceViewId>   RenderTargets;
+            std::optional<ResourceViewId> DepthStencil;
+        };
 
     public:
         GraphDepdencyLevel(
@@ -154,29 +165,20 @@ namespace Neon::RG
         /// Execute render passes
         /// </summary>
         void Execute(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+            GraphDepdencyLevel* PrevLevel) const;
 
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
         /// </summary>
-        void ExecuteBarriers(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+        void ExecuteBarriers() const;
 
         /// <summary>
         /// Execute render passes
         /// </summary>
-        void ExecutePasses(
-            RenderGraph::ChainedCommandList& ChainedCommandList) const;
+        void ExecutePasses() const;
 
     private:
-        struct RenderPassInfo
-        {
-            UPtr<IRenderPass>             Pass;
-            std::vector<ResourceViewId>   RenderTargets;
-            std::optional<ResourceViewId> DepthStencil;
-        };
-
         RenderGraph& m_Context;
 
         std::vector<RenderPassInfo> m_Passes;
@@ -185,5 +187,10 @@ namespace Neon::RG
         std::set<ResourceId> m_ResourcesToDestroy;
 
         std::map<ResourceViewId, RHI::MResourceState> m_States;
+
+        uint32_t m_GraphicsCount = 0,
+                 m_ComputeCount  = 0;
+
+        bool m_FlushCommands : 1 = false;
     };
 } // namespace Neon::RG
