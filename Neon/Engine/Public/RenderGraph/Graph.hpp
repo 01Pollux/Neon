@@ -88,6 +88,7 @@ namespace Neon::RG
 
         private:
             UPtr<RHI::IFence> m_Fence;
+            uint64_t          m_FenceValue = 0;
 
             std::vector<RHI::IGraphicsCommandList*> m_GraphicsCommandList;
             std::vector<RHI::IComputeCommandList*>  m_ComputeCommandList;

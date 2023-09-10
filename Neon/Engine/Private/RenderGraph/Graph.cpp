@@ -198,8 +198,15 @@ namespace Neon::RG
         size_t ComputeCount,
         bool   Reset)
     {
+        Signal(m_FenceValue);
         FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount, Reset);
         FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount, Reset);
+        // We should wait for sync point if we have both graphics and compute commands waiting to be executed
+        if (GraphicsCount && ComputeCount)
+        {
+            Wait(m_FenceValue);
+        }
+        m_FenceValue++;
     }
 
     void RenderGraph::CommandListContext::End()
