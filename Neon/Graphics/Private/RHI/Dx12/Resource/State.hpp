@@ -45,7 +45,7 @@ namespace Neon::RHI
         CommandContext FlushBarriers(
             CommandQueueType Type) override;
 
-        void FlushBarriers(
+        bool FlushBarriers(
             ICommandList* CommandList) override;
 
         virtual SubresourceStates GetCurrentStates(

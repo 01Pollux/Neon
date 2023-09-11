@@ -86,6 +86,7 @@ namespace Neon::RHI
         ID3D12CommandAllocator* Allocator)
     {
         auto Iter = m_CommandListsPool.Allocate(Allocator, m_Type);
+        printf("Requesting command list : %p -- %p -- allocator %p\n", Iter->CommandList.get(), Iter->Dx12CmdList.Get(), Allocator);
         ThrowIfFailed(Iter->Dx12CmdList->Reset(Allocator, nullptr));
 
         ID3D12DescriptorHeap* Heaps[]{
@@ -105,6 +106,7 @@ namespace Neon::RHI
     ICommandList* Dx12CommandContextManager::Request(
         FrameResource& Frame)
     {
+        printf("Requesting command list from frame\n");
         return Request(Frame.RequestAllocator(m_Type));
     }
 
@@ -112,6 +114,8 @@ namespace Neon::RHI
         ICommandList* CommandList)
     {
         auto Iter = m_ToPoolMap.find(CommandList);
+        printf("Freeing command list : %p -- %p\n", Iter->second->CommandList.get(), Iter->second->Dx12CmdList.Get());
+
         m_CommandListsPool.Free(Iter->second);
         m_ToPoolMap.erase(Iter);
     }
@@ -120,6 +124,7 @@ namespace Neon::RHI
         ID3D12CommandAllocator* Allocator,
         ICommandList*           CommandList)
     {
+        printf("Resetting command list : %p -- %p : Allocator %p\n", CommandList, m_ToPoolMap[CommandList]->Dx12CmdList.Get(), Allocator);
         auto CommandData = m_ToPoolMap[CommandList];
         ThrowIfFailed(CommandData->Dx12CmdList->Reset(Allocator, nullptr));
 
@@ -218,6 +223,7 @@ namespace Neon::RHI
     {
         for (auto QueueType : {
                  D3D12_COMMAND_LIST_TYPE_DIRECT,
+                 D3D12_COMMAND_LIST_TYPE_COMPUTE
              })
         {
             auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
@@ -257,6 +263,7 @@ namespace Neon::RHI
         for (size_t i = 0; i < Count; i++)
         {
             Result.emplace_back(Context.Pool.Request(Frame));
+            printf("[FRAME] Allocating %i command lists : %p\n", Type, Result.back());
         }
         return Result;
     }
@@ -273,6 +280,7 @@ namespace Neon::RHI
         std::scoped_lock Lock(Context.Mutex);
         for (auto Command : Commands)
         {
+            printf("[FRAME] Freeing %i command lists : %p\n", Type, Command);
             Context.Pool.Free(Command);
         }
     }
@@ -291,6 +299,7 @@ namespace Neon::RHI
         auto& Frame = *m_FrameResources[m_FrameIndex];
         for (auto Command : Commands)
         {
+            printf("[FRAME] Resetting %i command lists : %p\n", Type, Command);
             Context.Pool.Reset(Frame, Command);
         }
     }

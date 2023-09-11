@@ -44,8 +44,14 @@ namespace Neon::RG
             /// </summary>
             void Flush(
                 size_t GraphicsCount,
-                size_t ComputeCount,
-                bool   Reset);
+                size_t ComputeCount);
+
+            /// <summary>
+            /// Reallocate command lists
+            /// </summary>
+            void Reset(
+                size_t GraphicsCount,
+                size_t ComputeCount);
 
             /// <summary>
             /// End command list context

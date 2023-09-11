@@ -31,7 +31,7 @@ namespace Neon::RG
         }
 
         Builder.AddPass<SSAOPass>();
-        Builder.AddPass<AmbientPass>();
+        // Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
         Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));

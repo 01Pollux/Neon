@@ -85,14 +85,16 @@ namespace Neon::RHI
         return {};
     }
 
-    void Dx12ResourceStateManager::FlushBarriers(
+    bool Dx12ResourceStateManager::FlushBarriers(
         ICommandList* CommandList)
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
             auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
             Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
+            return true;
         }
+        return false;
     }
 
     auto Dx12ResourceStateManager::GetCurrentStates(

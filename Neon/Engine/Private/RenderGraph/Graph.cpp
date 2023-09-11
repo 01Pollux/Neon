@@ -75,14 +75,16 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
 
+        printf("BEGIN\n");
         m_CommandListContext.Begin();
 
         for (size_t i = 0; i < m_Levels.size(); i++)
         {
-            m_Levels[i].Execute((i + 1) != m_Levels.size());
+            m_Levels[i].Execute(i);
         }
 
         m_CommandListContext.End();
+        printf("END\n");
 
         m_Storage.FlushResources();
     }
@@ -129,6 +131,10 @@ namespace Neon::RG
             auto Commands = Queue->AllocateCommandLists(_Queue, List.size());
             std::transform(Commands.begin(), Commands.end(), List.begin(), [](auto& Command)
                            { return dynamic_cast<_Ty>(Command); });
+            for (auto& Command : Commands)
+            {
+                printf("[oPEN] Type: %d, cmd: %p\n", _Queue, Command);
+            }
         }
     }
 
@@ -139,7 +145,7 @@ namespace Neon::RG
     static void FreeCommandLists(
         const std::vector<_Ty>& List)
     {
-        if (List.size())
+        if (!List.empty())
         {
             auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
 
@@ -148,17 +154,21 @@ namespace Neon::RG
             std::transform(List.begin(), List.end(), std::back_inserter(Commands), [](auto& Command)
                            { return dynamic_cast<RHI::ICommandList*>(Command); });
             Queue->FreeCommandLists(_Queue, Commands);
+
+            for (auto& Command : Commands)
+            {
+                printf("[fREE] Type: %d, cmd: %p\n", _Queue, Command);
+            }
         }
     }
 
     /// <summary>
-    /// Flushes and reset a vector of command lists of type _Ty
+    /// Flushes a vector of command lists of type _Ty
     /// </summary>
     template<RHI::CommandQueueType _Queue, typename _Ty>
     static void FlushCommandLists(
         const std::vector<_Ty*>& List,
-        size_t                   Count,
-        bool                     Reset)
+        size_t                   Count)
     {
         if (Count)
         {
@@ -169,10 +179,26 @@ namespace Neon::RG
             std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
                            { return dynamic_cast<RHI::ICommandList*>(Command); });
             Queue->Upload(Commands);
-            if (Reset)
-            {
-                Queue->Reset(_Queue, Commands);
-            }
+        }
+    }
+
+    /// <summary>
+    /// Reset a vector of command lists of type _Ty
+    /// </summary>
+    template<RHI::CommandQueueType _Queue, typename _Ty>
+    static void ResetCommandLists(
+        const std::vector<_Ty*>& List,
+        size_t                   Count)
+    {
+        if (Count)
+        {
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
+
+            std::vector<RHI::ICommandList*> Commands;
+            Commands.reserve(Count);
+            std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
+                           { return dynamic_cast<RHI::ICommandList*>(Command); });
+            Queue->Reset(_Queue, Commands);
         }
     }
 
@@ -195,17 +221,20 @@ namespace Neon::RG
 
     void RenderGraph::CommandListContext::Flush(
         size_t GraphicsCount,
-        size_t ComputeCount,
-        bool   Reset)
+        size_t ComputeCount)
     {
         Signal(m_FenceValue);
-        FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount, Reset);
-        FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount, Reset);
-        // We should wait for sync point if we have both graphics and compute commands waiting to be executed
-        if (GraphicsCount && ComputeCount)
-        {
-            Wait(m_FenceValue);
-        }
+        FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
+        FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+    }
+
+    void RenderGraph::CommandListContext::Reset(
+        size_t GraphicsCount,
+        size_t ComputeCount)
+    {
+        ResetCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
+        ResetCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+        Wait(m_FenceValue);
         m_FenceValue++;
     }
 
@@ -314,6 +343,7 @@ namespace Neon::RG
             PassInfo.Pass->PreDispatch(Storage);
         }
 
+        printf("Barrier\n");
         ExecuteBarriers();
 
         {
@@ -324,29 +354,59 @@ namespace Neon::RG
             bool UsingGraphics = m_Context.m_CommandListContext.GetGraphicsCount() > 0;
             if (UsingGraphics)
             {
-                FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
-                StateManager->FlushBarriers(FirstCommandList);
-                if (m_FlushCommands)
+                if (Reset)
                 {
-                    m_Context.m_CommandListContext.Flush(1, 0, true);
+                    m_Context.m_CommandListContext.Reset(1, 0);
+                }
+                FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
+                if (StateManager->FlushBarriers(FirstCommandList) && m_FlushCommands)
+                {
+                    m_Context.m_CommandListContext.Flush(1, 0);
                 }
             }
             else
             {
-                FirstCommandList = m_Context.m_CommandListContext.GetCompute(0);
-                StateManager->FlushBarriers(FirstCommandList);
-                if (m_FlushCommands)
+                if (Reset)
                 {
-                    m_Context.m_CommandListContext.Flush(0, 1, true);
+                    m_Context.m_CommandListContext.Reset(0, 1);
+                }
+                FirstCommandList = m_Context.m_CommandListContext.GetCompute(0);
+                if (StateManager->FlushBarriers(FirstCommandList) && m_FlushCommands)
+                {
+                    m_Context.m_CommandListContext.Flush(0, 1);
                 }
             }
+        }
+
+        uint32_t GraphicsCommands = 0, ComputeCommand = 0;
+        for (auto& PassInfo : m_Passes)
+        {
+            if (PassInfo.Pass->GetQueueType() == PassQueueType::Unknown ||
+                PassInfo.Pass->GetPassFlags().Test(EPassFlags::Cull))
+            {
+                continue;
+            }
+
+            if (PassInfo.Pass->GetQueueType() == PassQueueType::Direct)
+            {
+                GraphicsCommands++;
+            }
+            else
+            {
+                ComputeCommand++;
+            }
+        }
+
+        if (m_FlushCommands)
+        {
+            m_Context.m_CommandListContext.Reset(GraphicsCommands, ComputeCommand);
         }
 
         ExecutePasses();
 
         if (m_FlushCommands)
         {
-            m_Context.m_CommandListContext.Flush(m_GraphicsCount, m_ComputeCount, Reset);
+            m_Context.m_CommandListContext.Flush(GraphicsCommands, ComputeCommand);
         }
 
         for (auto& Id : m_ResourcesToDestroy)
@@ -372,8 +432,6 @@ namespace Neon::RG
                 State,
                 ViewId.GetSubresourceIndex());
         }
-
-        RHI::ICommonCommandList* FirstCommandList = nullptr;
     }
 
     //

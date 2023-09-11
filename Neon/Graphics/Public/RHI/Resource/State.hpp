@@ -55,7 +55,7 @@ namespace Neon::RHI
         /// <summary>
         /// Flush all the pending barriers into the given command list.
         /// </summary>
-        virtual void FlushBarriers(
+        virtual bool FlushBarriers(
             ICommandList* CommandList) = 0;
 
         /// <summary>
