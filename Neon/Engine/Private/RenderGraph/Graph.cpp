@@ -75,7 +75,6 @@ namespace Neon::RG
             m_Storage.CreateViews(Handle);
         }
 
-        printf("BEGIN\n");
         m_CommandListContext.Begin();
 
         for (size_t i = 0; i < m_Levels.size(); i++)
@@ -84,7 +83,6 @@ namespace Neon::RG
         }
 
         m_CommandListContext.End();
-        printf("END\n");
 
         m_Storage.FlushResources();
     }
@@ -95,10 +93,13 @@ namespace Neon::RG
         m_Levels = std::move(Levels);
 
         uint32_t MaxGraphics = 0, MaxCompute = 0;
+        uint32_t LastFlushedGraphics = 0, LastFlushedCompute = 0;
+
         for (size_t i = 0; i < m_Levels.size(); i++)
         {
             auto ThisLevel = &m_Levels[i];
             auto NextLevel = (i + 1 < m_Levels.size()) ? &m_Levels[i + 1] : nullptr;
+            auto PrevLevel = (i > 0) ? &m_Levels[i - 1] : nullptr;
 
             bool ShouldNotFlush =
                 NextLevel &&
@@ -109,8 +110,20 @@ namespace Neon::RG
             // The only case where we should not flush is that when we have two passes in a row that are on the same queue
             ThisLevel->m_FlushCommands = !ShouldNotFlush;
 
-            MaxGraphics = std::max(MaxGraphics, ThisLevel->m_GraphicsCount);
-            MaxCompute  = std::max(MaxCompute, ThisLevel->m_ComputeCount);
+            auto [GraphicsCount, ComputeCount] = ThisLevel->GetCommandListCount();
+
+            MaxGraphics = std::max(MaxGraphics, GraphicsCount);
+            MaxCompute  = std::max(MaxCompute, ComputeCount);
+
+            ThisLevel->m_GraphicsCommandsToFlush = GraphicsCount;
+            ThisLevel->m_ComputeCommandsToFlush  = ComputeCount;
+
+            // Check if we need to overallocate command lists
+            if (PrevLevel)
+            {
+                ThisLevel->m_GraphicsCommandsToReserve = std::min(PrevLevel->m_GraphicsCommandsToFlush, GraphicsCount);
+                ThisLevel->m_ComputeCommandsToReserve  = std::min(PrevLevel->m_ComputeCommandsToFlush, ComputeCount);
+            }
         }
 
         m_CommandListContext = CommandListContext(MaxGraphics, MaxCompute);
@@ -131,10 +144,6 @@ namespace Neon::RG
             auto Commands = Queue->AllocateCommandLists(_Queue, List.size());
             std::transform(Commands.begin(), Commands.end(), List.begin(), [](auto& Command)
                            { return dynamic_cast<_Ty>(Command); });
-            for (auto& Command : Commands)
-            {
-                printf("[oPEN] Type: %d, cmd: %p\n", _Queue, Command);
-            }
         }
     }
 
@@ -154,11 +163,6 @@ namespace Neon::RG
             std::transform(List.begin(), List.end(), std::back_inserter(Commands), [](auto& Command)
                            { return dynamic_cast<RHI::ICommandList*>(Command); });
             Queue->FreeCommandLists(_Queue, Commands);
-
-            for (auto& Command : Commands)
-            {
-                printf("[fREE] Type: %d, cmd: %p\n", _Queue, Command);
-            }
         }
     }
 
@@ -223,9 +227,10 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        Signal(m_FenceValue);
         FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
         FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+        Signal();
+        Wait();
     }
 
     void RenderGraph::CommandListContext::Reset(
@@ -234,8 +239,6 @@ namespace Neon::RG
     {
         ResetCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
         ResetCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
-        Wait(m_FenceValue);
-        m_FenceValue++;
     }
 
     void RenderGraph::CommandListContext::End()
@@ -266,27 +269,26 @@ namespace Neon::RG
         return m_ComputeCommandList.size();
     }
 
-    void RenderGraph::CommandListContext::Wait(
-        size_t Value)
+    void RenderGraph::CommandListContext::Wait()
     {
         for (auto Type : {
-                 RHI::CommandQueueType::Graphics,
-                 RHI::CommandQueueType::Compute })
+                 RHI::CommandQueueType::Compute,
+                 RHI::CommandQueueType::Graphics })
         {
             auto Queue = RHI::ISwapchain::Get()->GetQueue(Type);
-            m_Fence->WaitGPU(Queue, Value);
+            m_Fence->WaitGPU(Queue, m_FenceValue);
         }
+        m_FenceValue++;
     }
 
-    void RenderGraph::CommandListContext::Signal(
-        size_t Value)
+    void RenderGraph::CommandListContext::Signal()
     {
         for (auto Type : {
                  RHI::CommandQueueType::Graphics,
                  RHI::CommandQueueType::Compute })
         {
             auto Queue = RHI::ISwapchain::Get()->GetQueue(Type);
-            m_Fence->SignalGPU(Queue, Value);
+            m_Fence->SignalGPU(Queue, m_FenceValue);
         }
     }
 
@@ -306,16 +308,6 @@ namespace Neon::RG
         std::set<ResourceId>                          ResourceToDestroy,
         std::map<ResourceViewId, RHI::MResourceState> States)
     {
-        switch (Pass->GetQueueType())
-        {
-        case PassQueueType::Direct:
-            m_GraphicsCount++;
-            break;
-        case PassQueueType::Compute:;
-            m_ComputeCount++;
-            break;
-        }
-
         m_Passes.emplace_back(std::move(Pass), std::move(RenderTargets), std::move(DepthStencil));
         m_ResourcesToCreate.merge(std::move(ResourceToCreate));
         m_ResourcesToDestroy.merge(std::move(ResourceToDestroy));
@@ -325,6 +317,26 @@ namespace Neon::RG
             CurrentState |= State;
         }
     }
+
+    std::pair<uint32_t, uint32_t> GraphDepdencyLevel::GetCommandListCount() const
+    {
+        uint32_t GraphicsCount = 0, ComputeCount = 0;
+        for (auto& PassInfo : m_Passes)
+        {
+            switch (PassInfo.Pass->GetQueueType())
+            {
+            case PassQueueType::Direct:
+                GraphicsCount++;
+                break;
+            case PassQueueType::Compute:;
+                ComputeCount++;
+                break;
+            }
+        }
+        return { GraphicsCount, ComputeCount };
+    }
+
+    //
 
     void GraphDepdencyLevel::Execute(
         bool Reset) const
@@ -343,7 +355,6 @@ namespace Neon::RG
             PassInfo.Pass->PreDispatch(Storage);
         }
 
-        printf("Barrier\n");
         ExecuteBarriers();
 
         {
@@ -359,7 +370,8 @@ namespace Neon::RG
                     m_Context.m_CommandListContext.Reset(1, 0);
                 }
                 FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
-                if (StateManager->FlushBarriers(FirstCommandList) && m_FlushCommands)
+                StateManager->FlushBarriers(FirstCommandList);
+                if (Reset)
                 {
                     m_Context.m_CommandListContext.Flush(1, 0);
                 }
@@ -371,42 +383,24 @@ namespace Neon::RG
                     m_Context.m_CommandListContext.Reset(0, 1);
                 }
                 FirstCommandList = m_Context.m_CommandListContext.GetCompute(0);
-                if (StateManager->FlushBarriers(FirstCommandList) && m_FlushCommands)
+                StateManager->FlushBarriers(FirstCommandList);
+                if (Reset)
                 {
                     m_Context.m_CommandListContext.Flush(0, 1);
                 }
             }
         }
 
-        uint32_t GraphicsCommands = 0, ComputeCommand = 0;
-        for (auto& PassInfo : m_Passes)
-        {
-            if (PassInfo.Pass->GetQueueType() == PassQueueType::Unknown ||
-                PassInfo.Pass->GetPassFlags().Test(EPassFlags::Cull))
-            {
-                continue;
-            }
-
-            if (PassInfo.Pass->GetQueueType() == PassQueueType::Direct)
-            {
-                GraphicsCommands++;
-            }
-            else
-            {
-                ComputeCommand++;
-            }
-        }
-
         if (m_FlushCommands)
         {
-            m_Context.m_CommandListContext.Reset(GraphicsCommands, ComputeCommand);
+            m_Context.m_CommandListContext.Reset(m_GraphicsCommandsToReserve, m_ComputeCommandsToReserve);
         }
 
         ExecutePasses();
 
         if (m_FlushCommands)
         {
-            m_Context.m_CommandListContext.Flush(GraphicsCommands, ComputeCommand);
+            m_Context.m_CommandListContext.Flush(m_GraphicsCommandsToFlush, m_ComputeCommandsToFlush);
         }
 
         for (auto& Id : m_ResourcesToDestroy)

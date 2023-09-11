@@ -52,7 +52,6 @@ namespace Neon::RHI
             [](ICommandList* Command)
             {
                 auto Dx12Command = static_cast<ID3D12GraphicsCommandList*>(dynamic_cast<Dx12CommandList*>(Command)->Get());
-                printf("Closing command list %p\n", Dx12Command);
                 Dx12Command->Close();
                 return static_cast<ID3D12CommandList*>(Dx12Command);
             });

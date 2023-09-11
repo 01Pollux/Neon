@@ -35,7 +35,7 @@ namespace Neon::RG
                 uint32_t MaxComputeCount);
 
             /// <summary>
-            /// Begin command list context
+            /// Preallocate command lists
             /// </summary>
             void Begin();
 
@@ -47,14 +47,14 @@ namespace Neon::RG
                 size_t ComputeCount);
 
             /// <summary>
-            /// Reallocate command lists
+            /// reset command lists with new allocators
             /// </summary>
             void Reset(
                 size_t GraphicsCount,
                 size_t ComputeCount);
 
             /// <summary>
-            /// End command list context
+            /// Free allocated command lists
             /// </summary>
             void End();
 
@@ -83,14 +83,12 @@ namespace Neon::RG
             /// <summary>
             /// Wait for the fence
             /// </summary>
-            void Wait(
-                size_t Value);
+            void Wait();
 
             /// <summary>
             /// Signal the fence
             /// </summary>
-            void Signal(
-                size_t Value);
+            void Signal();
 
         private:
             UPtr<RHI::IFence> m_Fence;
@@ -186,6 +184,11 @@ namespace Neon::RG
         void Execute(
             bool Reset) const;
 
+        /// <summary>
+        /// Get command list count for this level
+        /// </summary>
+        [[nodiscard]] std::pair<uint32_t, uint32_t> GetCommandListCount() const;
+
     private:
         /// <summary>
         /// Execute pending resource barriers before render passes
@@ -200,15 +203,26 @@ namespace Neon::RG
     private:
         RenderGraph& m_Context;
 
+        /// <summary>
+        /// Used when the previous level have executed N commands, where we need to use N+M commands
+        /// Check CommandListContext for more details
+        /// </summary>
+        uint32_t m_GraphicsCommandsToReserve = 0;
+        uint32_t m_GraphicsCommandsToFlush   = 0;
+
+        /// <summary>
+        /// Used when the previous level have executed N commands, where we need to use N+M commands
+        /// Check CommandListContext for more details
+        /// </summary>
+        uint32_t m_ComputeCommandsToReserve = 0;
+        uint32_t m_ComputeCommandsToFlush   = 0;
+
         std::vector<RenderPassInfo> m_Passes;
 
         std::set<ResourceId> m_ResourcesToCreate;
         std::set<ResourceId> m_ResourcesToDestroy;
 
         std::map<ResourceViewId, RHI::MResourceState> m_States;
-
-        uint32_t m_GraphicsCount = 0,
-                 m_ComputeCount  = 0;
 
         bool m_FlushCommands : 1 = false;
     };

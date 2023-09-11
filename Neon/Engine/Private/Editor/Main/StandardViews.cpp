@@ -25,7 +25,7 @@ namespace Neon::Editor
         RegisterView<Views::SceneHierachy>("_Hierachy", true);
         RegisterView<Views::Inspector>("_Inspector", true);
         RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
-        RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", true, false);
+        RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", false, false);
     }
 
     bool EditorEngine::BeginEditorSpace()
