@@ -26,9 +26,15 @@ namespace Neon::RHI
     }
 
     ICommandQueue* Dx12Swapchain::GetQueue(
-        CommandQueueType Type)
+        bool IsDirect)
     {
-        return &m_FrameManager->GetQueueManager()->Get(CastCommandQueueType(Type))->Queue;
+        return m_FrameManager->GetQueue(IsDirect);
+    }
+
+    IFence* Dx12Swapchain::GetQueueFence(
+        bool IsDirect)
+    {
+        return m_FrameManager->GetQueueFence(IsDirect);
     }
 
     Dx12Swapchain* Dx12Swapchain::Get()
@@ -53,13 +59,6 @@ namespace Neon::RHI
         const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation)
     {
         m_FrameManager->SafeRelease(Resource, Allocation);
-    }
-
-    void Dx12Swapchain::WaitForCopy(
-        ICommandQueue* Queue,
-        uint64_t       FenceValue)
-    {
-        m_FrameManager->WaitForCopy(static_cast<Dx12CommandQueue*>(Queue), FenceValue);
     }
 
     uint64_t Dx12Swapchain::EnqueueRequestCopy(

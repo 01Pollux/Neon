@@ -89,13 +89,6 @@ namespace Neon::RHI
         }
     }
 
-    void CopyContextManager::WaitForCopy(
-        Dx12CommandQueue* Queue,
-        uint64_t          CopyId)
-    {
-        m_CopyFence.WaitGPU(Queue, CopyId);
-    }
-
     uint64_t CopyContextManager::EnqueueCopy(
         std::function<void(ICopyCommandList*)> Task)
     {
@@ -114,5 +107,15 @@ namespace Neon::RHI
     {
         m_TaskWaiter.notify_all();
         m_Threads = {};
+    }
+
+    Dx12CommandQueue* CopyContextManager::GetQueue() noexcept
+    {
+        return &m_CopyQueue;
+    }
+
+    Dx12Fence* CopyContextManager::GetQueueFence() noexcept
+    {
+        return &m_CopyFence;
     }
 } // namespace Neon::RHI

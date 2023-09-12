@@ -80,16 +80,6 @@ namespace Neon::RG
             /// </summary>
             [[nodiscard]] size_t GetComputeCount() const noexcept;
 
-            /// <summary>
-            /// Wait for the fence
-            /// </summary>
-            void Wait();
-
-            /// <summary>
-            /// Signal the fence
-            /// </summary>
-            void Signal();
-
         private:
             UPtr<RHI::IFence> m_Fence;
             uint64_t          m_FenceValue = 0;

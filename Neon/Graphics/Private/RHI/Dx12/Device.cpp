@@ -467,9 +467,8 @@ namespace Neon::RHI
 
         //
 
-        auto CommandQueue = m_Swapchain->GetQueue(CommandQueueType::Graphics);
-
-        auto LoadTexture = [this, CommandQueue](SSyncTexture& Resource, DefaultTextures Type, const wchar_t* Name)
+        auto CommandQueue = m_Swapchain->GetQueue(true);
+        auto LoadTexture  = [this, CommandQueue](SSyncTexture& Resource, DefaultTextures Type, const wchar_t* Name)
         {
             auto& Object = m_DefaultTextures[size_t(Type)] = Resource;
             RHI::RenameObject(Object.get(), Name);

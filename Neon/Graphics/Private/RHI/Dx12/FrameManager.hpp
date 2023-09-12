@@ -17,41 +17,6 @@ namespace Neon::RHI
     class ISwapchain;
     class Dx12Swapchain;
 
-    class Dx12CommandQueueManager
-    {
-    public:
-        struct QueueAndFence
-        {
-            Dx12CommandQueue Queue;
-            Dx12Fence        Fence;
-
-            QueueAndFence(
-                CommandQueueType QueueType);
-        };
-
-        explicit Dx12CommandQueueManager();
-
-        /// <summary>
-        /// Get graphics command queue
-        /// </summary>
-        [[nodiscard]] QueueAndFence* GetGraphics();
-
-        /// <summary>
-        /// Get graphics compute queue
-        /// </summary>
-        [[nodiscard]] QueueAndFence* GetCompute();
-
-        /// <summary>
-        /// Get queue of type
-        /// </summary>
-        [[nodiscard]] QueueAndFence* Get(
-            D3D12_COMMAND_LIST_TYPE CommandType);
-
-    private:
-        QueueAndFence m_Graphics;
-        QueueAndFence m_Compute;
-    };
-
     class Dx12CommandContextManager
     {
     private:
@@ -140,13 +105,6 @@ namespace Neon::RHI
         CopyContextManager();
 
         /// <summary>
-        /// Enqueue task to copy queue
-        /// </summary>
-        void WaitForCopy(
-            Dx12CommandQueue* Queue,
-            uint64_t          CopyId);
-
-        /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
         uint64_t EnqueueCopy(
@@ -156,6 +114,16 @@ namespace Neon::RHI
         /// Wait for all tasks to finish and shutdown
         /// </summary>
         void Shutdown();
+
+        /// <summary>
+        /// Get copy command queue
+        /// </summary>
+        [[nodiscard]] Dx12CommandQueue* GetQueue() noexcept;
+
+        /// <summary>
+        /// Get copy fence
+        /// </summary>
+        [[nodiscard]] Dx12Fence* GetQueueFence() noexcept;
 
     private:
         Dx12CommandQueue m_CopyQueue;
@@ -188,9 +156,16 @@ namespace Neon::RHI
         ~FrameManager();
 
         /// <summary>
-        /// Get command queue manager
+        /// Get direct/copy command queue
         /// </summary>
-        [[nodiscard]] Dx12CommandQueueManager* GetQueueManager();
+        [[nodiscard]] Dx12CommandQueue* GetQueue(
+            bool IsDirect) noexcept;
+
+        /// <summary>
+        /// Get direct/copy fence
+        /// </summary>
+        [[nodiscard]] Dx12Fence* GetQueueFence(
+            bool IsDirect) noexcept;
 
     public:
         /// <summary>
@@ -275,13 +250,6 @@ namespace Neon::RHI
             const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation);
 
         /// <summary>
-        /// Wait for a copy command list to be executed.
-        /// </summary>
-        void WaitForCopy(
-            Dx12CommandQueue* Queue,
-            uint64_t          FenceValue);
-
-        /// <summary>
         /// Enqueue a copy command executed.
         /// </summary>
         uint64_t RequestCopy(
@@ -305,7 +273,8 @@ namespace Neon::RHI
 
         uint32_t m_FrameIndex = 0;
 
-        Dx12CommandQueueManager m_QueueManager;
+        Dx12CommandQueue m_DirectQueue;
+        Dx12Fence        m_DirectFence;
 
         CommandContextPools m_ContextPool;
         uint64_t            m_FenceValue = 0;

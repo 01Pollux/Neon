@@ -625,19 +625,15 @@ namespace Neon::RHI
         {
             if (m_CopyId && m_Resource) [[unlikely]]
             {
-                auto DirectQueue  = ISwapchain::Get()->GetQueue(RHI::CommandQueueType::Graphics);
-                auto ComputeQueue = ISwapchain::Get()->GetQueue(RHI::CommandQueueType::Compute);
-
-                ISwapchain::Get()->WaitForCopy(DirectQueue, m_CopyId);
-                ISwapchain::Get()->WaitForCopy(ComputeQueue, m_CopyId);
-
-                m_CopyId = 0;
+                ISwapchain::Get()->WaitForCopy(*m_CopyId);
+                m_CopyId.reset();
             }
         }
 
     protected:
-        ResourcePtr      m_Resource;
-        mutable uint64_t m_CopyId = 0;
+        ResourcePtr m_Resource;
+
+        mutable std::optional<uint64_t> m_CopyId = 0;
     };
 
     template<bool _Owning>
@@ -660,11 +656,13 @@ namespace Neon::RHI
             const SubresourceDesc&     Subresources,
             const RHI::MResourceState& InitialState = IBuffer::DefaultResourcestate)
         {
+            uint64_t CopyId;
             this->m_Resource.reset(IBuffer::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId,
+                CopyId,
                 InitialState));
+            this->m_CopyId = CopyId;
         }
 
         SyncBufferT(
@@ -703,11 +701,13 @@ namespace Neon::RHI
             const SubresourceDesc&     Subresources,
             const RHI::MResourceState& InitialState = IUploadBuffer::DefaultResourcestate)
         {
+            uint64_t CopyId;
             this->m_Resource.reset(IUploadBuffer::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId,
+                CopyId,
                 InitialState));
+            this->m_CopyId = CopyId;
         }
 
         SyncUploadBufferT(
@@ -736,10 +736,12 @@ namespace Neon::RHI
             const TextureRawImage& ImageData,
             RHI::MResourceState    InitialState = RHI::MResourceState_Common)
         {
+            uint64_t CopyId;
             this->m_Resource.reset(ITexture::Create(
                 ImageData,
-                this->m_CopyId,
+                CopyId,
                 std::move(InitialState)));
+            this->m_CopyId = CopyId;
         }
 
         SyncTextureT(
@@ -756,11 +758,13 @@ namespace Neon::RHI
             std::span<const SubresourceDesc> Subresources,
             RHI::MResourceState              InitialState = RHI::MResourceState_Common)
         {
+            uint64_t CopyId;
             this->m_Resource.reset(ITexture::Create(
                 Desc,
                 Subresources,
-                this->m_CopyId,
+                CopyId,
                 std::move(InitialState)));
+            this->m_CopyId = CopyId;
         }
     };
 

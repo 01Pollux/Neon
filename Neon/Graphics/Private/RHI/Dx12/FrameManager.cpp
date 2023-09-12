@@ -6,49 +6,6 @@
 
 namespace Neon::RHI
 {
-    Dx12CommandQueueManager::QueueAndFence::QueueAndFence(
-        CommandQueueType QueueType) :
-        Queue(QueueType),
-        Fence(0)
-    {
-    }
-
-    //
-
-    Dx12CommandQueueManager::Dx12CommandQueueManager() :
-        m_Graphics(CommandQueueType::Graphics),
-        m_Compute(CommandQueueType::Compute)
-    {
-        RHI::RenameObject(m_Graphics.Queue.Get(), STR("Main Graphics Command Queue"));
-        RHI::RenameObject(m_Compute.Queue.Get(), STR("Main Compute Command Queue"));
-    }
-
-    auto Dx12CommandQueueManager::GetGraphics() -> QueueAndFence*
-    {
-        return &m_Graphics;
-    }
-
-    auto Dx12CommandQueueManager::GetCompute() -> QueueAndFence*
-    {
-        return &m_Compute;
-    }
-
-    auto Dx12CommandQueueManager::Get(
-        D3D12_COMMAND_LIST_TYPE CommandType) -> QueueAndFence*
-    {
-        switch (CommandType)
-        {
-        case D3D12_COMMAND_LIST_TYPE_DIRECT:
-            return &m_Graphics;
-        case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-            return &m_Compute;
-        default:
-            std::unreachable();
-        }
-    }
-
-    //
-
     Dx12CommandContextManager::CommandListInstance::CommandListInstance(
         ID3D12CommandAllocator* Allocator,
         D3D12_COMMAND_LIST_TYPE CommandType)
@@ -144,11 +101,14 @@ namespace Neon::RHI
     //
 
     FrameManager::FrameManager() :
+        m_DirectQueue(RHI::CommandQueueType::Graphics),
+        m_DirectFence(0),
         m_ContextPool{
             CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_DIRECT)),
-            CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_COMPUTE)),
+            CommandContextPool(Dx12CommandContextManager(D3D12_COMMAND_LIST_TYPE_COMPUTE))
         }
     {
+        RHI::RenameObject(m_DirectQueue.Get(), STR("Main Command Queue"));
     }
 
     FrameManager::~FrameManager()
@@ -157,24 +117,23 @@ namespace Neon::RHI
         IdleGPU();
     }
 
-    //
-
-    Dx12CommandQueueManager* FrameManager::GetQueueManager()
+    Dx12CommandQueue* FrameManager::GetQueue(
+        bool IsDirect) noexcept
     {
-        return &m_QueueManager;
+        return IsDirect ? &m_DirectQueue : m_CopyContext.GetQueue();
+    }
+
+    Dx12Fence* FrameManager::GetQueueFence(
+        bool IsDirect) noexcept
+    {
+        return IsDirect ? &m_DirectFence : m_CopyContext.GetQueueFence();
     }
 
     //
 
     void FrameManager::NewFrame()
     {
-        for (auto QueueType : {
-                 D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
-        {
-            auto& Info = *m_QueueManager.Get(QueueType);
-            Info.Fence.WaitCPU(m_FenceValue);
-        }
+        m_DirectFence.WaitCPU(m_FenceValue);
         auto& Frame = *m_FrameResources[m_FrameIndex];
         Frame.Reset();
     }
@@ -182,13 +141,7 @@ namespace Neon::RHI
     void FrameManager::EndFrame()
     {
         ++m_FenceValue;
-        for (auto QueueType : {
-                 D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
-        {
-            auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
-            Fence.SignalGPU(&Queue, m_FenceValue);
-        }
+        m_DirectFence.SignalGPU(&m_DirectQueue, m_FenceValue);
         m_FrameIndex = (m_FrameIndex + 1) % uint32_t(m_FrameResources.size());
     }
 
@@ -218,21 +171,8 @@ namespace Neon::RHI
 
     void FrameManager::IdleGPU()
     {
-        for (auto QueueType : {
-                 D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
-        {
-            auto& [Queue, Fence] = *m_QueueManager.Get(QueueType);
-            Fence.SignalGPU(&Queue, m_FenceValue);
-        }
-
-        for (auto QueueType : {
-                 D3D12_COMMAND_LIST_TYPE_DIRECT,
-                 D3D12_COMMAND_LIST_TYPE_COMPUTE })
-        {
-            auto& Info = *m_QueueManager.Get(QueueType);
-            Info.Fence.WaitCPU(m_FenceValue);
-        }
+        m_DirectFence.SignalGPU(&m_DirectQueue, m_FenceValue);
+        m_DirectFence.WaitCPU(m_FenceValue);
 
         for (auto& Frame : m_FrameResources)
         {
@@ -331,13 +271,6 @@ namespace Neon::RHI
         std::scoped_lock Lock(m_StaleResourcesMutex[3]);
         auto&            Frame = *m_FrameResources[m_FrameIndex];
         Frame.SafeRelease(Resource, Allocation);
-    }
-
-    void FrameManager::WaitForCopy(
-        Dx12CommandQueue* Queue,
-        uint64_t          FenceValue)
-    {
-        m_CopyContext.WaitForCopy(Queue, FenceValue);
     }
 
     uint64_t FrameManager::RequestCopy(

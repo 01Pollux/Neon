@@ -37,7 +37,7 @@ namespace Neon::RHI
         size_t Size)
     {
         size_t Pos      = m_CommandLists.size();
-        auto   Queue    = ISwapchain::Get()->GetQueue(m_Type);
+        auto   Queue    = ISwapchain::Get()->GetQueue(true);
         auto   Commands = Queue->AllocateCommandLists(m_Type, Size);
         m_CommandLists.insert_range(m_CommandLists.end(), Commands);
         return Pos;
@@ -59,7 +59,7 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            auto Queue = ISwapchain::Get()->GetQueue(m_Type);
+            auto Queue = ISwapchain::Get()->GetQueue(true);
             Queue->Upload(m_CommandLists);
             if (Clear)
             {
@@ -73,7 +73,7 @@ namespace Neon::RHI
     {
         if (!m_CommandLists.empty())
         {
-            auto Queue = ISwapchain::Get()->GetQueue(m_Type);
+            auto Queue = ISwapchain::Get()->GetQueue(true);
             Queue->Reset(m_Type, m_CommandLists);
         }
     }

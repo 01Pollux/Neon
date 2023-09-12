@@ -43,7 +43,10 @@ namespace Neon::RHI
         uint32_t GetBackbufferCount() override;
 
         [[nodiscard]] ICommandQueue* GetQueue(
-            CommandQueueType Type) override;
+            bool IsDirect) override;
+
+        [[nodiscard]] IFence* GetQueueFence(
+            bool IsDirect) override;
 
     public:
         /// <summary>
@@ -101,13 +104,6 @@ namespace Neon::RHI
         void SafeRelease(
             const WinAPI::ComPtr<ID3D12Resource>&      Resource,
             const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation);
-
-        /// <summary>
-        /// Wait for a copy command list to be executed.
-        /// </summary>
-        void WaitForCopy(
-            ICommandQueue* Queue,
-            uint64_t       FenceValue);
 
         /// <summary>
         /// Enqueue a copy command list to be executed.

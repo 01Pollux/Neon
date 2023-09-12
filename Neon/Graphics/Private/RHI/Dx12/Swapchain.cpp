@@ -22,6 +22,17 @@ namespace Neon::RHI
         return IRenderDevice::Get()->GetSwapchain();
     }
 
+    void ISwapchain::WaitForCopy(
+        uint64_t FenceValue)
+    {
+        auto DirectQueue = GetQueue(true);
+        auto CopyFence   = GetQueueFence(false);
+
+        CopyFence->WaitGPU(DirectQueue, FenceValue);
+    }
+
+    //
+
     void Dx12Swapchain::PostInitialize(
         const SwapchainCreateDesc& Desc)
     {
@@ -179,7 +190,7 @@ namespace Neon::RHI
 
         WinAPI::ComPtr<IDXGIFactory2> DxgiFactory2;
 
-        auto GraphicsQueue = m_FrameManager->GetQueueManager()->GetGraphics()->Queue.Get();
+        auto GraphicsQueue = m_FrameManager->GetQueue(true)->Get();
         auto IsFullscreen  = m_WindowApp->IsFullScreen();
         HWND Handle        = glfwGetWin32Window(m_WindowApp->GetHandle());
 

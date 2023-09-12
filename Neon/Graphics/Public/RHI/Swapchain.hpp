@@ -78,10 +78,16 @@ namespace Neon::RHI
         [[nodiscard]] virtual uint32_t GetBackbufferCount() = 0;
 
         /// <summary>
-        /// Get the swapchain's queue.
+        /// Get direct/copy command queue
         /// </summary>
         [[nodiscard]] virtual ICommandQueue* GetQueue(
-            CommandQueueType Type) = 0;
+            bool IsDirect) = 0;
+
+        /// <summary>
+        /// Get direct/copy fence
+        /// </summary>
+        [[nodiscard]] virtual IFence* GetQueueFence(
+            bool IsDirect) = 0;
 
         /// <summary>
         /// Enqueue a copy command list to be executed.
@@ -97,11 +103,10 @@ namespace Neon::RHI
         }
 
         /// <summary>
-        /// Wait for a copy command list to be executed.
+        /// Wait for copy command list to be executed.
         /// </summary>
-        virtual void WaitForCopy(
-            ICommandQueue* Queue,
-            uint64_t       FenceValue) = 0;
+        void WaitForCopy(
+            uint64_t FenceValue);
 
     protected:
         /// <summary>

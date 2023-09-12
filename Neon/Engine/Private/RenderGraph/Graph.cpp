@@ -140,7 +140,7 @@ namespace Neon::RG
     {
         if (!List.empty())
         {
-            auto Queue    = RHI::ISwapchain::Get()->GetQueue(_Queue);
+            auto Queue    = RHI::ISwapchain::Get()->GetQueue(true);
             auto Commands = Queue->AllocateCommandLists(_Queue, List.size());
             std::transform(Commands.begin(), Commands.end(), List.begin(), [](auto& Command)
                            { return dynamic_cast<_Ty>(Command); });
@@ -156,12 +156,12 @@ namespace Neon::RG
     {
         if (!List.empty())
         {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
-
             std::vector<RHI::ICommandList*> Commands;
             Commands.reserve(List.size());
             std::transform(List.begin(), List.end(), std::back_inserter(Commands), [](auto& Command)
                            { return dynamic_cast<RHI::ICommandList*>(Command); });
+
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
             Queue->FreeCommandLists(_Queue, Commands);
         }
     }
@@ -176,12 +176,12 @@ namespace Neon::RG
     {
         if (Count)
         {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
-
             std::vector<RHI::ICommandList*> Commands;
             Commands.reserve(Count);
             std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
                            { return dynamic_cast<RHI::ICommandList*>(Command); });
+
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
             Queue->Upload(Commands);
         }
     }
@@ -196,7 +196,7 @@ namespace Neon::RG
     {
         if (Count)
         {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(_Queue);
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
 
             std::vector<RHI::ICommandList*> Commands;
             Commands.reserve(Count);
@@ -229,8 +229,6 @@ namespace Neon::RG
     {
         FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
         FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
-        Signal();
-        Wait();
     }
 
     void RenderGraph::CommandListContext::Reset(
@@ -267,29 +265,6 @@ namespace Neon::RG
     size_t RenderGraph::CommandListContext::GetComputeCount() const noexcept
     {
         return m_ComputeCommandList.size();
-    }
-
-    void RenderGraph::CommandListContext::Wait()
-    {
-        for (auto Type : {
-                 RHI::CommandQueueType::Compute,
-                 RHI::CommandQueueType::Graphics })
-        {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(Type);
-            m_Fence->WaitGPU(Queue, m_FenceValue);
-        }
-        m_FenceValue++;
-    }
-
-    void RenderGraph::CommandListContext::Signal()
-    {
-        for (auto Type : {
-                 RHI::CommandQueueType::Graphics,
-                 RHI::CommandQueueType::Compute })
-        {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(Type);
-            m_Fence->SignalGPU(Queue, m_FenceValue);
-        }
     }
 
     //
