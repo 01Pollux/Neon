@@ -72,6 +72,9 @@ namespace Neon::Editor
 
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Perspective);
         {
+            CameraComponent.Viewport.ClientHeight = false;
+            CameraComponent.Viewport.ClientWidth  = false;
+
             CameraComponent.Viewport.FieldOfView = Project::Config().EditorCameraFOV;
             RG::CreateStandard3DRenderGraph(CameraComponent, Camera);
         }
@@ -86,15 +89,14 @@ namespace Neon::Editor
 
         Camera.add<Scene::Editor::EditorSceneDoNotRemove>();
 
-        auto UpdateCamera =
-            Scene::EntityWorld::Get()
-                .system("EditorCamera::Update")
-                .kind(flecs::PreUpdate)
-                .iter(
-                    [](flecs::iter& Iter)
-                    {
-                        ProcessCameraInputs(Iter.delta_time());
-                    });
+        Scene::EntityWorld::Get()
+            .system("EditorCamera::Update")
+            .kind(flecs::PreUpdate)
+            .iter(
+                [](flecs::iter& Iter)
+                {
+                    ProcessCameraInputs(Iter.delta_time());
+                });
     }
 
     //

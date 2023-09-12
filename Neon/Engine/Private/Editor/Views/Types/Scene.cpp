@@ -46,6 +46,7 @@ namespace Neon::Editor::Views
                 {
                     Camera.disable();
                 }
+                return;
             }
             else
             {
@@ -54,6 +55,20 @@ namespace Neon::Editor::Views
                     Camera.enable();
                 }
             }
+
+            auto CameraData = Camera.get<Scene::Component::Camera>();
+            if (!CameraData) [[unlikely]]
+            {
+                return;
+            }
+
+            auto RenderGraph = CameraData->GetRenderGraph();
+            if (!RenderGraph) [[unlikely]]
+            {
+                return;
+            }
+
+            RenderGraph->GetStorage().SetOutputImageSize(Size2I{ int(Window->Size.x), int(Window->Size.y) });
         }
     }
 

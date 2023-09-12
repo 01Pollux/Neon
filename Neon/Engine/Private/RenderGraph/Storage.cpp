@@ -114,8 +114,14 @@ namespace Neon::RG
     {
         // We are using resource's desc since it is possible to change resource's dimension during graph execution
         // But the chance will only apply when the graph rerun again
-        auto& Desc = GetOutputImage().Get()->GetDesc();
-        return { Desc.Width, Desc.Height };
+        auto&  Resoure = GetOutputImage().Get();
+        Size2I Size{ 1, 1 };
+        if (Resoure)
+        {
+            auto& Desc = Resoure->GetDesc();
+            Size       = { Desc.Width, Desc.Height };
+        }
+        return Size;
     }
 
     void GraphStorage::SetOutputImageSize(
@@ -240,10 +246,9 @@ namespace Neon::RG
         auto& Desc = Handle.GetDesc();
         if (Handle.IsWindowSizedTexture())
         {
-            auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
-
-            Desc.Width  = WindowSize.Width();
-            Desc.Height = WindowSize.Height();
+            auto Size   = GetOutputImageSize();
+            Desc.Width  = Size.Width();
+            Desc.Height = Size.Height();
         }
 
         auto Iter = std::ranges::find_if(
@@ -289,6 +294,7 @@ namespace Neon::RG
             }
             else
             {
+                Desc.MipLevels = 0;
                 Res.reset(RHI::ITexture::Create(Desc));
             }
 

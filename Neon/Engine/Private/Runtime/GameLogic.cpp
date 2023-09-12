@@ -4,8 +4,6 @@
 #include <Script/Engine.hpp>
 #include <Runtime/GameLogic.hpp>
 #include <Runtime/GameEngine.hpp>
-
-#include <RHI/Swapchain.hpp>
 #include <RenderGraph/RG.hpp>
 
 #include <Scene/Component/Physics.hpp>
@@ -162,19 +160,19 @@ namespace Neon::Runtime
             [](flecs::entity      Entity,
                Component::Camera& Camera)
             {
-                auto& Size = RHI::ISwapchain::Get()->GetSize();
-
-                if (Camera.Viewport.ClientWidth)
-                {
-                    Camera.Viewport.Width = float(Size.Width());
-                }
-                if (Camera.Viewport.ClientHeight)
-                {
-                    Camera.Viewport.Height = float(Size.Height());
-                }
-
                 if (auto RenderGraph = Camera.GetRenderGraph())
                 {
+                    auto Size = RenderGraph->GetStorage().GetOutputImageSize();
+
+                    if (Camera.Viewport.ClientWidth)
+                    {
+                        Camera.Viewport.Width = float(Size.Width());
+                    }
+                    if (Camera.Viewport.ClientHeight)
+                    {
+                        Camera.Viewport.Height = float(Size.Height());
+                    }
+
                     RenderGraph->Draw();
                 }
             });

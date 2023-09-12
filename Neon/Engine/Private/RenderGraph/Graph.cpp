@@ -531,7 +531,7 @@ namespace Neon::RG
 
                 if (!RenderPass->OverrideViewport(Storage, RenderCommandList))
                 {
-                    auto& Size = RHI::ISwapchain::Get()->GetSize();
+                    auto Size = Storage.GetOutputImageSize();
 
                     RenderCommandList->SetViewport(
                         ViewportF{
