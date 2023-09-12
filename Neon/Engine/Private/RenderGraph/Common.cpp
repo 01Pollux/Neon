@@ -105,6 +105,12 @@ namespace Neon::RG
         return m_Flags.Test(EResourceFlags::WindowSizeDependent);
     }
 
+    void ResourceHandle::MakeWindowSizedTexture(
+        bool State) noexcept
+    {
+        m_Flags.Set(EResourceFlags::WindowSizeDependent, State);
+    }
+
     bool ResourceHandle::IsImported() const noexcept
     {
         return m_Flags.Test(EResourceFlags::Imported);

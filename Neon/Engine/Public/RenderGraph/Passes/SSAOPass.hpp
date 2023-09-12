@@ -21,7 +21,7 @@ namespace Neon::RG
 
     public:
         SSAOPass(
-            uint32_t SampleCount = 16);
+            uint32_t SampleCount = 8);
 
     public:
         /// <summary>
@@ -105,8 +105,8 @@ namespace Neon::RG
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage&       Storage,
-            RHI::ICommandList* CommandList);
+            const GraphStorage& Storage,
+            RHI::ICommandList*  CommandList);
 
     private:
         /// <summary>

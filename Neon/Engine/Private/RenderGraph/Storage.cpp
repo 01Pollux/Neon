@@ -26,10 +26,16 @@ namespace Neon::RG
     {
         FlushResources();
         m_Resources.clear();
+
         // Importing null output image to allow to use it in the graph
         ImportTexture(
             ResourceResolver::GetOutputImageTag(),
             nullptr);
+        auto& Resource = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        Resource.MakeWindowSizedTexture(true);
+        Resource.GetDesc() = RHI::ResourceDesc::Tex2D(
+            ResourceResolver::GetSwapchainFormat(),
+            1, 1, 1);
     }
 
     bool GraphStorage::ContainsResource(
@@ -106,13 +112,23 @@ namespace Neon::RG
 
     Size2I GraphStorage::GetOutputImageSize() const
     {
-        return m_OutputImageSize ? *m_OutputImageSize : RHI::ISwapchain::Get()->GetSize();
+        // We are using resource's desc since it is possible to change resource's dimension during graph execution
+        // But the chance will only apply when the graph rerun again
+        auto& Desc = GetOutputImage().Get()->GetDesc();
+        return { Desc.Width, Desc.Height };
     }
 
     void GraphStorage::SetOutputImageSize(
         std::optional<Size2I> Size)
     {
-        m_OutputImageSize = std::move(Size);
+        auto& Resource = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        Resource.MakeWindowSizedTexture(!Size.has_value());
+        if (Size)
+        {
+            auto& Desc  = Resource.GetDesc();
+            Desc.Width  = Size->Width();
+            Desc.Height = Size->Height();
+        }
     }
 
     //
@@ -199,16 +215,19 @@ namespace Neon::RG
     void GraphStorage::NewOutputImage()
     {
         auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImageTag());
-        auto& WindowSize  = RHI::ISwapchain::Get()->GetSize();
 
-        auto Desc = RHI::ResourceDesc::Tex2D(
-            ResourceResolver::GetSwapchainFormat(),
-            WindowSize.Width(), WindowSize.Height(), 1, 1);
+        auto& Desc = OutputImage.GetDesc();
+        if (OutputImage.IsWindowSizedTexture())
+        {
+            auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
+            Desc.Width       = WindowSize.Width();
+            Desc.Height      = WindowSize.Height();
+        }
+
         Desc.SetClearValue(Colors::Magenta);
         Desc.Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
         OutputImage.Set(Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc)));
-        OutputImage.GetDesc() = Desc;
 
 #ifndef NEON_DIST
         RHI::RenameObject(OutputImage.Get().get(), ResourceResolver::GetOutputImageTag().GetName());

@@ -310,6 +310,12 @@ namespace Neon::RG
         [[nodiscard]] bool IsWindowSizedTexture() const noexcept;
 
         /// <summary>
+        /// make texture window sized
+        /// </summary>
+        [[nodiscard]] void MakeWindowSizedTexture(
+            bool State = true) noexcept;
+
+        /// <summary>
         /// check if resource is imported
         /// </summary>
         [[nodiscard]] bool IsImported() const noexcept;

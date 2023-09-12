@@ -57,7 +57,7 @@ namespace Neon::RG
         RHI::ShaderCompileDesc ShaderDesc{
             .Stage = RHI::ShaderStage::Compute
         };
-        ShaderDesc.Macros.Append(STR("SAMPLE_COUNT"), std::to_wstring(SampleCount));
+        ShaderDesc.Macros.Append(STR("SSAO_SAMPLE_COUNT"), std::to_wstring(SampleCount));
 
 #if NEON_DEBUG
         ShaderDesc.Flags.Set(RHI::EShaderCompileFlags::Debug);

@@ -10,7 +10,6 @@
 
 namespace Neon::RHI
 {
-    class ISwapchain;
     class IShader;
     class IRootSignature;
     class IPipelineState;
@@ -81,6 +80,7 @@ namespace Neon::RG
 
         /// <summary>
         /// Set output image size
+        /// If set to std::nullopt, the output image will be the same size as the window
         /// </summary>
         [[nodiscard]] void SetOutputImageSize(
             std::optional<Size2I> Size);
@@ -183,7 +183,5 @@ namespace Neon::RG
         ResourceMapType          m_Resources;
         std::set<ResourceId>     m_ImportedResources;
         InactiveResourceListType m_InactiveResources;
-
-        std::optional<Size2I> m_OutputImageSize;
     };
 } // namespace Neon::RG
