@@ -232,8 +232,8 @@ namespace Neon::RG
     }
 
     void SSAOPass::DispatchTyped(
-        const GraphStorage&       Storage,
-        RHI::ICommandList* CommandList)
+        const GraphStorage& Storage,
+        RHI::ICommandList*  CommandList)
     {
         auto GBufferNormalId = GBufferPass::GetResource(GBufferPass::ResourceType::Normal);
         auto GBufferDepthId  = GBufferPass::GetResource(GBufferPass::ResourceType::DepthStencil);
@@ -285,7 +285,7 @@ namespace Neon::RG
 
         auto Size = Storage.GetOutputImageSize();
         Size.x    = int(Size.x * Factor);
-        Size.x    = int(Size.x * Factor);
+        Size.y    = int(Size.y * Factor);
 
         CommandList->Dispatch2D(Size.x, Size.y, m_SampleCount, m_SampleCount);
     }
