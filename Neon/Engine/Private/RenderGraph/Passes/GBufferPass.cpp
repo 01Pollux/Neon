@@ -6,7 +6,7 @@
 namespace Neon::RG
 {
     GBufferPass::GBufferPass() :
-        RenderPass(STR("GBufferPass"))
+        RenderPass("GBufferPass")
     {
     }
 

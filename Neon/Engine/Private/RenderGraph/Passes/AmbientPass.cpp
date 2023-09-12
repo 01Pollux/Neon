@@ -5,7 +5,7 @@
 namespace Neon::RG
 {
     AmbientPass::AmbientPass() :
-        RenderPass(STR("AmbientPass"))
+        RenderPass("AmbientPass")
     {
     }
 
@@ -15,8 +15,8 @@ namespace Neon::RG
     }
 
     void AmbientPass::DispatchTyped(
-        const GraphStorage&       Storage,
-        RHI::ICommandList* CommandList)
+        const GraphStorage& Storage,
+        RHI::ICommandList*  CommandList)
     {
     }
 } // namespace Neon::RG

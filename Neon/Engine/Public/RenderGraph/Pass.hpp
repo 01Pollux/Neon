@@ -13,7 +13,7 @@ namespace Neon::RG
         class ResourceResolver;
 
         IRenderPass(
-            String        PassName,
+            StringU8      PassName,
             PassQueueType QueueType,
             MPassFlags    Flags = {}) :
 #ifndef NEON_DIST
@@ -65,12 +65,12 @@ namespace Neon::RG
         /// <summary>
         /// Get pass name
         /// </summary>
-        [[nodiscard]] const String& GetPassName() const noexcept
+        [[nodiscard]] const StringU8& GetPassName() const noexcept
         {
 #ifndef NEON_DIST
             return m_PassName;
 #else
-            return StringUtils::Empty<String>;
+            return StringUtils::Empty<StringU8>;
 #endif
         }
 
@@ -101,7 +101,7 @@ namespace Neon::RG
 
     private:
 #ifndef NEON_DIST
-        String m_PassName;
+        StringU8 m_PassName;
 #endif
 
         PassQueueType m_QueueType;
@@ -119,7 +119,7 @@ namespace Neon::RG
         using RenderPass = TypedRenderPass<_Ty, _Type>;
 
         TypedRenderPass(
-            String     PassName,
+            StringU8   PassName,
             MPassFlags Flags = {}) :
             IRenderPass(std::move(PassName), _Type, std::move(Flags))
         {

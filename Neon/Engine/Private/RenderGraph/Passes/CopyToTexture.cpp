@@ -24,7 +24,7 @@ namespace Neon::RG
 {
     CopyToTexturePass::CopyToTexturePass(
         CopyToTextureData Data) :
-        RenderPass(STR("CopyToTexturePass")),
+        RenderPass("CopyToTexturePass"),
         m_Data(std::move(Data))
     {
         // TODO: Load from asset rather than hardcoding

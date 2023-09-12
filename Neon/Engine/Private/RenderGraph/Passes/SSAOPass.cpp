@@ -26,7 +26,7 @@ namespace Neon::RG
 {
     SSAOPass::SSAOPass(
         uint32_t SampleCount) :
-        RenderPass(STR("SSAOPass"))
+        RenderPass("SSAOPass")
     {
         GenerateNoise();
         RegenerateSamples(SampleCount);

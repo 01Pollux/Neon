@@ -12,6 +12,17 @@ namespace Neon::RHI
     class Dx12CommandList : public ICommandList
     {
     public:
+        void BeginEvent(
+            const StringU8& Text,
+            const Color4&   Color = Colors::White) override;
+
+        void MarkEvent(
+            const StringU8& Text,
+            const Color4&   Color = Colors::White) override;
+
+        void EndEvent() override;
+
+    public:
         void CopySubresources(
             IGpuResource*                    DstResource,
             IGpuResource*                    Intermediate,
@@ -144,5 +155,10 @@ namespace Neon::RHI
 
         Ptr<IPipelineState> m_PipelineState;
         Ptr<IRootSignature> m_RootSignature;
+
+#ifndef NEON_DIST
+    private:
+        uint64_t m_Pix3Blob[64]{};
+#endif
     };
 } // namespace Neon::RHI

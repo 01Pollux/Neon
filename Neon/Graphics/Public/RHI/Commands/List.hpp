@@ -73,6 +73,26 @@ namespace Neon::RHI
         virtual ~ICommandList() = default;
 
         /// <summary>
+        /// Begin event marker
+        /// </summary>
+        virtual void BeginEvent(
+            const StringU8& Text,
+            const Color4&   Color = Colors::White) = 0;
+
+        /// <summary>
+        /// Mark an entry
+        /// </summary>
+        virtual void MarkEvent(
+            const StringU8& Text,
+            const Color4&   Color = Colors::White) = 0;
+
+        /// <summary>
+        /// End event marker
+        /// </summary>
+        virtual void EndEvent() = 0;
+
+    public:
+        /// <summary>
         /// Copy subresources into the buffer
         /// </summary>
         virtual void CopySubresources(

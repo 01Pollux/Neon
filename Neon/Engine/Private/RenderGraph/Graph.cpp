@@ -403,7 +403,9 @@ namespace Neon::RG
             case PassQueueType::Direct:
             {
                 auto RenderCommandList = m_Context.m_CommandListContext.GetGraphics(CommandIndex);
-                CommandList            = RenderCommandList;
+
+                CommandList = RenderCommandList;
+                CommandList->BeginEvent(RenderPass->GetPassName());
 
                 std::vector<RHI::CpuDescriptorHandle> RtvHandles;
                 RtvHandles.reserve(RenderTargets.size());
@@ -411,36 +413,42 @@ namespace Neon::RG
                 RHI::CpuDescriptorHandle  DsvHandle;
                 RHI::CpuDescriptorHandle* DsvHandlePtr = nullptr;
 
-                for (auto& RtvViewId : RenderTargets)
+                if (!RenderTargets.empty())
                 {
-                    RHI::CpuDescriptorHandle RtvHandle;
-
-                    auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
-                    auto& ViewDesc = std::get<RHI::RTVDescOpt>(Storage.GetResourceView(RtvViewId, &RtvHandle));
-
-                    auto& Desc = Handle.GetDesc();
-                    RtvHandles.emplace_back(RtvHandle);
-
-                    if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
+                    CommandList->MarkEvent("ClearRenderTargets", Colors::DarkOrange);
+                    for (auto& RtvViewId : RenderTargets)
                     {
+                        RHI::CpuDescriptorHandle RtvHandle;
+
+                        auto& Handle   = Storage.GetResource(RtvViewId.GetResource());
+                        auto& ViewDesc = std::get<RHI::RTVDescOpt>(Storage.GetResourceView(RtvViewId, &RtvHandle));
+
+                        auto& Desc = Handle.GetDesc();
+                        RtvHandles.emplace_back(RtvHandle);
+
+                        if (ViewDesc && ViewDesc->ClearType != RHI::ERTClearType::Ignore)
+                        {
 #if NEON_DEBUG
-                        if (!ViewDesc->ForceColor && !Desc.ClearValue)
-                        {
-                            NEON_WARNING_TAG("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
-                        }
-                        else
+                            if (!ViewDesc->ForceColor && !Desc.ClearValue)
+                            {
+                                NEON_WARNING_TAG("RenderGraph", "Render target view has no clear value, while clear type is not set to Ignore");
+                            }
+                            else
 #endif
-                        {
-                            RenderCommandList->ClearRtv(
-                                RtvHandle,
-                                ViewDesc->ForceColor.value_or(
-                                    std::get<Color4>(Desc.ClearValue->Value)));
+                            {
+                                RenderCommandList->ClearRtv(
+                                    RtvHandle,
+                                    ViewDesc->ForceColor.value_or(
+                                        std::get<Color4>(Desc.ClearValue->Value)));
+                            }
                         }
                     }
                 }
 
                 if (DepthStencil)
                 {
+                    CommandList->MarkEvent("ClearDepthStencil", Colors::OrangeRed);
+
                     auto& Handle   = Storage.GetResource(DepthStencil->GetResource());
                     auto& ViewDesc = std::get<RHI::DSVDescOpt>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
                     auto& Desc     = Handle.GetDesc();
@@ -540,14 +548,17 @@ namespace Neon::RG
             case PassQueueType::Compute:
             {
                 CommandList = m_Context.m_CommandListContext.GetCompute(CommandIndex);
+                CommandList->BeginEvent(RenderPass->GetPassName());
                 break;
             }
             }
 
 #ifndef NEON_DIST
-            RHI::RenameObject(CommandList, RenderPass->GetPassName());
+            RHI::RenameObject(CommandList, StringUtils::Transform<String>(RenderPass->GetPassName()));
 #endif
             RenderPass->Dispatch(Storage, CommandList);
+
+            CommandList->EndEvent();
         };
 
 #ifdef NEON_RENDER_GRAPH_THREADED

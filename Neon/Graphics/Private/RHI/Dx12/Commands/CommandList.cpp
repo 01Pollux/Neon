@@ -16,10 +16,55 @@
 #include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <pix.h>
+
 namespace Neon::RHI
 {
-    static constexpr uint32_t SizeOfResourceDescriptorHeap = 8192;
-    static constexpr uint32_t SizeOfSamplerDescriptorHeap  = 8;
+#ifndef NEON_DIST
+    void Encode_Pix3Blob(
+        UINT64 (&Blob)[64],
+        const char* Label,
+        uint32_t    Size,
+        uint64_t    Color)
+    {
+
+        Blob[0] = (0x2ull << 10); // PIXEvent_BeginEvent_NoArgs
+        Blob[1] = Color;
+        Blob[2] = (8ull /* copyChunkSize */ << 55) | (1ull /* isANSI */ << 54);
+        std::fill_n(Blob + 3, 61, 0);
+        Size = std::min(Size, uint32_t(sizeof(Blob) - (4 * sizeof(UINT64))));
+        std::copy_n(Label, Size, std::bit_cast<char*>(Blob + 3));
+    }
+#endif
+
+    void Dx12CommandList::BeginEvent(
+        const StringU8& Text,
+        const Color4&   Color)
+    {
+#ifndef NEON_DIST
+        Encode_Pix3Blob(m_Pix3Blob, Text.c_str(), uint32_t(Text.size()), ColorToU32(Color));
+        m_CommandList->BeginEvent(2, m_Pix3Blob, sizeof(m_Pix3Blob));
+#endif
+    }
+
+    void Dx12CommandList::MarkEvent(
+        const StringU8& Text,
+        const Color4&   Color)
+    {
+#ifndef NEON_DIST
+        Encode_Pix3Blob(m_Pix3Blob, Text.c_str(), uint32_t(Text.size()), ColorToU32(Color));
+        m_CommandList->SetMarker(2, m_Pix3Blob, sizeof(m_Pix3Blob));
+#endif
+    }
+
+    void Dx12CommandList::EndEvent()
+    {
+#ifndef NEON_DIST
+        m_CommandList->EndEvent();
+#endif
+    }
+
+    //
 
     void Dx12CommandList::CopySubresources(
         IGpuResource*                    DstResource,

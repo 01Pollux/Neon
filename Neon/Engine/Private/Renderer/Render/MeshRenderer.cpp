@@ -69,6 +69,7 @@ namespace Neon::Renderer
     {
         if (m_MeshQuery.is_true())
         {
+            CommandList->MarkEvent("Render Mesh");
             m_MeshQuery.iter(
                 [this,
                  CameraBuffer,

@@ -33,6 +33,7 @@ namespace Neon::Renderer
     {
         if (m_SpriteQuery.is_true())
         {
+            CommandList->MarkEvent("Render Sprite");
             m_SpriteBatch.SetCameraBuffer(CameraBuffer);
             m_SpriteBatch.Begin(CommandList);
             m_SpriteQuery.iter(

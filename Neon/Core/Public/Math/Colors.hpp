@@ -10,6 +10,110 @@ namespace Neon
     using Color3U8 = glm::u8vec3;
     using Color4U8 = glm::u8vec4;
 
+    //
+
+    /// <summary>
+    /// Converts a Color3 to uint32_t
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t ColorToU32(
+        const Color3& Color)
+    {
+        return (uint32_t(Color.r * 255.0f) << 24) |
+               (uint32_t(Color.g * 255.0f) << 16) |
+               (uint32_t(Color.b * 255.0f) << 8) |
+               (uint32_t(255));
+    }
+
+    /// <summary>
+    /// Converts a Color4 to uint32_t
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t ColorToU32(
+        const Color4& Color)
+    {
+        return (uint32_t(Color.r * 255.0f) << 24) |
+               (uint32_t(Color.g * 255.0f) << 16) |
+               (uint32_t(Color.b * 255.0f) << 8) |
+               (uint32_t(Color.a * 255.0f));
+    }
+
+    /// <summary>
+    /// Converts a Color3 to uint32_t
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t ColorToU32(
+        const Color3U8& Color)
+    {
+        return (uint32_t(Color.r) << 24) |
+               (uint32_t(Color.g) << 16) |
+               (uint32_t(Color.b) << 8) |
+               (uint32_t(255));
+    }
+
+    /// <summary>
+    /// Converts a Color4 to uint32_t
+    /// </summary>
+    [[nodiscard]] constexpr uint32_t ColorToU32(
+        const Color4U8& Color)
+    {
+        return (uint32_t(Color.r) << 24) |
+               (uint32_t(Color.g) << 16) |
+               (uint32_t(Color.b) << 8) |
+               (uint32_t(Color.a));
+    }
+
+    //
+
+    /// <summary>
+    /// Converts a uint32_t to Color3
+    /// </summary>
+    [[nodiscard]] constexpr Color3 U32ToColor3(
+        uint32_t Color)
+    {
+        return Color3(
+            float((Color >> 24) & 0xFF) / 255.0f,
+            float((Color >> 16) & 0xFF) / 255.0f,
+            float((Color >> 8) & 0xFF) / 255.0f);
+    }
+
+    /// <summary>
+    /// Converts a uint32_t to Color4
+    /// </summary>
+    [[nodiscard]] constexpr Color4 U32ToColor4(
+        uint32_t Color)
+    {
+        return Color4(
+            float((Color >> 24) & 0xFF) / 255.0f,
+            float((Color >> 16) & 0xFF) / 255.0f,
+            float((Color >> 8) & 0xFF) / 255.0f,
+            float((Color >> 0) & 0xFF) / 255.0f);
+    }
+
+    /// <summary>
+    /// Converts a uint32_t to Color3
+    /// </summary>
+    [[nodiscard]] constexpr Color3U8 U32ToColor3U8(
+        uint32_t Color)
+    {
+        return Color3U8(
+            float((Color >> 24) & 0xFF) / 255.0f,
+            float((Color >> 16) & 0xFF) / 255.0f,
+            float((Color >> 8) & 0xFF) / 255.0f);
+    }
+
+    /// <summary>
+    /// Converts a uint32_t to Color4
+    /// </summary>
+    [[nodiscard]] constexpr Color4U8 U32ToColor4U8(
+        uint32_t Color)
+    {
+        return Color4U8(
+            float((Color >> 24) & 0xFF) / 255.0f,
+            float((Color >> 16) & 0xFF) / 255.0f,
+            float((Color >> 8) & 0xFF) / 255.0f,
+            float((Color >> 0) & 0xFF) / 255.0f);
+    }
+
+    //
+
     namespace Colors
     {
         static constexpr Color4 AliceBlue            = { 0.941176534f, 0.972549081f, 1.000000000f, 1.000000000f };

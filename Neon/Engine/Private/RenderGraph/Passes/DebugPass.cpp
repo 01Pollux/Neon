@@ -8,7 +8,7 @@ namespace Neon::RG
 {
     DebugPass::DebugPass(
         ResourceId DrawTarget) :
-        RenderPass(STR("DebugPass")),
+        RenderPass("DebugPass"),
         m_DrawTarget(std::move(DrawTarget))
     {
     }
@@ -25,8 +25,8 @@ namespace Neon::RG
     }
 
     void DebugPass::DispatchTyped(
-        const GraphStorage&        Storage,
-        RHI::ICommandList* CommandList)
+        const GraphStorage& Storage,
+        RHI::ICommandList*  CommandList)
     {
         Runtime::DebugOverlay::Render(
             CommandList,

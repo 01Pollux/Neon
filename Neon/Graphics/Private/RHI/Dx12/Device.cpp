@@ -24,6 +24,8 @@ namespace Neon::RHI
 {
     static std::unique_ptr<Dx12RenderDevice> s_RenderDevice = nullptr;
 
+    //
+
     void IRenderDevice::Create(
         Windowing::WindowApp*      Window,
         const DeviceCreateDesc&    DeviceDesc,
@@ -229,7 +231,8 @@ namespace Neon::RHI
 
         pixSearchPath.pop_back();
         pixSearchPath += NewestVersionFound + STR("\\WinPixGpuCapturer.dll");
-        if (!LoadLibraryW(pixSearchPath.c_str()))
+        HMODULE PixLib;
+        if (!(PixLib = LoadLibraryW(pixSearchPath.c_str())))
         {
             NEON_WARNING_TAG("Graphics", "Couldn't find a PIX gpu debugger");
         }
