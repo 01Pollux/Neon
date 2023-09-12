@@ -226,7 +226,8 @@ namespace Neon::Renderer
 
     Material::Material(
         const RenderMaterialBuilder& Builder) :
-        m_Parameters(std::make_shared<LayoutEntryMap>())
+        m_Parameters(std::make_shared<LayoutEntryMap>()),
+        m_IsCompute(false)
     {
         Material_CreateDescriptors(
             Builder,
@@ -239,7 +240,8 @@ namespace Neon::Renderer
 
     Material::Material(
         const ComputeMaterialBuilder& Builder) :
-        m_Parameters(std::make_shared<LayoutEntryMap>())
+        m_Parameters(std::make_shared<LayoutEntryMap>()),
+        m_IsCompute(true)
     {
         Material_CreateDescriptors(
             Builder,
@@ -254,7 +256,8 @@ namespace Neon::Renderer
         Material* Other) :
         m_SharedDescriptors(Other->m_SharedDescriptors),
         m_LocalDescriptors(Other->m_LocalDescriptors.ResourceDescriptors.Size, Other->m_LocalDescriptors.SamplerDescriptors.Size),
-        m_Parameters(Other->m_Parameters)
+        m_Parameters(Other->m_Parameters),
+        m_IsCompute(Other->m_IsCompute)
     {
         m_RootSignature = Other->m_RootSignature;
         m_PipelineState = Other->m_PipelineState;
@@ -362,13 +365,13 @@ namespace Neon::Renderer
     }
 
     void Material::Apply(
-        RHI::ICommonCommandList* CommandList)
+        RHI::ICommandList* CommandList)
     {
         MaterialTable::ApplyOne(this, CommandList);
     }
 
     void Material::ApplyAll(
-        RHI::ICommonCommandList*         CommandList,
+        RHI::ICommandList*               CommandList,
         std::span<uint32_t>              DescriptorOffsets,
         const RHI::DescriptorHeapHandle& ResourceDescriptor,
         const RHI::DescriptorHeapHandle& SamplerDescriptor) const
@@ -376,7 +379,7 @@ namespace Neon::Renderer
         auto& RootSignature = GetRootSignature();
 
         // Bind root signature and pipeline state
-        CommandList->SetRootSignature(RootSignature);
+        CommandList->SetRootSignature(!m_IsCompute, RootSignature);
         CommandList->SetPipelineState(GetPipelineState());
 
         // We will start at 1 to correctly bind root indices, (first Param always start with 0, and keep incrementing)
@@ -398,7 +401,7 @@ namespace Neon::Renderer
                 auto& Constant = std::get<ConstantEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
 
                 auto DataPtr = m_Parameters->ConstantData.get() + Constant.DataOffset;
-                CommandList->SetConstants(LastRootIndex, DataPtr, RootParam.Constants.Num32BitValues);
+                CommandList->SetConstants(!m_IsCompute, LastRootIndex, DataPtr, RootParam.Constants.Num32BitValues);
                 break;
             }
 
@@ -406,7 +409,7 @@ namespace Neon::Renderer
             {
                 auto& Root = std::get<RootEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
 
-                CommandList->SetResourceView(Root.ViewType, LastRootIndex, Root.Handle);
+                CommandList->SetResourceView(!m_IsCompute, Root.ViewType, LastRootIndex, Root.Handle);
                 break;
             }
 
@@ -415,7 +418,7 @@ namespace Neon::Renderer
                 auto  IsSampler       = std::holds_alternative<SamplerEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
                 auto& DescriptorTable = IsSampler ? SamplerDescriptor : ResourceDescriptor;
 
-                CommandList->SetDescriptorTable(LastRootIndex, DescriptorTable.GetGpuHandle(DescriptorOffsets[DescriptorOffsetIndex]));
+                CommandList->SetDescriptorTable(!m_IsCompute, LastRootIndex, DescriptorTable.GetGpuHandle(DescriptorOffsets[DescriptorOffsetIndex]));
                 DescriptorOffsetIndex++;
                 break;
             }
@@ -710,14 +713,14 @@ namespace Neon::Renderer
     //
 
     void MaterialTable::Apply(
-        RHI::ICommonCommandList* CommandList)
+        RHI::ICommandList* CommandList)
     {
         Apply(GetFirstMaterial(), m_Materials, CommandList);
     }
 
     void MaterialTable::ApplyOne(
-        IMaterial*               Material,
-        RHI::ICommonCommandList* CommandList)
+        IMaterial*         Material,
+        RHI::ICommandList* CommandList)
     {
         Apply(Material, { &Material, 1 }, CommandList);
     }
@@ -725,9 +728,9 @@ namespace Neon::Renderer
     //
 
     void MaterialTable::Apply(
-        IMaterial*               FirstMaterial,
-        std::span<IMaterial*>    Materials,
-        RHI::ICommonCommandList* CommandList)
+        IMaterial*            FirstMaterial,
+        std::span<IMaterial*> Materials,
+        RHI::ICommandList*    CommandList)
     {
         std::vector<RHI::IDescriptorHeap::CopyInfo> ResourceDescriptors, SamplerDescriptors;
         std::vector<uint32_t>                       DescriptorOffsets;

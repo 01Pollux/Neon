@@ -5,7 +5,7 @@
 
 namespace Neon::RHI
 {
-    class IGraphicsCommandList;
+    class ICommandList;
 }
 
 namespace Neon::Renderer
@@ -23,7 +23,7 @@ namespace Neon::Renderer
         /// Render the scene using the given command list.
         /// </summary>
         virtual void Render(
-            RHI::GpuResourceHandle     CameraBuffer,
-            RHI::IGraphicsCommandList* CommandList) = 0;
+            RHI::GpuResourceHandle CameraBuffer,
+            RHI::ICommandList*     CommandList) = 0;
     };
 } // namespace Neon::Renderer

@@ -7,7 +7,7 @@
 
 namespace Neon::RHI
 {
-    class IGraphicsCommandList;
+    class ICommandList;
 } // namespace Neon::RHI
 
 namespace Neon::Runtime
@@ -64,8 +64,8 @@ namespace Neon::Runtime
         /// Flush all draw calls into ommand list.
         /// </summary>
         static void Render(
-            RHI::IGraphicsCommandList* CommandList,
-            RHI::GpuResourceHandle     PerFrameData)
+            RHI::ICommandList*     CommandList,
+            RHI::GpuResourceHandle PerFrameData)
         {
 #ifndef NEON_DIST
             s_DebugOverlay->Render_Impl(CommandList, PerFrameData);
@@ -136,8 +136,8 @@ namespace Neon::Runtime
         NEON_M_NODIST_PV(void Reset_Impl());
 
         NEON_M_NODIST_PV(void Render_Impl(
-            RHI::IGraphicsCommandList* CommandList,
-            RHI::GpuResourceHandle     PerFrameData));
+            RHI::ICommandList*     CommandList,
+            RHI::GpuResourceHandle PerFrameData));
 
         NEON_M_NODIST_PV(void DrawLine_Impl(
             const LineArgs& Args,

@@ -13,8 +13,6 @@ namespace Neon::RHI
     {
     public:
         CommandContext() = default;
-        CommandContext(
-            CommandQueueType Type);
 
         NEON_CLASS_NO_COPY(CommandContext);
         CommandContext(
@@ -59,50 +57,5 @@ namespace Neon::RHI
 
     private:
         std::vector<ICommandList*> m_CommandLists;
-
-        CommandQueueType m_Type;
     };
-
-    template<CommandQueueType _Type>
-    class TCommandContext : public CommandContext
-    {
-    public:
-        // clang-format off
-        using CommandListType = std::conditional_t<
-            _Type == CommandQueueType::Graphics, IGraphicsCommandList,
-              std::conditional_t<
-                  _Type == CommandQueueType::Compute, IComputeCommandList,
-              std::conditional_t<
-                  _Type == CommandQueueType::Copy, ICopyCommandList,
-                  nullptr_t>
-            >
-        >;
-        // clang-format on
-
-        explicit TCommandContext() :
-            CommandContext(_Type)
-        {
-        }
-
-        /// <summary>
-        /// Add new command lists to the batch.
-        /// </summary>
-        CommandListType* Append()
-        {
-            return dynamic_cast<CommandListType*>(CommandContext::Append());
-        }
-
-        /// <summary>
-        /// Get a command list in the batch.
-        /// </summary>
-        [[nodiscard]] CommandListType* operator[](
-            size_t Index)
-        {
-            return dynamic_cast<CommandListType*>(CommandContext::operator[](Index));
-        }
-    };
-
-    using GraphicsCommandContext = TCommandContext<CommandQueueType::Graphics>;
-    using ComputeCommandContext  = TCommandContext<CommandQueueType::Compute>;
-    using CopyCommandContext     = TCommandContext<CommandQueueType::Copy>;
 } // namespace Neon::RHI

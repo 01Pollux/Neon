@@ -9,7 +9,7 @@ namespace Neon::RHI
 {
     class Dx12Swapchain;
 
-    class Dx12CommandList : public virtual ICommandList
+    class Dx12CommandList : public ICommandList
     {
     public:
         void CopySubresources(
@@ -37,68 +37,52 @@ namespace Neon::RHI
             const CopyBox*             SrcBox = nullptr) override;
 
     public:
-        /// <summary>
-        /// Attach D3D12 command list.
-        /// </summary>
-        void AttachCommandList(
-            ID3D12GraphicsCommandList* CommandList);
+        void SetRootSignature(
+            bool                       IsDirect,
+            const Ptr<IRootSignature>& RootSig) override;
 
-        /// <summary>
-        /// Get underlying D3D12 command list.
-        /// </summary>
-        [[nodiscard]] ID3D12GraphicsCommandList* Get();
-
-    protected:
-        ID3D12GraphicsCommandList* m_CommandList = nullptr;
-    };
-
-    class Dx12CommonCommandList : public virtual ICommonCommandList,
-                                  public Dx12CommandList
-    {
-    public:
         void SetPipelineState(
             const Ptr<IPipelineState>& State) override;
 
     public:
         void SetDynamicResourceView(
+            bool                IsDirect,
             CstResourceViewType Type,
             uint32_t            RootIndex,
             const void*         Data,
             size_t              Size) override;
 
     public:
-        /// <summary>
-        /// Reset pipeline state and root signature.
-        /// </summary>
-        void Reset();
+        void SetConstants(
+            bool        IsDirect,
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0) override;
 
-    protected:
-        Ptr<IPipelineState> m_PipelineState;
-        Ptr<IRootSignature> m_RootSignature;
+        void SetResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle) override;
 
-        bool m_DescriptorDirty = true;
-    };
+        void SetDescriptorTable(
+            bool                IsDirect,
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle) override;
 
-    class Dx12GraphicsCommandList final : public virtual IGraphicsCommandList,
-                                          public Dx12CommonCommandList
-    {
     public:
-        using Dx12CommonCommandList::Dx12CommonCommandList;
-
-        void SetRootSignature(
-            const Ptr<IRootSignature>& RootSig) override;
-
         void ClearRtv(
-            const CpuDescriptorHandle& RtvHandle,
-            const Color4&              Color) override;
+            CpuDescriptorHandle RtvHandle,
+            const Color4&       Color) override;
 
         void ClearDsv(
-            const CpuDescriptorHandle& RtvHandle,
-            std::optional<float>       Depth,
-            std::optional<uint8_t>     Stencil) override;
+            CpuDescriptorHandle    RtvHandle,
+            std::optional<float>   Depth,
+            std::optional<uint8_t> Stencil) override;
 
         void SetRenderTargets(
-            const CpuDescriptorHandle& ContiguousRtvs,
+            CpuDescriptorHandle        ContiguousRtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) override;
 
@@ -106,22 +90,6 @@ namespace Neon::RHI
             const CpuDescriptorHandle* Rtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) override;
-
-    public:
-        void SetConstants(
-            uint32_t    RootIndex,
-            const void* Constants,
-            size_t      NumConstants32Bit,
-            size_t      DestOffset = 0) override;
-
-        void SetResourceView(
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            GpuResourceHandle   Handle) override;
-
-        void SetDescriptorTable(
-            uint32_t            RootIndex,
-            GpuDescriptorHandle Handle) override;
 
     public:
         void SetScissorRect(
@@ -146,48 +114,35 @@ namespace Neon::RHI
 
         void Draw(
             const DrawArgs& Args) override;
-    };
-
-    //
-
-    class Dx12ComputeCommandList final : public virtual IComputeCommandList,
-                                         public Dx12CommonCommandList
-    {
-    public:
-        using Dx12CommonCommandList::Dx12CommonCommandList;
-
-        void SetRootSignature(
-            const Ptr<IRootSignature>& RootSig) override;
-
-    public:
-        void SetConstants(
-            uint32_t    RootIndex,
-            const void* Constants,
-            size_t      NumConstants32Bit,
-            size_t      DestOffset = 0) override;
-
-        void SetResourceView(
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            GpuResourceHandle   Handle) override;
-
-        void SetDescriptorTable(
-            uint32_t            RootIndex,
-            GpuDescriptorHandle Handle) override;
 
     public:
         void Dispatch(
             size_t GroupCountX = 1,
             size_t GroupCountY = 1,
             size_t GroupCountZ = 1) override;
-    };
 
-    //
-
-    class Dx12CopyCommandList final : public virtual ICopyCommandList,
-                                      public Dx12CommandList
-    {
     public:
-        using Dx12CommandList::Dx12CommandList;
+        /// <summary>
+        /// Reset pipeline state and root signature.
+        /// </summary>
+        void Reset();
+
+    public:
+        /// <summary>
+        /// Attach D3D12 command list.
+        /// </summary>
+        void AttachCommandList(
+            ID3D12GraphicsCommandList* CommandList);
+
+        /// <summary>
+        /// Get underlying D3D12 command list.
+        /// </summary>
+        [[nodiscard]] ID3D12GraphicsCommandList* Get();
+
+    private:
+        ID3D12GraphicsCommandList* m_CommandList = nullptr;
+
+        Ptr<IPipelineState> m_PipelineState;
+        Ptr<IRootSignature> m_RootSignature;
     };
 } // namespace Neon::RHI

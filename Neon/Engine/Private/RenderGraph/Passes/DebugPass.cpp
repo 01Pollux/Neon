@@ -26,7 +26,7 @@ namespace Neon::RG
 
     void DebugPass::DispatchTyped(
         const GraphStorage&        Storage,
-        RHI::IGraphicsCommandList* CommandList)
+        RHI::ICommandList* CommandList)
     {
         Runtime::DebugOverlay::Render(
             CommandList,

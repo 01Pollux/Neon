@@ -63,8 +63,8 @@ namespace Neon::RG
     }
 
     void CopyToTexturePass::DispatchTyped(
-        const GraphStorage&        Storage,
-        RHI::IGraphicsCommandList* CommandList)
+        const GraphStorage&      Storage,
+        RHI::GraphicsCommandList CommandList)
     {
         Ptr<Renderer::IMaterial> Material;
         switch (m_Data.Blend)
@@ -86,7 +86,7 @@ namespace Neon::RG
 
         Material->Apply(CommandList);
 
-        CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
-        CommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
+        CommandList.SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
+        CommandList.Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
     }
 } // namespace Neon::RG

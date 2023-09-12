@@ -79,7 +79,7 @@ namespace Neon::RHI
             BackBuffer,
             RHI::MResourceState::FromEnum(RHI::EResourceState::RenderTarget));
 
-        GraphicsCommandContext CommandContext;
+        CommandContext CommandContext;
 
         auto CommandList = CommandContext.Append();
         StateManager->FlushBarriers(CommandList);

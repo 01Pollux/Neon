@@ -42,8 +42,8 @@ namespace Neon::RG
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage&        Storage,
-            RHI::IGraphicsCommandList* CommandList);
+            const GraphStorage&      Storage,
+            RHI::GraphicsCommandList CommandList);
 
     private:
         CopyToTextureData m_Data;

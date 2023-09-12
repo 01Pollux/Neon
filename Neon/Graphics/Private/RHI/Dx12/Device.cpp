@@ -75,12 +75,12 @@ namespace Neon::RHI
 
     void RenameObject(IDescriptorHeap* Object, const String& Name)
     {
-        RenameObject(dynamic_cast<Dx12DescriptorHeap*>(Object)->Get(), Name.c_str());
+        RenameObject(static_cast<Dx12DescriptorHeap*>(Object)->Get(), Name.c_str());
     }
 
     void RenameObject(ICommandList* Object, const String& Name)
     {
-        RenameObject(dynamic_cast<Dx12CommandList*>(Object)->Get(), Name.c_str());
+        RenameObject(static_cast<Dx12CommandList*>(Object)->Get(), Name.c_str());
     }
 #endif
 

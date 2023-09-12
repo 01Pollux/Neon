@@ -138,20 +138,27 @@ namespace Neon::RHI
             SrcBox ? &Box : nullptr);
     }
 
-    void Dx12CommandList::AttachCommandList(
-        ID3D12GraphicsCommandList* CommandList)
-    {
-        m_CommandList = CommandList;
-    }
-
-    ID3D12GraphicsCommandList* Dx12CommandList::Get()
-    {
-        return m_CommandList;
-    }
-
     //
 
-    void Dx12CommonCommandList::SetPipelineState(
+    void Dx12CommandList::SetRootSignature(
+        bool                       IsDirect,
+        const Ptr<IRootSignature>& RootSig)
+    {
+        if (m_RootSignature != RootSig)
+        {
+            if (IsDirect)
+            {
+                m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            }
+            else
+            {
+                m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            }
+            m_RootSignature = RootSig;
+        }
+    }
+
+    void Dx12CommandList::SetPipelineState(
         const Ptr<IPipelineState>& State)
     {
         if (m_PipelineState != State)
@@ -163,7 +170,8 @@ namespace Neon::RHI
 
     //
 
-    void Dx12CommonCommandList::SetDynamicResourceView(
+    void Dx12CommandList::SetDynamicResourceView(
+        bool                IsDirect,
         CstResourceViewType Type,
         uint32_t            RootIndex,
         const void*         Data,
@@ -192,45 +200,41 @@ namespace Neon::RHI
         Buffer.AsUpload()->Write(0, Data, Size);
 
         SetResourceView(
+            IsDirect,
             Type,
             RootIndex,
             Buffer.GetGpuHandle());
     }
 
-    void Dx12CommonCommandList::Reset()
-    {
-        m_PipelineState = nullptr;
-        m_RootSignature = nullptr;
-    }
-
     //
 
-    void Dx12GraphicsCommandList::SetRootSignature(
-        const Ptr<IRootSignature>& RootSig)
-    {
-        if (m_RootSignature != RootSig)
-        {
-            m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
-            m_RootSignature = RootSig;
-        }
-    }
-
-    //
-
-    void Dx12GraphicsCommandList::SetConstants(
+    void Dx12CommandList::SetConstants(
+        bool        IsDirect,
         uint32_t    RootIndex,
         const void* Constants,
         size_t      NumConstants32Bit,
         size_t      DestOffset)
     {
-        m_CommandList->SetGraphicsRoot32BitConstants(
-            RootIndex,
-            uint32_t(NumConstants32Bit),
-            Constants,
-            uint32_t(DestOffset));
+        if (IsDirect)
+        {
+            m_CommandList->SetGraphicsRoot32BitConstants(
+                RootIndex,
+                uint32_t(NumConstants32Bit),
+                Constants,
+                uint32_t(DestOffset));
+        }
+        else
+        {
+            m_CommandList->SetComputeRoot32BitConstants(
+                RootIndex,
+                uint32_t(NumConstants32Bit),
+                Constants,
+                uint32_t(DestOffset));
+        }
     }
 
-    void Dx12GraphicsCommandList::SetResourceView(
+    void Dx12CommandList::SetResourceView(
+        bool                IsDirect,
         CstResourceViewType Type,
         uint32_t            RootIndex,
         GpuResourceHandle   Handle)
@@ -239,43 +243,78 @@ namespace Neon::RHI
         switch (Type)
         {
         case CstResourceViewType::Cbv:
-            m_CommandList->SetGraphicsRootConstantBufferView(
-                RootIndex,
-                Dx12Handle);
+            if (IsDirect)
+            {
+                m_CommandList->SetGraphicsRootConstantBufferView(
+                    RootIndex,
+                    Dx12Handle);
+            }
+            else
+            {
+                m_CommandList->SetComputeRootConstantBufferView(
+                    RootIndex,
+                    Dx12Handle);
+            }
             break;
         case CstResourceViewType::Srv:
-            m_CommandList->SetGraphicsRootShaderResourceView(
-                RootIndex,
-                Dx12Handle);
+            if (IsDirect)
+            {
+                m_CommandList->SetGraphicsRootShaderResourceView(
+                    RootIndex,
+                    Dx12Handle);
+            }
+            else
+            {
+                m_CommandList->SetComputeRootShaderResourceView(
+                    RootIndex,
+                    Dx12Handle);
+            }
             break;
         case CstResourceViewType::Uav:
-            m_CommandList->SetGraphicsRootUnorderedAccessView(
-                RootIndex,
-                Dx12Handle);
+            if (IsDirect)
+            {
+                m_CommandList->SetGraphicsRootUnorderedAccessView(
+                    RootIndex,
+                    Dx12Handle);
+            }
+            else
+            {
+                m_CommandList->SetComputeRootUnorderedAccessView(
+                    RootIndex,
+                    Dx12Handle);
+            }
             break;
         }
     }
 
-    void Dx12GraphicsCommandList::SetDescriptorTable(
+    void Dx12CommandList::SetDescriptorTable(
+        bool                IsDirect,
         UINT                RootIndex,
         GpuDescriptorHandle Handle)
     {
-        m_CommandList->SetGraphicsRootDescriptorTable(RootIndex, { Handle.Value });
+        if (IsDirect)
+        {
+            m_CommandList->SetGraphicsRootDescriptorTable(RootIndex, { Handle.Value });
+        }
+        else
+        {
+            m_CommandList->SetComputeRootDescriptorTable(RootIndex, { Handle.Value });
+        }
     }
 
     //
 
-    void Dx12GraphicsCommandList::ClearRtv(
-        const CpuDescriptorHandle& RtvHandle,
-        const Color4&              Color)
+    void Dx12CommandList::ClearRtv(
+        CpuDescriptorHandle RtvHandle,
+        const Color4&       Color)
     {
         m_CommandList->ClearRenderTargetView({ RtvHandle.Value }, glm::value_ptr(Color), 0, nullptr);
     }
 
-    void Dx12GraphicsCommandList::ClearDsv(
-        const CpuDescriptorHandle& RtvHandle,
-        std::optional<float>       Depth,
-        std::optional<uint8_t>     Stencil)
+    void Dx12CommandList::ClearDsv(
+        CpuDescriptorHandle    RtvHandle,
+        std::optional<float>   Depth,
+        std::optional<uint8_t> Stencil)
     {
         D3D12_CLEAR_FLAGS ClearFlags = {};
         if (Depth)
@@ -289,8 +328,8 @@ namespace Neon::RHI
         m_CommandList->ClearDepthStencilView({ RtvHandle.Value }, ClearFlags, Depth.value_or(1.0f), Stencil.value_or(0), 0, nullptr);
     }
 
-    void Dx12GraphicsCommandList::SetRenderTargets(
-        const CpuDescriptorHandle& ContiguousRtvs,
+    void Dx12CommandList::SetRenderTargets(
+        CpuDescriptorHandle        ContiguousRtvs,
         size_t                     RenderTargetCount,
         const CpuDescriptorHandle* DepthStencil)
     {
@@ -308,7 +347,7 @@ namespace Neon::RHI
             DepthStencil ? &Dsv : nullptr);
     }
 
-    void Dx12GraphicsCommandList::SetRenderTargets(
+    void Dx12CommandList::SetRenderTargets(
         const CpuDescriptorHandle* Rtvs,
         size_t                     RenderTargetCount,
         const CpuDescriptorHandle* DepthStencil)
@@ -317,7 +356,7 @@ namespace Neon::RHI
         Rtv.reserve(RenderTargetCount);
 
         std::transform(Rtvs, Rtvs + RenderTargetCount, std::back_inserter(Rtv),
-                       [](const CpuDescriptorHandle& Rtv) -> D3D12_CPU_DESCRIPTOR_HANDLE
+                       [](CpuDescriptorHandle Rtv) -> D3D12_CPU_DESCRIPTOR_HANDLE
                        { return { Rtv.Value }; });
 
         D3D12_CPU_DESCRIPTOR_HANDLE Dsv;
@@ -333,7 +372,9 @@ namespace Neon::RHI
             DepthStencil ? &Dsv : nullptr);
     }
 
-    void Dx12GraphicsCommandList::SetScissorRect(
+    //
+
+    void Dx12CommandList::SetScissorRect(
         std::span<RectT<Vector2>> Scissors)
     {
         std::vector<D3D12_RECT> Rects;
@@ -356,7 +397,7 @@ namespace Neon::RHI
         m_CommandList->RSSetScissorRects(UINT(Rects.size()), Rects.data());
     }
 
-    void Dx12GraphicsCommandList::SetViewport(
+    void Dx12CommandList::SetViewport(
         std::span<ViewportF> Views)
     {
         std::vector<D3D12_VIEWPORT> Viewports;
@@ -381,13 +422,13 @@ namespace Neon::RHI
         m_CommandList->RSSetViewports(UINT(Viewports.size()), Viewports.data());
     }
 
-    void Dx12GraphicsCommandList::SetPrimitiveTopology(
+    void Dx12CommandList::SetPrimitiveTopology(
         PrimitiveTopology Topology)
     {
         m_CommandList->IASetPrimitiveTopology(CastPrimitiveTopology(Topology));
     }
 
-    void Dx12GraphicsCommandList::SetIndexBuffer(
+    void Dx12CommandList::SetIndexBuffer(
         const Views::Index& View)
     {
         D3D12_INDEX_BUFFER_VIEW IndexBuffer{
@@ -398,7 +439,7 @@ namespace Neon::RHI
         m_CommandList->IASetIndexBuffer(&IndexBuffer);
     }
 
-    void Dx12GraphicsCommandList::SetVertexBuffer(
+    void Dx12CommandList::SetVertexBuffer(
         size_t               StartSlot,
         const Views::Vertex& Views)
     {
@@ -426,7 +467,7 @@ namespace Neon::RHI
 
     //
 
-    void Dx12GraphicsCommandList::Draw(
+    void Dx12CommandList::Draw(
         const DrawIndexArgs& Args)
     {
         m_CommandList->DrawIndexedInstanced(
@@ -437,7 +478,7 @@ namespace Neon::RHI
             Args.StartInstance);
     }
 
-    void Dx12GraphicsCommandList::Draw(
+    void Dx12CommandList::Draw(
         const DrawArgs& Args)
     {
         m_CommandList->DrawInstanced(
@@ -449,63 +490,7 @@ namespace Neon::RHI
 
     //
 
-    void Dx12ComputeCommandList::SetRootSignature(
-        const Ptr<IRootSignature>& RootSig)
-    {
-        if (m_RootSignature != RootSig)
-        {
-            m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
-            m_RootSignature = RootSig;
-        }
-    }
-
-    void Dx12ComputeCommandList::SetConstants(
-        uint32_t    RootIndex,
-        const void* Constants,
-        size_t      NumConstants32Bit,
-        size_t      DestOffset)
-    {
-        m_CommandList->SetComputeRoot32BitConstants(
-            RootIndex,
-            uint32_t(NumConstants32Bit),
-            Constants,
-            uint32_t(DestOffset));
-    }
-
-    void Dx12ComputeCommandList::SetResourceView(
-        CstResourceViewType Type,
-        uint32_t            RootIndex,
-        GpuResourceHandle   Handle)
-    {
-        D3D12_GPU_VIRTUAL_ADDRESS Dx12Handle{ Handle.Value };
-        switch (Type)
-        {
-        case CstResourceViewType::Cbv:
-            m_CommandList->SetComputeRootConstantBufferView(
-                RootIndex,
-                Dx12Handle);
-            break;
-        case CstResourceViewType::Srv:
-            m_CommandList->SetComputeRootShaderResourceView(
-                RootIndex,
-                Dx12Handle);
-            break;
-        case CstResourceViewType::Uav:
-            m_CommandList->SetComputeRootUnorderedAccessView(
-                RootIndex,
-                Dx12Handle);
-            break;
-        }
-    }
-
-    void Dx12ComputeCommandList::SetDescriptorTable(
-        UINT                RootIndex,
-        GpuDescriptorHandle Handle)
-    {
-        m_CommandList->SetComputeRootDescriptorTable(RootIndex, { Handle.Value });
-    }
-
-    void Dx12ComputeCommandList::Dispatch(
+    void Dx12CommandList::Dispatch(
         size_t GroupCountX,
         size_t GroupCountY,
         size_t GroupCountZ)
@@ -514,5 +499,26 @@ namespace Neon::RHI
             UINT(GroupCountX),
             UINT(GroupCountY),
             UINT(GroupCountZ));
+    }
+
+    //
+
+    void Dx12CommandList::Reset()
+    {
+        m_PipelineState = nullptr;
+        m_RootSignature = nullptr;
+    }
+
+    //
+
+    void Dx12CommandList::AttachCommandList(
+        ID3D12GraphicsCommandList* CommandList)
+    {
+        m_CommandList = CommandList;
+    }
+
+    ID3D12GraphicsCommandList* Dx12CommandList::Get()
+    {
+        return m_CommandList;
     }
 } // namespace Neon::RHI

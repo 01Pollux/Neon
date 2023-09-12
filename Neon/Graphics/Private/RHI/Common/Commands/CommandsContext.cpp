@@ -6,14 +6,7 @@
 namespace Neon::RHI
 {
     CommandContext::CommandContext(
-        CommandQueueType Type) :
-        m_Type(Type)
-    {
-    }
-
-    CommandContext::CommandContext(
         CommandContext&& Context) noexcept :
-        m_Type(Context.m_Type),
         m_CommandLists(std::exchange(Context.m_CommandLists, {}))
     {
     }
@@ -38,7 +31,7 @@ namespace Neon::RHI
     {
         size_t Pos      = m_CommandLists.size();
         auto   Queue    = ISwapchain::Get()->GetQueue(true);
-        auto   Commands = Queue->AllocateCommandLists(m_Type, Size);
+        auto   Commands = Queue->AllocateCommandLists(RHI::CommandQueueType::Graphics, Size);
         m_CommandLists.insert_range(m_CommandLists.end(), Commands);
         return Pos;
     }
@@ -63,7 +56,7 @@ namespace Neon::RHI
             Queue->Upload(m_CommandLists);
             if (Clear)
             {
-                Queue->FreeCommandLists(m_Type, m_CommandLists);
+                Queue->FreeCommandLists(RHI::CommandQueueType::Graphics, m_CommandLists);
                 m_CommandLists.clear();
             }
         }
@@ -74,7 +67,7 @@ namespace Neon::RHI
         if (!m_CommandLists.empty())
         {
             auto Queue = ISwapchain::Get()->GetQueue(true);
-            Queue->Reset(m_Type, m_CommandLists);
+            Queue->Reset(RHI::CommandQueueType::Graphics, m_CommandLists);
         }
     }
 

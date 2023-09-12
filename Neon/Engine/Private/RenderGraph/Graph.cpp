@@ -134,75 +134,56 @@ namespace Neon::RG
     /// <summary>
     /// Allocates a vector of command lists of type _Ty
     /// </summary>
-    template<RHI::CommandQueueType _Queue, typename _Ty>
     static void AllocateCommandLists(
-        std::vector<_Ty>& List)
+        std::vector<RHI::ICommandList*>& List)
     {
         if (!List.empty())
         {
-            auto Queue    = RHI::ISwapchain::Get()->GetQueue(true);
-            auto Commands = Queue->AllocateCommandLists(_Queue, List.size());
-            std::transform(Commands.begin(), Commands.end(), List.begin(), [](auto& Command)
-                           { return dynamic_cast<_Ty>(Command); });
-        }
-    }
-
-    /// <summary>
-    /// Flushes a vector of command lists of type _Ty
-    /// </summary>
-    template<RHI::CommandQueueType _Queue, typename _Ty>
-    static void FreeCommandLists(
-        const std::vector<_Ty>& List)
-    {
-        if (!List.empty())
-        {
-            std::vector<RHI::ICommandList*> Commands;
-            Commands.reserve(List.size());
-            std::transform(List.begin(), List.end(), std::back_inserter(Commands), [](auto& Command)
-                           { return dynamic_cast<RHI::ICommandList*>(Command); });
-
             auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
-            Queue->FreeCommandLists(_Queue, Commands);
+            List       = Queue->AllocateCommandLists(RHI::CommandQueueType::Graphics, List.size());
         }
     }
 
     /// <summary>
     /// Flushes a vector of command lists of type _Ty
     /// </summary>
-    template<RHI::CommandQueueType _Queue, typename _Ty>
+    static void FreeCommandLists(
+        std::vector<RHI::ICommandList*>& List)
+    {
+        if (!List.empty())
+        {
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
+            Queue->FreeCommandLists(RHI::CommandQueueType::Graphics, List);
+        }
+    }
+
+    /// <summary>
+    /// Flushes a vector of command lists of type _Ty
+    /// </summary>
     static void FlushCommandLists(
-        const std::vector<_Ty*>& List,
-        size_t                   Count)
+        std::vector<RHI::ICommandList*>& List,
+        size_t                           Count)
     {
         if (Count)
         {
-            std::vector<RHI::ICommandList*> Commands;
-            Commands.reserve(Count);
-            std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
-                           { return dynamic_cast<RHI::ICommandList*>(Command); });
-
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
-            Queue->Upload(Commands);
+            std::span View(List.data(), Count);
+            auto      Queue = RHI::ISwapchain::Get()->GetQueue(true);
+            Queue->Upload(View);
         }
     }
 
     /// <summary>
     /// Reset a vector of command lists of type _Ty
     /// </summary>
-    template<RHI::CommandQueueType _Queue, typename _Ty>
     static void ResetCommandLists(
-        const std::vector<_Ty*>& List,
-        size_t                   Count)
+        std::vector<RHI::ICommandList*>& List,
+        size_t                           Count)
     {
         if (Count)
         {
-            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
-
-            std::vector<RHI::ICommandList*> Commands;
-            Commands.reserve(Count);
-            std::transform(List.begin(), List.begin() + Count, std::back_inserter(Commands), [](auto& Command)
-                           { return dynamic_cast<RHI::ICommandList*>(Command); });
-            Queue->Reset(_Queue, Commands);
+            std::span View(List.data(), Count);
+            auto      Queue = RHI::ISwapchain::Get()->GetQueue(true);
+            Queue->Reset(RHI::CommandQueueType::Graphics, View);
         }
     }
 
@@ -219,39 +200,39 @@ namespace Neon::RG
 
     void RenderGraph::CommandListContext::Begin()
     {
-        AllocateCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList);
-        AllocateCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList);
+        AllocateCommandLists(m_GraphicsCommandList);
+        AllocateCommandLists(m_ComputeCommandList);
     }
 
     void RenderGraph::CommandListContext::Flush(
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        FlushCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
-        FlushCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+        FlushCommandLists(m_GraphicsCommandList, GraphicsCount);
+        FlushCommandLists(m_ComputeCommandList, ComputeCount);
     }
 
     void RenderGraph::CommandListContext::Reset(
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        ResetCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList, GraphicsCount);
-        ResetCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList, ComputeCount);
+        ResetCommandLists(m_GraphicsCommandList, GraphicsCount);
+        ResetCommandLists(m_ComputeCommandList, ComputeCount);
     }
 
     void RenderGraph::CommandListContext::End()
     {
-        FreeCommandLists<RHI::CommandQueueType::Graphics>(m_GraphicsCommandList);
-        FreeCommandLists<RHI::CommandQueueType::Compute>(m_ComputeCommandList);
+        FreeCommandLists(m_GraphicsCommandList);
+        FreeCommandLists(m_ComputeCommandList);
     }
 
-    RHI::IGraphicsCommandList* RenderGraph::CommandListContext::GetGraphics(
+    RHI::ICommandList* RenderGraph::CommandListContext::GetGraphics(
         size_t Index)
     {
         return m_GraphicsCommandList[Index];
     }
 
-    RHI::IComputeCommandList* RenderGraph::CommandListContext::GetCompute(
+    RHI::ICommandList* RenderGraph::CommandListContext::GetCompute(
         size_t Index)
     {
         return m_ComputeCommandList[Index];
@@ -335,7 +316,7 @@ namespace Neon::RG
         {
             auto StateManager = RHI::IResourceStateManager::Get();
 
-            RHI::ICommonCommandList* FirstCommandList = nullptr;
+            RHI::ICommandList* FirstCommandList = nullptr;
 
             bool UsingGraphics = m_Context.m_CommandListContext.GetGraphicsCount() > 0;
             if (UsingGraphics)

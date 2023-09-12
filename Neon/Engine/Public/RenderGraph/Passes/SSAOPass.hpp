@@ -106,7 +106,7 @@ namespace Neon::RG
 
         void DispatchTyped(
             const GraphStorage&       Storage,
-            RHI::IComputeCommandList* CommandList);
+            RHI::ICommandList* CommandList);
 
     private:
         /// <summary>

@@ -59,8 +59,8 @@ namespace Neon::Runtime
             bool ShouldDraw() const;
 
             void Flush(
-                RHI::IGraphicsCommandList* CommandList,
-                RHI::GpuResourceHandle     PerFrameData);
+                RHI::ICommandList*     CommandList,
+                RHI::GpuResourceHandle PerFrameData);
 
             void Append(
                 const LineArgs& Args,
@@ -80,8 +80,8 @@ namespace Neon::Runtime
         void Reset_Impl() override;
 
         void Render_Impl(
-            RHI::IGraphicsCommandList* CommandList,
-            RHI::GpuResourceHandle     PerFrameData) override;
+            RHI::ICommandList*     CommandList,
+            RHI::GpuResourceHandle PerFrameData) override;
 
         void DrawLine_Impl(
             const LineArgs& Args,
@@ -176,8 +176,8 @@ namespace Neon::Runtime
     }
 
     void DefaultEngineDebugOverlay::Render_Impl(
-        RHI::IGraphicsCommandList* CommandList,
-        RHI::GpuResourceHandle     PerFrameData)
+        RHI::ICommandList*     CommandList,
+        RHI::GpuResourceHandle PerFrameData)
     {
         m_LineBuffer.Flush(CommandList, PerFrameData);
     }
@@ -238,8 +238,8 @@ namespace Neon::Runtime
     }
 
     void DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Flush(
-        RHI::IGraphicsCommandList* CommandList,
-        RHI::GpuResourceHandle     PerFrameData)
+        RHI::ICommandList*     CommandList,
+        RHI::GpuResourceHandle PerFrameData)
     {
         // Remove any expired lines from the timed line buffer
         if (!m_TimedLines.empty())
@@ -264,8 +264,8 @@ namespace Neon::Runtime
 
         VertexBuffers.back()->Unmap();
 
-        CommandList->SetRootSignature(Material->GetRootSignature());
-        CommandList->SetResourceView(RHI::CstResourceViewType::Cbv, 0, PerFrameData);
+        CommandList->SetRootSignature(true, Material->GetRootSignature());
+        CommandList->SetResourceView(true, RHI::CstResourceViewType::Cbv, 0, PerFrameData);
 
         CommandList->SetPipelineState(Material->GetPipelineState());
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);

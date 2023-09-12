@@ -854,4 +854,26 @@ namespace Neon::RHI
     /// Alignment for constant buffers (in bytes)
     /// </summary>
     static constexpr size_t ConstantBufferAlignement = 256;
+
+    struct ResourceFootprint
+    {
+        uint32_t Width;
+        uint32_t Height;
+        uint32_t Depth;
+        uint32_t RowPitch;
+
+        EResourceFormat Format;
+    };
+
+    struct SubresourceFootprint : public ResourceFootprint
+    {
+        size_t Offset;
+    };
+
+    struct SubresourceDesc
+    {
+        const void* Data;
+        size_t      RowPitch;
+        size_t      SlicePitch;
+    };
 } // namespace Neon::RHI

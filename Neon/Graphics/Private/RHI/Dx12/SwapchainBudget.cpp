@@ -62,7 +62,7 @@ namespace Neon::RHI
     }
 
     uint64_t Dx12Swapchain::EnqueueRequestCopy(
-        std::function<void(ICopyCommandList*)> Task)
+        std::function<void(ICommandList*)> Task)
     {
         return m_FrameManager->RequestCopy(std::move(Task));
     }

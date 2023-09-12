@@ -39,7 +39,7 @@ namespace Neon::RG
         /// </summary>
         virtual bool OverrideViewport(
             const GraphStorage&,
-            RHI::IGraphicsCommandList*)
+            RHI::ICommandList*)
         {
             return false;
         }
@@ -135,11 +135,11 @@ namespace Neon::RG
             }
             else if constexpr (_Type == PassQueueType::Direct)
             {
-                static_cast<_Ty*>(this)->DispatchTyped(Graph, dynamic_cast<RHI::IGraphicsCommandList*>(CommandList));
+                static_cast<_Ty*>(this)->DispatchTyped(Graph, RHI::GraphicsCommandList(CommandList));
             }
             else if constexpr (_Type == PassQueueType::Compute)
             {
-                static_cast<_Ty*>(this)->DispatchTyped(Graph, dynamic_cast<RHI::IComputeCommandList*>(CommandList));
+                static_cast<_Ty*>(this)->DispatchTyped(Graph, RHI::ComputeCommandList(CommandList));
             }
         }
     };

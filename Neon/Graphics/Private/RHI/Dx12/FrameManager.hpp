@@ -82,7 +82,7 @@ namespace Neon::RHI
         using PromiseType = std::promise<uint64_t>;
         using FutureType  = std::future<uint64_t>;
 
-        using PackagedTaskType = std::packaged_task<void(ICopyCommandList*)>;
+        using PackagedTaskType = std::packaged_task<void(ICommandList*)>;
         struct PackagedTaskResult
         {
             PackagedTaskType Task;
@@ -108,7 +108,7 @@ namespace Neon::RHI
         /// Enqueue a copy command list to be executed.
         /// </summary>
         uint64_t EnqueueCopy(
-            std::function<void(ICopyCommandList*)> Task);
+            std::function<void(ICommandList*)> Task);
 
         /// <summary>
         /// Wait for all tasks to finish and shutdown
@@ -253,7 +253,7 @@ namespace Neon::RHI
         /// Enqueue a copy command executed.
         /// </summary>
         uint64_t RequestCopy(
-            std::function<void(ICopyCommandList*)> Task);
+            std::function<void(ICommandList*)> Task);
 
     public:
         /// <summary>

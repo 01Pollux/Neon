@@ -28,8 +28,8 @@ namespace Neon::Renderer
     }
 
     void SpriteRenderer::Render(
-        RHI::GpuResourceHandle     CameraBuffer,
-        RHI::IGraphicsCommandList* CommandList)
+        RHI::GpuResourceHandle CameraBuffer,
+        RHI::ICommandList*     CommandList)
     {
         if (m_SpriteQuery.is_true())
         {

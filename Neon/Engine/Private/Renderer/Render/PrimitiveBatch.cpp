@@ -32,9 +32,9 @@ namespace Neon::Renderer::Impl
     }
 
     void PrimitiveBatch::Begin(
-        RHI::IGraphicsCommandList* CommandList,
-        RHI::PrimitiveTopology     Topology,
-        bool                       Indexed)
+        RHI::ICommandList*     CommandList,
+        RHI::PrimitiveTopology Topology,
+        bool                   Indexed)
     {
         NEON_ASSERT(CommandList != nullptr, "CommandList is null");
         NEON_ASSERT(Topology != RHI::PrimitiveTopology::Undefined, "Topology is undefined");

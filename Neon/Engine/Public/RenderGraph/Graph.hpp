@@ -61,13 +61,13 @@ namespace Neon::RG
             /// <summary>
             /// Get graphics command list
             /// </summary>
-            [[nodiscard]] RHI::IGraphicsCommandList* GetGraphics(
+            [[nodiscard]] RHI::ICommandList* GetGraphics(
                 size_t Index);
 
             /// <summary>
             /// Get graphics command list
             /// </summary>
-            [[nodiscard]] RHI::IComputeCommandList* GetCompute(
+            [[nodiscard]] RHI::ICommandList* GetCompute(
                 size_t Index);
 
             /// <summary>
@@ -84,8 +84,8 @@ namespace Neon::RG
             UPtr<RHI::IFence> m_Fence;
             uint64_t          m_FenceValue = 0;
 
-            std::vector<RHI::IGraphicsCommandList*> m_GraphicsCommandList;
-            std::vector<RHI::IComputeCommandList*>  m_ComputeCommandList;
+            std::vector<RHI::ICommandList*> m_GraphicsCommandList;
+            std::vector<RHI::ICommandList*>  m_ComputeCommandList;
         };
 
     public:

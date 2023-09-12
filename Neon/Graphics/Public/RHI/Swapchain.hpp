@@ -15,7 +15,7 @@ namespace Neon::RHI
     class IGpuResource;
     class ICommandQueue;
     class IFence;
-    class ICopyCommandList;
+    class ICommandList;
 
     class ISwapchain
     {
@@ -113,7 +113,7 @@ namespace Neon::RHI
         /// Enqueue a copy command list to be executed.
         /// </summary>
         virtual uint64_t EnqueueRequestCopy(
-            std::function<void(ICopyCommandList*)> Task) = 0;
+            std::function<void(ICommandList*)> Task) = 0;
 
     public:
         /// <summary>

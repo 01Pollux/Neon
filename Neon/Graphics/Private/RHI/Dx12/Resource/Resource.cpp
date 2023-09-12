@@ -86,7 +86,7 @@ namespace Neon::RHI
 
         CopyId = Dx12Swapchain::Get()->RequestCopy(
             [SubreourcesGuard = std::move(Guard),
-             TransitionState  = std::move(TransitionState)](ICopyCommandList* CommandList,
+             TransitionState  = std::move(TransitionState)](ICommandList* CommandList,
                                                            Dx12GpuResource*  Resource)
             {
                 size_t TotalBytes;

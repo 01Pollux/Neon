@@ -74,7 +74,7 @@ namespace Neon::RHI::ImGuiRHI
     {
         ImGui::Render();
 
-        RHI::GraphicsCommandContext GraphicsContext;
+        RHI::CommandContext GraphicsContext;
 
         auto Swapchain    = RHI::ISwapchain::Get();
         auto Window       = Swapchain->GetWindow();
@@ -155,8 +155,8 @@ namespace Neon::RHI::ImGuiRHI
         auto View = RHI::ISwapchain::Get()->GetBackBufferView();
         CommandList->SetRenderTargets(View, 1);
 
-        auto Dx12CmdList = dynamic_cast<Dx12CommandList*>(CommandList)->Get();
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), Dx12CmdList);
+        auto DxCommandList = static_cast<Dx12CommandList*>(CommandList)->Get();
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DxCommandList);
 
         // Transition the backbuffer to a present state.
         StateManager->TransitionResource(
@@ -169,7 +169,7 @@ namespace Neon::RHI::ImGuiRHI
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) [[likely]]
         {
             ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault(nullptr, Dx12CmdList);
+            ImGui::RenderPlatformWindowsDefault(nullptr, DxCommandList);
         }
     }
 

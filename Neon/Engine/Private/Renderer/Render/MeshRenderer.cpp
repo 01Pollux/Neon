@@ -64,8 +64,8 @@ namespace Neon::Renderer
     };
 
     void MeshRenderer::Render(
-        RHI::GpuResourceHandle     CameraBuffer,
-        RHI::IGraphicsCommandList* CommandList)
+        RHI::GpuResourceHandle CameraBuffer,
+        RHI::ICommandList*     CommandList)
     {
         if (m_MeshQuery.is_true())
         {

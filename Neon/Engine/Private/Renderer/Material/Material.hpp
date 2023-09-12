@@ -53,7 +53,7 @@ namespace Neon::Renderer
             const StringU8& ParamName) const override;
 
         void Apply(
-            RHI::ICommonCommandList* CommandList) override;
+            RHI::ICommandList* CommandList) override;
 
         /// <summary>
         /// Apply all the material's resources.
@@ -64,7 +64,7 @@ namespace Neon::Renderer
         /// Offset of the descriptor in the heap, contains offsets of resource and sampler descriptors combined and ordered by root parameter index.
         /// </param>
         void ApplyAll(
-            RHI::ICommonCommandList*         CommandList,
+            RHI::ICommandList*               CommandList,
             std::span<uint32_t>              DescriptorOffsets,
             const RHI::DescriptorHeapHandle& ResourceDescriptor,
             const RHI::DescriptorHeapHandle& SamplerDescriptor) const;
@@ -172,5 +172,6 @@ namespace Neon::Renderer
         UnqiueDescriptorHeapHandle      m_LocalDescriptors;
 
         Ptr<LayoutEntryMap> m_Parameters;
+        bool                m_IsCompute = false;
     };
 } // namespace Neon::Renderer

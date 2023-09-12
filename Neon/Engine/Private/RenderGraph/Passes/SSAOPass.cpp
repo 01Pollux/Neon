@@ -233,7 +233,7 @@ namespace Neon::RG
 
     void SSAOPass::DispatchTyped(
         const GraphStorage&       Storage,
-        RHI::IComputeCommandList* CommandList)
+        RHI::ICommandList* CommandList)
     {
         auto GBufferNormalId = GBufferPass::GetResource(GBufferPass::ResourceType::Normal);
         auto GBufferDepthId  = GBufferPass::GetResource(GBufferPass::ResourceType::DepthStencil);

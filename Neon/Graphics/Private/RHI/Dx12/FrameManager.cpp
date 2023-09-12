@@ -18,21 +18,7 @@ namespace Neon::RHI
             nullptr,
             IID_PPV_ARGS(&Dx12CmdList)));
         Dx12CmdList->Close();
-
-        switch (CommandType)
-        {
-        case D3D12_COMMAND_LIST_TYPE_DIRECT:
-            CommandList.reset(NEON_NEW Dx12GraphicsCommandList);
-            break;
-        case D3D12_COMMAND_LIST_TYPE_COMPUTE:
-            CommandList.reset(NEON_NEW Dx12ComputeCommandList);
-            break;
-        case D3D12_COMMAND_LIST_TYPE_COPY:
-            CommandList.reset(NEON_NEW Dx12CopyCommandList);
-            break;
-        default:
-            std::unreachable();
-        }
+        CommandList.reset(NEON_NEW Dx12CommandList);
     }
 
     Dx12CommandContextManager::Dx12CommandContextManager(
@@ -56,7 +42,7 @@ namespace Neon::RHI
         Iter->CommandList->AttachCommandList(Iter->Dx12CmdList.Get());
         m_ToPoolMap.emplace(Iter->CommandList.get(), Iter);
 
-        static_cast<Dx12CommonCommandList*>(Iter->CommandList.get())->Reset();
+        static_cast<Dx12CommandList*>(Iter->CommandList.get())->Reset();
 
         return Iter->CommandList.get();
     }
@@ -88,7 +74,7 @@ namespace Neon::RHI
         };
         CommandData->Dx12CmdList->SetDescriptorHeaps(2, Heaps);
 
-        static_cast<Dx12CommonCommandList*>(CommandData->CommandList.get())->Reset();
+        static_cast<Dx12CommandList*>(CommandData->CommandList.get())->Reset();
     }
 
     void Dx12CommandContextManager::Reset(
@@ -274,7 +260,7 @@ namespace Neon::RHI
     }
 
     uint64_t FrameManager::RequestCopy(
-        std::function<void(ICopyCommandList*)> Task)
+        std::function<void(ICommandList*)> Task)
     {
         return m_CopyContext.EnqueueCopy(Task);
     }

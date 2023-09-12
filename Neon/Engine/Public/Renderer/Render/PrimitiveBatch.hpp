@@ -53,7 +53,7 @@ namespace Neon::Renderer
             /// Begin drawing.
             /// </summary>
             void Begin(
-                RHI::IGraphicsCommandList* CommandList,
+                RHI::ICommandList* CommandList,
                 RHI::PrimitiveTopology     Topology,
                 bool                       Indexed = false);
 
@@ -78,7 +78,7 @@ namespace Neon::Renderer
             void Reset();
 
         protected:
-            RHI::IGraphicsCommandList* m_CommandList = nullptr;
+            RHI::ICommandList* m_CommandList = nullptr;
 
         private:
             /// <summary>
@@ -130,7 +130,7 @@ namespace Neon::Renderer
         /// </summary>
         template<bool _ForceIndexed = UsingIndexBuffer>
         void Begin(
-            RHI::IGraphicsCommandList* CommandList,
+            RHI::ICommandList* CommandList,
             RHI::PrimitiveTopology     Topology)
         {
             return Impl::PrimitiveBatch::Begin(

@@ -53,7 +53,7 @@ namespace Neon::RG
         const GraphStorage& Storage,
         RHI::ICommandList*  CommandList)
     {
-        auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
+        RHI::GraphicsCommandList RenderCommandList(CommandList);
 
         auto  StateManager  = RHI::IResourceStateManager::Get();
         auto& SourceTexture = Storage.GetOutputImage();
@@ -79,21 +79,21 @@ namespace Neon::RG
         {
             auto& Size = RHI::ISwapchain::Get()->GetSize();
 
-            RenderCommandList->SetViewport(
+            RenderCommandList.SetViewport(
                 ViewportF{
                     .Width    = float(Size.Width()),
                     .Height   = float(Size.Height()),
                     .MaxDepth = 1.f,
                 });
-            RenderCommandList->SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
+            RenderCommandList.SetScissorRect(RectF(Vec::Zero<Vector2>, Size));
 
             auto View = RHI::ISwapchain::Get()->GetBackBufferView();
 
-            RenderCommandList->ClearRtv(
+            RenderCommandList.ClearRtv(
                 View,
                 Colors::Magenta);
 
-            RenderCommandList->SetRenderTargets(
+            RenderCommandList.SetRenderTargets(
                 View, 1);
         }
 
@@ -103,8 +103,8 @@ namespace Neon::RG
 
         m_Material->Apply(RenderCommandList);
 
-        RenderCommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
-        RenderCommandList->Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
+        RenderCommandList.SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
+        RenderCommandList.Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
 
         // Transition the backbuffer to a present state.
         StateManager->TransitionResource(

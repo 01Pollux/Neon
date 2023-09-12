@@ -2,11 +2,14 @@
 
 #include <RHI/Commands/Common.hpp>
 #include <RHI/Resource/Common.hpp>
+
 #include <Math/Common.hpp>
 #include <Math/Viewport.hpp>
 #include <Math/Colors.hpp>
 #include <Math/Rect.hpp>
+
 #include <array>
+#include <optional>
 #include <span>
 
 namespace Neon::RHI
@@ -114,17 +117,13 @@ namespace Neon::RHI
             const Vector3I&            DstPosition,
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) = 0;
-    };
 
-    //
-
-    class ICommonCommandList : public virtual ICommandList
-    {
     public:
         /// <summary>
         /// Set root signature
         /// </summary>
         virtual void SetRootSignature(
+            bool                       IsDirect,
             const Ptr<IRootSignature>& RootSig) = 0;
 
         /// <summary>
@@ -135,9 +134,20 @@ namespace Neon::RHI
 
     public:
         /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        virtual void SetDynamicResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size) = 0;
+
+        /// <summary>
         /// Sets constants in root signature
         /// </summary>
         virtual void SetConstants(
+            bool        IsDirect,
             uint32_t    RootIndex,
             const void* Constants,
             size_t      NumConstants32Bit,
@@ -147,52 +157,40 @@ namespace Neon::RHI
         /// Set resource view in root signature
         /// </summary>
         virtual void SetResourceView(
+            bool                IsDirect,
             CstResourceViewType Type,
             uint32_t            RootIndex,
             GpuResourceHandle   Handle) = 0;
 
         /// <summary>
-        /// Allocate from dynamic buffer and set resource view in root signature
-        /// </summary>
-        virtual void SetDynamicResourceView(
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            const void*         Data,
-            size_t              Size) = 0;
-
-        /// <summary>
         /// Set descriptor table in root signature
         /// </summary>
         virtual void SetDescriptorTable(
+            bool                IsDirect,
             uint32_t            RootIndex,
             GpuDescriptorHandle Handle) = 0;
-    };
 
-    //
-
-    class IGraphicsCommandList : public virtual ICommonCommandList
-    {
     public:
         /// <summary>
         /// Clear render target view
         /// </summary>
         virtual void ClearRtv(
-            const CpuDescriptorHandle& RtvHandle,
-            const Color4&              Color) = 0;
+            CpuDescriptorHandle RtvHandle,
+            const Color4&       Color) = 0;
 
         /// <summary>
         /// Clear depth stencil view
         /// </summary>
         virtual void ClearDsv(
-            const CpuDescriptorHandle& RtvHandle,
-            std::optional<float>       Depth   = std::nullopt,
-            std::optional<uint8_t>     Stencil = std::nullopt) = 0;
+            CpuDescriptorHandle    RtvHandle,
+            std::optional<float>   Depth   = std::nullopt,
+            std::optional<uint8_t> Stencil = std::nullopt) = 0;
 
         /// <summary>
         /// Bind rtv/dsv to pipeline
         /// </summary>
         virtual void SetRenderTargets(
-            const CpuDescriptorHandle& ContiguousRtvs,
+            CpuDescriptorHandle        ContiguousRtvs,
             size_t                     RenderTargetCount = 0,
             const CpuDescriptorHandle* DepthStencil      = nullptr) = 0;
 
@@ -268,12 +266,7 @@ namespace Neon::RHI
         /// </summary>
         virtual void Draw(
             const DrawArgs& Args) = 0;
-    };
 
-    //
-
-    class IComputeCommandList : public virtual ICommonCommandList
-    {
     public:
         /// <summary>
         /// Dispatch compute shader threads
@@ -332,8 +325,660 @@ namespace Neon::RHI
 
     //
 
-    class ICopyCommandList : public virtual ICommandList
+    class GraphicsCommandList
     {
     public:
+        GraphicsCommandList(
+            ICommandList* CmdList) :
+            m_CmdList(CmdList)
+        {
+        }
+
+        /// <summary>
+        /// Get command list
+        /// </summary>
+        [[nodiscard]] ICommandList* Get() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        operator ICommandList*() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        /// <summary>
+        /// Copy subresources into the buffer
+        /// </summary>
+        void CopySubresources(
+            IGpuResource*                    DstResource,
+            IGpuResource*                    Intermediate,
+            size_t                           IntOffset,
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> SubResources)
+        {
+            m_CmdList->CopySubresources(
+                DstResource,
+                Intermediate,
+                IntOffset,
+                FirstSubresource,
+                SubResources);
+        }
+
+        /// <summary>
+        /// Copy Resource into the buffer
+        /// </summary>
+        void CopyResource(
+            IGpuResource* DstResource,
+            IGpuResource* SrcResource)
+        {
+            m_CmdList->CopyResource(
+                DstResource,
+                SrcResource);
+        }
+
+        /// <summary>
+        /// Copy buffer resource
+        /// </summary>
+        void CopyBufferRegion(
+            IBuffer* DstBuffer,
+            size_t   DstOffset,
+            IBuffer* SrcBuffer,
+            size_t   SrcOffset,
+            size_t   NumBytes)
+        {
+            m_CmdList->CopyBufferRegion(
+                DstBuffer,
+                DstOffset,
+                SrcBuffer,
+                SrcOffset,
+                NumBytes);
+        }
+
+        /// <summary>
+        /// Copy texture resource
+        /// </summary>
+        void CopyTextureRegion(
+            const TextureCopyLocation&   Dst,
+            const Vector3I&              DstPosition,
+            const TextureCopyLocation&   Src,
+            const ICommandList::CopyBox* SrcBox = nullptr)
+        {
+            m_CmdList->CopyTextureRegion(
+                Dst,
+                DstPosition,
+                Src,
+                SrcBox);
+        }
+
+    public:
+        /// <summary>
+        /// Set root signature
+        /// </summary>
+        void SetRootSignature(
+            const Ptr<IRootSignature>& RootSig)
+        {
+            m_CmdList->SetRootSignature(
+                true,
+                RootSig);
+        }
+
+        /// <summary>
+        /// Set pipeline state
+        /// </summary>
+        void SetPipelineState(
+            const Ptr<IPipelineState>& State)
+        {
+            m_CmdList->SetPipelineState(
+                State);
+        }
+
+    public:
+        /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        void SetDynamicResourceView(
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size)
+        {
+            m_CmdList->SetDynamicResourceView(
+                true,
+                Type,
+                RootIndex,
+                Data,
+                Size);
+        }
+
+        /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0)
+        {
+            m_CmdList->SetConstants(
+                true,
+                RootIndex,
+                Constants,
+                NumConstants32Bit,
+                DestOffset);
+        }
+
+        /// <summary>
+        /// Set resource view in root signature
+        /// </summary>
+        void SetResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle)
+        {
+            m_CmdList->SetResourceView(
+                true,
+                Type,
+                RootIndex,
+                Handle);
+        }
+
+        /// <summary>
+        /// Set descriptor table in root signature
+        /// </summary>
+        void SetDescriptorTable(
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle)
+        {
+            m_CmdList->SetDescriptorTable(
+                true,
+                RootIndex,
+                Handle);
+        }
+
+    public:
+        /// <summary>
+        /// Clear render target view
+        /// </summary>
+        void ClearRtv(
+            CpuDescriptorHandle RtvHandle,
+            const Color4&       Color)
+        {
+            m_CmdList->ClearRtv(
+                RtvHandle,
+                Color);
+        }
+
+        /// <summary>
+        /// Clear depth stencil view
+        /// </summary>
+        void ClearDsv(
+            CpuDescriptorHandle    RtvHandle,
+            std::optional<float>   Depth   = std::nullopt,
+            std::optional<uint8_t> Stencil = std::nullopt)
+        {
+            m_CmdList->ClearDsv(
+                RtvHandle,
+                Depth,
+                Stencil);
+        }
+
+        /// <summary>
+        /// Bind rtv/dsv to pipeline
+        /// </summary>
+        void SetRenderTargets(
+            CpuDescriptorHandle        ContiguousRtvs,
+            size_t                     RenderTargetCount = 0,
+            const CpuDescriptorHandle* DepthStencil      = nullptr)
+        {
+            m_CmdList->SetRenderTargets(
+                &ContiguousRtvs,
+                RenderTargetCount,
+                DepthStencil);
+        }
+
+        /// <summary>
+        /// Bind rtv/dsv to pipeline
+        /// </summary>
+        void SetRenderTargets(
+            const CpuDescriptorHandle* Rtvs,
+            size_t                     RenderTargetCount = 0,
+            const CpuDescriptorHandle* DepthStencil      = nullptr)
+        {
+            m_CmdList->SetRenderTargets(
+                Rtvs,
+                RenderTargetCount,
+                DepthStencil);
+        }
+
+    public:
+        /// <summary>
+        /// Set scissor rects
+        /// </summary>
+        void SetScissorRect(
+            std::span<RectT<Vector2>> Scissors)
+        {
+            m_CmdList->SetScissorRect(
+                Scissors);
+        }
+
+        /// <summary>
+        /// Set scissor rect
+        /// </summary>
+        void SetScissorRect(
+            const RectT<Vector2>& Scissor)
+        {
+            m_CmdList->SetScissorRect(
+                Scissor);
+        }
+
+        /// <summary>
+        /// Set viewports
+        /// </summary>
+        void SetViewport(
+            std::span<ViewportF> Views)
+        {
+            m_CmdList->SetViewport(
+                Views);
+        }
+
+        /// <summary>
+        /// Set viewport
+        /// </summary>
+        void SetViewport(
+            const ViewportF& View)
+        {
+            m_CmdList->SetViewport(
+                View);
+        }
+
+        /// <summary>
+        /// Set primitive topology
+        /// </summary>
+        void SetPrimitiveTopology(
+            PrimitiveTopology Topology)
+        {
+            m_CmdList->SetPrimitiveTopology(
+                Topology);
+        }
+
+        /// <summary>
+        /// Set index buffer view
+        /// </summary>
+        void SetIndexBuffer(
+            const Views::Index& View)
+        {
+            m_CmdList->SetIndexBuffer(
+                View);
+        }
+
+        /// <summary>
+        /// Set vertex buffer views
+        /// </summary>
+        void SetVertexBuffer(
+            size_t               StartSlot,
+            const Views::Vertex& Views)
+        {
+            m_CmdList->SetVertexBuffer(
+                StartSlot,
+                Views);
+        }
+
+    public:
+        /// <summary>
+        /// Draw indexed primitives
+        /// </summary>
+        void Draw(
+            const DrawIndexArgs& Args)
+        {
+            m_CmdList->Draw(
+                Args);
+        }
+
+        /// <summary>
+        /// Draw non-indexed primitives
+        /// </summary>
+        void Draw(
+            const DrawArgs& Args)
+        {
+            m_CmdList->Draw(
+                Args);
+        }
+
+    private:
+        ICommandList* m_CmdList = nullptr;
+    };
+
+    //
+
+    class ComputeCommandList
+    {
+    public:
+        ComputeCommandList(
+            ICommandList* CmdList) :
+            m_CmdList(CmdList)
+        {
+        }
+
+        /// <summary>
+        /// Get command list
+        /// </summary>
+        [[nodiscard]] ICommandList* Get() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        operator ICommandList*() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        /// <summary>
+        /// Copy subresources into the buffer
+        /// </summary>
+        void CopySubresources(
+            IGpuResource*                    DstResource,
+            IGpuResource*                    Intermediate,
+            size_t                           IntOffset,
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> SubResources)
+        {
+            m_CmdList->CopySubresources(
+                DstResource,
+                Intermediate,
+                IntOffset,
+                FirstSubresource,
+                SubResources);
+        }
+
+        /// <summary>
+        /// Copy Resource into the buffer
+        /// </summary>
+        void CopyResource(
+            IGpuResource* DstResource,
+            IGpuResource* SrcResource)
+        {
+            m_CmdList->CopyResource(
+                DstResource,
+                SrcResource);
+        }
+
+        /// <summary>
+        /// Copy buffer resource
+        /// </summary>
+        void CopyBufferRegion(
+            IBuffer* DstBuffer,
+            size_t   DstOffset,
+            IBuffer* SrcBuffer,
+            size_t   SrcOffset,
+            size_t   NumBytes)
+        {
+            m_CmdList->CopyBufferRegion(
+                DstBuffer,
+                DstOffset,
+                SrcBuffer,
+                SrcOffset,
+                NumBytes);
+        }
+
+        /// <summary>
+        /// Copy texture resource
+        /// </summary>
+        void CopyTextureRegion(
+            const TextureCopyLocation&   Dst,
+            const Vector3I&              DstPosition,
+            const TextureCopyLocation&   Src,
+            const ICommandList::CopyBox* SrcBox = nullptr)
+        {
+            m_CmdList->CopyTextureRegion(
+                Dst,
+                DstPosition,
+                Src,
+                SrcBox);
+        }
+
+    public:
+        /// <summary>
+        /// Set root signature
+        /// </summary>
+        void SetRootSignature(
+            const Ptr<IRootSignature>& RootSig)
+        {
+            m_CmdList->SetRootSignature(
+                false,
+                RootSig);
+        }
+
+        /// <summary>
+        /// Set pipeline state
+        /// </summary>
+        void SetPipelineState(
+            const Ptr<IPipelineState>& State)
+        {
+            m_CmdList->SetPipelineState(
+                State);
+        }
+
+    public:
+        /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        void SetDynamicResourceView(
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size)
+        {
+            m_CmdList->SetDynamicResourceView(
+                false,
+                Type,
+                RootIndex,
+                Data,
+                Size);
+        }
+
+        /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        void SetConstants(
+            uint32_t    RootIndex,
+            const void* Constants,
+            size_t      NumConstants32Bit,
+            size_t      DestOffset = 0)
+        {
+            m_CmdList->SetConstants(
+                false,
+                RootIndex,
+                Constants,
+                NumConstants32Bit,
+                DestOffset);
+        }
+
+        /// <summary>
+        /// Set resource view in root signature
+        /// </summary>
+        void SetResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            GpuResourceHandle   Handle)
+        {
+            m_CmdList->SetResourceView(
+                false,
+                Type,
+                RootIndex,
+                Handle);
+        }
+
+        /// <summary>
+        /// Set descriptor table in root signature
+        /// </summary>
+        void SetDescriptorTable(
+            uint32_t            RootIndex,
+            GpuDescriptorHandle Handle)
+        {
+            m_CmdList->SetDescriptorTable(
+                false,
+                RootIndex,
+                Handle);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch(
+            size_t GroupCountX = 1,
+            size_t GroupCountY = 1,
+            size_t GroupCountZ = 1)
+        {
+            m_CmdList->Dispatch(
+                GroupCountX,
+                GroupCountY,
+                GroupCountZ);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch1D(
+            size_t ThreadCountX,
+            size_t GroupSizeX = 64)
+        {
+            m_CmdList->Dispatch1D(
+                ThreadCountX,
+                GroupSizeX);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch2D(
+            size_t ThreadCountX,
+            size_t ThreadCountY,
+            size_t GroupSizeX = 8,
+            size_t GroupSizeY = 8)
+        {
+            m_CmdList->Dispatch2D(
+                ThreadCountX,
+                ThreadCountY,
+                GroupSizeX,
+                GroupSizeY);
+        }
+
+        /// <summary>
+        /// Dispatch compute shader threads
+        /// </summary>
+        void Dispatch3D(
+            size_t ThreadCountX,
+            size_t ThreadCountY,
+            size_t ThreadCountZ,
+            size_t GroupSizeX,
+            size_t GroupSizeY,
+            size_t GroupSizeZ)
+        {
+            m_CmdList->Dispatch3D(
+                ThreadCountX,
+                ThreadCountY,
+                ThreadCountZ,
+                GroupSizeX,
+                GroupSizeY,
+                GroupSizeZ);
+        }
+
+    private:
+        ICommandList* m_CmdList = nullptr;
+    };
+
+    //
+
+    class CopyCommandList
+    {
+    public:
+        CopyCommandList(
+            ICommandList* CmdList) :
+            m_CmdList(CmdList)
+        {
+        }
+
+        /// <summary>
+        /// Get command list
+        /// </summary>
+        [[nodiscard]] ICommandList* Get() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        operator ICommandList*() const noexcept
+        {
+            return m_CmdList;
+        }
+
+        /// <summary>
+        /// Copy subresources into the buffer
+        /// </summary>
+        void CopySubresources(
+            IGpuResource*                    DstResource,
+            IGpuResource*                    Intermediate,
+            size_t                           IntOffset,
+            uint32_t                         FirstSubresource,
+            std::span<const SubresourceDesc> SubResources)
+        {
+            m_CmdList->CopySubresources(
+                DstResource,
+                Intermediate,
+                IntOffset,
+                FirstSubresource,
+                SubResources);
+        }
+
+        /// <summary>
+        /// Copy Resource into the buffer
+        /// </summary>
+        void CopyResource(
+            IGpuResource* DstResource,
+            IGpuResource* SrcResource)
+        {
+            m_CmdList->CopyResource(
+                DstResource,
+                SrcResource);
+        }
+
+        /// <summary>
+        /// Copy buffer resource
+        /// </summary>
+        void CopyBufferRegion(
+            IBuffer* DstBuffer,
+            size_t   DstOffset,
+            IBuffer* SrcBuffer,
+            size_t   SrcOffset,
+            size_t   NumBytes)
+        {
+            m_CmdList->CopyBufferRegion(
+                DstBuffer,
+                DstOffset,
+                SrcBuffer,
+                SrcOffset,
+                NumBytes);
+        }
+
+        /// <summary>
+        /// Copy texture resource
+        /// </summary>
+        void CopyTextureRegion(
+            const TextureCopyLocation&   Dst,
+            const Vector3I&              DstPosition,
+            const TextureCopyLocation&   Src,
+            const ICommandList::CopyBox* SrcBox = nullptr)
+        {
+            m_CmdList->CopyTextureRegion(
+                Dst,
+                DstPosition,
+                Src,
+                SrcBox);
+        }
+
+    private:
+        ICommandList* m_CmdList = nullptr;
     };
 } // namespace Neon::RHI

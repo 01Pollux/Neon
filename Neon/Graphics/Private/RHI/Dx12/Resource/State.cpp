@@ -73,12 +73,12 @@ namespace Neon::RHI
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            CommandContext CtxBatch(Type);
+            CommandContext CtxBatch;
 
             auto CommandList = CtxBatch.Append();
 
-            auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
-            Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
+            auto DxCommandList = static_cast<Dx12CommandList*>(CommandList)->Get();
+            DxCommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
 
             return CtxBatch;
         }
@@ -90,8 +90,8 @@ namespace Neon::RHI
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
-            auto Dx12CommandList = dynamic_cast<Dx12GraphicsCommandList*>(CommandList)->Get();
-            Dx12CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
+            auto DxCommandList = static_cast<Dx12CommandList*>(CommandList)->Get();
+            DxCommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
             return true;
         }
         return false;

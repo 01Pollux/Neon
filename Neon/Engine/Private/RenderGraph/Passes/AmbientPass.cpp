@@ -16,7 +16,7 @@ namespace Neon::RG
 
     void AmbientPass::DispatchTyped(
         const GraphStorage&       Storage,
-        RHI::IComputeCommandList* CommandList)
+        RHI::ICommandList* CommandList)
     {
     }
 } // namespace Neon::RG

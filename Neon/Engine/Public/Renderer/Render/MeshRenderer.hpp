@@ -22,7 +22,7 @@ namespace Neon::Renderer
         /// </summary>
         void Render(
             RHI::GpuResourceHandle     CameraBuffer,
-            RHI::IGraphicsCommandList* CommandList) override;
+            RHI::ICommandList* CommandList) override;
 
     private:
         flecs::query<

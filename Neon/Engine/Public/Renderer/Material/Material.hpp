@@ -10,7 +10,7 @@
 namespace Neon::RHI
 {
     class ISwapchain;
-    class ICommonCommandList;
+    class ICommandList;
     class IPipelineState;
     class IRootSignature;
 } // namespace Neon::RHI
@@ -48,7 +48,7 @@ namespace Neon::Renderer
         /// Apply the material to the command list.
         /// </summary>
         virtual void Apply(
-            RHI::ICommonCommandList* CommandList) = 0;
+            RHI::ICommandList* CommandList) = 0;
 
         /// <summary>
         /// Get the root signature.
@@ -130,10 +130,10 @@ namespace Neon::Renderer
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetTexture(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const RHI::SRVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const RHI::SRVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
@@ -142,10 +142,10 @@ namespace Neon::Renderer
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetStructuredBuffer(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const RHI::SRVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const RHI::SRVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetTexture(Name, Resource, Desc, ArrayIndex);
         }
@@ -154,10 +154,10 @@ namespace Neon::Renderer
         /// Set the material's resource as an unordered access view.
         /// </summary>
         void SetUnorderedAcess(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const RHI::UAVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const RHI::UAVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
@@ -166,11 +166,11 @@ namespace Neon::Renderer
         /// Set the material's resource as an unordered access view.
         /// </summary>
         void SetUnorderedAcess(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const Ptr<RHI::IGpuResource>&      Counter,
-            const RHI::UAVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const Ptr<RHI::IGpuResource>& Counter,
+            const RHI::UAVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex, Counter);
         }
@@ -179,10 +179,10 @@ namespace Neon::Renderer
         /// Set the material's resource as a render target view.
         /// </summary>
         void SetRenderTarget(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const RHI::RTVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const RHI::RTVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
@@ -191,10 +191,10 @@ namespace Neon::Renderer
         /// Set the material's resource as a depth stencil view.
         /// </summary>
         void SetDepthStencil(
-            const StringU8&                    Name,
-            const Ptr<RHI::IGpuResource>&      Resource,
-            const RHI::DSVDescOpt& Desc       = std::nullopt,
-            uint32_t                           ArrayIndex = 0)
+            const StringU8&               Name,
+            const Ptr<RHI::IGpuResource>& Resource,
+            const RHI::DSVDescOpt&        Desc       = std::nullopt,
+            uint32_t                      ArrayIndex = 0)
         {
             SetResource(Name, Resource, Desc, ArrayIndex);
         }
@@ -236,23 +236,23 @@ namespace Neon::Renderer
         /// Bind the material into the command list.
         /// </summary>
         void Apply(
-            RHI::ICommonCommandList* CommandList);
+            RHI::ICommandList* CommandList);
 
         /// <summary>
         /// Bind the material into the command list.
         /// </summary>
         static void ApplyOne(
-            IMaterial*               Material,
-            RHI::ICommonCommandList* CommandList);
+            IMaterial*         Material,
+            RHI::ICommandList* CommandList);
 
     private:
         /// <summary>
         /// Bind the materials into the command list.
         /// </summary>
         static void Apply(
-            IMaterial*               FirstMaterial,
-            std::span<IMaterial*>    Materials,
-            RHI::ICommonCommandList* CommandList);
+            IMaterial*            FirstMaterial,
+            std::span<IMaterial*> Materials,
+            RHI::ICommandList*    CommandList);
 
     private:
         std::vector<IMaterial*>                  m_Materials;

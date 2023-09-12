@@ -10,31 +10,11 @@ namespace Neon::RHI
 {
     class ISwapchain;
     class ICommandQueue;
+    class IGpuResource;
+
     struct DescriptorHeapHandle;
 
     //
-
-    struct ResourceFootprint
-    {
-        uint32_t Width;
-        uint32_t Height;
-        uint32_t Depth;
-        uint32_t RowPitch;
-
-        EResourceFormat Format;
-    };
-
-    struct SubresourceFootprint : public ResourceFootprint
-    {
-        size_t Offset;
-    };
-
-    struct SubresourceDesc
-    {
-        const void* Data;
-        size_t      RowPitch;
-        size_t      SlicePitch;
-    };
 
     struct TextureCopyLocation
     {

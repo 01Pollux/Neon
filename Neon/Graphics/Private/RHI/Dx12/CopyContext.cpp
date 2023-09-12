@@ -35,8 +35,8 @@ namespace Neon::RHI
                 {
                     auto& Context = m_CommandContexts[Index];
 
-                    Dx12CopyCommandList CopyCommandList;
-                    CopyCommandList.AttachCommandList(Context.CommandList.Get());
+                    Dx12CommandList CommandList;
+                    CommandList.AttachCommandList(Context.CommandList.Get());
 
                     while (!Token.stop_requested())
                     {
@@ -58,7 +58,7 @@ namespace Neon::RHI
                             for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
                             {
                                 auto& [Task, Promise] = m_Queue.front();
-                                Task(&CopyCommandList);
+                                Task(&CommandList);
                                 m_Queue.pop();
                             }
                         }
@@ -90,7 +90,7 @@ namespace Neon::RHI
     }
 
     uint64_t CopyContextManager::EnqueueCopy(
-        std::function<void(ICopyCommandList*)> Task)
+        std::function<void(ICommandList*)> Task)
     {
         uint64_t CopyId;
         {

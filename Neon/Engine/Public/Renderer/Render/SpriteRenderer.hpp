@@ -23,7 +23,7 @@ namespace Neon::Renderer
         /// </summary>
         void Render(
             RHI::GpuResourceHandle     CameraBuffer,
-            RHI::IGraphicsCommandList* CommandList) override;
+            RHI::ICommandList* CommandList) override;
 
     private:
         Renderer::SpriteBatcher m_SpriteBatch;

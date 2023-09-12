@@ -81,15 +81,13 @@ namespace Neon::RG
     }
 
     void GBufferPass::DispatchTyped(
-        const GraphStorage&        Storage,
-        RHI::IGraphicsCommandList* CommandList)
+        const GraphStorage&      Storage,
+        RHI::GraphicsCommandList CommandList)
     {
-        auto RenderCommandList = dynamic_cast<RHI::IGraphicsCommandList*>(CommandList);
-
         auto CameraStorage = Storage.GetFrameDataHandle();
         for (auto& Renderer : m_Renderers)
         {
-            Renderer->Render(CameraStorage, RenderCommandList);
+            Renderer->Render(CameraStorage, CommandList);
         }
     }
 } // namespace Neon::RG

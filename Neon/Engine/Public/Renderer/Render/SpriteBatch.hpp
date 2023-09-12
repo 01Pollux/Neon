@@ -13,7 +13,7 @@ namespace Neon
     {
         class ISwapchain;
         class IPipelineState;
-        class IGraphicsCommandList;
+        class ICommandList;
     } // namespace RHI
     namespace Renderer
     {
@@ -94,7 +94,7 @@ namespace Neon::Renderer
         /// Begin drawing.
         /// </summary>
         void Begin(
-            RHI::IGraphicsCommandList* CommandList)
+            RHI::ICommandList* CommandList)
         {
             Impl::PrimitiveBatch::Begin(CommandList, RHI::PrimitiveTopology::TriangleList, true);
         }

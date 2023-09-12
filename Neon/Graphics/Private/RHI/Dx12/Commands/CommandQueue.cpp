@@ -51,7 +51,7 @@ namespace Neon::RHI
             Commands, std::back_inserter(Dx12Commands),
             [](ICommandList* Command)
             {
-                auto Dx12Command = static_cast<ID3D12GraphicsCommandList*>(dynamic_cast<Dx12CommandList*>(Command)->Get());
+                auto Dx12Command = static_cast<ID3D12GraphicsCommandList*>(static_cast<Dx12CommandList*>(Command)->Get());
                 Dx12Command->Close();
                 return static_cast<ID3D12CommandList*>(Dx12Command);
             });
