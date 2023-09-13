@@ -40,15 +40,16 @@ namespace Neon::Renderer
                 .RootSignature(
                     RHI::RootSignatureBuilder()
                         .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
-                        .AddConstantBufferView("v_PerObjectData", 1, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("v_PerObjectData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("p_MaterialData", 1, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1, true), RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());
@@ -63,10 +64,6 @@ namespace Neon::Renderer
                 .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
             auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
-            Material->SetTexture("p_AlbedoMap", WhiteTexture);
-            Material->SetTexture("p_NormalMap", WhiteTexture);
-            Material->SetTexture("p_SpecularMap", WhiteTexture);
-            Material->SetTexture("p_EmissiveMap", WhiteTexture);
 
             s_DefaultMaterials[Type::Lit] = std::move(Material);
         }

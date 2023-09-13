@@ -103,17 +103,17 @@ PSOutput GBufferPack(
 
 ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
 
-StructuredBuffer<PerObjectData> g_PerObjectData : register(t0, space1);
-
 
 // --------------------
 // Vertex Shader
 // --------------------
 
+StructuredBuffer<PerObjectData> v_PerObjectData : register(t0, space1);
+
 
 PSInput VS_Main(VSInput Vs)
 {
-	PerObjectData Object = g_PerObjectData[Vs.InstanceId];
+	PerObjectData Object = v_PerObjectData[Vs.InstanceId];
 	PSInput Ps = (PSInput) 0;
 	
 	Ps.Position = mul(
@@ -179,12 +179,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	}
 	else
 	{
-		Normal = float4(Ps.NormalWS, 0.f);
-	}
-	
-	if (IsFrontFace)
-	{
-		Normal.xyz *= -1.f;
+		Normal = float4(normalize(Ps.NormalWS), 0.f);
 	}
 	
 	float4 Specular = float4(Material.Specular, 1.f);

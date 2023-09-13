@@ -294,6 +294,7 @@ namespace Neon::RG
             }
             else
             {
+                // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
                 Desc.MipLevels = 0;
                 Res.reset(RHI::ITexture::Create(Desc));
             }

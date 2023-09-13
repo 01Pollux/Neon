@@ -324,30 +324,37 @@ namespace Neon::Renderer
         {
             if (auto Descriptor = std::get_if<DescriptorEntry>(&Param->second))
             {
+                // Get either local or shared descriptor handle
                 auto& Handle = Descriptor->Instanced ? m_LocalDescriptors.ResourceDescriptors : m_SharedDescriptors->ResourceDescriptors;
 
-                Result = {
-                    .Descriptor = Handle.GetCpuHandle(Descriptor->Offset),
-                    .CopySize   = Descriptor->Count
-                };
+                // Check if we have all resources initialized
+                // If not ignore the descriptor (won't be copied if possible)
+                if (!ranges::any_of(Descriptor->Resources, [](auto& Resource)
+                                    { return !Resource; }))
+                {
+                    Result = {
+                        .Descriptor = Handle.GetCpuHandle(Descriptor->Offset),
+                        .CopySize   = Descriptor->Count
+                    };
+                }
             }
             else if (auto Sampler = std::get_if<SamplerEntry>(&Param->second))
             {
+                // Get either local or shared descriptor handle
                 auto& Handle = Sampler->Instanced ? m_LocalDescriptors.SamplerDescriptors : m_SharedDescriptors->SamplerDescriptors;
 
-                Result = {
-                    .Descriptor = Handle.GetCpuHandle(Sampler->Offset),
-                    .CopySize   = Sampler->Count
-                };
+                // Check if we have all samplers initialized
+                // If not ignore the descriptor (won't be copied if possible)
+                if (!ranges::any_of(Sampler->Descs, [](auto& Desc)
+                                    { return !Desc.has_value(); }))
+                {
+                    Result = {
+                        .Descriptor = Handle.GetCpuHandle(Sampler->Offset),
+                        .CopySize   = Sampler->Count
+                    };
+                }
             }
         }
-
-#ifdef NEON_DEBUG
-        if (!Result.CopySize)
-        {
-            NEON_WARNING("Material", "Material parameter '{}' not found", ParamName);
-        }
-#endif
 
         return Result;
     }
@@ -418,8 +425,11 @@ namespace Neon::Renderer
                 auto  IsSampler       = std::holds_alternative<SamplerEntry>(m_Parameters->Entries.find(RootParam.Name)->second);
                 auto& DescriptorTable = IsSampler ? SamplerDescriptor : ResourceDescriptor;
 
-                CommandList->SetDescriptorTable(!m_IsCompute, LastRootIndex, DescriptorTable.GetGpuHandle(DescriptorOffsets[DescriptorOffsetIndex]));
-                DescriptorOffsetIndex++;
+                if (DescriptorTable.Size)
+                {
+                    CommandList->SetDescriptorTable(!m_IsCompute, LastRootIndex, DescriptorTable.GetGpuHandle(DescriptorOffsets[DescriptorOffsetIndex]));
+                    DescriptorOffsetIndex++;
+                }
                 break;
             }
 
@@ -454,39 +464,52 @@ namespace Neon::Renderer
             Descriptor->Resources[ArrayIndex] = Resource;
             std::visit(
                 VariantVisitor{
-                    [](const std::monostate&)
-                    {
-                        NEON_ASSERT(false, "Invalid view type");
+                    [](std::monostate) {
                     },
                     [&Handle, DescriptorOffset](
                         const RHI::CBVDesc& Desc)
                     {
-                        RHI::Views::ConstantBuffer View{ Handle };
-                        View.Bind(Desc, DescriptorOffset);
+                        if (Desc.Resource.Value)
+                        {
+                            RHI::Views::ConstantBuffer View{ Handle };
+                            View.Bind(Desc, DescriptorOffset);
+                        }
                     },
                     [&Handle, &Resource, DescriptorOffset](
                         const RHI::SRVDescOpt& Desc)
                     {
-                        RHI::Views::ShaderResource View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        if (Resource || Desc.has_value())
+                        {
+                            RHI::Views::ShaderResource View{ Handle };
+                            View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        }
                     },
                     [&Handle, &Resource, &UavCounter, DescriptorOffset](
                         const RHI::UAVDescOpt& Desc)
                     {
-                        RHI::Views::UnorderedAccess View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
+                        if (Resource || Desc.has_value())
+                        {
+                            RHI::Views::UnorderedAccess View{ Handle };
+                            View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
+                        }
                     },
                     [&Handle, &Resource, DescriptorOffset](
                         const RHI::RTVDescOpt& Desc)
                     {
-                        RHI::Views::RenderTarget View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        if (Resource || Desc.has_value())
+                        {
+                            RHI::Views::RenderTarget View{ Handle };
+                            View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        }
                     },
                     [&Handle, &Resource, DescriptorOffset](
                         const RHI::DSVDescOpt& Desc)
                     {
-                        RHI::Views::DepthStencil View{ Handle };
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        if (Resource || Desc.has_value())
+                        {
+                            RHI::Views::DepthStencil View{ Handle };
+                            View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                        }
                     } },
                 Desc);
         }
@@ -496,10 +519,10 @@ namespace Neon::Renderer
         }
     }
 
-    void Material::SetResource(
-        const StringU8&         Name,
-        const RHI::SamplerDesc& Desc,
-        uint32_t                ArrayIndex)
+    void Material::SetSampler(
+        const StringU8&                        Name,
+        const std::optional<RHI::SamplerDesc>& Desc,
+        uint32_t                               ArrayIndex)
     {
         auto Layout = m_Parameters->Entries.find(Name);
         if (Layout == m_Parameters->Entries.end())
@@ -512,10 +535,13 @@ namespace Neon::Renderer
         {
             auto& Handle = Sampler->Instanced ? m_LocalDescriptors.SamplerDescriptors : m_SharedDescriptors->SamplerDescriptors;
 
-            uint32_t DescriptorOffset = ArrayIndex + Sampler->Offset;
-
-            RHI::Views::Sampler View{ Handle };
-            View.Bind(Desc, DescriptorOffset);
+            uint32_t DescriptorOffset  = ArrayIndex + Sampler->Offset;
+            Sampler->Descs[ArrayIndex] = Desc;
+            if (Desc)
+            {
+                RHI::Views::Sampler View{ Handle };
+                View.Bind(*Desc, DescriptorOffset);
+            }
         }
         else
         {
@@ -588,6 +614,8 @@ namespace Neon::Renderer
         case RHI::CstResourceViewType::Uav:
             BufferType = PoolBufferType::ReadWriteGPURW;
             break;
+        default:
+            std::unreachable();
         }
 
         RHI::UBufferPoolHandle Buffer(
@@ -742,13 +770,19 @@ namespace Neon::Renderer
             [&ResourceDescriptors,
              &ResourceDescriptorSize,
              &SamplerDescriptors,
-             &SamplerDescriptorSize](const RHI::IDescriptorHeap::CopyInfo& CopyInfo, RHI::DescriptorTableParam ParamType)
+             &SamplerDescriptorSize](const RHI::IDescriptorHeap::CopyInfo& CopyInfo, RHI::DescriptorTableParam ParamType) -> bool
         {
-            auto& Container = (ParamType == RHI::DescriptorTableParam::Sampler) ? SamplerDescriptors : ResourceDescriptors;
-            auto& Size      = (ParamType == RHI::DescriptorTableParam::Sampler) ? SamplerDescriptorSize : ResourceDescriptorSize;
+            // If descriptor isn't empty, meaning all resources were set
+            if (CopyInfo.CopySize)
+            {
+                auto& Container = (ParamType == RHI::DescriptorTableParam::Sampler) ? SamplerDescriptors : ResourceDescriptors;
+                auto& Size      = (ParamType == RHI::DescriptorTableParam::Sampler) ? SamplerDescriptorSize : ResourceDescriptorSize;
 
-            Container.emplace_back(CopyInfo);
-            Size += CopyInfo.CopySize;
+                Container.emplace_back(CopyInfo);
+                Size += CopyInfo.CopySize;
+                return true;
+            }
+            return false;
         };
 
         //
@@ -804,18 +838,21 @@ namespace Neon::Renderer
             }
 
             auto DescriptorOffset = Param.Descriptor.Type == RHI::DescriptorTableParam::Sampler ? SamplerDescriptorSize : ResourceDescriptorSize;
-            DescriptorOffsets.push_back(DescriptorOffset);
-
+            bool DescriptorWasSet = false;
             if (Param.Descriptor.Instanced)
             {
                 for (auto& CurMaterial : Materials)
                 {
-                    InsertToDescriptorBatch(CurMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
+                    DescriptorWasSet |= InsertToDescriptorBatch(CurMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
                 }
             }
             else
             {
-                InsertToDescriptorBatch(FirstMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
+                DescriptorWasSet |= InsertToDescriptorBatch(FirstMaterial->GetDescriptorParam(ParamName), Param.Descriptor.Type);
+            }
+            if (DescriptorWasSet)
+            {
+                DescriptorOffsets.push_back(DescriptorOffset);
             }
         }
 

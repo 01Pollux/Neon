@@ -74,10 +74,10 @@ namespace Neon::Renderer
         /// <summary>
         /// Set the material's resource as a sampler.
         /// </summary>
-        virtual void SetResource(
-            const StringU8&         Name,
-            const RHI::SamplerDesc& Desc,
-            uint32_t                ArrayIndex = 0) = 0;
+        virtual void SetSampler(
+            const StringU8&                        Name,
+            const std::optional<RHI::SamplerDesc>& Desc,
+            uint32_t                               ArrayIndex = 0) = 0;
 
         /// <summary>
         /// Set the material's resource as a sampler.

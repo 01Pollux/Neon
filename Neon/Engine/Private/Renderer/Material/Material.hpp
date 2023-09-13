@@ -77,10 +77,10 @@ namespace Neon::Renderer
             uint32_t                       ArrayIndex,
             const Ptr<RHI::IGpuResource>&  UavCounter) override;
 
-        void SetResource(
-            const StringU8&         Name,
-            const RHI::SamplerDesc& Desc,
-            uint32_t                ArrayIndex = 0) override;
+        void SetSampler(
+            const StringU8&                        Name,
+            const std::optional<RHI::SamplerDesc>& Desc,
+            uint32_t                               ArrayIndex = 0) override;
 
         void SetConstant(
             const StringU8& Name,
@@ -131,7 +131,7 @@ namespace Neon::Renderer
 
         struct SamplerEntry
         {
-            std::vector<RHI::SamplerDesc> Descs;
+            std::vector<std::optional<RHI::SamplerDesc>> Descs;
 
             uint32_t Offset;
 

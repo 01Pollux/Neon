@@ -66,7 +66,7 @@ namespace Neon::RG
         Renderer::ComputeMaterialBuilder Builder;
         m_Material =
             Builder.RootSignature(
-                       RHI::RootSignatureBuilder()
+                       RHI::RootSignatureBuilder(STR("SSAOPass::RootSignature"))
                            .AddConstantBufferView("c_PerFrameData", 0, 0)
                            .AddConstantBufferView("c_SSAOParams", 1, 0)
                            .AddDescriptorTable(
