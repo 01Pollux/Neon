@@ -158,6 +158,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
 	
 	float4 Albedo = float4(Material.Albedo, 1.f);
+	[branch]
 	if (Material.Flags & MATERIAL_FLAG_ALBEDO_MAP)
 	{
 		Texture2D AlbedoMap = p_AlbedoMap[Material.AlbedoMapIndex];
@@ -170,6 +171,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	}
 	
 	float4 Normal;
+	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
 	{
 		Texture2D NormalMap = p_NormalMap[Material.NormalMapIndex];
@@ -183,6 +185,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	}
 	
 	float4 Specular = float4(Material.Specular, 1.f);
+	[branch]
 	if (Material.Flags & MATERIAL_FLAG_SPECULAR_MAP)
 	{
 		Texture2D SpecularMap = p_SpecularMap[Material.SpecularMapIndex];
@@ -190,6 +193,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	}
 	
 	float4 Emissive = float4(Material.Emissive, 1.f);
+	[branch]
 	if (Material.Flags & MATERIAL_FLAG_EMISSIVE_MAP)
 	{
 		Texture2D EmissiveMap = p_EmissiveMap[Material.EmissiveMapIndex];

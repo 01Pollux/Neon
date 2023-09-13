@@ -124,7 +124,7 @@ namespace Neon::RHI
         std::span<Handle> Handles)
     {
         std::scoped_lock BufferLock(m_PoolMutex);
-        for (auto Hndl : Handles)
+        for (auto& Hndl : Handles)
         {
             bool  Exists    = false;
             auto& Allocator = m_BufferAllocators[int(Hndl.Type)];

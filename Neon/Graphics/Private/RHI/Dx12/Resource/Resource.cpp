@@ -235,18 +235,9 @@ namespace Neon::RHI
     GpuResourceHandle Dx12Buffer::GetHandle(
         size_t Offset) const
     {
-        return { m_Resource->GetGPUVirtualAddress() + GetOffset() + Offset };
+        return { m_Resource->GetGPUVirtualAddress() + Offset };
     }
 
-    size_t Dx12Buffer::GetOffset() const
-    {
-        return IsUsingPool() ? m_Offset : 0;
-    }
-
-    bool Dx12Buffer::IsUsingPool() const
-    {
-        return m_Allocation == nullptr;
-    }
     //
 
     IUploadBuffer* IUploadBuffer::Create(
@@ -286,7 +277,7 @@ namespace Neon::RHI
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + GetOffset();
+        return std::bit_cast<uint8_t*>(MappedData);
     }
 
     void Dx12UploadBuffer::Unmap()
@@ -322,7 +313,7 @@ namespace Neon::RHI
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData) + GetOffset();
+        return std::bit_cast<uint8_t*>(MappedData);
     }
 
     void Dx12ReadbackBuffer::Unmap()

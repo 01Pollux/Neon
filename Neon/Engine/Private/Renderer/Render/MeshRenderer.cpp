@@ -13,10 +13,11 @@ namespace Neon::Renderer
     /// Update and apply the material to command list
     /// </summary>
     static void ApplyMeshMaterial(
-        Renderer::IMaterial*        Material,
-        RHI::GpuResourceHandle      CameraBuffer,
-        const Component::Transform& Transform,
-        RHI::ICommandList*          CommandList);
+        std::vector<RHI::IUploadBuffer*>& BuffersToUnmap,
+        Renderer::IMaterial*              Material,
+        RHI::GpuResourceHandle            CameraBuffer,
+        const Component::Transform&       Transform,
+        RHI::ICommandList*                CommandList);
 
     //
 
@@ -75,9 +76,13 @@ namespace Neon::Renderer
     {
         if (m_MeshQuery.is_true())
         {
+            std::vector<RHI::IUploadBuffer*> BuffersToUnmap;
+            BuffersToUnmap.reserve(m_MeshQuery.count());
+
             CommandList->MarkEvent("Render Mesh");
             m_MeshQuery.iter(
                 [this,
+                 &BuffersToUnmap,
                  CameraBuffer,
                  CommandList](flecs::iter&                   Iter,
                               const Component::Transform*    Transform,
@@ -95,6 +100,7 @@ namespace Neon::Renderer
                         auto& Material = Model->GetMaterial(MatIdx);
 
                         ApplyMeshMaterial(
+                            BuffersToUnmap,
                             Material.get(),
                             CameraBuffer,
                             CurTransform,
@@ -125,14 +131,20 @@ namespace Neon::Renderer
                                 .IndexCountPerInstance = Submesh.IndexCount });
                     }
                 });
+
+            for (auto Buffer : BuffersToUnmap)
+            {
+                Buffer->Unmap();
+            }
         }
     }
 
     void ApplyMeshMaterial(
-        Renderer::IMaterial*        Material,
-        RHI::GpuResourceHandle      CameraBuffer,
-        const Component::Transform& Transform,
-        RHI::ICommandList*          CommandList)
+        std::vector<RHI::IUploadBuffer*>& BuffersToUnmap,
+        Renderer::IMaterial*              Material,
+        RHI::GpuResourceHandle            CameraBuffer,
+        const Component::Transform&       Transform,
+        RHI::ICommandList*                CommandList)
     {
         // Update per-frame data
         Material->SetResourceView(
@@ -142,8 +154,8 @@ namespace Neon::Renderer
         // Update per-object data
         {
             RHI::UBufferPoolHandle Buffer(
-                Math::AlignUp(sizeof(MeshRenderer::PerObjectData), RHI::ConstantBufferAlignement),
-                RHI::ConstantBufferAlignement,
+                Math::AlignUp(sizeof(MeshRenderer::PerObjectData), sizeof(Vector4)),
+                sizeof(Vector4),
                 RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
             {
                 auto UploadBuffer = Buffer.AsUpload();
@@ -151,7 +163,7 @@ namespace Neon::Renderer
                 auto Data   = std::bit_cast<MeshRenderer::PerObjectData*>(UploadBuffer->Map() + Buffer.Offset);
                 Data->World = Transform.World.ToMat4x4Transposed();
 
-                UploadBuffer->Unmap();
+                BuffersToUnmap.push_back(UploadBuffer);
             }
 
             Material->SetResourceView(
@@ -162,8 +174,8 @@ namespace Neon::Renderer
         // Update per-material data
         {
             RHI::UBufferPoolHandle Buffer(
-                sizeof(MeshRenderer::PerMaterialData),
-                RHI::ConstantBufferAlignement,
+                Math::AlignUp(sizeof(MeshRenderer::PerMaterialData), sizeof(Vector4)),
+                sizeof(Vector4),
                 RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
             {
                 auto UploadBuffer = Buffer.AsUpload();
@@ -175,14 +187,14 @@ namespace Neon::Renderer
                 Data->Specular = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
                 Data->Emissive = Colors::Black;
 
-                UploadBuffer->Unmap();
+                BuffersToUnmap.push_back(UploadBuffer);
             }
 
             Material->SetResourceView(
                 "p_MaterialData",
                 Buffer.GetGpuHandle());
         }
-
+        
         // Finalize material
         Material->Apply(CommandList);
     }

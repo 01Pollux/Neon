@@ -38,7 +38,7 @@ namespace Neon::Renderer
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
-                    RHI::RootSignatureBuilder()
+                    RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
                         .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
                         .AddShaderResourceView("v_PerObjectData", 0, 1, RHI::ShaderVisibility::Vertex)
                         .AddShaderResourceView("p_MaterialData", 1, 1, RHI::ShaderVisibility::Pixel)
@@ -76,7 +76,7 @@ namespace Neon::Renderer
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
-                    RHI::RootSignatureBuilder()
+                    RHI::RootSignatureBuilder(STR("Material::Sprite_RootSignature"))
                         .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
                         .AddShaderResourceView("g_SpriteData", 0, 1, RHI::ShaderVisibility::All)
                         .AddDescriptorTable(
