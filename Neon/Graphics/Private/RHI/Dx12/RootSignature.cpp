@@ -210,6 +210,13 @@ namespace Neon::RHI
             SignatureBlob->GetBufferSize(),
             IID_PPV_ARGS(&m_RootSignature)));
 
+#ifndef NEON_DIST
+        if (auto& Name = Builder.GetName(); !Name.empty())
+        {
+            RenameObject(m_RootSignature.Get(), Name.c_str());
+        }
+#endif
+
         //
 
         int RootIndex = 0;

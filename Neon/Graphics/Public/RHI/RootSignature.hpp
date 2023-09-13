@@ -323,6 +323,30 @@ namespace Neon::RHI
     class RootSignatureBuilder
     {
     public:
+        RootSignatureBuilder(
+            String Name = STR("")) noexcept :
+            m_Name(std::move(Name))
+        {
+        }
+
+        /// <summary>
+        /// Set name of root signature
+        /// </summary>
+        RootSignatureBuilder& SetName(
+            String Name) noexcept
+        {
+            m_Name = std::move(Name);
+            return *this;
+        }
+
+        /// <summary>
+        /// Get name of root signature
+        /// </summary>
+        [[nodiscard]] const String& GetName() const noexcept
+        {
+            return m_Name;
+        }
+
         /// <summary>
         /// Add descriptor table
         /// </summary>
@@ -461,6 +485,7 @@ namespace Neon::RHI
         }
 
     private:
+        String                                            m_Name;
         std::list<RootParameter>                          m_Parameters;
         std::list<std::pair<StringU8, StaticSamplerDesc>> m_StaticSamplers;
         MRootSignatureBuilderFlags                        m_Flags;
