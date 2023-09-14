@@ -12,10 +12,15 @@ namespace Neon::Asset
         bool ContainsAsset(
             const Asset::Handle& AssetGuid) const override;
 
-        std::future<void> Export() override
-        {
-            return std::async(std::launch::async, [] {});
-        }
+    public:
+        Asset::Handle FindAsset(
+            const StringU8& Path) const;
+
+        Asio::CoGenerator<Asset::Handle> FindAssets(
+            const StringU8& PathRegex) const;
+
+    public:
+        std::future<void> Export() override;
 
         std::future<void> SaveAsset(
             Ptr<IAsset> Asset) override;

@@ -1,5 +1,6 @@
 #include <ResourcePCH.hpp>
 #include <Asset/Packs/Memory.hpp>
+#include <regex>
 
 namespace Neon::Asset
 {
@@ -17,6 +18,44 @@ namespace Neon::Asset
     {
         RLock Lock(m_CacheMutex);
         return m_Cache.contains(AssetGuid);
+    }
+
+    //
+
+    Asset::Handle MemoryAssetPackage::FindAsset(
+        const StringU8& Path) const
+    {
+        RLock Lock(m_CacheMutex);
+        for (auto& [Guid, Asset] : m_Cache)
+        {
+            if (Asset->GetPath() == Path)
+            {
+                return Guid;
+            }
+        }
+        return Asset::Handle::Null;
+    }
+
+    Asio::CoGenerator<Asset::Handle> MemoryAssetPackage::FindAssets(
+        const StringU8& PathRegex) const
+    {
+        std::regex Regex(PathRegex);
+
+        RLock Lock(m_CacheMutex);
+        for (auto& [Guid, Asset] : m_Cache)
+        {
+            if (std::regex_match(Asset->GetPath(), Regex))
+            {
+                co_yield Asset::Handle{ Guid };
+            }
+        }
+    }
+
+    //
+
+    std::future<void> MemoryAssetPackage::Export()
+    {
+        return std::async(std::launch::async, [] {});
     }
 
     std::future<void> MemoryAssetPackage::SaveAsset(

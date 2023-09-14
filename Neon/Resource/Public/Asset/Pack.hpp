@@ -24,6 +24,7 @@ namespace Neon::Asset
     public:
         virtual ~IAssetPackage() = default;
 
+    public:
         /// <summary>
         /// Get the assets in this package as a coroutine.
         /// </summary>
@@ -35,6 +36,20 @@ namespace Neon::Asset
         virtual bool ContainsAsset(
             const Asset::Handle& AssetGuid) const = 0;
 
+    public:
+        /// <summary>
+        /// Finds an asset by path.
+        /// </summary>
+        [[nodiscard]] Asset::Handle FindAsset(
+            const StringU8& Path) const;
+
+        /// <summary>
+        /// Finds assets by path as regex.
+        /// </summary>
+        [[nodiscard]] Asio::CoGenerator<Asset::Handle> FindAssets(
+            const StringU8& PathRegex) const;
+
+    public:
         /// <summary>
         /// Export this package to the filesystem.
         /// </summary>

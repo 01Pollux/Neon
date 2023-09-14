@@ -29,7 +29,7 @@ namespace Neon::Asset
         /// <summary>
         /// Gets the thread pool used by the storage system.
         /// </summary>
-        Asio::ThreadPool<>& GetThreadPool();
+        [[nodiscard]] Asio::ThreadPool<>& GetThreadPool();
 
     public:
         /// <summary>
@@ -95,15 +95,42 @@ namespace Neon::Asset
         /// Gets the asset package with the specified name.
         /// Not thread safe.
         /// </summary>
-        Asio::CoGenerator<IAssetPackage*> GetPackages(
+        [[nodiscard]] Asio::CoGenerator<IAssetPackage*> GetPackages(
+            bool IncludeNonMemoryOnly,
             bool IncludeMemoryOnly);
 
         /// <summary>
         /// Gets all assets in all packages.
         /// Not thread safe.
         /// </summary>
-        Asio::CoGenerator<Storage::PackageAndAsset> GetAllAssets(
+        [[nodiscard]] Asio::CoGenerator<Storage::PackageAndAsset> GetAllAssets(
+            bool IncludeNonMemoryOnly,
             bool IncludeMemoryOnly);
+
+    public:
+        /// <summary>
+        /// Finds an asset by guid.
+        /// </summary>
+        [[nodiscard]] IAssetPackage* FindPackage(
+            const Handle& AssetGuid,
+            bool          IncludeNonMemoryOnly,
+            bool          IncludeMemoryOnly);
+
+        /// <summary>
+        /// Finds an asset by path.
+        /// </summary>
+        [[nodiscard]] Storage::PackageAndAsset FindAsset(
+            const StringU8& Path,
+            bool            IncludeNonMemoryOnly,
+            bool            IncludeMemoryOnly);
+
+        /// <summary>
+        /// Finds assets by path as regex.
+        /// </summary>
+        [[nodiscard]] Asio::CoGenerator<Storage::PackageAndAsset> FindAssets(
+            const StringU8& PathRegex,
+            bool            IncludeNonMemoryOnly,
+            bool            IncludeMemoryOnly);
 
     private:
         AssetPackageList                      m_Packages;

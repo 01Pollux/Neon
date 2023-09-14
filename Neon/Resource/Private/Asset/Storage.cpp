@@ -91,7 +91,7 @@ namespace Neon::Asset
     {
         std::vector<std::future<void>> Futures;
 
-        for (auto& Package : StorageImpl::Get()->GetPackages(false))
+        for (auto& Package : StorageImpl::Get()->GetPackages(true, false))
         {
             Futures.emplace_back(Package->Export());
         }
@@ -109,16 +109,46 @@ namespace Neon::Asset
         }
     }
 
+    //
+
     Asio::CoGenerator<IAssetPackage*> Storage::GetPackages(
+        bool IncludeNonMemoryOnly,
         bool IncludeMemoryOnly)
     {
-        return s_Instance->GetPackages(IncludeMemoryOnly);
+        return s_Instance->GetPackages(IncludeNonMemoryOnly, IncludeMemoryOnly);
     }
 
     Asio::CoGenerator<Storage::PackageAndAsset> Storage::GetAllAssets(
+        bool IncludeNonMemoryOnly,
         bool IncludeMemoryOnly)
     {
-        return s_Instance->GetAllAssets(IncludeMemoryOnly);
+        return s_Instance->GetAllAssets(IncludeNonMemoryOnly, IncludeMemoryOnly);
+    }
+
+    //
+
+    IAssetPackage* Storage::FindPackage(
+        const Handle& AssetGuid,
+        bool          IncludeNonMemoryOnly,
+        bool          IncludeMemoryOnly)
+    {
+        return s_Instance->FindPackage(AssetGuid, IncludeNonMemoryOnly, IncludeMemoryOnly);
+    }
+
+    auto Storage::FindAsset(
+        const StringU8& Path,
+        bool            IncludeNonMemoryOnly,
+        bool            IncludeMemoryOnly) -> PackageAndAsset
+    {
+        return s_Instance->FindAsset(Path, IncludeNonMemoryOnly, IncludeMemoryOnly);
+    }
+
+    Asio::CoGenerator<Storage::PackageAndAsset> Storage::FindAssets(
+        const StringU8& PathRegex,
+        bool            IncludeNonMemoryOnly,
+        bool            IncludeMemoryOnly)
+    {
+        return s_Instance->FindAssets(PathRegex, IncludeNonMemoryOnly, IncludeMemoryOnly);
     }
 
     //
@@ -133,9 +163,7 @@ namespace Neon::Asset
         Mount(UPtr<IAssetPackage>(NEON_NEW MemoryAssetPackage));
     }
 
-    StorageImpl::~StorageImpl()
-    {
-    }
+    StorageImpl::~StorageImpl() = default;
 
     Asio::ThreadPool<>& StorageImpl::GetThreadPool()
     {
@@ -232,6 +260,8 @@ namespace Neon::Asset
         return Iter != m_Handlers.end() ? Iter->second.get() : nullptr;
     }
 
+    //
+
     IAssetPackage* StorageImpl::Mount(
         UPtr<IAssetPackage> Package)
     {
@@ -246,33 +276,82 @@ namespace Neon::Asset
             { return CurPackage.get() == Package; });
     }
 
+    //
+
     Asio::CoGenerator<IAssetPackage*> StorageImpl::GetPackages(
+        bool IncludeNonMemoryOnly,
         bool IncludeMemoryOnly)
     {
         auto Iter = m_Packages.begin();
-        if (!IncludeMemoryOnly)
-        {
-            ++Iter;
-        }
-        for (; Iter != m_Packages.end(); ++Iter)
+        if (IncludeMemoryOnly)
         {
             co_yield Iter->get();
+        }
+        ++Iter;
+        if (IncludeNonMemoryOnly) [[likely]]
+        {
+            for (; Iter != m_Packages.end(); ++Iter)
+            {
+                co_yield Iter->get();
+            }
         }
     }
 
     Asio::CoGenerator<Storage::PackageAndAsset> StorageImpl::GetAllAssets(
+        bool IncludeNonMemoryOnly,
         bool IncludeMemoryOnly)
     {
-        auto Iter = m_Packages.begin();
-        if (!IncludeMemoryOnly)
+        for (auto& Packages : GetPackages(IncludeNonMemoryOnly, IncludeMemoryOnly))
         {
-            ++Iter;
-        }
-        for (; Iter != m_Packages.end(); ++Iter)
-        {
-            for (auto& AssetGuid : (*Iter)->GetAssets())
+            for (auto& AssetGuid : Packages->GetAssets())
             {
-                co_yield { Iter->get(), AssetGuid };
+                co_yield { Packages, AssetGuid };
+            }
+        }
+    }
+
+    //
+
+    IAssetPackage* StorageImpl::FindPackage(
+        const Handle& AssetGuid,
+        bool          IncludeNonMemoryOnly,
+        bool          IncludeMemoryOnly)
+    {
+        for (auto& Package : GetPackages(IncludeNonMemoryOnly, IncludeMemoryOnly))
+        {
+            if (Package->ContainsAsset(AssetGuid))
+            {
+                return Package;
+            }
+        }
+        return nullptr;
+    }
+
+    Storage::PackageAndAsset StorageImpl::FindAsset(
+        const StringU8& Path,
+        bool            IncludeNonMemoryOnly,
+        bool            IncludeMemoryOnly)
+    {
+        for (auto& Package : GetPackages(IncludeNonMemoryOnly, IncludeMemoryOnly))
+        {
+            if (auto Asset = Package->FindAsset(Path); !Asset.is_nil())
+            {
+                return { Package, Asset };
+            }
+        }
+        return { nullptr, Asset::Handle::Null };
+    }
+
+    Asio::CoGenerator<Storage::PackageAndAsset> StorageImpl::FindAssets(
+        const StringU8& PathRegex,
+        bool            IncludeNonMemoryOnly,
+        bool            IncludeMemoryOnly)
+    {
+        for (auto& Package : GetPackages(IncludeNonMemoryOnly, IncludeMemoryOnly))
+        {
+            for (auto& Asset : Package->FindAssets(PathRegex))
+            {
+                co_yield { Package, Asset };
             }
         }
     }

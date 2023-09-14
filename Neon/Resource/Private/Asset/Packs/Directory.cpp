@@ -7,6 +7,7 @@
 #include <queue>
 #include <stack>
 #include <fstream>
+#include <regex>
 
 #include <Log/Logger.hpp>
 
@@ -124,6 +125,29 @@ namespace Neon::Asset
     {
         RLock Lock(m_CacheMutex);
         return m_AssetMeta.contains(AssetGuid);
+    }
+
+    Asset::Handle DirectoryAssetPackage::FindAsset(
+        const StringU8& Path) const
+    {
+        RLock Lock(m_CacheMutex);
+        auto  Iter = m_AssetPath.find(Path);
+        return Iter != m_AssetPath.end() ? Iter->second : Asset::Handle::Null;
+    }
+
+    Asio::CoGenerator<Asset::Handle> DirectoryAssetPackage::FindAssets(
+        const StringU8& PathRegex) const
+    {
+        std::regex Regex(PathRegex);
+
+        RLock Lock(m_CacheMutex);
+        for (auto& [Path, Handle] : m_AssetPath)
+        {
+            if (std::regex_match(Path, Regex))
+            {
+                co_yield Asset::Handle{ Handle };
+            }
+        }
     }
 
     std::future<void> DirectoryAssetPackage::Export()

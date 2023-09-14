@@ -118,20 +118,47 @@ namespace Neon::Asset
         static void ExportAll();
 
     public:
+        using PackageAndAsset = std::pair<IAssetPackage*, const Handle&>;
+
         /// <summary>
         /// Gets the asset package with the specified name.
         /// Not thread safe.
         /// </summary>
         [[nodiscard]] static Asio::CoGenerator<IAssetPackage*> GetPackages(
-            bool IncludeMemoryOnly = false);
-
-        using PackageAndAsset = std::pair<IAssetPackage*, const Handle&>;
+            bool IncludeNonMemoryOnly = true,
+            bool IncludeMemoryOnly    = false);
 
         /// <summary>
         /// Gets all assets in all packages.
         /// Not thread safe.
         /// </summary>
         [[nodiscard]] static Asio::CoGenerator<PackageAndAsset> GetAllAssets(
-            bool IncludeMemoryOnly = false);
+            bool IncludeNonMemoryOnly = true,
+            bool IncludeMemoryOnly    = false);
+
+    public:
+        /// <summary>
+        /// Finds an asset by guid.
+        /// </summary>
+        [[nodiscard]] static IAssetPackage* FindPackage(
+            const Handle& AssetGuid,
+            bool          IncludeNonMemoryOnly = true,
+            bool          IncludeMemoryOnly    = false);
+
+        /// <summary>
+        /// Finds an asset by path.
+        /// </summary>
+        [[nodiscard]] static PackageAndAsset FindAsset(
+            const StringU8& Path,
+            bool            IncludeNonMemoryOnly = true,
+            bool            IncludeMemoryOnly    = false);
+
+        /// <summary>
+        /// Finds assets by path as regex.
+        /// </summary>
+        [[nodiscard]] static Asio::CoGenerator<PackageAndAsset> FindAssets(
+            const StringU8& PathRegex,
+            bool            IncludeNonMemoryOnly = true,
+            bool            IncludeMemoryOnly    = false);
     };
 } // namespace Neon::Asset

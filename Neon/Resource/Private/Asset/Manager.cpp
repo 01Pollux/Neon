@@ -37,7 +37,7 @@ namespace Neon::Asset
     std::future<Ptr<IAsset>> ManagerImpl::Load(
         const Handle& AssetGuid)
     {
-        for (auto Package : Storage::GetPackages(true))
+        for (auto Package : Storage::GetPackages(true, true))
         {
             if (Package->ContainsAsset(AssetGuid))
             {
@@ -56,7 +56,7 @@ namespace Neon::Asset
     std::future<Ptr<IAsset>> ManagerImpl::Reload(
         const Handle& AssetGuid)
     {
-        for (auto Package : Storage::GetPackages(true))
+        for (auto Package : Storage::GetPackages(true, true))
         {
             if (Package->RemoveAsset(AssetGuid))
             {
@@ -69,7 +69,7 @@ namespace Neon::Asset
     bool ManagerImpl::Unload(
         const Handle& AssetGuid)
     {
-        for (auto Package : Storage::GetPackages(true))
+        for (auto Package : Storage::GetPackages(true, true))
         {
             if (Package->RemoveAsset(AssetGuid))
             {
