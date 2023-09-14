@@ -117,25 +117,60 @@ namespace Neon::RHI
                 return S_OK;
             }
 
-            // We won't accept relative paths that start with a dot
-            if (FileName[0] == L'.')
+            if (FileName[0] == '.' && FileName[1] == '/')
+            {
+                FileName += 2;
+            }
+
+            size_t GoBackCount = 0;
+            while (FileName && FileName[0] == '.' && FileName[1] == '.' && FileName[2] == '/')
+            {
+                FileName += 3;
+                GoBackCount++;
+            }
+
+            if (!FileName) [[unlikely]]
             {
                 return E_FAIL;
             }
 
-            for (auto Path : {
+            auto FileNameStr = StringUtils::Transform<StringU8>(FileName);
+
+            // At first, we will find all shaders in Engine/Shaders/*, and GoBackCount could be 0 or 1 (depends if the user use ../)
+            uint32_t GoBackStart = 1;
+
+            for (std::filesystem::path Path : {
                      "Engine/Shaders",
-                     "Engine/Shaders/Include",
                      m_IncludeDirectory.empty() ? m_IncludeDirectory.data() : nullptr })
             {
-                if (!Path) [[unlikely]]
+                if (Path.empty()) [[unlikely]]
+                {
+                    GoBackStart = 0;
+                    continue;
+                }
+
+                bool ValidPath = true;
+                for (size_t i = GoBackStart; i < GoBackCount; i++)
+                {
+                    if (!Path.has_parent_path())
+                    {
+                        ValidPath = false;
+                        break;
+                    }
+                    Path = Path.parent_path();
+                }
+
+                GoBackStart = 0;
+
+                if (!ValidPath)
                 {
                     continue;
                 }
 
                 StringU8 PathToAsset = StringUtils::Format(
-                    "Path/{}",
-                    StringUtils::Transform<StringU8>(FileName));
+                    "{}/{}",
+                    Path.string(),
+                    FileNameStr);
 
                 auto& Handle = m_TextFileHandle.emplace_back(Asset::Storage::FindAsset(PathToAsset, true, true).second);
                 if (Handle.is_nil()) [[unlikely]]
@@ -144,21 +179,21 @@ namespace Neon::RHI
                     continue;
                 }
 
-                auto TextFile = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset::Manager::Load(Handle).get());
+                auto TextFile = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset::Manager::Load(Handle));
                 if (!TextFile) [[unlikely]]
                 {
                     m_TextFileHandle.pop_back();
                     continue;
                 }
 
-                auto& SourceCode = TextFile->AsUtf16();
+                auto& SourceCode = TextFile->Get();
 
                 WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
 
                 HRESULT Res = m_Utils->CreateBlobFromPinned(
                     SourceCode.data(),
                     uint32_t(SourceCode.size()),
-                    DXC_CP_ACP,
+                    DXC_CP_UTF8,
                     &ShaderCodeBlob);
 
                 if (SUCCEEDED(Res))
@@ -215,7 +250,7 @@ namespace Neon::RHI
         ThrowIfFailed(m_Utils->CreateBlobFromPinned(
             SourceCode.data(),
             uint32_t(SourceCode.size()),
-            DXC_CP_ACP,
+            DXC_CP_UTF8,
             &ShaderCodeBlob));
 
         std::vector<const wchar_t*> Options;
@@ -298,9 +333,7 @@ namespace Neon::RHI
                 uint32_t(Options.size()),
                 &Handler,
                 IID_PPV_ARGS(&Result)));
-        }
 
-        {
             WinAPI::ComPtr<IDxcBlobUtf8> Error;
             if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)) &&
                 Error &&

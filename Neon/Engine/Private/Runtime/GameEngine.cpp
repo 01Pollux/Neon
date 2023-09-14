@@ -207,7 +207,7 @@ namespace Neon::Runtime
         if (Config.Resource.LoggerAssetUid)
         {
             // Set global logger settings
-            if (auto Logger = Asset::AssetTaskPtr<Asset::LoggerAsset>(Asset::Manager::Load(*Config.Resource.LoggerAssetUid)))
+            if (auto Logger = std::dynamic_pointer_cast<Asset::LoggerAsset>(Asset::Manager::Load(*Config.Resource.LoggerAssetUid)))
             {
                 Logger->SetGlobal();
             }

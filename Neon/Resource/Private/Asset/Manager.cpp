@@ -14,13 +14,39 @@ namespace Neon::Asset
 
     //
 
-    std::future<Ptr<IAsset>> Manager::Load(
+    std::future<Ptr<IAsset>> Manager::LoadAsync(
+        const Handle& AssetGuid)
+    {
+        return ManagerImpl::Get()->LoadAsync(AssetGuid);
+    }
+
+    std::future<Ptr<IAsset>> Manager::LoadAsync(
+        IAssetPackage* Package,
+        const Handle&  AssetGuid)
+    {
+        return ManagerImpl::Get()->LoadAsync(Package, AssetGuid);
+    }
+
+    Ptr<IAsset> Manager::Load(
         const Handle& AssetGuid)
     {
         return ManagerImpl::Get()->Load(AssetGuid);
     }
 
-    std::future<Ptr<IAsset>> Manager::Reload(
+    Ptr<IAsset> Manager::Load(
+        IAssetPackage* Package,
+        const Handle&  AssetGuid)
+    {
+        return ManagerImpl::Get()->Load(Package, AssetGuid);
+    }
+
+    std::future<Ptr<IAsset>> Manager::ReloadAsync(
+        const Handle& AssetGuid)
+    {
+        return ManagerImpl::Get()->ReloadAsync(AssetGuid);
+    }
+
+    Ptr<IAsset> Manager::Reload(
         const Handle& AssetGuid)
     {
         return ManagerImpl::Get()->Reload(AssetGuid);
@@ -40,7 +66,7 @@ namespace Neon::Asset
 
     //
 
-    std::future<Ptr<IAsset>> ManagerImpl::Load(
+    std::future<Ptr<IAsset>> ManagerImpl::LoadAsync(
         const Handle& AssetGuid)
     {
         for (auto Package : Storage::GetPackages(true, true))
@@ -59,7 +85,63 @@ namespace Neon::Asset
         return {};
     }
 
-    std::future<Ptr<IAsset>> ManagerImpl::Reload(
+    std::future<Ptr<IAsset>> ManagerImpl::LoadAsync(
+        IAssetPackage* Package,
+        const Handle&  AssetGuid)
+    {
+        if (Package->ContainsAsset(AssetGuid))
+        {
+            return StorageImpl::Get()->GetThreadPool().enqueue(
+                [Package, AssetGuid]()
+                {
+                    return Package->LoadAsset(AssetGuid);
+                });
+        }
+
+        return {};
+    }
+
+    Ptr<IAsset> ManagerImpl::Load(
+        const Handle& AssetGuid)
+    {
+        for (auto Package : Storage::GetPackages(true, true))
+        {
+            if (Package->ContainsAsset(AssetGuid))
+            {
+                return Package->LoadAsset(AssetGuid);
+            }
+        }
+
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid.ToString());
+        return {};
+    }
+
+    Ptr<IAsset> ManagerImpl::Load(
+        IAssetPackage* Package,
+        const Handle&  AssetGuid)
+    {
+        if (Package->ContainsAsset(AssetGuid))
+        {
+            return Package->LoadAsset(AssetGuid);
+        }
+
+        return {};
+    }
+
+    std::future<Ptr<IAsset>> ManagerImpl::ReloadAsync(
+        const Handle& AssetGuid)
+    {
+        for (auto Package : Storage::GetPackages(true, true))
+        {
+            if (Package->RemoveAsset(AssetGuid, true))
+            {
+                break;
+            }
+        }
+        return LoadAsync(AssetGuid);
+    }
+
+    Ptr<IAsset> ManagerImpl::Reload(
         const Handle& AssetGuid)
     {
         for (auto Package : Storage::GetPackages(true, true))

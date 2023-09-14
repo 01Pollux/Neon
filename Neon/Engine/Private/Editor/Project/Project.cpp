@@ -214,7 +214,7 @@ namespace Neon::Editor
             auto SceneGuid = Asset::Handle::FromString(StartScene.get());
             if (SceneGuid != Asset::Handle::Null)
             {
-                SceneTask = Asset::Manager::Load(SceneGuid);
+                SceneTask = Asset::Manager::LoadAsync(SceneGuid);
                 NEON_TRACE("Startup scene: {}", StartScene.get());
             }
         }

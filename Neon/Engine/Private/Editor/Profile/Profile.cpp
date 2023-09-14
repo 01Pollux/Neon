@@ -13,7 +13,7 @@ namespace Neon::Editor
 {
     Profile::Profile(
         const Asset::Handle& ProfileAsset) :
-        m_Properties(Asset::AssetTaskPtr<Asset::PropertyTreeAsset>(Asset::Manager::Load(ProfileAsset))->Get())
+        m_Properties(std::dynamic_pointer_cast<Asset::PropertyTreeAsset>(Asset::Manager::Load(ProfileAsset))->Get())
     {
     }
 
@@ -26,7 +26,7 @@ namespace Neon::Editor
             return Id->second;
         }
 
-        auto Texture = Asset::AssetTaskPtr<Asset::TextureAsset>(Asset::Manager::Load(Guid))->GetTexture();
+        auto Texture = std::dynamic_pointer_cast<Asset::TextureAsset>(Asset::Manager::Load(Guid))->GetTexture();
 
         auto Descriptor = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
         auto Handle     = Descriptor->Allocate(1);

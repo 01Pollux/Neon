@@ -52,7 +52,7 @@ namespace Neon::RG
         // TODO: Load from asset rather than hardcoding
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
 
-        ShaderAssetTaskPtr Shader = Asset::Manager::Load(AssetGuids::SSAOShaderGuid());
+        ShaderAssetTaskPtr Shader(Asset::Manager::LoadAsync(AssetGuids::SSAOShaderGuid()));
 
         RHI::ShaderCompileDesc ShaderDesc{
             .Stage = RHI::ShaderStage::Compute

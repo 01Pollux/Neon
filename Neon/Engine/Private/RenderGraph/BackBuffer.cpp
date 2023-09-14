@@ -30,7 +30,7 @@ namespace Neon::RG
         // TODO: Load from asset rather than hardcoding
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
 
-        ShaderAssetTaskPtr CopyToTextureShader = Asset::Manager::Load(AssetGuids::CopyToTextureShaderGuid());
+        ShaderAssetTaskPtr CopyToTextureShader(Asset::Manager::LoadAsync(AssetGuids::CopyToTextureShaderGuid()));
 
         m_Material =
             Renderer::RenderMaterialBuilder()

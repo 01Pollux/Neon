@@ -13,38 +13,22 @@ namespace Neon::Asset
         using IAsset::IAsset;
 
         TextFileAsset(
-            String        Text,
-            const Handle& AssetGuid,
-            StringU8      Path);
-
-        TextFileAsset(
             StringU8      Text,
             const Handle& AssetGuid,
             StringU8      Path);
 
         /// <summary>
-        /// Load string as utf8
+        /// Load string
         /// </summary>
-        [[nodiscard]] const StringU8& AsUtf8() const;
+        [[nodiscard]] const StringU8& Get() const;
 
         /// <summary>
-        /// Get utf16 string
+        /// Set string
         /// </summary>
-        [[nodiscard]] const String& AsUtf16() const;
-
-        /// <summary>
-        /// Set utf8 text
-        /// </summary>
-        [[nodiscard]] void SetText(
+        [[nodiscard]] void Set(
             const StringU8& Text);
 
-        /// <summary>
-        /// Set utf16 text
-        /// </summary>
-        [[nodiscard]] void SetText(
-            const String& Text);
-
     private:
-        mutable std::variant<String, StringU8> m_Text = "";
+        StringU8 m_Text;
     };
 } // namespace Neon::Asset

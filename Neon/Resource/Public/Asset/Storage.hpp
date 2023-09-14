@@ -118,7 +118,7 @@ namespace Neon::Asset
         static void ExportAll();
 
     public:
-        using PackageAndAsset = std::pair<IAssetPackage*, const Handle&>;
+        using PackageAndAsset = std::pair<IAssetPackage*, Handle>;
 
         /// <summary>
         /// Gets the asset package with the specified name.

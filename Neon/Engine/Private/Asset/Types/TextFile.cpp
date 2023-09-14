@@ -7,15 +7,6 @@
 namespace Neon::Asset
 {
     TextFileAsset::TextFileAsset(
-        String        Text,
-        const Handle& AssetGuid,
-        StringU8      Path) :
-        IAsset(AssetGuid, std::move(Path)),
-        m_Text(std::move(Text))
-    {
-    }
-
-    TextFileAsset::TextFileAsset(
         StringU8      Text,
         const Handle& AssetGuid,
         StringU8      Path) :
@@ -24,36 +15,16 @@ namespace Neon::Asset
     {
     }
 
-    const StringU8& TextFileAsset::AsUtf8() const
+    const StringU8& TextFileAsset::Get() const
     {
-        if (!std::holds_alternative<StringU8>(m_Text))
-        {
-            m_Text = StringUtils::Transform<StringU8>(std::get<String>(m_Text));
-        }
-        return std::get<StringU8>(m_Text);
+        return m_Text;
     }
 
-    const String& TextFileAsset::AsUtf16() const
-    {
-        if (!std::holds_alternative<String>(m_Text))
-        {
-            m_Text = StringUtils::Transform<String>(std::get<StringU8>(m_Text));
-        }
-        return std::get<String>(m_Text);
-    }
-
-    void TextFileAsset::SetText(
+    void TextFileAsset::Set(
         const StringU8& Text)
     {
         MarkDirty();
-        m_Text = StringUtils::Transform<StringU8>(Text);
-    }
-
-    void TextFileAsset::SetText(
-        const String& Text)
-    {
-        MarkDirty();
-        m_Text = StringUtils::Transform<String>(Text);
+        m_Text = Text;
     }
 
     //
@@ -71,9 +42,9 @@ namespace Neon::Asset
         StringU8                       Path,
         const AssetMetaData&           LoaderData)
     {
-        StringU8 Text(std::istream_iterator<char>(Stream), {});
-
-        return std::make_shared<TextFileAsset>(std::move(Text), AssetGuid, std::move(Path));
+        std::stringstream Text;
+        Text << Stream.rdbuf();
+        return std::make_shared<TextFileAsset>(Text.str(), AssetGuid, std::move(Path));
     }
 
     void TextFileAsset::Handler::Save(
@@ -82,6 +53,6 @@ namespace Neon::Asset
         const Ptr<IAsset>& Asset,
         AssetMetaData&     LoaderData)
     {
-        Stream << static_cast<const TextFileAsset*>(Asset.get())->AsUtf8();
+        Stream << static_cast<const TextFileAsset*>(Asset.get())->Get();
     }
 } // namespace Neon::Asset

@@ -1,6 +1,6 @@
 {
-  "Guid": "7fd1137c-ad31-4f83-8c35-6d2246f66bd2",
-  "Path": "Shaders/Engine/Lighting/Lit.hlsl.namd",
+  "Guid": "7427990f-9be1-4a23-aad5-1b99f00c29fd",
+  "Path": "Engine/Shaders/Sprite2D.hlsl.namd",
   "Loader": "",
   "Dependencies": "",
   "LoaderId": "15635213787607061289",

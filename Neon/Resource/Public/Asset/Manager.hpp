@@ -6,6 +6,7 @@
 namespace Neon::Asset
 {
     class IAsset;
+    class IAssetPackage;
 
     class Manager
     {
@@ -13,13 +14,39 @@ namespace Neon::Asset
         /// <summary>
         /// Load asynchronously an asset from the storage system.
         /// </summary>
-        static std::future<Ptr<IAsset>> Load(
+        static std::future<Ptr<IAsset>> LoadAsync(
+            IAssetPackage* Package,
+            const Handle&  AssetGuid);
+
+        /// <summary>
+        /// Load asynchronously an asset from the storage system.
+        /// </summary>
+        static std::future<Ptr<IAsset>> LoadAsync(
+            const Handle& AssetGuid);
+
+        /// <summary>
+        /// Load an asset from the storage system.
+        /// </summary>
+        static Ptr<IAsset> Load(
+            IAssetPackage* Package,
+            const Handle&  AssetGuid);
+
+        /// <summary>
+        /// Load an asset from the storage system.
+        /// </summary>
+        static Ptr<IAsset> Load(
             const Handle& AssetGuid);
 
         /// <summary>
         /// Load or reload asynchronously an asset from the storage system.
         /// </summary>
-        static std::future<Ptr<IAsset>> Reload(
+        static std::future<Ptr<IAsset>> ReloadAsync(
+            const Handle& AssetGuid);
+
+        /// <summary>
+        /// Load or reload an asset from the storage system.
+        /// </summary>
+        static Ptr<IAsset> Reload(
             const Handle& AssetGuid);
 
         /// <summary>

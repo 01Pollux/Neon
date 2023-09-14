@@ -218,7 +218,7 @@ namespace Neon::Editor
                     std::ifstream           File(Path);
                     Asset::AssetMetaDataDef MetaData(File);
 
-                    Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneAsset(Asset::Manager::Load(MetaData.GetGuid()));
+                    Asset::AssetTaskPtr<Asset::RuntimeSceneAsset> SceneAsset(Asset::Manager::LoadAsync(MetaData.GetGuid()));
                     File.close();
 
                     Project::Get()->SetActiveScene(SceneAsset);

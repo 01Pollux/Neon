@@ -206,7 +206,7 @@ namespace Neon::Runtime
     {
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
 
-        ShaderAssetTaskPtr DebugShader = Asset::Manager::Load(AssetGuids::DebugOverlayGuid());
+        ShaderAssetTaskPtr DebugShader(Asset::Manager::LoadAsync(AssetGuids::DebugOverlayGuid()));
 
         RHI::ShaderInputLayout VertexInput;
         VertexInput.emplace_back("Position", RHI::EResourceFormat::R32G32B32_Float);
