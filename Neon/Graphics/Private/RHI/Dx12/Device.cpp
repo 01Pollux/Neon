@@ -116,6 +116,16 @@ namespace Neon::RHI
         return m_Swapchain.get();
     }
 
+    uint32_t Dx12RenderDevice::GetFrameCount() const
+    {
+        return m_Swapchain->GetFrameCount();
+    }
+
+    uint32_t Dx12RenderDevice::GetFrameIndex() const
+    {
+        return m_Swapchain->GetFrameIndex();
+    }
+
     //
 
     void Dx12RenderDevice::PostInitialize(

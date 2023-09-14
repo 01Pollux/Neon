@@ -32,10 +32,16 @@ namespace Neon::RHI
 
         EResourceFormat GetFormat() override;
 
+    public:
         IGpuResource* GetBackBuffer() override;
 
         CpuDescriptorHandle GetBackBufferView() override;
 
+        uint32_t GetFrameCount() const override;
+
+        uint32_t GetFrameIndex() const override;
+
+    public:
         void Resize(
             const Size2I&   Size,
             EResourceFormat NewFormat) override;

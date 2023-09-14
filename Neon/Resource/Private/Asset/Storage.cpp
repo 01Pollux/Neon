@@ -205,7 +205,7 @@ namespace Neon::Asset
     {
         for (auto& Package : m_Packages)
         {
-            if (Package->RemoveAsset(AssetGuid, true))
+            if (Package->RemoveAsset(AssetGuid))
             {
                 return;
             }

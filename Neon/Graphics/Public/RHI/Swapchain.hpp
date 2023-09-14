@@ -55,6 +55,7 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] virtual EResourceFormat GetFormat() = 0;
 
+    public:
         /// <summary>
         /// Get the swapchain's backbuffer.
         /// </summary>
@@ -65,6 +66,17 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] virtual CpuDescriptorHandle GetBackBufferView() = 0;
 
+        /// <summary>
+        /// Helper function for getting frame count
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetFrameCount() const = 0;
+
+        /// <summary>
+        /// Helper function for getting current frame index
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetFrameIndex() const = 0;
+
+    public:
         /// <summary>
         /// Set swapchain's size.
         /// </summary>

@@ -124,6 +124,16 @@ namespace Neon::RHI
         return m_RenderTargets.GetCpuHandle(m_FrameManager->GetFrameIndex());
     }
 
+    uint32_t Dx12Swapchain::GetFrameCount() const
+    {
+        return m_FrameManager->GetFrameCount();
+    }
+
+    uint32_t Dx12Swapchain::GetFrameIndex() const
+    {
+        return m_FrameManager->GetFrameIndex();
+    }
+
     void Dx12Swapchain::Resize(
         const Size2I&   Size,
         EResourceFormat NewFormat)

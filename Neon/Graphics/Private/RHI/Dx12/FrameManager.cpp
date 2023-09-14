@@ -145,6 +145,11 @@ namespace Neon::RHI
         m_FrameIndex = 0;
     }
 
+    uint32_t FrameManager::GetFrameCount() const
+    {
+        return uint32_t(m_FrameResources.size());
+    }
+
     uint32_t FrameManager::GetFrameIndex() const
     {
         return m_FrameIndex;

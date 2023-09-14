@@ -186,6 +186,11 @@ namespace Neon::RHI
             size_t FramesCount);
 
         /// <summary>
+        /// Get current frame count
+        /// </summary>
+        [[nodiscard]] uint32_t GetFrameCount() const;
+
+        /// <summary>
         /// Get current frame index
         /// </summary>
         [[nodiscard]] uint32_t GetFrameIndex() const;

@@ -6,6 +6,8 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
 
+#include <RHI/FrameResource.hpp>
+
 namespace Neon::Renderer
 {
     class MeshRenderer : public IRenderer
@@ -52,10 +54,20 @@ namespace Neon::Renderer
             RHI::GpuResourceHandle CameraBuffer,
             RHI::ICommandList*     CommandList) override;
 
+        struct FrameResource
+        {
+            Ptr<RHI::IUploadBuffer> PerObjectBuffer;
+            Ptr<RHI::IUploadBuffer> PerMaterialBuffer;
+
+            FrameResource();
+        };
+
     private:
         flecs::query<
             Scene::Component::Transform,
             Scene::Component::MeshInstance>
             m_MeshQuery;
+
+        RHI::FrameResource<FrameResource> m_MeshData;
     };
 } // namespace Neon::Renderer

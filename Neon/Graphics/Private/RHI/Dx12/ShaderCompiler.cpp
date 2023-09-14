@@ -189,7 +189,6 @@ namespace Neon::RHI
                 auto& SourceCode = TextFile->Get();
 
                 WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
-
                 HRESULT Res = m_Utils->CreateBlobFromPinned(
                     SourceCode.data(),
                     uint32_t(SourceCode.size()),

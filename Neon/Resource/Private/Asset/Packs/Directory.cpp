@@ -269,8 +269,7 @@ namespace Neon::Asset
     }
 
     bool DirectoryAssetPackage::RemoveAsset(
-        const Asset::Handle& AssetGuid,
-        bool                 Force)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
 
@@ -278,21 +277,6 @@ namespace Neon::Asset
         if (Iter == m_AssetMeta.end())
         {
             return false;
-        }
-
-        auto LoadedAsset = m_Cache.find(AssetGuid);
-
-        if (!Force)
-        {
-            if (LoadedAsset != m_Cache.end() && LoadedAsset->second.use_count() > 1)
-            {
-                return false;
-            }
-
-            if (LoadedAsset->second->IsDirty())
-            {
-                ExportMeta(Iter->second);
-            }
         }
 
         m_Cache.erase(AssetGuid);
@@ -425,10 +409,22 @@ namespace Neon::Asset
     }
 
     bool DirectoryAssetPackage::UnloadAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool                 Force)
     {
         RWLock Lock(m_CacheMutex);
-        return m_Cache.erase(AssetGuid) > 0;
+
+        auto Iter = m_Cache.find(AssetGuid);
+        if (Iter == m_Cache.end())
+        {
+            m_Cache.erase(AssetGuid);
+        }
+
+        if (!Force && Iter->second.use_count() == 1)
+        {
+            m_Cache.erase(Iter);
+        }
+        return true;
     }
 
     //

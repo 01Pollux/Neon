@@ -67,26 +67,10 @@ namespace Neon::Asset
     }
 
     bool MemoryAssetPackage::RemoveAsset(
-        const Asset::Handle& AssetGuid,
-        bool                 Force)
+        const Asset::Handle& AssetGuid)
     {
         RWLock Lock(m_CacheMutex);
-        auto   Iter = m_Cache.find(AssetGuid);
-        if (Iter == m_Cache.end())
-        {
-            return false;
-        }
-
-        if (!Force)
-        {
-            if (Iter->second.use_count() > 1)
-            {
-                return false;
-            }
-        }
-
-        m_Cache.erase(Iter);
-        return true;
+        return m_Cache.erase(AssetGuid) > 0;
     }
 
     Ptr<IAsset> MemoryAssetPackage::LoadAsset(
@@ -98,9 +82,21 @@ namespace Neon::Asset
     }
 
     bool MemoryAssetPackage::UnloadAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool                 Force)
     {
-        RLock Lock(m_CacheMutex);
-        return m_Cache.contains(AssetGuid);
+        RWLock Lock(m_CacheMutex);
+
+        auto Iter = m_Cache.find(AssetGuid);
+        if (Iter == m_Cache.end())
+        {
+            return false;
+        }
+
+        if (!Force && Iter->second.use_count() == 1)
+        {
+            m_Cache.erase(Iter);
+        }
+        return true;
     }
 } // namespace Neon::Asset

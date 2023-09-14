@@ -65,8 +65,7 @@ namespace Neon::Asset
         /// Remove an asset from this package.
         /// </summary>
         virtual bool RemoveAsset(
-            const Asset::Handle& AssetGuid,
-            bool                 Force) = 0;
+            const Asset::Handle& AssetGuid) = 0;
 
     protected:
         /// <summary>
@@ -79,7 +78,8 @@ namespace Neon::Asset
         /// Unload an asset from this package.
         /// </summary>
         virtual bool UnloadAsset(
-            const Asset::Handle& AssetGuid) = 0;
+            const Asset::Handle& AssetGuid,
+            bool                 Force) = 0;
 
     protected:
         AssetCacheMap             m_Cache;

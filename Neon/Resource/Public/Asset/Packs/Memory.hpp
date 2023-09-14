@@ -26,14 +26,14 @@ namespace Neon::Asset
             Ptr<IAsset> Asset) override;
 
         bool RemoveAsset(
-            const Asset::Handle& AssetGuid,
-            bool                 Force) override;
+            const Asset::Handle& AssetGuid) override;
 
     protected:
         Ptr<IAsset> LoadAsset(
             const Asset::Handle& AssetGuid) override;
 
         bool UnloadAsset(
-            const Asset::Handle& AssetGuid) override;
+            const Asset::Handle& AssetGuid,
+            bool                 Force) override;
     };
 } // namespace Neon::Asset

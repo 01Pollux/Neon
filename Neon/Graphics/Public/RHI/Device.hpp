@@ -27,7 +27,7 @@ namespace Neon::RHI
         }
 
         static void Create(
-            Windowing::WindowApp*     Window,
+            Windowing::WindowApp*      Window,
             const DeviceCreateDesc&    DeviceDesc,
             const SwapchainCreateDesc& SwapchainDesc);
 
@@ -50,5 +50,15 @@ namespace Neon::RHI
         /// Get the swapchain instance of the render device
         /// </summary>
         [[nodiscard]] virtual RHI::ISwapchain* GetSwapchain() = 0;
+
+        /// <summary>
+        /// Helper function for getting frame count
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetFrameCount() const = 0;
+
+        /// <summary>
+        /// Helper function for getting current frame index
+        /// </summary>
+        [[nodiscard]] virtual uint32_t GetFrameIndex() const = 0;
     };
 } // namespace Neon::RHI

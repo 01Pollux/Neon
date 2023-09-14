@@ -33,8 +33,7 @@ namespace Neon::Asset
             Ptr<IAsset> Asset) override;
 
         bool RemoveAsset(
-            const Asset::Handle& AssetGuid,
-            bool                 Force) override;
+            const Asset::Handle& AssetGuid) override;
 
     public:
         /// <summary>
@@ -48,7 +47,8 @@ namespace Neon::Asset
             const Asset::Handle& AssetGuid) override;
 
         bool UnloadAsset(
-            const Asset::Handle& AssetGuid) override;
+            const Asset::Handle& AssetGuid,
+            bool                 Force) override;
 
     private:
         [[nodiscard]] Asio::CoGenerator<const std::filesystem::path&> GetFiles(

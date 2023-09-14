@@ -19,6 +19,10 @@ namespace Neon::RHI
 
         RHI::ISwapchain* GetSwapchain() override;
 
+        uint32_t GetFrameCount() const override;
+
+        uint32_t GetFrameIndex() const override;
+
     public:
         /// <summary>
         /// Gets the global render device.

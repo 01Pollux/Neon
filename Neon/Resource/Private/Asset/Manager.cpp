@@ -133,7 +133,7 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid, true))
+            if (Package->UnloadAsset(AssetGuid, true))
             {
                 break;
             }
@@ -146,7 +146,7 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid, true))
+            if (Package->UnloadAsset(AssetGuid, true))
             {
                 break;
             }
@@ -159,7 +159,7 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid, true))
+            if (Package->UnloadAsset(AssetGuid, true))
             {
                 return true;
             }
@@ -174,7 +174,7 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid, false))
+            if (Package->UnloadAsset(AssetGuid, false))
             {
                 return true;
             }
