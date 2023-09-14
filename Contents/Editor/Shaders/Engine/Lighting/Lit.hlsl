@@ -108,12 +108,18 @@ ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
 // Vertex Shader
 // --------------------
 
-StructuredBuffer<PerObjectData> v_PerObjectData : register(t0, space1);
+ByteAddressBuffer v_ObjectData : register(t0, space1);
+
+PerObjectData LoadPerObjectData(uint InstanceId)
+{
+	uint Offset = InstanceId * sizeof(PerObjectData);
+	return v_ObjectData.Load < PerObjectData > (Offset);
+}
 
 
 PSInput VS_Main(VSInput Vs)
 {
-	PerObjectData Object = v_PerObjectData[Vs.InstanceId];
+	PerObjectData Object = LoadPerObjectData(Vs.InstanceId);
 	PSInput Ps = (PSInput) 0;
 	
 	Ps.Position = mul(
@@ -137,7 +143,13 @@ PSInput VS_Main(VSInput Vs)
 // Pixel Shader
 // --------------------
 
-StructuredBuffer<PerMaterialData> p_MaterialData : register(t1, space1);
+ByteAddressBuffer p_MaterialData : register(t0, space1);
+
+PerMaterialData LoadPerMaterialData(uint InstanceId)
+{
+	uint Offset = InstanceId * sizeof(PerMaterialData);
+	return p_MaterialData.Load < PerMaterialData > (Offset);
+}
 
 Texture2D<float4> p_AlbedoMap[] : register(t0, space2);
 Texture2D<float4> p_NormalMap[] : register(t0, space3);
@@ -155,7 +167,7 @@ SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
 [earlydepthstencil]
 PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 {
-	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
+	PerMaterialData Material = LoadPerMaterialData(Ps.InstanceId);
 	
 	float4 Albedo = float4(Material.Albedo, 1.f);
 	[branch]

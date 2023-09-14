@@ -40,8 +40,8 @@ namespace Neon::Renderer
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
                         .AddConstantBufferView("g_FrameData", 0, 1, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("v_PerObjectData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("p_MaterialData", 1, 1, RHI::ShaderVisibility::Pixel)
+                        .AddShaderResourceView("v_ObjectData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("p_MaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
                             RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(

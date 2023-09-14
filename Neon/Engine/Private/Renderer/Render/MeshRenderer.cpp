@@ -154,8 +154,8 @@ namespace Neon::Renderer
         // Update per-object data
         {
             RHI::UBufferPoolHandle Buffer(
-                Math::AlignUp(sizeof(MeshRenderer::PerObjectData), sizeof(Vector4)),
-                sizeof(Vector4),
+                sizeof(MeshRenderer::PerObjectData),
+                1,
                 RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
             {
                 auto UploadBuffer = Buffer.AsUpload();
@@ -167,15 +167,15 @@ namespace Neon::Renderer
             }
 
             Material->SetResourceView(
-                "v_PerObjectData",
+                "v_ObjectData",
                 Buffer.GetGpuHandle());
         }
 
         // Update per-material data
         {
             RHI::UBufferPoolHandle Buffer(
-                Math::AlignUp(sizeof(MeshRenderer::PerMaterialData), sizeof(Vector4)),
-                sizeof(Vector4),
+                sizeof(MeshRenderer::PerMaterialData),
+                1,
                 RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
             {
                 auto UploadBuffer = Buffer.AsUpload();
@@ -194,7 +194,7 @@ namespace Neon::Renderer
                 "p_MaterialData",
                 Buffer.GetGpuHandle());
         }
-        
+
         // Finalize material
         Material->Apply(CommandList);
     }
