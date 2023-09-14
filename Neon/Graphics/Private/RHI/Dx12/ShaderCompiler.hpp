@@ -19,6 +19,7 @@ namespace Neon::RHI
         /// Compile shader from source code
         /// </summary>
         std::unique_ptr<uint8_t[]> Compile(
+            StringU8View             IncludeDirectory,
             StringU8View             SourceCode,
             const ShaderCompileDesc& Desc,
             size_t&                  DataSize);

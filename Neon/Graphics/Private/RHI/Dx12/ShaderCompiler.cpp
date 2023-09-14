@@ -2,6 +2,11 @@
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
 #include <Private/RHI/Dx12/ShaderCompiler.hpp>
 
+#include <FileSystem/Path.hpp>
+#include <Asset/Manager.hpp>
+#include <Asset/Storage.hpp>
+#include <Asset/Types/TextFile.hpp>
+
 #include <Log/Logger.hpp>
 
 namespace Neon::RHI
@@ -26,24 +31,24 @@ namespace Neon::RHI
         }
 
         HRESULT STDMETHODCALLTYPE QueryInterface(
-            REFIID riid,
-            void** ppvObject) override
+            REFIID Riid,
+            void** Object) override
         {
-            if (ppvObject == nullptr)
+            if (!Object)
             {
                 return E_POINTER;
             }
 
-            if (riid == IID_IUnknown)
+            if (Riid == IID_IUnknown)
             {
-                *ppvObject = static_cast<IUnknown*>(this);
+                *Object = static_cast<IUnknown*>(this);
                 AddRef();
                 return S_OK;
             }
 
-            if (riid == __uuidof(IDxcBlob))
+            if (Riid == __uuidof(IDxcBlob))
             {
-                *ppvObject = static_cast<IDxcBlob*>(this);
+                *Object = static_cast<IDxcBlob*>(this);
                 AddRef();
                 return S_OK;
             }
@@ -53,17 +58,12 @@ namespace Neon::RHI
 
         ULONG STDMETHODCALLTYPE AddRef() override
         {
-            return ++m_RefCount;
+            return 1;
         }
 
         ULONG STDMETHODCALLTYPE Release() override
         {
-            ULONG Result = --m_RefCount;
-            if (Result == 0)
-            {
-                delete this;
-            }
-            return Result;
+            return 1;
         }
 
         LPVOID STDMETHODCALLTYPE GetBufferPointer() override
@@ -77,15 +77,136 @@ namespace Neon::RHI
         }
 
     private:
-        std::atomic<ULONG> m_RefCount = 0;
-
         const void* m_Data;
         size_t      m_Size;
     };
 
     //
 
+    class IncludeHandler : public IDxcIncludeHandler
+    {
+    public:
+        IncludeHandler(
+            IDxcUtils*          Utils,
+            IDxcIncludeHandler* DefaultIncludeHandler,
+            StringU8View        IncludeDirectory) :
+            m_Utils(Utils),
+            m_DefaultIncludeHandler(DefaultIncludeHandler),
+            m_IncludeDirectory(IncludeDirectory)
+        {
+        }
+
+        ~IncludeHandler()
+        {
+            for (auto& Handle : m_TextFileHandle)
+            {
+                Asset::Manager::RequestUnload(Handle);
+            }
+        }
+
+        HRESULT STDMETHODCALLTYPE LoadSource(
+            _In_ LPCWSTR                             FileName,
+            _COM_Outptr_result_maybenull_ IDxcBlob** IncludeSourceBlob) override
+        {
+            *IncludeSourceBlob = nullptr;
+            auto Iter          = m_LoadedFiles.find(FileName);
+            if (Iter != m_LoadedFiles.end())
+            {
+                *IncludeSourceBlob = Iter->second.Get();
+                (*IncludeSourceBlob)->AddRef();
+                return S_OK;
+            }
+
+            // We won't accept relative paths that start with a dot
+            if (FileName[0] == L'.')
+            {
+                return E_FAIL;
+            }
+
+            for (auto Path : {
+                     "Engine/Shaders",
+                     "Engine/Shaders/Include",
+                     m_IncludeDirectory.empty() ? m_IncludeDirectory.data() : nullptr })
+            {
+                if (!Path) [[unlikely]]
+                {
+                    continue;
+                }
+
+                StringU8 PathToAsset = StringUtils::Format(
+                    "Path/{}",
+                    StringUtils::Transform<StringU8>(FileName));
+
+                auto& Handle = m_TextFileHandle.emplace_back(Asset::Storage::FindAsset(PathToAsset, true, true).second);
+                if (Handle.is_nil()) [[unlikely]]
+                {
+                    m_TextFileHandle.pop_back();
+                    continue;
+                }
+
+                auto TextFile = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset::Manager::Load(Handle).get());
+                if (!TextFile) [[unlikely]]
+                {
+                    m_TextFileHandle.pop_back();
+                    continue;
+                }
+
+                auto& SourceCode = TextFile->AsUtf16();
+
+                WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
+
+                HRESULT Res = m_Utils->CreateBlobFromPinned(
+                    SourceCode.data(),
+                    uint32_t(SourceCode.size()),
+                    DXC_CP_ACP,
+                    &ShaderCodeBlob);
+
+                if (SUCCEEDED(Res))
+                {
+                    *IncludeSourceBlob = ShaderCodeBlob.Get();
+                    (*IncludeSourceBlob)->AddRef();
+                    m_LoadedFiles.emplace(FileName, std::move(ShaderCodeBlob));
+                    return S_OK;
+                }
+                else
+                {
+                    m_TextFileHandle.pop_back();
+                }
+            }
+
+            return E_FAIL;
+        }
+
+        HRESULT STDMETHODCALLTYPE QueryInterface(
+            REFIID Riid,
+            void** Object) override
+        {
+            return m_DefaultIncludeHandler->QueryInterface(Riid, Object);
+        }
+
+        ULONG STDMETHODCALLTYPE AddRef() override
+        {
+            return 1;
+        }
+
+        ULONG STDMETHODCALLTYPE Release() override
+        {
+            return 1;
+        }
+
+    private:
+        IDxcUtils*          m_Utils;
+        IDxcIncludeHandler* m_DefaultIncludeHandler;
+        StringU8View        m_IncludeDirectory;
+
+        std::list<Asset::Handle>                           m_TextFileHandle;
+        std::map<String, WinAPI::ComPtr<IDxcBlobEncoding>> m_LoadedFiles;
+    };
+
+    //
+
     std::unique_ptr<uint8_t[]> Dx12ShaderCompiler::Compile(
+        StringU8View             IncludeDirectory,
         StringU8View             SourceCode,
         const ShaderCompileDesc& Desc,
         size_t&                  DataSize)
@@ -165,23 +286,29 @@ namespace Neon::RHI
         };
 
         WinAPI::ComPtr<IDxcResult> Result;
-        ThrowIfFailed(m_Compiler->Compile(
-            &Buffer,
-            Options.data(),
-            uint32_t(Options.size()),
-            nullptr,
-            IID_PPV_ARGS(&Result)));
+        {
+            IncludeHandler Handler(
+                m_Utils.Get(),
+                m_DefaultIncludeHandler.Get(),
+                IncludeDirectory);
+
+            ThrowIfFailed(m_Compiler->Compile(
+                &Buffer,
+                Options.data(),
+                uint32_t(Options.size()),
+                &Handler,
+                IID_PPV_ARGS(&Result)));
+        }
 
         {
             WinAPI::ComPtr<IDxcBlobUtf8> Error;
-            if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)))
+            if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)) &&
+                Error &&
+                Error->GetStringLength() > 0)
             {
-                if (Error && Error->GetStringLength() > 0)
-                {
-                    size_t StrLen = Error->GetStringLength();
-                    NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
-                    return nullptr;
-                }
+                size_t StrLen = Error->GetStringLength();
+                NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));
+                return nullptr;
             }
         }
 
@@ -211,7 +338,6 @@ namespace Neon::RHI
             }
             else
             {
-                WinAPI::ComPtr<IDxcBlob> Data;
                 ThrowIfFailed(OperationResult->GetResult(&Data));
             }
         }
@@ -236,8 +362,8 @@ namespace Neon::RHI
         WinAPI::ComPtr<IDxcContainerReflection> Reflection;
         ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
 
-        WinAPI::ComPtr<ReflectionBlob> Blob(NEON_NEW ReflectionBlob(ShaderCode, ByteLength));
-        ThrowIfFailed(Reflection->Load(Blob.Get()));
+        ReflectionBlob Blob(ShaderCode, ByteLength);
+        ThrowIfFailed(Reflection->Load(&Blob));
 
         uint32_t DxilPart;
         ThrowIfFailed(Reflection->FindFirstPartKind(DXC_PART_DXIL, &DxilPart));

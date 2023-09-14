@@ -20,7 +20,8 @@ namespace Neon::Asset
         /// Load the shader cache from settings
         /// </summary>
         [[nodiscard]] UPtr<RHI::IShader> LoadShader(
-            const RHI::ShaderCompileDesc& Desc);
+            const RHI::ShaderCompileDesc& Desc,
+            const StringU8&               IncludeDirectory = "");
 
         /// <summary>
         /// Clear the shader cache

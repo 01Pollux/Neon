@@ -13,7 +13,8 @@ namespace Neon::Asset
     /// Get the shader hash from the shader compile description.
     /// </summary>
     [[nodiscard]] static Crypto::Sha256::Bytes GetShaderHash(
-        const RHI::ShaderCompileDesc& Desc)
+        const RHI::ShaderCompileDesc& Desc,
+        const StringU8&               IncludeDirectory)
     {
         Crypto::Sha256 Hash;
         Hash << Desc.Stage << Desc.Flags.ToUllong() << Desc.Profile;
@@ -37,12 +38,13 @@ namespace Neon::Asset
     }
 
     UPtr<RHI::IShader> ShaderAsset::LoadShader(
-        const RHI::ShaderCompileDesc& Desc)
+        const RHI::ShaderCompileDesc& Desc,
+        const StringU8&               IncludeDirectory)
     {
-        Crypto::Sha256::Bytes Hash;
+        Crypto::Sha256::Bytes Hash{};
 
-        auto   ShaderHash = GetShaderHash(Desc);
-        size_t ShaderSize;
+        auto   ShaderHash = GetShaderHash(Desc, IncludeDirectory);
+        size_t ShaderSize = 0;
 
         m_ShaderCacheFile.seekg(sizeof(Crypto::Sha256::Bytes), std::ios::beg);
         // Skip the first hash, which is the header hash.
@@ -67,7 +69,7 @@ namespace Neon::Asset
 
         m_ShaderCacheFile.seekp(0, std::ios::end);
 
-        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderHash.data()), Hash.size());
+        m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderHash.data()), ShaderHash.size());
         m_ShaderCacheFile.write(std::bit_cast<const char*>(&ShaderBytecode.Size), sizeof(ShaderBytecode.Size));
         m_ShaderCacheFile.write(std::bit_cast<const char*>(ShaderBytecode.Data), ShaderBytecode.Size);
 

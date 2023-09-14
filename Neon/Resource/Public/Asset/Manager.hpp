@@ -27,5 +27,11 @@ namespace Neon::Asset
         /// </summary>
         static void Unload(
             const Handle& AssetGuid);
+
+        /// <summary>
+        /// Unload an asset from the storage system if it is not referenced anymore.
+        /// </summary>
+        static void RequestUnload(
+            const Handle& AssetGuid);
     };
 } // namespace Neon::Asset

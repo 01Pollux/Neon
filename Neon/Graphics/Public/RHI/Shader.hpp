@@ -101,7 +101,8 @@ namespace Neon::RHI
 
         [[nodiscard]] static UPtr<IShader> Create(
             StringU8View             SourceCode,
-            const ShaderCompileDesc& Desc);
+            const ShaderCompileDesc& Desc,
+            StringU8View             IncludeDirectory = "");
 
         virtual ~IShader() = default;
 

@@ -40,14 +40,14 @@ namespace Neon::Asset
         /// <summary>
         /// Finds an asset by path.
         /// </summary>
-        [[nodiscard]] Asset::Handle FindAsset(
-            const StringU8& Path) const;
+        [[nodiscard]] virtual Asset::Handle FindAsset(
+            const StringU8& Path) const = 0;
 
         /// <summary>
         /// Finds assets by path as regex.
         /// </summary>
-        [[nodiscard]] Asio::CoGenerator<Asset::Handle> FindAssets(
-            const StringU8& PathRegex) const;
+        [[nodiscard]] virtual Asio::CoGenerator<Asset::Handle> FindAssets(
+            const StringU8& PathRegex) const = 0;
 
     public:
         /// <summary>
@@ -65,7 +65,8 @@ namespace Neon::Asset
         /// Remove an asset from this package.
         /// </summary>
         virtual bool RemoveAsset(
-            const Asset::Handle& AssetGuid) = 0;
+            const Asset::Handle& AssetGuid,
+            bool                 Force) = 0;
 
     protected:
         /// <summary>

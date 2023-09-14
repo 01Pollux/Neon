@@ -32,6 +32,12 @@ namespace Neon::Asset
         ManagerImpl::Get()->Unload(AssetGuid);
     }
 
+    void Manager::RequestUnload(
+        const Handle& AssetGuid)
+    {
+        ManagerImpl::Get()->RequestUnload(AssetGuid);
+    }
+
     //
 
     std::future<Ptr<IAsset>> ManagerImpl::Load(
@@ -58,7 +64,7 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid))
+            if (Package->RemoveAsset(AssetGuid, true))
             {
                 break;
             }
@@ -71,7 +77,22 @@ namespace Neon::Asset
     {
         for (auto Package : Storage::GetPackages(true, true))
         {
-            if (Package->RemoveAsset(AssetGuid))
+            if (Package->RemoveAsset(AssetGuid, true))
+            {
+                return true;
+            }
+        }
+
+        NEON_ERROR_TAG("Asset", "Asset not found: {}", AssetGuid.ToString());
+        return false;
+    }
+
+    bool ManagerImpl::RequestUnload(
+        const Handle& AssetGuid)
+    {
+        for (auto Package : Storage::GetPackages(true, true))
+        {
+            if (Package->RemoveAsset(AssetGuid, false))
             {
                 return true;
             }

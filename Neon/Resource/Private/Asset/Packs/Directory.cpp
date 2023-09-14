@@ -164,12 +164,7 @@ namespace Neon::Asset
                         continue;
                     }
 
-                    std::filesystem::path AssetPath = m_RootPath / Metadata.GetPath();
-                    std::filesystem::create_directories(AssetPath.parent_path());
-
-                    std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
-                    Metadata.Export(Metafile);
-                    Metadata.SetDirty(false);
+                    ExportMeta(Metadata);
                 }
             }
         };
@@ -274,18 +269,36 @@ namespace Neon::Asset
     }
 
     bool DirectoryAssetPackage::RemoveAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool                 Force)
     {
         RWLock Lock(m_CacheMutex);
-        m_Cache.erase(AssetGuid);
+
         auto Iter = m_AssetMeta.find(AssetGuid);
-        if (Iter != m_AssetMeta.end())
+        if (Iter == m_AssetMeta.end())
         {
-            m_AssetPath.erase(Iter->second.GetPath());
-            m_AssetMeta.erase(Iter);
-            return true;
+            return false;
         }
-        return false;
+
+        auto LoadedAsset = m_Cache.find(AssetGuid);
+
+        if (!Force)
+        {
+            if (LoadedAsset != m_Cache.end() && LoadedAsset->second.use_count() > 1)
+            {
+                return false;
+            }
+
+            if (LoadedAsset->second->IsDirty())
+            {
+                ExportMeta(Iter->second);
+            }
+        }
+
+        m_Cache.erase(AssetGuid);
+        m_AssetPath.erase(Iter->second.GetPath());
+        m_AssetMeta.erase(Iter);
+        return true;
     }
 
     const Asset::Handle& DirectoryAssetPackage::GetGuidOfPath(
@@ -430,5 +443,16 @@ namespace Neon::Asset
                 co_yield Entry.path();
             }
         }
+    }
+
+    void DirectoryAssetPackage::ExportMeta(
+        AssetMetaDataDef& Meta)
+    {
+        std::filesystem::path AssetPath = m_RootPath / Meta.GetPath();
+        std::filesystem::create_directories(AssetPath.parent_path());
+
+        std::ofstream Metafile(AssetPath, std::ios::out | std::ios::trunc);
+        Meta.Export(Metafile);
+        Meta.SetDirty(false);
     }
 } // namespace Neon::Asset

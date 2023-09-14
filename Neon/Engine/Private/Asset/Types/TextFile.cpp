@@ -11,7 +11,7 @@ namespace Neon::Asset
         const Handle& AssetGuid,
         StringU8      Path) :
         IAsset(AssetGuid, std::move(Path)),
-        m_Utf16Text(std::move(Text))
+        m_Text(std::move(Text))
     {
     }
 
@@ -20,39 +20,40 @@ namespace Neon::Asset
         const Handle& AssetGuid,
         StringU8      Path) :
         IAsset(AssetGuid, std::move(Path)),
-        m_Utf16Text(StringUtils::Transform<String>(Text)),
-        m_Utf8Text(std::move(Text))
+        m_Text(std::move(Text))
     {
     }
 
     const StringU8& TextFileAsset::AsUtf8() const
     {
-        if (!m_Utf8Text)
+        if (!std::holds_alternative<StringU8>(m_Text))
         {
-            m_Utf8Text = StringUtils::Transform<StringU8>(m_Utf16Text);
+            m_Text = StringUtils::Transform<StringU8>(std::get<String>(m_Text));
         }
-        return *m_Utf8Text;
+        return std::get<StringU8>(m_Text);
     }
 
     const String& TextFileAsset::AsUtf16() const
     {
-        return m_Utf16Text;
+        if (!std::holds_alternative<String>(m_Text))
+        {
+            m_Text = StringUtils::Transform<String>(std::get<StringU8>(m_Text));
+        }
+        return std::get<String>(m_Text);
     }
 
     void TextFileAsset::SetText(
         const StringU8& Text)
     {
         MarkDirty();
-        m_Utf8Text  = Text;
-        m_Utf16Text = StringUtils::Transform<String>(Text);
+        m_Text = StringUtils::Transform<StringU8>(Text);
     }
 
     void TextFileAsset::SetText(
         const String& Text)
     {
         MarkDirty();
-        m_Utf8Text.reset();
-        m_Utf16Text = Text;
+        m_Text = StringUtils::Transform<String>(Text);
     }
 
     //
@@ -70,10 +71,7 @@ namespace Neon::Asset
         StringU8                       Path,
         const AssetMetaData&           LoaderData)
     {
-        boost::archive::text_iarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
-
-        String Text;
-        Archive >> Text;
+        StringU8 Text(std::istream_iterator<char>(Stream), {});
 
         return std::make_shared<TextFileAsset>(std::move(Text), AssetGuid, std::move(Path));
     }
@@ -84,9 +82,6 @@ namespace Neon::Asset
         const Ptr<IAsset>& Asset,
         AssetMetaData&     LoaderData)
     {
-        auto TextFile = static_cast<TextFileAsset*>(Asset.get());
-
-        boost::archive::text_oarchive Archive(Stream, boost::archive::no_header | boost::archive::no_tracking);
-        Archive << TextFile->AsUtf16();
+        Stream << static_cast<const TextFileAsset*>(Asset.get())->AsUtf8();
     }
 } // namespace Neon::Asset

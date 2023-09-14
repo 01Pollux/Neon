@@ -67,10 +67,26 @@ namespace Neon::Asset
     }
 
     bool MemoryAssetPackage::RemoveAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool                 Force)
     {
         RWLock Lock(m_CacheMutex);
-        return m_Cache.erase(AssetGuid) > 0;
+        auto   Iter = m_Cache.find(AssetGuid);
+        if (Iter == m_Cache.end())
+        {
+            return false;
+        }
+
+        if (!Force)
+        {
+            if (Iter->second.use_count() > 1)
+            {
+                return false;
+            }
+        }
+
+        m_Cache.erase(Iter);
+        return true;
     }
 
     Ptr<IAsset> MemoryAssetPackage::LoadAsset(

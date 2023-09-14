@@ -10,6 +10,8 @@ namespace Neon::Asset
     public:
         class Handler;
 
+        using IAsset::IAsset;
+
         TextFileAsset(
             String        Text,
             const Handle& AssetGuid,
@@ -43,7 +45,6 @@ namespace Neon::Asset
             const String& Text);
 
     private:
-        String                          m_Utf16Text;
-        mutable std::optional<StringU8> m_Utf8Text;
+        mutable std::variant<String, StringU8> m_Text = "";
     };
 } // namespace Neon::Asset

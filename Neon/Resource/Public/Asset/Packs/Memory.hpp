@@ -14,10 +14,10 @@ namespace Neon::Asset
 
     public:
         Asset::Handle FindAsset(
-            const StringU8& Path) const;
+            const StringU8& Path) const override;
 
         Asio::CoGenerator<Asset::Handle> FindAssets(
-            const StringU8& PathRegex) const;
+            const StringU8& PathRegex) const override;
 
     public:
         std::future<void> Export() override;
@@ -26,7 +26,8 @@ namespace Neon::Asset
             Ptr<IAsset> Asset) override;
 
         bool RemoveAsset(
-            const Asset::Handle& AssetGuid) override;
+            const Asset::Handle& AssetGuid,
+            bool                 Force) override;
 
     protected:
         Ptr<IAsset> LoadAsset(
