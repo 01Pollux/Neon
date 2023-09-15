@@ -9,6 +9,7 @@ namespace Neon::RHI
 {
     class IShader;
     class IRootSignature;
+    class IPipelineState;
 
     template<bool _Compute>
     struct PipelineStateBuilder;
@@ -105,6 +106,8 @@ namespace Neon::RHI
 
         StripCutType    StripCut = StripCutType::None;
         EResourceFormat DSFormat = EResourceFormat::Unknown;
+
+        [[nodiscard]] Ptr<IPipelineState> Build() const;
     };
     using PipelineStateBuilderG = PipelineStateBuilder<false>;
 
@@ -113,6 +116,8 @@ namespace Neon::RHI
     {
         Ptr<IRootSignature> RootSignature = nullptr;
         Ptr<IShader>        ComputeShader = nullptr;
+
+        [[nodiscard]] Ptr<IPipelineState> Build() const;
     };
     using PipelineStateBuilderC = PipelineStateBuilder<true>;
 
@@ -127,4 +132,14 @@ namespace Neon::RHI
 
         virtual ~IPipelineState() = default;
     };
+
+    inline Ptr<IPipelineState> PipelineStateBuilderC::Build() const
+    {
+        return IPipelineState::Create(*this);
+    }
+
+    inline Ptr<IPipelineState> PipelineStateBuilderG::Build() const
+    {
+        return IPipelineState::Create(*this);
+    }
 } // namespace Neon::RHI

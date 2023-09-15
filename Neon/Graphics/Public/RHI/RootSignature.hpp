@@ -313,7 +313,7 @@ namespace Neon::RHI
         DenyPSAccess,
         AllowStreamOutput,
         LocalRootSignature,
-        DenyAmpAcess,
+        DenyAmpAccess,
         DenyMeshAccess,
 
         _Last_Enum
@@ -428,6 +428,26 @@ namespace Neon::RHI
         RootSignatureBuilder& SetFlags(
             ERootSignatureBuilderFlags Flag,
             bool                       Value = true);
+
+        /// <summary>
+        /// Set flags for root signature to only use compute shader only
+        /// </summary>
+        template<ERootSignatureBuilderFlags... Flags>
+        RootSignatureBuilder& ComputeOnly(
+            bool Value = true)
+        {
+            SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout, false);
+            SetFlags(RHI::ERootSignatureBuilderFlags::AllowStreamOutput, false);
+            SetFlags(RHI::ERootSignatureBuilderFlags::LocalRootSignature, false);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyVSAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyHSAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyDSAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyGSAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyPSAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyAmpAccess);
+            SetFlags(RHI::ERootSignatureBuilderFlags::DenyMeshAccess);
+            return *this;
+        }
 
     public:
         /// <summary>

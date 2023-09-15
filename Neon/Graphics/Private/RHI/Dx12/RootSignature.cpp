@@ -47,7 +47,7 @@ namespace Neon::RHI
             std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyPSAccess },
             std::pair{ D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT, ERootSignatureBuilderFlags::AllowStreamOutput },
             std::pair{ D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE, ERootSignatureBuilderFlags::LocalRootSignature },
-            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyAmpAcess },
+            std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyAmpAccess },
             std::pair{ D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS, ERootSignatureBuilderFlags::DenyMeshAccess },
         };
     }

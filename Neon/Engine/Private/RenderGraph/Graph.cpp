@@ -13,7 +13,7 @@
 
 #include <Log/Logger.hpp>
 
-// #define NEON_RENDER_GRAPH_THREADED
+#define NEON_RENDER_GRAPH_THREADED
 
 namespace Neon::RG
 {

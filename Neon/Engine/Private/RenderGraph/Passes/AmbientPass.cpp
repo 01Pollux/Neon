@@ -3,11 +3,57 @@
 #include <RenderGraph/Passes/AmbientPass.hpp>
 #include <RenderGraph/Passes/GBufferPass.hpp>
 
+#include <RHI/RootSignature.hpp>
+#include <RHI/PipelineState.hpp>
+
+#include <Asset/Manager.hpp>
+#include <Asset/Types/Shader.hpp>
+
+namespace Neon
+{
+    namespace AssetGuids
+    {
+        static inline auto AmbientShaderGuid()
+        {
+            return Asset::Handle::FromString("3c5e4767-680d-43d3-bb45-08312368da19");
+        }
+    } // namespace AssetGuids
+} // namespace Neon
+
 namespace Neon::RG
 {
     AmbientPass::AmbientPass() :
         RenderPass("AmbientPass")
     {
+        using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
+        ShaderAssetTaskPtr Shader(Asset::Manager::LoadAsync(AssetGuids::AmbientShaderGuid()));
+
+        RHI::ShaderCompileDesc ShaderDesc{
+            .Stage = RHI::ShaderStage::Compute
+        };
+
+        RHI::MRootDescriptorTableFlags RsFlags;
+        RsFlags.Set(RHI::ERootDescriptorTableFlags::Data_Static_While_Execute);
+        RsFlags.Set(RHI::ERootDescriptorTableFlags::Descriptor_Static_Bounds_Check);
+
+        m_AmbientPassRootSignature =
+            RHI::RootSignatureBuilder()
+                .AddConstantBufferView("g_FrameData", 0, 0)
+                .Add32BitConstants<ParamsType>("c_AmbientParams", 0, 1)
+                .AddDescriptorTable(
+                    RHI::RootDescriptorTable()
+                        .AddSrvRange("c_TexturesMap", 0, 1, 4, false, RsFlags)
+                        .AddUavRange("c_OutputTexture", 0, 1, 1, false, RsFlags))
+                .AddStandardSamplers(0, RHI::ShaderVisibility::All)
+                .ComputeOnly()
+                .Build();
+
+        m_AmbientPassPipeline =
+            RHI::PipelineStateBuilderC{
+                .RootSignature = m_AmbientPassRootSignature,
+                .ComputeShader = Shader->LoadShader(ShaderDesc)
+            }
+                .Build();
     }
 
     void AmbientPass::ResolveResources(

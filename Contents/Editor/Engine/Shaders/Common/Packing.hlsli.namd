@@ -1,6 +1,6 @@
 {
   "Guid": "a1bf9500-4742-44f7-853c-35842a48174d",
-  "Path": "Engine/Shaders/Common/Utils.hlsli.namd",
+  "Path": "Engine/Shaders/Common/Packing.hlsli.namd",
   "Loader": "",
   "Dependencies": "",
   "LoaderId": "12860950093446775512",

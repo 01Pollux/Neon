@@ -29,7 +29,7 @@ struct AmbientParams
 };
 
 ConstantBuffer<AmbientParams> c_AmbientParams : register(b0, space1);
-Texture2D g_TexturesMap[] : register(t0, space1);
+Texture2D c_TexturesMap[] : register(t0, space1);
 RWTexture2D<float4> c_OutputTexture : register(u0, space1);
 
 // --------------------
@@ -40,10 +40,10 @@ RWTexture2D<float4> c_OutputTexture : register(u0, space1);
 void CS_Main(
 	uint3 DTID : SV_DispatchThreadID)
 {
-	Texture2D DiffuseRoughnessMap = g_TexturesMap[c_AmbientParams.DiffuseRoughnessMap];
-	Texture2D EmissiveFactorMap = g_TexturesMap[c_AmbientParams.EmissiveFactorMap];
-	Texture2D DepthMap = g_TexturesMap[c_AmbientParams.DepthMap];
-	Texture2D AmbientMap = g_TexturesMap[c_AmbientParams.AmbientOcclusionMap];
+	Texture2D DiffuseRoughnessMap = c_TexturesMap[c_AmbientParams.DiffuseRoughnessMap];
+	Texture2D EmissiveFactorMap = c_TexturesMap[c_AmbientParams.EmissiveFactorMap];
+	Texture2D DepthMap = c_TexturesMap[c_AmbientParams.DepthMap];
+	Texture2D AmbientMap = c_TexturesMap[c_AmbientParams.AmbientOcclusionMap];
 	
 	float2 UV = ((float2) DTID.xy + 0.5f) / g_FrameData.ScreenResolution;
 	
