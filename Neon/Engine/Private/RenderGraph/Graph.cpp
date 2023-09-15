@@ -37,8 +37,6 @@ namespace Neon::RG
         const Scene::Component::Camera&    Camera,
         const Scene::Component::Transform& Transform)
     {
-        m_Storage.NewOutputImage();
-
         auto& CameraBuffer = m_Storage.MapFrameData();
 
         auto Rotation = Transform.World.GetRotation();
@@ -60,7 +58,7 @@ namespace Neon::RG
         CameraBuffer.ProjectionInverse     = glm::inverse(CameraBuffer.Projection);
         CameraBuffer.ViewProjectionInverse = glm::inverse(CameraBuffer.ViewProjection);
 
-        CameraBuffer.ScreenResolution = m_Storage.GetOutputImageSize();
+        CameraBuffer.ScreenResolution = { Camera.Viewport.Width, Camera.Viewport.Height };
 
         CameraBuffer.EngineTime = float(Runtime::GameEngine::Get()->GetEngineTime());
         CameraBuffer.GameTime   = float(Runtime::GameEngine::Get()->GetGameTime());

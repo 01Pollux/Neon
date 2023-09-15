@@ -182,7 +182,5 @@ namespace Neon::RG
         ResourceMapType          m_Resources;
         std::set<ResourceId>     m_ImportedResources;
         InactiveResourceListType m_InactiveResources;
-
-        bool m_NeedsToUpdateOutputImage = true;
     };
 } // namespace Neon::RG

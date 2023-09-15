@@ -215,11 +215,6 @@ namespace Neon::RG
 
     void GraphStorage::NewOutputImage()
     {
-        if (!m_NeedsToUpdateOutputImage) [[unlikely]]
-        {
-            return;
-        }
-
         auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImageTag());
 
         auto& Desc = OutputImage.GetDesc();
@@ -317,7 +312,6 @@ namespace Neon::RG
     void GraphStorage::FlushResources()
     {
         m_InactiveResources.clear();
-        m_NeedsToUpdateOutputImage = true;
     }
 
     //
