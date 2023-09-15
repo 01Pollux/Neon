@@ -45,7 +45,7 @@ namespace Neon::RG
     void ResourceResolver::WriteResourceEmpty(
         const ResourceId& Id)
     {
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesWritten.emplace(Id);
     }
 
@@ -54,7 +54,7 @@ namespace Neon::RG
         const RHI::DescriptorViewDesc& Desc)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesWritten.emplace(Id);
 
         RHI::MResourceState State;
@@ -90,7 +90,7 @@ namespace Neon::RG
                 },
                 [&ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to write to ({})", StringUtils::Transform<StringU8>(ViewId.GetName()));
+                    NEON_ASSERT(false, "Invalid descriptor view type to write to ({})", ViewId.GetNameU8());
                 } },
             Desc);
 
@@ -104,7 +104,7 @@ namespace Neon::RG
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesWritten.emplace(Id);
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest), {});
@@ -115,7 +115,7 @@ namespace Neon::RG
     void ResourceResolver::ReadResourceEmpty(
         const ResourceId& Id)
     {
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesRead.emplace(Id);
     }
 
@@ -125,7 +125,7 @@ namespace Neon::RG
         const RHI::DescriptorViewDesc& Desc)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesRead.emplace(Id);
 
         RHI::MResourceState State{};
@@ -157,7 +157,7 @@ namespace Neon::RG
                 },
                 [&ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to read from ({})", StringUtils::Transform<StringU8>(ViewId.GetName()));
+                    NEON_ASSERT(false, "Invalid descriptor view type to read from ({})", ViewId.GetNameU8());
                 } },
             Desc);
 
@@ -184,7 +184,7 @@ namespace Neon::RG
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource doesn't exists");
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
         m_ResourcesRead.emplace(Id);
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});

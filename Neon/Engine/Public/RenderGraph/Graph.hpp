@@ -85,7 +85,7 @@ namespace Neon::RG
             uint64_t          m_FenceValue = 0;
 
             std::vector<RHI::ICommandList*> m_GraphicsCommandList;
-            std::vector<RHI::ICommandList*>  m_ComputeCommandList;
+            std::vector<RHI::ICommandList*> m_ComputeCommandList;
         };
 
     public:
@@ -171,8 +171,7 @@ namespace Neon::RG
         /// <summary>
         /// Execute render passes
         /// </summary>
-        void Execute(
-            bool Reset) const;
+        void Execute() const;
 
         /// <summary>
         /// Get command list count for this level
@@ -214,6 +213,10 @@ namespace Neon::RG
 
         std::map<ResourceViewId, RHI::MResourceState> m_States;
 
+        bool m_ResetBarriers : 1 = false;
+        bool m_ResetCommands : 1 = false;
+
+        bool m_FlushBarriers : 1 = false;
         bool m_FlushCommands : 1 = false;
     };
 } // namespace Neon::RG

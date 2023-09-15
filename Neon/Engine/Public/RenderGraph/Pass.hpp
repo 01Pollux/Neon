@@ -83,6 +83,15 @@ namespace Neon::RG
         }
 
         /// <summary>
+        /// Set queue type
+        /// </summary>
+        void SetQueueType(
+            PassQueueType Type) noexcept
+        {
+            m_QueueType = Type;
+        }
+
+        /// <summary>
         /// Set render pass flags
         /// </summary>
         void SetPassFlags(

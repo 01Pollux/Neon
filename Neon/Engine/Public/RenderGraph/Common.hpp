@@ -89,9 +89,28 @@ namespace Neon::RG
 #if !NEON_DIDST
             return m_ResourceName;
 #else
-            return L"";
+            return StringUtils::Empty<String>;
 #endif
         }
+
+#if !NEON_DIDST
+        /// <summary>
+        /// Get resource name
+        /// </summary>
+        [[nodiscard]] constexpr StringU8 GetNameU8() const noexcept
+        {
+            return StringUtils::Transform<StringU8>(m_ResourceName);
+        }
+#else
+
+        /// <summary>
+        /// Get resource name
+        /// </summary>
+        [[nodiscard]] constexpr const StringU8& GetNameU8() const noexcept
+        {
+            return StringUtils::Empty<StringU8>;
+        }
+#endif
 
         constexpr auto operator<=>(
             const ResourceId& Other) const noexcept
@@ -158,21 +177,32 @@ namespace Neon::RG
             return m_ViewId;
         }
 
-#ifndef NEON_DIST
         /// <summary>
         /// Get resource view name
         /// </summary>
         [[nodiscard]] constexpr const String& GetName() const noexcept
         {
+#ifndef NEON_DIST
             return m_ViewName;
-        }
 #else
+            return StringUtils::Empty<String>;
+#endif
+        }
+
+#ifndef NEON_DIST
         /// <summary>
         /// Get resource view name
         /// </summary>
-        [[nodiscard]] constexpr String GetName() const noexcept
+        [[nodiscard]] constexpr StringU8 GetNameU8() const noexcept
         {
-            return STR("");
+            return StringUtils::Transform<StringU8>(m_ViewName);
+        }
+#else /// <summary>
+      /// Get resource view name
+      /// </summary>
+        [[nodiscard]] constexpr const StringU8& GetNameU8() const noexcept
+        {
+            return StringUtils::Empty<StringU8>;
         }
 #endif
 

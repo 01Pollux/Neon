@@ -13,7 +13,7 @@
 
 #include <Log/Logger.hpp>
 
-#define NEON_RENDER_GRAPH_THREADED
+// #define NEON_RENDER_GRAPH_THREADED
 
 namespace Neon::RG
 {
@@ -79,9 +79,7 @@ namespace Neon::RG
 
         for (size_t i = 0; i < m_Levels.size(); i++)
         {
-            auto PrevPass = (i > 0) ? &m_Levels[i - 1] : nullptr;
-            bool Reset    = PrevPass && PrevPass->m_FlushCommands;
-            m_Levels[i].Execute(Reset);
+            m_Levels[i].Execute();
         }
 
         m_CommandListContext.End();
@@ -103,16 +101,33 @@ namespace Neon::RG
             auto NextLevel = (i + 1 < m_Levels.size()) ? &m_Levels[i + 1] : nullptr;
             auto PrevLevel = (i > 0) ? &m_Levels[i - 1] : nullptr;
 
-            bool ShouldNotFlush =
-                NextLevel &&
-                ThisLevel->m_Passes.size() == 1 &&
-                NextLevel->m_Passes.size() == 1 &&
-                ThisLevel->m_Passes[0].Pass->GetQueueType() == NextLevel->m_Passes[0].Pass->GetQueueType();
-
-            // The only case where we should not flush is that when we have two passes in a row that are on the same queue
-            ThisLevel->m_FlushCommands = !ShouldNotFlush;
-
             auto [GraphicsCount, ComputeCount] = ThisLevel->GetCommandListCount();
+
+            ThisLevel->m_FlushBarriers =
+                ThisLevel->m_ResetCommands = (GraphicsCount + ComputeCount) > 1;
+            ThisLevel->m_FlushCommands     = !NextLevel;
+
+            // Try to mutate from compute to graphics to avoid a flush
+            if (!ThisLevel->m_ResetCommands)
+            {
+                if (ComputeCount)
+                {
+                    ComputeCount  = 0;
+                    GraphicsCount = 1;
+                    ThisLevel->m_Passes[0].Pass->SetQueueType(PassQueueType::Direct);
+                }
+                ThisLevel->m_FlushBarriers = false;
+            }
+
+            if (PrevLevel)
+            {
+                PrevLevel->m_FlushCommands |= ((GraphicsCount != PrevLevel->m_GraphicsCommandsToFlush) &&
+                                               (ComputeCount != PrevLevel->m_ComputeCommandsToFlush)) ||
+                                              ThisLevel->m_FlushBarriers;
+
+                bool FlushedCommands       = PrevLevel->m_FlushCommands;
+                ThisLevel->m_ResetBarriers = FlushedCommands;
+            }
 
             MaxGraphics = std::max(MaxGraphics, GraphicsCount);
             MaxCompute  = std::max(MaxCompute, ComputeCount);
@@ -120,12 +135,25 @@ namespace Neon::RG
             ThisLevel->m_GraphicsCommandsToFlush = GraphicsCount;
             ThisLevel->m_ComputeCommandsToFlush  = ComputeCount;
 
-            // Check if we need to overallocate command lists
-            if (PrevLevel)
+            if (!PrevLevel)
             {
-                ThisLevel->m_GraphicsCommandsToReserve = std::min(PrevLevel->m_GraphicsCommandsToFlush, GraphicsCount);
-                ThisLevel->m_ComputeCommandsToReserve  = std::min(PrevLevel->m_ComputeCommandsToFlush, ComputeCount);
+                ThisLevel->m_GraphicsCommandsToReserve = GraphicsCount;
+                ThisLevel->m_ComputeCommandsToReserve  = 0;
+
+                if (ThisLevel->m_FlushBarriers)
+                {
+                    ThisLevel->m_GraphicsCommandsToReserve = ThisLevel->m_GraphicsCommandsToReserve ? (ThisLevel->m_GraphicsCommandsToReserve - 1) : 0;
+                }
             }
+            else
+            {
+
+                ThisLevel->m_GraphicsCommandsToReserve = std::min(LastFlushedGraphics, GraphicsCount);
+                ThisLevel->m_ComputeCommandsToReserve  = std::min(LastFlushedCompute, ComputeCount);
+            }
+
+            LastFlushedGraphics = ThisLevel->m_GraphicsCommandsToFlush;
+            LastFlushedCompute  = ThisLevel->m_ComputeCommandsToFlush;
         }
 
         m_CommandListContext = CommandListContext(MaxGraphics, MaxCompute);
@@ -210,7 +238,6 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        printf("Flush: %i,%i\n", GraphicsCount, ComputeCount);
         FlushCommandLists(m_GraphicsCommandList, GraphicsCount);
         FlushCommandLists(m_ComputeCommandList, ComputeCount);
     }
@@ -219,7 +246,6 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        printf("Reset: %i,%i\n", GraphicsCount, ComputeCount);
         ResetCommandLists(m_GraphicsCommandList, GraphicsCount);
         ResetCommandLists(m_ComputeCommandList, ComputeCount);
     }
@@ -298,8 +324,7 @@ namespace Neon::RG
 
     //
 
-    void GraphDepdencyLevel::Execute(
-        bool Reset) const
+    void GraphDepdencyLevel::Execute() const
     {
         auto& Storage = m_Context.GetStorage();
 
@@ -321,29 +346,26 @@ namespace Neon::RG
             auto StateManager = RHI::IResourceStateManager::Get();
 
             const bool UsingGraphics    = m_GraphicsCommandsToFlush > 0;
-            auto       FirstCommandList = UsingGraphics ? m_Context.m_CommandListContext.GetGraphics(0) : m_Context.m_CommandListContext.GetCompute(0);
+            auto       FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
 
-            if (m_FlushCommands && Reset)
+            if (m_ResetBarriers)
             {
                 m_Context.m_CommandListContext.Reset(1, 0);
             }
 
-            printf("barrier\n");
-            FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
             StateManager->FlushBarriers(FirstCommandList);
 
-            if (m_FlushCommands && Reset)
+            if (m_FlushBarriers)
             {
                 m_Context.m_CommandListContext.Flush(1, 0);
             }
         }
 
-        if (m_FlushCommands)
+        if (m_ResetCommands)
         {
             m_Context.m_CommandListContext.Reset(m_GraphicsCommandsToReserve, m_ComputeCommandsToReserve);
         }
 
-        printf("exec\n");
         ExecutePasses();
 
         if (m_FlushCommands)
