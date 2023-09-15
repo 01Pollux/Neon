@@ -17,6 +17,8 @@ namespace Neon::RG
             Roughness = Albedo,
 
             Normal,
+            Metallic = Normal,
+
             Emissive,
             DepthStencil
         };

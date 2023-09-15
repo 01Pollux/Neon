@@ -85,35 +85,36 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 {
 	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
 	
-	float4 Albedo = float4(Material.Albedo, 1.f);
+	float3 Albedo = Material.Albedo;
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_ALBEDO_MAP)
 	{
 		Texture2D AlbedoMap = p_AlbedoMap[Material.AlbedoMapIndex];
-		Albedo *= AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
+		float4 Color = AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
+		if (Color.a < 0.1f)
+		{
+			discard;
+		}
+		Albedo.rgb *= Color.rgb;
 	}
 	
-	if (Albedo.a < 0.1f)
-	{
-		discard;
-	}
-	
-	float4 Normal;
+	float3 Normal;
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
 	{
 		Texture2D NormalMap = p_NormalMap[Material.NormalMapIndex];
-		Normal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
-		Normal = float4(Normal.xyz * 2.f - 1.f, 0.f);
+		Normal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz;
+		Normal = Normal * 2.f - 1.f;
 		Normal = normalize(Normal);
 	}
 	else
 	{
-		Normal = float4(normalize(Ps.NormalWS), 0.f);
-		if (IsFrontFace)
-		{
-			Normal.z *= -1.f;
-		}
+		Normal = normalize(Ps.NormalWS);
+	}
+	// Invert normal if front face
+	if (IsFrontFace)
+	{
+		Normal.z *= -1.f;
 	}
 	
 	float4 Specular = float4(Material.Specular, 1.f);
@@ -134,6 +135,8 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	
 	return GBufferPack(
 		Albedo,
+		0.75f, // TODO
 		Normal,
+		0.75f, // TODO
 		Emissive);
 }

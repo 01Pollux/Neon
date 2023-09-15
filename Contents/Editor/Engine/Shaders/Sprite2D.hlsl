@@ -1,4 +1,6 @@
 #include "Common/Frame.hlsli"
+#include "Common/Utils.hlsli"
+#include "Common/GBuffer.hlsli"
 
 // --------------------
 // Structures
@@ -30,25 +32,6 @@ struct PSInput
 	nointerpolation int SpriteIndex : SPRITE_INDEX;
 };
 
-struct PSOutput
-{
-	float4 Albedo : SV_TARGET0;
-	float4 Normal : SV_TARGET1;
-	float4 Emissive : SV_TARGET2;
-};
-
-PSOutput GBufferPack(
-	float4 Albedo,
-	float4 Normal,
-	float4 Emissive)
-{
-	PSOutput Out;
-	Out.Albedo = Albedo;
-	Out.Normal = Normal;
-	Out.Emissive = Emissive;
-	return Out;
-}
-
 // --------------------
 // Global
 // --------------------
@@ -78,28 +61,18 @@ PSInput VS_Main(VSInput Vs)
 
 Texture2D p_SpriteTextures[] : register(t0, space2);
 
-SamplerState p_Sampler_PointWrap : register(s0, space0);
-SamplerState p_Sampler_PointClamp : register(s1, space0);
-SamplerState p_Sampler_LinearWrap : register(s2, space0);
-SamplerState p_Sampler_LinearClamp : register(s3, space0);
-SamplerState p_Sampler_AnisotropicWrap : register(s4, space0);
-SamplerState p_Sampler_AnisotropicClamp : register(s5, space0);
-
 [earlydepthstencil]
 PSOutput PS_Main(PSInput Ps)
 {
 	int TextureIndex = g_SpriteData[Ps.SpriteIndex].TextureIndex;
 	float4 Color = g_SpriteData[Ps.SpriteIndex].Color;
-	Color *= p_SpriteTextures[TextureIndex].Sample(p_Sampler_PointWrap, Ps.TexCoord);
+	Color *= p_SpriteTextures[TextureIndex].Sample(s_Sampler_PointWrap, Ps.TexCoord);
 	clip(Color.a - 0.1f);
 	
-	float Dist = 1.0f - distance(Ps.PositionInScene * 0.3f, (float2) 0);
-	Dist = clamp(Dist, 0.0f, 1.0f);
-	Dist = pow(Dist, 2.5f);
-	Color.rgb *= Dist;
-	
 	return GBufferPack(
-		Color,
-		Color,
-		Color);
+		Color.rgb,
+		1.f,
+		(float3) 0,
+		1.f,
+		(float4) 0);
 }
