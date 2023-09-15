@@ -34,13 +34,13 @@ namespace Neon::RG
         Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
-        Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));
+        Builder.AddPass<DebugPass>(ResourceId(STR("HdrRenderTarget")));
 #endif
 
         Builder.AddPass<CopyToTexturePass>(
             CopyToTexturePass::CopyToTextureData{
-                .ViewName    = STR("GBufferAlbedoToFinal"),
-                .Source      = ResourceId(STR("GBufferAlbedo")),
+                .ViewName    = STR("HdrRenderTargetToFinal"),
+                .Source      = ResourceId(STR("HdrRenderTarget")),
                 .Destination = ResourceResolver::GetOutputImageTag() });
 
         Builder.Build();

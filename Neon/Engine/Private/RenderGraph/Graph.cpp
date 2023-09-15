@@ -79,7 +79,9 @@ namespace Neon::RG
 
         for (size_t i = 0; i < m_Levels.size(); i++)
         {
-            m_Levels[i].Execute(i);
+            auto PrevPass = (i > 0) ? &m_Levels[i - 1] : nullptr;
+            bool Reset    = PrevPass && PrevPass->m_FlushCommands;
+            m_Levels[i].Execute(Reset);
         }
 
         m_CommandListContext.End();
@@ -208,6 +210,7 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
+        printf("Flush: %i,%i\n", GraphicsCount, ComputeCount);
         FlushCommandLists(m_GraphicsCommandList, GraphicsCount);
         FlushCommandLists(m_ComputeCommandList, ComputeCount);
     }
@@ -216,6 +219,7 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
+        printf("Reset: %i,%i\n", GraphicsCount, ComputeCount);
         ResetCommandLists(m_GraphicsCommandList, GraphicsCount);
         ResetCommandLists(m_ComputeCommandList, ComputeCount);
     }
@@ -316,34 +320,21 @@ namespace Neon::RG
         {
             auto StateManager = RHI::IResourceStateManager::Get();
 
-            RHI::ICommandList* FirstCommandList = nullptr;
+            const bool UsingGraphics    = m_GraphicsCommandsToFlush > 0;
+            auto       FirstCommandList = UsingGraphics ? m_Context.m_CommandListContext.GetGraphics(0) : m_Context.m_CommandListContext.GetCompute(0);
 
-            bool UsingGraphics = m_Context.m_CommandListContext.GetGraphicsCount() > 0;
-            if (UsingGraphics)
+            if (m_FlushCommands && Reset)
             {
-                if (Reset)
-                {
-                    m_Context.m_CommandListContext.Reset(1, 0);
-                }
-                FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
-                StateManager->FlushBarriers(FirstCommandList);
-                if (Reset)
-                {
-                    m_Context.m_CommandListContext.Flush(1, 0);
-                }
+                m_Context.m_CommandListContext.Reset(1, 0);
             }
-            else
+
+            printf("barrier\n");
+            FirstCommandList = m_Context.m_CommandListContext.GetGraphics(0);
+            StateManager->FlushBarriers(FirstCommandList);
+
+            if (m_FlushCommands && Reset)
             {
-                if (Reset)
-                {
-                    m_Context.m_CommandListContext.Reset(0, 1);
-                }
-                FirstCommandList = m_Context.m_CommandListContext.GetCompute(0);
-                StateManager->FlushBarriers(FirstCommandList);
-                if (Reset)
-                {
-                    m_Context.m_CommandListContext.Flush(0, 1);
-                }
+                m_Context.m_CommandListContext.Flush(1, 0);
             }
         }
 
@@ -352,6 +343,7 @@ namespace Neon::RG
             m_Context.m_CommandListContext.Reset(m_GraphicsCommandsToReserve, m_ComputeCommandsToReserve);
         }
 
+        printf("exec\n");
         ExecutePasses();
 
         if (m_FlushCommands)

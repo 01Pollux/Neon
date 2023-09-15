@@ -41,8 +41,6 @@ Texture2D<float3> c_NoiseMap : register(t2, space0);
 
 RWTexture2D<float> c_OcclusionOutput : register(u0, space0);
 
-//
-
 // --------------------
 // Compute Shader
 // --------------------
