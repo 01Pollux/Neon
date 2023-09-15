@@ -25,7 +25,7 @@ namespace Neon::RG
             float Bias             = 0.01f;
             float Magnitude        = 1.5f;
             float Contrast         = 1.5f;
-            float ResolutionFactor = 0.5f;
+            float ResolutionFactor = 1.0f;
         };
 
     public:

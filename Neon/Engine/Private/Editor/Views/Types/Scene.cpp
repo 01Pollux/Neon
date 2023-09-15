@@ -56,7 +56,7 @@ namespace Neon::Editor::Views
                 }
             }
 
-            auto CameraData = Camera.get<Scene::Component::Camera>();
+            auto CameraData = Camera.get_mut<Scene::Component::Camera>();
             if (!CameraData) [[unlikely]]
             {
                 return;
@@ -68,7 +68,34 @@ namespace Neon::Editor::Views
                 return;
             }
 
-            RenderGraph->GetStorage().SetOutputImageSize(Size2I{ int(Window->Size.x), int(Window->Size.y) });
+            Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
+            bool  Changed = false;
+
+            if (CameraData->Viewport.ClientWidth)
+            {
+                Size.x = float(Window->Size.x);
+                if (Size.x != CameraData->Viewport.Width)
+                {
+                    Changed = true;
+                }
+            }
+            if (CameraData->Viewport.ClientHeight)
+            {
+                Size.y = float(Window->Size.y);
+                if (Size.y != CameraData->Viewport.Height)
+                {
+                    Changed = true;
+                }
+            }
+
+            if (Changed)
+            {
+                CameraData->Viewport.Width  = Size.x;
+                CameraData->Viewport.Height = Size.y;
+                RenderGraph->GetStorage().SetOutputImageSize(Size);
+
+                Camera.modified<Scene::Component::Camera>();
+            }
         }
     }
 

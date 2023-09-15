@@ -110,7 +110,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	else
 	{
 		Normal = float4(normalize(Ps.NormalWS), 0.f);
-		if (!IsFrontFace)
+		if (IsFrontFace)
 		{
 			Normal.z *= -1.f;
 		}

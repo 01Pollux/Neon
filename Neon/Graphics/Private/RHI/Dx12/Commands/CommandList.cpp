@@ -242,7 +242,7 @@ namespace Neon::RHI
             Alignment,
             BufferType);
 
-        Buffer.AsUpload()->Write(0, Data, Size);
+        Buffer.AsUpload()->Write(Buffer.Offset, Data, Size);
 
         SetResourceView(
             IsDirect,

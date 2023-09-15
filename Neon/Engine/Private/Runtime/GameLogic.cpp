@@ -90,7 +90,7 @@ namespace Neon::Runtime
             .term<Component::Transform>()
             .in()
             .each(
-                [](Component::Camera&          Camera,
+                [](const Component::Camera&    Camera,
                    const Component::Transform& Transform)
                 {
                     if (auto RenderGraph = Camera.GetRenderGraph())

@@ -188,7 +188,7 @@ namespace Neon::RG
     {
         std::uniform_real_distribution<float> Distribution(0.0f, 1.0f);
 
-        std::vector<Vector4> NoiseData(8 * 8);
+        std::vector<Vector4> NoiseData(128 * 128);
         for (auto& Noise : NoiseData)
         {
             Noise.x = Distribution(Random::GetEngine());
@@ -201,8 +201,8 @@ namespace Neon::RG
             RHI::ComputeSubresource(
                 RHI::EResourceFormat::R32G32B32A32_Float,
                 NoiseData.data(),
-                8,
-                8)
+                128,
+                128)
         };
 
         m_NoiseTexture = RHI::SSyncTexture(
