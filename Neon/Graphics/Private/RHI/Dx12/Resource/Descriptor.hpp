@@ -35,11 +35,26 @@ namespace Neon::RHI
         ~Dx12DescriptorHeap() override;
 
         /// <summary>
+        /// Copy to descriptors
+        /// </summary>
+        void Copy(
+            uint32_t                  DestIndex,
+            std::span<const CopyInfo> SrcDescriptors) override;
+
+        /// <summary>
         /// Copy to descriptor
         /// </summary>
         void Copy(
-            uint32_t        DescriptorIndex,
+            uint32_t        DestIndex,
             const CopyInfo& SrcDescriptors) override;
+
+        /// <summary>
+        /// Copy to descriptor
+        /// </summary>
+        static void Copy(
+            D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
+            std::span<const CopyInfo>  SrcDescriptors,
+            std::span<const CopyInfo>  DstDescriptors);
 
         /// <summary>
         /// Get cpu handle of offset

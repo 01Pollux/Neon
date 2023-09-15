@@ -806,11 +806,7 @@ namespace Neon::Renderer
             auto ResourceTable = RHI::IFrameDescriptorHeap::Get(Type);
             auto Descriptor    = ResourceTable->Allocate(SourceSize);
 
-            RHI::IDescriptorHeap::CopyInfo Destination{
-                .Descriptor = Descriptor.GetCpuHandle(),
-                .CopySize   = Descriptor.Size
-            };
-            RHI::IDescriptorHeap::Copy(Type, SourceDescriptors, { &Destination, 1 });
+            Descriptor.Heap->Copy(Descriptor.Offset, SourceDescriptors);
             return Descriptor;
         };
 

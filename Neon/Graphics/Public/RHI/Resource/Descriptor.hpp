@@ -34,10 +34,17 @@ namespace Neon::RHI
         virtual ~IDescriptorHeap() = default;
 
         /// <summary>
-        /// Copy to descriptor
+        /// Copy from descriptors
         /// </summary>
         virtual void Copy(
-            uint32_t        DescriptorIndex,
+            uint32_t                  DestIndex,
+            std::span<const CopyInfo> SrcDescriptors) = 0;
+
+        /// <summary>
+        /// Copy from descriptor
+        /// </summary>
+        virtual void Copy(
+            uint32_t        DestIndex,
             const CopyInfo& SrcDescriptors) = 0;
 
         /// <summary>

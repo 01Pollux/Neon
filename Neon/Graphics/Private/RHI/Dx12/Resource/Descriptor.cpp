@@ -103,13 +103,24 @@ namespace Neon::RHI
     }
 
     void Dx12DescriptorHeap::Copy(
-        uint32_t        DescriptorIndex,
+        uint32_t                  DestIndex,
+        std::span<const CopyInfo> SrcDescriptors)
+    {
+        CopyInfo DestInfo{
+            .Descriptor = GetCPUAddress(DestIndex),
+            .CopySize   = uint32_t(SrcDescriptors.size())
+        };
+        Copy(m_HeapType, SrcDescriptors, { &DestInfo, 1 });
+    }
+
+    void Dx12DescriptorHeap::Copy(
+        uint32_t        DestIndex,
         const CopyInfo& SrcDescriptors)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
         Dx12Device->CopyDescriptorsSimple(
             uint32_t(SrcDescriptors.CopySize),
-            { GetCPUAddress(DescriptorIndex).Value },
+            { GetCPUAddress(DestIndex).Value },
             { SrcDescriptors.Descriptor.Value },
             m_HeapType);
     }
@@ -118,6 +129,14 @@ namespace Neon::RHI
         DescriptorType            DescriptorType,
         std::span<const CopyInfo> SrcDescriptors,
         std::span<const CopyInfo> DstDescriptors)
+    {
+        Dx12DescriptorHeap::Copy(CastDescriptorType(DescriptorType), SrcDescriptors, DstDescriptors);
+    }
+
+    void Dx12DescriptorHeap::Copy(
+        D3D12_DESCRIPTOR_HEAP_TYPE DescriptorType,
+        std::span<const CopyInfo>  SrcDescriptors,
+        std::span<const CopyInfo>  DstDescriptors)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
 
@@ -150,7 +169,7 @@ namespace Neon::RHI
             UINT(SrcDescriptors.size()),
             DxSrcDescriptors.get(),
             DxSrcDescriptorsSizes.get(),
-            CastDescriptorType(DescriptorType));
+            DescriptorType);
     }
 
     CpuDescriptorHandle Dx12DescriptorHeap::GetCPUAddress(
