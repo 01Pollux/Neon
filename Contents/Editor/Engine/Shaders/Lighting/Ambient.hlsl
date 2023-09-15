@@ -29,7 +29,7 @@ struct AmbientParams
 };
 
 ConstantBuffer<AmbientParams> c_AmbientParams : register(b0, space1);
-Texture2D c_TexturesMap[] : register(t0, space1);
+Texture2D c_TextureMap[] : register(t0, space1);
 RWTexture2D<float4> c_OutputTexture : register(u0, space1);
 
 // --------------------
@@ -40,10 +40,10 @@ RWTexture2D<float4> c_OutputTexture : register(u0, space1);
 void CS_Main(
 	uint3 DTID : SV_DispatchThreadID)
 {
-	Texture2D DiffuseRoughnessMap = c_TexturesMap[0];
-	Texture2D EmissiveFactorMap = c_TexturesMap[1];
-	Texture2D DepthMap = c_TexturesMap[2];
-	Texture2D AmbientMap = c_TexturesMap[3];
+	Texture2D DiffuseRoughnessMap = c_TextureMap[0];
+	Texture2D EmissiveFactorMap = c_TextureMap[1];
+	Texture2D DepthMap = c_TextureMap[2];
+	Texture2D AmbientMap = c_TextureMap[3];
 	
 	int2 Size;
 	c_OutputTexture.GetDimensions(Size.x, Size.y);

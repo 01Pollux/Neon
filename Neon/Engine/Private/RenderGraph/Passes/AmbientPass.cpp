@@ -27,7 +27,7 @@ namespace Neon::RG
     {
         FrameData,
         AmbientParams,
-        OutputTexture_TexturesMap,
+        OutputTexture_TextureMap,
     };
 
     AmbientPass::AmbientPass() :
@@ -40,21 +40,25 @@ namespace Neon::RG
             .Stage = RHI::ShaderStage::Compute
         };
 
-        m_AmbientPassRootSignature =
+#if NEON_DEBUG
+        ShaderDesc.Flags.Set(RHI::EShaderCompileFlags::Debug);
+#endif
+
+        m_AmbientRootSignature =
             RHI::RootSignatureBuilder()
                 .AddConstantBufferView("g_FrameData", 0, 0)
                 .Add32BitConstants<ParamsType>("c_AmbientParams", 0, 1)
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
                         .AddUavRangeAt("c_OutputTexture", 0, 1, 1, 0)
-                        .AddSrvRangeAt("c_TexturesMap", 0, 1, 4, 1))
+                        .AddSrvRangeAt("c_TextureMap", 0, 1, 4, 1))
                 .AddStandardSamplers(0, RHI::ShaderVisibility::All)
                 .ComputeOnly()
                 .Build();
 
-        m_AmbientPassPipeline =
+        m_AmbientPipeline =
             RHI::PipelineStateBuilderC{
-                .RootSignature = m_AmbientPassRootSignature,
+                .RootSignature = m_AmbientRootSignature,
                 .ComputeShader = Shader->LoadShader(ShaderDesc)
             }
                 .Build();
@@ -95,9 +99,12 @@ namespace Neon::RG
             PassResources::HdrRenderTarget(),
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R16G16B16A16_Float, 1, 1, 1));
 
-        m_Data.HdrRenderTarget     = Resolver.WriteResource(PassResources::HdrRenderTarget().CreateView(STR("Main")));
-        m_Data.DiffuseMap          = Resolver.ReadTexture(PassResources::GBufferAlbedo().CreateView(STR("Ambient")), ResourceReadAccess::NonPixelShader);
-        m_Data.EmissiveFactorMap   = Resolver.ReadTexture(PassResources::GBufferEmissive().CreateView(STR("Ambient")), ResourceReadAccess::NonPixelShader);
+        m_Data.HdrRenderTarget = Resolver.WriteResource(PassResources::HdrRenderTarget().CreateView(STR("Main")));
+
+        m_Data.DiffuseMap          = Resolver.ReadTexture(PassResources::GBufferAlbedo().CreateView(STR("Ambient")),
+                                                          ResourceReadAccess::NonPixelShader);
+        m_Data.EmissiveFactorMap   = Resolver.ReadTexture(PassResources::GBufferEmissive().CreateView(STR("Ambient")),
+                                                          ResourceReadAccess::NonPixelShader);
         m_Data.DepthMap            = Resolver.ReadTexture(PassResources::GBufferDepth().CreateView(STR("Ambient")), ResourceReadAccess::NonPixelShader,
                                                           RHI::SRVDesc{
                                                               .Format = RHI::EResourceFormat::R32_Float,
@@ -111,8 +118,8 @@ namespace Neon::RG
     {
         auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(DataType::DescriptorsCount);
 
-        CommandList.SetPipelineState(m_AmbientPassPipeline);
-        CommandList.SetRootSignature(m_AmbientPassRootSignature);
+        CommandList.SetPipelineState(m_AmbientPipeline);
+        CommandList.SetRootSignature(m_AmbientRootSignature);
 
         // Copy to Params' descriptors
         {
@@ -123,6 +130,7 @@ namespace Neon::RG
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 }
             };
+            static_assert(std::size(SrcInfo) == DataType::DescriptorsCount);
 
             RHI::CpuDescriptorHandle
                 &OutputTexture       = SrcInfo[0].Descriptor,
@@ -148,7 +156,7 @@ namespace Neon::RG
 
         CommandList.SetResourceView(RHI::CstResourceViewType::Cbv, uint32_t(AmbientPassRS::FrameData), Storage.GetFrameDataHandle());
         CommandList.SetConstants<ParamsType>(uint32_t(AmbientPassRS::AmbientParams), Params);
-        CommandList.SetDescriptorTable(uint32_t(AmbientPassRS::OutputTexture_TexturesMap), Descriptor.GetGpuHandle());
+        CommandList.SetDescriptorTable(uint32_t(AmbientPassRS::OutputTexture_TextureMap), Descriptor.GetGpuHandle());
 
         auto Size = Storage.GetOutputImageSize();
         CommandList.Dispatch2D(Size.x, Size.y, 16, 16);

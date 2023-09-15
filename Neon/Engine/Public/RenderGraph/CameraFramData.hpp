@@ -16,6 +16,8 @@ namespace Neon::RG
         alignas(16) Matrix4x4 ProjectionInverse;
         alignas(16) Matrix4x4 ViewProjectionInverse;
 
+        Vector2 ScreenResolution;
+
         float EngineTime;
         float GameTime;
         float DeltaTime;

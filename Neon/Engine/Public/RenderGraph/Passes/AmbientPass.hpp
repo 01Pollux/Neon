@@ -38,8 +38,8 @@ namespace Neon::RG
             RHI::ComputeCommandList CommandList);
 
     private:
-        Ptr<RHI::IPipelineState> m_AmbientPassPipeline;
-        Ptr<RHI::IRootSignature> m_AmbientPassRootSignature;
+        Ptr<RHI::IPipelineState> m_AmbientPipeline;
+        Ptr<RHI::IRootSignature> m_AmbientRootSignature;
 
         DataType m_Data;
     };

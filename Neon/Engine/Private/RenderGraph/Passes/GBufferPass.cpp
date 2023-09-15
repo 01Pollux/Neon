@@ -33,9 +33,7 @@ namespace Neon::RG
             {
                 Desc.ClearValue = RHI::ClearOperation{
                     .Format = RenderTargetsFormatsTyped[Index],
-                    // TODO: Until we have skybox pass, we will use white color
-                    //.Value  = Colors::Black
-                    .Value = Colors::LightGray
+                    .Value  = Colors::Black
                 };
             }
 

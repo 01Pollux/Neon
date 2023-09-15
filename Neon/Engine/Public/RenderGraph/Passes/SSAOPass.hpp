@@ -10,6 +10,15 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
+        struct DataType
+        {
+            static constexpr size_t DescriptorsCount = 3;
+
+            ResourceViewId NormalMap;
+            ResourceViewId DepthMap;
+            ResourceViewId SSAOOutput;
+        };
+
         struct ParamsType
         {
             float Radius           = 1.f;
@@ -111,8 +120,8 @@ namespace Neon::RG
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList);
+            const GraphStorage&     Storage,
+            RHI::ComputeCommandList CommandList);
 
     private:
         /// <summary>
@@ -151,7 +160,8 @@ namespace Neon::RG
         RHI::SSyncTexture m_NoiseTexture;
         RHI::USyncBuffer  m_SamplesBuffer;
 
-        Ptr<Renderer::IMaterial> m_Material;
+        Ptr<RHI::IRootSignature> m_SSAORootSignature;
+        Ptr<RHI::IPipelineState> m_SSAOPipeline;
 
         /// <summary>
         /// Raw blob containing the SSAO parameters.
@@ -161,5 +171,7 @@ namespace Neon::RG
         std::unique_ptr<uint8_t[]> m_Params;
 
         size_t m_SampleCount = 0;
+
+        DataType m_Data;
     };
 } // namespace Neon::RG
