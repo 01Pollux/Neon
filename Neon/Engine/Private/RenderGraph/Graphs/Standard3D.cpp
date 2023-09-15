@@ -30,8 +30,8 @@ namespace Neon::RG
             GBuffer.AttachRenderer<Renderer::MeshRenderer>();
         }
 
-        Builder.AddPass<SSAOPass>();
-        // Builder.AddPass<AmbientPass>();
+        SSAOPass::AddPass(Builder);
+        Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
         Builder.AddPass<DebugPass>(ResourceId(STR("GBufferAlbedo")));

@@ -23,6 +23,12 @@ namespace Neon::RG
         SSAOPass(
             uint32_t SampleCount = 8);
 
+        /// <summary>
+        /// Add the SSAO pass to the graph.
+        /// </summary>
+        static void AddPass(
+            GraphBuilder& Builder);
+
     public:
         /// <summary>
         /// Regenerate the SSAO samples.

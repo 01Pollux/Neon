@@ -82,8 +82,8 @@ namespace Neon::RG
         /// Write resource as uav
         /// </summary>
         const ResourceViewId& WriteResource(
-            const ResourceViewId&       ViewId,
-            RHI::UAVDescOpt Desc = std::nullopt)
+            const ResourceViewId& ViewId,
+            RHI::UAVDescOpt       Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -92,8 +92,8 @@ namespace Neon::RG
         /// Write resource as renter target
         /// </summary>
         const ResourceViewId& WriteRenderTarget(
-            const ResourceViewId&       ViewId,
-            RHI::RTVDescOpt Desc = std::nullopt)
+            const ResourceViewId& ViewId,
+            RHI::RTVDescOpt       Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -102,8 +102,8 @@ namespace Neon::RG
         /// Write resource as renter target
         /// </summary>
         const ResourceViewId& WriteDepthStencil(
-            const ResourceViewId&       ViewId,
-            RHI::DSVDescOpt Desc = std::nullopt)
+            const ResourceViewId& ViewId,
+            RHI::DSVDescOpt       Desc = std::nullopt)
         {
             return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
@@ -130,23 +130,45 @@ namespace Neon::RG
             const ResourceViewId& ViewId);
 
         /// <summary>
-        /// Write resource as uav
+        /// Write resource as srv
         /// </summary>
-        const ResourceViewId& ReadTexture(
-            const ResourceViewId&       ViewId,
-            ResourceReadAccess          ReadAccess,
-            RHI::SRVDescOpt Desc = std::nullopt)
+        const ResourceViewId& ReadConstantBuffer(
+            const ResourceViewId& ViewId,
+            ResourceReadAccess    ReadAccess,
+            RHI::CBVDesc          Desc)
         {
             return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
         }
 
         /// <summary>
-        /// Write resource as renter target
+        /// Write resource as srv
+        /// </summary>
+        const ResourceViewId& ReadTexture(
+            const ResourceViewId& ViewId,
+            ResourceReadAccess    ReadAccess,
+            RHI::SRVDescOpt       Desc = std::nullopt)
+        {
+            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+        /// <summary>
+        /// Write resource as uav
+        /// </summary>
+        const ResourceViewId& ReadWriteTexture(
+            const ResourceViewId& ViewId,
+            ResourceReadAccess    ReadAccess,
+            RHI::UAVDescOpt       Desc = std::nullopt)
+        {
+            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+        }
+
+        /// <summary>
+        /// Write resource as dsv
         /// </summary>
         const ResourceViewId& ReadDepthStencil(
-            const ResourceViewId&       ViewId,
-            ResourceReadAccess          ReadAccess,
-            RHI::DSVDescOpt Desc = std::nullopt)
+            const ResourceViewId& ViewId,
+            ResourceReadAccess    ReadAccess,
+            RHI::DSVDescOpt       Desc = std::nullopt)
         {
             return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
         }

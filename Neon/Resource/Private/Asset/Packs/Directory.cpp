@@ -97,11 +97,16 @@ namespace Neon::Asset
                     NEON_ERROR_TAG("Asset", "Meta file '{}' does not have a hash", MetafilePath.string());
                     continue;
                 }
-                else if (Hash.Digest().ToString() != ExpectedHash)
+                else if (auto CurrentHash = Hash.Digest().ToString(); CurrentHash != ExpectedHash)
                 {
-                    NEON_ERROR_TAG("Asset", "Asset file '{}' has a different hash than the one in meta file", AssetFile.string());
 #ifndef NEON_ASSET_MGR_DISABLE_HASH_VALIDATION
+                    NEON_ERROR_TAG("Asset", "Asset file '{}' has a different hash than the one in meta file", AssetFile.string());
                     continue;
+#else
+                    // Try to correct the hash
+                    NEON_WARNING_TAG("Asset", "Asset file '{}' has a different hash than the one in meta file", AssetFile.string());
+                    Metadata.SetHash(CurrentHash);
+                    Metadata.SetDirty();
 #endif
                 }
 

@@ -1,0 +1,8 @@
+{
+  "Guid": "562a6137-65c5-4f27-9506-3ad2a6ef5696",
+  "Path": "Engine/Shaders/Common/GBuffer.hlsli.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "12860950093446775512",
+  "Hash": "931242fec9e6e900a5b77f1e6e18bf5036eecad48cf258f54b94f0fc0bb321f8"
+}

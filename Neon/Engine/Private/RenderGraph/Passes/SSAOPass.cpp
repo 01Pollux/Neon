@@ -32,6 +32,12 @@ namespace Neon::RG
         RegenerateSamples(SampleCount);
     }
 
+    void RG::SSAOPass::AddPass(
+        GraphBuilder& Builder)
+    {
+        Builder.AddPass<SSAOPass>();
+    }
+
     //
 
     void SSAOPass::RegenerateSamples(

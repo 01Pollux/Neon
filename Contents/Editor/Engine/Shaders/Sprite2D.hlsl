@@ -1,23 +1,8 @@
+#include "Common/Frame.hlsli"
 
 // --------------------
 // Structures
 // --------------------
-struct PerFrameData
-{
-	matrix World;
-	
-	matrix View;
-	matrix Projection;
-	matrix ViewProjection;
-	
-	matrix ViewInverse;
-	matrix ProjectionInverse;
-	matrix ViewProjectionInverse;
-	
-	float EngineTime;
-	float GameTime;
-	float DeltaTime;
-};
 
 struct PerObjectData
 {
@@ -68,7 +53,6 @@ PSOutput GBufferPack(
 // Global
 // --------------------
 
-ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
 StructuredBuffer<PerObjectData> g_SpriteData : register(t0, space1);
 
 // --------------------
