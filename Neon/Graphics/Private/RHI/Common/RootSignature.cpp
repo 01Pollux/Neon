@@ -5,11 +5,12 @@
 
 namespace Neon::RHI
 {
-    RootDescriptorTable& RootDescriptorTable::AddSrvRange(
+    RootDescriptorTable& RootDescriptorTable::AddSrvRangeAt(
         StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        uint32_t                  Offset,
         bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
@@ -19,17 +20,19 @@ namespace Neon::RHI
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
+                .Offset          = Offset,
                 .Flags           = Flags,
                 .Type            = DescriptorTableParam::ShaderResource,
                 .Instanced       = Instanced });
         return *this;
     }
 
-    RootDescriptorTable& RootDescriptorTable::AddUavRange(
+    RootDescriptorTable& RootDescriptorTable::AddUavRangeAt(
         StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        uint32_t                  Offset,
         bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
@@ -39,17 +42,19 @@ namespace Neon::RHI
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
+                .Offset          = Offset,
                 .Flags           = Flags,
                 .Type            = DescriptorTableParam::UnorderedAccess,
                 .Instanced       = Instanced });
         return *this;
     }
 
-    RootDescriptorTable& RootDescriptorTable::AddCbvRange(
+    RootDescriptorTable& RootDescriptorTable::AddCbvRangeAt(
         StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        uint32_t                  Offset,
         bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
@@ -59,17 +64,19 @@ namespace Neon::RHI
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
+                .Offset          = Offset,
                 .Flags           = Flags,
                 .Type            = DescriptorTableParam::ConstantBuffer,
                 .Instanced       = Instanced });
         return *this;
     }
 
-    RootDescriptorTable& RootDescriptorTable::AddSamplerRange(
+    RootDescriptorTable& RootDescriptorTable::AddSamplerRangeAt(
         StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
+        uint32_t                  Offset,
         bool                      Instanced,
         MRootDescriptorTableFlags Flags)
     {
@@ -79,6 +86,7 @@ namespace Neon::RHI
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
                 .DescriptorCount = NumDescriptors,
+                .Offset          = Offset,
                 .Flags           = Flags,
                 .Type            = DescriptorTableParam::Sampler,
                 .Instanced       = Instanced });

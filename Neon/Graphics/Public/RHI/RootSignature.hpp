@@ -93,6 +93,7 @@ namespace Neon::RHI
         uint32_t                  ShaderRegister;
         uint32_t                  RegisterSpace;
         uint32_t                  DescriptorCount;
+        uint32_t                  Offset = std::numeric_limits<uint32_t>::max();
         MRootDescriptorTableFlags Flags;
         DescriptorTableParam      Type;
         bool                      Instanced;
@@ -105,6 +106,7 @@ namespace Neon::RHI
             Archive& ShaderRegister;
             Archive& RegisterSpace;
             Archive& DescriptorCount;
+            Archive& Offset;
             Archive& Flags;
             auto     DType = std::to_underlying(Type);
             Archive& DType;
@@ -125,7 +127,29 @@ namespace Neon::RHI
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+        {
+            return AddSrvRangeAt(
+                std::move(Name),
+                BaseShaderRegister,
+                RegisterSpace,
+                NumDescriptors,
+                std::numeric_limits<uint32_t>::max(),
+                Instanced,
+                Flags);
+        }
+
+        /// <summary>
+        /// Add srv descriptor entries
+        /// </summary>
+        RootDescriptorTable& AddSrvRangeAt(
+            StringU8                  Name,
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            uint32_t                  Offset,
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add uav descriptor entries
@@ -136,7 +160,29 @@ namespace Neon::RHI
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+        {
+            return AddUavRangeAt(
+                std::move(Name),
+                BaseShaderRegister,
+                RegisterSpace,
+                NumDescriptors,
+                std::numeric_limits<uint32_t>::max(),
+                Instanced,
+                Flags);
+        }
+
+        /// <summary>
+        /// Add uav descriptor entries
+        /// </summary>
+        RootDescriptorTable& AddUavRangeAt(
+            StringU8                  Name,
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            uint32_t                  Offset,
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add cbv descriptor entries
@@ -147,7 +193,29 @@ namespace Neon::RHI
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+        {
+            return AddCbvRangeAt(
+                std::move(Name),
+                BaseShaderRegister,
+                RegisterSpace,
+                NumDescriptors,
+                std::numeric_limits<uint32_t>::max(),
+                Instanced,
+                Flags);
+        }
+
+        /// <summary>
+        /// Add cbv descriptor entries
+        /// </summary>
+        RootDescriptorTable& AddCbvRangeAt(
+            StringU8                  Name,
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            uint32_t                  Offset,
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add sampler descriptor entries
@@ -157,8 +225,31 @@ namespace Neon::RHI
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
+            uint32_t                  Offset,
             bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Volatile));
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+        {
+            return AddSamplerRangeAt(
+                std::move(Name),
+                BaseShaderRegister,
+                RegisterSpace,
+                NumDescriptors,
+                std::numeric_limits<uint32_t>::max(),
+                Instanced,
+                Flags);
+        }
+
+        /// <summary>
+        /// Add sampler descriptor entries
+        /// </summary>
+        RootDescriptorTable& AddSamplerRangeAt(
+            StringU8                  Name,
+            uint32_t                  BaseShaderRegister,
+            uint32_t                  RegisterSpace,
+            uint32_t                  NumDescriptors,
+            uint32_t                  Offset,
+            bool                      Instanced = false,
+            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
     public:
         /// <summary>

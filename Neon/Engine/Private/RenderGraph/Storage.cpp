@@ -77,8 +77,7 @@ namespace Neon::RG
 
     const RHI::DescriptorViewDesc& GraphStorage::GetResourceView(
         const ResourceViewId&     ViewId,
-        RHI::CpuDescriptorHandle* CpuHandle,
-        RHI::GpuDescriptorHandle* GpuHandle) const
+        RHI::CpuDescriptorHandle* CpuHandle) const
     {
         auto Iter = m_Resources.find(ViewId.GetResource());
         if (Iter != m_Resources.end())
@@ -92,10 +91,6 @@ namespace Neon::RG
                 if (CpuHandle)
                 {
                     *CpuHandle = ViewInfo.first.GetCpuHandle();
-                }
-                if (GpuHandle)
-                {
-                    *GpuHandle = ViewInfo.first.GetGpuHandle();
                 }
                 return ViewInfo.second;
             }

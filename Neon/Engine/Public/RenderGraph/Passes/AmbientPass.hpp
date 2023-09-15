@@ -9,14 +9,21 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
+        struct DataType
+        {
+            static constexpr size_t DescriptorsCount = 5;
+
+            ResourceViewId HdrRenderTarget;
+
+            ResourceViewId DiffuseMap;
+            ResourceViewId EmissiveFactorMap;
+            ResourceViewId DepthMap;
+            ResourceViewId AmbientOcclusionMap;
+        };
+
         struct ParamsType
         {
             uint32_t Color;
-
-            uint32_t DiffuseRoughnessMap;
-            uint32_t EmissiveFactorMap;
-            uint32_t DepthMap;
-            uint32_t AmbientOcclusionMap;
         };
 
     public:
@@ -27,11 +34,13 @@ namespace Neon::RG
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage& Storage,
-            RHI::ICommandList*  CommandList);
+            const GraphStorage&     Storage,
+            RHI::ComputeCommandList CommandList);
 
     private:
         Ptr<RHI::IPipelineState> m_AmbientPassPipeline;
         Ptr<RHI::IRootSignature> m_AmbientPassRootSignature;
+
+        DataType m_Data;
     };
 } // namespace Neon::RG

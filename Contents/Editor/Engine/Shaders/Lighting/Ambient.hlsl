@@ -40,12 +40,14 @@ RWTexture2D<float4> c_OutputTexture : register(u0, space1);
 void CS_Main(
 	uint3 DTID : SV_DispatchThreadID)
 {
-	Texture2D DiffuseRoughnessMap = c_TexturesMap[c_AmbientParams.DiffuseRoughnessMap];
-	Texture2D EmissiveFactorMap = c_TexturesMap[c_AmbientParams.EmissiveFactorMap];
-	Texture2D DepthMap = c_TexturesMap[c_AmbientParams.DepthMap];
-	Texture2D AmbientMap = c_TexturesMap[c_AmbientParams.AmbientOcclusionMap];
+	Texture2D DiffuseRoughnessMap = c_TexturesMap[0];
+	Texture2D EmissiveFactorMap = c_TexturesMap[1];
+	Texture2D DepthMap = c_TexturesMap[2];
+	Texture2D AmbientMap = c_TexturesMap[3];
 	
-	float2 UV = ((float2) DTID.xy + 0.5f) / g_FrameData.ScreenResolution;
+	int2 Size;
+	c_OutputTexture.GetDimensions(Size.x, Size.y);
+	float2 UV = ((float2) DTID.xy + 0.5f) / Size;
 	
 	// Outside of the screen
 	if (all(UV) < 0.f || all(UV) > 1.f)

@@ -398,7 +398,8 @@ namespace Neon::RHI
                                 DescriptorCount,
                                 Range.ShaderRegister,
                                 Range.RegisterSpace,
-                                Flags);
+                                Flags,
+                                Range.Offset);
                         }
 
                         Hash.Append(std::bit_cast<uint8_t*>(Ranges.data()), sizeof(Ranges[0]) * Ranges.size());

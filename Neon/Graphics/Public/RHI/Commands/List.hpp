@@ -174,6 +174,24 @@ namespace Neon::RHI
             size_t      DestOffset = 0) = 0;
 
         /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        template<typename _Ty>
+        void SetConstants(
+            bool       IsDirect,
+            uint32_t   RootIndex,
+            const _Ty& Constants,
+            size_t     DestOffset = 0)
+        {
+            SetConstants(
+                IsDirect,
+                RootIndex,
+                &Constants,
+                sizeof(_Ty) / sizeof(uint32_t),
+                DestOffset);
+        }
+
+        /// <summary>
         /// Set resource view in root signature
         /// </summary>
         virtual void SetResourceView(
@@ -485,6 +503,22 @@ namespace Neon::RHI
                 RootIndex,
                 Constants,
                 NumConstants32Bit,
+                DestOffset);
+        }
+
+        /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        template<typename _Ty>
+        void SetConstants(
+            uint32_t   RootIndex,
+            const _Ty& Constants,
+            size_t     DestOffset = 0)
+        {
+            m_CmdList->SetConstants<_Ty>(
+                true,
+                RootIndex,
+                Constants,
                 DestOffset);
         }
 
@@ -816,10 +850,25 @@ namespace Neon::RHI
         }
 
         /// <summary>
+        /// Sets constants in root signature
+        /// </summary>
+        template<typename _Ty>
+        void SetConstants(
+            uint32_t   RootIndex,
+            const _Ty& Constants,
+            size_t     DestOffset = 0)
+        {
+            m_CmdList->SetConstants<_Ty>(
+                false,
+                RootIndex,
+                Constants,
+                DestOffset);
+        }
+
+        /// <summary>
         /// Set resource view in root signature
         /// </summary>
         void SetResourceView(
-            bool                IsDirect,
             CstResourceViewType Type,
             uint32_t            RootIndex,
             GpuResourceHandle   Handle)

@@ -14,6 +14,8 @@ namespace Neon::RG
         enum class ResourceType : uint8_t
         {
             Albedo,
+            Roughness = Albedo,
+
             Normal,
             Emissive,
             DepthStencil

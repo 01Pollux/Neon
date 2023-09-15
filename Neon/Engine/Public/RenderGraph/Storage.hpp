@@ -64,8 +64,7 @@ namespace Neon::RG
         /// </summary>
         const RHI::DescriptorViewDesc& GetResourceView(
             const ResourceViewId&     ViewId,
-            RHI::CpuDescriptorHandle* CpuHandle = nullptr,
-            RHI::GpuDescriptorHandle* GpuHandle = nullptr) const;
+            RHI::CpuDescriptorHandle* CpuHandle = nullptr) const;
 
     public:
         /// <summary>
