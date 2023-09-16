@@ -15,15 +15,6 @@ namespace Neon::RG
         friend class RenderPass;
 
     public:
-        enum class BlendMode : uint8_t
-        {
-            Opaque,
-            AlphaBlend,
-            Additive,
-
-            Count
-        };
-
         struct BlurPassData
         {
             String ViewName;
