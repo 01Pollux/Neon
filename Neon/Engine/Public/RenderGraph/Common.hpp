@@ -299,6 +299,11 @@ namespace Neon::RG
         [[nodiscard]] const RHI::ResourceDesc& GetDesc() const noexcept;
 
         /// <summary>
+        /// Get resource desc
+        /// </summary>
+        [[nodiscard]] const MResourceFlags& GetFlags() const noexcept;
+
+        /// <summary>
         /// Get the underlying resource
         /// </summary>
         [[nodiscard]] const Ptr<RHI::IGpuResource>& Get() const noexcept;

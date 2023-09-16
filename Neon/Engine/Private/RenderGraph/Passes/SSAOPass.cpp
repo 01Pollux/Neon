@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/SSAOPass.hpp>
+#include <RenderGraph/Passes/BlurPass.hpp>
 #include <RenderGraph/Passes/GBufferPass.hpp>
 
 #include <RHI/RootSignature.hpp>
@@ -44,6 +45,10 @@ namespace Neon::RG
         GraphBuilder& Builder)
     {
         Builder.AddPass<SSAOPass>();
+        Builder.AddPass<BlurPass>(BlurPass::BlurPassData{
+            .ViewName = STR("SSAO"),
+            .Source   = ResourceId(STR("SSAOOutput")),
+            .Output   = ResourceId(STR("AmbientOcclusion")) });
     }
 
     //
@@ -286,9 +291,9 @@ namespace Neon::RG
             Storage.GetResourceView(m_Data.NormalMap, &NormalMap);
             Storage.GetResourceView(m_Data.DepthMap, &DepthMap);
 
-            Descriptor.Heap->Copy(Descriptor.Offset, SrcInfo);
+            Descriptor->Copy(Descriptor.Offset, SrcInfo);
 
-            Descriptor.Heap->CreateShaderResourceView(
+            Descriptor->CreateShaderResourceView(
                 Descriptor.Offset + DataType::DescriptorsCount,
                 m_NoiseTexture.Get().get());
         }

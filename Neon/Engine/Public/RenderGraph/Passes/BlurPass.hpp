@@ -14,17 +14,40 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
+        /// <summary>
+        /// Kernel size in compute shader.
+        /// </summary>
+        static constexpr uint32_t KernelSize           = 16;
+        static constexpr uint32_t BlurGaussWeightCount = 11;
+
+        using GaussWeightsList = std::array<float, BlurGaussWeightCount>;
+
     public:
         struct BlurPassData
         {
             String ViewName;
 
             ResourceId Source;
-            ResourceId Destination;
+            ResourceId Output;
+
+            RHI::SRVDescOpt SourceDesc;
+            RHI::UAVDescOpt OutputDesc;
         };
 
         BlurPass(
             BlurPassData Data);
+
+    public:
+        /// <summary>
+        /// Set the sigma value for the gaussian blur.
+        /// </summary>
+        void SetSigma(
+            float Sigma);
+
+        /// <summary>
+        /// Get the sigma value for the gaussian blur.
+        /// </summary>
+        float GetSigma() const noexcept;
 
     protected:
         void ResolveResources(
@@ -38,6 +61,13 @@ namespace Neon::RG
         BlurPassData m_Data;
 
         Ptr<RHI::IRootSignature> m_BlurPassRootSignature;
-        Ptr<RHI::IPipelineState> m_BlurPassPipelineState;
+        Ptr<RHI::IPipelineState>
+            m_BlurPassPipelineStateH,
+            m_BlurPassPipelineStateV;
+
+        float            m_Sigma;
+        GaussWeightsList m_GaussWeights;
+
+        uint32_t m_Iterations = 1;
     };
 } // namespace Neon::RG

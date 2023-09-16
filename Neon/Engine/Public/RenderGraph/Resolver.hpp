@@ -191,6 +191,13 @@ namespace Neon::RG
             const RHI::ClearOperationOpt& ClearValue = std::nullopt);
 
         /// <summary>
+        /// Get resource desc
+        /// </summary>
+        [[nodiscard]] std::pair<const RHI::ResourceDesc*, MResourceFlags> GetResourceDescAndFlags(
+            const ResourceId& Id) const;
+
+    public:
+        /// <summary>
         /// Get swapchain's format
         /// </summary>
         [[nodiscard]] static RHI::EResourceFormat GetSwapchainFormat();

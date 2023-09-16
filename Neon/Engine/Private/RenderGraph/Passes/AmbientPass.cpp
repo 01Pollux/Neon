@@ -73,7 +73,7 @@ namespace Neon::RG
 
         [[nodiscard]] static const ResourceId AmbientOcclusion()
         {
-            return ResourceId{ STR("SSAOOutput") };
+            return ResourceId{ STR("AmbientOcclusion") };
         }
 
         [[nodiscard]] static const ResourceId GBufferAlbedo()
@@ -145,7 +145,7 @@ namespace Neon::RG
             Storage.GetResourceView(m_Data.DepthMap, &DepthMap);
             Storage.GetResourceView(m_Data.AmbientOcclusionMap, &AmbientOcclusionMap);
 
-            Descriptor.Heap->Copy(Descriptor.Offset, SrcInfo);
+            Descriptor->Copy(Descriptor.Offset, SrcInfo);
         }
 
         //

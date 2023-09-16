@@ -60,6 +60,12 @@ namespace Neon::RG
             const ResourceId& Id) const;
 
         /// <summary>
+        /// Get resource size from id
+        /// </summary>
+        [[nodiscard]] Size2I GetResourceSize(
+            const ResourceId& Id) const;
+
+        /// <summary>
         /// Get resource view from id
         /// </summary>
         const RHI::DescriptorViewDesc& GetResourceView(

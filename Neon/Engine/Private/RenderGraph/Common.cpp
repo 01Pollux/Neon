@@ -64,6 +64,11 @@ namespace Neon::RG
         return m_Desc;
     }
 
+    const MResourceFlags& ResourceHandle::GetFlags() const noexcept
+    {
+        return m_Flags;
+    }
+
     const Ptr<RHI::IGpuResource>& ResourceHandle::Get() const noexcept
     {
         return m_Resource;

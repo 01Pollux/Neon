@@ -54,9 +54,17 @@ namespace Neon::RHI
         /// </summary>
         void Append(
             const String& Name,
-            const String& Value)
+            const String& Value = STR(""))
         {
             Defines.emplace_back(Name, Value);
+        }
+
+        /// <summary>
+        /// Clear all macros
+        /// </summary>
+        void Clear()
+        {
+            Defines.clear();
         }
 
         /// <summary>

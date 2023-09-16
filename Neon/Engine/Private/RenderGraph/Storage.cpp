@@ -75,6 +75,21 @@ namespace Neon::RG
         return Iter->second;
     }
 
+    Size2I GraphStorage::GetResourceSize(
+        const ResourceId& Id) const
+    {
+        // We are using resource's desc since it is possible to change resource's dimension during graph execution
+        // But the chance will only apply when the graph rerun again
+        auto&  Resoure = GetResource(Id).Get();
+        Size2I Size{ 1, 1 };
+        if (Resoure)
+        {
+            auto& Desc = Resoure->GetDesc();
+            Size       = { Desc.Width, Desc.Height };
+        }
+        return Size;
+    }
+
     const RHI::DescriptorViewDesc& GraphStorage::GetResourceView(
         const ResourceViewId&     ViewId,
         RHI::CpuDescriptorHandle* CpuHandle) const
@@ -107,16 +122,7 @@ namespace Neon::RG
 
     Size2I GraphStorage::GetOutputImageSize() const
     {
-        // We are using resource's desc since it is possible to change resource's dimension during graph execution
-        // But the chance will only apply when the graph rerun again
-        auto&  Resoure = GetOutputImage().Get();
-        Size2I Size{ 1, 1 };
-        if (Resoure)
-        {
-            auto& Desc = Resoure->GetDesc();
-            Size       = { Desc.Width, Desc.Height };
-        }
-        return Size;
+        return GetResourceSize(ResourceResolver::GetOutputImageTag());
     }
 
     void GraphStorage::SetOutputImageSize(

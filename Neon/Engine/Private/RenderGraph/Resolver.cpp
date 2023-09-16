@@ -208,6 +208,13 @@ namespace Neon::RG
         m_Storage.ImportTexture(Id, Resource, ClearValue);
     }
 
+    std::pair<const RHI::ResourceDesc*, MResourceFlags> IRenderPass::ResourceResolver::GetResourceDescAndFlags(
+        const ResourceId& Id) const
+    {
+        auto& ResourceHandle = m_Storage.GetResource(Id);
+        return { &ResourceHandle.GetDesc(), ResourceHandle.GetFlags() };
+    }
+
     RHI::EResourceFormat ResourceResolver::GetSwapchainFormat()
     {
         return RHI::ISwapchain::Get()->GetFormat();
