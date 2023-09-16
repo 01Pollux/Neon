@@ -45,10 +45,12 @@ namespace Neon::RG
         GraphBuilder& Builder)
     {
         Builder.AddPass<SSAOPass>();
-        Builder.AddPass<BlurPass>(BlurPass::BlurPassData{
-            .ViewName = STR("SSAO"),
-            .Source   = ResourceId(STR("SSAOOutput")),
-            .Output   = ResourceId(STR("AmbientOcclusion")) });
+        BlurPass::AddPass(
+            Builder,
+            BlurPass::BlurPassData{
+                .ViewName = STR("SSAO"),
+                .Source   = ResourceId(STR("SSAOOutput")),
+                .Output   = ResourceId(STR("AmbientOcclusion")) });
     }
 
     //
