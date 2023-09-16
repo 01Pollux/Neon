@@ -3,6 +3,7 @@
 #include <GraphicsPCH.hpp>
 #include <RHI/Resource/State.hpp>
 #include <Private/RHI/Dx12/DirectXHeaders.hpp>
+#include <set>
 
 namespace Neon::RHI
 {
@@ -13,9 +14,13 @@ namespace Neon::RHI
         {
             D3D12_RESOURCE_STATES State            = D3D12_RESOURCE_STATE_COMMON;
             uint32_t              SubresourceIndex = 0;
+
+            [[nodiscard]] std::strong_ordering operator<=>(
+                const Dx12SubresourceState&) const noexcept = default;
         };
 
         using Dx12SubresourceStateList = std::vector<Dx12SubresourceState>;
+        using Dx12SubresourceStateSet  = std::set<Dx12SubresourceState>;
         using Dx12ResourceBarrierList  = std::vector<D3D12_RESOURCE_BARRIER>;
 
         using ResourceStateInfoMapType = std::unordered_map<ID3D12Resource*, Dx12SubresourceStateList>;

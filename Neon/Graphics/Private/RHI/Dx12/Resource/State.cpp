@@ -25,12 +25,12 @@ namespace Neon::RHI
         uint32_t       SubresourceIndex)
     {
         auto Dx12Resource = GetDx12Resource(Resource);
+        auto State        = CastResourceStates(NewState);
         auto Lock         = LockStates();
 
         auto& PendingStates         = m_ResoureStates.PendingStates[Dx12Resource];
         auto& CurrentResourceStates = GetCurrentStates_Internal(Dx12Resource);
 
-        auto State = CastResourceStates(NewState);
         if (SubresourceIndex == Resource_AllSubresources)
         {
             PendingStates.reserve(CurrentResourceStates.size());
@@ -201,27 +201,19 @@ namespace Neon::RHI
             }
 
             HasUAVBarrier |= (NewState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-            if (HasUAVBarrier)
-            {
-                NewStateBarriers.emplace_back(
-                    CD3DX12_RESOURCE_BARRIER::UAV(Resource));
-            }
         }
 
         // If multiple transitions were requested, but it's possible to make just one - do it
         if (StatesMatch && NewStateBarriers.size() > 1)
         {
+            NewStateBarriers.resize(1);
             NewStateBarriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-            if (HasUAVBarrier) [[unlikely]]
-            {
-                NewStateBarriers.resize(2);
-                NewStateBarriers[0].UAV.pResource = Resource;
-                NewStateBarriers[0].Type          = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            }
-            else
-            {
-                NewStateBarriers.resize(1);
-            }
+        }
+
+        if (HasUAVBarrier) [[unlikely]]
+        {
+            NewStateBarriers.emplace_back(
+                CD3DX12_RESOURCE_BARRIER::UAV(Resource));
         }
 
         return NewStateBarriers;

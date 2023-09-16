@@ -299,10 +299,10 @@ namespace Neon::RG
         m_Passes.emplace_back(std::move(Pass), std::move(RenderTargets), std::move(DepthStencil));
         m_ResourcesToCreate.merge(std::move(ResourceToCreate));
         m_ResourcesToDestroy.merge(std::move(ResourceToDestroy));
+
         for (auto& [ViewId, State] : States)
         {
-            auto& CurrentState = m_States[ViewId];
-            CurrentState |= State;
+            m_StatesToTransition[ViewId.GetResource()][ViewId.GetSubresourceIndex()] |= State;
         }
     }
 
@@ -390,13 +390,16 @@ namespace Neon::RG
         auto& Storage      = m_Context.GetStorage();
         auto  StateManager = RHI::IResourceStateManager::Get();
 
-        for (auto& [ViewId, State] : m_States)
+        for (auto& [Resource, StateMap] : m_StatesToTransition)
         {
-            auto& Handle = Storage.GetResource(ViewId.GetResource());
-            StateManager->TransitionResource(
-                Handle.Get().get(),
-                State,
-                ViewId.GetSubresourceIndex());
+            auto& Handle = Storage.GetResource(Resource);
+            for (auto& [SubresourceIndex, State] : StateMap)
+            {
+                StateManager->TransitionResource(
+                    Handle.Get().get(),
+                    State,
+                    SubresourceIndex);
+            }
         }
     }
 

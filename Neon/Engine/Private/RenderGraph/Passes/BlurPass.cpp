@@ -9,6 +9,8 @@
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
 
+#include <Input/System.hpp>
+
 namespace Neon
 {
     namespace AssetGuids
@@ -47,8 +49,8 @@ namespace Neon::RG
                 .Add32BitConstants<GaussWeightsList>("c_BlurParams", 0, 1)
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
-                        .AddUavRangeAt("c_Input", 0, 1, 1, 0)
-                        .AddSrvRangeAt("c_Output", 0, 1, 1, 1))
+                        .AddSrvRangeAt("c_Input", 0, 1, 1, 0)
+                        .AddUavRangeAt("c_Output", 0, 1, 1, 1))
                 .ComputeOnly()
                 .Build();
 
@@ -110,8 +112,7 @@ namespace Neon::RG
         const ResourceId Intermediate(STR("BlurPassIntermediate_") + m_Data.ViewName);
 
         const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
-        const ResourceViewId IntermediateOutput(Intermediate.CreateView(STR("O_") + m_Data.ViewName));
-        const ResourceViewId IntermediateInput(Intermediate.CreateView(STR("I_") + m_Data.ViewName));
+        const ResourceViewId IntermediateView(Intermediate.CreateView(m_Data.ViewName));
         const ResourceViewId OutputView(m_Data.Output.CreateView(m_Data.ViewName));
 
         //
@@ -128,9 +129,7 @@ namespace Neon::RG
             Flags);
 
         Resolver.ReadTexture(SourceView, ResourceReadAccess::NonPixelShader, m_Data.SourceDesc);
-        Resolver.WriteResource(IntermediateOutput);
-
-        Resolver.ReadTexture(IntermediateInput, ResourceReadAccess::NonPixelShader, m_Data.SourceDesc);
+        Resolver.WriteResource(IntermediateView);
         Resolver.WriteResource(OutputView, m_Data.OutputDesc);
     }
 
@@ -138,11 +137,20 @@ namespace Neon::RG
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
+        static bool Disabled = false;
+        if (Input::IsKeyPressed(Input::EKeyboardInput::K))
+        {
+            Disabled = !Disabled;
+        }
+        if (Disabled)
+        {
+            return;
+        }
+
         const ResourceId Intermediate(STR("BlurPassIntermediate_") + m_Data.ViewName);
 
         const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
-        const ResourceViewId IntermediateOutput(Intermediate.CreateView(STR("O_") + m_Data.ViewName));
-        const ResourceViewId IntermediateInput(Intermediate.CreateView(STR("I_") + m_Data.ViewName));
+        const ResourceViewId IntermediateView(Intermediate.CreateView(m_Data.ViewName));
         const ResourceViewId OutputView(m_Data.Output.CreateView(m_Data.ViewName));
 
         //
@@ -152,29 +160,29 @@ namespace Neon::RG
         auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(DescriptorCount);
 
         // Sage: Type(Index), Type(Stage)
-        // H: Input(0), Output(1)
-        // V: Input(2), Output(3)
+        // H: Input(2), Output(3)
+        // V: Input(0), Output(1)
+        // SrcInfo is offseted by 1 because the first descriptor is for input vertical
         {
             std::array SrcInfo{
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
-                RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 }
             };
-            static_assert(std::size(SrcInfo) == DescriptorCount);
 
             RHI::CpuDescriptorHandle
-                &InputH  = SrcInfo[0].Descriptor,
-                &OutputH = SrcInfo[1].Descriptor,
-                &InputV  = SrcInfo[2].Descriptor,
-                &OutputV = SrcInfo[3].Descriptor;
+                &OutputV = SrcInfo[0].Descriptor,
+                &InputH  = SrcInfo[1].Descriptor,
+                &OutputH = SrcInfo[2].Descriptor;
 
             Storage.GetResourceView(SourceView, &InputH);
-            Storage.GetResourceView(IntermediateOutput, &OutputH);
-            Storage.GetResourceView(IntermediateInput, &InputV);
+            Storage.GetResourceView(IntermediateView, &OutputH);
             Storage.GetResourceView(OutputView, &OutputV);
 
-            Descriptor->Copy(Descriptor.Offset, SrcInfo);
+            Descriptor->Copy(Descriptor.Offset + 1, SrcInfo);
+            Descriptor->CreateShaderResourceView(
+                Descriptor.Offset + 0,
+                Storage.GetResource(Intermediate).Get().get());
         }
 
         CommandList.SetRootSignature(m_BlurPassRootSignature);
@@ -185,11 +193,11 @@ namespace Neon::RG
         for (uint32_t i = 0; i < m_Iterations; i++)
         {
             CommandList.SetPipelineState(m_BlurPassPipelineStateH);
-            CommandList.SetDescriptorTable(1, Descriptor.GetGpuHandle());
+            CommandList.SetDescriptorTable(1, Descriptor.GetGpuHandle(2));
             CommandList.Dispatch(Math::DivideByMultiple(Size.x, KernelSize), Size.y);
 
             CommandList.SetPipelineState(m_BlurPassPipelineStateV);
-            CommandList.SetDescriptorTable(1, Descriptor.GetGpuHandle(2));
+            CommandList.SetDescriptorTable(1, Descriptor.GetGpuHandle());
             CommandList.Dispatch(Size.x, Math::DivideByMultiple(Size.y, KernelSize));
         }
     }

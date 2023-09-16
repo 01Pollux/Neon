@@ -211,7 +211,7 @@ namespace Neon::RG
         std::set<ResourceId> m_ResourcesToCreate;
         std::set<ResourceId> m_ResourcesToDestroy;
 
-        std::map<ResourceViewId, RHI::MResourceState> m_States;
+        std::map<ResourceId, std::map<uint32_t, RHI::MResourceState>> m_StatesToTransition;
 
         bool m_ResetBarriers : 1 = false;
         bool m_ResetCommands : 1 = false;
