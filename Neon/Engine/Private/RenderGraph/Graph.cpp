@@ -242,6 +242,13 @@ namespace Neon::RG
     {
         FlushCommandLists(m_GraphicsCommandList, GraphicsCount);
         FlushCommandLists(m_ComputeCommandList, ComputeCount);
+
+        if (ComputeCount)
+        {
+            auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
+            m_Fence->SignalGPU(Queue, m_FenceValue);
+            m_Fence->WaitGPU(Queue, m_FenceValue++);
+        }
     }
 
     void RenderGraph::CommandListContext::Reset(

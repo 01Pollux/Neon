@@ -32,7 +32,7 @@ namespace Neon::RG
         /// Kernel size in compute shader.
         /// </summary>
         static constexpr uint32_t KernelSize           = 16;
-        static constexpr uint32_t BlurGaussWeightCount = 11;
+        static constexpr uint32_t BlurGaussWeightCount = 9;
 
         using GaussWeightsList = std::array<float, BlurGaussWeightCount>;
 
@@ -144,6 +144,16 @@ namespace Neon::RG
         {
             m_GaussWeights[i] /= TotalWeight;
         }
+
+        m_GaussWeights = { 0.0002,
+                           0.0060,
+                           0.0606,
+                           0.2417,
+                           0.3829,
+                           0.2417,
+                           0.0606,
+                           0.0060,
+                           0.0002 };
     }
 
     float BlurSubPass::GetSigma() const noexcept

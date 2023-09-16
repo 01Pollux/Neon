@@ -168,8 +168,6 @@ namespace Neon::RHI
         Dx12ResourceBarrierList NewStateBarriers;
 
         bool StatesMatch   = true;
-        bool HasUAVBarrier = false;
-
         auto FirstOldState = CurrentSubresources.front().State;
         auto FirstNewState = NewStates.front().State;
 
@@ -199,8 +197,6 @@ namespace Neon::RHI
             {
                 StatesMatch = false;
             }
-
-            HasUAVBarrier |= (NewState == D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         }
 
         // If multiple transitions were requested, but it's possible to make just one - do it
@@ -208,12 +204,6 @@ namespace Neon::RHI
         {
             NewStateBarriers.resize(1);
             NewStateBarriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        }
-
-        if (HasUAVBarrier) [[unlikely]]
-        {
-            NewStateBarriers.emplace_back(
-                CD3DX12_RESOURCE_BARRIER::UAV(Resource));
         }
 
         return NewStateBarriers;
