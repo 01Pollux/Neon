@@ -4,11 +4,11 @@
 #include "../Common/Packing.hlsli"
 
 #ifndef CS_KERNEL_SIZE_X
-#define CS_KERNEL_SIZE_X 8
+#define CS_KERNEL_SIZE_X 32
 #endif
 
 #ifndef CS_KERNEL_SIZE_Y
-#define CS_KERNEL_SIZE_Y 8
+#define CS_KERNEL_SIZE_Y 32
 #endif
 
 #ifndef CS_KERNEL_SIZE_Z

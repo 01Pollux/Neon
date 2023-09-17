@@ -1,8 +1,8 @@
 {
-  "Guid": "3c5e4767-680d-43d3-bb45-08312368da19",
-  "Path": "Engine/Shaders/Lighting/Ambient.hlsl.namd",
-  "Loader": "",
-  "Dependencies": "",
-  "LoaderId": "15635213787607061289",
-  "Hash": "c926a8751bb72fe3ca9474db3eb488d9732e7769d41a3d623eafedf2d6a4108d"
+    "Guid": "3c5e4767-680d-43d3-bb45-08312368da19",
+    "Path": "Engine\/Shaders\/Lighting\/Ambient.hlsl.namd",
+    "Loader": "",
+    "Dependencies": "",
+    "LoaderId": "15635213787607061289",
+    "Hash": "8e79e67c57f39c7dd85135c601d4cb5528930be7d446f5772709a0b9c2187cbb"
 }
