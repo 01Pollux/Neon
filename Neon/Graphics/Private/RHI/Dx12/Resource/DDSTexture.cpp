@@ -613,6 +613,7 @@ namespace Neon::RHI
     TextureLoader TextureLoader::LoadDDS(
         const uint8_t*             Data,
         size_t                     DataSize,
+        const wchar_t*             Name,
         const RHI::MResourceState& InitialState)
     {
         WinAPI::ComPtr<ID3D12Resource>      Texture;
@@ -630,6 +631,6 @@ namespace Neon::RHI
             &Allocation,
             TextureDataToUpload));
 
-        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload, InitialState);
+        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload, Name, InitialState);
     }
 } // namespace Neon::RHI

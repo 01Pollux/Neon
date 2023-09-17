@@ -215,6 +215,7 @@ namespace Neon::RG
         m_NoiseTexture = RHI::SSyncTexture(
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R32G32B32A32_Float, 8, 8, 1),
             Subresource,
+            STR("SSAOPass::NoiseTexture"),
             BitMask_Or(RHI::EResourceState::NonPixelShaderResource));
     }
 

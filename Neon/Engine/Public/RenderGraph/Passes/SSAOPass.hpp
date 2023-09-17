@@ -158,7 +158,6 @@ namespace Neon::RG
 
     private:
         RHI::SSyncTexture m_NoiseTexture;
-        RHI::USyncBuffer  m_SamplesBuffer;
 
         Ptr<RHI::IRootSignature> m_SSAORootSignature;
         Ptr<RHI::IPipelineState> m_SSAOPipeline;

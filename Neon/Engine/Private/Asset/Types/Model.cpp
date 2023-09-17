@@ -247,6 +247,14 @@ namespace Neon::Asset
                                 {
                                     NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
 
+#ifndef NEON_DIST
+                                    auto MatTextureName = StringUtils::Transform<String>(StringU8View(TexturePath.data, TexturePath.length));
+                                    auto TextureName    = StringUtils::Format(STR("Assimp_Texture::{}"), std::move(MatTextureName));
+                                    auto TextureNamePtr = TextureName.c_str();
+#else
+                                    const wchar_t* TextureNamePtr = nullptr;
+#endif
+
                                     if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
                                     {
                                         std::array Subresources{
@@ -263,7 +271,8 @@ namespace Neon::Asset
                                                 AITexture->mWidth,
                                                 AITexture->mHeight,
                                                 1),
-                                            Subresources);
+                                            Subresources,
+                                            TextureNamePtr);
                                         TexturesToSet.emplace(Type, std::move(Texture));
                                     }
                                     else
@@ -279,7 +288,7 @@ namespace Neon::Asset
                                                 .Type = RHI::TextureRawImage::Format::Png
                                             };
 
-                                            TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo));
+                                            TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo, TextureNamePtr));
                                         }
                                         else
                                         {
@@ -382,12 +391,24 @@ namespace Neon::Asset
                 MeshNodes.reserve(AIScene->mNumMeshes);
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
 
+#ifndef NEON_DIST
+                auto SceneName     = StringUtils::Transform<String>(StringU8View(AIScene->mName.data, AIScene->mName.length));
+                auto VtxBufferName = StringUtils::Format(STR("Assimp_VertexBuffer::{}"), SceneName);
+                auto IdxBufferName = StringUtils::Format(STR("Assimp_IndexBuffer::{}"), SceneName);
+
+                auto VtxBufferNamePtr = VtxBufferName.c_str();
+                auto IdxBufferNamePtr = IdxBufferName.c_str();
+#else
+                const wchar_t* VtxBufferNamePtr = nullptr;
+                const wchar_t* IdxBufferNamePtr = nullptr;
+#endif
+
                 VertexBuffer = RHI::USyncBuffer(
-                    RHI::BufferDesc(sizeof(Mdl::MeshVertex) * Vertices.size()),
+                    RHI::BufferDesc(sizeof(Mdl::MeshVertex) * Vertices.size(), VtxBufferNamePtr),
                     Vertices.data());
 
                 IndexBuffer = RHI::USyncBuffer(
-                    RHI::BufferDesc(sizeof(uint32_t) * Indices.size()),
+                    RHI::BufferDesc(sizeof(uint32_t) * Indices.size(), IdxBufferNamePtr),
                     Indices.data());
             }
 

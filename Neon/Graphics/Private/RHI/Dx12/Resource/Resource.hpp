@@ -62,6 +62,7 @@ namespace Neon::RHI
 
         Dx12Buffer(
             size_t                     Size,
+            const wchar_t*             Name,
             D3D12_RESOURCE_FLAGS       Flags,
             GraphicsBufferType         Type,
             const RHI::MResourceState& InitialState);
@@ -89,6 +90,7 @@ namespace Neon::RHI
 
         Dx12UploadBuffer(
             size_t                     Size,
+            const wchar_t*             Name,
             D3D12_RESOURCE_FLAGS       Flags,
             const RHI::MResourceState& InitialState);
 
@@ -109,6 +111,7 @@ namespace Neon::RHI
 
         Dx12ReadbackBuffer(
             size_t                     Size,
+            const wchar_t*             Name,
             D3D12_RESOURCE_FLAGS       Flags,
             const RHI::MResourceState& InitialState);
 
@@ -127,6 +130,7 @@ namespace Neon::RHI
             const RHI::ResourceDesc&         Desc,
             std::span<const SubresourceDesc> Subresources,
             uint64_t*                        CopyId,
+            const wchar_t*                   Name,
             const RHI::MResourceState&       InitialState);
 
         Dx12Texture(
@@ -139,6 +143,7 @@ namespace Neon::RHI
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>    Subresources,
             uint64_t&                           CopyId,
+            const wchar_t*                      Name,
             const RHI::MResourceState&          InitialState);
 
         Vector3I GetDimensions() const override;

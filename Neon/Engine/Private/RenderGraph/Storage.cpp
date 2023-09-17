@@ -234,11 +234,7 @@ namespace Neon::RG
         Desc.SetClearValue(Colors::Magenta);
         Desc.Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
-        OutputImage.Set(Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc)));
-
-#ifndef NEON_DIST
-        RHI::RenameObject(OutputImage.Get().get(), ResourceResolver::GetOutputImageTag().GetName());
-#endif
+        OutputImage.Set(Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc, ResourceResolver::GetOutputImageTag().GetName().c_str())));
     }
 
     void GraphStorage::ReallocateResource(

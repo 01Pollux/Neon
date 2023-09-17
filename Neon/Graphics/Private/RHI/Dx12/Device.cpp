@@ -452,9 +452,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
-        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
-        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
+        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D, STR("MagentaTexture2D"), MResourceState_AllShaderResource);
+        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D, STR("MagentaTexture3D"), MResourceState_AllShaderResource);
+        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube, STR("MagentaTextureCube"), MResourceState_AllShaderResource);
 
         //
 
@@ -463,9 +463,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
-        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
-        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
+        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D, STR("WhiteTexture2D"), MResourceState_AllShaderResource);
+        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D, STR("WhiteTexture3D"), MResourceState_AllShaderResource);
+        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube, STR("WhiteTextureCube"), MResourceState_AllShaderResource);
 
         //
 
@@ -474,9 +474,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture BlackTexture2D(Desc2D, Subresource2D, MResourceState_AllShaderResource);
-        SSyncTexture BlackTexture3D(Desc3D, Subresource3D, MResourceState_AllShaderResource);
-        SSyncTexture BlackTextureCube(DescCube, SubresourceCube, MResourceState_AllShaderResource);
+        SSyncTexture BlackTexture2D(Desc2D, Subresource2D, STR("BlackTexture2D"), MResourceState_AllShaderResource);
+        SSyncTexture BlackTexture3D(Desc3D, Subresource3D, STR("BlackTexture3D"), MResourceState_AllShaderResource);
+        SSyncTexture BlackTextureCube(DescCube, SubresourceCube, STR("BlackTextureCube"), MResourceState_AllShaderResource);
 
         //
 

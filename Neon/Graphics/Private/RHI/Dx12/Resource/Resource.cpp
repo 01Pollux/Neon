@@ -86,8 +86,8 @@ namespace Neon::RHI
 
         CopyId = Dx12Swapchain::Get()->RequestCopy(
             [SubreourcesGuard = std::move(Guard),
-             TransitionState  = std::move(TransitionState)](ICommandList* CommandList,
-                                                           Dx12GpuResource*  Resource)
+             TransitionState  = std::move(TransitionState)](ICommandList*    CommandList,
+                                                           Dx12GpuResource* Resource)
             {
                 size_t TotalBytes;
                 Resource->QueryFootprint(
@@ -165,6 +165,7 @@ namespace Neon::RHI
         const RHI::MResourceState& InitialState) :
         Dx12Buffer(
             Desc.Size,
+            Desc.Name,
             CastResourceFlags(Desc.Flags),
             Type,
             Subresource ? RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest) : InitialState)
@@ -177,6 +178,7 @@ namespace Neon::RHI
 
     Dx12Buffer::Dx12Buffer(
         size_t                     Size,
+        const wchar_t*             Name,
         D3D12_RESOURCE_FLAGS       Flags,
         GraphicsBufferType         Type,
         const RHI::MResourceState& InitialState) :
@@ -213,6 +215,13 @@ namespace Neon::RHI
             nullptr,
             &m_Allocation,
             IID_PPV_ARGS(&m_Resource)));
+
+#ifndef NEON_DIST
+        if (Name)
+        {
+            m_Resource->SetName(Name);
+        }
+#endif
 
         Dx12RenderDevice::Get()->GetDevice()->GetCopyableFootprints(
             &Dx12Desc,
@@ -267,9 +276,10 @@ namespace Neon::RHI
 
     Dx12UploadBuffer::Dx12UploadBuffer(
         size_t                     Size,
+        const wchar_t*             Name,
         D3D12_RESOURCE_FLAGS       Flags,
         const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Size, Flags, GraphicsBufferType::Upload, InitialState)
+        Dx12Buffer(Size, Name, Flags, GraphicsBufferType::Upload, InitialState)
     {
     }
 
@@ -303,9 +313,10 @@ namespace Neon::RHI
 
     Dx12ReadbackBuffer::Dx12ReadbackBuffer(
         size_t                     Size,
+        const wchar_t*             Name,
         D3D12_RESOURCE_FLAGS       Flags,
         const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Size, Flags, GraphicsBufferType::Readback, InitialState)
+        Dx12Buffer(Size, Name, Flags, GraphicsBufferType::Readback, InitialState)
     {
     }
 
@@ -325,23 +336,26 @@ namespace Neon::RHI
 
     ITexture* ITexture::Create(
         const ResourceDesc&        Desc,
+        const wchar_t*             Name,
         const RHI::MResourceState& InitialState)
     {
-        return NEON_NEW Dx12Texture(Desc, {}, nullptr, InitialState);
+        return NEON_NEW Dx12Texture(Desc, {}, nullptr, Name, InitialState);
     }
 
     ITexture* ITexture::Create(
         const ResourceDesc&              Desc,
         std::span<const SubresourceDesc> Subresources,
         uint64_t&                        CopyId,
+        const wchar_t*                   Name,
         const RHI::MResourceState&       InitialState)
     {
-        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyId, InitialState);
+        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyId, Name, InitialState);
     }
 
     ITexture* ITexture::Create(
         const TextureRawImage&     ImageData,
         uint64_t&                  CopyId,
+        const wchar_t*             Name,
         const RHI::MResourceState& InitialState)
     {
         if (!ImageData.Data)
@@ -375,7 +389,7 @@ namespace Neon::RHI
             std::unreachable();
         }
 
-        auto Image = LoadFunc(ImageData.Data, ImageData.Size, InitialState);
+        auto Image = LoadFunc(ImageData.Data, ImageData.Size, Name, InitialState);
         CopyId     = Image.GetUploadId();
         return Image.Release();
     }
@@ -384,6 +398,7 @@ namespace Neon::RHI
         const RHI::ResourceDesc&         Desc,
         std::span<const SubresourceDesc> Subresources,
         uint64_t*                        CopyId,
+        const wchar_t*                   Name,
         const RHI::MResourceState&       InitialState)
     {
         D3D12_RESOURCE_DESC Dx12Desc{
@@ -469,6 +484,13 @@ namespace Neon::RHI
             &m_Allocation,
             IID_PPV_ARGS(&m_Resource)));
 
+#ifndef NEON_DIST
+        if (Name)
+        {
+            m_Resource->SetName(Name);
+        }
+#endif
+
         InitializeDesc();
 
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), Dx12InitialState);
@@ -498,9 +520,16 @@ namespace Neon::RHI
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>    Subresources,
         uint64_t&                           CopyId,
+        const wchar_t*                      Name,
         const RHI::MResourceState&          InitialState) :
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
     {
+#ifndef NEON_DIST
+        if (Name)
+        {
+            m_Resource->SetName(Name);
+        }
+#endif
         CopyFrom(0, Subresources, CopyId, InitialState);
     }
 

@@ -301,7 +301,8 @@ namespace Neon::RHI
 
     struct BufferDesc
     {
-        size_t         Size;
+        size_t         Size = 0;
+        const wchar_t* Name = nullptr;
         MResourceFlags Flags;
     };
 
@@ -478,6 +479,7 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static ITexture* Create(
             const ResourceDesc&        Desc,
+            const wchar_t*             Name         = nullptr,
             const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
@@ -487,6 +489,7 @@ namespace Neon::RHI
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
             uint64_t&                        CopyId,
+            const wchar_t*                   Name         = nullptr,
             const RHI::MResourceState&       InitialState = DefaultResourcestate);
 
         /// <summary>
@@ -495,6 +498,7 @@ namespace Neon::RHI
         [[nodiscard]] static ITexture* Create(
             const TextureRawImage&     ImageData,
             uint64_t&                  CopyId,
+            const wchar_t*             Name         = nullptr,
             const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
@@ -714,35 +718,41 @@ namespace Neon::RHI
 
         SyncTextureT(
             const TextureRawImage& ImageData,
+            const wchar_t*         Name         = nullptr,
             RHI::MResourceState    InitialState = RHI::MResourceState_Common)
         {
-            uint64_t CopyId;
+            uint64_t CopyId = 0;
             this->m_Resource.reset(ITexture::Create(
                 ImageData,
                 CopyId,
+                Name,
                 std::move(InitialState)));
             this->m_CopyId = CopyId;
         }
 
         SyncTextureT(
             const ResourceDesc& Desc,
+            const wchar_t*      Name         = nullptr,
             RHI::MResourceState InitialState = RHI::MResourceState_Common)
         {
             this->m_Resource.reset(ITexture::Create(
                 Desc,
+                Name,
                 std::move(InitialState)));
         }
 
         SyncTextureT(
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
+            const wchar_t*                   Name         = nullptr,
             RHI::MResourceState              InitialState = RHI::MResourceState_Common)
         {
-            uint64_t CopyId;
+            uint64_t CopyId = 0;
             this->m_Resource.reset(ITexture::Create(
                 Desc,
                 Subresources,
                 CopyId,
+                Name,
                 std::move(InitialState)));
             this->m_CopyId = CopyId;
         }

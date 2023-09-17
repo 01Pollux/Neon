@@ -145,15 +145,15 @@ namespace Neon::RG
             m_GaussWeights[i] /= TotalWeight;
         }
 
-        m_GaussWeights = { 0.0002,
-                           0.0060,
-                           0.0606,
-                           0.2417,
-                           0.3829,
-                           0.2417,
-                           0.0606,
-                           0.0060,
-                           0.0002 };
+        m_GaussWeights = { 0.0002f,
+                           0.0060f,
+                           0.0606f,
+                           0.2417f,
+                           0.3829f,
+                           0.2417f,
+                           0.0606f,
+                           0.0060f,
+                           0.0002f };
     }
 
     float BlurSubPass::GetSigma() const noexcept
@@ -276,6 +276,6 @@ namespace Neon::RG
         BlurPassData  Data)
     {
         Builder.AddPass<BlurSubPass>(Data, true);
-        Builder.AddPass<BlurSubPass>(std::move(Data), false);
+        Builder.AddPass<BlurSubPass>(Data, false);
     }
 } // namespace Neon::RG
