@@ -41,12 +41,11 @@ namespace Neon::RG
         RegenerateSamples(SampleCount);
     }
 
-    void RG::SSAOPass::AddPass(
+    void SSAOPass::AddPass(
         GraphBuilder& Builder)
     {
         Builder.AddPass<SSAOPass>();
-        BlurPass::AddPass(
-            Builder,
+        Builder.AddPass<BlurPass>(
             BlurPass::BlurPassData{
                 .ViewName = STR("SSAO"),
                 .Source   = ResourceId(STR("SSAOOutput")),

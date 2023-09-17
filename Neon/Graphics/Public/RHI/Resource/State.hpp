@@ -49,8 +49,7 @@ namespace Neon::RHI
         /// <summary>
         /// Flush all the pending barriers into newly created command list.
         /// </summary>
-        virtual CommandContext FlushBarriers(
-            CommandQueueType Type = CommandQueueType::Graphics) = 0;
+        virtual CommandContext FlushBarriers() = 0;
 
         /// <summary>
         /// Flush all the pending barriers into the given command list.

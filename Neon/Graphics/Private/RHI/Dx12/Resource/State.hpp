@@ -47,8 +47,7 @@ namespace Neon::RHI
             IGpuResource*            Resource,
             const SubresourceStates& NewStates) override;
 
-        CommandContext FlushBarriers(
-            CommandQueueType Type) override;
+        CommandContext FlushBarriers() override;
 
         bool FlushBarriers(
             ICommandList* CommandList) override;

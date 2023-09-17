@@ -260,6 +260,15 @@ namespace Neon
             return (Flags & ToUllong()) == Flags;
         }
 
+        template<typename... _ETy>
+        [[nodiscard]] bool TestAll(
+            _ETy... Vals) const
+        {
+            using FirstType = std::tuple_element_t<0, std::tuple<_ETy...>>;
+            uint64_t Mask   = ((1Ui64 << static_cast<uint64_t>(Vals)) | ...);
+            return TestAll(Bitmask<FirstType>(Mask));
+        }
+
         [[nodiscard]] bool TestAny(
             const Bitmask& Other) const
         {

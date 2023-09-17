@@ -33,10 +33,16 @@ struct BlurParams
 		w8;
 };
 
-ConstantBuffer<BlurParams> c_BlurParams : register(b0, space1);
+struct OutputIndexOffset
+{
+	uint Offset;
+};
 
-Texture2D<float4> c_Input : register(t0, space1);
-RWTexture2D<float4> c_Output : register(u0, space1);
+ConstantBuffer<OutputIndexOffset> c_OutputIndexOffset : register(b0, space1);
+
+ConstantBuffer<BlurParams> c_BlurParams : register(b1, space1);
+
+RWTexture2D<float4> c_InputOutput[3] : register(u0, space1);
 
 //
 
@@ -56,6 +62,9 @@ void CS_Main(
 	int3 GTID : SV_GroupThreadID,
 	int3 DTID : SV_DispatchThreadID)
 {
+	RWTexture2D<float4> Input = c_InputOutput[c_OutputIndexOffset.Offset + 0];
+	RWTexture2D<float4> Output = c_InputOutput[c_OutputIndexOffset.Offset + 1];
+	
 	const float Weights[] =
 	{
 		c_BlurParams.w0,
@@ -70,7 +79,7 @@ void CS_Main(
 	};
 	
 	int2 DummySize;
-	c_Input.GetDimensions(DummySize.x, DummySize.y);
+	Input.GetDimensions(DummySize.x, DummySize.y);
 	
 #ifdef BLUR_H	
 	int Size = DummySize.x;
@@ -86,22 +95,22 @@ void CS_Main(
 	{
 		int Index = max(DispatchIndex - c_BlurRadius, 0);
 #ifdef BLUR_H
-		s_TempWeigths[GroupIndex.x] = c_Input[int2(Index, DTID.y)];
+		s_TempWeigths[GroupIndex.x] = Input[int2(Index, DTID.y)];
 #else
-		s_TempWeigths[GroupIndex.x] = c_Input[int2(DTID.x, Index)];
+		s_TempWeigths[GroupIndex.x] = Input[int2(DTID.x, Index)];
 #endif
 	}
 	else if (GroupIndex >= CS_KERNEL_SIZE - c_BlurRadius)
 	{
 		int Index = min(DispatchIndex + c_BlurRadius, Size - 1);
 #ifdef BLUR_H
-		s_TempWeigths[GroupIndex + 2 * c_BlurRadius] = c_Input[int2(Index, DTID.y)];
+		s_TempWeigths[GroupIndex + 2 * c_BlurRadius] = Input[int2(Index, DTID.y)];
 #else
-		s_TempWeigths[GroupIndex + 2 * c_BlurRadius] = c_Input[int2(DTID.x, Index)];
+		s_TempWeigths[GroupIndex + 2 * c_BlurRadius] = Input[int2(DTID.x, Index)];
 #endif
 	}
 
-	s_TempWeigths[GroupIndex + c_BlurRadius] = c_Input[min(DTID.xy, DummySize - 1)];
+	s_TempWeigths[GroupIndex + c_BlurRadius] = Input[min(DTID.xy, DummySize - 1)];
 
 	GroupMemoryBarrierWithGroupSync();
 	
@@ -111,5 +120,5 @@ void CS_Main(
 		Blurred += s_TempWeigths[GroupIndex + i] * Weights[i];
 	}
 	
-	c_Output[DTID.xy] = Blurred;
+	Output[DTID.xy] = Blurred;
 }

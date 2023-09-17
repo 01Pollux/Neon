@@ -47,6 +47,9 @@ namespace Neon::RHI
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) override;
 
+        void InsertUAVBarrier(
+            std::span<RHI::IGpuResource*> Resources) override;
+
     public:
         void SetRootSignature(
             bool                       IsDirect,

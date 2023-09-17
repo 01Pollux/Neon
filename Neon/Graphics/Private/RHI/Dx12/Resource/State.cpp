@@ -68,8 +68,7 @@ namespace Neon::RHI
             });
     }
 
-    CommandContext Dx12ResourceStateManager::FlushBarriers(
-        CommandQueueType Type)
+    CommandContext Dx12ResourceStateManager::FlushBarriers()
     {
         if (auto Barriers = Flush(); !Barriers.empty())
         {
@@ -167,7 +166,9 @@ namespace Neon::RHI
 
         Dx12ResourceBarrierList NewStateBarriers;
 
-        bool StatesMatch   = true;
+        bool StatesMatch     = true;
+        bool NeedsUAVBarrier = false;
+
         auto FirstOldState = CurrentSubresources.front().State;
         auto FirstNewState = NewStates.front().State;
 
@@ -197,6 +198,11 @@ namespace Neon::RHI
             {
                 StatesMatch = false;
             }
+
+            if (OldState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+            {
+                NeedsUAVBarrier = true;
+            }
         }
 
         // If multiple transitions were requested, but it's possible to make just one - do it
@@ -204,6 +210,10 @@ namespace Neon::RHI
         {
             NewStateBarriers.resize(1);
             NewStateBarriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        }
+        if (NeedsUAVBarrier)
+        {
+            NewStateBarriers.emplace_back(CD3DX12_RESOURCE_BARRIER::UAV(Resource));
         }
 
         return NewStateBarriers;
@@ -275,21 +285,27 @@ namespace Neon::RHI
 
     //
 
+    static constexpr D3D12_RESOURCE_STATES D3D12_READ_ONLY_STATES =
+        D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER |
+        D3D12_RESOURCE_STATE_INDEX_BUFFER |
+        D3D12_RESOURCE_STATE_DEPTH_READ |
+        D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE |
+        D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT |
+        D3D12_RESOURCE_STATE_COPY_SOURCE;
+
+    static constexpr D3D12_RESOURCE_STATES D3D12_WRITE_ONLY_STATES =
+        D3D12_RESOURCE_STATE_RENDER_TARGET |
+        D3D12_RESOURCE_STATE_STREAM_OUT |
+        D3D12_RESOURCE_STATE_COPY_DEST;
+
     bool Dx12ResourceStateManager::IsNewStateRedundant(
         D3D12_RESOURCE_STATES CurrentState,
         D3D12_RESOURCE_STATES NewState)
     {
-        auto HasReadState = [](D3D12_RESOURCE_STATES State)
-        {
-            return State & (D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE |
-                            D3D12_RESOURCE_STATE_GENERIC_READ |
-                            D3D12_RESOURCE_STATE_PREDICATION |
-                            D3D12_RESOURCE_STATE_DEPTH_READ);
-        };
         // Transition is redundant if either states completely match
         // or current state is a read state and new state is a partial or complete subset of the current
         // (which implies that it is also a read state)
         return (CurrentState == NewState) ||
-               (HasReadState(CurrentState) && ((CurrentState & NewState) == NewState));
+               ((CurrentState & D3D12_READ_ONLY_STATES) && ((CurrentState & NewState) == NewState));
     }
 } // namespace Neon::RHI

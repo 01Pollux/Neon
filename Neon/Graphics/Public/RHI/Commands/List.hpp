@@ -138,6 +138,21 @@ namespace Neon::RHI
             const TextureCopyLocation& Src,
             const CopyBox*             SrcBox = nullptr) = 0;
 
+        /// <summary>
+        /// Insert an UAV barrier for specificed resources
+        /// </summary>
+        virtual void InsertUAVBarrier(
+            std::span<RHI::IGpuResource*> Resources) = 0;
+
+        /// <summary>
+        /// Insert an UAV barrier for specificed resource
+        /// </summary>
+        void InsertUAVBarrier(
+            RHI::IGpuResource* Resource)
+        {
+            InsertUAVBarrier({ &Resource, 1 });
+        }
+
     public:
         /// <summary>
         /// Set root signature
@@ -447,6 +462,24 @@ namespace Neon::RHI
                 DstPosition,
                 Src,
                 SrcBox);
+        }
+
+        /// <summary>
+        /// Insert an UAV barrier for specificed resources
+        /// </summary>
+        void InsertUAVBarrier(
+            std::span<RHI::IGpuResource*> Resources)
+        {
+            m_CmdList->InsertUAVBarrier(Resources);
+        }
+
+        /// <summary>
+        /// Insert an UAV barrier for specificed resource
+        /// </summary>
+        void InsertUAVBarrier(
+            RHI::IGpuResource* Resources)
+        {
+            m_CmdList->InsertUAVBarrier(Resources);
         }
 
     public:
@@ -790,6 +823,24 @@ namespace Neon::RHI
                 DstPosition,
                 Src,
                 SrcBox);
+        }
+
+        /// <summary>
+        /// Insert an UAV barrier for specificed resources
+        /// </summary>
+        void InsertUAVBarrier(
+            std::span<RHI::IGpuResource*> Resources)
+        {
+            m_CmdList->InsertUAVBarrier(Resources);
+        }
+
+        /// <summary>
+        /// Insert an UAV barrier for specificed resource
+        /// </summary>
+        void InsertUAVBarrier(
+            RHI::IGpuResource* Resources)
+        {
+            m_CmdList->InsertUAVBarrier(Resources);
         }
 
     public:

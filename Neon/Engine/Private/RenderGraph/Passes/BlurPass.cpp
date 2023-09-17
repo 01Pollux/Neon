@@ -9,8 +9,6 @@
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
 
-#include <Input/System.hpp>
-
 namespace Neon
 {
     namespace AssetGuids
@@ -24,66 +22,20 @@ namespace Neon
 
 namespace Neon::RG
 {
-    class BlurSubPass : public ComputeRenderPass<BlurSubPass>
+    enum class BlurPassRS : uint8_t
     {
-        friend class RenderPass;
-
-        /// <summary>
-        /// Kernel size in compute shader.
-        /// </summary>
-        static constexpr uint32_t KernelSize           = 16;
-        static constexpr uint32_t BlurGaussWeightCount = 9;
-
-        using GaussWeightsList = std::array<float, BlurGaussWeightCount>;
-
-    public:
-        BlurSubPass(
-            BlurPass::BlurPassData Data,
-            bool                   IsHorizontal);
-
-    public:
-        /// <summary>
-        /// Set the sigma value for the gaussian blur.
-        /// </summary>
-        void SetSigma(
-            float Sigma);
-
-        /// <summary>
-        /// Get the sigma value for the gaussian blur.
-        /// </summary>
-        float GetSigma() const noexcept;
-
-    protected:
-        void ResolveResources(
-            ResourceResolver& Resolver) override;
-
-        void DispatchTyped(
-            const GraphStorage&     Storage,
-            RHI::ComputeCommandList CommandList);
-
-    private:
-        BlurPass::BlurPassData m_Data;
-
-        Ptr<RHI::IRootSignature> m_BlurSubPassRootSignature;
-        Ptr<RHI::IPipelineState> m_BlurSubPassPipelineState;
-
-        float            m_Sigma;
-        GaussWeightsList m_GaussWeights;
-
-        uint32_t m_Iterations = 1;
-        bool     m_IsHorizontal;
+        OutputIndexOffset,
+        BlurParams,
+        InputOutput_TextureMap
     };
 
-    //
-
-    BlurSubPass::BlurSubPass(
-        BlurPass::BlurPassData Data,
-        bool                   IsHorizontal) :
-        RenderPass("BlurSubPass"),
-        m_Data(std::move(Data)),
-        m_IsHorizontal(IsHorizontal)
+    BlurPass::BlurPass(
+        BlurPassData Data) :
+        RenderPass("BlurPass"),
+        m_Data(std::move(Data))
     {
         SetSigma(2.5f);
+        m_Iterations = 3;
 
         // TODO: Load from asset rather than hardcoding
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
@@ -100,20 +52,24 @@ namespace Neon::RG
 
         m_BlurSubPassRootSignature =
             RHI::RootSignatureBuilder()
-                .Add32BitConstants<GaussWeightsList>("c_BlurParams", 0, 1)
+                .Add32BitConstants<uint32_t>("c_OutputIndexOffset", 0, 1)
+                .Add32BitConstants<GaussWeightsList>("c_BlurParams", 1, 1)
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
-                        .AddSrvRange("c_Input", 0, 1, 1)
-                        .AddUavRange("c_Output", 0, 1, 1))
+                        .AddUavRange("c_InputOutput", 0, 1, 3))
                 .ComputeOnly()
                 .Build();
 
-        if (m_IsHorizontal)
-        {
-            ShaderDesc.Macros.Append(STR("BLUR_H"));
-        }
+        m_BlurSubPassPipelineStateV =
+            RHI::PipelineStateBuilderC{
+                .RootSignature = m_BlurSubPassRootSignature,
+                .ComputeShader = Shader->LoadShader(ShaderDesc)
+            }
+                .Build();
 
-        m_BlurSubPassPipelineState =
+        ShaderDesc.Macros.Append(STR("BLUR_H"));
+
+        m_BlurSubPassPipelineStateH =
             RHI::PipelineStateBuilderC{
                 .RootSignature = m_BlurSubPassRootSignature,
                 .ComputeShader = Shader->LoadShader(ShaderDesc)
@@ -123,7 +79,7 @@ namespace Neon::RG
 
     //
 
-    void BlurSubPass::SetSigma(
+    void BlurPass::SetSigma(
         float Sigma)
     {
         m_Sigma = Sigma;
@@ -156,126 +112,96 @@ namespace Neon::RG
                            0.0002f };
     }
 
-    float BlurSubPass::GetSigma() const noexcept
+    float BlurPass::GetSigma() const noexcept
     {
         return m_Sigma;
     }
 
     //
 
-    void BlurSubPass::ResolveResources(
+    void BlurPass::ResolveResources(
         ResourceResolver& Resolver)
     {
         const ResourceId Intermediate(STR("BlurSubPassIntermediate_") + m_Data.ViewName);
 
+        const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
+        const ResourceViewId IntermediateOutputView(Intermediate.CreateView(m_Data.ViewName));
+        const ResourceViewId OutputView(m_Data.Output.CreateView(m_Data.ViewName));
+
         auto [Desc, Flags] = Resolver.GetResourceDescAndFlags(m_Data.Source);
-        if (m_IsHorizontal)
-        {
-            const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
-            const ResourceViewId IntermediateView(Intermediate.CreateView(STR("O_") + m_Data.ViewName));
 
-            Resolver.CreateTexture(
-                Intermediate,
-                *Desc,
-                Flags);
+        Resolver.CreateTexture(
+            Intermediate,
+            *Desc,
+            Flags);
 
-            Resolver.ReadTexture(SourceView, ResourceReadAccess::NonPixelShader, m_Data.SourceDesc);
-            Resolver.WriteResource(IntermediateView);
-        }
-        else
-        {
-            const ResourceViewId IntermediateView(Intermediate.CreateView(m_Data.ViewName));
-            const ResourceViewId OutputView(m_Data.Output.CreateView(STR("I_") + m_Data.ViewName));
+        Resolver.CreateTexture(
+            m_Data.Output,
+            *Desc,
+            Flags);
 
-            Resolver.CreateTexture(
-                m_Data.Output,
-                *Desc,
-                Flags);
-
-            Resolver.ReadTexture(IntermediateView, ResourceReadAccess::NonPixelShader, m_Data.SourceDesc);
-            Resolver.WriteResource(OutputView, m_Data.OutputDesc);
-        }
+        Resolver.ReadResourceEmpty(m_Data.Source);
+        Resolver.WriteResource(SourceView, m_Data.OutputDesc);
+        Resolver.WriteResource(IntermediateOutputView, m_Data.OutputDesc);
+        Resolver.WriteResource(OutputView, m_Data.OutputDesc);
     }
 
-    void BlurSubPass::DispatchTyped(
+    void BlurPass::DispatchTyped(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        static bool Disabled = false;
-        if (Input::IsKeyPressed(Input::EKeyboardInput::K))
-        {
-            Disabled = !Disabled;
-        }
-        if (Disabled)
-        {
-            return;
-        }
-
         const ResourceId Intermediate(STR("BlurSubPassIntermediate_") + m_Data.ViewName);
 
-        //
-        // We will allocate 4 descriptors, one for input and one for output for each stage
-        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(2);
+        const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
+        const ResourceViewId IntermediateOutputView(Intermediate.CreateView(m_Data.ViewName));
+        const ResourceViewId OutputView(m_Data.Output.CreateView(m_Data.ViewName));
 
+        //
+
+        // We will allocate 4 descriptors, one for input and one for output for each stage
+        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(3);
+
+        auto IntermediateResource = Storage.GetResource(Intermediate).Get().get();
+
+        // Stage: Input(Index), Output(Index)
+        // H: Input(0), Output(1)
+        // V: Input(1), Output(2)
         {
             std::array SrcInfo{
+                RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 }
             };
 
             RHI::CpuDescriptorHandle
-                &Input  = SrcInfo[0].Descriptor,
-                &Output = SrcInfo[1].Descriptor;
+                &InputH  = SrcInfo[0].Descriptor,
+                &OutputH = SrcInfo[1].Descriptor,
+                &OutputV = SrcInfo[2].Descriptor;
 
-            if (m_IsHorizontal)
-            {
-                const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
-                const ResourceViewId IntermediateView(Intermediate.CreateView(STR("O_") + m_Data.ViewName));
-
-                Storage.GetResourceView(SourceView, &Input);
-                Storage.GetResourceView(IntermediateView, &Output);
-            }
-            else
-            {
-                const ResourceViewId IntermediateView(Intermediate.CreateView(m_Data.ViewName));
-                const ResourceViewId OutputView(m_Data.Output.CreateView(STR("I_") + m_Data.ViewName));
-
-                Storage.GetResourceView(IntermediateView, &Input);
-                Storage.GetResourceView(OutputView, &Output);
-            }
+            Storage.GetResourceView(SourceView, &InputH);
+            Storage.GetResourceView(IntermediateOutputView, &OutputH);
+            Storage.GetResourceView(OutputView, &OutputV);
 
             Descriptor->Copy(Descriptor.Offset, SrcInfo);
         }
 
         CommandList.SetRootSignature(m_BlurSubPassRootSignature);
-        CommandList.SetConstants(0, m_GaussWeights);
+        CommandList.SetConstants(uint32_t(BlurPassRS::BlurParams), m_GaussWeights);
+        CommandList.SetDescriptorTable(uint32_t(BlurPassRS::InputOutput_TextureMap), Descriptor.GetGpuHandle());
 
         auto Size = Storage.GetResourceSize(m_Data.Source);
 
         for (uint32_t i = 0; i < m_Iterations; i++)
         {
-            CommandList.SetPipelineState(m_BlurSubPassPipelineState);
-            CommandList.SetDescriptorTable(1, Descriptor.GetGpuHandle());
+            CommandList.SetPipelineState(m_BlurSubPassPipelineStateH);
+            CommandList.SetConstants(uint32_t(BlurPassRS::OutputIndexOffset), 0);
+            CommandList.Dispatch(Math::DivideByMultiple(Size.x, KernelSize), Size.y);
 
-            if (m_IsHorizontal)
-            {
-                CommandList.Dispatch(Math::DivideByMultiple(Size.x, KernelSize), Size.y);
-            }
-            else
-            {
-                CommandList.Dispatch(Size.x, Math::DivideByMultiple(Size.y, KernelSize));
-            }
+            CommandList.InsertUAVBarrier(IntermediateResource);
+
+            CommandList.SetPipelineState(m_BlurSubPassPipelineStateV);
+            CommandList.SetConstants(uint32_t(BlurPassRS::OutputIndexOffset), 1);
+            CommandList.Dispatch(Size.x, Math::DivideByMultiple(Size.y, KernelSize));
         }
-    }
-} // namespace Neon::RG
-
-namespace Neon::RG
-{
-    void BlurPass::AddPass(
-        GraphBuilder& Builder,
-        BlurPassData  Data)
-    {
-        Builder.AddPass<BlurSubPass>(Data, true);
-        Builder.AddPass<BlurSubPass>(Data, false);
     }
 } // namespace Neon::RG

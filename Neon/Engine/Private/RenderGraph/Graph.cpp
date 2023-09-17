@@ -309,7 +309,8 @@ namespace Neon::RG
 
         for (auto& [ViewId, State] : States)
         {
-            m_StatesToTransition[ViewId.GetResource()][ViewId.GetSubresourceIndex()] |= State;
+            auto& States = m_StatesToTransition[ViewId.GetResource()][ViewId.GetSubresourceIndex()];
+            States |= State;
         }
     }
 

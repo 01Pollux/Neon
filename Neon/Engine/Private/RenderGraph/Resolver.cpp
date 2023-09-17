@@ -234,6 +234,7 @@ namespace Neon::RG
         auto& ResourceDesc   = ResourceHandle.GetDesc();
 
         ResourceDesc.Flags |= Flags;
-        m_ResourceStates[ViewId] |= State;
+        auto& States = m_ResourceStates[ViewId];
+        States |= State;
     }
 } // namespace Neon::RG

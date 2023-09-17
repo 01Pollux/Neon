@@ -183,6 +183,18 @@ namespace Neon::RHI
             SrcBox ? &Box : nullptr);
     }
 
+    void Dx12CommandList::InsertUAVBarrier(
+        std::span<RHI::IGpuResource*> Resources)
+    {
+        std::vector<CD3DX12_RESOURCE_BARRIER> Barriers;
+        Barriers.reserve(Resources.size());
+        for (auto Resource : Resources)
+        {
+            Barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::UAV(dynamic_cast<Dx12GpuResource*>(Resource)->GetResource()));
+        }
+        m_CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
+    }
+
     //
 
     void Dx12CommandList::SetRootSignature(
