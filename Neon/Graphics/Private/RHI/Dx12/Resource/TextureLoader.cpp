@@ -9,12 +9,8 @@ namespace Neon::RHI
         return m_Texture.release();
     }
 
-    uint64_t TextureLoader::GetUploadId() const noexcept
-    {
-        return m_UploadId;
-    }
-
     TextureLoader::TextureLoader(
+        std::future<void>&                  CopyTask,
         WinAPI::ComPtr<ID3D12Resource>      Texture,
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>    Subresources,
@@ -24,7 +20,7 @@ namespace Neon::RHI
             std::move(Texture),
             std::move(Allocation),
             Subresources,
-            m_UploadId,
+            CopyTask,
             Name,
             InitialState))
     {

@@ -614,6 +614,7 @@ namespace Neon::RHI
         const uint8_t*             Data,
         size_t                     DataSize,
         const wchar_t*             Name,
+        std::future<void>&         CopyTask,
         const RHI::MResourceState& InitialState)
     {
         WinAPI::ComPtr<ID3D12Resource>      Texture;
@@ -631,6 +632,6 @@ namespace Neon::RHI
             &Allocation,
             TextureDataToUpload));
 
-        return TextureLoader(Texture.Get(), Allocation.Get(), TextureDataToUpload, Name, InitialState);
+        return TextureLoader(CopyTask, Texture.Get(), Allocation.Get(), TextureDataToUpload, Name, InitialState);
     }
 } // namespace Neon::RHI

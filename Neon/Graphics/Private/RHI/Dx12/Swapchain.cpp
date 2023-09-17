@@ -22,15 +22,6 @@ namespace Neon::RHI
         return IRenderDevice::Get()->GetSwapchain();
     }
 
-    void ISwapchain::WaitForCopy(
-        uint64_t FenceValue)
-    {
-        auto DirectQueue = GetQueue(true);
-        auto CopyFence   = GetQueueFence(false);
-
-        CopyFence->WaitGPU(DirectQueue, FenceValue);
-    }
-
     //
 
     void Dx12Swapchain::PostInitialize(

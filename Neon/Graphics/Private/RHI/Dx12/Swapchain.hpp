@@ -114,8 +114,9 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        uint64_t EnqueueRequestCopy(
-            std::function<void(ICommandList*)> Task) override;
+        std::future<void> EnqueueRequestCopy(
+            std::move_only_function<void(ICommandList*)> CopyTask,
+            std::move_only_function<void()>              PostCopyTask) override;
 
     public:
         /// <summary>

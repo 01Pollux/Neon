@@ -16,6 +16,7 @@ namespace Neon::RHI
             const uint8_t*             Data,
             size_t                     DataSize,
             const wchar_t*             Name,
+            std::future<void>&         CopyTask,
             const RHI::MResourceState& InitialState);
 
         /// <summary>
@@ -25,6 +26,7 @@ namespace Neon::RHI
             const uint8_t*             Data,
             size_t                     DataSize,
             const wchar_t*             Name,
+            std::future<void>&         CopyTask,
             const RHI::MResourceState& InitialState);
 
         /// <summary>
@@ -32,13 +34,9 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] Dx12Texture* Release() noexcept;
 
-        /// <summary>
-        /// Get upload id for texture.
-        /// </summary>
-        [[nodiscard]] uint64_t GetUploadId() const noexcept;
-
     private:
         TextureLoader(
+            std::future<void>&                  CopyTask,
             WinAPI::ComPtr<ID3D12Resource>      Texture,
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>    Subresources,
@@ -46,7 +44,6 @@ namespace Neon::RHI
             const RHI::MResourceState&          InitialState);
 
     private:
-        uint64_t          m_UploadId;
         UPtr<Dx12Texture> m_Texture;
     };
 } // namespace Neon::RHI

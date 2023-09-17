@@ -1,8 +1,10 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/FrameManager.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Swapchain.hpp>
 
 #include <Log/Logger.hpp>
+#include <chrono>
 
 namespace Neon::RHI
 {
@@ -22,12 +24,48 @@ namespace Neon::RHI
             IID_PPV_ARGS(&CommandList)));
 
         ThrowIfFailed(CommandList->Close());
+
+        RenameObject(CommandAllocator.Get(), STR("Main Copy Command Allocator"));
+        RenameObject(CommandList.Get(), STR("Main Copy Command List"));
     }
+
+    template<typename _Ty, typename... _Args>
+    void ProcessTasks(_Ty& TasksQueue, _Args&&... Args)
+    {
+#ifndef NEON_DIST
+        for (size_t i = 0; i < CopyContextManager::CommandsToHandleCount && !TasksQueue.empty(); i++)
+        {
+            auto [Task, Promise] = std::move(TasksQueue.back());
+            TasksQueue.pop_back();
+            try
+            {
+                Task(std::forward<_Args>(Args)...);
+                Promise.set_value();
+            }
+            catch (const std::exception& Exception)
+            {
+                NEON_FATAL("Exception in copy context thread: {}", Exception.what());
+            }
+        }
+
+#else
+        for (size_t i = 0; i < CopyContextManager::CommandsToHandleCount && !m_Queue.empty(); i++)
+        {
+            auto [Task, Promise] = std::move(m_CopyTasks.front());
+            m_CopyTasks.pop();
+
+            Task(std::forward<_Args>(Args)...);
+            Promise.set_value();
+        }
+#endif
+    };
 
     CopyContextManager::CopyContextManager() :
         m_CopyQueue(CommandQueueType::Copy),
         m_CopyFence(0)
     {
+        RenameObject(m_CopyQueue.Get(), STR("Main Copy Command Queue'"));
+
         for (size_t i = 0; i < m_Threads.size(); i++)
         {
             m_Threads[i] = std::jthread(
@@ -44,7 +82,7 @@ namespace Neon::RHI
 
                         std::unique_lock Lock(m_QueueMutex);
                         if (!m_TaskWaiter.wait(Lock, Token, [this]
-                                               { return !m_Queue.empty(); }))
+                                               { return !m_CopyTasks.empty(); }))
                         {
                             break;
                         }
@@ -52,55 +90,42 @@ namespace Neon::RHI
                         ThrowIfFailed(Context.CommandAllocator->Reset());
                         ThrowIfFailed(Context.CommandList->Reset(Context.CommandAllocator.Get(), nullptr));
 
-#ifndef NEON_DIST
-                        try
-                        {
-                            for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
-                            {
-                                auto& [Task, Promise] = m_Queue.front();
-                                Task(&CommandList);
-                                m_Queue.pop();
-                            }
-                        }
-                        catch (const std::exception& Exception)
-                        {
-                            NEON_ERROR("Exception in copy context thread: {}", Exception.what());
-                            std::terminate();
-                        }
-#else
-                        for (size_t i = 0; i < CommandsToHandleCount && !m_Queue.empty(); i++)
-                        {
-                            auto& [Task, Promise] = m_Queue.front();
-                            Task(&CopyCommandList);
-                            m_Queue.pop();
-                        }
-#endif
+                        ProcessTasks(m_CopyTasks, &CommandList);
+
                         ID3D12CommandList* CommandLists[]{ Context.CommandList.Get() };
 
                         ThrowIfFailed(Context.CommandList->Close());
                         m_CopyQueue.Get()->ExecuteCommandLists(1, CommandLists);
                         m_CopyFence.SignalGPU(&m_CopyQueue, m_CopyId);
-                        m_CopyFence.WaitCPU(m_CopyId);
 
-                        m_CopyId++;
+                        auto MainQueue = Dx12Swapchain::Get()->GetQueue(true);
+                        m_CopyFence.WaitGPU(MainQueue, m_CopyId);
+                        ProcessTasks(m_PostCopyTasks);
+
+                        auto OldValue = m_CopyId++;
+                        Lock.unlock();
+                        m_CopyFence.WaitCPU(OldValue);
                     }
                 },
                 i);
         }
     }
 
-    uint64_t CopyContextManager::EnqueueCopy(
-        std::function<void(ICommandList*)> Task)
+    std::future<void> CopyContextManager::EnqueueCopy(
+        std::move_only_function<void(ICommandList*)> CopyTask,
+        std::move_only_function<void()>              PostCopyTask)
     {
-        uint64_t CopyId;
+        NEON_ASSERT(CopyTask);
+        FutureType Future;
+
         {
             std::scoped_lock Lock(m_QueueMutex);
-            CopyId = m_CopyId;
-            m_Queue.emplace(PackagedTaskType(Task));
+            m_CopyTasks.emplace_back(PackagedCopyTaskType(std::move(CopyTask)));
+            Future = m_PostCopyTasks.emplace_back(PackagedPostCopyTaskType(std::move(PostCopyTask))).Promise.get_future();
         }
 
         m_TaskWaiter.notify_one();
-        return CopyId;
+        return Future;
     }
 
     void CopyContextManager::Shutdown()

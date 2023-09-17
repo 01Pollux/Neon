@@ -26,7 +26,7 @@ namespace Neon::Editor
             return Id->second;
         }
 
-        auto Texture = std::dynamic_pointer_cast<Asset::TextureAsset>(Asset::Manager::Load(Guid))->GetTexture();
+        auto& Texture = std::dynamic_pointer_cast<Asset::TextureAsset>(Asset::Manager::Load(Guid))->GetTexture();
 
         auto Descriptor = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
         auto Handle     = Descriptor->Allocate(1);

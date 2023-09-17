@@ -21,10 +21,9 @@ namespace Neon::RHI
             size_t*               RowSizeInBytes,
             size_t*               LinearSize) const override;
 
-        void CopyFrom(
+        std::future<void> CopyFrom(
             uint32_t                           FirstSubresource,
             std::span<const SubresourceDesc>   Subresources,
-            uint64_t&                          CopyId,
             std::optional<RHI::MResourceState> TransitionState) override;
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace Neon::RHI
         Dx12Buffer(
             const BufferDesc&          Desc,
             const SubresourceDesc*     Subresource,
-            uint64_t*                  CopyId,
+            std::future<void>*         CopyTask,
             GraphicsBufferType         Type,
             const RHI::MResourceState& InitialState);
 
@@ -85,7 +84,7 @@ namespace Neon::RHI
         Dx12UploadBuffer(
             const BufferDesc&          Desc,
             const SubresourceDesc*     Subresource,
-            uint64_t*                  CopyId,
+            std::future<void>*         CopyTask,
             const RHI::MResourceState& InitialState);
 
         Dx12UploadBuffer(
@@ -129,7 +128,7 @@ namespace Neon::RHI
         Dx12Texture(
             const RHI::ResourceDesc&         Desc,
             std::span<const SubresourceDesc> Subresources,
-            uint64_t*                        CopyId,
+            std::future<void>*               CopyTask,
             const wchar_t*                   Name,
             const RHI::MResourceState&       InitialState);
 
@@ -142,7 +141,7 @@ namespace Neon::RHI
             WinAPI::ComPtr<ID3D12Resource>      Texture,
             WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
             std::span<const SubresourceDesc>    Subresources,
-            uint64_t&                           CopyId,
+            std::future<void>&                  CopyTask,
             const wchar_t*                      Name,
             const RHI::MResourceState&          InitialState);
 

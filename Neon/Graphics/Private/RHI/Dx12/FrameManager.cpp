@@ -264,10 +264,11 @@ namespace Neon::RHI
         Frame.SafeRelease(Resource, Allocation);
     }
 
-    uint64_t FrameManager::RequestCopy(
-        std::function<void(ICommandList*)> Task)
+    std::future<void> FrameManager::RequestCopy(
+        std::move_only_function<void(ICommandList*)> CopyTask,
+        std::move_only_function<void()>              PostCopyTask)
     {
-        return m_CopyContext.EnqueueCopy(Task);
+        return m_CopyContext.EnqueueCopy(std::move(CopyTask), std::move(PostCopyTask));
     }
 
     Dx12FrameDescriptorHeap* FrameManager::GetFrameDescriptorAllocator(

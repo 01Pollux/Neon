@@ -104,28 +104,28 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        template<typename _FnTy, typename... _Args>
-        uint64_t RequestCopy(
-            _FnTy&& Task,
+        template<typename _CpyFnTy, typename _PostCpyFnTy, typename... _Args>
+        std::future<void> RequestCopy(
+            _CpyFnTy&&     CopyTask,
+            _PostCpyFnTy&& PostCopyTask,
             _Args&&... Args)
         {
-            return EnqueueRequestCopy(std::bind_back(
-                std::forward<_FnTy>(Task),
-                std::forward<_Args>(Args)...));
+            return EnqueueRequestCopy(
+                std::bind_back(
+                    std::forward<_CpyFnTy>(CopyTask),
+                    std::forward<_Args>(Args)...),
+                std::bind_back(
+                    std::forward<_PostCpyFnTy>(PostCopyTask),
+                    std::forward<_Args>(Args)...));
         }
-
-        /// <summary>
-        /// Wait for copy command list to be executed.
-        /// </summary>
-        void WaitForCopy(
-            uint64_t FenceValue);
 
     protected:
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        virtual uint64_t EnqueueRequestCopy(
-            std::function<void(ICommandList*)> Task) = 0;
+        virtual std::future<void> EnqueueRequestCopy(
+            std::move_only_function<void(ICommandList*)> CopyTask,
+            std::move_only_function<void()>              PostCopyTask) = 0;
 
     public:
         /// <summary>

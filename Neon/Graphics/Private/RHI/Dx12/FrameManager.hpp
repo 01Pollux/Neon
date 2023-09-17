@@ -79,17 +79,24 @@ namespace Neon::RHI
 
     class CopyContextManager
     {
-        using PromiseType = std::promise<uint64_t>;
-        using FutureType  = std::future<uint64_t>;
+        using PromiseType = std::promise<void>;
+        using FutureType  = std::future<void>;
 
-        using PackagedTaskType = std::packaged_task<void(ICommandList*)>;
-        struct PackagedTaskResult
+        using PackagedCopyTaskType = std::move_only_function<void(ICommandList*)>;
+        struct PackagedCopyTaskResult
         {
-            PackagedTaskType Task;
-            PromiseType      Promise;
+            PackagedCopyTaskType Task;
+            PromiseType          Promise;
         };
 
-    private:
+        using PackagedPostCopyTaskType = std::move_only_function<void()>;
+        struct PackagedPostCopyTaskResult
+        {
+            PackagedPostCopyTaskType Task;
+            PromiseType              Promise;
+        };
+
+    public:
         static constexpr uint32_t CommandContextCount   = 1;
         static constexpr uint32_t CommandsToHandleCount = 16;
 
@@ -107,8 +114,9 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command list to be executed.
         /// </summary>
-        uint64_t EnqueueCopy(
-            std::function<void(ICommandList*)> Task);
+        std::future<void> EnqueueCopy(
+            std::move_only_function<void(ICommandList*)> CopyTask,
+            std::move_only_function<void()>              PostCopyTask);
 
         /// <summary>
         /// Wait for all tasks to finish and shutdown
@@ -132,10 +140,13 @@ namespace Neon::RHI
         std::array<CommandContext, CommandContextCount> m_CommandContexts;
         std::array<std::jthread, CommandContextCount>   m_Threads;
 
-        uint64_t                       m_CopyId = 1;
-        std::mutex                     m_QueueMutex;
-        std::queue<PackagedTaskResult> m_Queue;
-        std::condition_variable_any    m_TaskWaiter;
+        uint64_t   m_CopyId = 1;
+        std::mutex m_QueueMutex;
+
+        std::list<PackagedCopyTaskResult>     m_CopyTasks;
+        std::list<PackagedPostCopyTaskResult> m_PostCopyTasks;
+
+        std::condition_variable_any m_TaskWaiter;
     };
 
     //
@@ -257,8 +268,9 @@ namespace Neon::RHI
         /// <summary>
         /// Enqueue a copy command executed.
         /// </summary>
-        uint64_t RequestCopy(
-            std::function<void(ICommandList*)> Task);
+        std::future<void> RequestCopy(
+            std::move_only_function<void(ICommandList*)> CopyTask,
+            std::move_only_function<void()>              PostCopyTask);
 
     public:
         /// <summary>

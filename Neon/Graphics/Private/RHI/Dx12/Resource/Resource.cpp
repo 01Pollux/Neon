@@ -54,10 +54,9 @@ namespace Neon::RHI
         }
     }
 
-    void Dx12GpuResource::CopyFrom(
+    std::future<void> Dx12GpuResource::CopyFrom(
         uint32_t                           FirstSubresource,
         std::span<const SubresourceDesc>   Subresources,
-        uint64_t&                          CopyId,
         std::optional<RHI::MResourceState> TransitionState)
     {
         struct SubresourceDescGuard
@@ -71,7 +70,7 @@ namespace Neon::RHI
             ~SubresourceDescGuard() = default;
         };
 
-        auto Guard = std::make_shared<SubresourceDescGuard>();
+        auto Guard = std::make_unique<SubresourceDescGuard>();
 
         Guard->Subresources = Subresources |
                               std::ranges::to<std::vector<SubresourceDesc>>();
@@ -84,10 +83,18 @@ namespace Neon::RHI
             Subresource.Data = NewData;
         }
 
-        CopyId = Dx12Swapchain::Get()->RequestCopy(
-            [SubreourcesGuard = std::move(Guard),
-             TransitionState  = std::move(TransitionState)](ICommandList*    CommandList,
-                                                           Dx12GpuResource* Resource)
+        std::move_only_function<void(Dx12GpuResource*)> TransitionAfterCopy;
+        if (TransitionState)
+        {
+            TransitionAfterCopy = [TransitionState = std::move(TransitionState)](Dx12GpuResource* Resource)
+            {
+                Dx12ResourceStateManager::Get()->TransitionResource(Resource, *TransitionState);
+            };
+        }
+
+        return ISwapchain::Get()->RequestCopy(
+            [SubreourcesGuard = std::move(Guard)](ICommandList*    CommandList,
+                                                  Dx12GpuResource* Resource)
             {
                 size_t TotalBytes;
                 Resource->QueryFootprint(
@@ -110,12 +117,8 @@ namespace Neon::RHI
                     Handle.Offset,
                     0,
                     SubreourcesGuard->Subresources);
-
-                if (TransitionState)
-                {
-                    Dx12ResourceStateManager::Get()->TransitionResource(Resource, *TransitionState);
-                }
             },
+            std::move(TransitionAfterCopy),
             this);
     }
 
@@ -151,16 +154,16 @@ namespace Neon::RHI
     IBuffer* IBuffer::Create(
         const BufferDesc&          Desc,
         const SubresourceDesc&     Subresource,
-        uint64_t&                  CopyId,
+        std::future<void>&         CopyTask,
         const RHI::MResourceState& InitialState)
     {
-        return NEON_NEW Dx12Buffer(Desc, &Subresource, &CopyId, GraphicsBufferType::Default, InitialState);
+        return NEON_NEW Dx12Buffer(Desc, &Subresource, &CopyTask, GraphicsBufferType::Default, InitialState);
     }
 
     Dx12Buffer::Dx12Buffer(
         const BufferDesc&          Desc,
         const SubresourceDesc*     Subresource,
-        uint64_t*                  CopyId,
+        std::future<void>*         CopyTask,
         GraphicsBufferType         Type,
         const RHI::MResourceState& InitialState) :
         Dx12Buffer(
@@ -172,7 +175,7 @@ namespace Neon::RHI
     {
         if (Subresource)
         {
-            CopyFrom(0, { Subresource, 1 }, *CopyId, InitialState);
+            *CopyTask = CopyFrom(0, { Subresource, 1 }, InitialState);
         }
     }
 
@@ -259,18 +262,18 @@ namespace Neon::RHI
     IUploadBuffer* IUploadBuffer::Create(
         const BufferDesc&          Desc,
         const SubresourceDesc&     Subresource,
-        uint64_t&                  CopyId,
+        std::future<void>&         CopyTask,
         const RHI::MResourceState& InitialState)
     {
-        return NEON_NEW Dx12UploadBuffer(Desc, &Subresource, &CopyId, InitialState);
+        return NEON_NEW Dx12UploadBuffer(Desc, &Subresource, &CopyTask, InitialState);
     }
 
     Dx12UploadBuffer::Dx12UploadBuffer(
         const BufferDesc&          Desc,
         const SubresourceDesc*     Subresource,
-        uint64_t*                  CopyId,
+        std::future<void>*         CopyTask,
         const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Desc, Subresource, CopyId, GraphicsBufferType::Upload, InitialState)
+        Dx12Buffer(Desc, Subresource, CopyTask, GraphicsBufferType::Upload, InitialState)
     {
     }
 
@@ -345,16 +348,16 @@ namespace Neon::RHI
     ITexture* ITexture::Create(
         const ResourceDesc&              Desc,
         std::span<const SubresourceDesc> Subresources,
-        uint64_t&                        CopyId,
+        std::future<void>&               CopyTask,
         const wchar_t*                   Name,
         const RHI::MResourceState&       InitialState)
     {
-        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyId, Name, InitialState);
+        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyTask, Name, InitialState);
     }
 
     ITexture* ITexture::Create(
         const TextureRawImage&     ImageData,
-        uint64_t&                  CopyId,
+        std::future<void>&         CopyTask,
         const wchar_t*             Name,
         const RHI::MResourceState& InitialState)
     {
@@ -389,15 +392,14 @@ namespace Neon::RHI
             std::unreachable();
         }
 
-        auto Image = LoadFunc(ImageData.Data, ImageData.Size, Name, InitialState);
-        CopyId     = Image.GetUploadId();
+        auto Image = LoadFunc(ImageData.Data, ImageData.Size, Name, CopyTask, InitialState);
         return Image.Release();
     }
 
     Dx12Texture::Dx12Texture(
         const RHI::ResourceDesc&         Desc,
         std::span<const SubresourceDesc> Subresources,
-        uint64_t*                        CopyId,
+        std::future<void>*               CopyTask,
         const wchar_t*                   Name,
         const RHI::MResourceState&       InitialState)
     {
@@ -496,7 +498,7 @@ namespace Neon::RHI
         Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), Dx12InitialState);
         if (!Subresources.empty())
         {
-            CopyFrom(0, Subresources, *CopyId, InitialState);
+            *CopyTask = CopyFrom(0, Subresources, InitialState);
         }
     }
 
@@ -519,7 +521,7 @@ namespace Neon::RHI
         WinAPI::ComPtr<ID3D12Resource>      Texture,
         WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
         std::span<const SubresourceDesc>    Subresources,
-        uint64_t&                           CopyId,
+        std::future<void>&                  CopyTask,
         const wchar_t*                      Name,
         const RHI::MResourceState&          InitialState) :
         Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
@@ -530,7 +532,7 @@ namespace Neon::RHI
             m_Resource->SetName(Name);
         }
 #endif
-        CopyFrom(0, Subresources, CopyId, InitialState);
+        CopyTask = CopyFrom(0, Subresources, InitialState);
     }
 
     Vector3I Dx12Texture::GetDimensions() const

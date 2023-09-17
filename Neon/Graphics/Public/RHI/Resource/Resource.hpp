@@ -1,8 +1,11 @@
 #pragma once
 
 #include <Math/Vector.hpp>
+#include <Asio/Coroutines.hpp>
+
 #include <RHI/Resource/Common.hpp>
 #include <RHI/Swapchain.hpp>
+
 #include <variant>
 #include <span>
 
@@ -267,22 +270,20 @@ namespace Neon::RHI
         /// <summary>
         /// Copy the subresources to the resource
         /// </summary>
-        virtual void CopyFrom(
+        virtual std::future<void> CopyFrom(
             uint32_t                           FirstSubresource,
             std::span<const SubresourceDesc>   Subresources,
-            uint64_t&                          CopyId,
-            std::optional<RHI::MResourceState> InitialState = std::nullopt) = 0;
+            std::optional<RHI::MResourceState> NextState = std::nullopt) = 0;
 
         /// <summary>
         /// Copy the subresource to the resource
         /// </summary>
-        void CopyFrom(
+        std::future<void> CopyFrom(
             uint32_t               FirstSubresource,
-            const SubresourceDesc& Subresource,
-            uint64_t&              CopyId)
+            const SubresourceDesc& Subresource)
         {
             std::array Subresources = { Subresource };
-            CopyFrom(FirstSubresource, Subresources, CopyId);
+            return CopyFrom(FirstSubresource, Subresources);
         }
 
         /// <summary>
@@ -326,7 +327,7 @@ namespace Neon::RHI
         [[nodiscard]] static IBuffer* Create(
             const BufferDesc&          Desc,
             const SubresourceDesc&     Subresource,
-            uint64_t&                  CopyId,
+            std::future<void>&         CopyId,
             const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
@@ -362,7 +363,7 @@ namespace Neon::RHI
         [[nodiscard]] static IUploadBuffer* Create(
             const BufferDesc&          Desc,
             const SubresourceDesc&     Subresource,
-            uint64_t&                  CopyId,
+            std::future<void>&         CopyId,
             const RHI::MResourceState& InitialState = DefaultResourcestate);
 
         /// <summary>
@@ -488,7 +489,7 @@ namespace Neon::RHI
         [[nodiscard]] static ITexture* Create(
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources,
-            uint64_t&                        CopyId,
+            std::future<void>&               CopyId,
             const wchar_t*                   Name         = nullptr,
             const RHI::MResourceState&       InitialState = DefaultResourcestate);
 
@@ -497,7 +498,7 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static ITexture* Create(
             const TextureRawImage&     ImageData,
-            uint64_t&                  CopyId,
+            std::future<void>&         CopyId,
             const wchar_t*             Name         = nullptr,
             const RHI::MResourceState& InitialState = DefaultResourcestate);
 
@@ -542,15 +543,16 @@ namespace Neon::RHI
     {
     public:
         using ResourcePtr = std::conditional_t<_Owning, UPtr<_ResourceTy>, Ptr<_ResourceTy>>;
+        using TaskPtr     = std::conditional_t<_Owning, std::future<void>, std::shared_future<void>>;
 
         SyncGpuResourceT() = default;
 
         SyncGpuResourceT(
-            ResourcePtr Resource,
-            uint64_t    CopyId) :
-            m_Resource(std::move(Resource)),
-            m_CopyId(CopyId)
+            ResourcePtr       Resource,
+            std::future<void> CopyTask) :
+            m_Resource(std::move(Resource))
         {
+            SetTask(std::move(CopyTask));
         }
 
         SyncGpuResourceT(
@@ -607,17 +609,32 @@ namespace Neon::RHI
         /// </summary>
         void WaitForUpload() const
         {
-            if (m_CopyId && m_Resource) [[unlikely]]
+            if (m_CopyTask.valid() && m_Resource) [[unlikely]]
             {
-                ISwapchain::Get()->WaitForCopy(*m_CopyId);
-                m_CopyId.reset();
+                m_CopyTask.get();
             }
         }
 
     protected:
-        ResourcePtr m_Resource;
+        /// <summary>
+        /// Set copy operation task
+        /// </summary>
+        void SetTask(
+            std::future<void> CopyTask)
+        {
+            if constexpr (_Owning)
+            {
+                m_CopyTask = std::move(CopyTask);
+            }
+            else
+            {
+                m_CopyTask = CopyTask.share();
+            }
+        }
 
-        mutable std::optional<uint64_t> m_CopyId = 0;
+    protected:
+        ResourcePtr     m_Resource;
+        mutable TaskPtr m_CopyTask;
     };
 
     template<bool _Owning>
@@ -640,13 +657,13 @@ namespace Neon::RHI
             const SubresourceDesc&     Subresources,
             const RHI::MResourceState& InitialState = IBuffer::DefaultResourcestate)
         {
-            uint64_t CopyId;
+            std::future<void> CopyTask;
             this->m_Resource.reset(IBuffer::Create(
                 Desc,
                 Subresources,
-                CopyId,
+                CopyTask,
                 InitialState));
-            this->m_CopyId = CopyId;
+            this->SetTask(std::move(CopyTask));
         }
 
         SyncBufferT(
@@ -685,13 +702,13 @@ namespace Neon::RHI
             const SubresourceDesc&     Subresources,
             const RHI::MResourceState& InitialState = IUploadBuffer::DefaultResourcestate)
         {
-            uint64_t CopyId;
+            std::future<void> CopyTask;
             this->m_Resource.reset(IUploadBuffer::Create(
                 Desc,
                 Subresources,
-                CopyId,
+                CopyTask,
                 InitialState));
-            this->m_CopyId = CopyId;
+            this->SetTask(std::move(CopyTask));
         }
 
         SyncUploadBufferT(
@@ -721,13 +738,13 @@ namespace Neon::RHI
             const wchar_t*         Name         = nullptr,
             RHI::MResourceState    InitialState = RHI::MResourceState_Common)
         {
-            uint64_t CopyId = 0;
+            std::future<void> CopyTask;
             this->m_Resource.reset(ITexture::Create(
                 ImageData,
-                CopyId,
+                CopyTask,
                 Name,
                 std::move(InitialState)));
-            this->m_CopyId = CopyId;
+            this->SetTask(std::move(CopyTask));
         }
 
         SyncTextureT(
@@ -747,14 +764,14 @@ namespace Neon::RHI
             const wchar_t*                   Name         = nullptr,
             RHI::MResourceState              InitialState = RHI::MResourceState_Common)
         {
-            uint64_t CopyId = 0;
+            std::future<void> CopyTask;
             this->m_Resource.reset(ITexture::Create(
                 Desc,
                 Subresources,
-                CopyId,
+                CopyTask,
                 Name,
                 std::move(InitialState)));
-            this->m_CopyId = CopyId;
+            this->SetTask(std::move(CopyTask));
         }
     };
 

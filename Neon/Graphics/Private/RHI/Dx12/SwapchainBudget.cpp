@@ -61,10 +61,11 @@ namespace Neon::RHI
         m_FrameManager->SafeRelease(Resource, Allocation);
     }
 
-    uint64_t Dx12Swapchain::EnqueueRequestCopy(
-        std::function<void(ICommandList*)> Task)
+    std::future<void> Dx12Swapchain::EnqueueRequestCopy(
+        std::move_only_function<void(ICommandList*)> CopyTask,
+        std::move_only_function<void()>              PostCopyTask)
     {
-        return m_FrameManager->RequestCopy(std::move(Task));
+        return m_FrameManager->RequestCopy(std::move(CopyTask), std::move(PostCopyTask));
     }
 
     Dx12FrameDescriptorHeap* Dx12Swapchain::GetFrameDescriptorAllocator(
