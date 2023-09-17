@@ -199,7 +199,8 @@ namespace Neon::RHI
                 StatesMatch = false;
             }
 
-            if (OldState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+            if ((OldState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) &&
+                !(NewState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS))
             {
                 NeedsUAVBarrier = true;
             }

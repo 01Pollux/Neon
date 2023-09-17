@@ -58,7 +58,15 @@ void CS_Main(
 	Texture2D DepthMap = c_TextureMap[TEXTURE_MAP_DEPTH];
 	Texture2D NoiseMap = c_TextureMap[TEXTURE_MAP_NOISE];
 	
-	float2 Resolution = g_FrameData.ScreenResolution;
+	uint2 Resolution;
+	uint2 NoiseSize;
+	
+	NoiseMap.GetDimensions(NoiseSize.x, NoiseSize.y);
+	c_OcclusionOutput.GetDimensions(Resolution.x, Resolution.y);
+	
+	Resolution *= c_SSAOParams.ResolutionFactor;
+	NoiseSize *= c_SSAOParams.ResolutionFactor;
+	
 	float2 UV = ((float2) DTID.xy + 0.5f) * c_SSAOParams.ResolutionFactor / Resolution;
 	
 	float3 Normal = normalize(NormalMap.SampleLevel(s_Sampler_LinearClamp, UV, 0.f).xyz * 2.f - 1.f);
@@ -66,13 +74,7 @@ void CS_Main(
 	float Depth = DepthMap.SampleLevel(s_Sampler_LinearClamp, UV, 0.f).x;
 	float3 Position = UVToViewPosition(UV, Depth, g_FrameData.ProjectionInverse);
 	
-	uint2 OutputSize;
-	uint2 NoiseSize;
-	
-	c_OcclusionOutput.GetDimensions(OutputSize.x, OutputSize.y);
-	NoiseMap.GetDimensions(NoiseSize.x, NoiseSize.y);
-	
-	float2 NoiseUV = UV * OutputSize / NoiseSize;
+	float2 NoiseUV = UV * Resolution / NoiseSize;
 	float3 Random = normalize(NoiseMap.SampleLevel(s_Sampler_LinearClamp, NoiseUV, 0.f).xyz * 2.f - 1.f);
 	
 	float3 Tangent = normalize(Random - Normal * dot(Random, Normal));

@@ -24,7 +24,7 @@ namespace Neon::RG
 {
     enum class BlurPassRS : uint8_t
     {
-        OutputIndexOffset,
+        IndexOffset,
         BlurParams,
         InputOutput_TextureMap
     };
@@ -52,7 +52,7 @@ namespace Neon::RG
 
         m_BlurSubPassRootSignature =
             RHI::RootSignatureBuilder()
-                .Add32BitConstants<uint32_t>("c_OutputIndexOffset", 0, 1)
+                .Add32BitConstants<uint32_t[2]>("c_IndexOffset", 0, 1)
                 .Add32BitConstants<GaussWeightsList>("c_BlurParams", 1, 1)
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
@@ -158,14 +158,12 @@ namespace Neon::RG
 
         //
 
-        // We will allocate 4 descriptors, one for input and one for output for each stage
         auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(3);
 
+        auto SourceResource       = Storage.GetResource(m_Data.Source).Get().get();
         auto IntermediateResource = Storage.GetResource(Intermediate).Get().get();
+        auto OutputResource       = Storage.GetResource(m_Data.Output).Get().get();
 
-        // Stage: Input(Index), Output(Index)
-        // H: Input(0), Output(1)
-        // V: Input(1), Output(2)
         {
             std::array SrcInfo{
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
@@ -174,13 +172,13 @@ namespace Neon::RG
             };
 
             RHI::CpuDescriptorHandle
-                &InputH  = SrcInfo[0].Descriptor,
-                &OutputH = SrcInfo[1].Descriptor,
-                &OutputV = SrcInfo[2].Descriptor;
+                &Source = SrcInfo[0].Descriptor,
+                &Tmp    = SrcInfo[1].Descriptor,
+                &Output = SrcInfo[2].Descriptor;
 
-            Storage.GetResourceView(SourceView, &InputH);
-            Storage.GetResourceView(IntermediateOutputView, &OutputH);
-            Storage.GetResourceView(OutputView, &OutputV);
+            Storage.GetResourceView(SourceView, &Source);
+            Storage.GetResourceView(IntermediateOutputView, &Tmp);
+            Storage.GetResourceView(OutputView, &Output);
 
             Descriptor->Copy(Descriptor.Offset, SrcInfo);
         }
@@ -191,17 +189,40 @@ namespace Neon::RG
 
         auto Size = Storage.GetResourceSize(m_Data.Source);
 
-        for (uint32_t i = 0; i < m_Iterations; i++)
+        uint32_t SourceOutput[2];
+        SourceOutput[0] = 0;
+        SourceOutput[1] = 1;
+
+        uint32_t Iterations = m_Iterations;
+        do
         {
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateH);
-            CommandList.SetConstants(uint32_t(BlurPassRS::OutputIndexOffset), 0);
+            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
             CommandList.Dispatch(Math::DivideByMultiple(Size.x, KernelSize), Size.y);
+
+            if (Iterations == 1)
+            {
+                SourceOutput[0] = 1;
+                SourceOutput[1] = 2;
+            }
+            else
+            {
+                SourceOutput[1] = 0;
+                SourceOutput[0] = 1;
+            }
 
             CommandList.InsertUAVBarrier(IntermediateResource);
 
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateV);
-            CommandList.SetConstants(uint32_t(BlurPassRS::OutputIndexOffset), 1);
+            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
             CommandList.Dispatch(Size.x, Math::DivideByMultiple(Size.y, KernelSize));
-        }
+
+            if (Iterations != 1)
+            {
+                SourceOutput[0] = 0;
+                SourceOutput[1] = 1;
+                CommandList.InsertUAVBarrier(SourceResource);
+            }
+        } while (--Iterations > 0);
     }
 } // namespace Neon::RG

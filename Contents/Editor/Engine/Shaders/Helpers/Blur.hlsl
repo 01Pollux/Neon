@@ -33,16 +33,29 @@ struct BlurParams
 		w8;
 };
 
-struct OutputIndexOffset
+struct IndexOffset
 {
-	uint Offset;
+	uint Input;
+	uint Output;
 };
 
-ConstantBuffer<OutputIndexOffset> c_OutputIndexOffset : register(b0, space1);
+ConstantBuffer<IndexOffset> c_IndexOffset : register(b0, space1);
 
 ConstantBuffer<BlurParams> c_BlurParams : register(b1, space1);
 
 RWTexture2D<float4> c_InputOutput[3] : register(u0, space1);
+
+//
+
+RWTexture2D<float4> GetInput()
+{
+	return c_InputOutput[c_IndexOffset.Input];
+}
+
+RWTexture2D<float4> GetOutput()
+{
+	return c_InputOutput[c_IndexOffset.Output];
+}
 
 //
 
@@ -62,8 +75,8 @@ void CS_Main(
 	int3 GTID : SV_GroupThreadID,
 	int3 DTID : SV_DispatchThreadID)
 {
-	RWTexture2D<float4> Input = c_InputOutput[c_OutputIndexOffset.Offset + 0];
-	RWTexture2D<float4> Output = c_InputOutput[c_OutputIndexOffset.Offset + 1];
+	RWTexture2D<float4> Input = GetInput();
+	RWTexture2D<float4> Output = GetOutput();
 	
 	const float Weights[] =
 	{
