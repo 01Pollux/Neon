@@ -3,11 +3,11 @@
 #include "../Common/Utils.hlsli"
 
 #ifndef CS_KERNEL_SIZE_X
-#define CS_KERNEL_SIZE_X 16
+#define CS_KERNEL_SIZE_X 8
 #endif
 
 #ifndef CS_KERNEL_SIZE_Y
-#define CS_KERNEL_SIZE_Y 16
+#define CS_KERNEL_SIZE_Y 8
 #endif
 
 #ifndef CS_KERNEL_SIZE_Z

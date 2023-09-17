@@ -35,7 +35,6 @@ namespace Neon::RG
         m_Data(std::move(Data))
     {
         SetSigma(2.5f);
-        m_Iterations = 3;
 
         // TODO: Load from asset rather than hardcoding
         using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
@@ -198,7 +197,7 @@ namespace Neon::RG
         {
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateH);
             CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
-            CommandList.Dispatch(Math::DivideByMultiple(Size.x, KernelSize), Size.y);
+            CommandList.Dispatch(Size.x, Size.y);
 
             if (Iterations == 1)
             {
@@ -215,7 +214,7 @@ namespace Neon::RG
 
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateV);
             CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
-            CommandList.Dispatch(Size.x, Math::DivideByMultiple(Size.y, KernelSize));
+            CommandList.Dispatch(Size.x, Size.y);
 
             if (Iterations != 1)
             {

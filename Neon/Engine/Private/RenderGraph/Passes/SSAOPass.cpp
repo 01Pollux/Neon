@@ -162,7 +162,7 @@ namespace Neon::RG
 
     void SSAOPass::GenerateSamples()
     {
-        std::uniform_real_distribution<float> Distribution(0.0f, 1.0f);
+        std::uniform_real_distribution<float> Distribution(0.f, 1.0f);
 
         {
             auto NewPtr(std::make_unique<uint8_t[]>(GetParamsSize()));
@@ -176,12 +176,13 @@ namespace Neon::RG
             }
             m_Params = std::move(NewPtr);
         }
+
         for (size_t i = 0; i < m_SampleCount; i++)
         {
             auto& Sample = GetSSAOSamples()[i];
 
-            Sample.x = 2.f * Distribution(Random::GetEngine()) - 1.f;
-            Sample.y = 2.f * Distribution(Random::GetEngine()) - 1.f;
+            Sample.x = Distribution(Random::GetEngine());
+            Sample.y = Distribution(Random::GetEngine());
             Sample.z = Distribution(Random::GetEngine());
             Sample.w = 0.0f;
             Sample   = glm::normalize(Sample) * Distribution(Random::GetEngine());
@@ -312,6 +313,6 @@ namespace Neon::RG
         Size.x = int(Size.x * Factor);
         Size.y = int(Size.y * Factor);
 
-        CommandList.Dispatch2D(Size.x, Size.y, m_SampleCount, m_SampleCount);
+        CommandList.Dispatch(Size.x, Size.y);
     }
 } // namespace Neon::RG

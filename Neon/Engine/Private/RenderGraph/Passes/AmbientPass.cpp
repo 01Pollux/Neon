@@ -159,6 +159,6 @@ namespace Neon::RG
         CommandList.SetDescriptorTable(uint32_t(AmbientPassRS::OutputTexture_TextureMap), Descriptor.GetGpuHandle());
 
         auto Size = Storage.GetOutputImageSize();
-        CommandList.Dispatch2D(Size.x, Size.y, 16, 16);
+        CommandList.Dispatch(Size.x, Size.y);
     }
 } // namespace Neon::RG

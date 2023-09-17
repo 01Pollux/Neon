@@ -28,6 +28,12 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] ByteCode GetByteCode() override;
 
+    public:
+        /// <summary>
+        /// Get group size of compute shader
+        /// </summary>
+        [[nodiscard]] Vector3U GetComputeGroupSize() const;
+
     private:
         std::unique_ptr<uint8_t[]> m_ShaderData;
         size_t                     m_DataSize;

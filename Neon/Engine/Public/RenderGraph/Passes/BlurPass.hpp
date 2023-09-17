@@ -17,7 +17,6 @@ namespace Neon::RG
         /// <summary>
         /// Kernel size in compute shader.
         /// </summary>
-        static constexpr uint32_t KernelSize           = 16;
         static constexpr uint32_t BlurGaussWeightCount = 9;
 
         using GaussWeightsList = std::array<float, BlurGaussWeightCount>;

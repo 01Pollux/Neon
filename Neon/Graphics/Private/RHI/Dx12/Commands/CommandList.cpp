@@ -552,10 +552,11 @@ namespace Neon::RHI
         size_t GroupCountY,
         size_t GroupCountZ)
     {
+        auto GroupSize = static_cast<Dx12PipelineState*>(m_PipelineState.get())->GetComputeGroupSize();
         m_CommandList->Dispatch(
-            UINT(GroupCountX),
-            UINT(GroupCountY),
-            UINT(GroupCountZ));
+            Math::DivideByMultiple(GroupCountX, GroupSize.x),
+            Math::DivideByMultiple(GroupCountY, GroupSize.y),
+            Math::DivideByMultiple(GroupCountZ, GroupSize.z));
     }
 
     //

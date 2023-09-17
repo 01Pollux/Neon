@@ -9,9 +9,11 @@ namespace Neon::RHI
     {
     public:
         Dx12PipelineState(
+            const PipelineStateBuilderG&              Builder,
             const D3D12_GRAPHICS_PIPELINE_STATE_DESC& GraphicsDesc);
 
         Dx12PipelineState(
+            const PipelineStateBuilderC&             Builder,
             const D3D12_COMPUTE_PIPELINE_STATE_DESC& ComputeDesc);
 
         /// <summary>
@@ -19,8 +21,15 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] ID3D12PipelineState* Get();
 
+        /// <summary>
+        /// Get group size of compute shader
+        /// </summary>
+        [[nodiscard]] const Vector3U& GetComputeGroupSize() const;
+
     private:
         WinAPI::ComPtr<ID3D12PipelineState> m_PipelineState;
+
+        Vector3U m_ComputeGroupSize{};
     };
 
     class Dx12PipelineStateCache

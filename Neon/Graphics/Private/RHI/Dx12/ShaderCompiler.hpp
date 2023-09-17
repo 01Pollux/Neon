@@ -33,6 +33,13 @@ namespace Neon::RHI
             ShaderInputLayout& Layout,
             bool               IsOutput);
 
+        /// <summary>
+        /// Get shader's descriptor structure
+        /// </summary>
+        WinAPI::ComPtr<ID3D12ShaderReflection> GetReflection(
+            const void* ShaderCode,
+            size_t      ByteLength);
+
     private:
         /// <summary>
         /// Reflect shader layout from shader bytecode

@@ -189,7 +189,7 @@ namespace Neon::RHI
                 auto& SourceCode = TextFile->Get();
 
                 WinAPI::ComPtr<IDxcBlobEncoding> ShaderCodeBlob;
-                HRESULT Res = m_Utils->CreateBlobFromPinned(
+                HRESULT                          Res = m_Utils->CreateBlobFromPinned(
                     SourceCode.data(),
                     uint32_t(SourceCode.size()),
                     DXC_CP_UTF8,
@@ -491,6 +491,27 @@ namespace Neon::RHI
             Layout.emplace_back(std::move(Name), Format);
         }
     }
+
+    WinAPI::ComPtr<ID3D12ShaderReflection> Dx12ShaderCompiler::GetReflection(
+        const void* ShaderCode,
+        size_t      ByteLength)
+    {
+        WinAPI::ComPtr<IDxcContainerReflection> Reflection;
+        ThrowIfFailed(DxcCreateInstance(CLSID_DxcContainerReflection, IID_PPV_ARGS(Reflection.GetAddressOf())));
+
+        ReflectionBlob Blob(ShaderCode, ByteLength);
+        ThrowIfFailed(Reflection->Load(&Blob));
+
+        uint32_t DxilPart;
+        ThrowIfFailed(Reflection->FindFirstPartKind(DXC_PART_DXIL, &DxilPart));
+
+        WinAPI::ComPtr<ID3D12ShaderReflection> ShaderReflection;
+        ThrowIfFailed(Reflection->GetPartReflection(DxilPart, IID_PPV_ARGS(&ShaderReflection)));
+
+        return ShaderReflection;
+    }
+
+    //
 
     String Dx12ShaderCompiler::GetShaderModel(
         ShaderStage   Stage,

@@ -1,8 +1,11 @@
 #include <GraphicsPCH.hpp>
-#include <Private/RHI/Dx12/Resource/Common.hpp>
-#include <Private/RHI/Dx12/PipelineState.hpp>
 #include <Private/RHI/Dx12/Device.hpp>
+#include <Private/RHI/Dx12/Resource/Common.hpp>
+
+#include <Private/RHI/Dx12/PipelineState.hpp>
 #include <Private/RHI/Dx12/RootSignature.hpp>
+#include <Private/RHI/Dx12/Shader.hpp>
+
 #include <RHI/Shader.hpp>
 
 namespace views  = std::views;
@@ -212,6 +215,7 @@ namespace Neon::RHI
     //
 
     Dx12PipelineState::Dx12PipelineState(
+        const PipelineStateBuilderG&              Builder,
         const D3D12_GRAPHICS_PIPELINE_STATE_DESC& GraphicsDesc)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -221,17 +225,26 @@ namespace Neon::RHI
     }
 
     Dx12PipelineState::Dx12PipelineState(
+        const PipelineStateBuilderC&             Builder,
         const D3D12_COMPUTE_PIPELINE_STATE_DESC& ComputeDesc)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
         ThrowIfFailed(Dx12Device->CreateComputePipelineState(
             &ComputeDesc,
             IID_PPV_ARGS(&m_PipelineState)));
+
+        auto DxShader      = static_cast<Dx12Shader*>(Builder.ComputeShader.get());
+        m_ComputeGroupSize = DxShader->GetComputeGroupSize();
     }
 
     ID3D12PipelineState* Dx12PipelineState::Get()
     {
         return m_PipelineState.Get();
+    }
+
+    const Vector3U& Dx12PipelineState::GetComputeGroupSize() const
+    {
+        return m_ComputeGroupSize;
     }
 
     //
@@ -252,7 +265,7 @@ namespace Neon::RHI
         auto& Cache = s_PipelineStateCache[Result.Digest];
         if (!Cache)
         {
-            Cache = std::make_shared<Dx12PipelineState>(Result.Desc);
+            Cache = std::make_shared<Dx12PipelineState>(Builder, Result.Desc);
         }
 
         return Cache;
@@ -268,7 +281,7 @@ namespace Neon::RHI
         auto& Cache = s_PipelineStateCache[Result.Digest];
         if (!Cache)
         {
-            Cache = std::make_shared<Dx12PipelineState>(Result.Desc);
+            Cache = std::make_shared<Dx12PipelineState>(Builder, Result.Desc);
         }
 
         return Cache;

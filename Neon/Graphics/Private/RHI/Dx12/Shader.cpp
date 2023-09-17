@@ -56,4 +56,14 @@ namespace Neon::RHI
     {
         return { m_ShaderData.get(), m_DataSize };
     }
+
+    Vector3U Dx12Shader::GetComputeGroupSize() const
+    {
+        auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
+        auto Reflection     = ShaderCompiler->GetReflection(m_ShaderData.get(), m_DataSize);
+
+        Vector3U Size{};
+        ThrowIfFailed(Reflection->GetThreadGroupSize(&Size.x, &Size.y, &Size.z));
+        return Size;
+    }
 } // namespace Neon::RHI

@@ -328,52 +328,6 @@ namespace Neon::RHI
             size_t GroupCountX = 1,
             size_t GroupCountY = 1,
             size_t GroupCountZ = 1) = 0;
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch1D(
-            size_t ThreadCountX,
-            size_t GroupSizeX = 64)
-        {
-            Dispatch(
-                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
-                1,
-                1);
-        }
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch2D(
-            size_t ThreadCountX,
-            size_t ThreadCountY,
-            size_t GroupSizeX = 8,
-            size_t GroupSizeY = 8)
-        {
-            Dispatch(
-                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
-                Math::DivideByMultiple(ThreadCountY, GroupSizeY),
-                1);
-        }
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch3D(
-            size_t ThreadCountX,
-            size_t ThreadCountY,
-            size_t ThreadCountZ,
-            size_t GroupSizeX,
-            size_t GroupSizeY,
-            size_t GroupSizeZ)
-        {
-
-            Dispatch(
-                Math::DivideByMultiple(ThreadCountX, GroupSizeX),
-                Math::DivideByMultiple(ThreadCountY, GroupSizeY),
-                Math::DivideByMultiple(ThreadCountZ, GroupSizeZ));
-        }
     };
 
     //
@@ -956,54 +910,6 @@ namespace Neon::RHI
                 GroupCountX,
                 GroupCountY,
                 GroupCountZ);
-        }
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch1D(
-            size_t ThreadCountX,
-            size_t GroupSizeX = 64)
-        {
-            m_CmdList->Dispatch1D(
-                ThreadCountX,
-                GroupSizeX);
-        }
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch2D(
-            size_t ThreadCountX,
-            size_t ThreadCountY,
-            size_t GroupSizeX = 8,
-            size_t GroupSizeY = 8)
-        {
-            m_CmdList->Dispatch2D(
-                ThreadCountX,
-                ThreadCountY,
-                GroupSizeX,
-                GroupSizeY);
-        }
-
-        /// <summary>
-        /// Dispatch compute shader threads
-        /// </summary>
-        void Dispatch3D(
-            size_t ThreadCountX,
-            size_t ThreadCountY,
-            size_t ThreadCountZ,
-            size_t GroupSizeX,
-            size_t GroupSizeY,
-            size_t GroupSizeZ)
-        {
-            m_CmdList->Dispatch3D(
-                ThreadCountX,
-                ThreadCountY,
-                ThreadCountZ,
-                GroupSizeX,
-                GroupSizeY,
-                GroupSizeZ);
         }
 
     private:
