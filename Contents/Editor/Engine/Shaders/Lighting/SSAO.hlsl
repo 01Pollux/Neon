@@ -67,16 +67,16 @@ void CS_Main(
 	Resolution *= c_SSAOParams.ResolutionFactor;
 	NoiseSize *= c_SSAOParams.ResolutionFactor;
 	
-	float2 UV = ((float2) DTID.xy + 0.5f) * c_SSAOParams.ResolutionFactor / Resolution;
+	float2 DispatchIndex = ((float2) DTID.xy + 0.5f) * c_SSAOParams.ResolutionFactor;
+	float2 UV = DispatchIndex / Resolution;
+	float2 NoiseUV = DispatchIndex / NoiseSize;
 	
-	float3 Normal = normalize(NormalMap.SampleLevel(s_Sampler_LinearClamp, UV, 0.f).xyz * 2.f - 1.f);
-	
-	float Depth = DepthMap.SampleLevel(s_Sampler_LinearClamp, UV, 0.f).x;
-	float3 Position = UVToViewPosition(UV, Depth, g_FrameData.ProjectionInverse);
-	
-	float2 NoiseUV = UV * Resolution / NoiseSize;
+	float3 Normal = normalize(NormalMap.SampleLevel(s_Sampler_LinearBorder, UV, 0.f).xyz * 2.f - 1.f);
 	float3 Random = normalize(NoiseMap.SampleLevel(s_Sampler_LinearClamp, NoiseUV, 0.f).xyz * 2.f - 1.f);
 	
+	float Depth = DepthMap.SampleLevel(s_Sampler_LinearBorder, UV, 0.f).x;
+	float3 Position = UVToViewPosition(UV, Depth, g_FrameData.ProjectionInverse);
+	                                                            
 	float3 Tangent = normalize(Random - Normal * dot(Random, Normal));
 	float3 Bitangent = cross(Normal, Tangent);
 	float3x3 TBN = float3x3(Tangent, Bitangent, Normal);
@@ -93,18 +93,17 @@ void CS_Main(
 		Offset = mul(Offset, g_FrameData.Projection);
 		Offset.xy = ((Offset.xy / Offset.w) * float2(1.0f, -1.0f)) * 0.5f + 0.5f;
 		
-		float SampleDepth = DepthMap.SampleLevel(s_Sampler_LinearClamp, Offset.xy, 0.f).x;
+		float SampleDepth = DepthMap.SampleLevel(s_Sampler_LinearBorder, Offset.xy, 0.f).x;
 		SampleDepth = UVToViewPosition(Offset.xy, SampleDepth, g_FrameData.ProjectionInverse).z;
 		
 		float Occluded = step(SampleDepth + c_SSAOParams.Bias, SamplePos.z);
-		float Intensity = smoothstep(.0f, 1.f, c_SSAOParams.Radius * (Position.z - SampleDepth));
+		float Intensity = smoothstep(.0f, 1.f, c_SSAOParams.Radius * abs(Position.z - SampleDepth));
 		
 		Occlusion -= Occluded * Intensity;
 	}
 	
 	Occlusion /= SSAO_SAMPLE_COUNT;
 	Occlusion = pow(Occlusion, c_SSAOParams.Magnitude);
-	Occlusion = c_SSAOParams.Contrast * (Occlusion - .5f) + .5f;
 	
 	c_OcclusionOutput[DTID.xy] = Occlusion;
 }

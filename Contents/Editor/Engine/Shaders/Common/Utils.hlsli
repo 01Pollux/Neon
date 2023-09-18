@@ -33,7 +33,8 @@ SamplerState s_Sampler_PointWrap : register(s0, space0);
 SamplerState s_Sampler_PointClamp : register(s1, space0);
 SamplerState s_Sampler_LinearWrap : register(s2, space0);
 SamplerState s_Sampler_LinearClamp : register(s3, space0);
-SamplerState s_Sampler_AnisotropicWrap : register(s4, space0);
-SamplerState s_Sampler_AnisotropicClamp : register(s5, space0);
+SamplerState s_Sampler_LinearBorder : register(s4, space0);
+SamplerState s_Sampler_AnisotropicWrap : register(s5, space0);
+SamplerState s_Sampler_AnisotropicClamp : register(s6, space0);
 
 #endif
