@@ -240,7 +240,6 @@ namespace Neon::RHI
             case StandardSamplerType::LinearBorder:
                 Desc.Filter   = RHI::ESamplerFilter::MinMagMipLinear;
                 Desc.AddressU = Desc.AddressV = Desc.AddressW = RHI::ESamplerMode::Border;
-                Desc.BorderColor                              = { 1.f, 1.f, 1.f, 1.f };
                 break;
             case StandardSamplerType::AnisotropicWrap:
                 Desc.Filter   = RHI::ESamplerFilter::Anisotropic;

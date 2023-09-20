@@ -401,10 +401,10 @@ namespace Neon::RHI
         ESamplerMode         AddressV       = ESamplerMode::Wrap;
         ESamplerMode         AddressW       = ESamplerMode::Wrap;
         float                MipLODBias     = 0.f;
-        uint32_t             MaxAnisotropy  = 1;
-        ECompareFunc         ComparisonFunc = ECompareFunc::Less;
-        std::array<float, 4> BorderColor    = { 1.f, 0.f, 1.f, 1.f };
-        float                MinLOD         = -16.f;
-        float                MaxLOD         = 15.99f;
+        uint32_t             MaxAnisotropy  = 16;
+        ECompareFunc         ComparisonFunc = ECompareFunc::LessEqual;
+        std::array<float, 4> BorderColor    = { 1.f, 1.f, 1.f, 1.f };
+        float                MinLOD         = 0.f;
+        float                MaxLOD         = FLT_MAX;
     };
 } // namespace Neon::RHI

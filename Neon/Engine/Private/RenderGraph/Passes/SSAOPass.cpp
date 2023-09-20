@@ -33,39 +33,32 @@ namespace Neon::RG
         OutputTexture_TextureMap,
     };
 
-    SSAOPass::SSAOPass(
-        uint32_t SampleCount) :
+    SSAOPass::SSAOPass() :
         RenderPass("SSAOPass")
     {
         GenerateNoise();
-        RegenerateSamples(SampleCount);
+        RegenerateSamples();
     }
 
     void SSAOPass::AddPass(
         GraphBuilder& Builder)
     {
         Builder.AddPass<SSAOPass>();
-        Builder.AddPass<BlurPass>(
+        auto& Blur = Builder.AddPass<BlurPass>(
             BlurPass::BlurPassData{
                 .ViewName = STR("SSAO"),
                 .Source   = ResourceId(STR("SSAOOutput")),
                 .Output   = ResourceId(STR("AmbientOcclusion")) });
+        Blur.SetIterations(3);
     }
 
     //
 
-    void SSAOPass::RegenerateSamples(
-        uint32_t SampleCount)
+    void SSAOPass::RegenerateSamples()
     {
-        if (SampleCount && m_SampleCount != SampleCount)
+        GenerateSamples();
+        if (m_SSAORootSignature) [[unlikely]]
         {
-            m_SampleCount = SampleCount;
-            GenerateSamples();
-        }
-
-        if (!SampleCount)
-        {
-            GenerateSamples();
             return;
         }
 
@@ -105,87 +98,90 @@ namespace Neon::RG
 
     float SSAOPass::GetRadius() const noexcept
     {
-        return GetSSAOParams()->Radius;
+        return m_Params.Radius;
     }
 
     void SSAOPass::SetRadius(
         float Val) noexcept
     {
-        GetSSAOParams()->Radius = Val;
+        m_Params.Radius = Val;
     }
 
     float SSAOPass::GetBias() const noexcept
     {
-        return GetSSAOParams()->Bias;
+        return m_Params.Bias;
     }
 
     void SSAOPass::SetBias(
         float Val) noexcept
     {
-        GetSSAOParams()->Bias = Val;
+        m_Params.Bias = Val;
     }
 
     float SSAOPass::GetMagnitude() const noexcept
     {
-        return GetSSAOParams()->Magnitude;
+        return m_Params.Magnitude;
     }
 
     void SSAOPass::SetMagniute(
         float Val) noexcept
     {
-        GetSSAOParams()->Magnitude = Val;
+        m_Params.Magnitude = Val;
     }
 
     float SSAOPass::GetContrast() const noexcept
     {
-        return GetSSAOParams()->Contrast;
+        return m_Params.Contrast;
     }
 
     void SSAOPass::SetContrast(
         float Val) noexcept
     {
-        GetSSAOParams()->Contrast = Val;
+        m_Params.Contrast = Val;
     }
 
     float SSAOPass::GetResolutionFactor() const noexcept
     {
-        return GetSSAOParams()->ResolutionFactor;
+        return m_Params.ResolutionFactor;
     }
 
     void SSAOPass::SetResolutionFactor(
         float Val) noexcept
     {
-        GetSSAOParams()->ResolutionFactor = Val;
+        m_Params.ResolutionFactor = Val;
     }
 
     //
 
     void SSAOPass::GenerateSamples()
     {
-        std::uniform_real_distribution<float> Distribution(0.f, 1.0f);
+        std::uniform_real_distribution<float> Distribution(0.25f, 1.0f);
 
+        m_Params.Samples[0] = Vector4{ 1.0f, 1.0f, 1.0f, 0.0f };
+        m_Params.Samples[1] = Vector4(-1.0f, -1.0f, -1.0f, 0.0f);
+
+        m_Params.Samples[2] = Vector4(-1.0f, 1.0f, 1.0f, 0.0f);
+        m_Params.Samples[3] = Vector4(1.0f, -1.0f, -1.0f, 0.0f);
+
+        m_Params.Samples[4] = Vector4(1.0f, 1.0f, -1.0f, 0.0f);
+        m_Params.Samples[5] = Vector4(-1.0f, -1.0f, 1.0f, 0.0f);
+
+        m_Params.Samples[6] = Vector4(-1.0f, 1.0f, -1.0f, 0.0f);
+        m_Params.Samples[7] = Vector4(1.0f, -1.0f, 1.0f, 0.0f);
+
+        m_Params.Samples[8] = Vector4(-1.0f, 0.0f, 0.0f, 0.0f);
+        m_Params.Samples[9] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+
+        m_Params.Samples[10] = Vector4(0.0f, -1.0f, 0.0f, 0.0f);
+        m_Params.Samples[11] = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
+
+        m_Params.Samples[12] = Vector4(0.0f, 0.0f, -1.0f, 0.0f);
+        m_Params.Samples[13] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+
+        for (size_t i = 0; i < SampleCount; i++)
         {
-            auto NewPtr(std::make_unique<uint8_t[]>(GetParamsSize()));
-            if (m_Params)
-            {
-                new (NewPtr.get()) ParamsType(*GetSSAOParams());
-            }
-            else
-            {
-                new (NewPtr.get()) ParamsType;
-            }
-            m_Params = std::move(NewPtr);
-        }
-
-        for (size_t i = 0; i < m_SampleCount; i++)
-        {
-            auto& Sample = GetSSAOSamples()[i];
-
-            Sample.x = Distribution(Random::GetEngine());
-            Sample.y = Distribution(Random::GetEngine());
-            Sample.z = Distribution(Random::GetEngine());
-            Sample.w = 0.0f;
-            Sample   = glm::normalize(Sample) * Distribution(Random::GetEngine());
+            auto& Sample = m_Params.Samples[i];
+            Sample       = glm::normalize(Sample) * Distribution(Random::GetEngine());
         }
     }
 
@@ -193,27 +189,27 @@ namespace Neon::RG
 
     void SSAOPass::GenerateNoise()
     {
-        std::uniform_real_distribution<float> Distribution(0.0f, 1.0f);
+        std::uniform_real_distribution<float> Distribution(0.25f, 1.0f);
 
-        std::vector<Vector4> NoiseData(128 * 128);
+        std::vector<Vector4> NoiseData(256 * 256);
         for (auto& Noise : NoiseData)
         {
             Noise.x = Distribution(Random::GetEngine());
             Noise.y = Distribution(Random::GetEngine());
             Noise.z = Distribution(Random::GetEngine());
-            Noise.w = Distribution(Random::GetEngine());
+            Noise.w = 1.f;
         }
 
         std::array Subresource{
             RHI::ComputeSubresource(
                 RHI::EResourceFormat::R32G32B32A32_Float,
                 NoiseData.data(),
-                128,
-                128)
+                256,
+                256)
         };
 
         m_NoiseTexture = RHI::SSyncTexture(
-            RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R32G32B32A32_Float, 8, 8, 1),
+            RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R32G32B32A32_Float, 256, 256, 1),
             Subresource,
             STR("SSAOPass::NoiseTexture"),
             BitMask_Or(RHI::EResourceState::NonPixelShaderResource));
@@ -304,11 +300,11 @@ namespace Neon::RG
         //
 
         CommandList.SetResourceView(RHI::CstResourceViewType::Cbv, uint32_t(SSAOPassRS::FrameData), Storage.GetFrameDataHandle());
-        CommandList.SetDynamicResourceView(RHI::CstResourceViewType::Cbv, uint32_t(SSAOPassRS::SSAOParams), m_Params.get(), GetParamsSize());
+        CommandList.SetDynamicResourceView(RHI::CstResourceViewType::Cbv, uint32_t(SSAOPassRS::SSAOParams), &m_Params, sizeof(m_Params));
         CommandList.SetDescriptorTable(uint32_t(SSAOPassRS::OutputTexture_TextureMap), Descriptor.GetGpuHandle());
 
         auto  Size   = Storage.GetOutputImageSize();
-        float Factor = GetSSAOParams()->ResolutionFactor;
+        float Factor = m_Params.ResolutionFactor;
 
         Size.x = int(Size.x * Factor);
         Size.y = int(Size.y * Factor);

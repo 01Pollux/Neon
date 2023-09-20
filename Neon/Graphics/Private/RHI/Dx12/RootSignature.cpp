@@ -466,7 +466,7 @@ namespace Neon::RHI
             {
                 BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
             }
-            else if (CompareColor(0.f))
+            else if (CompareColor(1.f))
             {
                 BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
             }

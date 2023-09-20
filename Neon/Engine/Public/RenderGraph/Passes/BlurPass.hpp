@@ -48,6 +48,17 @@ namespace Neon::RG
         /// </summary>
         float GetSigma() const noexcept;
 
+        /// <summary>
+        /// Set the number of iterations for the gaussian blur.
+        /// </summary>
+        void SetIterations(
+            uint32_t Iterations);
+
+        /// <summary>
+        /// Get the number of iterations for the gaussian blur.
+        /// </summary>
+        uint32_t GetIterations() const noexcept;
+
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;

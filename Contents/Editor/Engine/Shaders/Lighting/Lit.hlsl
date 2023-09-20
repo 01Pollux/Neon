@@ -109,12 +109,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	}
 	else
 	{
-		Normal = normalize(Ps.NormalWS);
-	}
-	// Invert normal if front face
-	if (IsFrontFace)
-	{
-		Normal *= -1.f;
+		Normal = abs(normalize(Ps.NormalWS));
 	}
 	
 	float4 Specular = float4(Material.Specular, 1.f);

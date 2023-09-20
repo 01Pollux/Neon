@@ -116,6 +116,17 @@ namespace Neon::RG
         return m_Sigma;
     }
 
+    void RG::BlurPass::SetIterations(
+        uint32_t Iterations)
+    {
+        m_Iterations = Iterations;
+    }
+
+    uint32_t RG::BlurPass::GetIterations() const noexcept
+    {
+        return m_Iterations;
+    }
+
     //
 
     void BlurPass::ResolveResources(
