@@ -98,19 +98,18 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 		Albedo.rgb *= Color.rgb;
 	}
 	
-	float3 Normal;
+	float3 Normal = Ps.NormalWS;
+	
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
 	{
 		Texture2D NormalMap = p_NormalMap[Material.NormalMapIndex];
-		Normal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz;
-		Normal = Normal * 2.f - 1.f;
-		Normal = normalize(Normal);
+		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
+		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
+		Normal = mul(Normal, TBN);
 	}
-	else
-	{
-		Normal = abs(normalize(Ps.NormalWS));
-	}
+	
+	Normal = normalize(mul(Normal, (float3x3) g_FrameData.View));
 	
 	float4 Specular = float4(Material.Specular, 1.f);
 	[branch]

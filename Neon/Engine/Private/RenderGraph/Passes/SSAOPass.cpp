@@ -49,7 +49,6 @@ namespace Neon::RG
                 .ViewName = STR("SSAO"),
                 .Source   = ResourceId(STR("SSAOOutput")),
                 .Output   = ResourceId(STR("AmbientOcclusion")) });
-        Blur.SetIterations(3);
     }
 
     //

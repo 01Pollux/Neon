@@ -1,5 +1,5 @@
-#ifndef HELPER_FRAME_H
-#define HELPER_FRAME_H
+#ifndef GBUFFER_HELPER_H
+#define GBUFFER_HELPER_H
 
 struct PSOutput
 {
@@ -17,7 +17,7 @@ PSOutput GBufferPack(
 {
 	PSOutput Out;
 	Out.Albedo_Roughness = float4(Albedo, Roughness);
-	Out.Normal_Metallic = float4(Normal, Metallic);
+	Out.Normal_Metallic = float4(normalize(Normal), Metallic);
 	Out.Emissive = Emissive;
 	return Out;
 }

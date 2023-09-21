@@ -31,16 +31,16 @@ namespace Neon::RG
         };
 
         static constexpr RHI::EResourceFormat RenderTargetsFormats[] = {
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Albedo
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Normal
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Emissive,
+            RHI::EResourceFormat::R16G16B16A16_Float, // Albedo
+            RHI::EResourceFormat::R16G16B16A16_Float, // Normal
+            RHI::EResourceFormat::R16G16B16A16_Float, // Emissive,
             RHI::EResourceFormat::R32_Typeless    // Depth-Stencil
         };
 
         static constexpr RHI::EResourceFormat RenderTargetsFormatsTyped[] = {
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Albedo
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Normal
-            RHI::EResourceFormat::R8G8B8A8_UNorm, // Emissive,
+            RHI::EResourceFormat::R16G16B16A16_Float, // Albedo
+            RHI::EResourceFormat::R16G16B16A16_Float, // Normal
+            RHI::EResourceFormat::R16G16B16A16_Float, // Emissive,
             RHI::EResourceFormat::D32_Float       // Depth-Stencil
         };
 
