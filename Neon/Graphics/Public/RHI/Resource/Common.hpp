@@ -885,6 +885,11 @@ namespace Neon::RHI
     /// </summary>
     static constexpr size_t ConstantBufferAlignement = 256;
 
+    /// <summary>
+    /// Alignment for shader resource (in bytes)
+    /// </summary>
+    static constexpr size_t ShaderResourceAlignement = 64;
+
     struct ResourceFootprint
     {
         uint32_t Width;

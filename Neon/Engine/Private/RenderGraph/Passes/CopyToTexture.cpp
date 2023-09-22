@@ -5,6 +5,7 @@
 
 #include <Renderer/Material/Material.hpp>
 #include <Renderer/Material/Builder.hpp>
+#include <RHI/GlobalDescriptors.hpp>
 
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
@@ -32,27 +33,40 @@ namespace Neon::RG
 
         ShaderAssetTaskPtr CopyToTextureShader(Asset::Manager::LoadAsync(AssetGuids::CopyToTextureShaderGuid()));
 
-        Renderer::RenderMaterialBuilder Builder;
-        Builder.RootSignature(
-                   RHI::RootSignatureBuilder()
-                       .AddDescriptorTable(
-                           RHI::RootDescriptorTable().AddSrvRange("p_CopySource", 0, 0, 1),
-                           RHI::ShaderVisibility::Pixel)
-                       .AddStandardSamplers()
-                       .Build())
-            .VertexShader(CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
-            .PixelShader(CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
-            .Topology(RHI::PrimitiveTopologyCategory::Triangle)
-            .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
-            .RenderTarget(0, RHI::EResourceFormat::R8G8B8A8_UNorm);
+        m_CopyToRootSignature =
+            RHI::RootSignatureBuilder()
+                .AddDescriptorTable(
+                    RHI::RootDescriptorTable().AddSrvRange("p_CopySource", 0, 0, 1),
+                    RHI::ShaderVisibility::Pixel)
+                .AddStandardSamplers()
+                .Build();
 
-        m_Materials[size_t(BlendMode::Opaque)] = Builder.Build();
+        RHI::PipelineStateBuilderG PipeineStateBuilder{
+            .RootSignature = m_CopyToRootSignature,
+            .VertexShader  = CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }),
+            .PixelShader   = CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }),
+            .DepthStencil  = { .DepthEnable = false },
+            .RTFormats     = { RHI::EResourceFormat::R8G8B8A8_UNorm },
+            .Topology      = RHI::PrimitiveTopologyCategory::Triangle
+        };
 
-        Builder.Blend(0, Renderer::MaterialStates::Blend::AlphaBlend);
-        m_Materials[size_t(BlendMode::AlphaBlend)] = Builder.Build();
+        m_CopyToPipeline[size_t(BlendMode::Opaque)] = PipeineStateBuilder.Build();
 
-        Builder.Blend(0, Renderer::MaterialStates::Blend::Additive);
-        m_Materials[size_t(BlendMode::Additive)] = Builder.Build();
+        PipeineStateBuilder.Blend.RenderTargets[0] = {
+            .BlendEnable = true,
+            .Src         = RHI::BlendTarget::SrcAlpha,
+            .Dest        = RHI::BlendTarget::InvSrcAlpha,
+            .OpSrc       = RHI::BlendOp::Add,
+        };
+        m_CopyToPipeline[size_t(BlendMode::AlphaBlend)] = PipeineStateBuilder.Build();
+
+        PipeineStateBuilder.Blend.RenderTargets[0] = {
+            .BlendEnable = true,
+            .Src         = RHI::BlendTarget::One,
+            .Dest        = RHI::BlendTarget::One,
+            .OpSrc       = RHI::BlendOp::Add,
+        };
+        m_CopyToPipeline[size_t(BlendMode::Additive)] = PipeineStateBuilder.Build();
     }
 
     void CopyToTexturePass::ResolveResources(
@@ -66,26 +80,29 @@ namespace Neon::RG
         const GraphStorage&      Storage,
         RHI::GraphicsCommandList CommandList)
     {
-        Ptr<Renderer::IMaterial> Material;
+        Ptr<RHI::IPipelineState> PipelineState;
         switch (m_Data.Blend)
         {
         case BlendMode::Opaque:
-            Material = m_Materials[size_t(BlendMode::Opaque)];
+            PipelineState = m_CopyToPipeline[size_t(BlendMode::Opaque)];
             break;
         case BlendMode::AlphaBlend:
-            Material = m_Materials[size_t(BlendMode::AlphaBlend)];
+            PipelineState = m_CopyToPipeline[size_t(BlendMode::AlphaBlend)];
             break;
         case BlendMode::Additive:
-            Material = m_Materials[size_t(BlendMode::Additive)];
+            PipelineState = m_CopyToPipeline[size_t(BlendMode::Additive)];
             break;
         }
 
-        Material->SetTexture(
-            "p_CopySource",
-            Storage.GetResource(m_Data.Source).Get());
+        RHI::CpuDescriptorHandle Resource;
+        Storage.GetResourceView(m_Data.Source.CreateView(m_Data.ViewName), &Resource);
 
-        Material->Apply(CommandList);
+        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
+        Descriptor->Copy(Descriptor.Offset, { Resource, 1 });
 
+        CommandList.SetRootSignature(m_CopyToRootSignature);
+        CommandList.SetPipelineState(PipelineState);
+        CommandList.SetDescriptorTable(0, Descriptor.GetGpuHandle());
         CommandList.SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);
         CommandList.Draw(RHI::DrawArgs{ .VertexCountPerInstance = 4 });
     }
