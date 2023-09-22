@@ -260,8 +260,25 @@ namespace Neon::RG
             Desc.Height = Size.Height();
         }
 
-        if (!Handle.Get() || WasChanged)
+        auto Iter = std::ranges::find_if(
+            m_InactiveResources,
+            [&Desc](const ResourceHandle& Handle)
+            {
+                return Handle.GetDesc() == Desc;
+            });
+
+        if (Iter != m_InactiveResources.end())
         {
+            auto& NewDesc = Iter->GetDesc();
+
+            Desc.ClearValue = NewDesc.ClearValue;
+
+            Handle.Set(Iter->Get());
+            m_InactiveResources.erase(Iter);
+        }
+        else
+        {
+
             Ptr<RHI::IGpuResource> Res;
 
             // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
