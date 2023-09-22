@@ -64,12 +64,6 @@ namespace Neon::RG
         void TopologicalSort();
 
         /// <summary>
-        /// Calculate resources lifetime for each pass
-        /// </summary>
-        [[nodiscard]] auto CalculateResourcesLifetime(
-            BuildersListType& Builders) const -> std::vector<std::set<ResourceId>>;
-
-        /// <summary>
         /// Depth first search for topological sort
         /// </summary>
         void DepthFirstSearch(
@@ -81,8 +75,7 @@ namespace Neon::RG
         /// Build dependency levels
         /// </summary>
         [[nodiscard]] auto BuildDependencyLevels(
-            BuildersListType&                  Builders,
-            std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<GraphDepdencyLevel>;
+            BuildersListType& Builders) -> std::vector<GraphDepdencyLevel>;
 
     private:
         explicit GraphBuilder(

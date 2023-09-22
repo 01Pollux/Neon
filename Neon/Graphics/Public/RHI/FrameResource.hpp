@@ -12,10 +12,6 @@ namespace Neon::RHI
         using SmallVector = boost::container::small_vector<_Ty, 3>;
 
     public:
-        FrameResource()
-        {
-        }
-
         template<typename... _Args>
         FrameResource(
             _Args&&... Args) noexcept
@@ -30,6 +26,7 @@ namespace Neon::RHI
         void Initialize(
             _Args&&... Args)
         {
+            Reset();
             m_Resources.reserve(Size());
             for (uint32_t i = 0; i < Size(); i++)
             {

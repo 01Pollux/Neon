@@ -85,8 +85,6 @@ namespace Neon::RG
         }
 
         m_CommandListContext.End();
-
-        m_Storage.FlushResources();
     }
 
     void RenderGraph::Build(
@@ -300,12 +298,10 @@ namespace Neon::RG
         std::vector<ResourceViewId>                   RenderTargets,
         std::optional<ResourceViewId>                 DepthStencil,
         std::set<ResourceId>                          ResourceToCreate,
-        std::set<ResourceId>                          ResourceToDestroy,
         std::map<ResourceViewId, RHI::MResourceState> States)
     {
         m_Passes.emplace_back(std::move(Pass), std::move(RenderTargets), std::move(DepthStencil));
         m_ResourcesToCreate.merge(std::move(ResourceToCreate));
-        m_ResourcesToDestroy.merge(std::move(ResourceToDestroy));
 
         for (auto& [ViewId, State] : States)
         {
@@ -381,15 +377,6 @@ namespace Neon::RG
         if (m_FlushCommands)
         {
             m_Context.m_CommandListContext.Flush(m_GraphicsCommandsToFlush, m_ComputeCommandsToFlush);
-        }
-
-        for (auto& Id : m_ResourcesToDestroy)
-        {
-            auto& Handle = Storage.GetResource(Id);
-            if (!Handle.IsImported())
-            {
-                Storage.FreeResource(Handle);
-            }
         }
     }
 
