@@ -207,7 +207,7 @@ namespace Neon::RG
                 256)
         };
 
-        m_NoiseTexture = RHI::SSyncTexture(
+        m_NoiseTexture = RHI::SSyncGpuResource(
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R32G32B32A32_Float, 256, 256, 1),
             Subresource,
             STR("SSAOPass::NoiseTexture"),

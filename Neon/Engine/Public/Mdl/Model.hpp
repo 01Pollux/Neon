@@ -22,7 +22,7 @@ namespace Neon::Mdl
         using SubmeshList    = std::vector<SubMeshData>;
         using MeshNodeList   = std::vector<MeshNode>;
         using SubmeshRefList = std::vector<SubmeshIndex>;
-        using GPUBuffer      = RHI::USyncBuffer;
+        using GPUBuffer      = RHI::USyncGpuResource;
         using MaterialsTable = std::vector<Ptr<Renderer::IMaterial>>;
 
     public:

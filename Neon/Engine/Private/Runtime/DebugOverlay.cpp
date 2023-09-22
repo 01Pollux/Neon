@@ -49,7 +49,7 @@ namespace Neon::Runtime
             Ptr<Renderer::IMaterial> Material;
 
             std::multimap<float, std::pair<LineArgs, bool>> m_TimedLines;
-            std::vector<UPtr<RHI::IUploadBuffer>>           VertexBuffers;
+            std::vector<UPtr<RHI::IGpuResource>>            VertexBuffers;
 
             Overlay_Debug_Line::Vertex* VertexBufferPtr = nullptr;
             uint32_t                    DrawCount       = 0;
@@ -290,7 +290,7 @@ namespace Neon::Runtime
             {
                 VertexBuffers.back()->Unmap();
             }
-            VertexBuffers.emplace_back(RHI::IUploadBuffer::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
+            VertexBuffers.emplace_back(RHI::IGpuResource::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
             VertexBufferPtr = VertexBuffers.back()->Map<Overlay_Debug_Line::Vertex>();
         }
 

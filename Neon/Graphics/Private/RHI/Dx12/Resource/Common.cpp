@@ -50,7 +50,7 @@ namespace Neon::RHI
 
     ID3D12Resource* GetDx12Resource(IGpuResource* Resource)
     {
-        return dynamic_cast<Dx12GpuResource*>(Resource)->GetResource();
+        return static_cast<Dx12GpuResource*>(Resource)->GetResource();
     }
 
     D3D12_RESOURCE_STATES CastResourceStates(

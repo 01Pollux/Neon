@@ -110,17 +110,9 @@ namespace Neon::RG
         // TODO: Add sampler
 
         /// <summary>
-        /// Declare buffer to be created later when dispatching passes
+        /// Declare resource to be created later when dispatching passes
         /// </summary>
-        void DeclareBuffer(
-            const ResourceId&       Id,
-            const RHI::BufferDesc&  Desc,
-            RHI::GraphicsBufferType BufferType);
-
-        /// <summary>
-        /// Declare texture to be created later when dispatching passes
-        /// </summary>
-        void DeclareTexture(
+        void DeclareResource(
             const ResourceId&        Id,
             const RHI::ResourceDesc& Desc,
             MResourceFlags           Flags);
@@ -129,16 +121,16 @@ namespace Neon::RG
         /// import buffer to be used later when dispatching passes
         /// </summary>
         void ImportBuffer(
-            const ResourceId&        Id,
-            const Ptr<RHI::IBuffer>& Resource,
-            RHI::GraphicsBufferType  BufferType);
+            const ResourceId&             Id,
+            const Ptr<RHI::IGpuResource>& Resource,
+            RHI::GraphicsBufferType       BufferType);
 
         /// <summary>
         /// import texture to be used later when dispatching passes
         /// </summary>
         void ImportTexture(
             const ResourceId&             Id,
-            const Ptr<RHI::ITexture>&     Resource,
+            const Ptr<RHI::IGpuResource>& Resource,
             const RHI::ClearOperationOpt& ClearValue = std::nullopt);
 
         /// <summary>
@@ -183,7 +175,7 @@ namespace Neon::RG
         /// The graphics buffer of the camera.
         /// Structured as CameraFrameData.
         /// </summary>
-        Ptr<RHI::IUploadBuffer> m_CameraFrameData;
+        Ptr<RHI::IGpuResource> m_CameraFrameData;
 
         ResourceMapType          m_Resources;
         std::set<ResourceId>     m_ImportedResources;

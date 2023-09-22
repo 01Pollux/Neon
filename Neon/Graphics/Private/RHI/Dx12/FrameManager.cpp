@@ -48,7 +48,7 @@ namespace Neon::RHI
     }
 
     ICommandList* Dx12CommandContextManager::Request(
-        FrameResource& Frame)
+        Dx12FrameResource& Frame)
     {
         return Request(Frame.RequestAllocator(m_Type));
     }
@@ -78,8 +78,8 @@ namespace Neon::RHI
     }
 
     void Dx12CommandContextManager::Reset(
-        FrameResource& Frame,
-        ICommandList*  CommandList)
+        Dx12FrameResource& Frame,
+        ICommandList*      CommandList)
     {
         return Reset(Frame.RequestAllocator(m_Type), CommandList);
     }
@@ -140,7 +140,7 @@ namespace Neon::RHI
         m_FrameResources.resize(FramesCount);
         for (size_t i = OldSize; i < FramesCount; i++)
         {
-            m_FrameResources[i] = std::make_unique<FrameResource>();
+            m_FrameResources[i] = std::make_unique<Dx12FrameResource>();
         }
         m_FrameIndex = 0;
     }
@@ -183,7 +183,7 @@ namespace Neon::RHI
         std::vector<ICommandList*> Result;
         Result.reserve(Count);
 
-        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+        auto& Context = m_ContextPool[Dx12FrameResource::GetCommandListIndex(Type)];
         auto& Frame   = *m_FrameResources[m_FrameIndex];
 
         std::scoped_lock Lock(Context.Mutex);
@@ -201,7 +201,7 @@ namespace Neon::RHI
         NEON_ASSERT(Type != D3D12_COMMAND_LIST_TYPE_COPY);
         NEON_ASSERT(!Commands.empty());
 
-        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+        auto& Context = m_ContextPool[Dx12FrameResource::GetCommandListIndex(Type)];
 
         std::scoped_lock Lock(Context.Mutex);
         for (auto Command : Commands)
@@ -217,7 +217,7 @@ namespace Neon::RHI
         NEON_ASSERT(!Commands.empty());
         NEON_ASSERT(!Commands.empty());
 
-        auto& Context = m_ContextPool[FrameResource::GetCommandListIndex(Type)];
+        auto& Context = m_ContextPool[Dx12FrameResource::GetCommandListIndex(Type)];
 
         std::scoped_lock Lock(Context.Mutex);
 

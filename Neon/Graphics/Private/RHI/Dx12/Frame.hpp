@@ -6,7 +6,7 @@
 
 namespace Neon::RHI
 {
-    class FrameResource
+    class Dx12FrameResource
     {
     public:
         struct CommandAllocatorInstance

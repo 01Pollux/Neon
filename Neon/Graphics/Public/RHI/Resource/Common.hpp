@@ -537,39 +537,69 @@ namespace Neon::RHI
     {
         constexpr bool operator==(const ResourceDesc&) const noexcept = default;
 
-        size_t            Width         = 0;
-        uint32_t          Height        = 0;
-        uint16_t          Depth         = 0;
-        uint16_t          MipLevels     = 0;
-        uint32_t          Alignment     = 0;
-        uint32_t          SampleCount   = 1;
-        uint32_t          SampleQuality = 0;
-        MResourceFlags    Flags;
-        ResourceType      Type   = ResourceType::Unknown;
-        EResourceFormat   Format = EResourceFormat::Unknown;
-        ResourceLayout    Layout = ResourceLayout::Unknown;
-        ClearOperationOpt ClearValue;
+        size_t             Width         = 1;
+        uint32_t           Height        = 1;
+        uint16_t           Depth         = 1;
+        uint16_t           MipLevels     = 0;
+        uint32_t           Alignment     = 0;
+        uint32_t           SampleCount   = 1;
+        uint32_t           SampleQuality = 0;
+        MResourceFlags     Flags;
+        ResourceType       Type       = ResourceType::Unknown;
+        EResourceFormat    Format     = EResourceFormat::Unknown;
+        ResourceLayout     Layout     = ResourceLayout::Unknown;
+        GraphicsBufferType BufferType = GraphicsBufferType::Default;
+        ClearOperationOpt  ClearValue;
 
         /// <summary>
         /// Creates a buffer resource description.
         /// </summary>
-        static ResourceDesc Buffer(
+        [[nodiscard]] static ResourceDesc Buffer(
+            size_t               Size,
+            const MResourceFlags Flags      = {},
+            GraphicsBufferType   BufferType = GraphicsBufferType::Default)
+        {
+            return {
+                .Width      = Size,
+                .MipLevels  = 1,
+                .Alignment  = 65536,
+                .Flags      = Flags,
+                .Type       = ResourceType::Buffer,
+                .Layout     = ResourceLayout::RowMajor,
+                .BufferType = BufferType
+            };
+        }
+
+        /// <summary>
+        /// Creates a buffer resource description.
+        /// </summary>
+        [[nodiscard]] static ResourceDesc BufferUpload(
             size_t               Size,
             const MResourceFlags Flags = {})
         {
-            return {
-                .Width     = Size,
-                .Alignment = 65536,
-                .Flags     = Flags,
-                .Type      = ResourceType::Buffer,
-                .Layout    = ResourceLayout::RowMajor
-            };
+            return Buffer(
+                Size,
+                Flags,
+                GraphicsBufferType::Upload);
+        }
+
+        /// <summary>
+        /// Creates a buffer resource description.
+        /// </summary>
+        [[nodiscard]] static ResourceDesc BufferReadback(
+            size_t               Size,
+            const MResourceFlags Flags = {})
+        {
+            return Buffer(
+                Size,
+                Flags,
+                GraphicsBufferType::Readback);
         }
 
         /// <summary>
         /// Creates a texture resource description.
         /// </summary>
-        static ResourceDesc Tex1D(
+        [[nodiscard]] static ResourceDesc Tex1D(
             EResourceFormat      Format,
             size_t               Width,
             uint16_t             ArraySize,
@@ -597,7 +627,7 @@ namespace Neon::RHI
         /// <summary>
         /// Creates a texture resource description.
         /// </summary>
-        static ResourceDesc Tex2D(
+        [[nodiscard]] static ResourceDesc Tex2D(
             EResourceFormat      Format,
             size_t               Width,
             uint32_t             Height,
@@ -627,7 +657,7 @@ namespace Neon::RHI
         /// <summary>
         /// Creates a texture resource description.
         /// </summary>
-        static ResourceDesc Tex3D(
+        [[nodiscard]] static ResourceDesc Tex3D(
             EResourceFormat      Format,
             size_t               Width,
             uint32_t             Height,
@@ -653,7 +683,7 @@ namespace Neon::RHI
         /// <summary>
         /// Creates a texture resource description.
         /// </summary>
-        static ResourceDesc TexCube(
+        [[nodiscard]] static ResourceDesc TexCube(
             EResourceFormat      Format,
             size_t               Width,
             uint32_t             Height,

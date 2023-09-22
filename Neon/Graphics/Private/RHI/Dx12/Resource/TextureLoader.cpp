@@ -4,7 +4,7 @@
 
 namespace Neon::RHI
 {
-    Dx12Texture* TextureLoader::Release() noexcept
+    Dx12GpuResource* TextureLoader::Release() noexcept
     {
         return m_Texture.release();
     }
@@ -16,11 +16,11 @@ namespace Neon::RHI
         std::span<const SubresourceDesc>    Subresources,
         const wchar_t*                      Name,
         const RHI::MResourceState&          InitialState) :
-        m_Texture(std::make_unique<Dx12Texture>(
+        m_Texture(std::make_unique<Dx12GpuResource>(
+            CopyTask,
             std::move(Texture),
             std::move(Allocation),
             Subresources,
-            CopyTask,
             Name,
             InitialState))
     {

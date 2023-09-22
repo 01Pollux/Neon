@@ -46,7 +46,7 @@ namespace Neon::RHI
         /// Request command list from pool
         /// </summary>
         ICommandList* Request(
-            FrameResource& Frame);
+            Dx12FrameResource& Frame);
 
         /// <summary>
         /// Free command list to pool
@@ -65,8 +65,8 @@ namespace Neon::RHI
         /// Reset command list with new command allocator
         /// </summary>
         void Reset(
-            FrameResource& Frame,
-            ICommandList*  CommandList);
+            Dx12FrameResource& Frame,
+            ICommandList*      CommandList);
 
     private:
         D3D12_COMMAND_LIST_TYPE m_Type;
@@ -286,7 +286,7 @@ namespace Neon::RHI
             DescriptorType Type) noexcept;
 
     private:
-        std::vector<UPtr<FrameResource>> m_FrameResources;
+        std::vector<UPtr<Dx12FrameResource>> m_FrameResources;
 
         uint32_t m_FrameIndex = 0;
 

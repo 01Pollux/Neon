@@ -56,8 +56,8 @@ namespace Neon::Renderer
 
         struct FrameResource
         {
-            Ptr<RHI::IUploadBuffer> PerObjectBuffer;
-            Ptr<RHI::IUploadBuffer> PerMaterialBuffer;
+            Ptr<RHI::IGpuResource> PerObjectBuffer;
+            Ptr<RHI::IGpuResource> PerMaterialBuffer;
 
             FrameResource();
         };

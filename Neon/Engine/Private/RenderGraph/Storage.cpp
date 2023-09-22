@@ -18,7 +18,9 @@
 namespace Neon::RG
 {
     GraphStorage::GraphStorage() :
-        m_CameraFrameData(RHI::IUploadBuffer::Create({ .Size = Math::AlignUp(sizeof(CameraFrameData), 255) }))
+        m_CameraFrameData(RHI::IGpuResource::Create(
+            RHI::ResourceDesc::BufferUpload(
+                Math::AlignUp(sizeof(CameraFrameData), 255))))
     {
     }
 
@@ -157,29 +159,19 @@ namespace Neon::RG
 
     //
 
-    void GraphStorage::DeclareBuffer(
-        const ResourceId&       Id,
-        const RHI::BufferDesc&  Desc,
-        RHI::GraphicsBufferType Type)
-    {
-        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, RHI::ResourceDesc::Buffer(Desc.Size, Desc.Flags), {}, Type));
-        NEON_ASSERT(HandleIter.second, "Resource already exists");
-    }
-
-    void GraphStorage::DeclareTexture(
+    void GraphStorage::DeclareResource(
         const ResourceId&        Id,
         const RHI::ResourceDesc& Desc,
         MResourceFlags           Flags)
     {
-        NEON_ASSERT(Desc.Type != RHI::ResourceType::Buffer);
         auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, Desc, std::move(Flags)));
         NEON_ASSERT(HandleIter.second, "Resource already exists");
     }
 
     void GraphStorage::ImportBuffer(
-        const ResourceId&        Id,
-        const Ptr<RHI::IBuffer>& Buffer,
-        RHI::GraphicsBufferType  BufferType)
+        const ResourceId&             Id,
+        const Ptr<RHI::IGpuResource>& Buffer,
+        RHI::GraphicsBufferType       BufferType)
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
         auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Buffer, BufferType)).first->second.Get();
@@ -192,7 +184,7 @@ namespace Neon::RG
 
     void GraphStorage::ImportTexture(
         const ResourceId&             Id,
-        const Ptr<RHI::ITexture>&     Texture,
+        const Ptr<RHI::IGpuResource>& Texture,
         const RHI::ClearOperationOpt& ClearValue)
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
@@ -234,7 +226,9 @@ namespace Neon::RG
         Desc.SetClearValue(Colors::Magenta);
         Desc.Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
 
-        OutputImage.Set(Ptr<RHI::ITexture>(RHI::ITexture::Create(Desc, ResourceResolver::GetOutputImageTag().GetName().c_str())));
+        OutputImage.Set(Ptr<RHI::IGpuResource>(RHI::IGpuResource::Create(
+            Desc,
+            { .Name = ResourceResolver::GetOutputImageTag().GetName().c_str() })));
     }
 
     void GraphStorage::ReallocateResource(
@@ -268,33 +262,10 @@ namespace Neon::RG
         {
 
             Ptr<RHI::IGpuResource> Res;
-            if (Desc.Type == RHI::ResourceType::Buffer)
-            {
-                RHI::BufferDesc BufferDesc{
-                    .Size  = Desc.Width,
-                    .Flags = Desc.Flags
-                };
-                switch (Handle.GetBufferType())
-                {
-                case RHI::GraphicsBufferType::Default:
-                    Res.reset(RHI::IBuffer::Create(BufferDesc));
-                    break;
-                case RHI::GraphicsBufferType::Upload:
-                    Res.reset(RHI::IUploadBuffer::Create(BufferDesc));
-                    break;
-                case RHI::GraphicsBufferType::Readback:
-                    Res.reset(RHI::IReadbackBuffer::Create(BufferDesc));
-                    break;
-                default:
-                    std::unreachable();
-                }
-            }
-            else
-            {
-                // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
-                Desc.MipLevels = 0;
-                Res.reset(RHI::ITexture::Create(Desc));
-            }
+
+            // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
+            Desc.MipLevels = 0;
+            Res.reset(RHI::IGpuResource::Create(Desc));
 
             Handle.Set(Res);
             Desc = Res->GetDesc();

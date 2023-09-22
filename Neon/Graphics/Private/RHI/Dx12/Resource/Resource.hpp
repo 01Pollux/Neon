@@ -7,9 +7,27 @@
 
 namespace Neon::RHI
 {
-    class Dx12GpuResource : public virtual IGpuResource
+    class Dx12GpuResource : public IGpuResource
     {
     public:
+        Dx12GpuResource(
+            const ResourceDesc&  Desc,
+            const InitDesc&      Init,
+            D3D12_RESOURCE_FLAGS Flags = D3D12_RESOURCE_FLAG_NONE);
+
+        Dx12GpuResource(
+            std::future<void>&                  CopyTask,
+            WinAPI::ComPtr<ID3D12Resource>      Texture,
+            WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
+            std::span<const SubresourceDesc>    Subresources,
+            const wchar_t*                      Name,
+            const RHI::MResourceState&          InitialState);
+
+        Dx12GpuResource(
+            WinAPI::ComPtr<ID3D12Resource>      Texture,
+            D3D12_RESOURCE_STATES               InitialState,
+            WinAPI::ComPtr<D3D12MA::Allocation> Allocation);
+
         ~Dx12GpuResource();
 
         void QueryFootprint(
@@ -41,120 +59,13 @@ namespace Neon::RHI
         /// </summary>
         void SilentRelease();
 
-    protected:
-        WinAPI::ComPtr<ID3D12Resource>      m_Resource;
-        WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
-    };
-
-    class Dx12Buffer : public virtual IBuffer,
-                       public Dx12GpuResource
-    {
-        friend class FrameResource;
-
     public:
-        Dx12Buffer(
-            const BufferDesc&          Desc,
-            const SubresourceDesc*     Subresource,
-            std::future<void>*         CopyTask,
-            GraphicsBufferType         Type,
-            const RHI::MResourceState& InitialState);
-
-        Dx12Buffer(
-            size_t                     Size,
-            const wchar_t*             Name,
-            D3D12_RESOURCE_FLAGS       Flags,
-            GraphicsBufferType         Type,
-            const RHI::MResourceState& InitialState);
-
-        size_t GetSize() const override;
-
         GpuResourceHandle GetHandle(
             size_t Offset) const override;
 
-    protected:
-        GraphicsBufferType m_Type{};
-    };
-
-    //
-
-    class Dx12UploadBuffer : public virtual IUploadBuffer,
-                             public Dx12Buffer
-    {
-    public:
-        Dx12UploadBuffer(
-            const BufferDesc&          Desc,
-            const SubresourceDesc*     Subresource,
-            std::future<void>*         CopyTask,
-            const RHI::MResourceState& InitialState);
-
-        Dx12UploadBuffer(
-            size_t                     Size,
-            const wchar_t*             Name,
-            D3D12_RESOURCE_FLAGS       Flags,
-            const RHI::MResourceState& InitialState);
-
         uint8_t* Map() override;
 
         void Unmap() override;
-    };
-
-    //
-
-    class Dx12ReadbackBuffer : public virtual IReadbackBuffer,
-                               public Dx12Buffer
-    {
-    public:
-        Dx12ReadbackBuffer(
-            const BufferDesc&          Desc,
-            const RHI::MResourceState& InitialState);
-
-        Dx12ReadbackBuffer(
-            size_t                     Size,
-            const wchar_t*             Name,
-            D3D12_RESOURCE_FLAGS       Flags,
-            const RHI::MResourceState& InitialState);
-
-        uint8_t* Map() override;
-
-        void Unmap() override;
-    };
-
-    //
-
-    class Dx12Texture : public virtual ITexture,
-                        public Dx12GpuResource
-    {
-    public:
-        Dx12Texture(
-            const RHI::ResourceDesc&         Desc,
-            std::span<const SubresourceDesc> Subresources,
-            std::future<void>*               CopyTask,
-            const wchar_t*                   Name,
-            const RHI::MResourceState&       InitialState);
-
-        Dx12Texture(
-            WinAPI::ComPtr<ID3D12Resource>      Texture,
-            D3D12_RESOURCE_STATES               InitialState,
-            WinAPI::ComPtr<D3D12MA::Allocation> Allocation = nullptr);
-
-        Dx12Texture(
-            WinAPI::ComPtr<ID3D12Resource>      Texture,
-            WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-            std::span<const SubresourceDesc>    Subresources,
-            std::future<void>&                  CopyTask,
-            const wchar_t*                      Name,
-            const RHI::MResourceState&          InitialState);
-
-        Vector3I GetDimensions() const override;
-
-        uint16_t GetMipLevels() const override;
-
-        uint32_t GetSubResourceCount() const override;
-
-        uint32_t GetSubresourceIndex(
-            uint32_t PlaneIndex,
-            uint32_t ArrayIndex,
-            uint32_t MipIndex) const override;
 
     private:
         /// <summary>
@@ -169,6 +80,8 @@ namespace Neon::RHI
             uint32_t SubresourcesCount);
 
     protected:
-        ClearOperationOpt m_ClearValue;
+        WinAPI::ComPtr<ID3D12Resource>      m_Resource;
+        WinAPI::ComPtr<D3D12MA::Allocation> m_Allocation;
+        ClearOperationOpt                   m_ClearValue;
     };
 } // namespace Neon::RHI

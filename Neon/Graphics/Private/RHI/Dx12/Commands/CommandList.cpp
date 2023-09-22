@@ -108,11 +108,11 @@ namespace Neon::RHI
     }
 
     void Dx12CommandList::CopyBufferRegion(
-        IBuffer* DstBuffer,
-        size_t   DstOffset,
-        IBuffer* SrcBuffer,
-        size_t   SrcOffset,
-        size_t   NumBytes)
+        IGpuResource* DstBuffer,
+        size_t        DstOffset,
+        IGpuResource* SrcBuffer,
+        size_t        SrcOffset,
+        size_t        NumBytes)
     {
         m_CommandList->CopyBufferRegion(
             GetDx12Resource(DstBuffer),
@@ -190,7 +190,7 @@ namespace Neon::RHI
         Barriers.reserve(Resources.size());
         for (auto Resource : Resources)
         {
-            Barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::UAV(dynamic_cast<Dx12GpuResource*>(Resource)->GetResource()));
+            Barriers.emplace_back(CD3DX12_RESOURCE_BARRIER::UAV(static_cast<Dx12GpuResource*>(Resource)->GetResource()));
         }
         m_CommandList->ResourceBarrier(UINT(Barriers.size()), Barriers.data());
     }
@@ -254,7 +254,7 @@ namespace Neon::RHI
             Alignment,
             BufferType);
 
-        Buffer.AsUpload()->Write(Buffer.Offset, Data, Size);
+        Buffer.AsUpload().Write(Buffer.Offset, Data, Size);
 
         SetResourceView(
             IsDirect,
@@ -552,11 +552,11 @@ namespace Neon::RHI
         size_t GroupCountY,
         size_t GroupCountZ)
     {
-        auto GroupSize = static_cast<Dx12PipelineState*>(m_PipelineState.get())->GetComputeGroupSize();
+        auto& GroupSize = static_cast<Dx12PipelineState*>(m_PipelineState.get())->GetComputeGroupSize();
         m_CommandList->Dispatch(
-            Math::DivideByMultiple(GroupCountX, GroupSize.x),
-            Math::DivideByMultiple(GroupCountY, GroupSize.y),
-            Math::DivideByMultiple(GroupCountZ, GroupSize.z));
+            uint32_t(Math::DivideByMultiple(GroupCountX, GroupSize.x)),
+            uint32_t(Math::DivideByMultiple(GroupCountY, GroupSize.y)),
+            uint32_t(Math::DivideByMultiple(GroupCountZ, GroupSize.z)));
     }
 
     //

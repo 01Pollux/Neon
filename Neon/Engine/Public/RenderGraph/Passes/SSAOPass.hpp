@@ -124,7 +124,7 @@ namespace Neon::RG
             RHI::ComputeCommandList CommandList);
 
     private:
-        RHI::SSyncTexture m_NoiseTexture;
+        RHI::SSyncGpuResource m_NoiseTexture;
 
         Ptr<RHI::IRootSignature> m_SSAORootSignature;
         Ptr<RHI::IPipelineState> m_SSAOPipeline;

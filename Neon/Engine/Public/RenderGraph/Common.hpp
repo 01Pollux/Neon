@@ -259,19 +259,18 @@ namespace Neon::RG
 
         ResourceHandle(
             const ResourceId&             Id,
-            const Ptr<RHI::ITexture>&     Texture,
+            const Ptr<RHI::IGpuResource>& Texture,
             const RHI::ClearOperationOpt& ClearValue = std::nullopt);
 
         ResourceHandle(
-            const ResourceId&        Id,
-            const Ptr<RHI::IBuffer>& Buffer,
-            RHI::GraphicsBufferType  BufferType);
+            const ResourceId&             Id,
+            const Ptr<RHI::IGpuResource>& Buffer,
+            RHI::GraphicsBufferType       BufferType);
 
         ResourceHandle(
             const ResourceId&        Id,
             const RHI::ResourceDesc& Desc,
-            MResourceFlags           Flags,
-            RHI::GraphicsBufferType  BufferType = RHI::GraphicsBufferType::Count);
+            MResourceFlags           Flags);
 
         /// <summary>
         /// Get resource id
@@ -317,27 +316,22 @@ namespace Neon::RG
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] Ptr<RHI::ITexture> AsTexture() const noexcept;
+        [[nodiscard]] RHI::GpuTexture AsTexture() const noexcept;
 
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] Ptr<RHI::IBuffer> AsBuffer() const noexcept;
+        [[nodiscard]] RHI::GpuBuffer AsBuffer() const noexcept;
 
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] Ptr<RHI::IUploadBuffer> AsUploadBuffer() const noexcept;
+        [[nodiscard]] RHI::GpuUploadBuffer AsUploadBuffer() const noexcept;
 
         /// <summary>
         /// Get the underlying resource
         /// </summary>
-        [[nodiscard]] Ptr<RHI::IReadbackBuffer> AsReadbackBuffer() const noexcept;
-
-        /// <summary>
-        /// Get buffer type if the resource is a buffer
-        /// </summary>
-        [[nodiscard]] RHI::GraphicsBufferType GetBufferType() const noexcept;
+        [[nodiscard]] RHI::GpuReadbackBuffer AsReadbackBuffer() const noexcept;
 
         /// <summary>
         /// check if texture is window sized
@@ -362,7 +356,5 @@ namespace Neon::RG
         ResourceId        m_Id;
         RHI::ResourceDesc m_Desc;
         MResourceFlags    m_Flags;
-
-        RHI::GraphicsBufferType m_BufferType : 2;
     };
 } // namespace Neon::RG

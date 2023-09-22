@@ -32,7 +32,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get loaded texture.
         /// </summary>
-        [[nodiscard]] Dx12Texture* Release() noexcept;
+        [[nodiscard]] Dx12GpuResource* Release() noexcept;
 
     private:
         TextureLoader(
@@ -44,6 +44,6 @@ namespace Neon::RHI
             const RHI::MResourceState&          InitialState);
 
     private:
-        UPtr<Dx12Texture> m_Texture;
+        UPtr<Dx12GpuResource> m_Texture;
     };
 } // namespace Neon::RHI

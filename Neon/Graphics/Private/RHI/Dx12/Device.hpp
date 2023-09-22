@@ -7,8 +7,6 @@
 
 namespace Neon::RHI
 {
-    class Dx12Texture;
-
     class Dx12RenderDevice final : public IRenderDevice
     {
     public:
@@ -85,7 +83,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get default texture.
         /// </summary>
-        [[nodiscard]] const Ptr<ITexture>& GetDefaultTexture(
+        [[nodiscard]] const Ptr<IGpuResource>& GetDefaultTexture(
             DefaultTextures Type) const;
 
     private:
@@ -158,6 +156,6 @@ namespace Neon::RHI
         UPtr<GraphicsMemoryAllocator> m_MemoryAllocator;
         UPtr<Dx12Swapchain>           m_Swapchain;
 
-        std::array<Ptr<ITexture>, size_t(DefaultTextures::Count)> m_DefaultTextures;
+        std::array<Ptr<IGpuResource>, size_t(DefaultTextures::Count)> m_DefaultTextures;
     };
 } // namespace Neon::RHI

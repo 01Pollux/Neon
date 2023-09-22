@@ -20,7 +20,7 @@ namespace Neon::RHI
     public:
         struct Handle
         {
-            IBuffer*                      Resource;
+            IGpuResource*                 Resource;
             size_t                        Offset;
             size_t                        Size;
             IGlobalBufferPool::BufferType Type;
@@ -30,7 +30,7 @@ namespace Neon::RHI
         struct BuddyBlock
         {
             Dx12ResourceStateManager& StateManager;
-            UPtr<Dx12Buffer>          Buffer;
+            UPtr<Dx12GpuResource>     Buffer;
 
             Allocator::BuddyAllocator Allocator;
 

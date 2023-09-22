@@ -5,7 +5,7 @@
 
 namespace Neon::RHI
 {
-    FrameResource::CommandAllocatorInstance::CommandAllocatorInstance(
+    Dx12FrameResource::CommandAllocatorInstance::CommandAllocatorInstance(
         D3D12_COMMAND_LIST_TYPE CommandType)
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -14,7 +14,7 @@ namespace Neon::RHI
             IID_PPV_ARGS(&CommandAllocator)));
     }
 
-    ID3D12CommandAllocator* FrameResource::RequestAllocator(
+    ID3D12CommandAllocator* Dx12FrameResource::RequestAllocator(
         D3D12_COMMAND_LIST_TYPE CommandType)
     {
         auto Allocator = m_AllocatorsPools[GetCommandListIndex(CommandType)].Allocate(CommandType)->CommandAllocator.Get();
@@ -22,7 +22,7 @@ namespace Neon::RHI
         return Allocator;
     }
 
-    void FrameResource::Reset()
+    void Dx12FrameResource::Reset()
     {
         for (auto& [HeapAllocators, Handles] : m_DescriptorHeapHandles)
         {
@@ -53,20 +53,20 @@ namespace Neon::RHI
         }
     }
 
-    void FrameResource::SafeRelease(
+    void Dx12FrameResource::SafeRelease(
         IDescriptorHeapAllocator*   Allocator,
         const DescriptorHeapHandle& Handle)
     {
         m_DescriptorHeapHandles[Allocator].emplace_back(Handle);
     }
 
-    void FrameResource::SafeRelease(
+    void Dx12FrameResource::SafeRelease(
         const GraphicsMemoryAllocator::Handle& Handle)
     {
         m_Buffers.emplace_back(Handle);
     }
 
-    void FrameResource::SafeRelease(
+    void Dx12FrameResource::SafeRelease(
         const WinAPI::ComPtr<ID3D12DescriptorHeap>& Descriptor)
     {
         // First we check if the incoming descriptor exists in the to be deleted handles.
@@ -87,7 +87,7 @@ namespace Neon::RHI
         m_Resources.emplace_back(Descriptor);
     }
 
-    void FrameResource::SafeRelease(
+    void Dx12FrameResource::SafeRelease(
         const WinAPI::ComPtr<ID3D12Resource>&      Resource,
         const WinAPI::ComPtr<D3D12MA::Allocation>& Allocation)
     {
@@ -96,13 +96,13 @@ namespace Neon::RHI
             m_Allocation.emplace_back(Allocation);
     }
 
-    Dx12FrameDescriptorHeap* FrameResource::GetFrameDescriptorAllocator(
+    Dx12FrameDescriptorHeap* Dx12FrameResource::GetFrameDescriptorAllocator(
         DescriptorType Type) noexcept
     {
         return &m_FrameDescriptors[Type == DescriptorType::ResourceView ? 0 : 1];
     }
 
-    Dx12StagedDescriptorHeap* FrameResource::GetStagedDescriptorAllocator(
+    Dx12StagedDescriptorHeap* Dx12FrameResource::GetStagedDescriptorAllocator(
         DescriptorType Type) noexcept
     {
         return &m_StagedDescriptors[size_t(Type)];
@@ -110,7 +110,7 @@ namespace Neon::RHI
 
     //
 
-    D3D12_COMMAND_LIST_TYPE FrameResource::GetCommandListType(
+    D3D12_COMMAND_LIST_TYPE Dx12FrameResource::GetCommandListType(
         size_t Index) noexcept
     {
         switch (Index)
@@ -124,7 +124,7 @@ namespace Neon::RHI
         }
     }
 
-    size_t FrameResource::GetCommandListIndex(
+    size_t Dx12FrameResource::GetCommandListIndex(
         D3D12_COMMAND_LIST_TYPE Type) noexcept
     {
         switch (Type)

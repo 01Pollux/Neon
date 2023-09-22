@@ -23,8 +23,6 @@ namespace Neon::RHI
     class IRootSignature;
 
     class IGpuResource;
-    class ITexture;
-    class IBuffer;
 
     struct SubresourceDesc;
     struct TextureCopyLocation;
@@ -113,11 +111,11 @@ namespace Neon::RHI
         /// Copy buffer resource
         /// </summary>
         virtual void CopyBufferRegion(
-            IBuffer* DstBuffer,
-            size_t   DstOffset,
-            IBuffer* SrcBuffer,
-            size_t   SrcOffset,
-            size_t   NumBytes) = 0;
+            IGpuResource* DstBuffer,
+            size_t        DstOffset,
+            IGpuResource* SrcBuffer,
+            size_t        SrcOffset,
+            size_t        NumBytes) = 0;
 
         struct CopyBox
         {
@@ -388,11 +386,11 @@ namespace Neon::RHI
         /// Copy buffer resource
         /// </summary>
         void CopyBufferRegion(
-            IBuffer* DstBuffer,
-            size_t   DstOffset,
-            IBuffer* SrcBuffer,
-            size_t   SrcOffset,
-            size_t   NumBytes)
+            IGpuResource* DstBuffer,
+            size_t        DstOffset,
+            IGpuResource* SrcBuffer,
+            size_t        SrcOffset,
+            size_t        NumBytes)
         {
             m_CmdList->CopyBufferRegion(
                 DstBuffer,
@@ -749,11 +747,11 @@ namespace Neon::RHI
         /// Copy buffer resource
         /// </summary>
         void CopyBufferRegion(
-            IBuffer* DstBuffer,
-            size_t   DstOffset,
-            IBuffer* SrcBuffer,
-            size_t   SrcOffset,
-            size_t   NumBytes)
+            IGpuResource* DstBuffer,
+            size_t        DstOffset,
+            IGpuResource* SrcBuffer,
+            size_t        SrcOffset,
+            size_t        NumBytes)
         {
             m_CmdList->CopyBufferRegion(
                 DstBuffer,
@@ -974,11 +972,11 @@ namespace Neon::RHI
         /// Copy buffer resource
         /// </summary>
         void CopyBufferRegion(
-            IBuffer* DstBuffer,
-            size_t   DstOffset,
-            IBuffer* SrcBuffer,
-            size_t   SrcOffset,
-            size_t   NumBytes)
+            IGpuResource* DstBuffer,
+            size_t        DstOffset,
+            IGpuResource* SrcBuffer,
+            size_t        SrcOffset,
+            size_t        NumBytes)
         {
             m_CmdList->CopyBufferRegion(
                 DstBuffer,

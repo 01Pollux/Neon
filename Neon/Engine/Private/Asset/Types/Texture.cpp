@@ -42,11 +42,11 @@ namespace Neon::Asset
                 m_ImageInfo.Data = m_ImageData.get();
             }
         }
-        m_Texture = RHI::SSyncTexture(ImageInfo);
+        m_Texture = RHI::SSyncGpuResource(ImageInfo);
         MarkDirty();
     }
 
-    const RHI::SSyncTexture& TextureAsset::GetTexture() const
+    const RHI::SSyncGpuResource& TextureAsset::GetTexture() const
     {
         return m_Texture;
     }

@@ -623,7 +623,7 @@ namespace Neon::Renderer
             Alignment,
             BufferType);
 
-        Buffer.AsUpload()->Write(0, Data, Size);
+        Buffer.AsUpload().Write(0, Data, Size);
 
         SetResourceView(
             Name,

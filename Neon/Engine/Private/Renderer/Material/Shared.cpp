@@ -26,7 +26,7 @@ namespace Neon::Renderer
 
         //
 
-        auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+        auto& WhiteTexture = RHI::IGpuResource::GetDefaultTexture(RHI::DefaultTextures::White_2D);
 
         //
 

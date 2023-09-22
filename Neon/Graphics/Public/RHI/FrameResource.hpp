@@ -6,18 +6,13 @@
 
 namespace Neon::RHI
 {
-    struct EmptyFrameData
-    {
-    };
-
     template<typename _Ty>
     class FrameResource
     {
         using SmallVector = boost::container::small_vector<_Ty, 3>;
 
     public:
-        FrameResource(
-            EmptyFrameData)
+        FrameResource()
         {
         }
 
@@ -35,7 +30,8 @@ namespace Neon::RHI
         void Initialize(
             _Args&&... Args)
         {
-            for (uint32_t i = 0; i < RHI::IRenderDevice::Get()->GetFrameCount(); i++)
+            m_Resources.reserve(Size());
+            for (uint32_t i = 0; i < Size(); i++)
             {
                 m_Resources.emplace_back(std::forward<_Args>(Args)...);
             }
@@ -68,6 +64,24 @@ namespace Neon::RHI
         /// <summary>
         /// Get the current frame resource
         /// </summary>
+        [[nodiscard]] _Ty& GetAt(
+            size_t Index) noexcept
+        {
+            return m_Resources[Index];
+        }
+
+        /// <summary>
+        /// Get the current frame resource
+        /// </summary>
+        [[nodiscard]] const _Ty& GetAt(
+            size_t Index) const noexcept
+        {
+            return m_Resources[Index];
+        }
+
+        /// <summary>
+        /// Get the current frame resource
+        /// </summary>
         [[nodiscard]] _Ty* operator->() noexcept
         {
             return std::addressof(Get());
@@ -79,6 +93,14 @@ namespace Neon::RHI
         [[nodiscard]] const _Ty* operator->() const noexcept
         {
             return std::addressof(Get());
+        }
+
+        /// <summary>
+        /// Get the number of frames
+        /// </summary>
+        [[nodiscard]] uint32_t Size() const noexcept
+        {
+            return RHI::IRenderDevice::Get()->GetFrameCount();
         }
 
     private:

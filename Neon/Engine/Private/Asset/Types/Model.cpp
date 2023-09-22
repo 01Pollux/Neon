@@ -203,7 +203,7 @@ namespace Neon::Asset
 
             //
 
-            using TextureMap         = std::unordered_map<aiTextureType, RHI::SSyncTexture>;
+            using TextureMap         = std::unordered_map<aiTextureType, RHI::SSyncGpuResource>;
             using MaterialTextureMap = std::unordered_map<Renderer::IMaterial*, TextureMap>;
 
             // Deferred loading of textures until we process all meshes.
@@ -226,7 +226,7 @@ namespace Neon::Asset
                 LoadMaterialTask = ThreadPool.enqueue(
                     [&]
                     {
-                        auto& WhiteTexture = RHI::ITexture::GetDefault(RHI::DefaultTextures::White_2D);
+                        auto& WhiteTexture = RHI::IGpuResource::GetDefaultTexture(RHI::DefaultTextures::White_2D);
 
                         Materials.reserve(AIScene->mNumMaterials);
                         auto LitMaterial = Renderer::SharedMaterials::Get(Renderer::SharedMaterials::Type::Lit);
@@ -265,7 +265,7 @@ namespace Neon::Asset
                                                     AITexture->mWidth,
                                                     AITexture->mHeight) }
                                         };
-                                        auto Texture = RHI::SSyncTexture(
+                                        auto Texture = RHI::SSyncGpuResource(
                                             RHI::ResourceDesc::Tex2D(
                                                 RHI::EResourceFormat::R8G8B8A8_UNorm,
                                                 AITexture->mWidth,
@@ -288,7 +288,7 @@ namespace Neon::Asset
                                                 .Type = RHI::TextureRawImage::Format::Png
                                             };
 
-                                            TexturesToSet.emplace(Type, RHI::SSyncTexture(ImageInfo, TextureNamePtr));
+                                            TexturesToSet.emplace(Type, RHI::SSyncGpuResource(ImageInfo, TextureNamePtr, RHI::MResourceState_AllShaderResource));
                                         }
                                         else
                                         {
@@ -305,10 +305,9 @@ namespace Neon::Asset
 
             //
 
+            RHI::USyncGpuResource VertexBuffer, IndexBuffer;
+
             // Process nodes
-
-            RHI::USyncBuffer VertexBuffer, IndexBuffer;
-
             if (AIScene->HasMeshes())
             {
                 uint32_t VerticesCount = 0, IndicesCount = 0;
@@ -403,13 +402,21 @@ namespace Neon::Asset
                 const wchar_t* IdxBufferNamePtr = nullptr;
 #endif
 
-                VertexBuffer = RHI::USyncBuffer(
-                    RHI::BufferDesc(sizeof(Mdl::MeshVertex) * Vertices.size(), VtxBufferNamePtr),
-                    Vertices.data());
+                VertexBuffer = RHI::USyncGpuResource::Buffer(
+                    sizeof(Mdl::MeshVertex),
+                    Vertices.size(),
+                    Vertices.data(),
+                    VtxBufferNamePtr,
+                    {},
+                    RHI::MResourceState_AllShaderResource);
 
-                IndexBuffer = RHI::USyncBuffer(
-                    RHI::BufferDesc(sizeof(uint32_t) * Indices.size(), IdxBufferNamePtr),
-                    Indices.data());
+                IndexBuffer = RHI::USyncGpuResource::Buffer(
+                    sizeof(uint32_t),
+                    Indices.size(),
+                    Indices.data(),
+                    IdxBufferNamePtr,
+                    {},
+                    RHI::MResourceState_AllShaderResource);
             }
 
             //

@@ -72,7 +72,7 @@ namespace Neon::RHI
 
     void RenameObject(IGpuResource* Object, const String& Name)
     {
-        RenameObject(dynamic_cast<Dx12GpuResource*>(Object)->GetResource(), Name.c_str());
+        RenameObject(static_cast<Dx12GpuResource*>(Object)->GetResource(), Name.c_str());
     }
 
     void RenameObject(IDescriptorHeap* Object, const String& Name)
@@ -377,7 +377,8 @@ namespace Neon::RHI
         return m_MemoryAllocator->GetStateManager();
     }
 
-    const Ptr<ITexture>& Dx12RenderDevice::GetDefaultTexture(DefaultTextures Type) const
+    const Ptr<IGpuResource>& Dx12RenderDevice::GetDefaultTexture(
+        DefaultTextures Type) const
     {
         return m_DefaultTextures[size_t(Type)];
     }
@@ -452,9 +453,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture MagentaTexture2D(Desc2D, Subresource2D, STR("MagentaTexture2D"), MResourceState_AllShaderResource);
-        SSyncTexture MagentaTexture3D(Desc3D, Subresource3D, STR("MagentaTexture3D"), MResourceState_AllShaderResource);
-        SSyncTexture MagentaTextureCube(DescCube, SubresourceCube, STR("MagentaTextureCube"), MResourceState_AllShaderResource);
+        SSyncGpuResource MagentaTexture2D(Desc2D, Subresource2D, STR("MagentaTexture2D"), MResourceState_AllShaderResource);
+        SSyncGpuResource MagentaTexture3D(Desc3D, Subresource3D, STR("MagentaTexture3D"), MResourceState_AllShaderResource);
+        SSyncGpuResource MagentaTextureCube(DescCube, SubresourceCube, STR("MagentaTextureCube"), MResourceState_AllShaderResource);
 
         //
 
@@ -463,9 +464,9 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture WhiteTexture2D(Desc2D, Subresource2D, STR("WhiteTexture2D"), MResourceState_AllShaderResource);
-        SSyncTexture WhiteTexture3D(Desc3D, Subresource3D, STR("WhiteTexture3D"), MResourceState_AllShaderResource);
-        SSyncTexture WhiteTextureCube(DescCube, SubresourceCube, STR("WhiteTextureCube"), MResourceState_AllShaderResource);
+        SSyncGpuResource WhiteTexture2D(Desc2D, Subresource2D, STR("WhiteTexture2D"), MResourceState_AllShaderResource);
+        SSyncGpuResource WhiteTexture3D(Desc3D, Subresource3D, STR("WhiteTexture3D"), MResourceState_AllShaderResource);
+        SSyncGpuResource WhiteTextureCube(DescCube, SubresourceCube, STR("WhiteTextureCube"), MResourceState_AllShaderResource);
 
         //
 
@@ -474,29 +475,28 @@ namespace Neon::RHI
         Subresource.Data = glm::value_ptr(Color);
         CreateSubresources();
 
-        SSyncTexture BlackTexture2D(Desc2D, Subresource2D, STR("BlackTexture2D"), MResourceState_AllShaderResource);
-        SSyncTexture BlackTexture3D(Desc3D, Subresource3D, STR("BlackTexture3D"), MResourceState_AllShaderResource);
-        SSyncTexture BlackTextureCube(DescCube, SubresourceCube, STR("BlackTextureCube"), MResourceState_AllShaderResource);
+        SSyncGpuResource BlackTexture2D(Desc2D, Subresource2D, STR("BlackTexture2D"), MResourceState_AllShaderResource);
+        SSyncGpuResource BlackTexture3D(Desc3D, Subresource3D, STR("BlackTexture3D"), MResourceState_AllShaderResource);
+        SSyncGpuResource BlackTextureCube(DescCube, SubresourceCube, STR("BlackTextureCube"), MResourceState_AllShaderResource);
 
         //
 
         auto CommandQueue = m_Swapchain->GetQueue(true);
-        auto LoadTexture  = [this, CommandQueue](SSyncTexture& Resource, DefaultTextures Type, const wchar_t* Name)
+        auto LoadTexture  = [this, CommandQueue](SSyncGpuResource& Resource, DefaultTextures Type)
         {
             auto& Object = m_DefaultTextures[size_t(Type)] = Resource;
-            RHI::RenameObject(Object.get(), Name);
         };
 
-        LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D, STR("_Magenta2D"));
-        LoadTexture(MagentaTexture3D, DefaultTextures::Magenta_3D, STR("_Magenta3D"));
-        LoadTexture(MagentaTextureCube, DefaultTextures::Magenta_Cube, STR("_MagentaCube"));
+        LoadTexture(MagentaTexture2D, DefaultTextures::Magenta_2D);
+        LoadTexture(MagentaTexture3D, DefaultTextures::Magenta_3D);
+        LoadTexture(MagentaTextureCube, DefaultTextures::Magenta_Cube);
 
-        LoadTexture(WhiteTexture2D, DefaultTextures::White_2D, STR("_White2D"));
-        LoadTexture(WhiteTexture3D, DefaultTextures::White_3D, STR("_White3D"));
-        LoadTexture(WhiteTextureCube, DefaultTextures::White_Cube, STR("_WhiteCube"));
+        LoadTexture(WhiteTexture2D, DefaultTextures::White_2D);
+        LoadTexture(WhiteTexture3D, DefaultTextures::White_3D);
+        LoadTexture(WhiteTextureCube, DefaultTextures::White_Cube);
 
-        LoadTexture(BlackTexture2D, DefaultTextures::Black_2D, STR("_Black2D"));
-        LoadTexture(BlackTexture3D, DefaultTextures::Black_3D, STR("_Black3D"));
-        LoadTexture(BlackTextureCube, DefaultTextures::Black_Cube, STR("_BlackCube"));
+        LoadTexture(BlackTexture2D, DefaultTextures::Black_2D);
+        LoadTexture(BlackTexture3D, DefaultTextures::Black_3D);
+        LoadTexture(BlackTextureCube, DefaultTextures::Black_Cube);
     }
 } // namespace Neon::RHI

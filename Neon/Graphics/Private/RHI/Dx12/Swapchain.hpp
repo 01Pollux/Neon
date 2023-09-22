@@ -1,6 +1,5 @@
 #pragma once
 
-#include <RHI/Device.hpp>
 #include <RHI/Swapchain.hpp>
 #include <RHI/Fence.hpp>
 
@@ -165,8 +164,8 @@ namespace Neon::RHI
 
         UPtr<FrameManager> m_FrameManager;
 
-        std::vector<Dx12Texture> m_BackBuffers;
-        Views::RenderTarget      m_RenderTargets;
+        std::vector<Dx12GpuResource> m_BackBuffers;
+        Views::RenderTarget          m_RenderTargets;
 
         EResourceFormat m_BackbufferFormat = EResourceFormat::Unknown;
     };

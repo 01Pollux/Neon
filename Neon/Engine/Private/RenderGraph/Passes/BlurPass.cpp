@@ -140,12 +140,12 @@ namespace Neon::RG
 
         auto [Desc, Flags] = Resolver.GetResourceDescAndFlags(m_Data.Source);
 
-        Resolver.CreateTexture(
+        Resolver.CreateResource(
             Intermediate,
             *Desc,
             Flags);
 
-        Resolver.CreateTexture(
+        Resolver.CreateResource(
             m_Data.Output,
             *Desc,
             Flags);

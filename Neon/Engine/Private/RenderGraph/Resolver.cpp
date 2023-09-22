@@ -15,21 +15,12 @@ namespace Neon::RG
     {
     }
 
-    void ResourceResolver::CreateBuffer(
-        const ResourceId&       Id,
-        const RHI::BufferDesc&  Desc,
-        RHI::GraphicsBufferType BufferType)
-    {
-        m_Storage.DeclareBuffer(Id, Desc, BufferType);
-        m_ResourcesCreated.emplace(Id);
-    }
-
-    void ResourceResolver::CreateTexture(
+    void ResourceResolver::CreateResource(
         const ResourceId&        Id,
         const RHI::ResourceDesc& Desc,
         MResourceFlags           Flags)
     {
-        m_Storage.DeclareTexture(Id, Desc, std::move(Flags));
+        m_Storage.DeclareResource(Id, Desc, std::move(Flags));
         m_ResourcesCreated.emplace(Id);
     }
 
@@ -39,7 +30,7 @@ namespace Neon::RG
         MResourceFlags           Flags)
     {
         Flags.Set(RG::EResourceFlags::WindowSizeDependent);
-        CreateTexture(Id, Desc, std::move(Flags));
+        CreateResource(Id, Desc, std::move(Flags));
     }
 
     void ResourceResolver::WriteResourceEmpty(
@@ -193,16 +184,16 @@ namespace Neon::RG
     }
 
     void ResourceResolver::ImportBuffer(
-        const ResourceId&        Id,
-        const Ptr<RHI::IBuffer>& Resource,
-        RHI::GraphicsBufferType  BufferType)
+        const ResourceId&             Id,
+        const Ptr<RHI::IGpuResource>& Resource,
+        RHI::GraphicsBufferType       BufferType)
     {
         m_Storage.ImportBuffer(Id, Resource, BufferType);
     }
 
     void ResourceResolver::ImportTexture(
         const ResourceId&             Id,
-        const Ptr<RHI::ITexture>&     Resource,
+        const Ptr<RHI::IGpuResource>& Resource,
         const RHI::ClearOperationOpt& ClearValue)
     {
         m_Storage.ImportTexture(Id, Resource, ClearValue);

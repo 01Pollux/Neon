@@ -31,11 +31,11 @@ namespace Neon::Asset
         /// <summary>
         /// Get or load the texture.
         /// </summary>
-        [[nodiscard]] const RHI::SSyncTexture& GetTexture() const;
+        [[nodiscard]] const RHI::SSyncGpuResource& GetTexture() const;
 
     private:
         RHI::TextureRawImage       m_ImageInfo;
         std::unique_ptr<uint8_t[]> m_ImageData;
-        RHI::SSyncTexture          m_Texture;
+        RHI::SSyncGpuResource      m_Texture;
     };
 } // namespace Neon::Asset

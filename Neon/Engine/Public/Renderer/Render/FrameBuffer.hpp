@@ -19,7 +19,7 @@ namespace Neon::Renderer
         /// <summary>
         /// Upload buffer to hold data.
         /// </summary>
-        UPtr<RHI::IUploadBuffer> Buffer;
+        UPtr<RHI::IGpuResource> Buffer;
 
         /// <summary>
         /// Pointer to the data in the buffer.
@@ -143,7 +143,8 @@ namespace Neon::Renderer
         {
             if (!Buffer)
             {
-                Buffer.reset(RHI::IUploadBuffer::Create({ .Size = MaxSize }));
+                Buffer.reset(RHI::IGpuResource::Create(
+                    RHI::ResourceDesc::BufferUpload(MaxSize)));
             }
             BufferData = Buffer->Map();
         }

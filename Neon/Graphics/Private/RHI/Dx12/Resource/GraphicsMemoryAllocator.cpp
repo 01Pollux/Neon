@@ -14,40 +14,48 @@ namespace Neon::RHI
         Allocator(SizeOfBuffer),
         StateManager(StateManager)
     {
-        D3D12_RESOURCE_FLAGS Flags{};
+        IGpuResource::InitDesc InitDesc;
+        MResourceFlags         Flags;
+        GraphicsBufferType     BufferType;
 
         switch (Type)
         {
         case IGlobalBufferPool::BufferType::ReadOnly:
-            Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+            Flags.Set(RHI::EResourceFlags::DenyShaderResource);
+            InitDesc.InitialState.Set(EResourceState::CopyDest);
+            InitDesc.Name = STR("GraphicsMemoryAllocator::ReabackBuffer");
+            BufferType    = GraphicsBufferType::Readback;
 
-            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12ReadbackBuffer(
-                SizeOfBuffer,
-                STR("GraphicsMemoryAllocator::ReabackBuffer"),
-                Flags,
-                IReadbackBuffer::DefaultResourcestate)));
             break;
         case IGlobalBufferPool::BufferType::ReadWrite:
         case IGlobalBufferPool::BufferType::ReadWriteGPUR:
         case IGlobalBufferPool::BufferType::ReadWriteGPURW:
+            InitDesc.InitialState.Set(EResourceState::CopySource);
+            BufferType = GraphicsBufferType::Upload;
+
             if (Type == IGlobalBufferPool::BufferType::ReadWrite)
             {
-                Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+                Flags.Set(RHI::EResourceFlags::DenyShaderResource);
+                InitDesc.Name = STR("GraphicsMemoryAllocator::UploadBuffer");
             }
             else if (Type == IGlobalBufferPool::BufferType::ReadWriteGPURW)
             {
-                Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+                Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
+                InitDesc.Name = STR("GraphicsMemoryAllocator::UploadBuffer_RW");
             }
-
-            this->Buffer.reset(dynamic_cast<Dx12Buffer*>(NEON_NEW Dx12UploadBuffer(
-                SizeOfBuffer,
-                STR("GraphicsMemoryAllocator::UploadBuffer"),
-                Flags,
-                Dx12UploadBuffer::DefaultResourcestate)));
+            else
+            {
+                InitDesc.Name = STR("GraphicsMemoryAllocator::UploadBuffer_R");
+            }
             break;
         default:
             std::unreachable();
         }
+
+        this->Buffer.reset(static_cast<Dx12GpuResource*>(
+            IGpuResource::Create(
+                ResourceDesc::Buffer(SizeOfBuffer, Flags, BufferType),
+                InitDesc)));
     }
 
     GraphicsMemoryAllocator::BuddyBlock::~BuddyBlock()

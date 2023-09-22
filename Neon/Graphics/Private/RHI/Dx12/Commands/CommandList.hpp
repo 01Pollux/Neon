@@ -35,11 +35,11 @@ namespace Neon::RHI
             IGpuResource* SrcResource) override;
 
         void CopyBufferRegion(
-            IBuffer* DstBuffer,
-            size_t   DstOffset,
-            IBuffer* SrcBuffer,
-            size_t   SrcOffset,
-            size_t   NumBytes) override;
+            IGpuResource* DstBuffer,
+            size_t        DstOffset,
+            IGpuResource* SrcBuffer,
+            size_t        SrcOffset,
+            size_t        NumBytes) override;
 
         void CopyTextureRegion(
             const TextureCopyLocation& Dst,

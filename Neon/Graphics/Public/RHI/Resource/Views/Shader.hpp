@@ -21,10 +21,10 @@ namespace Neon::RHI::Views
         /// Append a vertex buffer view.
         /// </summary>
         void Append(
-            IBuffer* Buffer,
-            size_t   Offset,
-            size_t   Stride,
-            size_t   Size)
+            IGpuResource* Buffer,
+            size_t        Offset,
+            size_t        Stride,
+            size_t        Size)
         {
             Append({ Buffer->GetHandle().Value + Offset }, Stride, Size);
         }
@@ -77,10 +77,10 @@ namespace Neon::RHI::Views
         Index() = default;
 
         Index(
-            IBuffer* Buffer,
-            size_t   Offset,
-            size_t   Size,
-            bool     Is32Bit = false) :
+            IGpuResource* Buffer,
+            size_t        Offset,
+            size_t        Size,
+            bool          Is32Bit = false) :
             Index({ Buffer->GetHandle().Value + Offset }, Size, Is32Bit)
         {
         }
@@ -110,9 +110,9 @@ namespace Neon::RHI::Views
         IndexU16() = default;
 
         IndexU16(
-            IBuffer* Buffer,
-            uint32_t Offset,
-            uint32_t Count) :
+            IGpuResource* Buffer,
+            uint32_t      Offset,
+            uint32_t      Count) :
             Index(Buffer, Offset * sizeof(uint32_t), Count * sizeof(uint16_t), false)
         {
         }
@@ -130,9 +130,9 @@ namespace Neon::RHI::Views
         IndexU32() = default;
 
         IndexU32(
-            IBuffer* Buffer,
-            uint32_t Offset,
-            uint32_t Count) :
+            IGpuResource* Buffer,
+            uint32_t      Offset,
+            uint32_t      Count) :
             Index(Buffer, Offset * sizeof(uint32_t), Count * sizeof(uint32_t), true)
         {
         }

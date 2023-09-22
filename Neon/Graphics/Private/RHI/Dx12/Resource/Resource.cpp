@@ -9,6 +9,203 @@
 
 namespace Neon::RHI
 {
+    IGpuResource* IGpuResource::Create(
+        const ResourceDesc& Desc,
+        const InitDesc&     Init)
+    {
+        return NEON_NEW Dx12GpuResource(Desc, Init);
+    }
+
+    IGpuResource* IGpuResource::Create(
+        const TextureRawImage& ImageData,
+        const InitDesc&        Init)
+    {
+        if (!ImageData.Data)
+        {
+            return nullptr;
+        }
+
+        using TextureLoadFuncType    = decltype(&TextureLoader::LoadDDS);
+        TextureLoadFuncType LoadFunc = nullptr;
+
+        switch (ImageData.Type)
+        {
+        case TextureRawImage::Format::Dds:
+        {
+            LoadFunc = &TextureLoader::LoadDDS;
+            break;
+        }
+        case TextureRawImage::Format::Bmp:
+        case TextureRawImage::Format::Ico:
+        case TextureRawImage::Format::Png:
+        case TextureRawImage::Format::Jpeg:
+        case TextureRawImage::Format::Jxr:
+        case TextureRawImage::Format::Tiff:
+        {
+            LoadFunc = &TextureLoader::LoadWIC;
+            break;
+        }
+
+        default:
+            NEON_ASSERT(false, "Tried to load an unsupported image format");
+            std::unreachable();
+        }
+
+        auto Image = LoadFunc(ImageData.Data, ImageData.Size, Init.Name, *Init.CopyTask, Init.InitialState);
+        return Image.Release();
+    }
+
+    //
+
+    Dx12GpuResource::Dx12GpuResource(
+        const ResourceDesc&  Desc,
+        const InitDesc&      Init,
+        D3D12_RESOURCE_FLAGS Flags)
+
+    {
+        D3D12_RESOURCE_DESC Dx12Desc{
+            .Width            = Desc.Width,
+            .Height           = Desc.Height,
+            .DepthOrArraySize = Desc.Depth,
+            .MipLevels        = Desc.MipLevels,
+            .Format           = CastFormat(Desc.Format),
+            .SampleDesc       = { .Count = Desc.SampleCount, .Quality = Desc.SampleQuality },
+            .Flags            = CastResourceFlags(Desc.Flags),
+        };
+
+        switch (Desc.Layout)
+        {
+        case ResourceLayout::Unknown:
+            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+            break;
+        case ResourceLayout::RowMajor:
+            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+            break;
+        case ResourceLayout::StandardSwizzle64KB:
+            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
+            break;
+        case ResourceLayout::UndefinedSwizzle64KB:
+            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+            break;
+        default:
+            NEON_ASSERT(false, "Invalid texture layout");
+            break;
+        }
+
+        D3D12MA::ALLOCATION_DESC AllocDesc{};
+        AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+        switch (Desc.Type)
+        {
+        case ResourceType::Buffer:
+            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+            switch (Desc.BufferType)
+            {
+            case GraphicsBufferType::Upload:
+                AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+                break;
+            case GraphicsBufferType::Readback:
+                AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+                break;
+            }
+            break;
+        case ResourceType::Texture1D:
+            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+            break;
+        case ResourceType::Texture2D:
+            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            break;
+        case ResourceType::Texture3D:
+            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+            break;
+        default:
+            NEON_ASSERT(false, "Invalid texture type");
+            break;
+        }
+
+        D3D12_CLEAR_VALUE ClearValue, *ClearValuePtr = nullptr;
+        if (Desc.ClearValue && (Dx12Desc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)))
+        {
+            ClearValuePtr         = &ClearValue;
+            ClearValuePtr->Format = CastFormat(Desc.ClearValue->Format);
+
+            std::visit(
+                VariantVisitor{
+                    [ClearValuePtr](const Color4& Color)
+                    {
+                        ClearValuePtr->Color[0] = Color.r;
+                        ClearValuePtr->Color[1] = Color.g;
+                        ClearValuePtr->Color[2] = Color.b;
+                        ClearValuePtr->Color[3] = Color.a;
+                    },
+                    [ClearValuePtr](ClearOperation::DepthStencil DS)
+                    {
+                        ClearValuePtr->DepthStencil.Depth   = DS.Depth;
+                        ClearValuePtr->DepthStencil.Stencil = DS.Stencil;
+                    } },
+                Desc.ClearValue->Value);
+            m_ClearValue = Desc.ClearValue;
+        }
+
+        auto Dx12InitialState = Init.Subresources.empty() ? CastResourceStates(Init.InitialState) : D3D12_RESOURCE_STATE_COPY_DEST;
+
+        auto Allocator = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
+        ThrowIfFailed(Allocator->CreateResource(
+            &AllocDesc,
+            &Dx12Desc,
+            Dx12InitialState,
+            ClearValuePtr,
+            &m_Allocation,
+            IID_PPV_ARGS(&m_Resource)));
+
+#ifndef NEON_DIST
+        if (Init.Name)
+        {
+            m_Resource->SetName(Init.Name);
+        }
+#endif
+
+        InitializeDesc();
+
+        Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), Dx12InitialState);
+        if (!Init.Subresources.empty())
+        {
+            *Init.CopyTask = CopyFrom(0, Init.Subresources, Init.InitialState);
+        }
+    }
+
+    Dx12GpuResource::Dx12GpuResource(
+        std::future<void>&                  CopyTask,
+        WinAPI::ComPtr<ID3D12Resource>      Texture,
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
+        std::span<const SubresourceDesc>    Subresources,
+        const wchar_t*                      Name,
+        const RHI::MResourceState&          InitialState) :
+        Dx12GpuResource{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
+    {
+#ifndef NEON_DIST
+        if (Name)
+        {
+            m_Resource->SetName(Name);
+        }
+#endif
+        CopyTask = CopyFrom(0, Subresources, InitialState);
+    }
+
+    Dx12GpuResource::Dx12GpuResource(
+        WinAPI::ComPtr<ID3D12Resource>      Texture,
+        D3D12_RESOURCE_STATES               InitialState,
+        WinAPI::ComPtr<D3D12MA::Allocation> Allocation)
+    {
+        m_Resource   = std::move(Texture);
+        m_Allocation = std::move(Allocation);
+
+        if (m_Resource)
+        {
+            InitializeDesc();
+            Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
+        }
+    }
+
     Dx12GpuResource::~Dx12GpuResource()
     {
         if (m_Resource)
@@ -113,7 +310,7 @@ namespace Neon::RHI
 
                 CommandList->CopySubresources(
                     Resource,
-                    static_cast<IGpuResource*>(Handle.Buffer),
+                    Handle.Buffer,
                     Handle.Offset,
                     0,
                     SubreourcesGuard->Subresources);
@@ -144,107 +341,7 @@ namespace Neon::RHI
 
     //
 
-    IBuffer* IBuffer::Create(
-        const BufferDesc&          Desc,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12Buffer(Desc, nullptr, nullptr, GraphicsBufferType::Default, InitialState);
-    }
-
-    IBuffer* IBuffer::Create(
-        const BufferDesc&          Desc,
-        const SubresourceDesc&     Subresource,
-        std::future<void>&         CopyTask,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12Buffer(Desc, &Subresource, &CopyTask, GraphicsBufferType::Default, InitialState);
-    }
-
-    Dx12Buffer::Dx12Buffer(
-        const BufferDesc&          Desc,
-        const SubresourceDesc*     Subresource,
-        std::future<void>*         CopyTask,
-        GraphicsBufferType         Type,
-        const RHI::MResourceState& InitialState) :
-        Dx12Buffer(
-            Desc.Size,
-            Desc.Name,
-            CastResourceFlags(Desc.Flags),
-            Type,
-            Subresource ? RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest) : InitialState)
-    {
-        if (Subresource)
-        {
-            *CopyTask = CopyFrom(0, { Subresource, 1 }, InitialState);
-        }
-    }
-
-    Dx12Buffer::Dx12Buffer(
-        size_t                     Size,
-        const wchar_t*             Name,
-        D3D12_RESOURCE_FLAGS       Flags,
-        GraphicsBufferType         Type,
-        const RHI::MResourceState& InitialState) :
-        m_Type(Type)
-    {
-        auto Allocator = Dx12RenderDevice::Get()->GetAllocator();
-
-        D3D12_RESOURCE_STATES    Dx12InitialState = CastResourceStates(InitialState);
-        D3D12MA::ALLOCATION_DESC AllocDesc{};
-
-        switch (Type)
-        {
-        case GraphicsBufferType::Default:
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-            break;
-        case GraphicsBufferType::Upload:
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
-            break;
-        case GraphicsBufferType::Readback:
-            AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
-            Flags |= D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-            break;
-        default:
-            std::unreachable();
-        }
-
-        auto Dx12Desc = CD3DX12_RESOURCE_DESC::Buffer(Size, Flags, D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT);
-        m_Desc        = ResourceDesc::Buffer(Dx12Desc.Width, CastResourceFlags(Flags));
-
-        ThrowIfFailed(Allocator->GetMA()->CreateResource(
-            &AllocDesc,
-            &Dx12Desc,
-            Dx12InitialState,
-            nullptr,
-            &m_Allocation,
-            IID_PPV_ARGS(&m_Resource)));
-
-#ifndef NEON_DIST
-        if (Name)
-        {
-            m_Resource->SetName(Name);
-        }
-#endif
-
-        Dx12RenderDevice::Get()->GetDevice()->GetCopyableFootprints(
-            &Dx12Desc,
-            0,
-            1,
-            0,
-            nullptr,
-            nullptr,
-            nullptr,
-            &m_Desc.Width);
-
-        Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), Dx12InitialState);
-    }
-
-    size_t Dx12Buffer::GetSize() const
-    {
-        return m_Desc.Width;
-    }
-
-    GpuResourceHandle Dx12Buffer::GetHandle(
+    GpuResourceHandle Dx12GpuResource::GetHandle(
         size_t Offset) const
     {
         return { m_Resource->GetGPUVirtualAddress() + Offset };
@@ -252,319 +349,21 @@ namespace Neon::RHI
 
     //
 
-    IUploadBuffer* IUploadBuffer::Create(
-        const BufferDesc&          Desc,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12UploadBuffer(Desc, nullptr, nullptr, InitialState);
-    }
-
-    IUploadBuffer* IUploadBuffer::Create(
-        const BufferDesc&          Desc,
-        const SubresourceDesc&     Subresource,
-        std::future<void>&         CopyTask,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12UploadBuffer(Desc, &Subresource, &CopyTask, InitialState);
-    }
-
-    Dx12UploadBuffer::Dx12UploadBuffer(
-        const BufferDesc&          Desc,
-        const SubresourceDesc*     Subresource,
-        std::future<void>*         CopyTask,
-        const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Desc, Subresource, CopyTask, GraphicsBufferType::Upload, InitialState)
-    {
-    }
-
-    Dx12UploadBuffer::Dx12UploadBuffer(
-        size_t                     Size,
-        const wchar_t*             Name,
-        D3D12_RESOURCE_FLAGS       Flags,
-        const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Size, Name, Flags, GraphicsBufferType::Upload, InitialState)
-    {
-    }
-
-    uint8_t* Dx12UploadBuffer::Map()
+    uint8_t* Dx12GpuResource::Map()
     {
         void* MappedData = nullptr;
         ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
         return std::bit_cast<uint8_t*>(MappedData);
     }
 
-    void Dx12UploadBuffer::Unmap()
+    void Dx12GpuResource::Unmap()
     {
         m_Resource->Unmap(0, nullptr);
     }
 
     //
 
-    IReadbackBuffer* IReadbackBuffer::Create(
-        const BufferDesc&          Desc,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12ReadbackBuffer(Desc, InitialState);
-    }
-
-    Dx12ReadbackBuffer::Dx12ReadbackBuffer(
-        const BufferDesc&          Desc,
-        const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Desc, nullptr, nullptr, GraphicsBufferType::Readback, InitialState)
-    {
-    }
-
-    Dx12ReadbackBuffer::Dx12ReadbackBuffer(
-        size_t                     Size,
-        const wchar_t*             Name,
-        D3D12_RESOURCE_FLAGS       Flags,
-        const RHI::MResourceState& InitialState) :
-        Dx12Buffer(Size, Name, Flags, GraphicsBufferType::Readback, InitialState)
-    {
-    }
-
-    uint8_t* Dx12ReadbackBuffer::Map()
-    {
-        void* MappedData = nullptr;
-        ThrowIfFailed(m_Resource->Map(0, nullptr, &MappedData));
-        return std::bit_cast<uint8_t*>(MappedData);
-    }
-
-    void Dx12ReadbackBuffer::Unmap()
-    {
-        m_Resource->Unmap(0, nullptr);
-    }
-
-    //
-
-    ITexture* ITexture::Create(
-        const ResourceDesc&        Desc,
-        const wchar_t*             Name,
-        const RHI::MResourceState& InitialState)
-    {
-        return NEON_NEW Dx12Texture(Desc, {}, nullptr, Name, InitialState);
-    }
-
-    ITexture* ITexture::Create(
-        const ResourceDesc&              Desc,
-        std::span<const SubresourceDesc> Subresources,
-        std::future<void>&               CopyTask,
-        const wchar_t*                   Name,
-        const RHI::MResourceState&       InitialState)
-    {
-        return NEON_NEW Dx12Texture(Desc, Subresources, &CopyTask, Name, InitialState);
-    }
-
-    ITexture* ITexture::Create(
-        const TextureRawImage&     ImageData,
-        std::future<void>&         CopyTask,
-        const wchar_t*             Name,
-        const RHI::MResourceState& InitialState)
-    {
-        if (!ImageData.Data)
-        {
-            return nullptr;
-        }
-
-        using TextureLoadFuncType    = decltype(&TextureLoader::LoadDDS);
-        TextureLoadFuncType LoadFunc = nullptr;
-
-        switch (ImageData.Type)
-        {
-        case TextureRawImage::Format::Dds:
-        {
-            LoadFunc = &TextureLoader::LoadDDS;
-            break;
-        }
-        case TextureRawImage::Format::Bmp:
-        case TextureRawImage::Format::Ico:
-        case TextureRawImage::Format::Png:
-        case TextureRawImage::Format::Jpeg:
-        case TextureRawImage::Format::Jxr:
-        case TextureRawImage::Format::Tiff:
-        {
-            LoadFunc = &TextureLoader::LoadWIC;
-            break;
-        }
-
-        default:
-            NEON_ASSERT(false, "Tried to load an unsupported image format");
-            std::unreachable();
-        }
-
-        auto Image = LoadFunc(ImageData.Data, ImageData.Size, Name, CopyTask, InitialState);
-        return Image.Release();
-    }
-
-    Dx12Texture::Dx12Texture(
-        const RHI::ResourceDesc&         Desc,
-        std::span<const SubresourceDesc> Subresources,
-        std::future<void>*               CopyTask,
-        const wchar_t*                   Name,
-        const RHI::MResourceState&       InitialState)
-    {
-        D3D12_RESOURCE_DESC Dx12Desc{
-            .Width            = Desc.Width,
-            .Height           = Desc.Height,
-            .DepthOrArraySize = Desc.Depth,
-            .MipLevels        = Desc.MipLevels,
-            .Format           = CastFormat(Desc.Format),
-            .SampleDesc       = { .Count = Desc.SampleCount, .Quality = Desc.SampleQuality },
-            .Flags            = CastResourceFlags(Desc.Flags),
-        };
-
-        switch (Desc.Layout)
-        {
-        case ResourceLayout::Unknown:
-            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-            break;
-        case ResourceLayout::RowMajor:
-            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-            break;
-        case ResourceLayout::StandardSwizzle64KB:
-            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_64KB_STANDARD_SWIZZLE;
-            break;
-        case ResourceLayout::UndefinedSwizzle64KB:
-            Dx12Desc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
-            break;
-        default:
-            NEON_ASSERT(false, "Invalid texture layout");
-            break;
-        }
-
-        switch (Desc.Type)
-        {
-        case ResourceType::Texture1D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-            break;
-        case ResourceType::Texture2D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-            break;
-        case ResourceType::Texture3D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-            break;
-        default:
-            NEON_ASSERT(false, "Invalid texture type");
-            break;
-        }
-
-        D3D12MA::ALLOCATION_DESC AllocDesc{};
-        AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
-
-        D3D12_CLEAR_VALUE ClearValue, *ClearValuePtr = nullptr;
-        if (Desc.ClearValue && (Dx12Desc.Flags & (D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)))
-        {
-            ClearValuePtr         = &ClearValue;
-            ClearValuePtr->Format = CastFormat(Desc.ClearValue->Format);
-
-            std::visit(
-                VariantVisitor{
-                    [ClearValuePtr](const Color4& Color)
-                    {
-                        ClearValuePtr->Color[0] = Color.r;
-                        ClearValuePtr->Color[1] = Color.g;
-                        ClearValuePtr->Color[2] = Color.b;
-                        ClearValuePtr->Color[3] = Color.a;
-                    },
-                    [ClearValuePtr](ClearOperation::DepthStencil DS)
-                    {
-                        ClearValuePtr->DepthStencil.Depth   = DS.Depth;
-                        ClearValuePtr->DepthStencil.Stencil = DS.Stencil;
-                    } },
-                Desc.ClearValue->Value);
-            m_ClearValue = Desc.ClearValue;
-        }
-
-        auto Dx12InitialState = Subresources.empty() ? CastResourceStates(InitialState) : D3D12_RESOURCE_STATE_COPY_DEST;
-
-        auto Allocator = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
-        ThrowIfFailed(Allocator->CreateResource(
-            &AllocDesc,
-            &Dx12Desc,
-            Dx12InitialState,
-            ClearValuePtr,
-            &m_Allocation,
-            IID_PPV_ARGS(&m_Resource)));
-
-#ifndef NEON_DIST
-        if (Name)
-        {
-            m_Resource->SetName(Name);
-        }
-#endif
-
-        InitializeDesc();
-
-        Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), Dx12InitialState);
-        if (!Subresources.empty())
-        {
-            *CopyTask = CopyFrom(0, Subresources, InitialState);
-        }
-    }
-
-    Dx12Texture::Dx12Texture(
-        WinAPI::ComPtr<ID3D12Resource>      Texture,
-        D3D12_RESOURCE_STATES               InitialState,
-        WinAPI::ComPtr<D3D12MA::Allocation> Allocation)
-    {
-        m_Resource   = std::move(Texture);
-        m_Allocation = std::move(Allocation);
-
-        if (m_Resource)
-        {
-            InitializeDesc();
-            Dx12ResourceStateManager::Get()->StartTrakingResource(m_Resource.Get(), InitialState);
-        }
-    }
-
-    Dx12Texture::Dx12Texture(
-        WinAPI::ComPtr<ID3D12Resource>      Texture,
-        WinAPI::ComPtr<D3D12MA::Allocation> Allocation,
-        std::span<const SubresourceDesc>    Subresources,
-        std::future<void>&                  CopyTask,
-        const wchar_t*                      Name,
-        const RHI::MResourceState&          InitialState) :
-        Dx12Texture{ std::move(Texture), D3D12_RESOURCE_STATE_COPY_DEST, std::move(Allocation) }
-    {
-#ifndef NEON_DIST
-        if (Name)
-        {
-            m_Resource->SetName(Name);
-        }
-#endif
-        CopyTask = CopyFrom(0, Subresources, InitialState);
-    }
-
-    Vector3I Dx12Texture::GetDimensions() const
-    {
-        return {
-            int(m_Desc.Width),
-            int(m_Desc.Height),
-            int(m_Desc.Depth)
-        };
-    }
-
-    uint16_t Dx12Texture::GetMipLevels() const
-    {
-        return m_Desc.MipLevels;
-    }
-
-    uint32_t Dx12Texture::GetSubResourceCount() const
-    {
-        return uint32_t(m_Desc.MipLevels) * m_Desc.Depth;
-    }
-
-    uint32_t Dx12Texture::GetSubresourceIndex(
-        uint32_t PlaneIndex,
-        uint32_t ArrayIndex,
-        uint32_t MipIndex) const
-    {
-        return MipIndex +
-               ArrayIndex * m_Desc.MipLevels +
-               PlaneIndex * m_Desc.Depth * m_Desc.MipLevels;
-    }
-
-    void Dx12Texture::InitializeDesc()
+    void Dx12GpuResource::InitializeDesc()
     {
         NEON_ASSERT(m_Resource);
         auto Dx12Desc = m_Resource->GetDesc();
@@ -616,7 +415,7 @@ namespace Neon::RHI
         }
     }
 
-    size_t Dx12Texture::GetTextureCopySize(
+    size_t Dx12GpuResource::GetTextureCopySize(
         uint32_t SubresourcesCount)
     {
         size_t TotalBytes;
@@ -636,7 +435,9 @@ namespace Neon::RHI
         return TotalBytes;
     }
 
-    const Ptr<ITexture>& ITexture::GetDefault(
+    //
+
+    const Ptr<IGpuResource>& IGpuResource::GetDefaultTexture(
         DefaultTextures Type)
     {
         return Dx12RenderDevice::Get()->GetDefaultTexture(Type);

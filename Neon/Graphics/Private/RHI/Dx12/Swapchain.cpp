@@ -164,7 +164,7 @@ namespace Neon::RHI
         {
             WinAPI::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT, nullptr);
             RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);
 
             m_RenderTargets.Bind(
@@ -284,7 +284,7 @@ namespace Neon::RHI
         {
             WinAPI::ComPtr<ID3D12Resource> BackBuffer;
             ThrowIfFailed(m_Swapchain->GetBuffer(UINT(i), IID_PPV_ARGS(&BackBuffer)));
-            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT);
+            auto& Buffer = m_BackBuffers.emplace_back(std::move(BackBuffer), D3D12_RESOURCE_STATE_PRESENT, nullptr);
             RHI::RenameObject(Buffer.GetResource(), STR("Swapchain Backbuffer {}"), i);
 
             m_RenderTargets.Bind(

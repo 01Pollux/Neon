@@ -5,7 +5,7 @@ namespace Neon::RG
 {
     ResourceHandle::ResourceHandle(
         const ResourceId&             Id,
-        const Ptr<RHI::ITexture>&     Texture,
+        const Ptr<RHI::IGpuResource>& Texture,
         const RHI::ClearOperationOpt& ClearValue) :
         m_Id(Id),
         m_Resource(Texture),
@@ -16,13 +16,12 @@ namespace Neon::RG
     }
 
     ResourceHandle::ResourceHandle(
-        const ResourceId&        Id,
-        const Ptr<RHI::IBuffer>& Buffer,
-        RHI::GraphicsBufferType  BufferType) :
+        const ResourceId&             Id,
+        const Ptr<RHI::IGpuResource>& Buffer,
+        RHI::GraphicsBufferType       BufferType) :
         m_Id(Id),
         m_Resource(Buffer),
-        m_Desc(Buffer->GetDesc()),
-        m_BufferType(BufferType)
+        m_Desc(Buffer->GetDesc())
     {
         m_Flags.Set(EResourceFlags::Imported);
     }
@@ -30,12 +29,10 @@ namespace Neon::RG
     ResourceHandle::ResourceHandle(
         const ResourceId&        Id,
         const RHI::ResourceDesc& Desc,
-        MResourceFlags           Flags,
-        RHI::GraphicsBufferType  BufferType) :
+        MResourceFlags           Flags) :
         m_Id(Id),
         m_Desc(Desc),
-        m_Flags(Flags),
-        m_BufferType(BufferType)
+        m_Flags(Flags)
     {
     }
 
@@ -80,29 +77,24 @@ namespace Neon::RG
         m_Resource = Resource;
     }
 
-    Ptr<RHI::ITexture> ResourceHandle::AsTexture() const noexcept
+    RHI::GpuTexture ResourceHandle::AsTexture() const noexcept
     {
-        return std::dynamic_pointer_cast<RHI::ITexture>(Get());
+        return RHI::GpuTexture(m_Resource.get());
     }
 
-    Ptr<RHI::IBuffer> ResourceHandle::AsBuffer() const noexcept
+    RHI::GpuBuffer ResourceHandle::AsBuffer() const noexcept
     {
-        return std::dynamic_pointer_cast<RHI::IBuffer>(Get());
+        return RHI::GpuBuffer(m_Resource.get());
     }
 
-    Ptr<RHI::IUploadBuffer> ResourceHandle::AsUploadBuffer() const noexcept
+    RHI::GpuUploadBuffer ResourceHandle::AsUploadBuffer() const noexcept
     {
-        return std::dynamic_pointer_cast<RHI::IUploadBuffer>(Get());
+        return RHI::GpuUploadBuffer(m_Resource.get());
     }
 
-    Ptr<RHI::IReadbackBuffer> ResourceHandle::AsReadbackBuffer() const noexcept
+    RHI::GpuReadbackBuffer ResourceHandle::AsReadbackBuffer() const noexcept
     {
-        return std::dynamic_pointer_cast<RHI::IReadbackBuffer>(Get());
-    }
-
-    RHI::GraphicsBufferType ResourceHandle::GetBufferType() const noexcept
-    {
-        return m_BufferType;
+        return RHI::GpuReadbackBuffer(m_Resource.get());
     }
 
     bool ResourceHandle::IsWindowSizedTexture() const noexcept

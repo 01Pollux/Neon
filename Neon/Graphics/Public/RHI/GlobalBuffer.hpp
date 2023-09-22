@@ -23,7 +23,7 @@ namespace Neon::RHI
 
         struct Handle
         {
-            IBuffer* Buffer;
+            GpuBuffer Buffer;
 
             size_t Offset;
             size_t Size;
@@ -35,7 +35,7 @@ namespace Neon::RHI
             /// </summary>
             [[nodiscard]] RHI::GpuResourceHandle GetGpuHandle() const
             {
-                return Buffer->GetHandle(Offset);
+                return Buffer.GetHandle(Offset);
             }
 
             Handle() = default;
@@ -49,18 +49,18 @@ namespace Neon::RHI
             /// Cast to an upload buffer
             /// </summary>
             /// <returns></returns>
-            [[nodiscard]] IUploadBuffer* AsUpload() const noexcept
+            [[nodiscard]] GpuUploadBuffer AsUpload() const noexcept
             {
-                return dynamic_cast<IUploadBuffer*>(this->Buffer);
+                return GpuUploadBuffer(Buffer);
             }
 
             /// <summary>
             /// Cast to a readback buffer
             /// </summary>
             /// <returns></returns>
-            [[nodiscard]] IReadbackBuffer* AsReadBack() const noexcept
+            [[nodiscard]] GpuReadbackBuffer AsReadBack() const noexcept
             {
-                return dynamic_cast<IReadbackBuffer*>(this->Buffer);
+                return GpuReadbackBuffer(Buffer);
             }
         };
 

@@ -184,11 +184,11 @@ namespace Neon::Renderer
 
     MeshRenderer::FrameResource::FrameResource() :
         PerObjectBuffer(
-            RHI::IUploadBuffer::Create(
-                { sizeof(MeshRenderer::PerObjectData) * 1024 })),
+            RHI::IGpuResource::Create(
+                RHI::ResourceDesc::BufferUpload(sizeof(MeshRenderer::PerObjectData) * 1024))),
         PerMaterialBuffer(
-            RHI::IUploadBuffer::Create(
-                { sizeof(MeshRenderer::PerMaterialData) * 1024 }))
+            RHI::IGpuResource::Create(
+                RHI::ResourceDesc::BufferUpload(sizeof(MeshRenderer::PerMaterialData) * 1024)))
     {
     }
 } // namespace Neon::Renderer

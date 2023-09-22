@@ -20,17 +20,9 @@ namespace Neon::RG
 
     public:
         /// <summary>
-        /// Create buffer
+        /// Create resource
         /// </summary>
-        void CreateBuffer(
-            const ResourceId&       Id,
-            const RHI::BufferDesc&  Desc,
-            RHI::GraphicsBufferType BufferType);
-
-        /// <summary>
-        /// Create texture
-        /// </summary>
-        void CreateTexture(
+        void CreateResource(
             const ResourceId&        Id,
             const RHI::ResourceDesc& Desc,
             MResourceFlags           Flags = {});
@@ -178,16 +170,16 @@ namespace Neon::RG
         /// import buffer to be used later when dispatching passes
         /// </summary>
         void ImportBuffer(
-            const ResourceId&        Id,
-            const Ptr<RHI::IBuffer>& Resource,
-            RHI::GraphicsBufferType  BufferType);
+            const ResourceId&             Id,
+            const Ptr<RHI::IGpuResource>& Resource,
+            RHI::GraphicsBufferType       BufferType);
 
         /// <summary>
         /// import texture to be used later when dispatching passes
         /// </summary>
         void ImportTexture(
             const ResourceId&             Id,
-            const Ptr<RHI::ITexture>&     Resource,
+            const Ptr<RHI::IGpuResource>& Resource,
             const RHI::ClearOperationOpt& ClearValue = std::nullopt);
 
         /// <summary>
