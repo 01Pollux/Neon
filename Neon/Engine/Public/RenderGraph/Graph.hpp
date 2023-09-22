@@ -165,7 +165,6 @@ namespace Neon::RG
             std::vector<ResourceViewId>                   RenderTargets,
             std::optional<ResourceViewId>                 DepthStencil,
             std::set<ResourceId>                          ResourceToCreate,
-            std::set<ResourceId>                          ResourceToDestroy,
             std::map<ResourceViewId, RHI::MResourceState> States);
 
         /// <summary>
@@ -209,7 +208,6 @@ namespace Neon::RG
         std::vector<RenderPassInfo> m_Passes;
 
         std::set<ResourceId> m_ResourcesToCreate;
-        std::set<ResourceId> m_ResourcesToDestroy;
 
         std::map<ResourceId, std::map<uint32_t, RHI::MResourceState>> m_StatesToTransition;
 

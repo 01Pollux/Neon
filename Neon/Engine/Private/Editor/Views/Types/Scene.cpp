@@ -69,11 +69,13 @@ namespace Neon::Editor::Views
             }
 
             Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
-            bool  Changed = false;
+            bool  Changed       = false;
+            bool  HasClientSize = false;
 
             if (CameraData->Viewport.ClientWidth)
             {
-                Size.x = float(Window->Size.x);
+                HasClientSize = true;
+                Size.x        = float(Window->Size.x);
                 if (Size.x != CameraData->Viewport.Width)
                 {
                     Changed = true;
@@ -81,7 +83,8 @@ namespace Neon::Editor::Views
             }
             if (CameraData->Viewport.ClientHeight)
             {
-                Size.y = float(Window->Size.y);
+                HasClientSize = true;
+                Size.y        = float(Window->Size.y);
                 if (Size.y != CameraData->Viewport.Height)
                 {
                     Changed = true;
@@ -92,7 +95,7 @@ namespace Neon::Editor::Views
             {
                 CameraData->Viewport.Width  = Size.x;
                 CameraData->Viewport.Height = Size.y;
-                RenderGraph->GetStorage().SetOutputImageSize(Size);
+                RenderGraph->GetStorage().SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
 
                 Camera.modified<Scene::Component::Camera>();
             }

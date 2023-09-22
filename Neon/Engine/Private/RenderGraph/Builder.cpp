@@ -35,8 +35,7 @@ namespace Neon::RG
     {
         BuildAdjacencyLists(Builders);
         TopologicalSort();
-        auto ResourcesToDestroy = CalculateResourcesLifetime(Builders);
-        return BuildDependencyLevels(Builders, ResourcesToDestroy);
+        return BuildDependencyLevels(Builders);
     }
 
     //
@@ -92,37 +91,6 @@ namespace Neon::RG
 
     //
 
-    auto GraphBuilder::CalculateResourcesLifetime(
-        BuildersListType& Builders) const -> std::vector<std::set<ResourceId>>
-    {
-        std::vector<std::set<ResourceId>> ResourceToDestroy(m_Passes.size());
-        std::map<ResourceId, size_t>      LastUsedResources;
-
-        for (size_t i = 0; i < m_TopologicallySortedList.size(); i++)
-        {
-            size_t PassIdx   = m_TopologicallySortedList[i];
-            auto&  Resources = Builders[PassIdx].Resources;
-
-            for (auto& ResId : Resources.m_ResourcesWritten)
-            {
-                LastUsedResources[ResId] = PassIdx;
-            }
-            for (auto& ResId : Resources.m_ResourcesRead)
-            {
-                LastUsedResources[ResId] = PassIdx;
-            }
-        }
-
-        for (auto& [Id, PassIdx] : LastUsedResources)
-        {
-            ResourceToDestroy[PassIdx].insert(Id);
-        }
-
-        return ResourceToDestroy;
-    }
-
-    //
-
     void GraphBuilder::DepthFirstSearch(
         size_t              Index,
         std::vector<bool>&  Visited,
@@ -142,8 +110,7 @@ namespace Neon::RG
     //
 
     auto GraphBuilder::BuildDependencyLevels(
-        BuildersListType&                  Builders,
-        std::vector<std::set<ResourceId>>& ResourceToDestroy) -> std::vector<GraphDepdencyLevel>
+        BuildersListType& Builders) -> std::vector<GraphDepdencyLevel>
     {
         std::vector<size_t> Distances(m_TopologicallySortedList.size());
         for (size_t d = 0; d < Distances.size(); d++)
@@ -177,7 +144,6 @@ namespace Neon::RG
                 std::move(Builders[i].Resources.m_RenderTargets),
                 std::move(Builders[i].Resources.m_DepthStencil),
                 std::move(Builders[i].Resources.m_ResourcesCreated),
-                std::move(ResourceToDestroy[i]),
                 std::move(Builders[i].Resources.m_ResourceStates));
         }
 

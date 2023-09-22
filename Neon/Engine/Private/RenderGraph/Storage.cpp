@@ -26,7 +26,6 @@ namespace Neon::RG
 
     void GraphStorage::Reset()
     {
-        FlushResources();
         m_Resources.clear();
 
         // Importing null output image to allow to use it in the graph
@@ -211,56 +210,58 @@ namespace Neon::RG
 
     //
 
-    void GraphStorage::NewOutputImage()
+    void GraphStorage::UpdateOutputImage(
+        const Size2I& Size)
     {
         auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        auto& Desc        = OutputImage.GetDesc();
 
-        auto& Desc = OutputImage.GetDesc();
+        bool WasChanged = false;
         if (OutputImage.IsWindowSizedTexture())
         {
-            auto& WindowSize = RHI::ISwapchain::Get()->GetSize();
-            Desc.Width       = WindowSize.Width();
-            Desc.Height      = WindowSize.Height();
+            WasChanged = Desc.Width != Size.Width() ||
+                         Desc.Height != Size.Height();
+
+            Desc.Width  = Size.Width();
+            Desc.Height = Size.Height();
         }
 
-        Desc.SetClearValue(Colors::Magenta);
-        Desc.Flags.Set(RHI::EResourceFlags::AllowRenderTarget);
+        if (!OutputImage.Get() || WasChanged)
+        {
+            Ptr<RHI::IGpuResource> Res;
 
-        OutputImage.Set(Ptr<RHI::IGpuResource>(RHI::IGpuResource::Create(
-            Desc,
-            { .Name = ResourceResolver::GetOutputImageTag().GetName().c_str() })));
+            // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
+            Desc.MipLevels = 0;
+            Res.reset(RHI::IGpuResource::Create(Desc));
+
+            OutputImage.Set(Res);
+            Desc = Res->GetDesc();
+
+#ifndef NEON_DIST
+            RHI::RenameObject(OutputImage.Get().get(), OutputImage.GetId().GetName());
+#endif
+        }
     }
 
     void GraphStorage::ReallocateResource(
         ResourceHandle& Handle)
     {
-        auto& Desc = Handle.GetDesc();
+        auto& Desc       = Handle.GetDesc();
+        bool  WasChanged = false;
+
         if (Handle.IsWindowSizedTexture())
         {
-            auto Size   = GetOutputImageSize();
+            auto Size = GetOutputImageSize();
+
+            WasChanged = Desc.Width != Size.Width() ||
+                         Desc.Height != Size.Height();
+
             Desc.Width  = Size.Width();
             Desc.Height = Size.Height();
         }
 
-        auto Iter = std::ranges::find_if(
-            m_InactiveResources,
-            [&Desc](const ResourceHandle& Handle)
-            {
-                return Handle.GetDesc() == Desc;
-            });
-
-        if (Iter != m_InactiveResources.end())
+        if (!Handle.Get() || WasChanged)
         {
-            auto& NewDesc = Iter->GetDesc();
-
-            Desc.ClearValue = NewDesc.ClearValue;
-
-            Handle.Set(Iter->Get());
-            m_InactiveResources.erase(Iter);
-        }
-        else
-        {
-
             Ptr<RHI::IGpuResource> Res;
 
             // We have to reset mip levels to 0 since we don't know how many mip levels the resource will have
@@ -269,22 +270,11 @@ namespace Neon::RG
 
             Handle.Set(Res);
             Desc = Res->GetDesc();
-        }
 
 #ifndef NEON_DIST
-        RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
+            RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
 #endif
-    }
-
-    void GraphStorage::FreeResource(
-        const ResourceHandle& Handle)
-    {
-        m_InactiveResources.emplace_back(Handle);
-    }
-
-    void GraphStorage::FlushResources()
-    {
-        m_InactiveResources.clear();
+        }
     }
 
     //

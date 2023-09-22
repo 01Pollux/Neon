@@ -22,8 +22,7 @@ namespace Neon::RG
         friend class RenderGraph;
         friend class GraphDepdencyLevel;
 
-        using ResourceMapType          = std::map<ResourceId, ResourceHandle>;
-        using InactiveResourceListType = std::deque<ResourceHandle>;
+        using ResourceMapType = std::map<ResourceId, ResourceHandle>;
 
     public:
         GraphStorage();
@@ -144,24 +143,14 @@ namespace Neon::RG
         /// <summary>
         /// Allocate a new output image for rendering
         /// </summary>
-        void NewOutputImage();
+        void UpdateOutputImage(
+            const Size2I& Size);
 
         /// <summary>
         /// Allocate resource from the pool
         /// </summary>
         void ReallocateResource(
             ResourceHandle& Handle);
-
-        /// <summary>
-        /// Free resource to the pool
-        /// </summary>
-        void FreeResource(
-            const ResourceHandle& Handle);
-
-        /// <summary>
-        /// Free all resource from pool
-        /// </summary>
-        void FlushResources();
 
     public:
         /// <summary>
@@ -176,9 +165,7 @@ namespace Neon::RG
         /// Structured as CameraFrameData.
         /// </summary>
         Ptr<RHI::IGpuResource> m_CameraFrameData;
-
-        ResourceMapType          m_Resources;
-        std::set<ResourceId>     m_ImportedResources;
-        InactiveResourceListType m_InactiveResources;
+        ResourceMapType        m_Resources;
+        std::set<ResourceId>   m_ImportedResources;
     };
 } // namespace Neon::RG
