@@ -132,11 +132,13 @@ namespace Neon::RG
     void BlurPass::ResolveResources(
         ResourceResolver& Resolver)
     {
-        const ResourceId Intermediate(STR("BlurSubPassIntermediate_") + m_Data.ViewName);
+        const ResourceId Intermediate("BlurSubPassIntermediate_" + m_Data.ViewName);
 
         const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
         const ResourceViewId IntermediateOutputView(Intermediate.CreateView(m_Data.ViewName));
         const ResourceViewId OutputView(m_Data.Output.CreateView(m_Data.ViewName));
+
+        //
 
         auto [Desc, Flags] = Resolver.GetResourceDescAndFlags(m_Data.Source);
 
@@ -150,6 +152,7 @@ namespace Neon::RG
             *Desc,
             Flags);
 
+        // We will write to source <=> tmp, then to the output in the final iteration
         Resolver.ReadResourceEmpty(m_Data.Source);
         Resolver.WriteResource(SourceView, m_Data.OutputDesc);
         Resolver.WriteResource(IntermediateOutputView, m_Data.OutputDesc);
@@ -160,7 +163,7 @@ namespace Neon::RG
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        const ResourceId Intermediate(STR("BlurSubPassIntermediate_") + m_Data.ViewName);
+        const ResourceId Intermediate("BlurSubPassIntermediate_" + m_Data.ViewName);
 
         const ResourceViewId SourceView(m_Data.Source.CreateView(m_Data.ViewName));
         const ResourceViewId IntermediateOutputView(Intermediate.CreateView(m_Data.ViewName));

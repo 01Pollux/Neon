@@ -66,14 +66,16 @@ namespace Neon::RG
 
     struct PassResources
     {
+        static constexpr size_t DescriptorsCount = 5;
+
         [[nodiscard]] static const ResourceId HdrRenderTarget()
         {
-            return ResourceId{ STR("HdrRenderTarget") };
+            return ResourceId{ "HdrRenderTarget" };
         }
 
         [[nodiscard]] static const ResourceId AmbientOcclusion()
         {
-            return ResourceId{ STR("AmbientOcclusion") };
+            return ResourceId{ "AmbientOcclusion" };
         }
 
         [[nodiscard]] static const ResourceId GBufferAlbedo()
@@ -95,28 +97,52 @@ namespace Neon::RG
     void AmbientPass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        const ResourceId HdrRenderTargetId  = PassResources::HdrRenderTarget();
+        const ResourceId GBufferAlbedoId    = PassResources::GBufferAlbedo();
+        const ResourceId GBufferEmissiveId  = PassResources::GBufferEmissive();
+        const ResourceId GBufferDepthId     = PassResources::GBufferDepth();
+        const ResourceId AmbientOcclusionId = PassResources::AmbientOcclusion();
+
+        //
+
         Resolver.CreateWindowTexture(
-            PassResources::HdrRenderTarget(),
+            HdrRenderTargetId,
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R16G16B16A16_Float, 1, 1, 1));
 
-        m_Data.HdrRenderTarget = Resolver.WriteResource(PassResources::HdrRenderTarget().CreateView(STR("Main")));
+        Resolver.WriteResource(
+            HdrRenderTargetId.CreateView("Main"));
 
-        m_Data.DiffuseMap          = Resolver.ReadTexture(PassResources::GBufferAlbedo().CreateView(STR("Ambient")),
-                                                          ResourceReadAccess::NonPixelShader);
-        m_Data.EmissiveFactorMap   = Resolver.ReadTexture(PassResources::GBufferEmissive().CreateView(STR("Ambient")),
-                                                          ResourceReadAccess::NonPixelShader);
-        m_Data.DepthMap            = Resolver.ReadTexture(PassResources::GBufferDepth().CreateView(STR("Ambient")), ResourceReadAccess::NonPixelShader,
-                                                          RHI::SRVDesc{
-                                                              .Format = RHI::EResourceFormat::R32_Float,
-                                                              .View   = RHI::SRVDesc::Texture2D{} });
-        m_Data.AmbientOcclusionMap = Resolver.ReadTexture(PassResources::AmbientOcclusion().CreateView(STR("Ambient")), ResourceReadAccess::NonPixelShader);
+        Resolver.ReadTexture(
+            GBufferAlbedoId.CreateView("Ambient"),
+            ResourceReadAccess::NonPixelShader);
+
+        Resolver.ReadTexture(
+            GBufferEmissiveId.CreateView("Ambient"),
+            ResourceReadAccess::NonPixelShader);
+
+        Resolver.ReadTexture(
+            GBufferDepthId.CreateView("Ambient"), ResourceReadAccess::NonPixelShader,
+            RHI::SRVDesc{
+                .Format = RHI::EResourceFormat::R32_Float,
+                .View   = RHI::SRVDesc::Texture2D{} });
+
+        Resolver.ReadTexture(
+            AmbientOcclusionId.CreateView("Ambient"), ResourceReadAccess::NonPixelShader);
     }
 
     void AmbientPass::DispatchTyped(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(DataType::DescriptorsCount);
+        const ResourceId HdrRenderTargetId  = PassResources::HdrRenderTarget();
+        const ResourceId GBufferAlbedoId    = PassResources::GBufferAlbedo();
+        const ResourceId GBufferEmissiveId  = PassResources::GBufferEmissive();
+        const ResourceId GBufferDepthId     = PassResources::GBufferDepth();
+        const ResourceId AmbientOcclusionId = PassResources::AmbientOcclusion();
+
+        //
+
+        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(PassResources::DescriptorsCount);
 
         CommandList.SetPipelineState(m_AmbientPipeline);
         CommandList.SetRootSignature(m_AmbientRootSignature);
@@ -130,7 +156,7 @@ namespace Neon::RG
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 }
             };
-            static_assert(std::size(SrcInfo) == DataType::DescriptorsCount);
+            static_assert(std::size(SrcInfo) == PassResources::DescriptorsCount);
 
             RHI::CpuDescriptorHandle
                 &OutputTexture       = SrcInfo[0].Descriptor,
@@ -139,11 +165,11 @@ namespace Neon::RG
                 &DepthMap            = SrcInfo[3].Descriptor,
                 &AmbientOcclusionMap = SrcInfo[4].Descriptor;
 
-            Storage.GetResourceView(m_Data.HdrRenderTarget, &OutputTexture);
-            Storage.GetResourceView(m_Data.DiffuseMap, &AlbedoMap);
-            Storage.GetResourceView(m_Data.EmissiveFactorMap, &EmissiveFactorMap);
-            Storage.GetResourceView(m_Data.DepthMap, &DepthMap);
-            Storage.GetResourceView(m_Data.AmbientOcclusionMap, &AmbientOcclusionMap);
+            Storage.GetResourceView(HdrRenderTargetId.CreateView("Main"), &OutputTexture);
+            Storage.GetResourceView(GBufferAlbedoId.CreateView("Ambient"), &AlbedoMap);
+            Storage.GetResourceView(GBufferEmissiveId.CreateView("Ambient"), &EmissiveFactorMap);
+            Storage.GetResourceView(GBufferDepthId.CreateView("Ambient"), &DepthMap);
+            Storage.GetResourceView(AmbientOcclusionId.CreateView("Ambient"), &AmbientOcclusionMap);
 
             Descriptor->Copy(Descriptor.Offset, SrcInfo);
         }

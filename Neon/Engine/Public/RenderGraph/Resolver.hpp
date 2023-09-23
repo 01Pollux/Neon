@@ -40,64 +40,72 @@ namespace Neon::RG
         /// Write resource view to add dependency without actually writing anything
         /// </summary>
         void WriteResourceEmpty(
-            const ResourceId& Id);
+            ResourceId Id);
 
         /// <summary>
         /// Write resource view
         /// RawView indicates that the resource is used as raw buffer and no descriptor will be created
         /// </summary>
-        const ResourceViewId& WriteResource(
+        void WriteResource(
             const ResourceViewId&          ViewId,
-            const RHI::DescriptorViewDesc& Desc);
+            const RHI::DescriptorViewDesc& Desc,
+            SubresourceView                Subresource = {});
 
         /// <summary>
         /// Write resource in copy operation
         /// </summary>
-        const ResourceViewId& WriteDstResource(
+        void WriteDstResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
         /// Write resource as cbv
         /// 0 offset and size means whole buffer
         /// </summary>
-        const ResourceViewId& WriteBuffer(
+        void WriteBuffer(
             const ResourceViewId& ViewId,
-            size_t                Offset = 0,
-            size_t                Size   = 0)
+            size_t                Offset      = 0,
+            size_t                Size        = 0,
+            SubresourceView       Subresource = {})
         {
-            return WriteResource(ViewId, RHI::DescriptorViewDesc{ RHI::CBVDesc{
-                                             .Resource = Offset,
-                                             .Size     = Size } });
+            WriteResource(
+                ViewId,
+                RHI::DescriptorViewDesc{ RHI::CBVDesc{
+                    .Resource = Offset,
+                    .Size     = Size } },
+                std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as uav
         /// </summary>
-        const ResourceViewId& WriteResource(
+        void WriteResource(
             const ResourceViewId& ViewId,
-            RHI::UAVDescOpt       Desc = std::nullopt)
+            RHI::UAVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as renter target
         /// </summary>
-        const ResourceViewId& WriteRenderTarget(
+        void WriteRenderTarget(
             const ResourceViewId& ViewId,
-            RHI::RTVDescOpt       Desc = std::nullopt)
+            RHI::RTVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as renter target
         /// </summary>
-        const ResourceViewId& WriteDepthStencil(
+        void WriteDepthStencil(
             const ResourceViewId& ViewId,
-            RHI::DSVDescOpt       Desc = std::nullopt)
+            RHI::DSVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) });
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
     public:
@@ -105,64 +113,69 @@ namespace Neon::RG
         /// Read resource view
         /// </summary>
         void ReadResourceEmpty(
-            const ResourceId& ViewId);
+            ResourceId Id);
 
         /// <summary>
         /// Read resource view
         /// </summary>
-        const ResourceViewId& ReadResource(
+        void ReadResource(
             const ResourceViewId&          ViewId,
             ResourceReadAccess             ReadAccess,
-            const RHI::DescriptorViewDesc& Desc);
+            const RHI::DescriptorViewDesc& Desc,
+            SubresourceView                Subresource = {});
 
         /// <summary>
         /// Read resource in copy operation
         /// </summary>
-        const ResourceViewId& ReadSrcResource(
+        void ReadSrcResource(
             const ResourceViewId& ViewId);
 
         /// <summary>
         /// Write resource as srv
         /// </summary>
-        const ResourceViewId& ReadConstantBuffer(
+        void ReadConstantBuffer(
             const ResourceViewId& ViewId,
             ResourceReadAccess    ReadAccess,
-            RHI::CBVDesc          Desc)
+            RHI::CBVDesc          Desc,
+            SubresourceView       Subresource = {})
         {
-            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as srv
         /// </summary>
-        const ResourceViewId& ReadTexture(
+        void ReadTexture(
             const ResourceViewId& ViewId,
             ResourceReadAccess    ReadAccess,
-            RHI::SRVDescOpt       Desc = std::nullopt)
+            RHI::SRVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as uav
         /// </summary>
-        const ResourceViewId& ReadWriteTexture(
+        void ReadWriteTexture(
             const ResourceViewId& ViewId,
             ResourceReadAccess    ReadAccess,
-            RHI::UAVDescOpt       Desc = std::nullopt)
+            RHI::UAVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
         /// <summary>
         /// Write resource as dsv
         /// </summary>
-        const ResourceViewId& ReadDepthStencil(
+        void ReadDepthStencil(
             const ResourceViewId& ViewId,
             ResourceReadAccess    ReadAccess,
-            RHI::DSVDescOpt       Desc = std::nullopt)
+            RHI::DSVDescOpt       Desc        = std::nullopt,
+            SubresourceView       Subresource = {})
         {
-            return ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) });
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
     public:
@@ -186,7 +199,7 @@ namespace Neon::RG
         /// Get resource desc
         /// </summary>
         [[nodiscard]] std::pair<const RHI::ResourceDesc*, MResourceFlags> GetResourceDescAndFlags(
-            const ResourceId& Id) const;
+            ResourceId Id) const;
 
     public:
         /// <summary>
@@ -197,14 +210,25 @@ namespace Neon::RG
         /// <summary>
         /// Get output image id
         /// </summary>
-        [[nodiscard]] static ResourceId GetOutputImageTag();
+        [[nodiscard]] static StringU8 GetOutputImageTag()
+        {
+            return "OutputImage";
+        }
+
+        /// <summary>
+        /// Get output image id
+        /// </summary>
+        [[nodiscard]] static ResourceId GetOutputImage()
+        {
+            return ResourceId(GetOutputImageTag());
+        }
 
     private:
         /// <summary>
         /// Initialize resource to the default state
         /// </summary>
         void SetResourceState(
-            const ResourceViewId&      ViewId,
+            ResourceViewId             ViewId,
             const RHI::MResourceState& State,
             const RHI::MResourceFlags& Flags);
 

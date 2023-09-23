@@ -43,7 +43,7 @@ namespace Neon::RG
         /// Check to see if resource of id exists
         /// </summary>
         [[nodiscard]] bool ContainsResourceView(
-            const ResourceViewId& ViewId) const;
+            const ResourceViewId& ViewId);
 
     public:
         /// <summary>
@@ -68,8 +68,9 @@ namespace Neon::RG
         /// Get resource view from id
         /// </summary>
         const RHI::DescriptorViewDesc& GetResourceView(
-            const ResourceViewId&     ViewId,
-            RHI::CpuDescriptorHandle* CpuHandle = nullptr) const;
+            ResourceViewId            ViewId,
+            RHI::CpuDescriptorHandle* CpuHandle        = nullptr,
+            uint32_t*                 SubresourceIndex = nullptr) const;
 
     public:
         /// <summary>
@@ -117,15 +118,15 @@ namespace Neon::RG
             MResourceFlags           Flags);
 
         /// <summary>
-        /// import buffer to be used later when dispatching passes
+        /// import resource to be used later when dispatching passes
         /// </summary>
         void ImportBuffer(
             const ResourceId&             Id,
-            const Ptr<RHI::IGpuResource>& Resource,
+            const Ptr<RHI::IGpuResource>& Buffer,
             RHI::GraphicsBufferType       BufferType);
 
         /// <summary>
-        /// import texture to be used later when dispatching passes
+        /// import resource to be used later when dispatching passes
         /// </summary>
         void ImportTexture(
             const ResourceId&             Id,
@@ -137,7 +138,8 @@ namespace Neon::RG
         /// </summary>
         void DeclareResourceView(
             const ResourceViewId&          ViewId,
-            const RHI::DescriptorViewDesc& Desc);
+            const RHI::DescriptorViewDesc& Desc,
+            SubresourceView                Subresource);
 
     private:
         /// <summary>

@@ -23,25 +23,25 @@ namespace Neon::RG
             DepthStencil
         };
 
-        static constexpr const wchar_t* ResourceNames[] = {
-            STR("GBufferAlbedo"),
-            STR("GBufferNormal"),
-            STR("GBufferEmissive"),
-            STR("GBufferDepth")
+        static constexpr const char* ResourceNames[] = {
+            "GBufferAlbedo",
+            "GBufferNormal",
+            "GBufferEmissive",
+            "GBufferDepth"
         };
 
         static constexpr RHI::EResourceFormat RenderTargetsFormats[] = {
             RHI::EResourceFormat::R16G16B16A16_Float, // Albedo
             RHI::EResourceFormat::R16G16B16A16_Float, // Normal
             RHI::EResourceFormat::R16G16B16A16_Float, // Emissive,
-            RHI::EResourceFormat::R32_Typeless    // Depth-Stencil
+            RHI::EResourceFormat::R32_Typeless        // Depth-Stencil
         };
 
         static constexpr RHI::EResourceFormat RenderTargetsFormatsTyped[] = {
             RHI::EResourceFormat::R16G16B16A16_Float, // Albedo
             RHI::EResourceFormat::R16G16B16A16_Float, // Normal
             RHI::EResourceFormat::R16G16B16A16_Float, // Emissive,
-            RHI::EResourceFormat::D32_Float       // Depth-Stencil
+            RHI::EResourceFormat::D32_Float           // Depth-Stencil
         };
 
         /// <summary>

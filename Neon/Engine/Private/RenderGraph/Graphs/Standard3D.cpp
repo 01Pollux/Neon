@@ -34,14 +34,14 @@ namespace Neon::RG
         Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
-        Builder.AddPass<DebugPass>(ResourceId(STR("HdrRenderTarget")));
+        Builder.AddPass<DebugPass>(ResourceId("HdrRenderTarget"));
 #endif
 
         Builder.AddPass<CopyToTexturePass>(
             CopyToTexturePass::CopyToTextureData{
-                .ViewName    = STR("HdrRenderTargetToFinal"),
-                .Source      = ResourceId(STR("HdrRenderTarget")),
-                .Destination = ResourceResolver::GetOutputImageTag() });
+                .ViewName    = "HdrRenderTargetToFinal",
+                .Source      = ResourceId("HdrRenderTarget"),
+                .Destination = ResourceResolver::GetOutputImage() });
 
         Builder.Build();
     }

@@ -25,7 +25,6 @@ struct SSAOParams
 	float Bias;
 	float Magnitude;
 	float Contrast;
-	float ResolutionFactor;
 };
 
 enum

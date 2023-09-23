@@ -10,25 +10,15 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
-        struct DataType
-        {
-            static constexpr size_t DescriptorsCount = 3;
-
-            ResourceViewId NormalMap;
-            ResourceViewId DepthMap;
-            ResourceViewId SSAOOutput;
-        };
-
         static constexpr size_t SampleCount = 14;
 
         struct ParamsType
         {
             Vector4 Samples[SampleCount];
-            float   Radius           = 1.f;
-            float   Bias             = 0.01f;
-            float   Magnitude        = 1.5f;
-            float   Contrast         = 1.5f;
-            float   ResolutionFactor = 1.f;
+            float   Radius    = 1.f;
+            float   Bias      = 0.01f;
+            float   Magnitude = 1.5f;
+            float   Contrast  = 1.5f;
         };
 
     public:
@@ -90,17 +80,6 @@ namespace Neon::RG
         void SetContrast(
             float Val) noexcept;
 
-        /// <summary>
-        /// Get the SSAO resolution factor.
-        /// </summary>
-        [[nodiscard]] float GetResolutionFactor() const noexcept;
-
-        /// <summary>
-        /// Set the SSAO resolution factor.
-        /// </summary>
-        void SetResolutionFactor(
-            float Val) noexcept;
-
     private:
         /// <summary>
         /// Generate the SSAO samples.
@@ -130,7 +109,5 @@ namespace Neon::RG
         Ptr<RHI::IPipelineState> m_SSAOPipeline;
 
         ParamsType m_Params;
-
-        DataType m_Data;
     };
 } // namespace Neon::RG

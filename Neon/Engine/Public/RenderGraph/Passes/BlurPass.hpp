@@ -24,7 +24,7 @@ namespace Neon::RG
     public:
         struct BlurPassData
         {
-            String ViewName;
+            StringU8 ViewName;
 
             ResourceId Source;
             ResourceId Output;

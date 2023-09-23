@@ -9,18 +9,6 @@ namespace Neon::RG
     {
         friend class RenderPass;
 
-        struct DataType
-        {
-            static constexpr size_t DescriptorsCount = 5;
-
-            ResourceViewId HdrRenderTarget;
-
-            ResourceViewId DiffuseMap;
-            ResourceViewId EmissiveFactorMap;
-            ResourceViewId DepthMap;
-            ResourceViewId AmbientOcclusionMap;
-        };
-
         struct ParamsType
         {
             uint32_t Color;
@@ -40,7 +28,5 @@ namespace Neon::RG
     private:
         Ptr<RHI::IPipelineState> m_AmbientPipeline;
         Ptr<RHI::IRootSignature> m_AmbientRootSignature;
-
-        DataType m_Data;
     };
 } // namespace Neon::RG

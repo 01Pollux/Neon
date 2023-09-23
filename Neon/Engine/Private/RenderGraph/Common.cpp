@@ -1,6 +1,8 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/Common.hpp>
 
+#include <Log/Logger.hpp>
+
 namespace Neon::RG
 {
     ResourceHandle::ResourceHandle(
@@ -41,6 +43,20 @@ namespace Neon::RG
         return m_Id;
     }
 
+    void ResourceHandle::CreateView(
+        const ResourceViewId&          ViewId,
+        const RHI::DescriptorViewDesc& Desc,
+        const SubresourceView&         Subresource)
+    {
+        NEON_ASSERT(!m_ViewMap.contains(ViewId), "View name already exists");
+
+        m_ViewMap[ViewId] = {
+            .Desc             = Desc,
+            .SubresourceIndex = Subresource.GetSubresourceIndex(
+                m_Desc.Depth, m_Desc.MipLevels)
+        };
+    }
+
     auto ResourceHandle::GetViews() noexcept -> ResourceViewMapType&
     {
         return m_ViewMap;
@@ -74,7 +90,12 @@ namespace Neon::RG
     void ResourceHandle::Set(
         const Ptr<RHI::IGpuResource>& Resource) noexcept
     {
-        m_Resource = Resource;
+        bool ShouldRename = Resource && m_Resource != Resource;
+        m_Resource        = Resource;
+        if (ShouldRename)
+        {
+            SetName();
+        }
     }
 
     RHI::GpuTexture ResourceHandle::AsTexture() const noexcept
@@ -111,5 +132,26 @@ namespace Neon::RG
     bool ResourceHandle::IsImported() const noexcept
     {
         return m_Flags.Test(EResourceFlags::Imported);
+    }
+
+    void ResourceHandle::SetName()
+    {
+#ifndef NEON_DIST
+        if (m_Resource)
+        {
+            RHI::RenameObject(m_Resource.get(), StringUtils::Transform<String>(m_Id.GetName()).c_str());
+        }
+#endif
+    }
+
+    //
+
+    constexpr uint32_t SubresourceView::GetSubresourceIndex(
+        uint32_t ArraySize,
+        uint32_t MipSize) const
+    {
+        return MipIndex == -1
+                   ? std::numeric_limits<uint32_t>::max()
+                   : RHI::IGpuResource::GetSubresourceIndex(PlaneIndex, ArrayIndex, ArraySize, MipIndex, MipSize);
     }
 } // namespace Neon::RG

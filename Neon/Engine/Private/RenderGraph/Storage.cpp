@@ -28,16 +28,20 @@ namespace Neon::RG
     {
         m_Resources.clear();
 
+        auto OutputImageId = ResourceResolver::GetOutputImage();
         // Importing null output image to allow to use it in the graph
         ImportTexture(
-            ResourceResolver::GetOutputImageTag(),
+            OutputImageId,
             nullptr);
-        auto& Resource = GetResourceMut(ResourceResolver::GetOutputImageTag());
+
+        auto& Resource = GetResourceMut(OutputImageId);
         Resource.MakeWindowSizedTexture(true);
         Resource.GetDesc() = RHI::ResourceDesc::Tex2D(
             ResourceResolver::GetSwapchainFormat(),
             1, 1, 1);
     }
+
+    //
 
     bool GraphStorage::ContainsResource(
         const ResourceId& Id) const
@@ -46,16 +50,14 @@ namespace Neon::RG
     }
 
     bool GraphStorage::ContainsResourceView(
-        const ResourceViewId& ViewId) const
+        const ResourceViewId& ViewId)
     {
-        bool Found = false;
-        auto Iter  = m_Resources.find(ViewId.GetResource());
+        auto Iter = m_Resources.find(ViewId.GetResource());
         if (Iter != m_Resources.end())
         {
-            auto& Views = Iter->second.GetViews();
-            Found       = Views.contains(ViewId.Get());
+            return Iter->second.GetViews().contains(ViewId);
         }
-        return Found;
+        return false;
     }
 
     //
@@ -92,23 +94,28 @@ namespace Neon::RG
     }
 
     const RHI::DescriptorViewDesc& GraphStorage::GetResourceView(
-        const ResourceViewId&     ViewId,
-        RHI::CpuDescriptorHandle* CpuHandle) const
+        ResourceViewId            ViewId,
+        RHI::CpuDescriptorHandle* CpuHandle,
+        uint32_t*                 SubresourceIndex) const
     {
         auto Iter = m_Resources.find(ViewId.GetResource());
         if (Iter != m_Resources.end())
         {
             auto& Views    = Iter->second.GetViews();
-            auto  ViewIter = Views.find(ViewId.Get());
+            auto  ViewIter = Views.find(ViewId);
 
             if (ViewIter != Views.end())
             {
                 auto& ViewInfo = ViewIter->second;
                 if (CpuHandle)
                 {
-                    *CpuHandle = ViewInfo.first.GetCpuHandle();
+                    *CpuHandle = ViewInfo.Handle.GetCpuHandle();
                 }
-                return ViewInfo.second;
+                if (SubresourceIndex)
+                {
+                    *SubresourceIndex = ViewInfo.SubresourceIndex;
+                }
+                return ViewInfo.Desc;
             }
         }
 
@@ -118,18 +125,18 @@ namespace Neon::RG
 
     const ResourceHandle& GraphStorage::GetOutputImage() const
     {
-        return GetResource(ResourceResolver::GetOutputImageTag());
+        return GetResource(ResourceResolver::GetOutputImage());
     }
 
     Size2I GraphStorage::GetOutputImageSize() const
     {
-        return GetResourceSize(ResourceResolver::GetOutputImageTag());
+        return GetResourceSize(ResourceResolver::GetOutputImage());
     }
 
     void GraphStorage::SetOutputImageSize(
         std::optional<Size2I> Size)
     {
-        auto& Resource = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        auto& Resource = GetResourceMut(ResourceResolver::GetOutputImage());
         Resource.MakeWindowSizedTexture(!Size.has_value());
         if (Size)
         {
@@ -163,8 +170,8 @@ namespace Neon::RG
         const RHI::ResourceDesc& Desc,
         MResourceFlags           Flags)
     {
-        auto HandleIter = m_Resources.emplace(Id, ResourceHandle(Id, Desc, std::move(Flags)));
-        NEON_ASSERT(HandleIter.second, "Resource already exists");
+        NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
+        m_Resources.emplace(Id, ResourceHandle(Id, Desc, std::move(Flags)));
     }
 
     void GraphStorage::ImportBuffer(
@@ -173,12 +180,11 @@ namespace Neon::RG
         RHI::GraphicsBufferType       BufferType)
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
-        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Buffer, BufferType)).first->second.Get();
-#ifndef NEON_DIST
-        RHI::RenameObject(Handle.get(), Id.GetName());
-#endif
 
+        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Buffer, BufferType)).first->second;
         m_ImportedResources.emplace(Id);
+
+        Handle.SetName();
     }
 
     void GraphStorage::ImportTexture(
@@ -187,25 +193,21 @@ namespace Neon::RG
         const RHI::ClearOperationOpt& ClearValue)
     {
         NEON_ASSERT(!ContainsResource(Id), "Resource already exists");
-        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second.Get();
-#ifndef NEON_DIST
-        if (Handle.get()) [[likely]]
-        {
-            RHI::RenameObject(Handle.get(), Id.GetName());
-        }
-#endif
+
+        auto& Handle = m_Resources.emplace(Id, ResourceHandle(Id, Texture, ClearValue)).first->second;
         m_ImportedResources.emplace(Id);
+
+        Handle.SetName();
     }
 
     void GraphStorage::DeclareResourceView(
         const ResourceViewId&          ViewId,
-        const RHI::DescriptorViewDesc& Desc)
+        const RHI::DescriptorViewDesc& Desc,
+        SubresourceView                Subresource)
     {
         auto Iter = m_Resources.find(ViewId.GetResource());
         NEON_ASSERT(Iter != m_Resources.end(), "Resource doesn't exists");
-
-        auto& Views = Iter->second.GetViews();
-        NEON_ASSERT(Views.emplace(ViewId.Get(), ResourceHandle::ViewDesc{ {}, Desc }).second, "Resource view already exists exists");
+        Iter->second.CreateView(ViewId, Desc, Subresource);
     }
 
     //
@@ -213,7 +215,7 @@ namespace Neon::RG
     void GraphStorage::UpdateOutputImage(
         const Size2I& Size)
     {
-        auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImageTag());
+        auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImage());
         auto& Desc        = OutputImage.GetDesc();
 
         bool WasChanged = false;
@@ -236,10 +238,6 @@ namespace Neon::RG
 
             OutputImage.Set(Res);
             Desc = Res->GetDesc();
-
-#ifndef NEON_DIST
-            RHI::RenameObject(OutputImage.Get().get(), OutputImage.GetId().GetName());
-#endif
         }
     }
 
@@ -270,10 +268,6 @@ namespace Neon::RG
 
             Handle.Set(Res);
             Desc = Res->GetDesc();
-
-#ifndef NEON_DIST
-            RHI::RenameObject(Handle.Get().get(), Handle.GetId().GetName());
-#endif
         }
     }
 
@@ -287,7 +281,7 @@ namespace Neon::RG
 
         for (auto& View : Views)
         {
-            auto& [ViewDescHandle, ViewDesc] = View.second;
+            auto& ViewDesc = View.second;
 
             // TODO: batch allocations
             std::visit(
@@ -296,37 +290,37 @@ namespace Neon::RG
                     {
                         NEON_ASSERT(false, "Invalid view type");
                     },
-                    [&ViewDescHandle, this](const RHI::CBVDesc& Desc)
+                    [&ViewDesc, this](const RHI::CBVDesc& Desc)
                     {
                         RHI::Views::ConstantBuffer View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Desc);
-                        ViewDescHandle = View;
+                        ViewDesc.Handle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const RHI::SRVDescOpt& Desc)
+                    [&ViewDesc, Resource, this](const RHI::SRVDescOpt& Desc)
                     {
                         RHI::Views::ShaderResource View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDescHandle = View;
+                        ViewDesc.Handle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const RHI::UAVDescOpt& Desc)
+                    [&ViewDesc, Resource, this](const RHI::UAVDescOpt& Desc)
                     {
                         RHI::Views::UnorderedAccess View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDescHandle = View;
+                        ViewDesc.Handle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const RHI::RTVDescOpt& Desc)
+                    [&ViewDesc, Resource, this](const RHI::RTVDescOpt& Desc)
                     {
                         RHI::Views::RenderTarget View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::RenderTargetView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDescHandle = View;
+                        ViewDesc.Handle = View;
                     },
-                    [&ViewDescHandle, Resource, this](const RHI::DSVDescOpt& Desc)
+                    [&ViewDesc, Resource, this](const RHI::DSVDescOpt& Desc)
                     {
                         RHI::Views::DepthStencil View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::DepthStencilView)->Allocate(1);
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDescHandle = View;
+                        ViewDesc.Handle = View;
                     } },
-                ViewDesc);
+                ViewDesc.Desc);
         }
     }
 } // namespace Neon::RG

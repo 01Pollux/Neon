@@ -46,9 +46,9 @@ namespace Neon::RG
         Builder.AddPass<SSAOPass>();
         auto& Blur = Builder.AddPass<BlurPass>(
             BlurPass::BlurPassData{
-                .ViewName = STR("SSAO"),
-                .Source   = ResourceId(STR("SSAOOutput")),
-                .Output   = ResourceId(STR("AmbientOcclusion")) });
+                .ViewName = "SSAO",
+                .Source   = ResourceId("SSAOOutput"),
+                .Output   = ResourceId("AmbientOcclusion") });
     }
 
     //
@@ -139,17 +139,6 @@ namespace Neon::RG
         m_Params.Contrast = Val;
     }
 
-    float SSAOPass::GetResolutionFactor() const noexcept
-    {
-        return m_Params.ResolutionFactor;
-    }
-
-    void SSAOPass::SetResolutionFactor(
-        float Val) noexcept
-    {
-        m_Params.ResolutionFactor = Val;
-    }
-
     //
 
     void SSAOPass::GenerateSamples()
@@ -218,9 +207,11 @@ namespace Neon::RG
 
     struct PassResources
     {
+        static constexpr uint32_t DescriptorsCount = 3;
+
         [[nodiscard]] static const ResourceId SSAOOutput()
         {
-            return ResourceId{ STR("SSAOOutput") };
+            return ResourceId{ "SSAOOutput" };
         }
 
         [[nodiscard]] static const ResourceId GBufferNormal()
@@ -237,19 +228,29 @@ namespace Neon::RG
     void SSAOPass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        const ResourceId SSAOOutputId    = PassResources::SSAOOutput();
+        const ResourceId GBufferNormalId = PassResources::GBufferNormal();
+        const ResourceId GBufferDepthId  = PassResources::GBufferDepth();
+
+        //
+
         Resolver.CreateWindowTexture(
-            PassResources::SSAOOutput(),
+            SSAOOutputId,
             RHI::ResourceDesc::Tex2D(RHI::EResourceFormat::R8_UNorm, 1, 1, 1));
 
-        m_Data.SSAOOutput = Resolver.WriteResource(PassResources::SSAOOutput().CreateView(STR("Main")));
+        Resolver.WriteResource(
+            SSAOOutputId.CreateView("Main"));
 
-        m_Data.NormalMap = Resolver.ReadTexture(PassResources::GBufferNormal().CreateView(STR("SSAO")),
-                                                RG::ResourceReadAccess::NonPixelShader);
-        m_Data.DepthMap  = Resolver.ReadTexture(GBufferPass::GetResource(GBufferPass::ResourceType::DepthStencil).CreateView(STR("SSAO")),
-                                                RG::ResourceReadAccess::NonPixelShader,
-                                                RHI::SRVDesc{
-                                                    .Format = RHI::EResourceFormat::R32_Float,
-                                                    .View   = RHI::SRVDesc::Texture2D{} });
+        Resolver.ReadTexture(
+            GBufferNormalId.CreateView("SSAO"),
+            RG::ResourceReadAccess::NonPixelShader);
+
+        Resolver.ReadTexture(
+            GBufferDepthId.CreateView("SSAO"),
+            RG::ResourceReadAccess::NonPixelShader,
+            RHI::SRVDesc{
+                .Format = RHI::EResourceFormat::R32_Float,
+                .View   = RHI::SRVDesc::Texture2D{} });
     }
 
     //
@@ -265,8 +266,14 @@ namespace Neon::RG
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        // We will allocate Descriptor Count + 1 (noise map)
-        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(DataType::DescriptorsCount + 1);
+        const ResourceId SSAOOutputId    = PassResources::SSAOOutput();
+        const ResourceId GBufferNormalId = PassResources::GBufferNormal();
+        const ResourceId GBufferDepthId  = PassResources::GBufferDepth();
+
+        //
+
+        // We will allocate 3 descriptors  + 1 (noise map)
+        auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(PassResources::DescriptorsCount + 1);
 
         CommandList.SetPipelineState(m_SSAOPipeline);
         CommandList.SetRootSignature(m_SSAORootSignature);
@@ -278,21 +285,21 @@ namespace Neon::RG
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
                 RHI::IDescriptorHeap::CopyInfo{ .CopySize = 1 },
             };
-            static_assert(std::size(SrcInfo) == DataType::DescriptorsCount);
+            static_assert(std::size(SrcInfo) == PassResources::DescriptorsCount);
 
             RHI::CpuDescriptorHandle
                 &SSAOOutput = SrcInfo[0].Descriptor,
                 &NormalMap  = SrcInfo[1].Descriptor,
                 &DepthMap   = SrcInfo[2].Descriptor;
 
-            Storage.GetResourceView(m_Data.SSAOOutput, &SSAOOutput);
-            Storage.GetResourceView(m_Data.NormalMap, &NormalMap);
-            Storage.GetResourceView(m_Data.DepthMap, &DepthMap);
+            Storage.GetResourceView(SSAOOutputId.CreateView("Main"), &SSAOOutput);
+            Storage.GetResourceView(GBufferNormalId.CreateView("SSAO"), &NormalMap);
+            Storage.GetResourceView(GBufferDepthId.CreateView("SSAO"), &DepthMap);
 
             Descriptor->Copy(Descriptor.Offset, SrcInfo);
 
             Descriptor->CreateShaderResourceView(
-                Descriptor.Offset + DataType::DescriptorsCount,
+                Descriptor.Offset + PassResources::DescriptorsCount,
                 m_NoiseTexture.Get().get());
         }
 
@@ -302,12 +309,7 @@ namespace Neon::RG
         CommandList.SetDynamicResourceView(RHI::CstResourceViewType::Cbv, uint32_t(SSAOPassRS::SSAOParams), &m_Params, sizeof(m_Params));
         CommandList.SetDescriptorTable(uint32_t(SSAOPassRS::OutputTexture_TextureMap), Descriptor.GetGpuHandle());
 
-        auto  Size   = Storage.GetOutputImageSize();
-        float Factor = m_Params.ResolutionFactor;
-
-        Size.x = int(Size.x * Factor);
-        Size.y = int(Size.y * Factor);
-
+        auto Size = Storage.GetOutputImageSize();
         CommandList.Dispatch(Size.x, Size.y);
     }
 } // namespace Neon::RG

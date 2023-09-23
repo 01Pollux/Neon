@@ -302,9 +302,13 @@ namespace Neon::RG
         m_Passes.emplace_back(std::move(Pass), std::move(RenderTargets), std::move(DepthStencil));
         m_ResourcesToCreate.merge(std::move(ResourceToCreate));
 
+        auto& Storage = m_Context.GetStorage();
+
         for (auto& [ViewId, State] : States)
         {
-            auto& States = m_StatesToTransition[ViewId.GetResource()][ViewId.GetSubresourceIndex()];
+            uint32_t SubresourceIndex;
+            Storage.GetResourceView(ViewId, nullptr, &SubresourceIndex);
+            auto& States = m_StatesToTransition[ViewId.GetResource()][SubresourceIndex];
             States |= State;
         }
     }

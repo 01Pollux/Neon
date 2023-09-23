@@ -16,12 +16,6 @@ namespace Neon::RG
         Any
     };
 
-    struct ConstantBufferViewDesc
-    {
-        uint32_t ViewOffset;
-        uint32_t ViewSize;
-    };
-
     //
 
     enum class PassQueueType : uint8_t
@@ -34,6 +28,7 @@ namespace Neon::RG
     enum class EPassFlags : uint8_t
     {
         Cull,
+        // UAVBarrier,
 
         _Last_Enum,
     };
@@ -64,12 +59,15 @@ namespace Neon::RG
     class ResourceId
     {
     public:
+        constexpr ResourceId() = default;
+
         constexpr explicit ResourceId(
-            const String& Name = STR("")) :
-#ifndef NEON_DIST
-            m_ResourceName(Name),
-#endif
+            const StringU8& Name) :
             m_Id(StringUtils::Hash(Name))
+#ifndef NEON_DIST
+            ,
+            m_Name(Name)
+#endif
         {
         }
 
@@ -82,35 +80,16 @@ namespace Neon::RG
         }
 
         /// <summary>
-        /// Get resource name
+        /// Get resource name (non-dist only)
         /// </summary>
-        [[nodiscard]] constexpr const String& GetName() const noexcept
+        [[nodiscard]] constexpr const StringU8& GetName() const noexcept
         {
-#if !NEON_DIDST
-            return m_ResourceName;
+#ifndef NEON_DIST
+            return m_Name;
 #else
-            return StringUtils::Empty<String>;
-#endif
-        }
-
-#if !NEON_DIDST
-        /// <summary>
-        /// Get resource name
-        /// </summary>
-        [[nodiscard]] constexpr StringU8 GetNameU8() const noexcept
-        {
-            return StringUtils::Transform<StringU8>(m_ResourceName);
-        }
-#else
-
-        /// <summary>
-        /// Get resource name
-        /// </summary>
-        [[nodiscard]] constexpr const StringU8& GetNameU8() const noexcept
-        {
             return StringUtils::Empty<StringU8>;
-        }
 #endif
+        }
 
         constexpr auto operator<=>(
             const ResourceId& Other) const noexcept
@@ -118,17 +97,21 @@ namespace Neon::RG
             return m_Id <=> Other.m_Id;
         }
 
+        constexpr operator bool() const noexcept
+        {
+            return m_Id != std::numeric_limits<size_t>::max();
+        }
+
         /// <summary>
         /// Create a resource view id
         /// </summary>
         [[nodiscard]] constexpr ResourceViewId CreateView(
-            const String& ViewName,
-            uint32_t      SubresourceIndex = uint32_t(-1)) const;
+            const StringU8& ViewName) const;
 
     private:
-        size_t m_Id;
-#if !NEON_DIDST
-        String m_ResourceName;
+        size_t m_Id = std::numeric_limits<size_t>::max();
+#ifndef NEON_DIST
+        StringU8 m_Name;
 #endif
     };
 
@@ -140,24 +123,17 @@ namespace Neon::RG
         ResourceViewId() = default;
 
         constexpr explicit ResourceViewId(
-            const String& Name,
-            const String& ViewName,
-            uint32_t      SubresourceIndex = uint32_t(-1)) :
-            ResourceViewId(ResourceId(Name), ViewName, SubresourceIndex)
+            const StringU8& Name,
+            const StringU8& ViewName) :
+            ResourceViewId(ResourceId(Name), ViewName)
         {
         }
 
         constexpr explicit ResourceViewId(
-            ResourceId    ResId,
-            const String& ViewName,
-            uint32_t      SubresourceIndex = uint32_t(-1)) :
+            ResourceId      ResId,
+            const StringU8& ViewName) :
             m_Resource(ResId),
-            m_ViewId(StringUtils::Hash(ViewName) + ResId.Get() + SubresourceIndex),
-            m_SubresourceIndex(SubresourceIndex)
-#ifndef NEON_DIST
-            ,
-            m_ViewName(StringUtils::Format(STR("{}::{}"), ViewName, ResId.GetName()))
-#endif
+            m_ViewId(StringUtils::Hash(ViewName))
         {
         }
 
@@ -177,41 +153,9 @@ namespace Neon::RG
             return m_ViewId;
         }
 
-        /// <summary>
-        /// Get resource view name
-        /// </summary>
-        [[nodiscard]] constexpr const String& GetName() const noexcept
+        constexpr operator bool() const noexcept
         {
-#ifndef NEON_DIST
-            return m_ViewName;
-#else
-            return StringUtils::Empty<String>;
-#endif
-        }
-
-#ifndef NEON_DIST
-        /// <summary>
-        /// Get resource view name
-        /// </summary>
-        [[nodiscard]] constexpr StringU8 GetNameU8() const noexcept
-        {
-            return StringUtils::Transform<StringU8>(m_ViewName);
-        }
-#else /// <summary>
-      /// Get resource view name
-      /// </summary>
-        [[nodiscard]] constexpr const StringU8& GetNameU8() const noexcept
-        {
-            return StringUtils::Empty<StringU8>;
-        }
-#endif
-
-        /// <summary>
-        /// Get subresource index
-        /// </summary>
-        [[nodiscard]] constexpr uint32_t GetSubresourceIndex() const noexcept
-        {
-            return m_SubresourceIndex;
+            return m_ViewId != std::numeric_limits<size_t>::max() && m_Resource;
         }
 
         auto operator<=>(
@@ -221,41 +165,52 @@ namespace Neon::RG
             if (Cmp == std::strong_ordering::equal)
             {
                 Cmp = m_ViewId <=> Other.m_ViewId;
-                if (Cmp == std::strong_ordering::equal)
-                {
-                    Cmp = m_SubresourceIndex <=> Other.m_SubresourceIndex;
-                }
             }
             return Cmp;
         }
 
     private:
         ResourceId m_Resource;
-        size_t     m_ViewId           = std::numeric_limits<size_t>::max();
-        uint32_t   m_SubresourceIndex = std::numeric_limits<uint32_t>::max();
-
-#ifndef NEON_DIST
-    private:
-        String m_ViewName;
-#endif
+        size_t     m_ViewId = std::numeric_limits<size_t>::max();
     };
 
     //
 
     inline constexpr ResourceViewId ResourceId::CreateView(
-        const String& ViewName,
-        uint32_t      SubresourceIndex) const
+        const StringU8& ViewName) const
     {
-        return ResourceViewId(*this, ViewName, SubresourceIndex);
+        return ResourceViewId(*this, ViewName);
     }
+
+    //
+
+    struct SubresourceView
+    {
+        uint32_t PlaneIndex = 0;
+        uint32_t ArrayIndex = 0;
+        uint32_t MipIndex   = std::numeric_limits<uint32_t>::max();
+
+        /// <summary>
+        /// Calculate subresource's index
+        /// will return -1 if mip index is -1
+        /// </summary>
+        [[nodiscard]] constexpr uint32_t GetSubresourceIndex(
+            uint32_t ArraySize,
+            uint32_t MipSize) const;
+    };
 
     //
 
     class ResourceHandle
     {
     public:
-        using ViewDesc            = std::pair<RHI::Views::Generic, RHI::DescriptorViewDesc>;
-        using ResourceViewMapType = std::map<size_t, ViewDesc>;
+        struct ViewDesc
+        {
+            RHI::DescriptorViewDesc Desc;
+            RHI::Views::Generic     Handle;
+            uint32_t                SubresourceIndex;
+        };
+        using ResourceViewMapType = std::map<ResourceViewId, ViewDesc>;
 
         ResourceHandle(
             const ResourceId&             Id,
@@ -276,6 +231,14 @@ namespace Neon::RG
         /// Get resource id
         /// </summary>
         [[nodiscard]] const ResourceId& GetId() const noexcept;
+
+        /// <summary>
+        /// Create a resource view with name
+        /// </summary>
+        void CreateView(
+            const ResourceViewId&          ViewId,
+            const RHI::DescriptorViewDesc& Desc,
+            const SubresourceView&         Subresource);
 
         /// <summary>
         /// Get resource views
@@ -348,6 +311,11 @@ namespace Neon::RG
         /// check if resource is imported
         /// </summary>
         [[nodiscard]] bool IsImported() const noexcept;
+
+        /// <summary>
+        /// Apply name to the resource
+        /// </summary>
+        void SetName();
 
     private:
         Ptr<RHI::IGpuResource> m_Resource;

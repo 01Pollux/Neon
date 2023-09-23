@@ -33,19 +33,24 @@ namespace Neon::RG
         CreateResource(Id, Desc, std::move(Flags));
     }
 
+    //
+
     void ResourceResolver::WriteResourceEmpty(
-        const ResourceId& Id)
+        ResourceId Id)
     {
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
         m_ResourcesWritten.emplace(Id);
     }
 
-    const ResourceViewId& ResourceResolver::WriteResource(
+    void ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
-        const RHI::DescriptorViewDesc& Desc)
+        const RHI::DescriptorViewDesc& Desc,
+        SubresourceView                Subresource)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
+        m_Storage.DeclareResourceView(ViewId, Desc, Subresource);
+
         m_ResourcesWritten.emplace(Id);
 
         RHI::MResourceState State;
@@ -63,7 +68,7 @@ namespace Neon::RG
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const RHI::RTVDescOpt& Desc)
+                [&State, &Flags, this, ViewId](const RHI::RTVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::RenderTarget);
@@ -71,7 +76,7 @@ namespace Neon::RG
 
                     m_RenderTargets.emplace_back(ViewId);
                 },
-                [&State, &Flags, this, &ViewId](const RHI::DSVDescOpt& Desc)
+                [&State, &Flags, this, ViewId](const RHI::DSVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthWrite);
@@ -79,44 +84,44 @@ namespace Neon::RG
 
                     m_DepthStencil = ViewId;
                 },
-                [&ViewId](const auto&)
+                [ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to write to ({})", ViewId.GetNameU8());
+                    NEON_ASSERT(false, "Invalid descriptor view type to write to ({})", ViewId.Get());
                 } },
             Desc);
 
         SetResourceState(ViewId, State, Flags);
-        m_Storage.DeclareResourceView(ViewId, Desc);
-
-        return ViewId;
     }
 
-    const ResourceViewId& ResourceResolver::WriteDstResource(
+    void ResourceResolver::WriteDstResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
-        m_ResourcesWritten.emplace(Id);
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopyDest), {});
-
-        return ViewId;
+        m_ResourcesWritten.emplace(Id);
     }
 
+    //
+
     void ResourceResolver::ReadResourceEmpty(
-        const ResourceId& Id)
+        ResourceId Id)
     {
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
         m_ResourcesRead.emplace(Id);
     }
 
-    const ResourceViewId& ResourceResolver::ReadResource(
+    void ResourceResolver::ReadResource(
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
-        const RHI::DescriptorViewDesc& Desc)
+        const RHI::DescriptorViewDesc& Desc,
+        SubresourceView                Subresource)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
+        m_Storage.DeclareResourceView(ViewId, Desc, Subresource);
+
         m_ResourcesRead.emplace(Id);
 
         RHI::MResourceState State{};
@@ -138,7 +143,7 @@ namespace Neon::RG
                     State.Set(RHI::EResourceState::UnorderedAccess);
                     Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
                 },
-                [&State, &Flags, this, &ViewId](const RHI::DSVDescOpt& Desc)
+                [&State, &Flags, this, ViewId](const RHI::DSVDescOpt& Desc)
                 {
                     NEON_ASSERT(!Desc || !std::holds_alternative<std::monostate>(Desc->View), "View must be set");
                     State.Set(RHI::EResourceState::DepthRead);
@@ -146,9 +151,9 @@ namespace Neon::RG
 
                     m_DepthStencil = ViewId;
                 },
-                [&ViewId](const auto&)
+                [ViewId](const auto&)
                 {
-                    NEON_ASSERT(false, "Invalid descriptor view type to read from ({})", ViewId.GetNameU8());
+                    NEON_ASSERT(false, "Invalid descriptor view type to read from ({})", ViewId.Get());
                 } },
             Desc);
 
@@ -166,29 +171,26 @@ namespace Neon::RG
         }
 
         SetResourceState(ViewId, State, Flags);
-        m_Storage.DeclareResourceView(ViewId, Desc);
-
-        return ViewId;
     }
 
-    const ResourceViewId& ResourceResolver::ReadSrcResource(
+    void ResourceResolver::ReadSrcResource(
         const ResourceViewId& ViewId)
     {
         auto& Id = ViewId.GetResource();
-        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetNameU8());
-        m_ResourcesRead.emplace(Id);
+        NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
 
         SetResourceState(ViewId, RHI::MResourceState::FromEnum(RHI::EResourceState::CopySource), {});
-
-        return ViewId;
+        m_ResourcesWritten.emplace(Id);
     }
+
+    //
 
     void ResourceResolver::ImportBuffer(
         const ResourceId&             Id,
         const Ptr<RHI::IGpuResource>& Resource,
         RHI::GraphicsBufferType       BufferType)
     {
-        m_Storage.ImportBuffer(Id, Resource, BufferType);
+        return m_Storage.ImportBuffer(Id, Resource, BufferType);
     }
 
     void ResourceResolver::ImportTexture(
@@ -196,28 +198,25 @@ namespace Neon::RG
         const Ptr<RHI::IGpuResource>& Resource,
         const RHI::ClearOperationOpt& ClearValue)
     {
-        m_Storage.ImportTexture(Id, Resource, ClearValue);
+        return m_Storage.ImportTexture(Id, Resource, ClearValue);
     }
 
     std::pair<const RHI::ResourceDesc*, MResourceFlags> IRenderPass::ResourceResolver::GetResourceDescAndFlags(
-        const ResourceId& Id) const
+        ResourceId Id) const
     {
         auto& ResourceHandle = m_Storage.GetResource(Id);
         return { &ResourceHandle.GetDesc(), ResourceHandle.GetFlags() };
     }
+
+    //
 
     RHI::EResourceFormat ResourceResolver::GetSwapchainFormat()
     {
         return RHI::ISwapchain::Get()->GetFormat();
     }
 
-    ResourceId ResourceResolver::GetOutputImageTag()
-    {
-        return ResourceId(STR("OutputImage"));
-    }
-
     void ResourceResolver::SetResourceState(
-        const ResourceViewId&      ViewId,
+        ResourceViewId             ViewId,
         const RHI::MResourceState& State,
         const RHI::MResourceFlags& Flags)
     {

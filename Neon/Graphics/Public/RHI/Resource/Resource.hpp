@@ -476,9 +476,27 @@ namespace Neon::RHI
             uint32_t ArrayIndex,
             uint32_t MipIndex) const
         {
+            return GetSubresourceIndex(
+                PlaneIndex,
+                ArrayIndex,
+                m_Desc.Depth,
+                MipIndex,
+                m_Desc.MipLevels);
+        }
+
+        /// <summary>
+        /// Get subresource index from plane, array and mip index
+        /// </summary>
+        [[nodiscard]] static constexpr uint32_t GetSubresourceIndex(
+            uint32_t PlaneIndex,
+            uint32_t ArrayIndex,
+            uint32_t ArraySize,
+            uint32_t MipIndex,
+            uint32_t MipSize) noexcept
+        {
             return MipIndex +
-                   ArrayIndex * m_Desc.MipLevels +
-                   PlaneIndex * m_Desc.Depth * m_Desc.MipLevels;
+                   ArrayIndex * MipSize +
+                   PlaneIndex * ArraySize * MipSize;
         }
 
     public:

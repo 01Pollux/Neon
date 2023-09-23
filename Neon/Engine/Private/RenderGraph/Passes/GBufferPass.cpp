@@ -59,7 +59,7 @@ namespace Neon::RG
             if (i != (RenderTargets.size() - 1)) [[likely]]
             {
                 Resolver.WriteRenderTarget(
-                    Resource.CreateView(STR("Main")),
+                    Resource.CreateView("Main"),
                     RHI::RTVDesc{
                         .View      = RHI::RTVDesc::Texture2D{},
                         .ClearType = RHI::ERTClearType::Color,
@@ -69,7 +69,7 @@ namespace Neon::RG
             else
             {
                 Resolver.WriteDepthStencil(
-                    Resource.CreateView(STR("Main")),
+                    Resource.CreateView("Main"),
                     RHI::DSVDesc{
                         .View      = RHI::DSVDesc::Texture2D{},
                         .ClearType = RHI::EDSClearType::Depth,

@@ -26,7 +26,7 @@ namespace Neon::RG
 
         struct CopyToTextureData
         {
-            String ViewName;
+            StringU8 ViewName;
 
             ResourceId Source;
             ResourceId Destination;

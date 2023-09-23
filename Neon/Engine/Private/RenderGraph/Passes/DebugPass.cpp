@@ -18,7 +18,7 @@ namespace Neon::RG
     {
         Resolver.ReadResourceEmpty(m_DrawTarget);
         Resolver.WriteRenderTarget(
-            m_DrawTarget.CreateView(STR("DebugPass")),
+            m_DrawTarget.CreateView("DebugPass"),
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Ignore });
