@@ -1,4 +1,5 @@
 
+#include "../Common/Standard.hlsli"
 #include "../Common/Frame.hlsli"
 #include "../Common/Utils.hlsli"
 #include "../Common/StdMaterial.hlsli"
@@ -32,10 +33,14 @@ struct PSInput
 	
 	float3 TangentWS : TANGENT_WORLD;
 	float3 BitangentWS : BITANGENT_WORLD;
-	
-	uint InstanceId : INSTANCE_INDEX;
 };
 
+struct CBInfo
+{
+	uint PerObjectOffset;
+};
+
+ConstantBuffer<CBInfo> g_CBInfo : register(b0, space1);
 
 //
 
@@ -43,12 +48,9 @@ struct PSInput
 // Vertex Shader
 // --------------------
 
-StructuredBuffer<PerObjectData> v_ObjectData : register(t0, space1);
-
-
 PSInput VS_Main(VSInput Vs)
 {
-	PerObjectData Object = v_ObjectData[Vs.InstanceId];
+	PerObjectData Object = DescriptorTable::LoadObject_R<PerObjectData>(g_CBInfo.PerObjectOffset);
 	PSInput Ps = (PSInput) 0;
 	
 	Ps.Position = mul(
@@ -72,24 +74,17 @@ PSInput VS_Main(VSInput Vs)
 // Pixel Shader
 // --------------------
 
-StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space1);
-
-Texture2D<float4> p_AlbedoMap[] : register(t0, space2);
-Texture2D<float4> p_NormalMap[] : register(t0, space3);
-Texture2D<float4> p_SpecularMap[] : register(t0, space4);
-Texture2D<float4> p_EmissiveMap[] : register(t0, space5);
-
-
 [earlydepthstencil]
 PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 {
-	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
+	PerMaterialData Material = DescriptorTable::LoadObject_R<PerMaterialData>(g_CBInfo.PerObjectOffset + 1);
 	
 	float3 Albedo = Material.Albedo;
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_ALBEDO_MAP)
 	{
-		Texture2D AlbedoMap = p_AlbedoMap[Material.AlbedoMapIndex];
+		Texture2D AlbedoMap = DescriptorTable::Load2D(Material.AlbedoMapIndex);
+		
 		float4 Color = AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 		if (Color.a < 0.1f)
 		{
@@ -103,7 +98,8 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
 	{
-		Texture2D NormalMap = p_NormalMap[Material.NormalMapIndex];
+		Texture2D NormalMap = DescriptorTable::Load2D(Material.NormalMapIndex);
+		
 		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
 		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
 		Normal = mul(Normal, TBN);
@@ -115,7 +111,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_SPECULAR_MAP)
 	{
-		Texture2D SpecularMap = p_SpecularMap[Material.SpecularMapIndex];
+		Texture2D SpecularMap = DescriptorTable::Load2D(Material.SpecularMapIndex);
 		Specular *= SpecularMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	
@@ -123,7 +119,7 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_EMISSIVE_MAP)
 	{
-		Texture2D EmissiveMap = p_EmissiveMap[Material.EmissiveMapIndex];
+		Texture2D EmissiveMap = DescriptorTable::Load2D(Material.EmissiveMapIndex);
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	

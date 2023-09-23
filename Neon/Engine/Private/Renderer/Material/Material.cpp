@@ -53,13 +53,6 @@ namespace Neon::Renderer
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
-        auto& RootSignature = Builder.RootSignature();
-        NEON_ASSERT(RootSignature);
-
-        Mat->m_RootSignature = RootSignature;
-
-        //
-
         // Calculate number of descriptors needed (for shared and local descriptors)
         uint32_t TableSharedResourceCount = 0;
         uint32_t TableSharedSamplerCount  = 0;
@@ -69,7 +62,7 @@ namespace Neon::Renderer
         // Calculate size of constants
         uint8_t BufferSize = 0;
 
-        for (auto& Param : RootSignature->GetParams())
+        for (auto& Param : Mat->m_RootSignature->GetParams())
         {
             switch (Param.Type)
             {
@@ -229,9 +222,12 @@ namespace Neon::Renderer
         m_Parameters(std::make_shared<LayoutEntryMap>()),
         m_IsCompute(false)
     {
-        Material_CreateDescriptors(
+        m_RootSignature = Builder.RootSignature();
+        NEON_ASSERT(m_RootSignature);
+
+        /*Material_CreateDescriptors(
             Builder,
-            this);
+            this);*/
 
         Material_CreatePipelineState(
             Builder,
@@ -243,6 +239,9 @@ namespace Neon::Renderer
         m_Parameters(std::make_shared<LayoutEntryMap>()),
         m_IsCompute(true)
     {
+        m_RootSignature = Builder.RootSignature();
+        NEON_ASSERT(m_RootSignature);
+
         Material_CreateDescriptors(
             Builder,
             this);

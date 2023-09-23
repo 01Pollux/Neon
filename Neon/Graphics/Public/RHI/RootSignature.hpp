@@ -510,7 +510,7 @@ namespace Neon::RHI
         /// </summary>
         RootSignatureBuilder& AddStandardSamplers(
             uint32_t         RegisterSpace = 0,
-            ShaderVisibility Visibility    = ShaderVisibility::Pixel);
+            ShaderVisibility Visibility    = ShaderVisibility::All);
 
         /// <summary>
         /// Set flags for root signature
