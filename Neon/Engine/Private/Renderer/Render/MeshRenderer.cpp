@@ -3,18 +3,12 @@
 #include <Scene/EntityWorld.hpp>
 
 #include <RHI/Resource/Views/Shader.hpp>
-#include <RHI/Resource/Views/ShaderResource.hpp>
-
-#include <RHI/GlobalDescriptors.hpp>
 #include <RHI/GlobalBuffer.hpp>
 
 namespace Component = Neon::Scene::Component;
 
 namespace Neon::Renderer
 {
-    static constexpr size_t SizeOf_PerMaterialData = Math::AlignUp(sizeof(MeshRenderer::PerMaterialData), RHI::ShaderResourceAlignement);
-    static constexpr size_t SizeOf_PerObjectData   = Math::AlignUp(sizeof(MeshRenderer::PerObjectData), RHI::ConstantBufferAlignement);
-
     /// <summary>
     /// Update and apply the material to command list
     /// </summary>
@@ -81,7 +75,6 @@ namespace Neon::Renderer
         RHI::GpuResourceHandle CameraBuffer,
         RHI::ICommandList*     CommandList)
     {
-
         if (m_MeshQuery.is_true())
         {
             size_t SubresourceIndex = 0;
@@ -146,26 +139,29 @@ namespace Neon::Renderer
         const Component::Transform&  Transform,
         RHI::ICommandList*           CommandList)
     {
-        CommandList->SetRootSignature(true, Material->GetRootSignature());
-        CommandList->SetPipelineState(Material->GetPipelineState());
-
-        CommandList->SetResourceView(true, RHI::CstResourceViewType::Cbv, 1, CameraBuffer);
         // Update per-frame data
-        /*     Material->SetResourceView(
-                 "g_FrameData",
-                 CameraBuffer);*/
+        Material->SetResourceView(
+            "g_FrameData",
+            CameraBuffer);
 
-        struct
+        // Update per-object data
         {
-            uint32_t PerObjectOffset = 0;
-        } CBInfo;
+            size_t Offset = Math::AlignUp(sizeof(MeshRenderer::PerObjectData) * SubresourceIndex, 4);
 
-        auto Descriptor        = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(2);
-        CBInfo.PerObjectOffset = Descriptor.Offset;
+            auto& Buffer = FrameResource.PerObjectBuffer;
+            {
+                auto Data   = std::bit_cast<MeshRenderer::PerObjectData*>(Buffer->Map() + Offset);
+                Data->World = Transform.World.ToMat4x4Transposed();
+            }
+
+            Material->SetResourceView(
+                "v_ObjectData",
+                Buffer->GetHandle(Offset));
+        }
 
         // Update per-material data
         {
-            size_t Offset = SizeOf_PerMaterialData * SubresourceIndex;
+            size_t Offset = Math::AlignUp(sizeof(MeshRenderer::PerMaterialData) * SubresourceIndex, 4);
 
             auto& Buffer = FrameResource.PerMaterialBuffer;
             {
@@ -177,76 +173,22 @@ namespace Neon::Renderer
                 Data->Emissive = Colors::Black;
             }
 
-            RHI::SRVDesc SrvDesc{
-                .View = RHI::SRVDesc::Buffer{
-                    .FirstElement = SubresourceIndex,
-                    .Count        = 1,
-                    .SizeOfStruct = SizeOf_PerMaterialData }
-            };
-
-            Descriptor->CreateShaderResourceView(
-                Descriptor.Offset + 1,
-                Buffer.get(),
-                &SrvDesc);
-
-            /*Material->SetResourceView(
+            Material->SetResourceView(
                 "p_MaterialData",
-                Buffer->GetHandle(Offset));*/
-        }
-
-        // Update per-object data
-        {
-            size_t Offset = SizeOf_PerObjectData * SubresourceIndex;
-
-            auto& Buffer = FrameResource.PerObjectBuffer;
-            {
-                auto Data   = std::bit_cast<MeshRenderer::PerObjectData*>(Buffer->Map() + Offset);
-                Data->World = Transform.World.ToMat4x4Transposed();
-            }
-
-            RHI::SRVDesc SrvDesc{
-                .View = RHI::SRVDesc::Buffer{
-                    .FirstElement = SubresourceIndex,
-                    .Count        = 1,
-                    .SizeOfStruct = SizeOf_PerObjectData }
-            };
-
-            Descriptor->CreateShaderResourceView(
-                Descriptor.Offset,
-                Buffer.get(),
-                &SrvDesc);
-
-            /*Material->SetResourceView(
-                "v_ObjectData",
-                Buffer->GetHandle(Offset));*/
-        }
-
-        CommandList->SetDynamicResourceView(
-            true,
-            RHI::CstResourceViewType::Cbv,
-            0,
-            &CBInfo,
-            sizeof(CBInfo));
-
-        for (uint32_t i = 2; i <= 55; i++)
-        {
-            CommandList->SetDescriptorTable(
-                true,
-                i,
-                Descriptor->GetGPUAddress());
+                Buffer->GetHandle(Offset));
         }
 
         // Finalize material
-        // Material->Apply(CommandList);
+        Material->Apply(CommandList);
     }
 
     MeshRenderer::FrameResource::FrameResource() :
         PerObjectBuffer(
             RHI::IGpuResource::Create(
-                RHI::ResourceDesc::BufferUpload(SizeOf_PerObjectData * 1024))),
+                RHI::ResourceDesc::BufferUpload(sizeof(MeshRenderer::PerObjectData) * 1024))),
         PerMaterialBuffer(
             RHI::IGpuResource::Create(
-                RHI::ResourceDesc::BufferUpload(SizeOf_PerMaterialData * 1024)))
+                RHI::ResourceDesc::BufferUpload(sizeof(MeshRenderer::PerMaterialData) * 1024)))
     {
     }
 } // namespace Neon::Renderer
