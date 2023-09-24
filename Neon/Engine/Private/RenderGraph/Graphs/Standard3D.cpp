@@ -21,7 +21,7 @@ namespace Neon::RG
         Scene::Component::Camera& CameraComponent,
         const flecs::entity&      Camera)
     {
-        auto Graph   = CameraComponent.NewRenderGraph(Camera);
+        /*auto Graph   = CameraComponent.NewRenderGraph(Camera);
         auto Builder = Graph->Reset();
 
         auto& GBuffer = Builder.AddPass<GBufferPass>();
@@ -30,19 +30,26 @@ namespace Neon::RG
             GBuffer.AttachRenderer<Renderer::MeshRenderer>();
         }
 
-        SSAOPass::AddPass(Builder);
-        Builder.AddPass<AmbientPass>();
+        ResourceId FinalImage = GBufferPass::GetResource(GBufferPass::ResourceType::Normal);
+
+        if (false)
+        {
+            SSAOPass::AddPass(Builder);
+            Builder.AddPass<AmbientPass>();
 
 #ifndef NEON_DIST
-        Builder.AddPass<DebugPass>(ResourceId("HdrRenderTarget"));
+            Builder.AddPass<DebugPass>(ResourceId("HdrRenderTarget"));
 #endif
+
+            FinalImage = ResourceId("HdrRenderTarget");
+        }
 
         Builder.AddPass<CopyToTexturePass>(
             CopyToTexturePass::CopyToTextureData{
-                .ViewName    = "HdrRenderTargetToFinal",
-                .Source      = ResourceId("HdrRenderTarget"),
+                .ViewName    = "Present",
+                .Source      = FinalImage,
                 .Destination = ResourceResolver::GetOutputImage() });
 
-        Builder.Build();
+        Builder.Build();*/
     }
 } // namespace Neon::RG

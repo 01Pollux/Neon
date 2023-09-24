@@ -169,7 +169,7 @@ namespace Neon::RHI::ImGuiRHI
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) [[likely]]
         {
             ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault(nullptr, DxCommandList);
+            ImGui::RenderPlatformWindowsDefault(nullptr, nullptr);
         }
     }
 
