@@ -39,17 +39,17 @@ namespace Neon::Renderer
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
-                        .AddConstantBufferView("g_FrameData", 0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("v_ObjectData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("p_MaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_AlbedoMap", 0, 2, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange(0, 2, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_NormalMap", 0, 3, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange(0, 3, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_SpecularMap", 0, 4, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange(0, 4, 1, true), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_EmissiveMap", 0, 5, 1, true), RHI::ShaderVisibility::Pixel)
+                            RHI::RootDescriptorTable().AddSrvRange(0, 5, 1, true), RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());
@@ -77,11 +77,11 @@ namespace Neon::Renderer
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Sprite_RootSignature"))
-                        .AddConstantBufferView("g_FrameData", 0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("g_SpriteData", 0, 1, RHI::ShaderVisibility::All)
+                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::All)
                         .AddDescriptorTable(
                             RHI::RootDescriptorTable()
-                                .AddSrvRange("p_SpriteTextures", 0, 2, 1, true),
+                                .AddSrvRange(0, 2, 1, true),
                             RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()

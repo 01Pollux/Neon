@@ -232,26 +232,24 @@ namespace Neon::RHI
 
         WinAPI::ComPtr<ID3DBlob> SignatureBlob;
         WinAPI::ComPtr<ID3DBlob> ErrorBlob;
-        {
 
-            CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC Desc(
-                UINT(Result.Parameters.size()),
-                Result.Parameters.data(),
-                UINT(Result.StaticSamplers.size()),
-                Result.StaticSamplers.data(),
-                Result.Flags);
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC Desc(
+            UINT(Result.Parameters.size()),
+            Result.Parameters.data(),
+            UINT(Result.StaticSamplers.size()),
+            Result.StaticSamplers.data(),
+            Result.Flags);
 
-            auto  Dx12Device = Dx12RenderDevice::Get()->GetDevice();
-            auto& Features   = Dx12RenderDevice::Get()->GetFeatures();
+        auto  Dx12Device = Dx12RenderDevice::Get()->GetDevice();
+        auto& Features   = Dx12RenderDevice::Get()->GetFeatures();
 
-            HRESULT SerializeRes = D3DX12SerializeVersionedRootSignature(
-                &Desc,
-                Features.GetRootSignatureVersion(),
-                &SignatureBlob,
-                &ErrorBlob);
+        HRESULT SerializeRes = D3DX12SerializeVersionedRootSignature(
+            &Desc,
+            Features.GetRootSignatureVersion(),
+            &SignatureBlob,
+            &ErrorBlob);
 
-            NEON_VALIDATE(SUCCEEDED(SerializeRes), static_cast<const char*>(ErrorBlob->GetBufferPointer()));
-        }
+        NEON_VALIDATE(SUCCEEDED(SerializeRes), static_cast<const char*>(ErrorBlob->GetBufferPointer()));
 
         const void* BlobData = SignatureBlob->GetBufferPointer();
         size_t      BlobSize = SignatureBlob->GetBufferSize();
@@ -306,6 +304,7 @@ namespace Neon::RHI
         const RootSignatureBuilder& Builder) -> BuildResult
     {
         BuildResult Result;
+        Result.Flags = CastRootSignatureFlags(Builder.GetFlags());
 
         auto& NParameters = Builder.GetParameters();
         Result.Parameters.reserve(NParameters.size());

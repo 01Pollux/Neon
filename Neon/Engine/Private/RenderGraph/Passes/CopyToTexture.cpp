@@ -34,9 +34,9 @@ namespace Neon::RG
         ShaderAssetTaskPtr CopyToTextureShader(Asset::Manager::LoadAsync(AssetGuids::CopyToTextureShaderGuid()));
 
         m_CopyToRootSignature =
-            RHI::RootSignatureBuilder()
+            RHI::RootSignatureBuilder(STR("CopyToTexturePass::RootSignature"))
                 .AddDescriptorTable(
-                    RHI::RootDescriptorTable().AddSrvRange("p_CopySource", 0, 0, 1),
+                    RHI::RootDescriptorTable().AddSrvRange(0, 0, 1),
                     RHI::ShaderVisibility::Pixel)
                 .AddStandardSamplers()
                 .Build();

@@ -35,9 +35,9 @@ namespace Neon::RG
         m_Material =
             Renderer::RenderMaterialBuilder()
                 .RootSignature(
-                    RHI::RootSignatureBuilder()
+                    RHI::RootSignatureBuilder(STR("BackBufferFinalizer::RootSignature"))
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange("p_CopySource", 0, 0, 1),
+                            RHI::RootDescriptorTable().AddSrvRange(0, 0, 1),
                             RHI::ShaderVisibility::Pixel)
                         .AddStandardSamplers()
                         .Build())

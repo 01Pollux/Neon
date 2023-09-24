@@ -50,12 +50,12 @@ namespace Neon::RG
 #endif
 
         m_BlurSubPassRootSignature =
-            RHI::RootSignatureBuilder()
-                .Add32BitConstants<uint32_t[2]>("c_IndexOffset", 0, 1)
-                .Add32BitConstants<GaussWeightsList>("c_BlurParams", 1, 1)
+            RHI::RootSignatureBuilder(STR("BlurPass::RootSignature"))
+                .Add32BitConstants<uint32_t[2]>(0, 1)
+                .Add32BitConstants<GaussWeightsList>(1, 1)
                 .AddDescriptorTable(
                     RHI::RootDescriptorTable()
-                        .AddUavRange("c_InputOutput", 0, 1, 3))
+                        .AddUavRange(0, 1, 3))
                 .ComputeOnly()
                 .Build();
 
