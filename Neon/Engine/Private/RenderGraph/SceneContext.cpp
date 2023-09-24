@@ -54,12 +54,8 @@ namespace Neon::RG
         RHI::ICommandList* CommandList,
         RenderType         Type) const
     {
-        switch (Type)
+        if (m_MeshQuery.is_true())
         {
-        case RenderType::DepthPrepass:
-        {
-            break;
-        }
         }
     }
 } // namespace Neon::RG
