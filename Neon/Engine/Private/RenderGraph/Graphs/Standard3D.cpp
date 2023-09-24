@@ -2,10 +2,7 @@
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Graphs/Standard.hpp>
 
-#include <RenderGraph/Passes/GBufferPass.hpp>
-#include <RenderGraph/Passes/SSAOPass.hpp>
-#include <RenderGraph/Passes/AmbientPass.hpp>
-#include <RenderGraph/Passes/DebugPass.hpp>
+#include <RenderGraph/Passes/DepthPrepass.hpp>
 #include <RenderGraph/Passes/CopyToTexture.hpp>
 
 //
@@ -21,9 +18,12 @@ namespace Neon::RG
         Scene::Component::Camera& CameraComponent,
         const flecs::entity&      Camera)
     {
-        /*auto Graph   = CameraComponent.NewRenderGraph(Camera);
+        auto Graph   = CameraComponent.NewRenderGraph(Camera);
         auto Builder = Graph->Reset();
 
+        Builder.AddPass<DepthPrepass>();
+        Builder.Build();
+        /*
         auto& GBuffer = Builder.AddPass<GBufferPass>();
         {
             GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
@@ -50,6 +50,6 @@ namespace Neon::RG
                 .Source      = FinalImage,
                 .Destination = ResourceResolver::GetOutputImage() });
 
-        Builder.Build();*/
+        */
     }
 } // namespace Neon::RG

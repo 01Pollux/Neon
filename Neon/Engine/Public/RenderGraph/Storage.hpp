@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RenderGraph/Common.hpp>
+#include <RenderGraph/SceneContext.hpp>
 #include <RenderGraph/CameraFramData.hpp>
 
 #include <deque>
@@ -104,7 +104,17 @@ namespace Neon::RG
         /// <summary>
         /// Get global frame data
         /// </summary>
-        RHI::GpuResourceHandle GetFrameDataHandle() const;
+        [[nodiscard]] RHI::GpuResourceHandle GetFrameDataHandle() const;
+
+        /// <summary>
+        /// Get scene context
+        /// </summary>
+        [[nodiscard]] const SceneContext& GetSceneContext() const noexcept;
+
+        /// <summary>
+        /// Get scene context
+        /// </summary>
+        [[nodiscard]] SceneContext& GetSceneContext() noexcept;
 
     public:
         // TODO: Add sampler
@@ -169,5 +179,6 @@ namespace Neon::RG
         Ptr<RHI::IGpuResource> m_CameraFrameData;
         ResourceMapType        m_Resources;
         std::set<ResourceId>   m_ImportedResources;
+        SceneContext           m_SceneContext;
     };
 } // namespace Neon::RG

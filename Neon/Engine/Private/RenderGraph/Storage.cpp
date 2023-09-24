@@ -20,7 +20,8 @@ namespace Neon::RG
     GraphStorage::GraphStorage() :
         m_CameraFrameData(RHI::IGpuResource::Create(
             RHI::ResourceDesc::BufferUpload(
-                Math::AlignUp(sizeof(CameraFrameData), 255))))
+                Math::AlignUp(sizeof(CameraFrameData), 255)))),
+        m_SceneContext(*this)
     {
     }
 
@@ -161,6 +162,16 @@ namespace Neon::RG
     RHI::GpuResourceHandle GraphStorage::GetFrameDataHandle() const
     {
         return m_CameraFrameData->GetHandle();
+    }
+
+    const SceneContext& GraphStorage::GetSceneContext() const noexcept
+    {
+        return m_SceneContext;
+    }
+
+    SceneContext& GraphStorage::GetSceneContext() noexcept
+    {
+        return m_SceneContext;
     }
 
     //

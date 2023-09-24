@@ -233,9 +233,10 @@ namespace Neon::Renderer
             Builder,
             this);
 
-        Material_CreatePipelineState(
-            Builder,
-            this);
+        // TODO: Rework material pipeline state creation
+        // Material_CreatePipelineState(
+        //     Builder,
+        //     this);
     }
 
     Material::Material(
@@ -247,9 +248,10 @@ namespace Neon::Renderer
             Builder,
             this);
 
-        Material_CreatePipelineState(
-            Builder,
-            this);
+        // TODO: Rework material pipeline state creation
+        // Material_CreatePipelineState(
+        //    Builder,
+        //    this);
     }
 
     Material::Material(

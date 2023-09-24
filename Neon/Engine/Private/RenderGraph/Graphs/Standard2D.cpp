@@ -2,10 +2,6 @@
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Graphs/Standard.hpp>
 
-#include <RenderGraph/Passes/GBufferPass.hpp>
-#include <RenderGraph/Passes/DebugPass.hpp>
-#include <RenderGraph/Passes/CopyToTexture.hpp>
-
 //
 
 #include <Renderer/Render/SpriteRenderer.hpp>
@@ -19,25 +15,25 @@ namespace Neon::RG
         Scene::Component::Camera& CameraComponent,
         const flecs::entity&      Camera)
     {
-        auto Graph   = CameraComponent.NewRenderGraph(Camera);
-        auto Builder = Graph->Reset();
+        /*  auto Graph   = CameraComponent.NewRenderGraph(Camera);
+          auto Builder = Graph->Reset();
 
-        auto& GBuffer = Builder.AddPass<GBufferPass>();
-        {
-            GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
-            GBuffer.AttachRenderer<Renderer::MeshRenderer>();
-        }
+          auto& GBuffer = Builder.AddPass<GBufferPass>();
+          {
+              GBuffer.AttachRenderer<Renderer::SpriteRenderer>();
+              GBuffer.AttachRenderer<Renderer::MeshRenderer>();
+          }
 
-#ifndef NEON_DIST
-        Builder.AddPass<DebugPass>(ResourceId("GBufferAlbedo"));
-#endif
+  #ifndef NEON_DIST
+          Builder.AddPass<DebugPass>(ResourceId("GBufferAlbedo"));
+  #endif
 
-        Builder.AddPass<CopyToTexturePass>(
-            CopyToTexturePass::CopyToTextureData{
-                .ViewName    = "GBufferAlbedoToFinal",
-                .Source      = ResourceId("GBufferAlbedo"),
-                .Destination = ResourceResolver::GetOutputImage() });
+          Builder.AddPass<CopyToTexturePass>(
+              CopyToTexturePass::CopyToTextureData{
+                  .ViewName    = "GBufferAlbedoToFinal",
+                  .Source      = ResourceId("GBufferAlbedo"),
+                  .Destination = ResourceResolver::GetOutputImage() });
 
-        Builder.Build();
+          Builder.Build();*/
     }
 } // namespace Neon::RG

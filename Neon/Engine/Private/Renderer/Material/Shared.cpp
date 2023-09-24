@@ -32,9 +32,9 @@ namespace Neon::Renderer
 
         // Lit
         {
-            Renderer::GBufferMaterialBuilder BaseSpriteMaterial;
+            Renderer::RenderMaterialBuilder LitMaterial;
 
-            BaseSpriteMaterial
+            LitMaterial
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
@@ -59,20 +59,20 @@ namespace Neon::Renderer
             Flags.Set(RHI::EShaderCompileFlags::Debug);
 #endif
 
-            BaseSpriteMaterial
+            LitMaterial
                 .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
                 .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
-            auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+            auto Material = Renderer::IMaterial::Create(std::move(LitMaterial));
 
             s_DefaultMaterials[Type::Lit] = std::move(Material);
         }
 
         // Unlit sprite
         {
-            Renderer::GBufferMaterialBuilder BaseSpriteMaterial;
+            Renderer::RenderMaterialBuilder SpriteMaterial;
 
-            BaseSpriteMaterial
+            SpriteMaterial
                 .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
@@ -92,11 +92,11 @@ namespace Neon::Renderer
             Flags.Set(RHI::EShaderCompileFlags::Debug);
 #endif
 
-            BaseSpriteMaterial
+            SpriteMaterial
                 .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
                 .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
-            auto Material = Renderer::IMaterial::Create(std::move(BaseSpriteMaterial));
+            auto Material = Renderer::IMaterial::Create(std::move(SpriteMaterial));
             Material->SetTexture("p_SpriteTextures", WhiteTexture);
 
             s_DefaultMaterials[Type::LitSprite] = std::move(Material);
