@@ -34,6 +34,11 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] Vector3U GetComputeGroupSize() const;
 
+        /// <summary>
+        /// Get shader's reflection
+        /// </summary>
+        [[nodiscard]] WinAPI::ComPtr<ID3D12ShaderReflection> GetReflection() const;
+
     private:
         std::unique_ptr<uint8_t[]> m_ShaderData;
         size_t                     m_DataSize;

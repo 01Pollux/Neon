@@ -19,6 +19,14 @@ namespace Neon::RHI
     public:
         static constexpr size_t ShaderCount = _ShaderCount;
 
+        /// <summary>
+        /// Get the shader modules.
+        /// </summary>
+        [[nodiscard]] const auto& Shaders() const
+        {
+            return m_ShaderModules;
+        }
+
     protected:
         std::array<Ptr<IShader>, ShaderCount> m_ShaderModules;
     };
@@ -33,7 +41,8 @@ namespace Neon::RHI
         /// <summary>
         /// Build material.
         /// </summary>
-        [[nodiscard]] Ptr<IMaterial> Build() const;
+        [[nodiscard]] Ptr<IMaterial> Build(
+            const wchar_t* Name) const;
 
         /// <summary>
         /// Disable or enable vertex input.
@@ -282,7 +291,8 @@ namespace Neon::RHI
         /// <summary>
         /// Build material.
         /// </summary>
-        [[nodiscard]] Ptr<IMaterial> Build() const;
+        [[nodiscard]] Ptr<IMaterial> Build(
+            const wchar_t* Name) const;
 
         /// <summary>
         /// Set the compute shader.

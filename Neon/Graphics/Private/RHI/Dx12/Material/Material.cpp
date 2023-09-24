@@ -1,8 +1,9 @@
 #include <GraphicsPCH.hpp>
 #include <Private/RHI/Dx12/Material/Material.hpp>
+#include <Private/RHI/Dx12/RootSignature.hpp>
+#include <Private/RHI/Dx12/PipelineState.hpp>
 #include <RHI/Material/Builder.hpp>
 
-#include <RHI/Swapchain.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 #include <RHI/GlobalBuffer.hpp>
 
@@ -21,15 +22,17 @@ namespace views  = std::views;
 namespace Neon::RHI
 {
     Ptr<IMaterial> IMaterial::Create(
+        const wchar_t*                       Name,
         const GenericMaterialBuilder<false>& Builder)
     {
-        return Ptr<Material>{ NEON_NEW Material(Builder) };
+        return Ptr<Material>{ NEON_NEW Material(Name, Builder) };
     }
 
     Ptr<IMaterial> IMaterial::Create(
+        const wchar_t*                      Name,
         const GenericMaterialBuilder<true>& Builder)
     {
-        return Ptr<Material>{ NEON_NEW Material(Builder) };
+        return Ptr<Material>{ NEON_NEW Material(Name, Builder) };
     }
 
     //
@@ -50,9 +53,11 @@ namespace Neon::RHI
 
     template<bool _Compute>
     void Material_CreateDescriptors(
+        const wchar_t*                          Name,
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
+        Mat->m_RootSignature = Dx12RootSignatureCache::Compile(Name, Builder.Shaders());
     }
 
     //
@@ -119,9 +124,11 @@ namespace Neon::RHI
     //
 
     Material::Material(
+        const wchar_t*               Name,
         const RenderMaterialBuilder& Builder)
     {
         Material_CreateDescriptors(
+            Name,
             Builder,
             this);
 
@@ -131,9 +138,11 @@ namespace Neon::RHI
     }
 
     Material::Material(
+        const wchar_t*                Name,
         const ComputeMaterialBuilder& Builder)
     {
         Material_CreateDescriptors(
+            Name,
             Builder,
             this);
 

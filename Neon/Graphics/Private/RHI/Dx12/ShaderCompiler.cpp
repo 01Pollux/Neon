@@ -335,8 +335,8 @@ namespace Neon::RHI
 
             WinAPI::ComPtr<IDxcBlobUtf8> Error;
             if (SUCCEEDED(Result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&Error), nullptr)) &&
-                Error &&
-                Error->GetStringLength() > 0)
+                (Error &&
+                 Error->GetStringLength() > 0))
             {
                 size_t StrLen = Error->GetStringLength();
                 NEON_ERROR_TAG("ShaderCompiler", StringU8(Error->GetStringPointer(), StrLen));

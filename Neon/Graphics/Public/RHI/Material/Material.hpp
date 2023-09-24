@@ -45,9 +45,11 @@ namespace Neon::RHI
         using PipelineStateList = std::array<Ptr<IPipelineState>, size_t(PipelineVariant::Count)>;
 
         static Ptr<IMaterial> Create(
+            const wchar_t*                       Name,
             const GenericMaterialBuilder<false>& Builder);
 
         static Ptr<IMaterial> Create(
+            const wchar_t*                      Name,
             const GenericMaterialBuilder<true>& Builder);
 
         virtual ~IMaterial() = default;

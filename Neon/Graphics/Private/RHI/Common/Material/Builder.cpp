@@ -4,14 +4,16 @@
 
 namespace Neon::RHI
 {
-    Ptr<IMaterial> RenderMaterialBuilder::Build() const
+    Ptr<IMaterial> RenderMaterialBuilder::Build(
+        const wchar_t* Name) const
     {
-        return IMaterial::Create(*this);
+        return IMaterial::Create(Name, *this);
     }
 
-    Ptr<IMaterial> ComputeMaterialBuilder::Build() const
+    Ptr<IMaterial> ComputeMaterialBuilder::Build(
+        const wchar_t* Name) const
     {
-        return IMaterial::Create(*this);
+        return IMaterial::Create(Name, *this);
     }
 
     //

@@ -59,11 +59,15 @@ namespace Neon::RHI
 
     Vector3U Dx12Shader::GetComputeGroupSize() const
     {
-        auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
-        auto Reflection     = ShaderCompiler->GetReflection(m_ShaderData.get(), m_DataSize);
-
+        auto     Reflection = GetReflection();
         Vector3U Size{};
         ThrowIfFailed(Reflection->GetThreadGroupSize(&Size.x, &Size.y, &Size.z));
         return Size;
+    }
+
+    WinAPI::ComPtr<ID3D12ShaderReflection> Dx12Shader::GetReflection() const
+    {
+        auto ShaderCompiler = Dx12RenderDevice::Get()->GetShaderCompiler();
+        return ShaderCompiler->GetReflection(m_ShaderData.get(), m_DataSize);
     }
 } // namespace Neon::RHI

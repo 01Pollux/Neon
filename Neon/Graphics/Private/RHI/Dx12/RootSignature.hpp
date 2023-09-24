@@ -5,6 +5,10 @@
 
 namespace Neon::RHI
 {
+    class IShader;
+
+    //
+
     /// <summary>
     /// Cast Neon shader visbility to D3D12_SHADER_VISIBILITY
     /// </summary>
@@ -51,9 +55,10 @@ namespace Neon::RHI
     {
     public:
         Dx12RootSignature(
-            const RootSignatureBuilder&                  Builder,
-            const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC& SignatureDesc,
-            Crypto::Sha256::Bytes&&                      Hash);
+            const wchar_t*          Name,
+            const void*             BlobData,
+            size_t                  BlobSize,
+            Crypto::Sha256::Bytes&& Hash);
 
         /// <summary>
         /// Get the underlying D3D12 root signature
@@ -84,10 +89,16 @@ namespace Neon::RHI
         [[nodiscard]] static Ptr<IRootSignature> Load(
             const RootSignatureBuilder& Builder);
 
+        /// <summary>
+        /// Compile root signature from shaders
+        /// </summary>
+        static Ptr<IRootSignature> Compile(
+            const wchar_t*                Name,
+            std::span<const Ptr<IShader>> Shaders);
+
     private:
         struct BuildResult
         {
-            Crypto::Sha256::Bytes                             Digest;
             std::list<std::vector<CD3DX12_DESCRIPTOR_RANGE1>> RangesList;
             std::vector<CD3DX12_ROOT_PARAMETER1>              Parameters;
             std::vector<CD3DX12_STATIC_SAMPLER_DESC>          StaticSamplers;
