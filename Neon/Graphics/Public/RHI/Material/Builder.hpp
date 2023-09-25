@@ -20,6 +20,24 @@ namespace Neon::RHI
         static constexpr size_t ShaderCount = _ShaderCount;
 
         /// <summary>
+        /// Get root signature.
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IRootSignature>& RootSignature() const noexcept
+        {
+            return m_RootSignatuer;
+        }
+
+        /// <summary>
+        /// Set root signature.
+        /// </summary>
+        _Ty& RootSignature(
+            const Ptr<RHI::IRootSignature>& RootSig)
+        {
+            m_RootSignatuer = RootSig;
+            return static_cast<_Ty&>(*this);
+        }
+
+        /// <summary>
         /// Get the shader modules.
         /// </summary>
         [[nodiscard]] const auto& Shaders() const
@@ -29,6 +47,7 @@ namespace Neon::RHI
 
     protected:
         std::array<Ptr<IShader>, ShaderCount> m_ShaderModules;
+        Ptr<RHI::IRootSignature>              m_RootSignatuer;
     };
 
     template<bool _IsCompute>

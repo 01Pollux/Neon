@@ -72,7 +72,6 @@ namespace Neon::RHI
         uint32_t                  Offset = std::numeric_limits<uint32_t>::max();
         MRootDescriptorTableFlags Flags;
         DescriptorTableParam      Type;
-        bool                      Instanced;
 
         template<typename _Archive>
         void serialize(
@@ -87,29 +86,34 @@ namespace Neon::RHI
             auto     DType = std::to_underlying(Type);
             Archive& DType;
             Type = static_cast<Neon::RHI::DescriptorTableParam>(DType);
-            Archive& Instanced;
         }
     };
 
     class RootDescriptorTable
     {
     public:
+        RootDescriptorTable(
+            bool Instanced = false) :
+            m_Instanced(Instanced)
+        {
+        }
+
         /// <summary>
         /// Add srv descriptor entries
         /// </summary>
         RootDescriptorTable& AddSrvRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
         {
             return AddSrvRangeAt(
+                std::move(Name),
                 BaseShaderRegister,
                 RegisterSpace,
                 NumDescriptors,
                 std::numeric_limits<uint32_t>::max(),
-                Instanced,
                 Flags);
         }
 
@@ -117,29 +121,29 @@ namespace Neon::RHI
         /// Add srv descriptor entries
         /// </summary>
         RootDescriptorTable& AddSrvRangeAt(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             uint32_t                  Offset,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add uav descriptor entries
         /// </summary>
         RootDescriptorTable& AddUavRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
         {
             return AddUavRangeAt(
+                std::move(Name),
                 BaseShaderRegister,
                 RegisterSpace,
                 NumDescriptors,
                 std::numeric_limits<uint32_t>::max(),
-                Instanced,
                 Flags);
         }
 
@@ -147,29 +151,29 @@ namespace Neon::RHI
         /// Add uav descriptor entries
         /// </summary>
         RootDescriptorTable& AddUavRangeAt(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             uint32_t                  Offset,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add cbv descriptor entries
         /// </summary>
         RootDescriptorTable& AddCbvRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile))
         {
             return AddCbvRangeAt(
+                std::move(Name),
                 BaseShaderRegister,
                 RegisterSpace,
                 NumDescriptors,
                 std::numeric_limits<uint32_t>::max(),
-                Instanced,
                 Flags);
         }
 
@@ -177,29 +181,29 @@ namespace Neon::RHI
         /// Add cbv descriptor entries
         /// </summary>
         RootDescriptorTable& AddCbvRangeAt(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             uint32_t                  Offset,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Data_Static_While_Execute, ERootDescriptorTableFlags::Descriptor_Volatile));
 
         /// <summary>
         /// Add sampler descriptor entries
         /// </summary>
         RootDescriptorTable& AddSamplerRange(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile))
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile))
         {
             return AddSamplerRangeAt(
+                std::move(Name),
                 BaseShaderRegister,
                 RegisterSpace,
                 NumDescriptors,
                 std::numeric_limits<uint32_t>::max(),
-                Instanced,
                 Flags);
         }
 
@@ -207,12 +211,12 @@ namespace Neon::RHI
         /// Add sampler descriptor entries
         /// </summary>
         RootDescriptorTable& AddSamplerRangeAt(
+            StringU8                  Name,
             uint32_t                  BaseShaderRegister,
             uint32_t                  RegisterSpace,
             uint32_t                  NumDescriptors,
             uint32_t                  Offset,
-            bool                      Instanced = false,
-            MRootDescriptorTableFlags Flags     = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile));
+            MRootDescriptorTableFlags Flags = BitMask_Or(ERootDescriptorTableFlags::Descriptor_Volatile));
 
     public:
         /// <summary>
@@ -231,6 +235,14 @@ namespace Neon::RHI
             return m_DescriptorRanges;
         }
 
+        /// <summary>
+        /// Check to see if the table is instanced
+        /// </summary>
+        [[nodiscard]] bool Instanced() const noexcept
+        {
+            return m_Instanced;
+        }
+
     private:
         friend class boost::serialization::access;
         template<typename _Archive>
@@ -239,10 +251,14 @@ namespace Neon::RHI
             uint32_t  Version)
         {
             Archive& m_DescriptorRanges;
+            Archive& m_Instanced;
         }
 
     private:
-        std::vector<RootDescriptorTableParam> m_DescriptorRanges;
+        std::vector<
+            std::pair<StringU8, RootDescriptorTableParam>>
+             m_DescriptorRanges;
+        bool m_Instanced = false;
     };
 
     class RootParameter
@@ -401,6 +417,7 @@ namespace Neon::RHI
         /// Add descriptor table
         /// </summary>
         RootSignatureBuilder& AddDescriptorTable(
+            StringU8            Name,
             RootDescriptorTable Table,
             ShaderVisibility    Visibility = ShaderVisibility::All);
 
@@ -409,18 +426,20 @@ namespace Neon::RHI
         /// </summary>
         template<typename _Ty>
         RootSignatureBuilder& Add32BitConstants(
+            StringU8         Name,
             uint32_t         ShaderRegister,
             uint32_t         RegisterSpace,
             ShaderVisibility Visibility = ShaderVisibility::All)
         {
             static_assert(sizeof(_Ty) % 4 == 0);
-            return Add32BitConstants(ShaderRegister, RegisterSpace, sizeof(_Ty) / 4, Visibility);
+            return Add32BitConstants(Name, ShaderRegister, RegisterSpace, sizeof(_Ty) / 4, Visibility);
         }
 
         /// <summary>
         /// Add 32 bit root constants
         /// </summary>
         RootSignatureBuilder& Add32BitConstants(
+            StringU8         Name,
             uint32_t         ShaderRegister,
             uint32_t         RegisterSpace,
             uint32_t         Num32BitValues,
@@ -430,6 +449,7 @@ namespace Neon::RHI
         /// Add cbv root
         /// </summary>
         RootSignatureBuilder& AddConstantBufferView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
@@ -439,6 +459,7 @@ namespace Neon::RHI
         /// Add srv root
         /// </summary>
         RootSignatureBuilder& AddShaderResourceView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
@@ -448,6 +469,7 @@ namespace Neon::RHI
         /// Add uav root
         /// </summary>
         RootSignatureBuilder& AddUnorderedAccessView(
+            StringU8             Name,
             uint32_t             ShaderRegister,
             uint32_t             RegisterSpace,
             ShaderVisibility     Visibility = ShaderVisibility::All,
@@ -537,18 +559,92 @@ namespace Neon::RHI
         }
 
     private:
-        String                         m_Name;
-        std::vector<RootParameter>     m_Parameters;
-        std::vector<StaticSamplerDesc> m_StaticSamplers;
-        MRootSignatureBuilderFlags     m_Flags;
+        String                                          m_Name;
+        std::vector<std::pair<StringU8, RootParameter>> m_Parameters;
+        std::vector<StaticSamplerDesc>                  m_StaticSamplers;
+        MRootSignatureBuilderFlags                      m_Flags;
     };
 
     class IRootSignature
     {
     public:
+        enum class ParamType : uint8_t
+        {
+            Constants,
+            Root,
+            DescriptorTable
+        };
+
+        struct ParamDescriptorRange
+        {
+            uint32_t             Offset;
+            uint32_t             Size;
+            DescriptorTableParam Type;
+        };
+
+        struct ParamConstant
+        {
+            uint8_t Num32BitValues;
+        };
+
+        struct ParamRoot
+        {
+            RootParameter::RootType Type;
+        };
+
+        struct ParamDescriptor
+        {
+            std::unordered_map<StringU8, ParamDescriptorRange> NamedRanges;
+
+            uint32_t Size{};
+            bool     Instanced{};
+
+            /// <summary>
+            /// Get parameter by name else return nullptr
+            /// </summary>
+            [[nodiscard]] const ParamDescriptorRange* FindRange(
+                const StringU8& Name) const
+            {
+                auto Iter = NamedRanges.find(Name);
+                return Iter != NamedRanges.end() ? &Iter->second : nullptr;
+            }
+        };
+
+        using ParamInfo = std::variant<ParamConstant, ParamRoot, ParamDescriptor>;
+
         [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);
 
         virtual ~IRootSignature() = default;
+
+        /// <summary>
+        /// Get all parameters of root signature ordered by root index
+        /// </summary>
+        [[nodiscard]] const auto& GetParams() const
+        {
+            return m_Params;
+        }
+
+        /// <summary>
+        /// Get all parameters of root signature in map
+        /// </summary>
+        [[nodiscard]] const auto& GetNamedParams() const
+        {
+            return m_NamedParams;
+        }
+
+        /// <summary>
+        /// Get parameter by name else return nullptr
+        /// </summary>
+        [[nodiscard]] const ParamInfo* FindParam(
+            const StringU8& Name) const
+        {
+            auto Iter = m_NamedParams.find(Name);
+            return Iter != m_NamedParams.end() ? &m_Params[Iter->second] : nullptr;
+        }
+
+    protected:
+        std::vector<ParamInfo>                 m_Params;
+        std::unordered_map<StringU8, uint32_t> m_NamedParams;
     };
 } // namespace Neon::RHI

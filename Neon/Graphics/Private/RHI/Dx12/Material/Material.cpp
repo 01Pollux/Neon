@@ -57,7 +57,6 @@ namespace Neon::RHI
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
-        Mat->m_RootSignature = Dx12RootSignatureCache::Compile(Name, Builder.Shaders());
     }
 
     //

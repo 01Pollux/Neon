@@ -186,10 +186,11 @@ namespace Neon::RHI
     //
 
     Dx12RootSignature::Dx12RootSignature(
-        const wchar_t*          Name,
-        const void*             BlobData,
-        size_t                  BlobSize,
-        Crypto::Sha256::Bytes&& Hash) :
+        const wchar_t*              Name,
+        const RootSignatureBuilder& Builder,
+        const void*                 BlobData,
+        size_t                      BlobSize,
+        Crypto::Sha256::Bytes&&     Hash) :
         m_Hash(std::move(Hash))
     {
         auto Dx12Device = Dx12RenderDevice::Get()->GetDevice();
@@ -205,6 +206,69 @@ namespace Neon::RHI
             RenameObject(m_RootSignature.Get(), Name);
         }
 #endif
+
+        // Parse params names from Builder
+        uint32_t RootIndex = 0;
+        m_Params.reserve(Builder.GetParameters().size());
+        for (auto& [ParamName, Param] : Builder.GetParameters())
+        {
+            boost::apply_visitor(
+                VariantVisitor{
+                    [this](const RootParameter::DescriptorTable& Table)
+                    {
+                        ParamDescriptor FinalParam{
+                            .Instanced = Table.Instanced()
+                        };
+
+                        uint32_t Size = 0;
+
+                        for (auto& [Name, Range] : Table.GetRanges())
+                        {
+                            ParamDescriptorRange Param{
+                                .Offset = Range.Offset,
+                                .Size   = Range.DescriptorCount,
+                                .Type   = Range.Type
+                            };
+
+                            if (!FinalParam.NamedRanges.emplace(Name, Param).second)
+                            {
+                                NEON_WARNING_TAG("Root signature parameter name for descriptor table is not unique: {}", Name);
+                            }
+                            else
+                            {
+                                Size += Range.DescriptorCount;
+                            }
+                        }
+
+                        FinalParam.Size = Size;
+                        m_Params.emplace_back(std::move(FinalParam));
+                    },
+                    [this](const RootParameter::Constants& Constants)
+                    {
+                        ParamConstant FinalParam{
+                            .Num32BitValues = uint8_t(Constants.Num32BitValues)
+                        };
+                        m_Params.emplace_back(std::move(FinalParam));
+                    },
+                    [this](const RootParameter::Root& RootParam)
+                    {
+                        ParamRoot FinalParam{
+                            .Type = RootParam.Type
+                        };
+                        m_Params.emplace_back(std::move(FinalParam));
+                    } },
+                Param.GetParameter());
+
+            if (!m_NamedParams.emplace(ParamName, uint32_t(m_Params.size() - 1)).second) [[unlikely]]
+            {
+                NEON_WARNING_TAG("Root signature parameter name is not unique: {}", ParamName);
+                m_Params.pop_back();
+            }
+            else
+            {
+                RootIndex++;
+            }
+        }
     }
 
     ID3D12RootSignature* Dx12RootSignature::Get()
@@ -263,38 +327,9 @@ namespace Neon::RHI
         {
             auto& Name    = Builder.GetName();
             auto  NamePtr = Name.empty() ? nullptr : Name.c_str();
-            Cache         = std::make_shared<Dx12RootSignature>(NamePtr, BlobData, BlobSize, std::move(Digest));
+            Cache         = std::make_shared<Dx12RootSignature>(NamePtr, Builder, BlobData, BlobSize, std::move(Digest));
         }
 
-        return Cache;
-    }
-
-    //
-
-    Ptr<IRootSignature> Dx12RootSignatureCache::Compile(
-        const wchar_t*                Name,
-        std::span<const Ptr<IShader>> Shaders)
-    {
-        IShader* FirstShader = nullptr;
-        for (auto& Shader : Shaders)
-        {
-            if (FirstShader = Shader.get())
-            {
-                break;
-            }
-        }
-        NEON_ASSERT(FirstShader, "No shader was set to compile");
-
-        auto Bytecode = FirstShader->GetByteCode();
-        auto Digest   = Crypto::Sha256().Append(Bytecode.Data, Bytecode.Size).Digest();
-
-        std::scoped_lock Lock(s_RootSignatureCacheMutex);
-
-        auto& Cache = s_RootSignatureCache[Digest];
-        if (Cache)
-        {
-            Cache = std::make_shared<Dx12RootSignature>(Name, Bytecode.Data, Bytecode.Size, std::move(Digest));
-        }
         return Cache;
     }
 
@@ -308,7 +343,7 @@ namespace Neon::RHI
 
         auto& NParameters = Builder.GetParameters();
         Result.Parameters.reserve(NParameters.size());
-        for (auto& Param : NParameters)
+        for (auto& Param : NParameters | std::views::values)
         {
             auto Visibility = CastShaderVisibility(Param.Visibility());
 
@@ -320,7 +355,7 @@ namespace Neon::RHI
 
                         auto& NRanges = Table.GetRanges();
                         Ranges.reserve(NRanges.size());
-                        for (auto& Range : NRanges)
+                        for (auto& Range : NRanges | std::views::values)
                         {
                             D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
@@ -346,7 +381,7 @@ namespace Neon::RHI
                             auto Flags = CastRootDescriptorTableFlags(Range.Flags);
 
                             uint32_t DescriptorCount;
-                            if (Range.Instanced)
+                            if (Table.Instanced())
                             {
                                 DescriptorCount = UINT32_MAX;
                                 Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;

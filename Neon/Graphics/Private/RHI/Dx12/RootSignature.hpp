@@ -55,10 +55,11 @@ namespace Neon::RHI
     {
     public:
         Dx12RootSignature(
-            const wchar_t*          Name,
-            const void*             BlobData,
-            size_t                  BlobSize,
-            Crypto::Sha256::Bytes&& Hash);
+            const wchar_t*              Name,
+            const RootSignatureBuilder& Builder,
+            const void*                 BlobData,
+            size_t                      BlobSize,
+            Crypto::Sha256::Bytes&&     Hash);
 
         /// <summary>
         /// Get the underlying D3D12 root signature
@@ -88,13 +89,6 @@ namespace Neon::RHI
         /// </summary>
         [[nodiscard]] static Ptr<IRootSignature> Load(
             const RootSignatureBuilder& Builder);
-
-        /// <summary>
-        /// Compile root signature from shaders
-        /// </summary>
-        static Ptr<IRootSignature> Compile(
-            const wchar_t*                Name,
-            std::span<const Ptr<IShader>> Shaders);
 
     private:
         struct BuildResult
