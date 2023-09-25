@@ -39,17 +39,21 @@ namespace Neon::Renderer
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
-                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddConstantBufferView("Constant", 0, 0, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView("PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange(0, 2, 1, true), RHI::ShaderVisibility::Pixel)
+                            "AlbedoMaps",
+                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 2, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange(0, 3, 1, true), RHI::ShaderVisibility::Pixel)
+                            "NormalMaps",
+                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 3, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange(0, 4, 1, true), RHI::ShaderVisibility::Pixel)
+                            "SpecularMaps",
+                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 4, 1), RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange(0, 5, 1, true), RHI::ShaderVisibility::Pixel)
+                            "EmissiveMaps",
+                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 5, 1), RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());
@@ -67,40 +71,40 @@ namespace Neon::Renderer
 
             s_DefaultMaterials[Type::Lit] = std::move(Material);
         }
-
-        // Unlit sprite
-        {
-            Renderer::RenderMaterialBuilder SpriteMaterial;
-
-            SpriteMaterial
-                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
-                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
-                .RootSignature(
-                    RHI::RootSignatureBuilder(STR("Material::Sprite_RootSignature"))
-                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::All)
-                        .AddDescriptorTable(
-                            RHI::RootDescriptorTable()
-                                .AddSrvRange(0, 2, 1, true),
-                            RHI::ShaderVisibility::Pixel)
-                        .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
-                        .AddStandardSamplers()
-                        .Build());
-
-            RHI::MShaderCompileFlags Flags;
-#if NEON_DEBUG
-            Flags.Set(RHI::EShaderCompileFlags::Debug);
-#endif
-
-            SpriteMaterial
-                .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
-                .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
-
-            auto Material = Renderer::IMaterial::Create(std::move(SpriteMaterial));
-            Material->SetTexture("p_SpriteTextures", WhiteTexture);
-
-            s_DefaultMaterials[Type::LitSprite] = std::move(Material);
-        }
+        //
+        //        // Unlit sprite
+        //        {
+        //            Renderer::RenderMaterialBuilder SpriteMaterial;
+        //
+        //            SpriteMaterial
+        //                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
+        //                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
+        //                .RootSignature(
+        //                    RHI::RootSignatureBuilder(STR("Material::Sprite_RootSignature"))
+        //                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
+        //                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::All)
+        //                        .AddDescriptorTable(
+        //                            RHI::RootDescriptorTable()
+        //                                .AddSrvRange(0, 2, 1, true),
+        //                            RHI::ShaderVisibility::Pixel)
+        //                        .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+        //                        .AddStandardSamplers()
+        //                        .Build());
+        //
+        //            RHI::MShaderCompileFlags Flags;
+        // #if NEON_DEBUG
+        //            Flags.Set(RHI::EShaderCompileFlags::Debug);
+        // #endif
+        //
+        //            SpriteMaterial
+        //                .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
+        //                .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
+        //
+        //            auto Material = Renderer::IMaterial::Create(std::move(SpriteMaterial));
+        //            Material->SetTexture("p_SpriteTextures", WhiteTexture);
+        //
+        //            s_DefaultMaterials[Type::LitSprite] = std::move(Material);
+        //        }
     }
 
     void SharedMaterials::Shutdown()

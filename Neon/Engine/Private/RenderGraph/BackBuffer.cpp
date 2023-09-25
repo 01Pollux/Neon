@@ -37,7 +37,8 @@ namespace Neon::RG
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("BackBufferFinalizer::RootSignature"))
                         .AddDescriptorTable(
-                            RHI::RootDescriptorTable().AddSrvRange(0, 0, 1),
+                            "CopySource",
+                            RHI::RootDescriptorTable().AddSrvRange("Data", 0, 0, 1),
                             RHI::ShaderVisibility::Pixel)
                         .AddStandardSamplers()
                         .Build())

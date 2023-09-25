@@ -36,7 +36,9 @@ namespace Neon::RG
         m_CopyToRootSignature =
             RHI::RootSignatureBuilder(STR("CopyToTexturePass::RootSignature"))
                 .AddDescriptorTable(
-                    RHI::RootDescriptorTable().AddSrvRange(0, 0, 1),
+                    "InputTextures",
+                    RHI::RootDescriptorTable()
+                        .AddSrvRange("Data", 0, 0, 1),
                     RHI::ShaderVisibility::Pixel)
                 .AddStandardSamplers()
                 .Build();
