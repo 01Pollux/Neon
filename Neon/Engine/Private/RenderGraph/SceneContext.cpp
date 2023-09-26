@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/SceneContext.hpp>
 #include <Scene/EntityWorld.hpp>
+#include <RHI/Material/Material.hpp>
 
 namespace Component = Neon::Scene::Component;
 
@@ -33,8 +34,8 @@ namespace Neon::RG
                         auto& MaterialLhs = ModelLhs->GetMaterial(MatIdxLhs);
                         auto& MaterialRhs = ModelRhs->GetMaterial(MatIdxRhs);
 
-                        auto& PipelineStateLhs = MaterialLhs->GetPipelineState();
-                        auto& PipelineStateRhs = MaterialRhs->GetPipelineState();
+                        auto& PipelineStateLhs = MaterialLhs->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
+                        auto& PipelineStateRhs = MaterialRhs->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
 
                         if (PipelineStateLhs < PipelineStateRhs)
                         {

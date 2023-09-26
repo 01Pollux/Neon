@@ -236,30 +236,6 @@ namespace Neon::RHI
 
     public:
         /// <summary>
-        /// Set the render target format.
-        /// </summary>
-        GenericMaterialBuilder& RenderTarget(
-            uint32_t        Index,
-            EResourceFormat Format);
-
-        /// <summary>
-        /// Get the render target formats.
-        /// </summary>
-        [[nodiscard]] auto& RenderTargets()
-        {
-            return m_RenderTargetFormats;
-        }
-
-        /// <summary>
-        /// Get the render target formats.
-        /// </summary>
-        [[nodiscard]] auto& RenderTargets() const
-        {
-            return m_RenderTargetFormats;
-        }
-
-    public:
-        /// <summary>
         /// Set the depth stencil format.
         /// </summary>
         GenericMaterialBuilder& Topology(
@@ -269,18 +245,6 @@ namespace Neon::RHI
         /// Get the depth stencil format.
         /// </summary>
         [[nodiscard]] PrimitiveTopologyCategory Topology() const;
-
-    public:
-        /// <summary>
-        /// Set the depth stencil format.
-        /// </summary>
-        GenericMaterialBuilder& DepthStencilFormat(
-            EResourceFormat Format);
-
-        /// <summary>
-        /// Get the depth stencil format.
-        /// </summary>
-        [[nodiscard]] EResourceFormat DepthStencilFormat() const;
 
     private:
         PipelineStateBuilderG::BlendState m_BlendState;
@@ -292,8 +256,7 @@ namespace Neon::RHI
         PipelineStateBuilderG::RasterizerState   m_Rasterizer;
         PipelineStateBuilderG::DepthStencilState m_DepthStencil;
 
-        std::map<uint32_t, EResourceFormat> m_RenderTargetFormats;
-        std::optional<ShaderInputLayout>    m_InputLayout;
+        std::optional<ShaderInputLayout> m_InputLayout;
 
         PipelineStateBuilderG::StripCutType m_StripCut           = PipelineStateBuilderG::StripCutType::None;
         PrimitiveTopologyCategory           m_Topology           = PrimitiveTopologyCategory::Undefined;

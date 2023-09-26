@@ -222,16 +222,6 @@ namespace Neon::RHI
 
     //
 
-    RenderMaterialBuilder& RenderMaterialBuilder::RenderTarget(
-        uint32_t        Index,
-        EResourceFormat Format)
-    {
-        m_RenderTargetFormats[Index] = Format;
-        return *this;
-    }
-
-    //
-
     RenderMaterialBuilder& RenderMaterialBuilder::Topology(
         PrimitiveTopologyCategory Type)
     {
@@ -242,20 +232,6 @@ namespace Neon::RHI
     PrimitiveTopologyCategory RenderMaterialBuilder::Topology() const
     {
         return m_Topology;
-    }
-
-    //
-
-    RenderMaterialBuilder& RenderMaterialBuilder::DepthStencilFormat(
-        EResourceFormat Format)
-    {
-        m_DepthStencilFormat = Format;
-        return *this;
-    }
-
-    EResourceFormat RenderMaterialBuilder::DepthStencilFormat() const
-    {
-        return m_DepthStencilFormat;
     }
 
     //

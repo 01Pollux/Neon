@@ -26,12 +26,19 @@ namespace Neon::RHI
             /// <summary>
             /// Render pass.
             /// Used for forward+ rendering.
+            /// </summary>
             RenderPass,
 
             /// <summary>
             /// Compute pass.
             /// </summary>
             ComputePass = RenderPass,
+
+            /// <summary>
+            /// Render pass.
+            /// Used for forward+ rendering.
+            /// </summary>
+            RenderPassTransparent,
 
             /// <summary>
             /// Depth prepass.

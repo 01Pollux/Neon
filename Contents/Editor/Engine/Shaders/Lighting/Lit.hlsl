@@ -2,7 +2,6 @@
 #include "../Common/Frame.hlsli"
 #include "../Common/Utils.hlsli"
 #include "../Common/StdMaterial.hlsli"
-#include "../Common/GBuffer.hlsli"
 
 //
 
@@ -81,7 +80,7 @@ Texture2D<float4> p_EmissiveMap[] : register(t0, space5);
 
 
 [earlydepthstencil]
-PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
+float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 {
 	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
 	
@@ -127,10 +126,5 @@ PSOutput PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace)
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	
-	return GBufferPack(
-		Albedo,
-		0.75f, // TODO
-		Normal,
-		0.75f, // TODO
-		Emissive);
+	return float4(Albedo, 1.f);
 }

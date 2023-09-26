@@ -2,9 +2,6 @@
 
 #include <RenderGraph/Common.hpp>
 
-#include <Renderer/Render/BaseRenderer.hpp>
-#include <Renderer/Render/SpriteBatch.hpp>
-
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
 

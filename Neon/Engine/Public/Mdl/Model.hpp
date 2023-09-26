@@ -3,12 +3,9 @@
 #include <Mdl/Submesh.hpp>
 #include <RHI/Resource/Resource.hpp>
 
-namespace Neon
+namespace Neon::RHI
 {
-    namespace Renderer
-    {
         class IMaterial;
-    } // namespace Renderer
 } // namespace Neon
 
 namespace Neon::Mdl
@@ -23,7 +20,7 @@ namespace Neon::Mdl
         using MeshNodeList   = std::vector<MeshNode>;
         using SubmeshRefList = std::vector<SubmeshIndex>;
         using GPUBuffer      = RHI::USyncGpuResource;
-        using MaterialsTable = std::vector<Ptr<Renderer::IMaterial>>;
+        using MaterialsTable = std::vector<Ptr<RHI::IMaterial>>;
 
     public:
         Model(

@@ -217,18 +217,13 @@ namespace Neon::RHI
                 .Rasterizer   = Builder.Rasterizer(),
                 .DepthStencil = Builder.DepthStencil(),
 
-                .RTFormats = Builder.RenderTargets() |
-                             views::transform([](auto& RenderTarget)
-                                              { return RenderTarget.second; }) |
-                             ranges::to<std::vector>(),
-
                 .SampleMask    = Builder.SampleMask(),
                 .SampleCount   = Builder.SampleCount(),
                 .SampleQuality = Builder.SampleQuality(),
                 .Topology      = Builder.Topology(),
 
                 .StripCut = Builder.StripCut(),
-                .DSFormat = Builder.DepthStencilFormat()
+                .DSFormat = EResourceFormat::D24_UNorm_S8_UInt
             };
 
             {
@@ -243,18 +238,39 @@ namespace Neon::RHI
                 }
             }
 
+            for (auto& BlendRenderTarget : PipelineDesc.Blend.RenderTargets)
+            {
+                BlendRenderTarget.BlendEnable = false;
+                BlendRenderTarget.LogicEnable = false;
+            }
+
             for (size_t i = 0; i < size_t(IMaterial::PipelineVariant::Count); i++)
             {
+                PipelineDesc.RTFormats.clear();
+
                 switch (IMaterial::PipelineVariant(i))
                 {
                 case IMaterial::PipelineVariant::RenderPass:
                 {
                     PipelineDesc.PixelShader = Builder.PixelShader();
+                    PipelineDesc.RTFormats.push_back(ISwapchain::Get()->GetFormat());
+                    PipelineDesc.Blend.RenderTargets[0].BlendEnable = false;
+                    PipelineDesc.DepthStencil.DepthWriteEnable      = true;
+                    break;
+                }
+                case IMaterial::PipelineVariant::RenderPassTransparent:
+                {
+                    PipelineDesc.PixelShader = Builder.PixelShader();
+                    PipelineDesc.RTFormats.push_back(ISwapchain::Get()->GetFormat());
+                    PipelineDesc.Blend.RenderTargets[0].BlendEnable = true;
+                    PipelineDesc.DepthStencil.DepthWriteEnable      = false;
                     break;
                 }
                 case IMaterial::PipelineVariant::DepthPass:
                 {
-                    PipelineDesc.PixelShader = nullptr;
+                    PipelineDesc.PixelShader                        = nullptr;
+                    PipelineDesc.Blend.RenderTargets[0].BlendEnable = false;
+                    PipelineDesc.DepthStencil.DepthWriteEnable      = true;
                     break;
                 }
                 }

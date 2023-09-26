@@ -7,11 +7,6 @@
 
 //
 
-#include <Renderer/Render/SpriteRenderer.hpp>
-#include <Renderer/Render/MeshRenderer.hpp>
-
-//
-
 namespace Neon::RG
 {
     void CreateStandard3DRenderGraph(

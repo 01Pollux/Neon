@@ -204,7 +204,7 @@ namespace Neon::Asset
             //
 
             using TextureMap         = std::unordered_map<aiTextureType, RHI::SSyncGpuResource>;
-            using MaterialTextureMap = std::unordered_map<Renderer::IMaterial*, TextureMap>;
+            using MaterialTextureMap = std::unordered_map<RHI::IMaterial*, TextureMap>;
 
             // Deferred loading of textures until we process all meshes.
             MaterialTextureMap MaterialsToSet;
@@ -229,7 +229,7 @@ namespace Neon::Asset
                         auto& WhiteTexture = RHI::IGpuResource::GetDefaultTexture(RHI::DefaultTextures::White_2D);
 
                         Materials.reserve(AIScene->mNumMaterials);
-                        auto LitMaterial = Renderer::SharedMaterials::Get(Renderer::SharedMaterials::Type::Lit);
+                        auto LitMaterial = RHI::SharedMaterials::Get(RHI::SharedMaterials::Type::Lit);
 
                         for (uint32_t i = 0; i < AIScene->mNumMaterials; i++)
                         {
@@ -430,7 +430,8 @@ namespace Neon::Asset
             {
                 for (auto& [Type, Texture] : Textures)
                 {
-                    Material->SetTexture(TextureKvList[Type], Texture.Get());
+                    // TODO:
+                    //Material->SetTexture(TextureKvList[Type], Texture.Get());
                 }
             }
 

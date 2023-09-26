@@ -3,9 +3,8 @@
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/CopyToTexture.hpp>
 
-#include <Renderer/Material/Material.hpp>
-#include <Renderer/Material/Builder.hpp>
-#include <RHI/GlobalDescriptors.hpp>
+#include <RHI/RootSignature.hpp>
+#include <RHI/PipelineState.hpp>
 
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>

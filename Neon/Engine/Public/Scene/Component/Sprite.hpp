@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Scene/Component/Component.hpp>
-#include <Renderer/Material/Material.hpp>
+#include <RHI/Material/Material.hpp>
 #include <Math/Transform.hpp>
 
 namespace Neon::Scene::Component
@@ -31,7 +31,7 @@ namespace Neon::Scene::Component
 
         Sprite();
 
-        Ptr<Renderer::IMaterial> MaterialInstance;
+        Ptr<RHI::IMaterial> MaterialInstance;
         AffineTransformMatrix    TextureTransform;
         Vector2                  SpriteSize{ 1.0f, 1.0f };
         Color4                   ModulationColor = Colors::White;

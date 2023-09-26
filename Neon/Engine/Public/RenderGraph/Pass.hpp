@@ -3,6 +3,9 @@
 #include <RenderGraph/Common.hpp>
 #include <RHI/Commands/List.hpp>
 
+#include <RHI/RootSignature.hpp>
+#include <RHI/GlobalDescriptors.hpp>
+
 namespace Neon::RG
 {
     class GraphStorage;

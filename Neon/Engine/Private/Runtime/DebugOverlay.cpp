@@ -8,8 +8,8 @@
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
 
-#include <Renderer/Material/Builder.hpp>
-#include <Renderer/Material/Material.hpp>
+#include <RHI/Material/Builder.hpp>
+#include <RHI/Material/Material.hpp>
 
 #include <RHI/Swapchain.hpp>
 #include <RHI/Commands/List.hpp>
@@ -46,7 +46,8 @@ namespace Neon::Runtime
 
         struct Overlay_Debug_LineBuffer
         {
-            Ptr<Renderer::IMaterial> Material;
+            // TODO: Use normal pipeline/root signature objects
+            Ptr<RHI::IMaterial> Material;
 
             std::multimap<float, std::pair<LineArgs, bool>> m_TimedLines;
             std::vector<UPtr<RHI::IGpuResource>>            VertexBuffers;
@@ -214,19 +215,18 @@ namespace Neon::Runtime
         VertexInput.emplace_back("NeedsProjection", RHI::EResourceFormat::R32_UInt);
 
         Material =
-            Renderer::RenderMaterialBuilder()
+            RHI::RenderMaterialBuilder()
                 .RootSignature(
                     RHI::IRootSignature::Create(
                         RHI::RootSignatureBuilder()
                             .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                             .AddConstantBufferView("PerFrameData", 0, 1)))
-                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
-                .DepthStencil(Renderer::MaterialStates::DepthStencil::None)
+                .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
+                .DepthStencil(RHI::MaterialStates::DepthStencil::None)
                 .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
                 .InputLayout(std::move(VertexInput))
                 .PixelShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
                 .Topology(RHI::PrimitiveTopologyCategory::Line)
-                .RenderTarget(0, RHI::ISwapchain::Get()->GetFormat())
                 .Build();
 
         Asset::Manager::Unload(DebugShader->GetGuid());
@@ -267,7 +267,7 @@ namespace Neon::Runtime
         CommandList->SetRootSignature(true, Material->GetRootSignature());
         CommandList->SetResourceView(true, RHI::CstResourceViewType::Cbv, 0, PerFrameData);
 
-        CommandList->SetPipelineState(Material->GetPipelineState());
+        CommandList->SetPipelineState(Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass));
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);
 
         RHI::Views::Vertex VtxView;
