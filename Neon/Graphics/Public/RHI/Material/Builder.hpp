@@ -60,8 +60,7 @@ namespace Neon::RHI
         /// <summary>
         /// Build material.
         /// </summary>
-        [[nodiscard]] Ptr<IMaterial> Build(
-            const wchar_t* Name) const;
+        [[nodiscard]] Ptr<IMaterial> Build() const;
 
         /// <summary>
         /// Disable or enable vertex input.
@@ -310,8 +309,7 @@ namespace Neon::RHI
         /// <summary>
         /// Build material.
         /// </summary>
-        [[nodiscard]] Ptr<IMaterial> Build(
-            const wchar_t* Name) const;
+        [[nodiscard]] Ptr<IMaterial> Build() const;
 
         /// <summary>
         /// Set the compute shader.

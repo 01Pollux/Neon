@@ -22,17 +22,15 @@ namespace views  = std::views;
 namespace Neon::RHI
 {
     Ptr<IMaterial> IMaterial::Create(
-        const wchar_t*                       Name,
         const GenericMaterialBuilder<false>& Builder)
     {
-        return Ptr<Material>{ NEON_NEW Material(Name, Builder) };
+        return Ptr<Material>{ NEON_NEW Material(Builder) };
     }
 
     Ptr<IMaterial> IMaterial::Create(
-        const wchar_t*                      Name,
         const GenericMaterialBuilder<true>& Builder)
     {
-        return Ptr<Material>{ NEON_NEW Material(Name, Builder) };
+        return Ptr<Material>{ NEON_NEW Material(Builder) };
     }
 
     //
@@ -78,7 +76,6 @@ namespace Neon::RHI
 
     template<bool _Compute>
     void Material_CreateDescriptors(
-        const wchar_t*                          Name,
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
@@ -278,11 +275,9 @@ namespace Neon::RHI
     //
 
     Material::Material(
-        const wchar_t*               Name,
         const RenderMaterialBuilder& Builder)
     {
         Material_CreateDescriptors(
-            Name,
             Builder,
             this);
 
@@ -292,11 +287,9 @@ namespace Neon::RHI
     }
 
     Material::Material(
-        const wchar_t*                Name,
         const ComputeMaterialBuilder& Builder)
     {
         Material_CreateDescriptors(
-            Name,
             Builder,
             this);
 

@@ -22,7 +22,6 @@ namespace Neon::RHI
 
         template<bool _Compute>
         friend void Material_CreateDescriptors(
-            const wchar_t*                          Name,
             const GenericMaterialBuilder<_Compute>& Builder,
             Material*                               Mat);
 
@@ -33,11 +32,9 @@ namespace Neon::RHI
 
     public:
         Material(
-            const wchar_t*                      Name,
             const GenericMaterialBuilder<true>& Builder);
 
         Material(
-            const wchar_t*                       Name,
             const GenericMaterialBuilder<false>& Builder);
 
         Material(

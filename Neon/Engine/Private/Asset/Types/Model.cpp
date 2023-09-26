@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/Model.hpp>
-#include <Renderer/Material/Shared.hpp>
+#include <RHI/Material/Shared.hpp>
 
 #ifndef NEON_DIST
 #include <Runtime/GameEngine.hpp>

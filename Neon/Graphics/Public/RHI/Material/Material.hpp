@@ -45,11 +45,9 @@ namespace Neon::RHI
         using PipelineStateList = std::array<Ptr<IPipelineState>, size_t(PipelineVariant::Count)>;
 
         static Ptr<IMaterial> Create(
-            const wchar_t*                       Name,
             const GenericMaterialBuilder<false>& Builder);
 
         static Ptr<IMaterial> Create(
-            const wchar_t*                      Name,
             const GenericMaterialBuilder<true>& Builder);
 
         virtual ~IMaterial() = default;
@@ -62,7 +60,7 @@ namespace Neon::RHI
         /// <summary>
         /// Check to see if material is implemented in compute shader.
         /// </summary>
-        virtual bool IsCompute() const noexcept = 0;
+        [[nodiscard]] virtual bool IsCompute() const noexcept = 0;
 
         /// <summary>
         /// Get the root signature.

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Renderer/Material/Material.hpp>
+#include <RHI/Material/Material.hpp>
 
-namespace Neon::Renderer
+namespace Neon::RHI
 {
     struct SharedMaterials
     {
@@ -28,4 +28,4 @@ namespace Neon::Renderer
         [[nodiscard]] static Ptr<IMaterial> Get(
             Type Ty);
     };
-} // namespace Neon::Renderer
+} // namespace Neon::RHI

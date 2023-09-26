@@ -1,6 +1,6 @@
 #include <EnginePCH.hpp>
-#include <Renderer/Material/Shared.hpp>
-#include <Renderer/Material/Builder.hpp>
+#include <RHI/Material/Shared.hpp>
+#include <RHI/Material/Builder.hpp>
 
 #include <Asset/Manager.hpp>
 #include <Asset/Types/Shader.hpp>
@@ -8,7 +8,7 @@
 
 #include <Log/Logger.hpp>
 
-namespace Neon::Renderer
+namespace Neon::RHI
 {
     static std::map<SharedMaterials::Type, Ptr<IMaterial>> s_DefaultMaterials;
 
@@ -32,10 +32,10 @@ namespace Neon::Renderer
 
         // Lit
         {
-            Renderer::RenderMaterialBuilder LitMaterial;
+            RHI::RenderMaterialBuilder LitMaterial;
 
             LitMaterial
-                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
+                .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
@@ -67,44 +67,8 @@ namespace Neon::Renderer
                 .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
                 .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
 
-            auto Material = Renderer::IMaterial::Create(std::move(LitMaterial));
-
-            s_DefaultMaterials[Type::Lit] = std::move(Material);
+            s_DefaultMaterials[Type::Lit] = LitMaterial.Build();
         }
-        //
-        //        // Unlit sprite
-        //        {
-        //            Renderer::RenderMaterialBuilder SpriteMaterial;
-        //
-        //            SpriteMaterial
-        //                .Rasterizer(Renderer::MaterialStates::Rasterizer::CullNone)
-        //                .Topology(RHI::PrimitiveTopologyCategory::Triangle)
-        //                .RootSignature(
-        //                    RHI::RootSignatureBuilder(STR("Material::Sprite_RootSignature"))
-        //                        .AddConstantBufferView(0, 0, RHI::ShaderVisibility::All)
-        //                        .AddShaderResourceView(0, 1, RHI::ShaderVisibility::All)
-        //                        .AddDescriptorTable(
-        //                            RHI::RootDescriptorTable()
-        //                                .AddSrvRange(0, 2, 1, true),
-        //                            RHI::ShaderVisibility::Pixel)
-        //                        .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
-        //                        .AddStandardSamplers()
-        //                        .Build());
-        //
-        //            RHI::MShaderCompileFlags Flags;
-        // #if NEON_DEBUG
-        //            Flags.Set(RHI::EShaderCompileFlags::Debug);
-        // #endif
-        //
-        //            SpriteMaterial
-        //                .VertexShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
-        //                .PixelShader(LitSpriteShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
-        //
-        //            auto Material = Renderer::IMaterial::Create(std::move(SpriteMaterial));
-        //            Material->SetTexture("p_SpriteTextures", WhiteTexture);
-        //
-        //            s_DefaultMaterials[Type::LitSprite] = std::move(Material);
-        //        }
     }
 
     void SharedMaterials::Shutdown()
@@ -118,4 +82,4 @@ namespace Neon::Renderer
         NEON_ASSERT(s_DefaultMaterials.contains(Ty), "Default material not found!");
         return s_DefaultMaterials[Ty];
     }
-} // namespace Neon::Renderer
+} // namespace Neon::RHI
