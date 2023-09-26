@@ -568,13 +568,6 @@ namespace Neon::RHI
     class IRootSignature
     {
     public:
-        enum class ParamType : uint8_t
-        {
-            Constants,
-            Root,
-            DescriptorTable
-        };
-
         struct ParamDescriptorRange
         {
             uint32_t             Offset;
@@ -596,8 +589,8 @@ namespace Neon::RHI
         {
             std::unordered_map<StringU8, ParamDescriptorRange> NamedRanges;
 
-            uint32_t Size{};
-            bool     Instanced{};
+            uint32_t Size;
+            bool     Instanced;
 
             /// <summary>
             /// Get parameter by name else return nullptr
@@ -610,7 +603,7 @@ namespace Neon::RHI
             }
         };
 
-        using ParamInfo = std::variant<ParamConstant, ParamRoot, ParamDescriptor>;
+        using ParamInfo = boost::variant<ParamConstant, ParamRoot, ParamDescriptor>;
 
         [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);

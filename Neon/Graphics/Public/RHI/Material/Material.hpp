@@ -24,12 +24,6 @@ namespace Neon::RHI
         enum class PipelineVariant : uint8_t
         {
             /// <summary>
-            /// Depth prepass.
-            /// Used for forward+ rendering.
-            /// </summary>
-            DepthPass,
-
-            /// <summary>
             /// Render pass.
             /// Used for forward+ rendering.
             RenderPass,
@@ -38,6 +32,12 @@ namespace Neon::RHI
             /// Compute pass.
             /// </summary>
             ComputePass = RenderPass,
+
+            /// <summary>
+            /// Depth prepass.
+            /// Used for forward+ rendering.
+            /// </summary>
+            DepthPass,
 
             Count
         };
@@ -58,6 +58,11 @@ namespace Neon::RHI
         /// Creates a new material instance.
         /// </summary>
         [[nodiscard]] virtual Ptr<IMaterial> CreateInstance() = 0;
+
+        /// <summary>
+        /// Check to see if material is implemented in compute shader.
+        /// </summary>
+        virtual bool IsCompute() const noexcept = 0;
 
         /// <summary>
         /// Get the root signature.

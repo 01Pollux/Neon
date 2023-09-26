@@ -49,6 +49,31 @@ namespace Neon::RHI
         }
     }
 
+    static void InitializeDescriptorIfNeeded(
+        DescriptorHeapHandle&       Destination,
+        DescriptorType              Type,
+        const DescriptorHeapHandle& Source)
+    {
+        auto Allocator = IStaticDescriptorHeap::Get(Type);
+        if (Destination)
+        {
+            Destination->Copy(
+                Destination.Offset,
+                IDescriptorHeap::CopyInfo{
+                    Source.GetCpuHandle(Source.Offset),
+                    Source.Size });
+        }
+    }
+
+    static void CreateAndInitializeDescriptorIfNeeded(
+        DescriptorHeapHandle&       Destination,
+        DescriptorType              Type,
+        const DescriptorHeapHandle& Source)
+    {
+        CreateDescriptorIfNeeded(Destination, Type, Source.Size);
+        InitializeDescriptorIfNeeded(Destination, Type, Source);
+    }
+
     //
 
     template<bool _Compute>
@@ -57,6 +82,121 @@ namespace Neon::RHI
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
     {
+        auto& RootSignature = Builder.RootSignature();
+        NEON_ASSERT(RootSignature);
+
+        Mat->m_RootSignature = RootSignature;
+
+        // Calculate number of descriptors needed (for shared and local descriptors)
+        uint32_t TableSharedResourceCount = 0;
+        uint32_t TableSharedSamplerCount  = 0;
+        uint32_t TableResourceCount       = 0;
+        uint32_t TableSamplerCount        = 0;
+
+        // Calculate size of constants
+        uint8_t BufferSize = 0;
+
+        for (auto& [Name, ParamIndex] : RootSignature->GetNamedParams())
+        {
+            auto& Param = RootSignature->GetParams()[ParamIndex];
+            boost::apply_visitor(
+                VariantVisitor{
+                    [&BufferSize](const IRootSignature::ParamConstant& Constant)
+                    {
+                        BufferSize += Constant.Num32BitValues * sizeof(uint32_t);
+                    },
+                    [Mat, &Name](const IRootSignature::ParamRoot& Root)
+                    {
+                        CstResourceViewType ViewType;
+                        switch (Root.Type)
+                        {
+                        case RootParameter::RootType::ConstantBuffer:
+                        {
+                            ViewType = CstResourceViewType::Cbv;
+                            break;
+                        }
+                        case RootParameter::RootType::ShaderResource:
+                        {
+                            ViewType = CstResourceViewType::Srv;
+                            break;
+                        }
+                        case RootParameter::RootType::UnorderedAccess:
+                        {
+                            ViewType = CstResourceViewType::Uav;
+                            break;
+                        }
+                        default:
+                        {
+                            NEON_ASSERT(false, "Invalid root type");
+                            break;
+                        }
+                        }
+                        Mat->m_SharedParameters->SharedEntries.emplace(Name, Material::RootEntry{ .ViewType = ViewType });
+                    },
+                    [&](const IRootSignature::ParamDescriptor& Descriptor)
+                    {
+                        const bool IsSamplerDescriptor = Descriptor.NamedRanges.begin()->second.Type == DescriptorTableParam::Sampler;
+                        if (IsSamplerDescriptor)
+                        {
+                            auto& DescriptorCount = Descriptor.Instanced ? TableSamplerCount : TableSharedSamplerCount;
+                            DescriptorCount += Descriptor.Size;
+
+                            for (auto& [Name, Range] : Descriptor.NamedRanges)
+                            {
+                                Material::SamplerEntry Entry{
+                                    .Offset = DescriptorCount,
+                                    .Count  = Range.Size
+                                };
+
+                                Entry.Descs.resize(Range.Size);
+
+                                if (Descriptor.Instanced)
+                                {
+                                    Mat->m_SharedParameters->SharedEntries.emplace(Name, std::move(Entry));
+                                }
+                                else
+                                {
+                                    Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            auto& DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
+                            DescriptorCount += Descriptor.Size;
+
+                            for (auto& [Name, Range] : Descriptor.NamedRanges)
+                            {
+                                Material::DescriptorEntry Entry{
+                                    .Offset = DescriptorCount,
+                                    .Count  = Range.Size,
+                                    .Type   = Range.Type
+                                };
+
+                                Entry.Resources.resize(Range.Size);
+
+                                if (Descriptor.Instanced)
+                                {
+                                    Mat->m_SharedParameters->SharedEntries.emplace(Name, std::move(Entry));
+                                }
+                                else
+                                {
+                                    Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry));
+                                }
+                            }
+                        }
+                    },
+                },
+                Param);
+
+            if (BufferSize)
+            {
+                Mat->m_SharedParameters->ConstantData = std::make_unique<uint8_t[]>(BufferSize);
+            }
+
+            Mat->m_SharedParameters->Descriptors = Material::UnqiueDescriptorHeapHandle(TableSharedResourceCount, TableSharedSamplerCount);
+            Mat->m_LocalParameters.Descriptors   = Material::UnqiueDescriptorHeapHandle(TableResourceCount, TableSamplerCount);
+        }
     }
 
     //
@@ -72,7 +212,6 @@ namespace Neon::RHI
                 .RootSignature = Mat->m_RootSignature,
 
                 .VertexShader   = Builder.VertexShader(),
-                .PixelShader    = Builder.PixelShader(),
                 .GeometryShader = Builder.GeometryShader(),
                 .HullShader     = Builder.HullShader(),
                 .DomainShader   = Builder.DomainShader(),
@@ -107,7 +246,23 @@ namespace Neon::RHI
                 }
             }
 
-            // Mat->m_PipelineState = IPipelineState::Create(PipelineDesc);
+            for (size_t i = 0; i < size_t(IMaterial::PipelineVariant::Count); i++)
+            {
+                switch (IMaterial::PipelineVariant(i))
+                {
+                case IMaterial::PipelineVariant::RenderPass:
+                {
+                    PipelineDesc.PixelShader = Builder.PixelShader();
+                    break;
+                }
+                case IMaterial::PipelineVariant::DepthPass:
+                {
+                    PipelineDesc.PixelShader = nullptr;
+                    break;
+                }
+                }
+                Mat->m_PipelineStates[i] = IPipelineState::Create(PipelineDesc);
+            }
         }
         else
         {
@@ -116,7 +271,7 @@ namespace Neon::RHI
                 .ComputeShader = Builder.ComputeShader()
             };
 
-            // Mat->m_PipelineState = IPipelineState::Create(PipelineDesc);
+            Mat->m_PipelineStates[size_t(IMaterial::PipelineVariant::ComputePass)] = IPipelineState::Create(PipelineDesc);
         }
     }
 
@@ -145,15 +300,15 @@ namespace Neon::RHI
             Builder,
             this);
 
-        // TODO: Rework material pipeline state creation
-        // Material_CreatePipelineState(
-        //    Builder,
-        //    this);
+        Material_CreatePipelineState(
+            Builder,
+            this);
     }
 
     Material::Material(
         Material* Other) :
-        m_LocalDescriptors(Other->m_LocalDescriptors.ResourceDescriptors.Size, Other->m_LocalDescriptors.SamplerDescriptors.Size)
+        m_SharedParameters(Other->m_SharedParameters),
+        m_LocalParameters(Other->m_LocalParameters)
     {
         m_RootSignature  = Other->m_RootSignature;
         m_PipelineStates = Other->m_PipelineStates;
@@ -162,6 +317,11 @@ namespace Neon::RHI
     Ptr<IMaterial> Material::CreateInstance()
     {
         return Ptr<IMaterial>(NEON_NEW Material(this));
+    }
+
+    bool Material::IsCompute() const noexcept
+    {
+        return m_IsCompute;
     }
 
     //
@@ -174,6 +334,27 @@ namespace Neon::RHI
     {
         CreateDescriptorIfNeeded(ResourceDescriptors, DescriptorType::ResourceView, ResourceDescriptorSize);
         CreateDescriptorIfNeeded(SamplerDescriptors, DescriptorType::Sampler, SamplerDescriptorSize);
+    }
+
+    Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
+        const UnqiueDescriptorHeapHandle& Other)
+    {
+        CreateAndInitializeDescriptorIfNeeded(ResourceDescriptors, DescriptorType::ResourceView, Other.ResourceDescriptors);
+        CreateAndInitializeDescriptorIfNeeded(SamplerDescriptors, DescriptorType::Sampler, Other.SamplerDescriptors);
+    }
+
+    auto Material::UnqiueDescriptorHeapHandle::operator=(
+        const UnqiueDescriptorHeapHandle& Other) -> UnqiueDescriptorHeapHandle&
+    {
+        if (this != &Other)
+        {
+            Release();
+
+            CreateAndInitializeDescriptorIfNeeded(ResourceDescriptors, DescriptorType::ResourceView, Other.ResourceDescriptors);
+            CreateAndInitializeDescriptorIfNeeded(SamplerDescriptors, DescriptorType::Sampler, Other.SamplerDescriptors);
+        }
+
+        return *this;
     }
 
     Material::UnqiueDescriptorHeapHandle::UnqiueDescriptorHeapHandle(
@@ -190,16 +371,7 @@ namespace Neon::RHI
     {
         if (this != &Other)
         {
-            if (ResourceDescriptors)
-            {
-                auto Allocator = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
-                Allocator->Free(ResourceDescriptors);
-            }
-            if (SamplerDescriptors)
-            {
-                auto Allocator = IStaticDescriptorHeap::Get(DescriptorType::Sampler);
-                Allocator->Free(SamplerDescriptors);
-            }
+            Release();
 
             ResourceDescriptors = std::move(Other.ResourceDescriptors);
             SamplerDescriptors  = std::move(Other.SamplerDescriptors);
@@ -212,6 +384,11 @@ namespace Neon::RHI
     }
 
     Material::UnqiueDescriptorHeapHandle::~UnqiueDescriptorHeapHandle()
+    {
+        Release();
+    }
+
+    void Material::UnqiueDescriptorHeapHandle::Release()
     {
         if (ResourceDescriptors)
         {

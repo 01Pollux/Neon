@@ -403,6 +403,7 @@ namespace Neon::RHI
 
     enum class ESamplerFilter : uint8_t
     {
+        Unknown,
         MinMagMipPoint,
         MinMagPoint_MipLinear,
         MinPoint_MagLinear_MipPoint,

@@ -49,7 +49,50 @@ namespace Neon::RHI
 
         Ptr<IMaterial> CreateInstance() override;
 
+        bool IsCompute() const noexcept override;
+
     private:
+        struct ConstantEntry
+        {
+            uint8_t DataOffset;
+        };
+
+        struct RootEntry
+        {
+            RHI::GpuResourceHandle   Handle{};
+            RHI::CstResourceViewType ViewType;
+        };
+
+        struct DescriptorEntry
+        {
+            std::vector<Ptr<RHI::IGpuResource>> Resources;
+            std::vector<DescriptorViewDesc>     Descs;
+
+            uint32_t Offset;
+
+            /// <summary>
+            /// Resizable array of resource descriptors.
+            /// </summary>
+            uint32_t Count;
+
+            RHI::DescriptorTableParam Type;
+        };
+
+        struct SamplerEntry
+        {
+            std::vector<RHI::SamplerDesc> Descs;
+
+            uint32_t Offset;
+
+            /// <summary>
+            /// Resizable array of sampler descriptors.
+            /// </summary>
+            uint32_t Count;
+        };
+
+        using SharedEntryVariant = std::variant<ConstantEntry, RootEntry, DescriptorEntry, SamplerEntry>;
+        using LocalEntryVariant  = std::variant<DescriptorEntry, SamplerEntry>;
+
         struct UnqiueDescriptorHeapHandle
         {
             DescriptorHeapHandle ResourceDescriptors, SamplerDescriptors;
@@ -59,13 +102,36 @@ namespace Neon::RHI
                 uint32_t ResourceDescriptorSize,
                 uint32_t SamplerDescriptorSize);
 
-            NEON_CLASS_NO_COPY(UnqiueDescriptorHeapHandle);
+            UnqiueDescriptorHeapHandle(const UnqiueDescriptorHeapHandle&);
+            UnqiueDescriptorHeapHandle& operator=(const UnqiueDescriptorHeapHandle&);
             NEON_CLASS_MOVE_DECL(UnqiueDescriptorHeapHandle);
 
             ~UnqiueDescriptorHeapHandle();
+
+        private:
+            /// <summary>
+            /// Release current descriptors
+            /// </summary>
+            void Release();
+        };
+
+    public:
+        struct SharedParameters
+        {
+            UnqiueDescriptorHeapHandle             Descriptors;
+            std::map<StringU8, SharedEntryVariant> SharedEntries;
+            std::unique_ptr<uint8_t[]>             ConstantData;
+        };
+
+        struct LocalParameters
+        {
+            UnqiueDescriptorHeapHandle            Descriptors;
+            std::map<StringU8, LocalEntryVariant> LocalEntries;
         };
 
     private:
-        UnqiueDescriptorHeapHandle m_LocalDescriptors;
+        Ptr<SharedParameters> m_SharedParameters = std::make_shared<SharedParameters>();
+        LocalParameters       m_LocalParameters;
+        bool                  m_IsCompute = false;
     };
 } // namespace Neon::RHI
