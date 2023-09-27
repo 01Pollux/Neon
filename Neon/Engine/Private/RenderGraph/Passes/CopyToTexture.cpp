@@ -37,7 +37,7 @@ namespace Neon::RG
                 .AddDescriptorTable(
                     "InputTextures",
                     RHI::RootDescriptorTable()
-                        .AddSrvRange("Data", 0, 0, 1),
+                        .AddSrvRange("", 0, 0, 1),
                     RHI::ShaderVisibility::Pixel)
                 .AddStandardSamplers()
                 .Build();

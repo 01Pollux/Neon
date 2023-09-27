@@ -93,7 +93,7 @@ namespace Neon::RHI
         // Calculate size of constants
         uint8_t BufferSize = 0;
 
-        for (auto& [Name, ParamIndex] : RootSignature->GetNamedParams())
+        for (auto& [VarName, ParamIndex] : RootSignature->GetNamedParams())
         {
             auto& Param = RootSignature->GetParams()[ParamIndex];
             boost::apply_visitor(
@@ -102,7 +102,7 @@ namespace Neon::RHI
                     {
                         BufferSize += Constant.Num32BitValues * sizeof(uint32_t);
                     },
-                    [Mat, &Name](const IRootSignature::ParamRoot& Root)
+                    [Mat, &VarName](const IRootSignature::ParamRoot& Root)
                     {
                         CstResourceViewType ViewType;
                         switch (Root.Type)
@@ -128,7 +128,7 @@ namespace Neon::RHI
                             break;
                         }
                         }
-                        Mat->m_SharedParameters->SharedEntries.emplace(Name, Material::RootEntry{ .ViewType = ViewType });
+                        Mat->m_SharedParameters->SharedEntries.emplace(VarName, Material::RootEntry{ .ViewType = ViewType });
                     },
                     [&](const IRootSignature::ParamDescriptor& Descriptor)
                     {
@@ -147,14 +147,23 @@ namespace Neon::RHI
 
                                 Entry.Descs.resize(Range.Size);
 
+                                bool WasInserted = false;
+
+                                // If a variable's name was not set, assume that texture's access will be parent's name
+                                auto NewName = VarName;
+                                if (!Name.empty())
+                                {
+                                    NewName = StringUtils::Format("{}.{}", VarName, Name);
+                                }
                                 if (Descriptor.Instanced)
                                 {
-                                    Mat->m_SharedParameters->SharedEntries.emplace(Name, std::move(Entry));
+                                    WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(NewName, std::move(Entry)).second;
                                 }
                                 else
                                 {
-                                    Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry));
+                                    WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry)).second;
                                 }
+                                NEON_ASSERT(WasInserted, "Duplicate sampler variable");
                             }
                         }
                         else
@@ -172,14 +181,23 @@ namespace Neon::RHI
 
                                 Entry.Resources.resize(Range.Size);
 
+                                bool WasInserted = false;
+
+                                // If a variable's name was not set, assume that texture's access will be parent's name
+                                auto NewName = VarName;
+                                if (!Name.empty())
+                                {
+                                    NewName = StringUtils::Format("{}.{}", VarName, Name);
+                                }
                                 if (Descriptor.Instanced)
                                 {
-                                    Mat->m_SharedParameters->SharedEntries.emplace(Name, std::move(Entry));
+                                    WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(NewName, std::move(Entry)).second;
                                 }
                                 else
                                 {
-                                    Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry));
+                                    WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(NewName, std::move(Entry)).second;
                                 }
+                                NEON_ASSERT(WasInserted, "Duplicate descriptor variable");
                             }
                         }
                     },

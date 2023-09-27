@@ -56,7 +56,7 @@ namespace Neon::RG
                 .AddDescriptorTable(
                     "InputTextures",
                     RHI::RootDescriptorTable()
-                        .AddUavRange("Data", 0, 1, 3))
+                        .AddUavRange("", 0, 1, 3))
                 .ComputeOnly()
                 .Build();
 
