@@ -406,5 +406,12 @@ namespace Neon::RHI
         std::array<float, 4> BorderColor    = { 1.f, 1.f, 1.f, 1.f };
         float                MinLOD         = 0.f;
         float                MaxLOD         = FLT_MAX;
+
+        constexpr operator bool() const noexcept
+        {
+            return Filter != ESamplerFilter::Unknown;
+        }
+
+        static const SamplerDesc Null;
     };
 } // namespace Neon::RHI

@@ -3,6 +3,14 @@
 #include "../Common/Utils.hlsli"
 #include "../Common/StdMaterial.hlsli"
 
+enum
+{
+	TEXTURE_OFFSET_ALBEDO,
+	TEXTURE_OFFSET_NORMAL,
+	TEXTURE_OFFSET_SPECULAR,
+	TEXTURE_OFFSET_EMISSIVE
+};
+
 //
 
 struct PerObjectData
@@ -73,10 +81,7 @@ PSInput VS_Main(VSInput Vs)
 
 StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space1);
 
-Texture2D<float4> p_AlbedoMap[] : register(t0, space2);
-Texture2D<float4> p_NormalMap[] : register(t0, space3);
-Texture2D<float4> p_SpecularMap[] : register(t0, space4);
-Texture2D<float4> p_EmissiveMap[] : register(t0, space5);
+Texture2D p_TextureTable[] : register(t0, space2);
 
 
 [earlydepthstencil]
@@ -88,7 +93,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_ALBEDO_MAP)
 	{
-		Texture2D AlbedoMap = p_AlbedoMap[Material.AlbedoMapIndex];
+		Texture2D AlbedoMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_ALBEDO];
 		float4 Color = AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 		if (Color.a < 0.1f)
 		{
@@ -102,7 +107,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
 	{
-		Texture2D NormalMap = p_NormalMap[Material.NormalMapIndex];
+		Texture2D NormalMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_NORMAL];
 		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
 		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
 		Normal = mul(Normal, TBN);
@@ -114,7 +119,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_SPECULAR_MAP)
 	{
-		Texture2D SpecularMap = p_SpecularMap[Material.SpecularMapIndex];
+		Texture2D SpecularMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_SPECULAR];
 		Specular *= SpecularMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	
@@ -122,7 +127,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_EMISSIVE_MAP)
 	{
-		Texture2D EmissiveMap = p_EmissiveMap[Material.EmissiveMapIndex];
+		Texture2D EmissiveMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_EMISSIVE];
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	

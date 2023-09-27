@@ -48,6 +48,39 @@ namespace Neon::RHI
 
         bool IsCompute() const noexcept override;
 
+    public:
+        void SetResource(
+            const StringU8&                Name,
+            const Ptr<RHI::IGpuResource>&  Resource,
+            const RHI::DescriptorViewDesc& Desc,
+            uint32_t                       ArrayIndex,
+            const Ptr<RHI::IGpuResource>&  UavCounter) override;
+
+        void SetSampler(
+            const StringU8&         Name,
+            const RHI::SamplerDesc& Desc,
+            uint32_t                ArrayIndex = 0) override;
+
+        void SetConstant(
+            const StringU8& Name,
+            const void*     Data,
+            size_t          Size,
+            uint32_t        Offset) override;
+
+        void SetResourceView(
+            const StringU8&        Name,
+            RHI::GpuResourceHandle Handle) override;
+
+        void SetDynamicResourceView(
+            const StringU8&          Name,
+            RHI::CstResourceViewType Type,
+            const void*              Data,
+            size_t                   Size) override;
+
+        void SetResourceSize(
+            const StringU8& Name,
+            uint32_t        Size) override;
+
     private:
         struct ConstantEntry
         {

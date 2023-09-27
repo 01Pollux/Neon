@@ -43,17 +43,13 @@ namespace Neon::RHI
                         .AddShaderResourceView("PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
                         .AddShaderResourceView("PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
-                            "AlbedoMaps",
-                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 2, 1), RHI::ShaderVisibility::Pixel)
-                        .AddDescriptorTable(
-                            "NormalMaps",
-                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 3, 1), RHI::ShaderVisibility::Pixel)
-                        .AddDescriptorTable(
-                            "SpecularMaps",
-                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 4, 1), RHI::ShaderVisibility::Pixel)
-                        .AddDescriptorTable(
-                            "EmissiveMaps",
-                            RHI::RootDescriptorTable(true).AddSrvRange("Data", 0, 5, 1), RHI::ShaderVisibility::Pixel)
+                            "TextureMaps",
+                            RHI::RootDescriptorTable(true)
+                                .AddSrvRange("Albedo", 0, 2, 1)
+                                .AddSrvRange("Normal", 0, 2, 1)
+                                .AddSrvRange("Specular", 0, 2, 1)
+                                .AddSrvRange("Emissive", 0, 2, 1),
+                            RHI::ShaderVisibility::Pixel)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());

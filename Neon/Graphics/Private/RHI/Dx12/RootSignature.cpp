@@ -355,50 +355,110 @@ namespace Neon::RHI
 
                         auto& NRanges = Table.GetRanges();
                         Ranges.reserve(NRanges.size());
-                        for (auto& Range : NRanges | std::views::values)
+
+                        struct PreExistingRange
                         {
-                            D3D12_DESCRIPTOR_RANGE_TYPE Type;
+                            D3D12_DESCRIPTOR_RANGE_FLAGS Flags;
+                            uint32_t                     ShaderRegister;
+                            uint32_t                     Offset;
+                        };
 
-                            switch (Range.Type)
+                        // Instanced will allocate unbounded descriptors
+                        if (Table.Instanced())
+                        {
+                            std::map<std::pair<D3D12_DESCRIPTOR_RANGE_TYPE, uint32_t>, PreExistingRange> PreExistingRanges;
+
+                            for (auto& Range : NRanges | std::views::values)
                             {
-                            case DescriptorTableParam::ConstantBuffer:
-                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-                                break;
-                            case DescriptorTableParam::ShaderResource:
-                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-                                break;
-                            case DescriptorTableParam::UnorderedAccess:
-                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-                                break;
-                            case DescriptorTableParam::Sampler:
-                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-                                break;
-                            default:
-                                std::unreachable();
-                            }
+                                D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
-                            // Instanced will allocate unbounded descriptors
-                            auto Flags = CastRootDescriptorTableFlags(Range.Flags);
+                                switch (Range.Type)
+                                {
+                                case DescriptorTableParam::ConstantBuffer:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+                                    break;
+                                case DescriptorTableParam::ShaderResource:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+                                    break;
+                                case DescriptorTableParam::UnorderedAccess:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+                                    break;
+                                case DescriptorTableParam::Sampler:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+                                    break;
+                                default:
+                                    std::unreachable();
+                                }
 
-                            uint32_t DescriptorCount;
-                            if (Table.Instanced())
-                            {
-                                DescriptorCount = UINT32_MAX;
+                                auto Flags = CastRootDescriptorTableFlags(Range.Flags);
                                 Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
                                 Flags &= ~D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_STATIC_KEEPING_BUFFER_BOUNDS_CHECKS;
-                            }
-                            else
-                            {
-                                DescriptorCount = Range.DescriptorCount;
-                            }
 
-                            Ranges.emplace_back().Init(
-                                Type,
-                                DescriptorCount,
-                                Range.ShaderRegister,
-                                Range.RegisterSpace,
-                                Flags,
-                                Range.Offset);
+                                std::pair Key  = { Type, Range.RegisterSpace };
+                                auto      Iter = PreExistingRanges.find(Key);
+                                if (Iter == PreExistingRanges.end())
+                                {
+                                    PreExistingRanges.emplace(
+                                        Key,
+                                        PreExistingRange{
+                                            .Flags          = Flags,
+                                            .ShaderRegister = Range.ShaderRegister,
+                                            .Offset         = Range.Offset });
+                                }
+                                else
+                                {
+                                    auto& CurRange = Iter->second;
+
+                                    CurRange.Flags |= Flags;
+                                    CurRange.ShaderRegister = std::min(CurRange.ShaderRegister, Range.ShaderRegister);
+                                    CurRange.Offset         = std::min(CurRange.Offset, Range.Offset);
+                                }
+                            }
+                            for (auto& [Key, Range] : PreExistingRanges)
+                            {
+                                auto& [Type, RegisterSpace] = Key;
+                                Ranges.emplace_back()
+                                    .Init(
+                                        Type,
+                                        UINT32_MAX,
+                                        Range.ShaderRegister,
+                                        RegisterSpace,
+                                        Range.Flags,
+                                        Range.Offset);
+                            }
+                        }
+                        else
+                        {
+                            for (auto& Range : NRanges | std::views::values)
+                            {
+                                D3D12_DESCRIPTOR_RANGE_TYPE Type;
+
+                                switch (Range.Type)
+                                {
+                                case DescriptorTableParam::ConstantBuffer:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+                                    break;
+                                case DescriptorTableParam::ShaderResource:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+                                    break;
+                                case DescriptorTableParam::UnorderedAccess:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+                                    break;
+                                case DescriptorTableParam::Sampler:
+                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+                                    break;
+                                default:
+                                    std::unreachable();
+                                }
+
+                                Ranges.emplace_back().Init(
+                                    Type,
+                                    Range.DescriptorCount,
+                                    Range.ShaderRegister,
+                                    Range.RegisterSpace,
+                                    CastRootDescriptorTableFlags(Range.Flags),
+                                    Range.Offset);
+                            }
                         }
 
                         Result.Parameters.emplace_back().InitAsDescriptorTable(UINT(Ranges.size()), Ranges.data(), Visibility);

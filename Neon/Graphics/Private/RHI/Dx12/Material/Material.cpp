@@ -58,7 +58,7 @@ namespace Neon::RHI
             Destination->Copy(
                 Destination.Offset,
                 IDescriptorHeap::CopyInfo{
-                    Source.GetCpuHandle(Source.Offset),
+                    Source.GetCpuHandle(),
                     Source.Size });
         }
     }
@@ -334,6 +334,256 @@ namespace Neon::RHI
     }
 
     //
+
+    void Material::SetResource(
+        const StringU8&                Name,
+        const Ptr<RHI::IGpuResource>&  Resource,
+        const RHI::DescriptorViewDesc& Desc,
+        uint32_t                       ArrayIndex,
+        const Ptr<RHI::IGpuResource>&  UavCounter)
+    {
+        DescriptorEntry*      Descriptor     = nullptr;
+        DescriptorHeapHandle* DescriptorHeap = nullptr;
+
+        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
+            Iter != m_LocalParameters.LocalEntries.end())
+        {
+            Descriptor     = std::get_if<DescriptorEntry>(&Iter->second);
+            DescriptorHeap = &m_LocalParameters.Descriptors.ResourceDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
+                 Iter != m_SharedParameters->SharedEntries.end())
+        {
+            Descriptor     = std::get_if<DescriptorEntry>(&Iter->second);
+            DescriptorHeap = &m_SharedParameters->Descriptors.ResourceDescriptors;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
+            return;
+        }
+
+        if (!Descriptor)
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
+            return;
+        }
+
+        uint32_t DescriptorOffset = ArrayIndex + Descriptor->Offset;
+
+        Descriptor->Resources[ArrayIndex] = Resource;
+        std::visit(
+            VariantVisitor{
+                [](std::monostate) {
+                },
+                [DescriptorHeap, DescriptorOffset](
+                    const RHI::CBVDesc& Desc)
+                {
+                    if (Desc.Resource.Value)
+                    {
+                        RHI::Views::ConstantBuffer View{ *DescriptorHeap };
+                        View.Bind(Desc, DescriptorOffset);
+                    }
+                },
+                [DescriptorHeap, &Resource, DescriptorOffset](
+                    const RHI::SRVDescOpt& Desc)
+                {
+                    if (Resource || Desc.has_value())
+                    {
+                        RHI::Views::ShaderResource View{ *DescriptorHeap };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                    }
+                },
+                [DescriptorHeap, &Resource, &UavCounter, DescriptorOffset](
+                    const RHI::UAVDescOpt& Desc)
+                {
+                    if (Resource || Desc.has_value())
+                    {
+                        RHI::Views::UnorderedAccess View{ *DescriptorHeap };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
+                    }
+                },
+                [DescriptorHeap, &Resource, DescriptorOffset](
+                    const RHI::RTVDescOpt& Desc)
+                {
+                    if (Resource || Desc.has_value())
+                    {
+                        RHI::Views::RenderTarget View{ *DescriptorHeap };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                    }
+                },
+                [DescriptorHeap, &Resource, DescriptorOffset](
+                    const RHI::DSVDescOpt& Desc)
+                {
+                    if (Resource || Desc.has_value())
+                    {
+                        RHI::Views::DepthStencil View{ *DescriptorHeap };
+                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
+                    }
+                } },
+            Desc);
+    }
+
+    void Material::SetSampler(
+        const StringU8&         Name,
+        const RHI::SamplerDesc& Desc,
+        uint32_t                ArrayIndex)
+    {
+        SamplerEntry*         Sampler        = nullptr;
+        DescriptorHeapHandle* DescriptorHeap = nullptr;
+
+        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
+            Iter != m_LocalParameters.LocalEntries.end())
+        {
+            Sampler        = std::get_if<SamplerEntry>(&Iter->second);
+            DescriptorHeap = &m_LocalParameters.Descriptors.SamplerDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
+                 Iter != m_SharedParameters->SharedEntries.end())
+        {
+            Sampler        = std::get_if<SamplerEntry>(&Iter->second);
+            DescriptorHeap = &m_SharedParameters->Descriptors.SamplerDescriptors;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "Failed to find sampler: {}", Name);
+            return;
+        }
+
+        if (!Sampler)
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a sampler", Name);
+            return;
+        }
+
+        uint32_t DescriptorOffset  = ArrayIndex + Sampler->Offset;
+        Sampler->Descs[ArrayIndex] = Desc;
+        if (Desc)
+        {
+            RHI::Views::Sampler View{ *DescriptorHeap };
+            View.Bind(Desc, DescriptorOffset);
+        }
+    }
+
+    void Material::SetConstant(
+        const std::string& Name,
+        const void*        Data,
+        size_t             Size,
+        uint32_t           Offset)
+    {
+        auto Iter = m_SharedParameters->SharedEntries.find(Name);
+        if (Iter == m_SharedParameters->SharedEntries.end())
+        {
+            NEON_WARNING_TAG("Material", "Failed to find constant: {}", Name);
+            return;
+        }
+
+        if (auto Constant = std::get_if<ConstantEntry>(&Iter->second))
+        {
+            std::copy_n(std::bit_cast<uint8_t*>(Data), Size, m_SharedParameters->ConstantData.get() + Offset);
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a constant", Name);
+        }
+    }
+
+    void Material::SetResourceView(
+        const std::string&     Name,
+        RHI::GpuResourceHandle Handle)
+    {
+        auto Iter = m_SharedParameters->SharedEntries.find(Name);
+        if (Iter == m_SharedParameters->SharedEntries.end())
+        {
+            NEON_WARNING_TAG("Material", "Failed to find resource view: {}", Name);
+            return;
+        }
+
+        if (auto Root = std::get_if<RootEntry>(&Iter->second))
+        {
+            Root->Handle = Handle;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a resource view", Name);
+        }
+    }
+
+    void Material::SetDynamicResourceView(
+        const StringU8&          Name,
+        RHI::CstResourceViewType Type,
+        const void*              Data,
+        size_t                   Size)
+    {
+        const uint32_t Alignment =
+            Type == RHI::CstResourceViewType::Cbv ? 256 : 1;
+
+        using PoolBufferType = RHI::IGlobalBufferPool::BufferType;
+
+        PoolBufferType BufferType;
+        switch (Type)
+        {
+        case RHI::CstResourceViewType::Cbv:
+        case RHI::CstResourceViewType::Srv:
+            BufferType = PoolBufferType::ReadWriteGPUR;
+            break;
+        case RHI::CstResourceViewType::Uav:
+            BufferType = PoolBufferType::ReadWriteGPURW;
+            break;
+        default:
+            std::unreachable();
+        }
+
+        RHI::UBufferPoolHandle Buffer(
+            Size,
+            Alignment,
+            BufferType);
+
+        Buffer.AsUpload().Write(0, Data, Size);
+
+        SetResourceView(
+            Name,
+            Buffer.GetGpuHandle());
+    }
+
+    void Material::SetResourceSize(
+        const StringU8& Name,
+        uint32_t        Size)
+    {
+        SamplerEntry*    Sampler    = nullptr;
+        DescriptorEntry* Descriptor = nullptr;
+
+        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
+            Iter != m_LocalParameters.LocalEntries.end())
+        {
+            Sampler    = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = std::get_if<DescriptorEntry>(&Iter->second);
+        }
+        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
+                 Iter != m_SharedParameters->SharedEntries.end())
+        {
+            Sampler    = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = std::get_if<DescriptorEntry>(&Iter->second);
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
+            return;
+        }
+
+        if (Descriptor)
+        {
+            Descriptor->Count = Size;
+        }
+        else if (Sampler)
+        {
+            Sampler->Count = Size;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "'{}' is not a resource nor sampler", Name);
+        }
+    }
 
     //
 

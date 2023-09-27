@@ -430,8 +430,7 @@ namespace Neon::Asset
             {
                 for (auto& [Type, Texture] : Textures)
                 {
-                    // TODO:
-                    //Material->SetTexture(TextureKvList[Type], Texture.Get());
+                    Material->SetTexture(TextureKvList[Type], Texture.Get());
                 }
             }
 

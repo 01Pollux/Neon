@@ -3,6 +3,10 @@
 
 namespace Neon::RHI
 {
+    const SamplerDesc SamplerDesc::Null{
+        .Filter = ESamplerFilter::Unknown
+    };
+
     void ResourceDesc::SetClearValue(
         RHI::EResourceFormat ResFormat,
         const Color4&        Color)
