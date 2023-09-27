@@ -34,7 +34,7 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the underlying heap.
         /// </summary>
-        [[nodiscard]] ID3D12DescriptorHeap* GetHeap();
+        [[nodiscard]] Dx12DescriptorHeap* GetHeap();
 
     private:
         std::mutex m_HeapBlockMutex;
@@ -102,7 +102,7 @@ namespace Neon::RHI
         /// <summary>
         /// Returns the underlying heap.
         /// </summary>
-        [[nodiscard]] ID3D12DescriptorHeap* GetHeap();
+        [[nodiscard]] Dx12DescriptorHeap* GetHeap();
 
         /// <summary>
         /// Resets the allocator.

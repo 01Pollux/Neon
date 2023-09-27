@@ -34,8 +34,8 @@ namespace Neon::RHI
         ThrowIfFailed(Iter->Dx12CmdList->Reset(Allocator, nullptr));
 
         ID3D12DescriptorHeap* Heaps[]{
-            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap(),
-            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap()->Get(),
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()->Get()
         };
         Iter->Dx12CmdList->SetDescriptorHeaps(2, Heaps);
 
@@ -69,8 +69,8 @@ namespace Neon::RHI
         ThrowIfFailed(CommandData->Dx12CmdList->Reset(Allocator, nullptr));
 
         ID3D12DescriptorHeap* Heaps[]{
-            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap(),
-            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView))->GetHeap()->Get(),
+            static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler))->GetHeap()->Get()
         };
         CommandData->Dx12CmdList->SetDescriptorHeaps(2, Heaps);
 

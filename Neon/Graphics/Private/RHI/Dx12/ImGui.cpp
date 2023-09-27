@@ -61,7 +61,7 @@ namespace Neon::RHI::ImGuiRHI
         auto FrameDescriptor  = static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView));
         auto Handle           = StagedDescriptor->Allocate(1);
 
-        BackendData->pd3dSrvDescHeap       = FrameDescriptor->GetHeap();
+        BackendData->pd3dSrvDescHeap       = FrameDescriptor->GetHeap()->Get();
         BackendData->hFontSrvCpuDescHandle = { Handle.GetCpuHandle().Value };
         BackendData->hFontSrvGpuDescHandle = { Handle.GetCpuHandle().Value };
 
@@ -114,6 +114,7 @@ namespace Neon::RHI::ImGuiRHI
         }
 
         // Copy the texture descriptors to the frame descriptor heap.
+        auto FrameDescriptor = static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView));
         if (!s_DrawCommands.empty()) [[unlikely]]
         {
             auto FrameDescriptor = IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView);

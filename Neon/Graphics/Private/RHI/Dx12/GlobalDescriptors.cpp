@@ -60,9 +60,9 @@ namespace Neon::RHI
         m_HeapBlock.Allocator = Allocator::BuddyAllocator(m_HeapBlock.Heap.GetSize());
     }
 
-    ID3D12DescriptorHeap* Dx12DFrameDescriptorHeapBuddyAllocator::GetHeap()
+    Dx12DescriptorHeap* Dx12DFrameDescriptorHeapBuddyAllocator::GetHeap()
     {
-        return m_HeapBlock.Heap.Get();
+        return &m_HeapBlock.Heap;
     }
 
     //
@@ -173,7 +173,7 @@ namespace Neon::RHI
         return m_Allocator.Allocate(Count);
     }
 
-    ID3D12DescriptorHeap* Dx12FrameDescriptorHeap::GetHeap()
+    Dx12DescriptorHeap* Dx12FrameDescriptorHeap::GetHeap()
     {
         return m_Allocator.GetHeap();
     }
