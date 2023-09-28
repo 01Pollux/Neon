@@ -29,7 +29,7 @@ namespace Neon::Mdl
         /// <summary>
         /// Get submesh index of the mesh.
         /// </summary>
-        [[nodiscard]] uint32_t GetSubmeshIndex() const noexcept
+        [[nodiscard]] uint32_t GetDataIndex() const noexcept
         {
             return m_Submesh;
         }
@@ -37,7 +37,7 @@ namespace Neon::Mdl
         /// <summary>
         /// Get submesh index of the mesh.
         /// </summary>
-        [[nodiscard]] const auto& GetSubmesh() const noexcept
+        [[nodiscard]] const auto& GetData() const noexcept
         {
             return m_Model->GetSubmesh(m_Submesh);
         }

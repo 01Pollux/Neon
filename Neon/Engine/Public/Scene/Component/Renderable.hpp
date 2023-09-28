@@ -21,7 +21,18 @@ namespace Neon::Scene::Component
             return InstanceId != std::numeric_limits<uint32_t>::max();
         }
 
+        /// <summary>
+        /// Get the instance ID of the renderable in GPUScene.
+        /// </summary>
+        [[nodiscard]] uint32_t GetInstanceId() const noexcept
+        {
+            return InstanceId;
+        }
+
     private:
+        /// <summary>
+        /// Instance ID of the renderable in GPUScene.
+        /// </summary>
         uint32_t InstanceId = std::numeric_limits<uint32_t>::max();
     };
 } // namespace Neon::Scene::Component

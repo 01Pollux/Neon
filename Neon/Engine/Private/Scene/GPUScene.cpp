@@ -29,6 +29,9 @@ namespace Neon::Scene
 
     GPUScene::GPUScene()
     {
+        // Reserve at least one page.
+        m_PagesInstances.emplace_back(0);
+
         EntityWorld::Get()
             .observer<Component::Transform, Component::Renderable>()
             .term_at(1)

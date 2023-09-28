@@ -66,6 +66,8 @@ namespace Neon::RG
 
         m_Storage.UpdateOutputImage(CameraBuffer.ScreenResolution);
         m_Storage.UnmapFrameData();
+
+        m_Storage.GetSceneContext().Update();
     }
 
     void RenderGraph::Draw()
