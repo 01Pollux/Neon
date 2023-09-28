@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <Scene/EntityWorld.hpp>
+#include <Scene/GPUScene.hpp>
 #include <RHI/Commands/Context.hpp>
 
 namespace Neon
@@ -53,9 +54,19 @@ namespace Neon::Runtime
         {
             return m_PhysicsWorld.get();
         }
+        
+        /// <summary>
+        /// Get the GPU scene.
+        /// </summary>
+        [[nodiscard]] Scene::GPUScene* GetGPUScene() 
+        {
+            return &m_GpuScene;
+        }
 
     private:
         UPtr<Physics::World> m_PhysicsWorld;
+
+        Scene::GPUScene m_GpuScene;
 
         flecs::query<
             Scene::Component::Camera>

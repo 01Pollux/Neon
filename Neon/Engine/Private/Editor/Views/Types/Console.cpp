@@ -8,6 +8,7 @@
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
+#include <Scene/Component/Renderable.hpp>
 
 namespace Neon::Editor::Views
 {
@@ -31,6 +32,7 @@ namespace Neon::Editor::Views
         {
             Entity.emplace<Scene::Component::Transform>(Node.Transform);
             Entity.emplace<Scene::Component::MeshInstance>(Mdl::Mesh{ Model, Node.Submeshes[0] });
+            Entity.emplace<Scene::Component::Renderable>();
 
             break;
         }
@@ -45,6 +47,7 @@ namespace Neon::Editor::Views
                 flecs::entity Child = Scene::EntityHandle::Create(SceneRoot, Entity, Name.c_str());
                 Child.emplace<Scene::Component::Transform>(Node.Transform);
                 Child.emplace<Scene::Component::MeshInstance>(Mdl::Mesh{ Model, SubmeshIdx });
+                Child.emplace<Scene::Component::Renderable>();
             }
 
             break;

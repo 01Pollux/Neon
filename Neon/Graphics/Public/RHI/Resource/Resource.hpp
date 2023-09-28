@@ -309,16 +309,16 @@ namespace Neon::RHI
     class IGpuResource
     {
     public:
-        static constexpr auto DefaultResourcestate         = RHI::MResourceState_Common;
-        static constexpr auto DefaultUploadResourcestate   = RHI::MResourceState_GenericRead;
-        static constexpr auto DefaultReadbackResourcestate = BitMask_Or(RHI::EResourceState::CopyDest);
+        static constexpr auto DefaultResourceState         = RHI::MResourceState_Common;
+        static constexpr auto DefaultUploadResourceState   = RHI::MResourceState_GenericRead;
+        static constexpr auto DefaultReadbackResourceState = BitMask_Or(RHI::EResourceState::CopyDest);
 
         struct InitDesc
         {
             const wchar_t*                   Name         = nullptr;
             std::span<const SubresourceDesc> Subresources = {};
             std::future<void>*               CopyTask     = nullptr;
-            RHI::MResourceState              InitialState = DefaultResourcestate;
+            RHI::MResourceState              InitialState = DefaultResourceState;
         };
 
         /// <summary>
@@ -515,7 +515,7 @@ namespace Neon::RHI
     class GpuBuffer
     {
     public:
-        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
+        static constexpr auto DefaultResourceState = RHI::MResourceState_Common;
         GpuBuffer(
             IGpuResource* Resource = nullptr) :
             m_Resource(Resource)
@@ -618,7 +618,7 @@ namespace Neon::RHI
     class GpuUploadBuffer
     {
     public:
-        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
+        static constexpr auto DefaultResourceState = RHI::MResourceState_Common;
         GpuUploadBuffer(
             IGpuResource* Resource = nullptr) :
             m_Resource(Resource)
@@ -759,7 +759,7 @@ namespace Neon::RHI
     class GpuReadbackBuffer
     {
     public:
-        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
+        static constexpr auto DefaultResourceState = RHI::MResourceState_Common;
         GpuReadbackBuffer(
             IGpuResource* Resource = nullptr) :
             m_Resource(Resource)
@@ -900,7 +900,7 @@ namespace Neon::RHI
     class GpuTexture
     {
     public:
-        static constexpr auto DefaultResourcestate = RHI::MResourceState_Common;
+        static constexpr auto DefaultResourceState = RHI::MResourceState_Common;
         GpuTexture(
             IGpuResource* Resource = nullptr) :
             m_Resource(Resource)
@@ -1060,7 +1060,7 @@ namespace Neon::RHI
             const ResourceDesc&              Desc,
             std::span<const SubresourceDesc> Subresources = {},
             const wchar_t*                   Name         = nullptr,
-            RHI::MResourceState              InitialState = IGpuResource::DefaultResourcestate)
+            RHI::MResourceState              InitialState = IGpuResource::DefaultResourceState)
         {
             std::future<void>      Future;
             IGpuResource::InitDesc Init{
@@ -1081,7 +1081,7 @@ namespace Neon::RHI
             const ResourceDesc&    Desc,
             const SubresourceDesc& Subresource,
             const wchar_t*         Name         = nullptr,
-            RHI::MResourceState    InitialState = IGpuResource::DefaultResourcestate)
+            RHI::MResourceState    InitialState = IGpuResource::DefaultResourceState)
         {
             std::future<void>      Future;
             IGpuResource::InitDesc Init{
@@ -1101,7 +1101,7 @@ namespace Neon::RHI
         SyncGpuResourceT(
             const TextureRawImage& ImageData,
             const wchar_t*         Name         = nullptr,
-            RHI::MResourceState    InitialState = IGpuResource::DefaultResourcestate)
+            RHI::MResourceState    InitialState = IGpuResource::DefaultResourceState)
         {
             std::future<void>      Future;
             IGpuResource::InitDesc Init{
@@ -1120,7 +1120,7 @@ namespace Neon::RHI
             const void*         Data,
             const wchar_t*      Name         = nullptr,
             RHI::MResourceFlags Flags        = {},
-            RHI::MResourceState InitialState = IGpuResource::DefaultResourcestate)
+            RHI::MResourceState InitialState = IGpuResource::DefaultResourceState)
         {
             return SyncGpuResourceT(
                 ResourceDesc::Buffer(Stride * Count, Flags),

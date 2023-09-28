@@ -49,6 +49,7 @@ namespace Neon::Runtime
                     {
                         m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject.get());
                     }
+                    // TODO: This may cause a leak if we set multiple times.
                     else if (Iter.event() == flecs::OnSet)
                     {
                         m_PhysicsWorld->RemovePhysicsObject(Object.BulletObject.get());
@@ -64,15 +65,11 @@ namespace Neon::Runtime
             .each(
                 [this](flecs::iter& Iter, size_t Idx, Component::ScriptInstance& Instance)
                 {
-                    if (Iter.event() == flecs::OnRemove)
+                    if (Instance.Handle)
                     {
-                        if (Instance.Handle)
-                        {
-                            Instance.Handle.Free();
-                            Instance.Handle = {};
-                        }
+                        Instance.Handle.Free();
                     }
-                    else if (Iter.event() == flecs::OnSet)
+                    if (Iter.event() == flecs::OnSet)
                     {
                         Instance.Handle = Scripting::CreateNeonScriptObject(
                             Instance.AssemblyName.c_str(),

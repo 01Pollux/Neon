@@ -3,10 +3,17 @@
 #include <Scene/Component/Component.hpp>
 #include <Script/Handle.hpp>
 
+namespace Neon::Runtime
+{
+    class GameLogic;
+} // namespace Neon::Runtime
+
 namespace Neon::Scene::Component
 {
     struct ScriptInstance
     {
+        friend class Runtime::GameLogic;
+
         NEON_COMPONENT_SERIALIZE_IMPL
         {
             Archive& AssemblyName& ClassName;
@@ -20,6 +27,7 @@ namespace Neon::Scene::Component
         StringU8 AssemblyName;
         StringU8 ClassName;
 
+    private:
         Scripting::GCHandle Handle;
     };
 } // namespace Neon::Scene::Component

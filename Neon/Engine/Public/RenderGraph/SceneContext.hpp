@@ -30,10 +30,5 @@ namespace Neon::RG
 
     private:
         const GraphStorage& m_Storage;
-
-        flecs::query<
-            Scene::Component::Transform,
-            Scene::Component::MeshInstance>
-            m_MeshQuery;
     };
 } // namespace Neon::RG
