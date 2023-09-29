@@ -14,17 +14,26 @@ namespace Neon::RG
         ResourceResolver& Resolver)
     {
         auto Desc = RHI::ResourceDesc::Tex2D(
-            RHI::EResourceFormat::R24G8_Typeless,
+            RHI::EResourceFormat::R32_Typeless,
             0, 0, 1, 1);
 
         Desc.ClearValue = RHI::ClearOperation{
-            .Format = RHI::EResourceFormat::D24_UNorm_S8_UInt,
-            .Value  = Colors::Black
+            .Format = RHI::EResourceFormat::D32_Float,
+            .Value  = RHI::ClearOperation::DepthStencil{ 1.0f, 0 }
         };
 
+        ResourceId DepthBuffer("DepthBuffer");
+
         Resolver.CreateWindowTexture(
-            ResourceId("DepthBuffer"),
+            DepthBuffer,
             Desc);
+
+        Resolver.WriteDepthStencil(
+            DepthBuffer.CreateView("DepthPrePass"),
+            RHI::DSVDesc{
+                .View      = RHI::DSVDesc::Texture2D{},
+                .ClearType = RHI::EDSClearType::Depth,
+                .Format    = RHI::EResourceFormat::D32_Float });
     }
 
     void DepthPrepass::DispatchTyped(

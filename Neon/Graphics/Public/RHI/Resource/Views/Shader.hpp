@@ -22,11 +22,22 @@ namespace Neon::RHI::Views
         /// </summary>
         void Append(
             IGpuResource* Buffer,
+            size_t        Stride,
+            size_t        Size)
+        {
+            Append(Buffer->GetHandle(), Stride, Size);
+        }
+
+        /// <summary>
+        /// Append a vertex buffer view.
+        /// </summary>
+        void Append(
+            IGpuResource* Buffer,
             size_t        Offset,
             size_t        Stride,
             size_t        Size)
         {
-            Append({ Buffer->GetHandle().Value + Offset }, Stride, Size);
+            Append(Buffer->GetHandle(), Offset, Stride, Size);
         }
 
         /// <summary>
@@ -43,13 +54,36 @@ namespace Neon::RHI::Views
         /// <summary>
         /// Append a vertex buffer view.
         /// </summary>
+        void Append(
+            GpuResourceHandle Handle,
+            size_t            Offset,
+            size_t            Stride,
+            size_t            Size)
+        {
+            m_Views.emplace_back(GpuResourceHandle{ Handle.Value + Offset * Stride }, uint32_t(Stride), uint32_t(Size));
+        }
+
+        /// <summary>
+        /// Append a vertex buffer view.
+        /// </summary>
         template<typename _Ty>
-        void AppendOffset(
+        void Append(
+            GpuResourceHandle BaseHandle,
+            uint32_t          Count)
+        {
+            Append(BaseHandle, sizeof(_Ty), Count * sizeof(_Ty));
+        }
+
+        /// <summary>
+        /// Append a vertex buffer view.
+        /// </summary>
+        template<typename _Ty>
+        void Append(
             GpuResourceHandle BaseHandle,
             uint32_t          Offset,
             uint32_t          Count)
         {
-            Append({ BaseHandle.Value + Offset * sizeof(_Ty) }, sizeof(_Ty), sizeof(_Ty) * Count);
+            Append(BaseHandle, Offset, sizeof(_Ty), Count * sizeof(_Ty));
         }
 
         /// <summary>
@@ -76,20 +110,37 @@ namespace Neon::RHI::Views
 
         Index() = default;
 
-        Index(
+        constexpr Index(
+            IGpuResource* Buffer,
+            size_t        Size,
+            bool          Is32Bit = false) :
+            Index(Buffer->GetHandle(), Size, Is32Bit)
+        {
+        }
+
+        constexpr Index(
             IGpuResource* Buffer,
             size_t        Offset,
             size_t        Size,
             bool          Is32Bit = false) :
-            Index({ Buffer->GetHandle().Value + Offset }, Size, Is32Bit)
+            Index(Buffer->GetHandle(), Offset, Size, Is32Bit)
         {
         }
 
-        Index(
+        constexpr Index(
             GpuResourceHandle Handle,
             size_t            Size,
             bool              Is32Bit = false) :
             m_View{ Handle, uint32_t(Size), Is32Bit }
+        {
+        }
+
+        constexpr Index(
+            GpuResourceHandle Handle,
+            size_t            Offset,
+            size_t            Size,
+            bool              Is32Bit = false) :
+            m_View{ { Handle.Value + Offset * (Is32Bit ? sizeof(uint32_t) : sizeof(uint16_t)) }, uint32_t(Size), Is32Bit }
         {
         }
 
@@ -107,29 +158,50 @@ namespace Neon::RHI::Views
 
     struct IndexU16 : public Index
     {
-        IndexU16() = default;
+        constexpr IndexU16() = default;
 
-        IndexU16(
+        constexpr IndexU16(
             IGpuResource* Buffer,
-            uint32_t      Offset,
             uint32_t      Count) :
-            Index(Buffer, Offset * sizeof(uint32_t), Count * sizeof(uint16_t), false)
+            Index(Buffer, Count * sizeof(uint16_t), false)
         {
         }
 
-        IndexU16(
+        constexpr IndexU16(
+            IGpuResource* Buffer,
+            uint32_t      Offset,
+            uint32_t      Count) :
+            Index(Buffer, Offset * sizeof(uint16_t), Count * sizeof(uint16_t), false)
+        {
+        }
+
+        constexpr IndexU16(
             GpuResourceHandle Handle,
             uint32_t          Count) :
             Index(Handle, Count * sizeof(uint16_t), false)
+        {
+        }
+
+        constexpr IndexU16(
+            GpuResourceHandle Handle,
+            uint32_t          Offset,
+            uint32_t          Count) :
+            Index(Handle, Offset * sizeof(uint16_t), Count * sizeof(uint16_t), false)
         {
         }
     };
 
     struct IndexU32 : public Index
     {
-        IndexU32() = default;
+        constexpr IndexU32() = default;
 
-        IndexU32(
+        constexpr IndexU32(
+            IGpuResource* Buffer,
+            uint32_t      Count) :
+            Index(Buffer, Count * sizeof(uint32_t), true)
+        {
+        }
+        constexpr IndexU32(
             IGpuResource* Buffer,
             uint32_t      Offset,
             uint32_t      Count) :
@@ -137,10 +209,18 @@ namespace Neon::RHI::Views
         {
         }
 
-        IndexU32(
+        constexpr IndexU32(
             GpuResourceHandle Handle,
             uint32_t          Count) :
             Index(Handle, Count * sizeof(uint32_t), true)
+        {
+        }
+
+        constexpr IndexU32(
+            GpuResourceHandle Handle,
+            uint32_t          Offset,
+            uint32_t          Count) :
+            Index(Handle, Offset * sizeof(uint32_t), Count * sizeof(uint32_t), true)
         {
         }
     };

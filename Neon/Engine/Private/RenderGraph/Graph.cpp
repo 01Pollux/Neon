@@ -482,7 +482,7 @@ namespace Neon::RG
                         Stencil = ClearValue->Stencil;
                     }
 
-                    if (ViewDesc)
+                    if (ViewDesc && ViewDesc->ClearType != RHI::EDSClearType::Ignore)
                     {
 #if NEON_DEBUG
                         if (!ViewDesc->ForceDepth && !ClearValue)
@@ -531,7 +531,6 @@ namespace Neon::RG
                             std::unreachable();
                         }
                     }
-
 #if NEON_DEBUG
                     else
                     {

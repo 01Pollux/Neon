@@ -157,11 +157,11 @@ namespace Neon::RHI
                             bool WasInserted = false;
                             if (Descriptor.Instanced)
                             {
-                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(SamplerMap)).second;
+                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(SamplerMap)).second;
                             }
                             else
                             {
-                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(SamplerMap)).second;
+                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(SamplerMap)).second;
                             }
                             NEON_ASSERT(WasInserted, "Duplicate descriptor sampler table");
                         }
@@ -191,11 +191,11 @@ namespace Neon::RHI
                             bool WasInserted = false;
                             if (Descriptor.Instanced)
                             {
-                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(DescriptorMap)).second;
+                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(DescriptorMap)).second;
                             }
                             else
                             {
-                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(DescriptorMap)).second;
+                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(DescriptorMap)).second;
                             }
                             NEON_ASSERT(WasInserted, "Duplicate descriptor table");
                         }
@@ -240,7 +240,7 @@ namespace Neon::RHI
                 .Topology      = Builder.Topology(),
 
                 .StripCut = Builder.StripCut(),
-                .DSFormat = EResourceFormat::D24_UNorm_S8_UInt
+                .DSFormat = EResourceFormat::D32_Float
             };
 
             {

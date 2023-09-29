@@ -62,7 +62,6 @@ namespace Neon::RG
 
             CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
             CommandList->SetPipelineState(PipelineState);
-
             FirstMaterial->BindSharedParams(CommandList);
 
             for (auto InstanceId : InstanceList)
@@ -81,14 +80,17 @@ namespace Neon::RG
 
                 RHI::Views::Vertex VtxView;
                 VtxView.Append(
-                    MeshModel->GetVertexBuffer()->GetHandle(MeshData.VertexOffset),
+                    MeshModel->GetVertexBuffer()->GetHandle(),
+                    MeshData.VertexOffset,
                     sizeof(Mdl::MeshVertex),
                     MeshData.VertexCount);
 
                 RHI::Views::IndexU32 IdxView(
-                    MeshModel->GetIndexBuffer()->GetHandle(MeshData.IndexOffset),
+                    MeshModel->GetIndexBuffer()->GetHandle(),
+                    MeshData.IndexOffset,
                     MeshData.IndexCount);
 
+                CommandList->SetPrimitiveTopology(MeshData.Topology);
                 CommandList->SetIndexBuffer(IdxView);
                 CommandList->SetVertexBuffer(0, VtxView);
                 CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
