@@ -1,5 +1,6 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/SceneContext.hpp>
+#include <RenderGraph/Storage.hpp>
 
 #include <Runtime/GameLogic.hpp>
 #include <Scene/EntityWorld.hpp>
@@ -33,6 +34,27 @@ namespace Neon::RG
         UpdateInstances();
     }
 
+    //
+
+    struct PerMaterialData
+    {
+        Vector3  Albedo;
+        uint32_t AlbedoMapIndex;
+
+        Vector3  Specular;
+        uint32_t SpecularMapIndex;
+
+        Vector3  Emissive;
+        uint32_t EmissiveMapIndex;
+
+        uint32_t NormalMapIndex;
+
+        // MATERIAL_FLAG_*
+        uint32_t Flags;
+    };
+
+    //
+
     void SceneContext::Render(
         RHI::ICommandList* CommandList,
         RenderType         Type) const
@@ -60,9 +82,13 @@ namespace Neon::RG
                 break;
             }
 
+            FirstMaterial->SetResourceView(
+                "_FrameConstant",
+                m_Storage.GetFrameDataHandle());
+
             CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
             CommandList->SetPipelineState(PipelineState);
-            FirstMaterial->BindSharedParams(CommandList);
+            // FirstMaterial->BindSharedParams(CommandList);
 
             for (auto InstanceId : InstanceList)
             {
@@ -79,16 +105,45 @@ namespace Neon::RG
                 MeshMaterial->BindLocalParams(CommandList);
 
                 RHI::Views::Vertex VtxView;
-                VtxView.Append(
+                VtxView.Append<Mdl::MeshVertex>(
                     MeshModel->GetVertexBuffer()->GetHandle(),
                     MeshData.VertexOffset,
-                    sizeof(Mdl::MeshVertex),
                     MeshData.VertexCount);
 
                 RHI::Views::IndexU32 IdxView(
                     MeshModel->GetIndexBuffer()->GetHandle(),
                     MeshData.IndexOffset,
                     MeshData.IndexCount);
+
+                if (1)
+                {
+                    auto Buffer0 = RHI::IGpuResource::Create(
+                        RHI::ResourceDesc::Buffer(
+                            sizeof(Matrix4x4),
+                            {},
+                            RHI::GraphicsBufferType::Upload));
+                    auto Buffer1 = RHI::IGpuResource::Create(
+                        RHI::ResourceDesc::Buffer(
+                            sizeof(PerMaterialData),
+                            {},
+                            RHI::GraphicsBufferType::Upload));
+
+                    auto Ptr0 = Buffer0->Map();
+                    auto Ptr1 = Buffer1->Map();
+
+                    PerMaterialData* MaterialData = std::bit_cast<PerMaterialData*>(Ptr1);
+                    *MaterialData                 = {};
+
+                    MaterialData->Albedo = Colors::DarkGreen;
+
+                    Matrix4x4* World = std::bit_cast<Matrix4x4*>(Ptr0);
+                    *World           = glm::transpose(MeshData.Transform);
+
+                    MeshMaterial->SetResourceView("_PerInstanceData", Buffer0->GetHandle());
+                    MeshMaterial->SetResourceView("_PerMaterialData", Buffer1->GetHandle());
+
+                    MeshMaterial->BindSharedParams(CommandList);
+                }
 
                 CommandList->SetPrimitiveTopology(MeshData.Topology);
                 CommandList->SetIndexBuffer(IdxView);

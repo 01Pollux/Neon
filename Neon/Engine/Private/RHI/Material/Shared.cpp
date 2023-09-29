@@ -39,9 +39,9 @@ namespace Neon::RHI
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
-                        .AddConstantBufferView("Constant", 0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
+                        .AddShaderResourceView("_PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("_PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
                             "TextureMaps",
                             RHI::RootDescriptorTable(true)
