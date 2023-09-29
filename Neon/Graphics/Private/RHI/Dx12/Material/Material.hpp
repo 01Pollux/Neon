@@ -49,6 +49,13 @@ namespace Neon::RHI
         bool IsCompute() const noexcept override;
 
     public:
+        void BindSharedParams(
+            ICommandList* CommandList) override;
+
+        void BindLocalParams(
+            ICommandList* CommandList) override;
+
+    public:
         void SetResource(
             const StringU8&                Name,
             const Ptr<RHI::IGpuResource>&  Resource,
@@ -120,8 +127,22 @@ namespace Neon::RHI
             uint32_t Count;
         };
 
-        using SharedEntryVariant = std::variant<ConstantEntry, RootEntry, DescriptorEntry, SamplerEntry>;
-        using LocalEntryVariant  = std::variant<DescriptorEntry, SamplerEntry>;
+        using DescriptorVariant = std::variant<DescriptorEntry, SamplerEntry>;
+
+        struct DescriptorVariantMap
+        {
+            std::map<StringU8, DescriptorVariant> Entries;
+
+            uint32_t Offset;
+
+            [[nodiscard]] bool IsSampler() const noexcept
+            {
+                return Entries.begin()->second.index() == 1;
+            }
+        };
+
+        using SharedEntryVariant = std::variant<ConstantEntry, RootEntry, DescriptorVariantMap>;
+        using LocalEntryVariant  = DescriptorVariantMap;
 
         struct UnqiueDescriptorHeapHandle
         {
@@ -144,6 +165,22 @@ namespace Neon::RHI
             /// </summary>
             void Release();
         };
+
+    private:
+        /// <summary>
+        /// Split resource name into resource group name and resource name.
+        /// </summary>
+        [[nodiscard]] std::pair<StringU8, StringU8> SplitResourceName(
+            const StringU8& Name);
+
+        /// <summary>
+        /// Get descriptor variant from shared/local parameters.
+        /// </summary>
+        DescriptorVariant* GetDescriptorVariant(
+            const StringU8&              Name,
+            const StringU8&              EntryName,
+            DescriptorVariantMap**       VariantMap     = nullptr,
+            UnqiueDescriptorHeapHandle** DescriptorHeap = nullptr);
 
     public:
         struct SharedParameters

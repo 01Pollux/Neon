@@ -214,20 +214,22 @@ namespace Neon::RHI
         {
             boost::apply_visitor(
                 VariantVisitor{
-                    [this](const RootParameter::DescriptorTable& Table)
+                    [this, &ParamName](const RootParameter::DescriptorTable& Table)
                     {
                         ParamDescriptor FinalParam{
-                            .Instanced = Table.Instanced()
+                            { .Name = ParamName },
                         };
+                        FinalParam.Instanced = Table.Instanced();
 
                         uint32_t Size = 0;
 
                         for (auto& [Name, Range] : Table.GetRanges())
                         {
                             ParamDescriptorRange Param{
-                                .Offset = Range.Offset,
-                                .Size   = Range.DescriptorCount,
-                                .Type   = Range.Type
+                                { .Name = Name },
+                                Range.Offset,
+                                Range.DescriptorCount,
+                                Range.Type
                             };
 
                             if (!FinalParam.NamedRanges.emplace(Name, Param).second)
@@ -243,17 +245,19 @@ namespace Neon::RHI
                         FinalParam.Size = Size;
                         m_Params.emplace_back(std::move(FinalParam));
                     },
-                    [this](const RootParameter::Constants& Constants)
+                    [this, &ParamName](const RootParameter::Constants& Constants)
                     {
                         ParamConstant FinalParam{
-                            .Num32BitValues = uint8_t(Constants.Num32BitValues)
+                            { .Name = ParamName },
+                            uint8_t(Constants.Num32BitValues)
                         };
                         m_Params.emplace_back(std::move(FinalParam));
                     },
-                    [this](const RootParameter::Root& RootParam)
+                    [this, &ParamName](const RootParameter::Root& RootParam)
                     {
                         ParamRoot FinalParam{
-                            .Type = RootParam.Type
+                            { .Name = ParamName },
+                            RootParam.Type
                         };
                         m_Params.emplace_back(std::move(FinalParam));
                     } },

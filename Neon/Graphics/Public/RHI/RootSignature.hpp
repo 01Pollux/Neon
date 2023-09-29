@@ -568,24 +568,29 @@ namespace Neon::RHI
     class IRootSignature
     {
     public:
-        struct ParamDescriptorRange
+        struct ParamRef
+        {
+            StringU8 Name;
+        };
+
+        struct ParamDescriptorRange : ParamRef
         {
             uint32_t             Offset;
             uint32_t             Size;
             DescriptorTableParam Type;
         };
 
-        struct ParamConstant
+        struct ParamConstant : ParamRef
         {
             uint8_t Num32BitValues;
         };
 
-        struct ParamRoot
+        struct ParamRoot : ParamRef
         {
             RootParameter::RootType Type;
         };
 
-        struct ParamDescriptor
+        struct ParamDescriptor : ParamRef
         {
             std::unordered_map<StringU8, ParamDescriptorRange> NamedRanges;
 
@@ -605,6 +610,7 @@ namespace Neon::RHI
 
         using ParamInfo = boost::variant<ParamConstant, ParamRoot, ParamDescriptor>;
 
+    public:
         [[nodiscard]] static Ptr<IRootSignature> Create(
             const RootSignatureBuilder& Builder);
 

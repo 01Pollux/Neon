@@ -167,16 +167,6 @@ namespace Neon::RHI
 
     public:
         /// <summary>
-        /// Allocate from dynamic buffer and set resource view in root signature
-        /// </summary>
-        virtual void SetDynamicResourceView(
-            bool                IsDirect,
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            const void*         Data,
-            size_t              Size) = 0;
-
-        /// <summary>
         /// Sets constants in root signature
         /// </summary>
         virtual void SetConstants(
@@ -214,12 +204,32 @@ namespace Neon::RHI
             GpuResourceHandle   Handle) = 0;
 
         /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        virtual void SetDynamicResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size) = 0;
+
+        /// <summary>
         /// Set descriptor table in root signature
         /// </summary>
         virtual void SetDescriptorTable(
             bool                IsDirect,
             uint32_t            RootIndex,
             GpuDescriptorHandle Handle) = 0;
+
+        /// <summary>
+        /// Allocate from frame descriptor and set descriptor table in root signature
+        /// </summary>
+        virtual void SetDynamicDescriptorTable(
+            bool                IsDirect,
+            uint32_t            RootIndex,
+            CpuDescriptorHandle Handle,
+            uint32_t            Size,
+            bool                IsSampler) = 0;
 
     public:
         /// <summary>
@@ -458,23 +468,6 @@ namespace Neon::RHI
 
     public:
         /// <summary>
-        /// Allocate from dynamic buffer and set resource view in root signature
-        /// </summary>
-        void SetDynamicResourceView(
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            const void*         Data,
-            size_t              Size)
-        {
-            m_CmdList->SetDynamicResourceView(
-                true,
-                Type,
-                RootIndex,
-                Data,
-                Size);
-        }
-
-        /// <summary>
         /// Sets constants in root signature
         /// </summary>
         void SetConstants(
@@ -524,6 +517,23 @@ namespace Neon::RHI
         }
 
         /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        void SetDynamicResourceView(
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size)
+        {
+            m_CmdList->SetDynamicResourceView(
+                true,
+                Type,
+                RootIndex,
+                Data,
+                Size);
+        }
+
+        /// <summary>
         /// Set descriptor table in root signature
         /// </summary>
         void SetDescriptorTable(
@@ -534,6 +544,24 @@ namespace Neon::RHI
                 true,
                 RootIndex,
                 Handle);
+        }
+
+        /// <summary>
+        /// Allocate from frame descriptor and set descriptor table in root signature
+        /// </summary>
+        void SetDynamicDescriptorTable(
+            bool                IsDirect,
+            uint32_t            RootIndex,
+            CpuDescriptorHandle Handle,
+            uint32_t            Size,
+            bool                IsSampler)
+        {
+            m_CmdList->SetDynamicDescriptorTable(
+                true,
+                RootIndex,
+                Handle,
+                Size,
+                IsSampler);
         }
 
     public:
@@ -819,23 +847,6 @@ namespace Neon::RHI
 
     public:
         /// <summary>
-        /// Allocate from dynamic buffer and set resource view in root signature
-        /// </summary>
-        void SetDynamicResourceView(
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            const void*         Data,
-            size_t              Size)
-        {
-            m_CmdList->SetDynamicResourceView(
-                false,
-                Type,
-                RootIndex,
-                Data,
-                Size);
-        }
-
-        /// <summary>
         /// Sets constants in root signature
         /// </summary>
         void SetConstants(
@@ -884,6 +895,23 @@ namespace Neon::RHI
         }
 
         /// <summary>
+        /// Allocate from dynamic buffer and set resource view in root signature
+        /// </summary>
+        void SetDynamicResourceView(
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size)
+        {
+            m_CmdList->SetDynamicResourceView(
+                false,
+                Type,
+                RootIndex,
+                Data,
+                Size);
+        }
+
+        /// <summary>
         /// Set descriptor table in root signature
         /// </summary>
         void SetDescriptorTable(
@@ -894,6 +922,24 @@ namespace Neon::RHI
                 false,
                 RootIndex,
                 Handle);
+        }
+
+        /// <summary>
+        /// Allocate from frame descriptor and set descriptor table in root signature
+        /// </summary>
+        void SetDynamicDescriptorTable(
+            bool                IsDirect,
+            uint32_t            RootIndex,
+            CpuDescriptorHandle Handle,
+            uint32_t            Size,
+            bool                IsSampler)
+        {
+            m_CmdList->SetDynamicDescriptorTable(
+                false,
+                RootIndex,
+                Handle,
+                Size,
+                IsSampler);
         }
 
         /// <summary>

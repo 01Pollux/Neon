@@ -59,14 +59,6 @@ namespace Neon::RHI
             const Ptr<IPipelineState>& State) override;
 
     public:
-        void SetDynamicResourceView(
-            bool                IsDirect,
-            CstResourceViewType Type,
-            uint32_t            RootIndex,
-            const void*         Data,
-            size_t              Size) override;
-
-    public:
         void SetConstants(
             bool        IsDirect,
             uint32_t    RootIndex,
@@ -80,10 +72,24 @@ namespace Neon::RHI
             uint32_t            RootIndex,
             GpuResourceHandle   Handle) override;
 
+        void SetDynamicResourceView(
+            bool                IsDirect,
+            CstResourceViewType Type,
+            uint32_t            RootIndex,
+            const void*         Data,
+            size_t              Size) override;
+
         void SetDescriptorTable(
             bool                IsDirect,
             uint32_t            RootIndex,
             GpuDescriptorHandle Handle) override;
+
+        void SetDynamicDescriptorTable(
+            bool                IsDirect,
+            uint32_t            RootIndex,
+            CpuDescriptorHandle Handle,
+            uint32_t            Size,
+            bool                IsSampler) override;
 
     public:
         void ClearRtv(

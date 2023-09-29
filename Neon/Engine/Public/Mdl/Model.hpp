@@ -5,8 +5,8 @@
 
 namespace Neon::RHI
 {
-        class IMaterial;
-} // namespace Neon
+    class IMaterial;
+} // namespace Neon::RHI
 
 namespace Neon::Mdl
 {

@@ -136,40 +136,42 @@ namespace Neon::RHI
                         if (IsSamplerDescriptor)
                         {
                             auto& DescriptorCount = Descriptor.Instanced ? TableSamplerCount : TableSharedSamplerCount;
-                            DescriptorCount += Descriptor.Size;
 
+                            Material::DescriptorVariantMap SamplerMap{
+                                .Offset = DescriptorCount
+                            };
                             for (auto& [Name, Range] : Descriptor.NamedRanges)
                             {
                                 Material::SamplerEntry Entry{
                                     .Offset = DescriptorCount,
-                                    .Count  = Range.Size
+                                    .Count  = Range.Size,
                                 };
 
+                                DescriptorCount += Range.Size;
                                 Entry.Descs.resize(Range.Size);
 
-                                bool WasInserted = false;
-
-                                // If a variable's name was not set, assume that texture's access will be parent's name
-                                auto NewName = VarName;
-                                if (!Name.empty())
-                                {
-                                    NewName = StringUtils::Format("{}.{}", VarName, Name);
-                                }
-                                if (Descriptor.Instanced)
-                                {
-                                    WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(NewName, std::move(Entry)).second;
-                                }
-                                else
-                                {
-                                    WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(Name, std::move(Entry)).second;
-                                }
+                                bool WasInserted = SamplerMap.Entries.emplace(Name, std::move(Entry)).second;
                                 NEON_ASSERT(WasInserted, "Duplicate sampler variable");
                             }
+
+                            bool WasInserted = false;
+                            if (Descriptor.Instanced)
+                            {
+                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(SamplerMap)).second;
+                            }
+                            else
+                            {
+                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(SamplerMap)).second;
+                            }
+                            NEON_ASSERT(WasInserted, "Duplicate descriptor sampler table");
                         }
                         else
                         {
                             auto& DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
-                            DescriptorCount += Descriptor.Size;
+
+                            Material::DescriptorVariantMap DescriptorMap{
+                                .Offset = DescriptorCount
+                            };
 
                             for (auto& [Name, Range] : Descriptor.NamedRanges)
                             {
@@ -179,26 +181,23 @@ namespace Neon::RHI
                                     .Type   = Range.Type
                                 };
 
+                                DescriptorCount += Range.Size;
                                 Entry.Resources.resize(Range.Size);
 
-                                bool WasInserted = false;
-
-                                // If a variable's name was not set, assume that texture's access will be parent's name
-                                auto NewName = VarName;
-                                if (!Name.empty())
-                                {
-                                    NewName = StringUtils::Format("{}.{}", VarName, Name);
-                                }
-                                if (Descriptor.Instanced)
-                                {
-                                    WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(NewName, std::move(Entry)).second;
-                                }
-                                else
-                                {
-                                    WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(NewName, std::move(Entry)).second;
-                                }
+                                bool WasInserted = DescriptorMap.Entries.emplace(Name, std::move(Entry)).second;
                                 NEON_ASSERT(WasInserted, "Duplicate descriptor variable");
                             }
+
+                            bool WasInserted = false;
+                            if (Descriptor.Instanced)
+                            {
+                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(DescriptorMap)).second;
+                            }
+                            else
+                            {
+                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(DescriptorMap)).second;
+                            }
+                            NEON_ASSERT(WasInserted, "Duplicate descriptor table");
                         }
                     },
                 },
@@ -284,7 +283,7 @@ namespace Neon::RHI
                     PipelineDesc.DepthStencil.DepthWriteEnable      = false;
                     break;
                 }
-                case IMaterial::PipelineVariant::DepthPass:
+                case IMaterial::PipelineVariant::DepthPrePass:
                 {
                     PipelineDesc.PixelShader                        = nullptr;
                     PipelineDesc.Blend.RenderTargets[0].BlendEnable = false;
@@ -353,6 +352,72 @@ namespace Neon::RHI
 
     //
 
+    void Material::BindSharedParams(
+        ICommandList* CommandList)
+    {
+        auto& Params = m_RootSignature->GetParams();
+        for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
+        {
+            auto& Param = Params[i];
+            boost::apply_visitor(
+                VariantVisitor{
+                    [&](const IRootSignature::ParamConstant& Constant)
+                    {
+                        auto& Entry = std::get<ConstantEntry>(m_SharedParameters->SharedEntries.at(Constant.Name));
+                        CommandList->SetConstants(!m_IsCompute, i, m_SharedParameters->ConstantData.get() + Entry.DataOffset);
+                    },
+                    [&](const IRootSignature::ParamRoot& Root)
+                    {
+                        auto& Entry = std::get<RootEntry>(m_SharedParameters->SharedEntries.at(Root.Name));
+                        if (Entry.Handle)
+                        {
+                            CommandList->SetResourceView(!m_IsCompute, Entry.ViewType, i, Entry.Handle);
+                        }
+                    },
+                    [&](const IRootSignature::ParamDescriptor& Descriptor)
+                    {
+                        if (!Descriptor.Instanced)
+                        {
+                            auto& Entry          = std::get<DescriptorVariantMap>(m_SharedParameters->SharedEntries.at(Descriptor.Name));
+                            auto& DescriptorHeap = Entry.IsSampler()
+                                                       ? m_SharedParameters->Descriptors.SamplerDescriptors
+                                                       : m_SharedParameters->Descriptors.ResourceDescriptors;
+
+                            CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
+                        }
+                    } },
+                Param);
+        }
+    }
+
+    void Material::BindLocalParams(
+        ICommandList* CommandList)
+    {
+        auto& Params = m_RootSignature->GetParams();
+        for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
+        {
+            auto& Param = Params[i];
+            boost::apply_visitor(
+                VariantVisitor{
+                    [&](const auto&) {},
+                    [&](const IRootSignature::ParamDescriptor& Descriptor)
+                    {
+                        if (Descriptor.Instanced)
+                        {
+                            auto& Entry          = m_LocalParameters.LocalEntries.at(Descriptor.Name);
+                            auto& DescriptorHeap = Entry.IsSampler()
+                                                       ? m_LocalParameters.Descriptors.SamplerDescriptors
+                                                       : m_LocalParameters.Descriptors.ResourceDescriptors;
+
+                            CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
+                        }
+                    } },
+                Param);
+        }
+    }
+
+    //
+
     void Material::SetResource(
         const StringU8&                Name,
         const Ptr<RHI::IGpuResource>&  Resource,
@@ -360,27 +425,18 @@ namespace Neon::RHI
         uint32_t                       ArrayIndex,
         const Ptr<RHI::IGpuResource>&  UavCounter)
     {
-        DescriptorEntry*      Descriptor     = nullptr;
-        DescriptorHeapHandle* DescriptorHeap = nullptr;
+        auto [GroupName, VarName] = SplitResourceName(Name);
 
-        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
-            Iter != m_LocalParameters.LocalEntries.end())
+        UnqiueDescriptorHeapHandle* DescriptorHeap = nullptr;
+
+        auto Variant = GetDescriptorVariant(GroupName, VarName, nullptr, &DescriptorHeap);
+
+        if (!Variant) [[unlikely]]
         {
-            Descriptor     = std::get_if<DescriptorEntry>(&Iter->second);
-            DescriptorHeap = &m_LocalParameters.Descriptors.ResourceDescriptors;
-        }
-        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
-                 Iter != m_SharedParameters->SharedEntries.end())
-        {
-            Descriptor     = std::get_if<DescriptorEntry>(&Iter->second);
-            DescriptorHeap = &m_SharedParameters->Descriptors.ResourceDescriptors;
-        }
-        else
-        {
-            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
             return;
         }
 
+        auto Descriptor = std::get_if<DescriptorEntry>(Variant);
         if (!Descriptor)
         {
             NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
@@ -399,7 +455,7 @@ namespace Neon::RHI
                 {
                     if (Desc.Resource.Value)
                     {
-                        RHI::Views::ConstantBuffer View{ *DescriptorHeap };
+                        RHI::Views::ConstantBuffer View{ DescriptorHeap->ResourceDescriptors };
                         View.Bind(Desc, DescriptorOffset);
                     }
                 },
@@ -408,7 +464,7 @@ namespace Neon::RHI
                 {
                     if (Resource || Desc.has_value())
                     {
-                        RHI::Views::ShaderResource View{ *DescriptorHeap };
+                        RHI::Views::ShaderResource View{ DescriptorHeap->ResourceDescriptors };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     }
                 },
@@ -417,7 +473,7 @@ namespace Neon::RHI
                 {
                     if (Resource || Desc.has_value())
                     {
-                        RHI::Views::UnorderedAccess View{ *DescriptorHeap };
+                        RHI::Views::UnorderedAccess View{ DescriptorHeap->ResourceDescriptors };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
                     }
                 },
@@ -426,7 +482,7 @@ namespace Neon::RHI
                 {
                     if (Resource || Desc.has_value())
                     {
-                        RHI::Views::RenderTarget View{ *DescriptorHeap };
+                        RHI::Views::RenderTarget View{ DescriptorHeap->ResourceDescriptors };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     }
                 },
@@ -435,7 +491,7 @@ namespace Neon::RHI
                 {
                     if (Resource || Desc.has_value())
                     {
-                        RHI::Views::DepthStencil View{ *DescriptorHeap };
+                        RHI::Views::DepthStencil View{ DescriptorHeap->ResourceDescriptors };
                         View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
                     }
                 } },
@@ -447,27 +503,18 @@ namespace Neon::RHI
         const RHI::SamplerDesc& Desc,
         uint32_t                ArrayIndex)
     {
-        SamplerEntry*         Sampler        = nullptr;
-        DescriptorHeapHandle* DescriptorHeap = nullptr;
+        auto [GroupName, VarName] = SplitResourceName(Name);
 
-        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
-            Iter != m_LocalParameters.LocalEntries.end())
+        UnqiueDescriptorHeapHandle* DescriptorHeap = nullptr;
+
+        auto Variant = GetDescriptorVariant(GroupName, VarName, nullptr, &DescriptorHeap);
+
+        if (!Variant) [[unlikely]]
         {
-            Sampler        = std::get_if<SamplerEntry>(&Iter->second);
-            DescriptorHeap = &m_LocalParameters.Descriptors.SamplerDescriptors;
-        }
-        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
-                 Iter != m_SharedParameters->SharedEntries.end())
-        {
-            Sampler        = std::get_if<SamplerEntry>(&Iter->second);
-            DescriptorHeap = &m_SharedParameters->Descriptors.SamplerDescriptors;
-        }
-        else
-        {
-            NEON_WARNING_TAG("Material", "Failed to find sampler: {}", Name);
             return;
         }
 
+        auto Sampler = std::get_if<SamplerEntry>(Variant);
         if (!Sampler)
         {
             NEON_WARNING_TAG("Material", "'{}' is not a sampler", Name);
@@ -478,7 +525,7 @@ namespace Neon::RHI
         Sampler->Descs[ArrayIndex] = Desc;
         if (Desc)
         {
-            RHI::Views::Sampler View{ *DescriptorHeap };
+            RHI::Views::Sampler View{ DescriptorHeap->SamplerDescriptors };
             View.Bind(Desc, DescriptorOffset);
         }
     }
@@ -568,38 +615,91 @@ namespace Neon::RHI
         const StringU8& Name,
         uint32_t        Size)
     {
-        SamplerEntry*    Sampler    = nullptr;
-        DescriptorEntry* Descriptor = nullptr;
+        auto [GroupName, VarName] = SplitResourceName(Name);
+        auto Variant              = GetDescriptorVariant(GroupName, VarName);
 
-        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
-            Iter != m_LocalParameters.LocalEntries.end())
+        if (!Variant) [[unlikely]]
         {
-            Sampler    = std::get_if<SamplerEntry>(&Iter->second);
-            Descriptor = std::get_if<DescriptorEntry>(&Iter->second);
-        }
-        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
-                 Iter != m_SharedParameters->SharedEntries.end())
-        {
-            Sampler    = std::get_if<SamplerEntry>(&Iter->second);
-            Descriptor = std::get_if<DescriptorEntry>(&Iter->second);
-        }
-        else
-        {
-            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
             return;
         }
 
-        if (Descriptor)
+        if (auto Descriptor = std::get_if<DescriptorEntry>(Variant))
         {
             Descriptor->Count = Size;
         }
-        else if (Sampler)
+        else if (auto Sampler = std::get_if<SamplerEntry>(Variant))
         {
             Sampler->Count = Size;
         }
         else
         {
             NEON_WARNING_TAG("Material", "'{}' is not a resource nor sampler", Name);
+        }
+    }
+
+    //
+
+    std::pair<StringU8, StringU8> Material::SplitResourceName(
+        const StringU8& Name)
+    {
+        auto Names = std::views::split(Name, ".");
+
+        StringU8View FirstPart(*Names.begin());
+        StringU8View SecondPart;
+        if (auto SecondPartIter = std::next(Names.begin()); SecondPartIter != Names.end())
+        {
+            SecondPart = StringU8View(*SecondPartIter);
+        }
+        return { StringU8(FirstPart), StringU8(SecondPart) };
+    }
+
+    auto Material::GetDescriptorVariant(
+        const StringU8&              Name,
+        const StringU8&              EntryName,
+        DescriptorVariantMap**       VariantMap,
+        UnqiueDescriptorHeapHandle** DescriptorHeap) -> DescriptorVariant*
+    {
+        DescriptorVariantMap* InVariantMap = nullptr;
+
+        if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
+            Iter != m_LocalParameters.LocalEntries.end())
+        {
+            InVariantMap = &Iter->second;
+            if (DescriptorHeap)
+            {
+                *DescriptorHeap = &m_LocalParameters.Descriptors;
+            }
+        }
+        else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
+                 Iter != m_SharedParameters->SharedEntries.end())
+        {
+            InVariantMap = std::get_if<DescriptorVariantMap>(&Iter->second);
+            if (DescriptorHeap)
+            {
+                *DescriptorHeap = &m_SharedParameters->Descriptors;
+            }
+        }
+
+        if (!InVariantMap) [[unlikely]]
+        {
+            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
+            return nullptr;
+        }
+
+        if (VariantMap)
+        {
+            *VariantMap = InVariantMap;
+        }
+
+        if (auto Iter = InVariantMap->Entries.find(Name);
+            Iter != InVariantMap->Entries.end())
+        {
+            return &Iter->second;
+        }
+        else
+        {
+            NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
+            return nullptr;
         }
     }
 
@@ -621,7 +721,8 @@ namespace Neon::RHI
     }
 
     auto Material::UnqiueDescriptorHeapHandle::operator=(
-        const UnqiueDescriptorHeapHandle& Other) -> UnqiueDescriptorHeapHandle&
+        const UnqiueDescriptorHeapHandle& Other)
+        -> UnqiueDescriptorHeapHandle&
     {
         if (this != &Other)
         {
@@ -644,7 +745,8 @@ namespace Neon::RHI
     }
 
     auto Material::UnqiueDescriptorHeapHandle::operator=(
-        UnqiueDescriptorHeapHandle&& Other) -> UnqiueDescriptorHeapHandle&
+        UnqiueDescriptorHeapHandle&& Other)
+        -> UnqiueDescriptorHeapHandle&
     {
         if (this != &Other)
         {

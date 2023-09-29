@@ -40,7 +40,7 @@ struct PSInput
 	float3 TangentWS : TANGENT_WORLD;
 	float3 BitangentWS : BITANGENT_WORLD;
 	
-	uint InstanceId : INSTANCE_INDEX;
+	nointerpolation uint InstanceId : INSTANCE_INDEX;
 };
 
 

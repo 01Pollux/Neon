@@ -44,7 +44,7 @@ namespace Neon::RHI
             /// Depth prepass.
             /// Used for forward+ rendering.
             /// </summary>
-            DepthPass,
+            DepthPrePass,
 
             Count
         };
@@ -85,6 +85,19 @@ namespace Neon::RHI
         {
             return m_PipelineStates[static_cast<uint8_t>(Variant)];
         }
+
+    public:
+        /// <summary>
+        /// Bind shared parameters directly into the command list.
+        /// </summary>
+        virtual void BindSharedParams(
+            ICommandList* CommandList) = 0;
+
+        /// <summary>
+        /// Bind local parameters directly into the command list.
+        /// </summary>
+        virtual void BindLocalParams(
+            ICommandList* CommandList) = 0;
 
     public:
         /// <summary>

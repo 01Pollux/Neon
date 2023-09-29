@@ -227,44 +227,6 @@ namespace Neon::RHI
 
     //
 
-    void Dx12CommandList::SetDynamicResourceView(
-        bool                IsDirect,
-        CstResourceViewType Type,
-        uint32_t            RootIndex,
-        const void*         Data,
-        size_t              Size)
-    {
-        const uint32_t Alignment =
-            Type == CstResourceViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
-
-        IGlobalBufferPool::BufferType BufferType;
-        switch (Type)
-        {
-        case CstResourceViewType::Cbv:
-        case CstResourceViewType::Srv:
-            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPUR;
-            break;
-        case CstResourceViewType::Uav:
-            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPURW;
-            break;
-        }
-
-        UBufferPoolHandle Buffer(
-            Size,
-            Alignment,
-            BufferType);
-
-        Buffer.AsUpload().Write(Buffer.Offset, Data, Size);
-
-        SetResourceView(
-            IsDirect,
-            Type,
-            RootIndex,
-            Buffer.GetGpuHandle());
-    }
-
-    //
-
     void Dx12CommandList::SetConstants(
         bool        IsDirect,
         uint32_t    RootIndex,
@@ -344,6 +306,42 @@ namespace Neon::RHI
         }
     }
 
+    void Dx12CommandList::SetDynamicResourceView(
+        bool                IsDirect,
+        CstResourceViewType Type,
+        uint32_t            RootIndex,
+        const void*         Data,
+        size_t              Size)
+    {
+        const uint32_t Alignment =
+            Type == CstResourceViewType::Cbv ? D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT : 1;
+
+        IGlobalBufferPool::BufferType BufferType;
+        switch (Type)
+        {
+        case CstResourceViewType::Cbv:
+        case CstResourceViewType::Srv:
+            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPUR;
+            break;
+        case CstResourceViewType::Uav:
+            BufferType = IGlobalBufferPool::BufferType::ReadWriteGPURW;
+            break;
+        }
+
+        UBufferPoolHandle Buffer(
+            Size,
+            Alignment,
+            BufferType);
+
+        Buffer.AsUpload().Write(Buffer.Offset, Data, Size);
+
+        SetResourceView(
+            IsDirect,
+            Type,
+            RootIndex,
+            Buffer.GetGpuHandle());
+    }
+
     void Dx12CommandList::SetDescriptorTable(
         bool                IsDirect,
         UINT                RootIndex,
@@ -357,6 +355,24 @@ namespace Neon::RHI
         {
             m_CommandList->SetComputeRootDescriptorTable(RootIndex, { Handle.Value });
         }
+    }
+
+    void Dx12CommandList::SetDynamicDescriptorTable(
+        bool                IsDirect,
+        uint32_t            RootIndex,
+        CpuDescriptorHandle Handle,
+        uint32_t            Size,
+        bool                IsSampler)
+    {
+        auto Descriptor = IFrameDescriptorHeap::Get(IsSampler ? DescriptorType::Sampler : DescriptorType::ResourceView)->Allocate(Size);
+        Descriptor.Heap->Copy(
+            Descriptor.Offset,
+            { .Descriptor = Handle,
+              .CopySize = Size });
+        SetDescriptorTable(
+			IsDirect,
+			RootIndex,
+			Descriptor.GetGpuHandle());
     }
 
     //

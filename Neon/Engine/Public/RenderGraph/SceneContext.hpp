@@ -13,8 +13,9 @@ namespace Neon::RG
     class SceneContext
     {
         using InstanceIdList          = std::vector<uint32_t>;
-        using InstanceIdPipelineGroup = std::unordered_map<Ptr<RHI::IPipelineState>, InstanceIdList>;
+        using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
 
+        using InstanceIdMeshMap   = std::unordered_map<uint32_t, const Mdl::Mesh*>;
         using InstanceIdMeshQuery = flecs::query<
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance,
@@ -24,7 +25,8 @@ namespace Neon::RG
         enum class RenderType : uint8_t
         {
             // Deferred,
-            DepthPrepass
+            DepthPrepass,
+            RenderPass
         };
 
         SceneContext(
@@ -52,6 +54,7 @@ namespace Neon::RG
         const GraphStorage& m_Storage;
 
         InstanceIdMeshQuery     m_MeshQuery;
-        InstanceIdPipelineGroup m_InstanceIds;
+        InstanceIdMeshMap       m_Meshes;
+        InstanceIdPipelineGroup m_MeshInstanceIds;
     };
 } // namespace Neon::RG

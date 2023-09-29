@@ -54,16 +54,31 @@ namespace Neon::RHI
     struct CpuDescriptorHandle
     {
         uint64_t Value{};
+
+        constexpr operator bool() const noexcept
+        {
+            return Value != 0;
+        }
     };
 
     struct GpuDescriptorHandle
     {
         uint64_t Value{};
+
+        constexpr operator bool() const noexcept
+        {
+            return Value != 0;
+        }
     };
 
     struct GpuResourceHandle
     {
         uint64_t Value{};
+
+        constexpr operator bool() const noexcept
+        {
+            return Value != 0;
+        }
     };
 
     static constexpr uint32_t Resource_AllSubresources = ~0u;
