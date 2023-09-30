@@ -22,8 +22,9 @@ namespace Neon::Mdl
 
     struct SubMeshData
     {
-        Matrix4x4       Transform = Mat::Identity<Matrix4x4>;
-        AABoundingBox3D AABB;
+        Matrix4x4 Transform = Mat::Identity<Matrix4x4>;
+
+        Geometry::AABoundingBox3D AABB;
 
         uint32_t VertexCount;
         uint32_t IndexCount;

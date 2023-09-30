@@ -24,9 +24,12 @@ namespace Neon::RG
         /// <summary>
         /// Recreates the grid frustum resource if needed. (window size changed)
         /// </summary>
-        void RecreateGridFrustum();
+        void RecreateGridFrustum(
+            const Size2I& OutputSize);
 
     private:
+        Size2I                   m_GridSize;
+        UPtr<RHI::IGpuResource>  m_GridFrustum;
         Ptr<RHI::IRootSignature> m_GridFrustumRootSignature;
         Ptr<RHI::IPipelineState> m_GridFrustumPipelineState;
     };

@@ -3,7 +3,7 @@
 #include <Math/Vector.hpp>
 #include <glm/gtx/norm.hpp>
 
-namespace Neon
+namespace Neon::Geometry
 {
     template<Vec::VectorType _VecTy>
     struct AABoundingBox
@@ -166,4 +166,4 @@ namespace Neon
 
     using AABoundingBox2D = AABoundingBox<Vector2>;
     using AABoundingBox3D = AABoundingBox<Vector3>;
-} // namespace Neon
+} // namespace Neon::Geometry

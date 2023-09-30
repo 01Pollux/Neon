@@ -24,7 +24,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get group size of compute shader
         /// </summary>
-        [[nodiscard]] const Vector3U& GetComputeGroupSize() const;
+        [[nodiscard]] const Vector3U& GetComputeGroupSize() const override;
 
     private:
         WinAPI::ComPtr<ID3D12PipelineState> m_PipelineState;

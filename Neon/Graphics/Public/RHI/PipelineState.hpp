@@ -131,6 +131,11 @@ namespace Neon::RHI
             const PipelineStateBuilderC& Builder);
 
         virtual ~IPipelineState() = default;
+
+        /// <summary>
+        /// Get group size of compute shader
+        /// </summary>
+        [[nodiscard]] virtual const Vector3U& GetComputeGroupSize() const = 0;
     };
 
     inline Ptr<IPipelineState> PipelineStateBuilderC::Build() const
