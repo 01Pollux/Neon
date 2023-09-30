@@ -1,16 +1,16 @@
 #include <EnginePCH.hpp>
 
 #include <RenderGraph/RG.hpp>
-#include <RenderGraph/Passes/ShadingPass.hpp>
+#include <RenderGraph/Passes/GeometryPass.hpp>
 
 namespace Neon::RG
 {
-    ShadingPass::ShadingPass() :
-        RenderPass("ShadingPass")
+    GeometryPass::GeometryPass() :
+        RenderPass("GeometryPass")
     {
     }
 
-    void ShadingPass::ResolveResources(
+    void GeometryPass::ResolveResources(
         ResourceResolver& Resolver)
     {
         auto Desc = RHI::ResourceDesc::Tex2D(
@@ -33,21 +33,21 @@ namespace Neon::RG
             DepthBuffer);
 
         Resolver.WriteRenderTarget(
-            ShadedImage.CreateView("ShadingPass"),
+            ShadedImage.CreateView("GeometryPass"),
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Color,
                 .Format    = Resolver.GetSwapchainFormat() });
 
         Resolver.WriteDepthStencil(
-            DepthBuffer.CreateView("ShadingPass"),
+            DepthBuffer.CreateView("GeometryPass"),
             RHI::DSVDesc{
                 .View      = RHI::DSVDesc::Texture2D{},
                 .ClearType = RHI::EDSClearType::Ignore,
                 .Format    = RHI::EResourceFormat::D32_Float });
     }
 
-    void ShadingPass::DispatchTyped(
+    void GeometryPass::DispatchTyped(
         const GraphStorage&      Storage,
         RHI::GraphicsCommandList CommandList)
     {

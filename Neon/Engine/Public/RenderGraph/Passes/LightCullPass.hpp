@@ -5,19 +5,19 @@
 
 namespace Neon::RG
 {
-    class ShadingPass : public GraphicsRenderPass<ShadingPass>
+    class LightCullPass : public ComputeRenderPass<LightCullPass>
     {
         friend class RenderPass;
 
     public:
-        ShadingPass();
+        LightCullPass();
 
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage&      Storage,
-            RHI::GraphicsCommandList CommandList);
+            const GraphStorage&     Storage,
+            RHI::ComputeCommandList CommandList);
     };
 } // namespace Neon::RG

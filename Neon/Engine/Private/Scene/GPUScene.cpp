@@ -74,7 +74,9 @@ namespace Neon::Scene
                     const Scene::Component::MeshInstance,
                     const Scene::Component::Renderable>()
                 .with<Scene::Component::Transform>()
+                .in()
                 .with<Scene::Component::ActiveSceneEntity>()
+                .in()
                 .build();
 
         // Update the mesh ever frame if needed
@@ -110,6 +112,7 @@ namespace Neon::Scene
                                 m_Meshes[Renderable.GetInstanceId()] = &Mesh;
                             }
                         });
+                    printf("change: %d\n", MeshQuery.changed());
                 });
     }
 
