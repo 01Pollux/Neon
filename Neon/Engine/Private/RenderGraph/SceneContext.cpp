@@ -6,8 +6,10 @@
 #include <Scene/EntityWorld.hpp>
 #include <Scene/GPUScene.hpp>
 
+#include <Mdl/Mesh.hpp>
 #include <RHI/Material/Material.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
+#include <RHI/GlobalBuffer.hpp>
 
 namespace Component = Neon::Scene::Component;
 
@@ -15,42 +17,9 @@ namespace Neon::RG
 {
     SceneContext::SceneContext(
         const GraphStorage& Storage) :
-        m_Storage(Storage),
-        m_MeshQuery(
-            Scene::EntityWorld()
-                .Get()
-                .query_builder<
-                    const Scene::Component::Transform,
-                    const Scene::Component::MeshInstance,
-                    const Scene::Component::Renderable>()
-                .with<Component::ActiveSceneEntity>()
-                .build())
+        m_Storage(Storage)
     {
     }
-
-    void SceneContext::Update()
-    {
-        UpdateInstances();
-    }
-
-    //
-
-    struct PerMaterialData
-    {
-        Vector3  Albedo;
-        uint32_t AlbedoMapIndex;
-
-        Vector3  Specular;
-        uint32_t SpecularMapIndex;
-
-        Vector3  Emissive;
-        uint32_t EmissiveMapIndex;
-
-        uint32_t NormalMapIndex;
-
-        // MATERIAL_FLAG_*
-        uint32_t Flags;
-    };
 
     //
 
@@ -58,11 +27,34 @@ namespace Neon::RG
         RHI::ICommandList* CommandList,
         RenderType         Type) const
     {
-        auto GpuScene = Runtime::GameLogic::Get()->GetGPUScene();
-        for (auto& InstanceList : m_MeshInstanceIds | std::views::values)
+        auto  GpuScene      = Runtime::GameLogic::Get()->GetGPUScene();
+        auto& Meshes        = GpuScene->GetMeshes();
+        auto& MeshInstances = GpuScene->GetMeshInstanceIds();
+
+        // Accumulate count of instances
+        size_t Count = 0;
+        for (auto& InstanceList : MeshInstances)
+        {
+            Count += InstanceList.second.size();
+        }
+
+        if (!Count)
+        {
+            return;
+        }
+
+        RHI::UBufferPoolHandle Buffer(
+            SizeOfPerMaterialData * Count,
+            AlignOfPerMaterialData,
+            RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
+
+        auto   MaterialData  = Buffer.AsUpload().Map<PerMaterialData>(Buffer.Offset);
+        size_t MaterialIndex = 0;
+
+        for (auto& InstanceList : MeshInstances | std::views::values)
         {
             uint32_t FirstInstanceId = InstanceList.back();
-            auto     FirstMesh       = m_Meshes.at(FirstInstanceId);
+            auto     FirstMesh       = Meshes.at(FirstInstanceId);
             auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
 
             if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
@@ -91,7 +83,7 @@ namespace Neon::RG
 
             for (auto InstanceId : InstanceList)
             {
-                auto  Mesh         = m_Meshes.at(InstanceId);
+                auto  Mesh         = Meshes.at(InstanceId);
                 auto& MeshData     = Mesh->GetData();
                 auto& MeshModel    = Mesh->GetModel();
                 auto& MeshMaterial = Mesh->GetModel()->GetMaterial(MeshData.MaterialIndex);
@@ -99,6 +91,17 @@ namespace Neon::RG
                 if (MeshMaterial->IsCompute() && Type != RenderType::RenderPass)
                 {
                     continue;
+                }
+
+                // Update shared params
+                {
+                    *MaterialData        = {};
+                    MaterialData->Albedo = Colors::DarkGreen;
+
+                    MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
+                    MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
+
+                    MeshMaterial->BindSharedParams(CommandList);
                 }
 
                 MeshMaterial->BindLocalParams(CommandList);
@@ -114,63 +117,14 @@ namespace Neon::RG
                     MeshData.IndexOffset,
                     MeshData.IndexCount);
 
-                if (1)
-                {
-                    auto Buffer1 = UPtr<RHI::IGpuResource>(RHI::IGpuResource::Create(
-                        RHI::ResourceDesc::Buffer(
-                            sizeof(PerMaterialData),
-                            {},
-                            RHI::GraphicsBufferType::Upload)));
-
-                    auto Ptr1 = Buffer1->Map();
-
-                    PerMaterialData* MaterialData = std::bit_cast<PerMaterialData*>(Ptr1);
-                    *MaterialData                 = {};
-
-                    MaterialData->Albedo = Colors::DarkGreen;
-
-                    MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
-                    MeshMaterial->SetResourceView("_PerMaterialData", Buffer1->GetHandle());
-
-                    MeshMaterial->BindSharedParams(CommandList);
-                }
-
                 CommandList->SetPrimitiveTopology(MeshData.Topology);
                 CommandList->SetIndexBuffer(IdxView);
                 CommandList->SetVertexBuffer(0, VtxView);
                 CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
+
+                MaterialData++;
+                MaterialIndex++;
             }
         }
-    }
-
-    void SceneContext::UpdateInstances()
-    {
-        if (!m_MeshQuery.changed())
-        {
-            return;
-        }
-
-        m_MeshInstanceIds.clear();
-        m_Meshes.clear();
-
-        m_MeshQuery.iter(
-            [this](flecs::iter& Iter,
-                   const Scene::Component::Transform*,
-                   const Scene::Component::MeshInstance* MeshTable,
-                   const Scene::Component::Renderable*   RenderableTable)
-            {
-                for (size_t Idx : Iter)
-                {
-                    auto& Mesh       = MeshTable[Idx].Mesh;
-                    auto& Renderable = RenderableTable[Idx];
-
-                    auto& MeshData      = Mesh.GetData();
-                    auto& MeshMaterial  = Mesh.GetModel()->GetMaterial(MeshData.MaterialIndex);
-                    auto& PipelineState = MeshMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
-
-                    m_MeshInstanceIds[PipelineState.get()].emplace_back(Renderable.GetInstanceId());
-                    m_Meshes[Renderable.GetInstanceId()] = &Mesh;
-                }
-            });
     }
 } // namespace Neon::RG

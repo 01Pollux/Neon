@@ -8,6 +8,11 @@
 #include <Allocator/Buddy.hpp>
 #include <vector>
 
+namespace Neon::Mdl
+{
+    class Mesh;
+}
+
 namespace Neon::Scene
 {
     class GPUScene
@@ -21,6 +26,11 @@ namespace Neon::Scene
         static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
         static constexpr size_t   SizeOfPage         = std::numeric_limits<uint16_t>::max();
         static constexpr size_t   NumberOfPages      = std::numeric_limits<uint16_t>::max();
+
+        using InstanceIdList          = std::vector<uint32_t>;
+        using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
+
+        using InstanceIdMeshMap = std::unordered_map<uint32_t, const Mdl::Mesh*>;
 
     public:
         using InstanceDataBuffer = Ptr<RHI::IGpuResource>;
@@ -70,7 +80,21 @@ namespace Neon::Scene
         [[nodiscard]] RHI::GpuResourceHandle GetInstanceHandle(
             uint32_t InstanceId) const;
 
+    public:
+        [[nodiscard]] auto& GetMeshInstanceIds() const noexcept
+        {
+            return m_MeshInstanceIds;
+        }
+
+        [[nodiscard]] auto& GetMeshes() const noexcept
+        {
+            return m_Meshes;
+        }
+
     private:
         PagedInstanceBufferArray m_PagesInstances;
+
+        InstanceIdMeshMap       m_Meshes;
+        InstanceIdPipelineGroup m_MeshInstanceIds;
     };
 } // namespace Neon::Scene

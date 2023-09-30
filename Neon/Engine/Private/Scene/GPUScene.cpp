@@ -1,8 +1,12 @@
 #include <EnginePCH.hpp>
 #include <Scene/GPUScene.hpp>
 #include <Scene/EntityWorld.hpp>
-#include <Scene/Component/Renderable.hpp>
+
 #include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Mesh.hpp>
+#include <Scene/Component/Renderable.hpp>
+
+#include <RHI/Material/Material.hpp>
 
 #include <Log/Logger.hpp>
 
@@ -32,6 +36,7 @@ namespace Neon::Scene
         // Reserve at least one page.
         m_PagesInstances.emplace_back(0);
 
+        // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform, Component::Renderable>()
             .event(flecs::OnSet)
@@ -58,6 +63,54 @@ namespace Neon::Scene
                         this->RemoveInstance(Renderable.InstanceId);
                         Renderable = {};
                     }
+                });
+
+        //
+
+        // Create mesh query
+        auto MeshQuery =
+            EntityWorld::Get()
+                .query_builder<
+                    const Scene::Component::MeshInstance,
+                    const Scene::Component::Renderable>()
+                .with<Scene::Component::Transform>()
+                .with<Scene::Component::ActiveSceneEntity>()
+                .build();
+
+        // Update the mesh ever frame if needed
+        EntityWorld::Get()
+            .system("MeshQueryUpdate")
+            .kind(flecs::PreUpdate)
+            .iter(
+                [this, MeshQuery](flecs::iter& Iter)
+                {
+                    if (!MeshQuery.changed())
+                    {
+                        return;
+                    }
+
+                    m_MeshInstanceIds.clear();
+                    m_Meshes.clear();
+
+                    MeshQuery.iter(
+                        [this](flecs::iter&                          Iter,
+                               const Scene::Component::MeshInstance* MeshInstances,
+                               const Scene::Component::Renderable*   Renderables)
+                        {
+                            for (size_t Idx : Iter)
+                            {
+                                auto& Mesh       = MeshInstances[Idx].Mesh;
+                                auto& Renderable = Renderables[Idx];
+
+                                auto& MeshData      = Mesh.GetData();
+                                auto& MeshMaterial  = Mesh.GetModel()->GetMaterial(MeshData.MaterialIndex);
+                                auto& PipelineState = MeshMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
+
+                                m_MeshInstanceIds[PipelineState.get()].emplace_back(Renderable.GetInstanceId());
+                                m_Meshes[Renderable.GetInstanceId()] = &Mesh;
+                            }
+                        });
+                    printf("change: %d\n", MeshQuery.changed());
                 });
     }
 

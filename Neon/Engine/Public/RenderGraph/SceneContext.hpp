@@ -1,10 +1,7 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
-
-#include <Scene/Component/Transform.hpp>
-#include <Scene/Component/Renderable.hpp>
-#include <Scene/Component/Mesh.hpp>
+#include <Math/Common.hpp>
 
 namespace Neon::RG
 {
@@ -12,14 +9,25 @@ namespace Neon::RG
 
     class SceneContext
     {
-        using InstanceIdList          = std::vector<uint32_t>;
-        using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
+        struct alignas(16) PerMaterialData
+        {
+            Vector3  Albedo;
+            uint32_t AlbedoMapIndex;
 
-        using InstanceIdMeshMap   = std::unordered_map<uint32_t, const Mdl::Mesh*>;
-        using InstanceIdMeshQuery = flecs::query<
-            const Scene::Component::Transform,
-            const Scene::Component::MeshInstance,
-            const Scene::Component::Renderable>;
+            Vector3  Specular;
+            uint32_t SpecularMapIndex;
+
+            Vector3  Emissive;
+            uint32_t EmissiveMapIndex;
+
+            uint32_t NormalMapIndex;
+
+            // MATERIAL_FLAG_*
+            uint32_t Flags;
+        };
+
+        static constexpr uint32_t AlignOfPerMaterialData = uint32_t(alignof(PerMaterialData));
+        static constexpr uint32_t SizeOfPerMaterialData  = uint32_t(Math::AlignUp(sizeof(PerMaterialData), AlignOfPerMaterialData));
 
     public:
         enum class RenderType : uint8_t
@@ -33,11 +41,6 @@ namespace Neon::RG
             const GraphStorage& Storage);
 
         /// <summary>
-        /// Update the scene context
-        /// </summary>
-        void Update();
-
-        /// <summary>
         /// Dispatch the renderers depending on the type
         /// </summary>
         void Render(
@@ -45,16 +48,6 @@ namespace Neon::RG
             RenderType         Type) const;
 
     private:
-        /// <summary>
-        /// Update the instance ids for the renderers from the query
-        /// </summary>
-        void UpdateInstances();
-
-    private:
         const GraphStorage& m_Storage;
-
-        InstanceIdMeshQuery     m_MeshQuery;
-        InstanceIdMeshMap       m_Meshes;
-        InstanceIdPipelineGroup m_MeshInstanceIds;
     };
 } // namespace Neon::RG
