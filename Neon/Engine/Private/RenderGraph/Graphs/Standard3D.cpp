@@ -3,7 +3,7 @@
 #include <RenderGraph/Graphs/Standard.hpp>
 
 #include <RenderGraph/Passes/DepthPrepass.hpp>
-#include <RenderGraph/Passes/LightCullPass.hpp>
+#include <RenderGraph/Passes/GridFrustumPass.hpp>
 #include <RenderGraph/Passes/GeometryPass.hpp>
 #include <RenderGraph/Passes/CopyToTexture.hpp>
 
@@ -20,7 +20,7 @@ namespace Neon::RG
 
         Builder.AddPass<DepthPrepass>();
 
-        Builder.AddPass<LightCullPass>();
+        // Builder.AddPass<LightCullPass>();
 
         Builder.AddPass<GeometryPass>();
 
