@@ -113,7 +113,7 @@ namespace Neon::RHI::Views
         constexpr Index(
             IGpuResource* Buffer,
             size_t        Size,
-            bool          Is32Bit = false) :
+            bool          Is32Bit) :
             Index(Buffer->GetHandle(), Size, Is32Bit)
         {
         }
@@ -122,7 +122,7 @@ namespace Neon::RHI::Views
             IGpuResource* Buffer,
             size_t        Offset,
             size_t        Size,
-            bool          Is32Bit = false) :
+            bool          Is32Bit) :
             Index(Buffer->GetHandle(), Offset, Size, Is32Bit)
         {
         }
@@ -130,7 +130,7 @@ namespace Neon::RHI::Views
         constexpr Index(
             GpuResourceHandle Handle,
             size_t            Size,
-            bool              Is32Bit = false) :
+            bool              Is32Bit) :
             m_View{ Handle, uint32_t(Size), Is32Bit }
         {
         }
@@ -139,8 +139,8 @@ namespace Neon::RHI::Views
             GpuResourceHandle Handle,
             size_t            Offset,
             size_t            Size,
-            bool              Is32Bit = false) :
-            m_View{ { Handle.Value + Offset * (Is32Bit ? sizeof(uint32_t) : sizeof(uint16_t)) }, uint32_t(Size), Is32Bit }
+            bool              Is32Bit) :
+            m_View{ { Handle.Value + Offset }, uint32_t(Size), Is32Bit }
         {
         }
 

@@ -33,25 +33,30 @@ namespace Neon::Scene
         m_PagesInstances.emplace_back(0);
 
         EntityWorld::Get()
-            .observer<Component::Transform, Component::Renderable>()
-            .term_at(1)
-            .in()
-            .term_at(2)
-            .inout()
+            .observer<const Component::Transform, Component::Renderable>()
             .event(flecs::OnSet)
             .event(flecs::OnRemove)
             .each(
                 [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform, Component::Renderable& Renderable)
                 {
-                    if (Renderable)
-                    {
-                        this->RemoveInstance(Renderable.InstanceId);
-                    }
+                    auto o = Iter.entity(Idx).id();
                     if (Iter.event() == flecs::OnSet)
                     {
-                        InstanceData* Data    = nullptr;
-                        Renderable.InstanceId = this->AddInstance(&Data);
-                        Data->World           = Transform.World.ToMat4x4Transposed();
+                        InstanceData* Data = nullptr;
+                        if (Renderable) [[likely]]
+                        {
+                            Data = this->GetInstanceData(Renderable.GetInstanceId());
+                        }
+                        else
+                        {
+                            Renderable.InstanceId = this->AddInstance(&Data);
+                        }
+                        Data->World = Transform.World.ToMat4x4Transposed();
+                    }
+                    else if (Renderable)
+                    {
+                        this->RemoveInstance(Renderable.InstanceId);
+                        Renderable = {};
                     }
                 });
     }
@@ -112,5 +117,13 @@ namespace Neon::Scene
         uint32_t PageIndex = InstanceId >> 16;
         uint32_t Offset    = InstanceId & 0xFFFF;
         return m_PagesInstances[PageIndex].MappedInstances + Offset;
+    }
+
+    RHI::GpuResourceHandle GPUScene::GetInstanceHandle(
+        uint32_t InstanceId) const
+    {
+        uint32_t PageIndex = InstanceId >> 16;
+        uint32_t Offset    = InstanceId & 0xFFFF;
+        return m_PagesInstances[PageIndex].Instances->GetHandle(Offset * SizeOfInstanceData);
     }
 } // namespace Neon::Scene

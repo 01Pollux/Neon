@@ -15,12 +15,10 @@ namespace Neon::Scene
         struct InstanceData
         {
             Matrix4x4 World;
-            Vector3   BoudingBoxMin;
-            Vector3   BoudingBoxMax;
         };
 
         static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
-        static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 64);
+        static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
         static constexpr size_t   SizeOfPage         = std::numeric_limits<uint16_t>::max();
         static constexpr size_t   NumberOfPages      = std::numeric_limits<uint16_t>::max();
 
@@ -64,6 +62,12 @@ namespace Neon::Scene
         /// Get the instance data
         /// </summary>
         [[nodiscard]] const InstanceData* GetInstanceData(
+            uint32_t InstanceId) const;
+
+        /// <summary>
+        /// Get the instance resource's handle
+        /// </summary>
+        [[nodiscard]] RHI::GpuResourceHandle GetInstanceHandle(
             uint32_t InstanceId) const;
 
     private:

@@ -25,7 +25,6 @@ namespace Neon::RG
                     const Scene::Component::Renderable>()
                 .with<Component::ActiveSceneEntity>()
                 .build())
-
     {
     }
 
@@ -117,18 +116,12 @@ namespace Neon::RG
 
                 if (1)
                 {
-                    auto Buffer0 = RHI::IGpuResource::Create(
-                        RHI::ResourceDesc::Buffer(
-                            sizeof(Matrix4x4),
-                            {},
-                            RHI::GraphicsBufferType::Upload));
-                    auto Buffer1 = RHI::IGpuResource::Create(
+                    auto Buffer1 = UPtr<RHI::IGpuResource>(RHI::IGpuResource::Create(
                         RHI::ResourceDesc::Buffer(
                             sizeof(PerMaterialData),
                             {},
-                            RHI::GraphicsBufferType::Upload));
+                            RHI::GraphicsBufferType::Upload)));
 
-                    auto Ptr0 = Buffer0->Map();
                     auto Ptr1 = Buffer1->Map();
 
                     PerMaterialData* MaterialData = std::bit_cast<PerMaterialData*>(Ptr1);
@@ -136,10 +129,7 @@ namespace Neon::RG
 
                     MaterialData->Albedo = Colors::DarkGreen;
 
-                    Matrix4x4* World = std::bit_cast<Matrix4x4*>(Ptr0);
-                    *World           = glm::transpose(MeshData.Transform);
-
-                    MeshMaterial->SetResourceView("_PerInstanceData", Buffer0->GetHandle());
+                    MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
                     MeshMaterial->SetResourceView("_PerMaterialData", Buffer1->GetHandle());
 
                     MeshMaterial->BindSharedParams(CommandList);
