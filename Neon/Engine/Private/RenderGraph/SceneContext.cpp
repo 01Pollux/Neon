@@ -50,81 +50,118 @@ namespace Neon::RG
 
         auto   MaterialData  = Buffer.AsUpload().Map<PerMaterialData>(Buffer.Offset);
         size_t MaterialIndex = 0;
+        size_t PassesCount   = 1;
 
-        for (auto& InstanceList : MeshInstances | std::views::values)
+        std::array<RHI::IMaterial::PipelineVariant, 2> Passes;
+
+#ifndef NEON_DIST
+        static const std::array<StringU8, 2> PassNames{
+            "OpaquePass",
+            "TransparentPass"
+        };
+#endif
+
+        switch (Type)
         {
-            uint32_t FirstInstanceId = InstanceList.back();
-            auto     FirstMesh       = Meshes.at(FirstInstanceId);
-            auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
+        case RenderType::DepthPrepass:
+            Passes[0] = RHI::IMaterial::PipelineVariant::DepthPrePass;
+            break;
+        case RenderType::RenderPass:
+            Passes[0]   = RHI::IMaterial::PipelineVariant::RenderPass;
+            Passes[1]   = RHI::IMaterial::PipelineVariant::RenderPassTransparent;
+            PassesCount = 2;
+            break;
+        default:
+            std::unreachable();
+        }
 
-            if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
+        for (size_t Pass = 0; Pass < PassesCount; Pass++)
+        {
+#ifndef NEON_DIST
+            if (Type != RenderType::DepthPrepass)
             {
-                continue;
+                CommandList->BeginEvent(PassNames[Pass]);
             }
+#endif
 
-            Ptr<RHI::IPipelineState> PipelineState;
-            switch (Type)
+            auto PassType = Passes[Pass];
+            for (auto& InstanceList : MeshInstances | std::views::values)
             {
-            case RenderType::DepthPrepass:
-                PipelineState = FirstMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::DepthPrePass);
-                break;
-            case RenderType::RenderPass:
-                PipelineState = FirstMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
-                break;
-            }
+                uint32_t FirstInstanceId = InstanceList.back();
+                auto     FirstMesh       = Meshes.at(FirstInstanceId);
+                auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
 
-            FirstMaterial->SetResourceView(
-                "_FrameConstant",
-                m_Storage.GetFrameDataHandle());
-
-            CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
-            CommandList->SetPipelineState(PipelineState);
-            // FirstMaterial->BindSharedParams(CommandList);
-
-            for (auto InstanceId : InstanceList)
-            {
-                auto  Mesh         = Meshes.at(InstanceId);
-                auto& MeshData     = Mesh->GetData();
-                auto& MeshModel    = Mesh->GetModel();
-                auto& MeshMaterial = Mesh->GetModel()->GetMaterial(MeshData.MaterialIndex);
-
-                if (MeshMaterial->IsCompute() && Type != RenderType::RenderPass)
+                if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
                 {
                     continue;
                 }
 
-                // Update shared params
+                FirstMaterial->SetResourceView(
+                    "_FrameConstant",
+                    m_Storage.GetFrameDataHandle());
+
+                CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
+                CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
+
+                for (auto InstanceId : InstanceList)
                 {
-                    *MaterialData        = {};
-                    MaterialData->Albedo = Colors::DarkGreen;
+                    auto  Mesh         = Meshes.at(InstanceId);
+                    auto& MeshData     = Mesh->GetData();
+                    auto& MeshModel    = Mesh->GetModel();
+                    auto& MeshMaterial = Mesh->GetModel()->GetMaterial(MeshData.MaterialIndex);
 
-                    MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
-                    MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
+                    if (MeshMaterial->IsCompute() && Type != RenderType::RenderPass)
+                    {
+                        continue;
+                    }
 
-                    MeshMaterial->BindSharedParams(CommandList);
+                    // Pass == 0 opaque materials
+                    // Pass == 1 transparent materials
+                    if ((MeshMaterial->IsTransparent() ? 1 : 0) != Pass)
+                    {
+                        continue;
+                    }
+
+                    // Update shared params
+                    {
+                        *MaterialData        = {};
+                        MaterialData->Albedo = Colors::DarkGreen;
+
+                        MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
+                        MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
+
+                        MeshMaterial->BindSharedParams(CommandList);
+                    }
+
+                    MeshMaterial->BindLocalParams(CommandList);
+
+                    RHI::Views::Vertex VtxView;
+                    VtxView.Append<Mdl::MeshVertex>(
+                        MeshModel->GetVertexBuffer()->GetHandle(),
+                        MeshData.VertexOffset,
+                        MeshData.VertexCount);
+
+                    RHI::Views::IndexU32 IdxView(
+                        MeshModel->GetIndexBuffer()->GetHandle(),
+                        MeshData.IndexOffset,
+                        MeshData.IndexCount);
+
+                    CommandList->SetPrimitiveTopology(MeshData.Topology);
+                    CommandList->SetIndexBuffer(IdxView);
+                    CommandList->SetVertexBuffer(0, VtxView);
+                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
+
+                    MaterialData++;
+                    MaterialIndex++;
                 }
-
-                MeshMaterial->BindLocalParams(CommandList);
-
-                RHI::Views::Vertex VtxView;
-                VtxView.Append<Mdl::MeshVertex>(
-                    MeshModel->GetVertexBuffer()->GetHandle(),
-                    MeshData.VertexOffset,
-                    MeshData.VertexCount);
-
-                RHI::Views::IndexU32 IdxView(
-                    MeshModel->GetIndexBuffer()->GetHandle(),
-                    MeshData.IndexOffset,
-                    MeshData.IndexCount);
-
-                CommandList->SetPrimitiveTopology(MeshData.Topology);
-                CommandList->SetIndexBuffer(IdxView);
-                CommandList->SetVertexBuffer(0, VtxView);
-                CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
-
-                MaterialData++;
-                MaterialIndex++;
             }
+
+#ifndef NEON_DIST
+            if (Type != RenderType::DepthPrepass)
+            {
+                CommandList->EndEvent();
+            }
+#endif
         }
     }
 } // namespace Neon::RG

@@ -464,24 +464,22 @@ namespace Neon::RG
 
                 if (DepthStencil)
                 {
-                    CommandList->MarkEvent("ClearDepthStencil", Colors::OrangeRed);
-
                     auto& Handle   = Storage.GetResource(DepthStencil->GetResource());
                     auto& ViewDesc = std::get<RHI::DSVDescOpt>(Storage.GetResourceView(*DepthStencil, &DsvHandle));
                     auto& Desc     = Handle.GetDesc();
 
-                    std::optional<float>   Depth;
-                    std::optional<uint8_t> Stencil;
-
-                    auto ClearValue = Desc.ClearValue ? std::get_if<RHI::ClearOperation::DepthStencil>(&Desc.ClearValue->Value) : nullptr;
-                    if (ClearValue)
-                    {
-                        Depth   = ClearValue->Depth;
-                        Stencil = ClearValue->Stencil;
-                    }
-
                     if (ViewDesc && ViewDesc->ClearType != RHI::EDSClearType::Ignore)
                     {
+                        std::optional<float>   Depth;
+                        std::optional<uint8_t> Stencil;
+
+                        auto ClearValue = Desc.ClearValue ? std::get_if<RHI::ClearOperation::DepthStencil>(&Desc.ClearValue->Value) : nullptr;
+                        if (ClearValue)
+                        {
+                            Depth   = ClearValue->Depth;
+                            Stencil = ClearValue->Stencil;
+                        }
+
 #if NEON_DEBUG
                         if (!ViewDesc->ForceDepth && !ClearValue)
                         {
@@ -528,15 +526,11 @@ namespace Neon::RG
                         default:
                             std::unreachable();
                         }
-                    }
-#if NEON_DEBUG
-                    else
-                    {
-                        NEON_WARNING_TAG("RenderGraph", "Depth stencil view has no clear value, while clear type is not set to Ignore");
-                    }
-#endif
 
-                    RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
+                        CommandList->MarkEvent("ClearDepthStencil", Colors::OrangeRed);
+                        RenderCommandList->ClearDsv(DsvHandle, Depth, Stencil);
+                    }
+
                     DsvHandlePtr = &DsvHandle;
                 }
 

@@ -48,6 +48,11 @@ namespace Neon::RHI
 
         bool IsCompute() const noexcept override;
 
+        bool IsTransparent() const noexcept override;
+
+        void SetTransparent(
+            bool State) noexcept override;
+
     public:
         void BindSharedParams(
             ICommandList* CommandList) override;
@@ -199,6 +204,8 @@ namespace Neon::RHI
     private:
         Ptr<SharedParameters> m_SharedParameters = std::make_shared<SharedParameters>();
         LocalParameters       m_LocalParameters;
-        bool                  m_IsCompute = false;
+
+        bool m_IsCompute     : 1 = false;
+        bool m_IsTransparent : 1 = false;
     };
 } // namespace Neon::RHI

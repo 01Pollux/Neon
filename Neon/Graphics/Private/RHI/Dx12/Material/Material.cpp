@@ -350,6 +350,17 @@ namespace Neon::RHI
         return m_IsCompute;
     }
 
+    bool Material::IsTransparent() const noexcept
+    {
+        return m_IsTransparent;
+    }
+
+    void Material::SetTransparent(
+        bool State) noexcept
+    {
+        m_IsTransparent = State;
+    }
+
     //
 
     void Material::BindSharedParams(

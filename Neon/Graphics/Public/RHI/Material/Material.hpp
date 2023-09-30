@@ -70,6 +70,17 @@ namespace Neon::RHI
         [[nodiscard]] virtual bool IsCompute() const noexcept = 0;
 
         /// <summary>
+        /// Check to see if material is transparent.
+        /// </summary>
+        [[nodiscard]] virtual bool IsTransparent() const noexcept = 0;
+
+        /// <summary>
+        /// Check to see if material is transparent.
+        /// </summary>
+        [[nodiscard]] virtual void SetTransparent(
+            bool State = true) noexcept = 0;
+
+        /// <summary>
         /// Get the root signature.
         /// </summary>
         const Ptr<IRootSignature>& GetRootSignature() const noexcept

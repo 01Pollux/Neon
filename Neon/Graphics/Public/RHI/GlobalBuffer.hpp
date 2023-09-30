@@ -34,7 +34,7 @@ namespace Neon::RHI
             /// Get the GPU handle
             /// </summary>
             [[nodiscard]] RHI::GpuResourceHandle GetGpuHandle(
-                uint32_t RelOffset = 0) const
+                size_t RelOffset = 0) const
             {
                 return Buffer.GetHandle(Offset + RelOffset);
             }

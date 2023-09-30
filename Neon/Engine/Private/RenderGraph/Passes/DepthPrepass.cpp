@@ -22,7 +22,7 @@ namespace Neon::RG
             .Value  = RHI::ClearOperation::DepthStencil{ 1.0f, 0 }
         };
 
-        ResourceId DepthBuffer("DepthBuffer");
+        const ResourceId DepthBuffer("DepthBuffer");
 
         Resolver.CreateWindowTexture(
             DepthBuffer,
