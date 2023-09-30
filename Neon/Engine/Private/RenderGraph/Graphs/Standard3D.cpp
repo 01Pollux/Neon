@@ -18,7 +18,15 @@ namespace Neon::RG
         auto Builder = Graph->Reset();
 
         Builder.AddPass<DepthPrepass>();
+
         Builder.AddPass<ShadingPass>();
+
+        Builder.AddPass<CopyToTexturePass>(
+            CopyToTexturePass::CopyToTextureData{
+                .ViewName    = "Finalize",
+                .Source      = ResourceId("ShadedImage"),
+                .Destination = ResourceResolver::GetOutputImage() });
+
         Builder.Build();
     }
 } // namespace Neon::RG

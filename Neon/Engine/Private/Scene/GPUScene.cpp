@@ -110,7 +110,6 @@ namespace Neon::Scene
                                 m_Meshes[Renderable.GetInstanceId()] = &Mesh;
                             }
                         });
-                    printf("change: %d\n", MeshQuery.changed());
                 });
     }
 
