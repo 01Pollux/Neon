@@ -5,6 +5,7 @@
 #include <RenderGraph/Passes/LightCullPass.hpp>
 
 #include <RHI/Shaders/GridFrustumGen.hpp>
+#include <RHI/Shaders/LightCull.hpp>
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
 
@@ -14,6 +15,7 @@ namespace Neon::RG
         RenderPass("LightCullPass")
     {
         RHI::Shaders::GridFrustumGenShader GridFrustumGenShader;
+        RHI::Shaders::LightCullShader      LightCullShader;
 
         m_GridFrustumRS =
             RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
@@ -53,10 +55,12 @@ namespace Neon::RG
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        // RecreateGridFrustum(Storage, CommandList);
+        RecreateGridFrustumIfNeeded(Storage, CommandList);
     }
 
-    void LightCullPass::RecreateGridFrustum(
+    //
+
+    void LightCullPass::RecreateGridFrustumIfNeeded(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {

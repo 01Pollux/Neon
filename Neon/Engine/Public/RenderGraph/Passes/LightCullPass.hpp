@@ -24,9 +24,14 @@ namespace Neon::RG
 
     private:
         /// <summary>
+        /// Initialize root signature and pipeline state.
+        /// </summary>
+        void InitializeGridFrustumGen();
+
+        /// <summary>
         /// Recreates the grid frustum resource if needed. (window size changed)
         /// </summary>
-        void RecreateGridFrustum(
+        void RecreateGridFrustumIfNeeded(
             const GraphStorage&     Storage,
             RHI::ComputeCommandList CommandList);
 
@@ -44,5 +49,8 @@ namespace Neon::RG
         RHI::DescriptorHeapHandle m_GridFrustumViews; // 0: UAV, 1: SRV
         Ptr<RHI::IRootSignature>  m_GridFrustumRS;
         Ptr<RHI::IPipelineState>  m_GridFrustumPSO;
+
+        Ptr<RHI::IRootSignature> m_LightCullRS;
+        Ptr<RHI::IPipelineState> m_LightCullPSO;
     };
 } // namespace Neon::RG

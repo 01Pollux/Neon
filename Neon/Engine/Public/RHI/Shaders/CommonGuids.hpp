@@ -28,4 +28,9 @@ namespace Neon::RHI::Shaders
     {
         return Asset::Handle::FromString("91f8ade0-a897-41c7-802c-e11cbec5861f");
     }
+
+    static inline auto LightCullShaderGuid()
+    {
+        return Asset::Handle::FromString("de5df67e-e0c7-40dc-a73f-fc9ab93deca2");
+    }
 } // namespace Neon::RHI::Shaders

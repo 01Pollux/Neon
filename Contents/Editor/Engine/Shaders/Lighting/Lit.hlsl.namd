@@ -1,8 +1,8 @@
 {
-    "Guid": "7fd1137c-ad31-4f83-8c35-6d2246f66bd2",
-    "Path": "Engine\/Shaders\/Lighting\/Lit.hlsl.namd",
-    "Loader": "",
-    "Dependencies": "",
-    "LoaderId": "15635213787607061289",
-    "Hash": "b73aaebebed1bf21634c3c254d0f21d27940cd30adb99b50df192eaa2ab69782"
+  "Guid": "7fd1137c-ad31-4f83-8c35-6d2246f66bd2",
+  "Path": "Engine/Shaders/Lighting/Lit.hlsl.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "15635213787607061289",
+  "Hash": "b73aaebebed1bf21634c3c254d0f21d27940cd30adb99b50df192eaa2ab69782"
 }
