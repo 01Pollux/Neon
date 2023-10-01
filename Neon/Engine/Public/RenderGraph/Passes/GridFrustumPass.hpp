@@ -25,12 +25,22 @@ namespace Neon::RG
         /// Recreates the grid frustum resource if needed. (window size changed)
         /// </summary>
         void RecreateGridFrustum(
-            const Size2I& OutputSize);
+            const GraphStorage&     Storage,
+            RHI::ComputeCommandList CommandList);
+
+        /// <summary>
+        /// Dispatches the grid frustum pass.
+        /// </summary>
+        void DispatchGridFrustum(
+            const GraphStorage&     Storage,
+            RHI::ComputeCommandList CommandList,
+            const Size2I&           GridCount);
 
     private:
-        Size2I                   m_GridSize;
-        UPtr<RHI::IGpuResource>  m_GridFrustum;
-        Ptr<RHI::IRootSignature> m_GridFrustumRootSignature;
-        Ptr<RHI::IPipelineState> m_GridFrustumPipelineState;
+        Size2I                    m_GridSize;
+        UPtr<RHI::IGpuResource>   m_GridFrustum;
+        RHI::DescriptorHeapHandle m_GridFrustumViews; // 0: UAV, 1: SRV
+        Ptr<RHI::IRootSignature>  m_GridFrustumRS;
+        Ptr<RHI::IPipelineState>  m_GridFrustumPSO;
     };
 } // namespace Neon::RG

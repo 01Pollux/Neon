@@ -40,9 +40,7 @@ namespace Neon::RG
         const GraphStorage&      Storage,
         RHI::GraphicsCommandList CommandList)
     {
-        auto  CameraStorage = Storage.GetFrameDataHandle();
-        auto& SceneContext  = Storage.GetSceneContext();
-
+        auto& SceneContext = Storage.GetSceneContext();
         SceneContext.Render(CommandList, SceneContext::RenderType::DepthPrepass);
     }
 } // namespace Neon::RG

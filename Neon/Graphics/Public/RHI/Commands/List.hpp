@@ -550,7 +550,6 @@ namespace Neon::RHI
         /// Allocate from frame descriptor and set descriptor table in root signature
         /// </summary>
         void SetDynamicDescriptorTable(
-            bool                IsDirect,
             uint32_t            RootIndex,
             CpuDescriptorHandle Handle,
             uint32_t            Size,
@@ -928,7 +927,6 @@ namespace Neon::RHI
         /// Allocate from frame descriptor and set descriptor table in root signature
         /// </summary>
         void SetDynamicDescriptorTable(
-            bool                IsDirect,
             uint32_t            RootIndex,
             CpuDescriptorHandle Handle,
             uint32_t            Size,
