@@ -44,7 +44,7 @@ namespace Neon::RHI
 
         static_cast<Dx12CommandList*>(Iter->CommandList.get())->Reset();
 
-        return Iter->CommandList.get();
+        return Iter->CommandList.get(); 
     }
 
     ICommandList* Dx12CommandContextManager::Request(

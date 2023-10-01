@@ -86,6 +86,9 @@ namespace Neon::RG
 
             std::vector<RHI::ICommandList*> m_GraphicsCommandList;
             std::vector<RHI::ICommandList*> m_ComputeCommandList;
+
+            std::vector<bool> m_ActiveGraphicsCommandList;
+            std::vector<bool> m_ActiveComputeCommandList;
         };
 
     public:

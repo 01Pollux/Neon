@@ -120,8 +120,8 @@ namespace Neon::RG
 
             if (PrevLevel)
             {
-                PrevLevel->m_FlushCommands |= ((GraphicsCount != PrevLevel->m_GraphicsCommandsToFlush) &&
-                                               (ComputeCount != PrevLevel->m_ComputeCommandsToFlush)) ||
+                PrevLevel->m_FlushCommands |= (GraphicsCount != PrevLevel->m_GraphicsCommandsToFlush) ||
+                                               (ComputeCount != PrevLevel->m_ComputeCommandsToFlush) ||
                                               ThisLevel->m_FlushBarriers;
 
                 bool FlushedCommands       = PrevLevel->m_FlushCommands;
@@ -163,12 +163,14 @@ namespace Neon::RG
     /// Allocates a vector of command lists of type _Ty
     /// </summary>
     static void AllocateCommandLists(
-        std::vector<RHI::ICommandList*>& List)
+        std::vector<RHI::ICommandList*>& List,
+        std::vector<bool>&               ActiveList)
     {
         if (!List.empty())
         {
             auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
             List       = Queue->AllocateCommandLists(RHI::CommandQueueType::Graphics, List.size());
+            ActiveList.insert(ActiveList.end(), List.size(), true);
         }
     }
 
@@ -176,12 +178,14 @@ namespace Neon::RG
     /// Flushes a vector of command lists of type _Ty
     /// </summary>
     static void FreeCommandLists(
-        std::vector<RHI::ICommandList*>& List)
+        std::vector<RHI::ICommandList*>& List,
+        std::vector<bool>&               ActiveList)
     {
         if (!List.empty())
         {
             auto Queue = RHI::ISwapchain::Get()->GetQueue(true);
             Queue->FreeCommandLists(RHI::CommandQueueType::Graphics, List);
+            ActiveList.clear();
         }
     }
 
@@ -190,6 +194,7 @@ namespace Neon::RG
     /// </summary>
     static void FlushCommandLists(
         std::vector<RHI::ICommandList*>& List,
+        std::vector<bool>&               ActiveList,
         size_t                           Count)
     {
         if (Count)
@@ -197,6 +202,15 @@ namespace Neon::RG
             std::span View(List.data(), Count);
             auto      Queue = RHI::ISwapchain::Get()->GetQueue(true);
             Queue->Upload(View);
+
+            for (size_t i = 0; i < Count; i++)
+            {
+                RHI::ICommandList* CurCommandList = List.back();
+                List.pop_back();
+                List.push_back(CurCommandList);
+            }
+            ActiveList.erase(ActiveList.begin(), ActiveList.begin() + Count);
+            ActiveList.insert(ActiveList.end(), Count, false);
         }
     }
 
@@ -205,6 +219,7 @@ namespace Neon::RG
     /// </summary>
     static void ResetCommandLists(
         std::vector<RHI::ICommandList*>& List,
+        std::vector<bool>&               ActiveList,
         size_t                           Count)
     {
         if (Count)
@@ -212,6 +227,11 @@ namespace Neon::RG
             std::span View(List.data(), Count);
             auto      Queue = RHI::ISwapchain::Get()->GetQueue(true);
             Queue->Reset(RHI::CommandQueueType::Graphics, View);
+
+            for (size_t i = 0; i < Count; i++)
+            {
+                ActiveList[i] = true;
+            }
         }
     }
 
@@ -228,16 +248,16 @@ namespace Neon::RG
 
     void RenderGraph::CommandListContext::Begin()
     {
-        AllocateCommandLists(m_GraphicsCommandList);
-        AllocateCommandLists(m_ComputeCommandList);
+        AllocateCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList);
+        AllocateCommandLists(m_ComputeCommandList, m_ActiveComputeCommandList);
     }
 
     void RenderGraph::CommandListContext::Flush(
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        FlushCommandLists(m_GraphicsCommandList, GraphicsCount);
-        FlushCommandLists(m_ComputeCommandList, ComputeCount);
+        FlushCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList,GraphicsCount);
+        FlushCommandLists(m_ComputeCommandList, m_ActiveComputeCommandList, ComputeCount);
 
         if (ComputeCount)
         {
@@ -251,14 +271,14 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        ResetCommandLists(m_GraphicsCommandList, GraphicsCount);
-        ResetCommandLists(m_ComputeCommandList, ComputeCount);
+        ResetCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList, GraphicsCount);
+        ResetCommandLists(m_ComputeCommandList, m_ActiveComputeCommandList, ComputeCount);
     }
 
     void RenderGraph::CommandListContext::End()
     {
-        FreeCommandLists(m_GraphicsCommandList);
-        FreeCommandLists(m_ComputeCommandList);
+        FreeCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList);
+        FreeCommandLists(m_ComputeCommandList, m_ActiveComputeCommandList);
     }
 
     RHI::ICommandList* RenderGraph::CommandListContext::GetGraphics(
