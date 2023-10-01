@@ -2,11 +2,14 @@
 
 #include <RHI/Shaders/Common.hpp>
 
-namespace Neon::RHI
+namespace Neon::RHI::Shaders
 {
     class BlurShader : public GlobalShader
     {
     public:
-        BlurShader();
+        BlurShader() :
+            GlobalShader(BlurShaderGuid())
+        {
+        }
     };
 } // namespace Neon::RHI

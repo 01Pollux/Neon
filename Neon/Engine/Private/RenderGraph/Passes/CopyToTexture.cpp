@@ -6,19 +6,7 @@
 #include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>
 
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
-
-namespace Neon
-{
-    namespace AssetGuids
-    {
-        static inline auto CopyToTextureShaderGuid()
-        {
-            return Asset::Handle::FromString("d54f5bd2-3945-4e46-acfb-b31de1f08ad5");
-        }
-    } // namespace AssetGuids
-} // namespace Neon
+#include <RHI/Shaders/CopyToTexture.hpp>
 
 namespace Neon::RG
 {
@@ -27,10 +15,7 @@ namespace Neon::RG
         RenderPass("CopyToTexturePass"),
         m_Data(std::move(Data))
     {
-        // TODO: Load from asset rather than hardcoding
-        using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
-
-        ShaderAssetTaskPtr CopyToTextureShader(Asset::Manager::LoadAsync(AssetGuids::CopyToTextureShaderGuid()));
+        RHI::Shaders::CopyToTextureShader Shader;
 
         m_CopyToRootSignature =
             RHI::RootSignatureBuilder(STR("CopyToTexturePass::RootSignature"))
@@ -44,8 +29,8 @@ namespace Neon::RG
 
         RHI::PipelineStateBuilderG PipeineStateBuilder{
             .RootSignature = m_CopyToRootSignature,
-            .VertexShader  = CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }),
-            .PixelShader   = CopyToTextureShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }),
+            .VertexShader  = Shader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }),
+            .PixelShader   = Shader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }),
             .DepthStencil  = { .DepthEnable = false },
             .RTFormats     = { RHI::EResourceFormat::R8G8B8A8_UNorm },
             .Topology      = RHI::PrimitiveTopologyCategory::Triangle

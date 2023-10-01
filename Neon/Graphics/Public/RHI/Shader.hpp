@@ -30,7 +30,11 @@ namespace Neon::RHI
     };
     using MShaderCompileFlags = Bitmask<EShaderCompileFlags>;
 
+#ifdef NEON_DEBUG
+    static constexpr auto MShaderCompileFlags_Default = BitMask_Or(EShaderCompileFlags::Debug);
+#else
     static constexpr auto MShaderCompileFlags_Default = MShaderCompileFlags{};
+#endif
 
     enum class ShaderProfile : uint8_t
     {

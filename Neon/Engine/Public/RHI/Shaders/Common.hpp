@@ -2,8 +2,9 @@
 
 #include <Asset/Asset.hpp>
 #include <Asset/Types/Shader.hpp>
+#include <RHI/Shaders/CommonGuids.hpp>
 
-namespace Neon::RHI
+namespace Neon::RHI::Shaders
 {
     /// <summary>
     /// Helper class to load shaders async and discard them at the end of the scope.

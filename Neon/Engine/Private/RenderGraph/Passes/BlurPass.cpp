@@ -6,19 +6,7 @@
 #include <RHI/PipelineState.hpp>
 #include <RHI/GlobalDescriptors.hpp>
 
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
-
-namespace Neon
-{
-    namespace AssetGuids
-    {
-        static inline auto BlurShaderGuid()
-        {
-            return Asset::Handle::FromString("8d605fba-0199-4716-90ca-600366176e8a");
-        }
-    } // namespace AssetGuids
-} // namespace Neon
+#include <RHI/Shaders/Blur.hpp>
 
 namespace Neon::RG
 {
@@ -36,18 +24,11 @@ namespace Neon::RG
     {
         SetSigma(2.5f);
 
-        // TODO: Load from asset rather than hardcoding
-        using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
-
-        ShaderAssetTaskPtr Shader(Asset::Manager::LoadAsync(AssetGuids::BlurShaderGuid()));
+        RHI::Shaders::BlurShader Shader;
 
         RHI::ShaderCompileDesc ShaderDesc{
             .Stage = RHI::ShaderStage::Compute
         };
-
-#if NEON_DEBUG
-        ShaderDesc.Flags.Set(RHI::EShaderCompileFlags::Debug);
-#endif
 
         m_BlurSubPassRootSignature =
             RHI::RootSignatureBuilder(STR("BlurPass::RootSignature"))

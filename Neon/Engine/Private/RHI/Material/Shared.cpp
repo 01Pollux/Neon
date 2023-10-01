@@ -2,8 +2,7 @@
 #include <RHI/Material/Shared.hpp>
 #include <RHI/Material/Builder.hpp>
 
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
+#include <RHI/Shaders/Lit.hpp>
 #include <RHI/Resource/Resource.hpp>
 
 #include <Log/Logger.hpp>
@@ -14,15 +13,7 @@ namespace Neon::RHI
 
     void SharedMaterials::Initialize()
     {
-        using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
-
-        //
-
-        const auto         LitShaderGuid = Asset::Handle::FromString("7fd1137c-ad31-4f83-8c35-6d2246f66bd2");
-        ShaderAssetTaskPtr LitShader(Asset::Manager::LoadAsync(LitShaderGuid, true));
-
-        const auto         LitSpriteShaderGuid = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
-        ShaderAssetTaskPtr LitSpriteShader(Asset::Manager::LoadAsync(LitSpriteShaderGuid, true));
+        RHI::Shaders::LitShader LitShader;
 
         //
 
@@ -55,9 +46,6 @@ namespace Neon::RHI
                         .Build());
 
             RHI::MShaderCompileFlags Flags;
-#if NEON_DEBUG
-            Flags.Set(RHI::EShaderCompileFlags::Debug);
-#endif
 
             LitMaterial
                 .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
