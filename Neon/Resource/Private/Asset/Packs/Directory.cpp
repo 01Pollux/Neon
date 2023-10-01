@@ -299,7 +299,8 @@ namespace Neon::Asset
     }
 
     Ptr<IAsset> DirectoryAssetPackage::LoadAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool                 LoadTemp)
     {
         auto LoadFromCache =
             [this](const Asset::Handle& AssetGuid) -> Ptr<IAsset>
@@ -322,7 +323,8 @@ namespace Neon::Asset
         std::stack<Handle> ToLoad;
         ToLoad.push(AssetGuid);
 
-        Asset::DependencyReader DepReader;
+        Asset::DependencyReader  DepReader;
+        std::vector<Ptr<IAsset>> TempAssets;
 
         while (!ToLoad.empty())
         {
@@ -344,7 +346,7 @@ namespace Neon::Asset
             }
 
             // If we need to load dependencies first, skip this asset and load the dependencies
-            bool NeedsToDependenciesFirst = false;
+            bool NeedsDependenciesFirst = false;
 
             // Insert the assets that should be loaded first
             {
@@ -358,11 +360,11 @@ namespace Neon::Asset
                     else
                     {
                         ToLoad.push(std::move(DepGuid));
-                        NeedsToDependenciesFirst = true;
+                        NeedsDependenciesFirst = true;
                     }
                 }
             }
-            if (NeedsToDependenciesFirst)
+            if (NeedsDependenciesFirst)
             {
                 continue;
             }
@@ -404,13 +406,25 @@ namespace Neon::Asset
 
             ToLoad.pop();
 
+            if (!LoadTemp) [[likely]]
             {
                 RWLock Lock(m_CacheMutex);
-                m_Cache.emplace(CurrentGuid, Asset);
+                m_Cache.emplace(CurrentGuid, std::move(Asset));
+            }
+            else
+            {
+                TempAssets.emplace_back(std::move(Asset));
             }
         }
 
-        return LoadFromCache(AssetGuid);
+        if (!LoadTemp) [[likely]]
+        {
+            return LoadFromCache(AssetGuid);
+        }
+        else
+        {
+            return TempAssets.back();
+        }
     }
 
     bool DirectoryAssetPackage::UnloadAsset(

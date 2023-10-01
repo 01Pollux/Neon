@@ -19,10 +19,10 @@ namespace Neon::RHI
         //
 
         const auto         LitShaderGuid = Asset::Handle::FromString("7fd1137c-ad31-4f83-8c35-6d2246f66bd2");
-        ShaderAssetTaskPtr LitShader(Asset::Manager::LoadAsync(LitShaderGuid));
+        ShaderAssetTaskPtr LitShader(Asset::Manager::LoadAsync(LitShaderGuid, true));
 
         const auto         LitSpriteShaderGuid = Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
-        ShaderAssetTaskPtr LitSpriteShader(Asset::Manager::LoadAsync(LitSpriteShaderGuid));
+        ShaderAssetTaskPtr LitSpriteShader(Asset::Manager::LoadAsync(LitSpriteShaderGuid, true));
 
         //
 

@@ -98,10 +98,6 @@ namespace Neon::RHI
 
         ~IncludeHandler()
         {
-            for (auto& Handle : m_TextFileHandle)
-            {
-                Asset::Manager::RequestUnload(Handle);
-            }
         }
 
         HRESULT STDMETHODCALLTYPE LoadSource(
@@ -172,17 +168,17 @@ namespace Neon::RHI
                     Path.string(),
                     FileNameStr);
 
-                auto& Handle = m_TextFileHandle.emplace_back(Asset::Storage::FindAsset(PathToAsset, true, true).second);
+                auto Handle = Asset::Storage::FindAsset(PathToAsset, true, true).second;
                 if (Handle.is_nil()) [[unlikely]]
                 {
-                    m_TextFileHandle.pop_back();
+                    m_TextFiles.pop_back();
                     continue;
                 }
 
-                auto TextFile = std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset::Manager::Load(Handle));
+                auto TextFile = m_TextFiles.emplace_back(std::dynamic_pointer_cast<Asset::TextFileAsset>(Asset::Manager::Load(Handle, true)));
                 if (!TextFile) [[unlikely]]
                 {
-                    m_TextFileHandle.pop_back();
+                    m_TextFiles.pop_back();
                     continue;
                 }
 
@@ -204,7 +200,7 @@ namespace Neon::RHI
                 }
                 else
                 {
-                    m_TextFileHandle.pop_back();
+                    m_TextFiles.pop_back();
                 }
             }
 
@@ -233,7 +229,7 @@ namespace Neon::RHI
         IDxcIncludeHandler* m_DefaultIncludeHandler;
         StringU8View        m_IncludeDirectory;
 
-        std::list<Asset::Handle>                           m_TextFileHandle;
+        std::vector<Ptr<Asset::TextFileAsset>>             m_TextFiles;
         std::map<String, WinAPI::ComPtr<IDxcBlobEncoding>> m_LoadedFiles;
     };
 

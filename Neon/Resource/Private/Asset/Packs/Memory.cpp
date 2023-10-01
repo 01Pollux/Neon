@@ -74,7 +74,8 @@ namespace Neon::Asset
     }
 
     Ptr<IAsset> MemoryAssetPackage::LoadAsset(
-        const Asset::Handle& AssetGuid)
+        const Asset::Handle& AssetGuid,
+        bool)
     {
         RWLock Lock(m_CacheMutex);
         auto   Iter = m_Cache.find(AssetGuid);

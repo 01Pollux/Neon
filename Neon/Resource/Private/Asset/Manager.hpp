@@ -17,27 +17,31 @@ namespace Neon::Asset
         /// Load asynchronously an asset from the storage system.
         /// </summary>
         std::future<Ptr<IAsset>> LoadAsync(
-            const Handle& AssetGuid);
+            const Handle& AssetGuid,
+            bool          LoadTemp = false);
 
         /// <summary>
         /// Load asynchronously an asset from the storage system.
         /// </summary>
         std::future<Ptr<IAsset>> LoadAsync(
             IAssetPackage* Package,
-            const Handle&  AssetGuid);
+            const Handle&  AssetGuid,
+            bool           LoadTemp = false);
 
         /// <summary>
         /// Load an asset from the storage system.
         /// </summary>
         Ptr<IAsset> Load(
-            const Handle& AssetGuid);
+            const Handle& AssetGuid,
+            bool          LoadTemp = false);
 
         /// <summary>
         /// Load an asset from the storage system.
         /// </summary>
         Ptr<IAsset> Load(
             IAssetPackage* Package,
-            const Handle&  AssetGuid);
+            const Handle&  AssetGuid,
+            bool           LoadTemp = false);
 
         /// <summary>
         /// Load or reload asynchronously an asset from the storage system.

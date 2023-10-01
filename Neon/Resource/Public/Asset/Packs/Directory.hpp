@@ -44,7 +44,8 @@ namespace Neon::Asset
 
     protected:
         Ptr<IAsset> LoadAsset(
-            const Asset::Handle& AssetGuid) override;
+            const Asset::Handle& AssetGuid,
+            bool                 LoadTemp) override;
 
         bool UnloadAsset(
             const Asset::Handle& AssetGuid,

@@ -72,7 +72,8 @@ namespace Neon::Asset
         /// Load an asset from this package.
         /// </summary>
         [[nodiscard]] virtual Ptr<IAsset> LoadAsset(
-            const Asset::Handle& AssetGuid) = 0;
+            const Asset::Handle& AssetGuid,
+            bool                 LoadTemp) = 0;
 
         /// <summary>
         /// Unload an asset from this package.
