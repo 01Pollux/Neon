@@ -139,14 +139,13 @@ namespace Neon::RG
                 ThisLevel->m_GraphicsCommandsToReserve = GraphicsCount;
                 ThisLevel->m_ComputeCommandsToReserve  = 0;
 
-                if (ThisLevel->m_FlushBarriers)
+                if (ThisLevel->m_FlushBarriers && !ThisLevel->m_ResetCommands)
                 {
                     ThisLevel->m_GraphicsCommandsToReserve = ThisLevel->m_GraphicsCommandsToReserve ? (ThisLevel->m_GraphicsCommandsToReserve - 1) : 0;
                 }
             }
             else
             {
-
                 ThisLevel->m_GraphicsCommandsToReserve = std::min(LastFlushedGraphics, GraphicsCount);
                 ThisLevel->m_ComputeCommandsToReserve  = std::min(LastFlushedCompute, ComputeCount);
             }

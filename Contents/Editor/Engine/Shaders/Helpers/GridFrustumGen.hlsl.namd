@@ -1,0 +1,8 @@
+{
+  "Guid": "91f8ade0-a897-41c7-802c-e11cbec5861f",
+  "Path": "Engine/Shaders/Helpers/GridFrustumGen.hlsl.namd",
+  "Loader": "",
+  "Dependencies": "",
+  "LoaderId": "15635213787607061289",
+  "Hash": "931242fec9e6e900a5b77f1e6e18bf5036eecad48cf258f54b94f0fc0bb321f8"
+}

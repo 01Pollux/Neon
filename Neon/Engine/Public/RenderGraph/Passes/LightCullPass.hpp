@@ -5,12 +5,14 @@
 
 namespace Neon::RG
 {
-    class GridFrustumPass : public ComputeRenderPass<GridFrustumPass>
+    class LightCullPass : public ComputeRenderPass<LightCullPass>
     {
         friend class RenderPass;
 
     public:
-        GridFrustumPass();
+        LightCullPass();
+
+        ~LightCullPass();
 
     protected:
         void ResolveResources(

@@ -23,4 +23,9 @@ namespace Neon::RHI::Shaders
     {
         return Asset::Handle::FromString("7427990f-9be1-4a23-aad5-1b99f00c29fd");
     }
+
+    static inline auto GridFrustumGenShaderGuid()
+    {
+        return Asset::Handle::FromString("91f8ade0-a897-41c7-802c-e11cbec5861f");
+    }
 } // namespace Neon::RHI::Shaders

@@ -180,6 +180,7 @@ namespace Neon::RHI
         /// Sets constants in root signature
         /// </summary>
         template<typename _Ty>
+            requires std::is_fundamental_v<_Ty>
         void SetConstants(
             bool       IsDirect,
             uint32_t   RootIndex,
@@ -488,6 +489,7 @@ namespace Neon::RHI
         /// Sets constants in root signature
         /// </summary>
         template<typename _Ty>
+            requires std::is_fundamental_v<_Ty>
         void SetConstants(
             uint32_t   RootIndex,
             const _Ty& Constants,
@@ -866,6 +868,7 @@ namespace Neon::RHI
         /// Sets constants in root signature
         /// </summary>
         template<typename _Ty>
+            requires std::is_fundamental_v<_Ty>
         void SetConstants(
             uint32_t   RootIndex,
             const _Ty& Constants,

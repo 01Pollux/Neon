@@ -375,7 +375,7 @@ namespace Neon::RHI
                     [&](const IRootSignature::ParamConstant& Constant)
                     {
                         auto& Entry = std::get<ConstantEntry>(m_SharedParameters->SharedEntries.at(Constant.Name));
-                        CommandList->SetConstants(!m_IsCompute, i, m_SharedParameters->ConstantData.get() + Entry.DataOffset);
+                        CommandList->SetConstants(!m_IsCompute, i, m_SharedParameters->ConstantData.get() + Entry.DataOffset, Constant.Num32BitValues);
                     },
                     [&](const IRootSignature::ParamRoot& Root)
                     {

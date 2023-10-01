@@ -179,7 +179,7 @@ namespace Neon::RG
         }
 
         CommandList.SetRootSignature(m_BlurSubPassRootSignature);
-        CommandList.SetConstants(uint32_t(BlurPassRS::BlurParams), m_GaussWeights);
+        CommandList.SetConstants(uint32_t(BlurPassRS::BlurParams), m_GaussWeights.data(), m_GaussWeights.size());
         CommandList.SetDescriptorTable(uint32_t(BlurPassRS::InputOutput_TextureMap), Descriptor.GetGpuHandle());
 
         auto Size = Storage.GetResourceSize(m_Data.Source);
@@ -192,7 +192,7 @@ namespace Neon::RG
         do
         {
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateH);
-            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
+            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput, std::size(SourceOutput));
             CommandList.Dispatch(Size.x, Size.y);
 
             if (Iterations == 1)
@@ -209,7 +209,7 @@ namespace Neon::RG
             CommandList.InsertUAVBarrier(IntermediateResource);
 
             CommandList.SetPipelineState(m_BlurSubPassPipelineStateV);
-            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput);
+            CommandList.SetConstants(uint32_t(BlurPassRS::IndexOffset), SourceOutput, std::size(SourceOutput));
             CommandList.Dispatch(Size.x, Size.y);
 
             if (Iterations != 1)

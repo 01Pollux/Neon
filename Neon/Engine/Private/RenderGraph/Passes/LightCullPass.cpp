@@ -2,40 +2,61 @@
 
 #include <Math/Frustum.hpp>
 #include <RenderGraph/RG.hpp>
-#include <RenderGraph/Passes/GridFrustumPass.hpp>
+#include <RenderGraph/Passes/LightCullPass.hpp>
 
+#include <RHI/Shaders/GridFrustumGen.hpp>
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
 
 namespace Neon::RG
 {
-    GridFrustumPass::GridFrustumPass() :
-        RenderPass("GridFrustumPass")
+    LightCullPass::LightCullPass() :
+        RenderPass("LightCullPass")
     {
+        RHI::Shaders::GridFrustumGenShader GridFrustumGenShader;
+
+        m_GridFrustumRS =
+            RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
+                .Add32BitConstants<Size2I>("c_DispatchConstants", 0, 1)
+                .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
+                .AddDescriptorTable(
+                    "c_Frustum",
+                    RHI::RootDescriptorTable()
+                        .AddUavRange("", 0, 1, 1),
+                    RHI::ShaderVisibility::All)
+                .ComputeOnly()
+                .AddStandardSamplers()
+                .Build();
+
+        m_GridFrustumPSO =
+            RHI::PipelineStateBuilderC{
+                .RootSignature = m_GridFrustumRS,
+                .ComputeShader = GridFrustumGenShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
+            }
+                .Build();
     }
 
-    void GridFrustumPass::ResolveResources(
+    LightCullPass::~LightCullPass()
+    {
+        if (m_GridFrustumViews)
+        {
+            RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Free(m_GridFrustumViews);
+        }
+    }
+
+    void LightCullPass::ResolveResources(
         ResourceResolver& Resolver)
     {
-        /* auto Desc = RHI::ResourceDesc::Buffer(
-             Resolver.GetSwapchainFormat(),
-             0, 0, 1, 1);
-
-         const ResourceId GridFrustum("GridFrustum");
-
-         Resolver.CreateWindowTexture(
-             GridFrustum,
-             Desc);*/
     }
 
-    void GridFrustumPass::DispatchTyped(
+    void LightCullPass::DispatchTyped(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
-        RecreateGridFrustum(Storage, CommandList);
+        // RecreateGridFrustum(Storage, CommandList);
     }
 
-    void GridFrustumPass::RecreateGridFrustum(
+    void LightCullPass::RecreateGridFrustum(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList)
     {
@@ -52,7 +73,8 @@ namespace Neon::RG
             int(Math::DivideByMultiple(OutputSize.x, GroupSize.x)),
             int(Math::DivideByMultiple(OutputSize.y, GroupSize.y)));
 
-        size_t SizeInBytes = sizeof(Geometry::Frustum) * GridCount.x * GridCount.y;
+        uint32_t BufferCount = GridCount.x * GridCount.y;
+        size_t   SizeInBytes = sizeof(Geometry::Frustum) * BufferCount;
 
         RHI::MResourceFlags Flags;
         Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
@@ -71,18 +93,30 @@ namespace Neon::RG
 
         m_GridFrustumViews = Descriptor->Allocate(2);
 
+        RHI::UAVDesc UavDesc{
+            .View = RHI::UAVDesc::Buffer{
+                .Count        = BufferCount,
+                .SizeOfStruct = sizeof(Geometry::Frustum) }
+        };
         m_GridFrustumViews->CreateUnorderedAccessView(
             m_GridFrustumViews.Offset,
-            m_GridFrustum.get());
+            m_GridFrustum.get(),
+            &UavDesc);
 
+        RHI::SRVDesc SrvDesc{
+            .View = RHI::SRVDesc::Buffer{
+                .Count        = BufferCount,
+                .SizeOfStruct = sizeof(Geometry::Frustum) }
+        };
         m_GridFrustumViews->CreateShaderResourceView(
             m_GridFrustumViews.Offset + 1,
-            m_GridFrustum.get());
+            m_GridFrustum.get(),
+            &SrvDesc);
 
         DispatchGridFrustum(Storage, CommandList, GridCount);
     }
 
-    void GridFrustumPass::DispatchGridFrustum(
+    void LightCullPass::DispatchGridFrustum(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList,
         const Size2I&           GridCount)

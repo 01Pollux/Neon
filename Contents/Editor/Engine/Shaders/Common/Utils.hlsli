@@ -1,10 +1,36 @@
 #ifndef COMMON_UTILS_H
 #define COMMON_UTILS_H
 
+//
+
+// Convert clip space coordinates to view space
+float4 ClipToViewPosition(
+	in const float4 ClipPos,
+	in const matrix ProjectionInverse)
+{
+	float4 WorldPos = mul(ClipPos, ProjectionInverse);
+	return WorldPos / WorldPos.w;
+}
+
+// Convert screen space coordinates to view space
+float4 ScreenToViewPosition(
+	in const float4 ScreenPos,
+	in const float2 ScreenSize,
+	in const matrix ProjectionInverse)
+{
+	float2 ScreenUV = ScreenPos.xy / ScreenSize;
+	ScreenUV.y = 1.0f - ScreenUV.y;
+	ScreenUV = ScreenUV * 2.0f - 1.0f;
+	
+	return ClipToViewPosition(float4(ScreenUV, ScreenPos.z, 1.0f), ProjectionInverse);
+}
+
+//
+
 float3 UVToViewPosition(
-	float2 UV,
-	float Depth,
-	matrix ProjectionInverse)
+	in const float2 UV,
+	in const float Depth,
+	in const matrix ProjectionInverse)
 {
 	float2 ScreenUV = UV * 2.0f - 1.0f;
 	ScreenUV.y *= -1.0f;
@@ -16,9 +42,9 @@ float3 UVToViewPosition(
 }
 
 float3 UVToWorldPosition(
-	float2 UV,
-	float Depth,
-	matrix ProjectionInverse)
+	in const float2 UV,
+	in const float Depth,
+	in const matrix ProjectionInverse)
 {
 	float2 ScreenUV = UV * 2.0f - 1.0f;
 	ScreenUV.y *= -1.0f;
@@ -28,6 +54,9 @@ float3 UVToWorldPosition(
 	
 	return WorldPos.xyz / WorldPos.w;
 }
+
+
+//
 
 SamplerState s_Sampler_PointWrap : register(s0, space0);
 SamplerState s_Sampler_PointClamp : register(s1, space0);

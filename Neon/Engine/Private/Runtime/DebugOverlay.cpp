@@ -220,7 +220,7 @@ namespace Neon::Runtime
                     RHI::IRootSignature::Create(
                         RHI::RootSignatureBuilder()
                             .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
-                            .AddConstantBufferView("PerFrameData", 0, 1)))
+                            .AddConstantBufferView("_FrameConstant", 0, 1)))
                 .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
                 .DepthStencil(RHI::MaterialStates::DepthStencil::None)
                 .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))

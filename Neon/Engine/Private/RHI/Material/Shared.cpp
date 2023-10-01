@@ -30,9 +30,6 @@ namespace Neon::RHI
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle)
                 .RootSignature(
                     RHI::RootSignatureBuilder(STR("Material::Lit_RootSignature"))
-                        .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
-                        .AddShaderResourceView("_PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("_PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
                         .AddDescriptorTable(
                             "TextureMaps",
                             RHI::RootDescriptorTable(true)
@@ -41,6 +38,9 @@ namespace Neon::RHI
                                 .AddSrvRange("Specular", 0, 2, 1)
                                 .AddSrvRange("Emissive", 0, 2, 1),
                             RHI::ShaderVisibility::Pixel)
+                        .AddShaderResourceView("_PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("_PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()
                         .Build());
