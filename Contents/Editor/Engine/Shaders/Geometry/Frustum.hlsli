@@ -45,22 +45,68 @@ bool IsInsideFrustum(const in Frustum frustum, const in float3 pt, const in floa
 	return true;
 }
 
-bool IsInsideFrustum(const in Frustum frustum, const in float3 pt, const in float radius, out float3 outPt, out float outDist, out int outPlane)
+bool PointInsideFrustum(const in Frustum frustum, const in float3 pt, const in float near, const in float far)
 {
-	outPt = pt;
-	outDist = 0.0f;
-	for (int i = 0; i < 6; ++i)
+	bool result = true;
+	if ((pt.z > near) || (pt.z < far))
 	{
-		float dist = dot(frustum.planes[i].Normal, pt) + frustum.planes[i].Distance;
-		if (dist < -radius)
+		result = false;
+	}
+
+	for (int i = 0; i < 4 && result; i++)
+	{
+		if (PointInsidePlane(frustum.planes[i], pt))
 		{
-			outPt += frustum.planes[i].Normal * (dist + radius);
-			outDist = dist + radius;
-			outPlane = i;
-			return false;
+			result = false;
 		}
 	}
-	return true;
+
+	return result;
+}
+
+//
+
+bool SphereInsideFrustum(const in Frustum frustum, const in Sphere sphere, const in float near, const in float far)
+{
+	bool result = true;
+	if (((sphere.Center.z - sphere.Radius) > near) || ((sphere.Center.z + sphere.Radius) < far))
+	{
+		result = false;
+	}
+
+	for (int i = 0; i < 4 && result; i++)
+	{
+		if (SphereInsidePlane(sphere, frustum.planes[i]))
+		{
+			result = false;
+		}
+	}
+
+	return result;
+}
+
+bool ConeInsideFrustum(const in Frustum frustum, const in Cone cone, const in float near, const in float far)
+{
+	bool result = true;
+
+	Plane nearPlane = { float3(0, 0, -1), -near };
+	Plane farPlane = { float3(0, 0, 1), far };
+
+    // First check the near and far clipping planes.
+	if (!ConeInsidePlane(cone, nearPlane) && !ConeInsidePlane(cone, farPlane))
+	{
+		// Then check frustum planes
+		for (int i = 0; i < 4; i++)
+		{
+			if (ConeInsidePlane(cone, frustum.planes[i]))
+			{
+				result = false;
+				break;
+			}
+		}
+	}
+
+	return result;
 }
 	
 #endif

@@ -24,11 +24,6 @@ namespace Neon::RG
 
     private:
         /// <summary>
-        /// Initialize root signature and pipeline state.
-        /// </summary>
-        void InitializeGridFrustumGen();
-
-        /// <summary>
         /// Recreates the grid frustum resource if needed. (window size changed)
         /// </summary>
         void RecreateGridFrustumIfNeeded(

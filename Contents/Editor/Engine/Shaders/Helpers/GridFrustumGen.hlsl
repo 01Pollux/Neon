@@ -11,10 +11,6 @@
 #define CS_KERNEL_SIZE_Y 16
 #endif
 
-#ifndef CS_KERNEL_SIZE_Z
-#define CS_KERNEL_SIZE_Z 1
-#endif
-
 
 //
 
@@ -25,11 +21,11 @@ struct DispatchConstants
 
 ConstantBuffer<DispatchConstants> c_DispatchConstants : register(b0, space1);
 
-RWStructuredBuffer<Frustum> c_Frustum : register(u0, space1);
+RWStructuredBuffer<Frustum> c_FrustumGrid : register(u0, space1);
 
 //
 
-[numthreads(CS_KERNEL_SIZE_X, CS_KERNEL_SIZE_Y, CS_KERNEL_SIZE_Z)]
+[numthreads(CS_KERNEL_SIZE_X, CS_KERNEL_SIZE_Y, 1)]
 void CS_Main(
 	uint3 DTID : SV_DispatchThreadID)
 {
@@ -52,7 +48,7 @@ void CS_Main(
 	ViewSpace[3] = ScreenToViewPosition(float4((DTID.x + 1) * CS_KERNEL_SIZE_X, (DTID.y + 1) * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).xyz;
 
 	// Get it from g_FrameData.World
-	float3 EyePosition = g_FrameData.World._41_42_43;
+	float3 EyePosition = (float3) 0;
 	
 	Frustum Frustum;
 	Frustum.planes[0] = PlaneFromPoints(EyePosition, ViewSpace[2], ViewSpace[0]);
@@ -61,5 +57,5 @@ void CS_Main(
 	Frustum.planes[3] = PlaneFromPoints(EyePosition, ViewSpace[3], ViewSpace[2]);
 
 	uint Index = DTID.y * c_DispatchConstants.ThreadCounts.x + DTID.x;
-	c_Frustum[Index] = Frustum;
+	c_FrustumGrid[Index] = Frustum;
 }

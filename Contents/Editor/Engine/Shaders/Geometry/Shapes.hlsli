@@ -11,7 +11,7 @@ struct Cone
 {
 	float3 Tip;
 	float Height;
-	float3 Distanec;
+	float3 Direction;
 	float Radius;
 };
 
@@ -47,6 +47,11 @@ Plane PlaneFromPoints(const in float3 p0, const in float3 p1, const in float3 p2
 
 //
 
+bool PointInsideSphere(const in Sphere sphere, const in float3 pt)
+{
+	return length(pt - sphere.Center) < sphere.Radius;
+}
+
 bool SphereInsidePlane(const in Sphere sphere, const in Plane plane)
 {
 	return dot(plane.Normal, sphere.Center) - plane.Distance < sphere.Radius;
@@ -60,10 +65,9 @@ bool SphereInsideSphere(const in Sphere sphere0, const in Sphere sphere1)
 bool SphereInsideCone(const in Sphere sphere, const in Cone cone)
 {
 	float3 v = sphere.Center - cone.Tip;
-	float3 n = normalize(cone.Distanec);
-	float d = dot(v, n);
+	float d = dot(v, cone.Direction);
 	float r = cone.Radius * (cone.Height - d) / cone.Height;
-	return length(v - n * d) < r + sphere.Radius;
+	return length(v - cone.Direction * d) < r + sphere.Radius;
 }
 
 bool SphereInsideCylinder(const in Sphere sphere, const in Cylinder cylinder)
@@ -84,6 +88,14 @@ bool SphereInsideBox(const in Sphere sphere, const in Box box)
 
 //
 
+bool PointInsideCone(const in Cone cone, const in float3 pt)
+{
+	float3 v = pt - cone.Tip;
+	float d = dot(v, cone.Direction);
+	float r = cone.Radius * (cone.Height - d) / cone.Height;
+	return length(v - cone.Direction * d) < r;
+}
+
 bool ConeInsidePlane(const in Cone cone, const in Plane plane)
 {
 	return dot(plane.Normal, cone.Tip) - plane.Distance < cone.Radius;
@@ -91,42 +103,44 @@ bool ConeInsidePlane(const in Cone cone, const in Plane plane)
 
 bool ConeInsideSphere(const in Cone cone, const in Sphere sphere)
 {
-	float3 v = sphere.Center - cone.Tip;
-	float3 n = normalize(cone.Distanec);
-	float d = dot(v, n);
-	float r = cone.Radius * (cone.Height - d) / cone.Height;
-	return length(v - n * d) < r + sphere.Radius;
+	return SphereInsideCone(sphere, cone);
 }
 
 bool ConeInsideCone(const in Cone cone0, const in Cone cone1)
 {
 	float3 v = cone1.Tip - cone0.Tip;
-	float3 n = normalize(cone0.Distanec);
-	float d = dot(v, n);
+	float d = dot(v, cone0.Direction);
 	float r = cone0.Radius * (cone0.Height - d) / cone0.Height;
-	return length(v - n * d) < r + cone1.Radius;
+	return length(v - cone0.Direction * d) < r + cone1.Radius;
 }
 
 bool ConeInsideCylinder(const in Cone cone, const in Cylinder cylinder)
 {
 	float3 v = cylinder.Center - cone.Tip;
-	float3 n = normalize(cone.Distanec);
-	float d = dot(v, n);
+	float d = dot(v, cone.Direction);
 	float r = cone.Radius * (cone.Height - d) / cone.Height;
-	return length(v - n * d) < r + cylinder.Radius;
+	return length(v - cone.Direction * d) < r + cylinder.Radius;
 }
 
 bool ConeInsideBox(const in Cone cone, const in Box box)
 {
 	float3 v = abs(box.Center - cone.Tip);
 	float3 e = box.Extents;
-	float3 n = normalize(cone.Distanec);
-	float d = dot(v, n);
+	float d = dot(v, cone.Direction);
 	float r = cone.Radius * (cone.Height - d) / cone.Height;
-	return length(v - n * d) < r + length(e);
+	return length(v - cone.Direction * d) < r + length(e);
 }
 
 //
+
+bool PointInsideCylinder(const in Cylinder cylinder, const in float3 pt)
+{
+	float3 v = pt - cylinder.Center;
+	float3 n = normalize(cylinder.Distance);
+	float d = dot(v, n);
+	float r = cylinder.Radius * (cylinder.Height - d) / cylinder.Height;
+	return length(v - n * d) < r;
+}
 
 bool CylinderInsidePlane(const in Cylinder cylinder, const in Plane plane)
 {
@@ -135,20 +149,12 @@ bool CylinderInsidePlane(const in Cylinder cylinder, const in Plane plane)
 
 bool CylinderInsideSphere(const in Cylinder cylinder, const in Sphere sphere)
 {
-	float3 v = sphere.Center - cylinder.Center;
-	float3 n = normalize(cylinder.Distance);
-	float d = dot(v, n);
-	float r = cylinder.Radius * (cylinder.Height - d) / cylinder.Height;
-	return length(v - n * d) < r + sphere.Radius;
+	return SphereInsideCylinder(sphere, cylinder);
 }
 
 bool CylinderInsideCone(const in Cylinder cylinder, const in Cone cone)
 {
-	float3 v = cone.Tip - cylinder.Center;
-	float3 n = normalize(cylinder.Distance);
-	float d = dot(v, n);
-	float r = cylinder.Radius * (cylinder.Height - d) / cylinder.Height;
-	return length(v - n * d) < r + cone.Radius;
+	return ConeInsideCylinder(cone, cylinder);
 }
 
 bool CylinderInsideCylinder(const in Cylinder cylinder0, const in Cylinder cylinder1)
@@ -172,55 +178,50 @@ bool CylinderInsideBox(const in Cylinder cylinder, const in Box box)
 
 //
 
+bool PointInsideBox(const in Box box, const in float3 pt)
+{
+	float3 v = abs(pt - box.Center);
+	float3 e = box.Extents;
+	return v.x < e.x && v.y < e.y && v.z < e.z;
+}
+
 bool BoxInsidePlane(const in Box box, const in Plane plane)
 {
-	float3 e = box.Extents;
-	float3 n = plane.Normal;
-	float d = plane.Distance;
-	float r = e.x * abs(n.x) + e.y * abs(n.y) + e.z * abs(n.z);
-	return dot(n, box.Center) - d < r;
+	return dot(plane.Normal, box.Center) - plane.Distance < length(box.Extents);
 }
 
 bool BoxInsideSphere(const in Box box, const in Sphere sphere)
 {
-	float3 v = abs(sphere.Center - box.Center);
-	float3 e = box.Extents;
-	return v.x < e.x + sphere.Radius && v.y < e.y + sphere.Radius && v.z < e.z + sphere.Radius;
+	return SphereInsideBox(sphere, box);
 }
 
 bool BoxInsideCone(const in Box box, const in Cone cone)
 {
-	float3 v = abs(cone.Tip - box.Center);
-	float3 e = box.Extents;
-	float3 n = normalize(cone.Distanec);
-	float d = dot(v, n);
-	float r = cone.Radius * (cone.Height - d) / cone.Height;
-	return length(v - n * d) < r + length(e);
+	return ConeInsideBox(cone, box);
 }
 
 bool BoxInsideCylinder(const in Box box, const in Cylinder cylinder)
 {
-	float3 v = abs(cylinder.Center - box.Center);
-	float3 e = box.Extents;
-	float3 n = normalize(cylinder.Distance);
-	float d = dot(v, n);
-	float r = cylinder.Radius * (cylinder.Height - d) / cylinder.Height;
-	return length(v - n * d) < r + length(e);
+	return CylinderInsideBox(cylinder, box);
 }
 
 bool BoxInsideBox(const in Box box0, const in Box box1)
 {
 	float3 v = abs(box1.Center - box0.Center);
-	float3 e0 = box0.Extents;
-	float3 e1 = box1.Extents;
-	return v.x < e0.x + e1.x && v.y < e0.y + e1.y && v.z < e0.z + e1.z;
+	float3 e = box0.Extents + box1.Extents;
+	return v.x < e.x && v.y < e.y && v.z < e.z;
 }
 
 //
 
+bool PointInsidePlane(const in Plane plane0, const in float3 pt)
+{
+	return dot(plane0.Normal, pt) - plane0.Distance < length(plane0.Normal);
+}
+
 bool PlaneInsidePlane(const in Plane plane0, const in Plane plane1)
 {
-	return dot(plane0.Normal, plane1.Normal) - plane0.Distance < plane1.Distance;
+	return dot(plane0.Normal, plane1.Normal) - plane0.Distance < length(plane1.Normal);
 }
 
 bool PlaneInsideSphere(const in Plane plane, const in Sphere sphere)

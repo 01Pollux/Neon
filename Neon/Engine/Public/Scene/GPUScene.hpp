@@ -17,6 +17,13 @@ namespace Neon::Scene
 {
     class GPUScene
     {
+        struct LightData
+        {
+            Vector3 Position;
+            float   SpotlightAngle;
+            Vector3 Direction;
+        };
+
         struct InstanceData
         {
             Matrix4x4 World;

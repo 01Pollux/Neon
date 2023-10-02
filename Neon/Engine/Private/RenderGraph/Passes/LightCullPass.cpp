@@ -30,10 +30,38 @@ namespace Neon::RG
                 .AddStandardSamplers()
                 .Build();
 
+        uint32_t DescriptorOffset = 0;
+        m_LightCullRS =
+            RHI::RootSignatureBuilder(STR("LightCull::RootSignature"))
+                .Add32BitConstants<uint32_t>("c_LightInfo", 0, 1)
+                .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
+                .AddDescriptorTable(
+                    "c_TextureTable",
+                    RHI::RootDescriptorTable()
+                        .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, DescriptorOffset++)
+                        .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, DescriptorOffset++)
+                        .AddSrvRangeAt("c_Lights", 2, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightResult", 0, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightIndexList_Opaque", 1, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightIndexList_Transparent", 2, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightGrid_Opaque", 3, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightGrid_Transparent", 4, 1, 1, DescriptorOffset++),
+                    RHI::ShaderVisibility::All)
+                .ComputeOnly()
+                .AddStandardSamplers()
+                .Build();
+
         m_GridFrustumPSO =
             RHI::PipelineStateBuilderC{
                 .RootSignature = m_GridFrustumRS,
                 .ComputeShader = GridFrustumGenShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
+            }
+                .Build();
+
+        m_LightCullPSO =
+            RHI::PipelineStateBuilderC{
+                .RootSignature = m_LightCullRS,
+                .ComputeShader = LightCullShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
             }
                 .Build();
     }
