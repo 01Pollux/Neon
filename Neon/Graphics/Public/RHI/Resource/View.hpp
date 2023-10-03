@@ -145,9 +145,10 @@ namespace Neon::RHI
 
         //
 
+        ViewVariant View;
+
         EResourceFormat        Format = EResourceFormat::Unknown;
         ShaderComponentMapping Mapping;
-        ViewVariant            View;
     };
 
     //
@@ -204,8 +205,9 @@ namespace Neon::RHI
 
         //
 
+        ViewVariant View;
+
         EResourceFormat Format = EResourceFormat::Unknown;
-        ViewVariant     View;
     };
 
     //

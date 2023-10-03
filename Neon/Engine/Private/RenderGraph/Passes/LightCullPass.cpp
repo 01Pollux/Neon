@@ -17,6 +17,8 @@ namespace Neon::RG
         RHI::Shaders::GridFrustumGenShader GridFrustumGenShader;
         RHI::Shaders::LightCullShader      LightCullShader;
 
+        CreateResources();
+
         m_GridFrustumRS =
             RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
                 .Add32BitConstants<Size2I>("c_DispatchConstants", 0, 1)
@@ -33,7 +35,7 @@ namespace Neon::RG
         uint32_t DescriptorOffset = 0;
         m_LightCullRS =
             RHI::RootSignatureBuilder(STR("LightCull::RootSignature"))
-                .Add32BitConstants<uint32_t>("c_LightInfo", 0, 1)
+                .Add32BitConstants<LightInfo>("c_LightInfo", 0, 1)
                 .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
                 .AddDescriptorTable(
                     "c_TextureTable",
@@ -77,6 +79,19 @@ namespace Neon::RG
     void LightCullPass::ResolveResources(
         ResourceResolver& Resolver)
     {
+        // const ResourceId DepthBuffer("DepthBuffer");
+        // const ResourceId LightCullResult("LightCullResult");
+
+        ////
+
+        ////
+
+        // Resolver.ReadTexture(
+        //     DepthBuffer.CreateView("LightCull"),
+        //     ResourceReadAccess::NonPixelShader,
+        //     RHI::SRVDesc{
+        //         .View   = RHI::SRVDesc::Texture2D{},
+        //         .Format = RHI::EResourceFormat::R32_Float });
     }
 
     void LightCullPass::DispatchTyped(
@@ -105,6 +120,14 @@ namespace Neon::RG
             int(Math::DivideByMultiple(OutputSize.x, GroupSize.x)),
             int(Math::DivideByMultiple(OutputSize.y, GroupSize.y)));
 
+        RecreateGridFrustum(GridCount);
+        DispatchGridFrustum(Storage, CommandList, GridCount);
+        RecreateLightGrid(GridCount);
+    }
+
+    void LightCullPass::RecreateGridFrustum(
+        const Size2I& GridCount)
+    {
         uint32_t BufferCount = GridCount.x * GridCount.y;
         size_t   SizeInBytes = sizeof(Geometry::Frustum) * BufferCount;
 
@@ -121,7 +144,8 @@ namespace Neon::RG
         m_GridFrustum.reset(RHI::IGpuResource::Create(
             RHI::ResourceDesc::Buffer(
                 SizeInBytes,
-                Flags)));
+                Flags),
+            { .Name = STR("LightCull::GridFrustum") }));
 
         m_GridFrustumViews = Descriptor->Allocate(2);
 
@@ -144,8 +168,6 @@ namespace Neon::RG
             m_GridFrustumViews.Offset + 1,
             m_GridFrustum.get(),
             &SrvDesc);
-
-        DispatchGridFrustum(Storage, CommandList, GridCount);
     }
 
     void LightCullPass::DispatchGridFrustum(
@@ -185,5 +207,59 @@ namespace Neon::RG
 
         StateManager->TransitionResource(m_GridFrustum.get(), RHI::EResourceState::NonPixelShaderResource);
         StateManager->FlushBarriers(CommandList);
+    }
+
+    //
+
+    void LightCullPass::RecreateLightGrid(
+        const Size2I& GridCount)
+    {
+        uint32_t BufferCount           = GridCount.x * GridCount.y;
+        size_t   SizeInBytesForIndices = sizeof(uint32_t) * BufferCount * MaxOverlappingLightsPerTile;
+
+        RHI::MResourceFlags Flags;
+        Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
+
+        // Create opaque and transparent index list
+        {
+            m_LightIndexList_Opaque.reset(RHI::IGpuResource::Create(
+                RHI::ResourceDesc::Buffer(
+                    SizeInBytesForIndices,
+                    Flags),
+                { .Name = STR("LightCull::LightIndexList_Opaque") }));
+
+            m_LightIndexList_Transparent.reset(RHI::IGpuResource::Create(
+                RHI::ResourceDesc::Buffer(
+                    SizeInBytesForIndices,
+                    Flags),
+                { .Name = STR("LightCull::LightIndexList_Transparent") }));
+        }
+
+        // Create opaque and transparent grid
+        {
+            m_LightGrid_Opaque.reset(RHI::IGpuResource::Create(
+                RHI::ResourceDesc::Tex2D(
+                    RHI::EResourceFormat::R32G32_UInt,
+                    GridCount.x,
+                    GridCount.y,
+                    1, 1,
+                    1, 0,
+                    Flags),
+                { .Name = STR("LightCull::LightGrid_Opaque") }));
+
+            m_LightGrid_Transparent.reset(RHI::IGpuResource::Create(
+                RHI::ResourceDesc::Tex2D(
+                    RHI::EResourceFormat::R32G32_UInt,
+                    GridCount.x,
+                    GridCount.y,
+                    1, 1,
+                    1, 0,
+                    Flags),
+                { .Name = STR("LightCull::LightGrid_Transparent") }));
+        }
+    }
+
+    void LightCullPass::CreateResources()
+    {
     }
 } // namespace Neon::RG

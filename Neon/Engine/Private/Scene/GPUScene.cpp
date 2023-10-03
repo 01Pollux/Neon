@@ -44,7 +44,12 @@ namespace Neon::Scene
             .each(
                 [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform, Component::Renderable& Renderable)
                 {
-                    auto o = Iter.entity(Idx).id();
+                    if (Renderable)
+                    {
+                        this->RemoveInstance(Renderable.InstanceId);
+                        Renderable = {};
+                    }
+
                     if (Iter.event() == flecs::OnSet)
                     {
                         InstanceData* Data = nullptr;
@@ -57,11 +62,6 @@ namespace Neon::Scene
                             Renderable.InstanceId = this->AddInstance(&Data);
                         }
                         Data->World = Transform.World.ToMat4x4Transposed();
-                    }
-                    else if (Renderable)
-                    {
-                        this->RemoveInstance(Renderable.InstanceId);
-                        Renderable = {};
                     }
                 });
 

@@ -166,18 +166,6 @@ namespace Neon::RG
             ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
 
-        /// <summary>
-        /// Write resource as dsv
-        /// </summary>
-        void ReadDepthStencil(
-            const ResourceViewId& ViewId,
-            ResourceReadAccess    ReadAccess,
-            RHI::DSVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
-        {
-            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
-        }
-
     public:
         /// <summary>
         /// import buffer to be used later when dispatching passes

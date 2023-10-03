@@ -27,7 +27,6 @@ struct LightResult
 	uint TransparentCount;
 };
 
-
 //
 
 ConstantBuffer<LightInfo> c_LightInfo : register(b0, space1);
