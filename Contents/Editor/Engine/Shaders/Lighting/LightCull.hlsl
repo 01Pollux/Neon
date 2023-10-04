@@ -58,7 +58,7 @@ void AppendLight_Opaque(in const uint Index)
 {
 	int InsertIndex;
 	InterlockedAdd(c_LightCount_Opaque, 1, InsertIndex);
-	if (InsertIndex < 1024)
+	if (InsertIndex < MAX_LIGHTS)
 	{
 		c_LightList_Opaque[InsertIndex] = Index;
 	}
@@ -68,7 +68,7 @@ void AppendLight_Transparent(in const uint Index)
 {
 	int InsertIndex;
 	InterlockedAdd(c_LightCount_Transparent, 1, InsertIndex);
-	if (InsertIndex < 1024)
+	if (InsertIndex < MAX_LIGHTS)
 	{
 		c_LightList_Transparent[InsertIndex] = Index;
 	}

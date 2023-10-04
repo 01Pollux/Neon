@@ -1,5 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Scene/GPUScene.hpp>
+#include <Scene/GPUTransformManager.hpp>
 #include <Scene/EntityWorld.hpp>
 
 #include <Scene/Component/Transform.hpp>
@@ -12,7 +12,7 @@
 
 namespace Neon::Scene
 {
-    GPUScene::InstanceBufferPage::InstanceBufferPage(
+    GPUTransformManager::InstanceBufferPage::InstanceBufferPage(
         size_t PageIndex) :
         Instances(RHI::IGpuResource::Create(
             RHI::ResourceDesc::Buffer(
@@ -31,7 +31,7 @@ namespace Neon::Scene
 
     //
 
-    GPUScene::GPUScene()
+    GPUTransformManager::GPUTransformManager()
     {
         // Reserve at least one page.
         m_PagesInstances.emplace_back(0);
@@ -115,7 +115,7 @@ namespace Neon::Scene
                 });
     }
 
-    uint32_t GPUScene::AddInstance(
+    uint32_t GPUTransformManager::AddInstance(
         InstanceData** InstanceData)
     {
         uint32_t InstanceId = InvalidInstanceId;
@@ -149,7 +149,7 @@ namespace Neon::Scene
         return InstanceId;
     }
 
-    void GPUScene::RemoveInstance(
+    void GPUTransformManager::RemoveInstance(
         uint32_t InstanceId)
     {
         uint32_t PageIndex = InstanceId >> 16;
@@ -157,7 +157,7 @@ namespace Neon::Scene
         m_PagesInstances[PageIndex].Allocator.Free({ .Offset = Offset, .Size = 1 });
     }
 
-    auto GPUScene::GetInstanceData(
+    auto GPUTransformManager::GetInstanceData(
         uint32_t InstanceId) -> InstanceData*
     {
         uint32_t PageIndex = InstanceId >> 16;
@@ -165,7 +165,7 @@ namespace Neon::Scene
         return m_PagesInstances[PageIndex].MappedInstances + Offset;
     }
 
-    auto GPUScene::GetInstanceData(
+    auto GPUTransformManager::GetInstanceData(
         uint32_t InstanceId) const -> const InstanceData*
     {
         uint32_t PageIndex = InstanceId >> 16;
@@ -173,7 +173,7 @@ namespace Neon::Scene
         return m_PagesInstances[PageIndex].MappedInstances + Offset;
     }
 
-    RHI::GpuResourceHandle GPUScene::GetInstanceHandle(
+    RHI::GpuResourceHandle GPUTransformManager::GetInstanceHandle(
         uint32_t InstanceId) const
     {
         uint32_t PageIndex = InstanceId >> 16;

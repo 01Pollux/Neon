@@ -27,9 +27,9 @@ namespace Neon::RG
         RHI::ICommandList* CommandList,
         RenderType         Type) const
     {
-        auto  GpuScene      = Runtime::GameLogic::Get()->GetGPUScene();
-        auto& Meshes        = GpuScene->GetMeshes();
-        auto& MeshInstances = GpuScene->GetMeshInstanceIds();
+        auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetGPUTransform();
+        auto& Meshes              = GpuTransformManager.GetMeshes();
+        auto& MeshInstances       = GpuTransformManager.GetMeshInstanceIds();
 
         // Accumulate count of instances
         size_t Count = 0;
@@ -127,7 +127,7 @@ namespace Neon::RG
                         *MaterialData        = {};
                         MaterialData->Albedo = Colors::DarkGreen;
 
-                        MeshMaterial->SetResourceView("_PerInstanceData", GpuScene->GetInstanceHandle(InstanceId));
+                        MeshMaterial->SetResourceView("_PerInstanceData", GpuTransformManager.GetInstanceHandle(InstanceId));
                         MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
 
                         MeshMaterial->BindSharedParams(CommandList);

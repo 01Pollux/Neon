@@ -30,13 +30,13 @@ namespace Neon::RG
 
         //
 
-        // Resolver.ReadTexture(
-        //     LightCullPass::LightIndexList_Opaque.CreateView("Geometry"),
-        //     ResourceReadAccess::PixelShader);
+        Resolver.ReadTexture(
+            LightCullPass::LightIndexList_Opaque.CreateView("Geometry"),
+            ResourceReadAccess::PixelShader);
 
-        // Resolver.ReadTexture(
-        //     LightCullPass::LightIndexList_Transparent.CreateView("Geometry"),
-        //     ResourceReadAccess::PixelShader);
+        Resolver.ReadTexture(
+            LightCullPass::LightIndexList_Transparent.CreateView("Geometry"),
+            ResourceReadAccess::PixelShader);
 
         Resolver.ReadTexture(
             LightCullPass::LightGrid_Opaque.CreateView("Geometry"),

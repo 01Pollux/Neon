@@ -278,6 +278,22 @@ namespace Neon::RG
             bool                          Rename = true) noexcept;
 
         /// <summary>
+        /// Set the underlying resource and resource views
+        /// </summary>
+        template<typename... _Args>
+        [[nodiscard]] void Set(
+            const Ptr<RHI::IGpuResource>&   Resource,
+            const VariantVisitor<_Args...>& Visitor,
+            bool                            Rename = true) noexcept
+        {
+            Set(Resource, Rename);
+            for (auto& View : GetViews())
+            {
+                std::visit(Visitor, View.second.Desc);
+            }
+        }
+
+        /// <summary>
         /// Get the underlying resource
         /// </summary>
         [[nodiscard]] RHI::GpuTexture AsTexture() const noexcept;

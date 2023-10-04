@@ -282,8 +282,8 @@ namespace Neon::RG
     void LightCullPass::RecreateLightGrid(
         const Size2I& GridCount)
     {
-        uint32_t BufferCount           = GridCount.x * GridCount.y;
-        size_t   SizeInBytesForIndices = sizeof(uint32_t) * (BufferCount * MaxOverlappingLightsPerTile + 1);
+        uint32_t BufferCount           = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
+        size_t   SizeInBytesForIndices = sizeof(uint32_t) * (BufferCount + 1);
 
         RHI::MResourceFlags Flags;
         Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
@@ -338,35 +338,30 @@ namespace Neon::RG
         Storage.GetResourceMut(LightCullPass::LightGrid_Transparent).Set(m_LightGrid_Transparent, false);
         Storage.GetResourceMut(LightCullPass::LightGrid_Opaque).Set(m_LightGrid_Opaque, false);
 
-        OpaqueList.Set(m_LightIndexList_Opaque, false);
-        TransparentList.Set(m_LightIndexList_Transparent, false);
+        uint32_t       BufferCount = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
+        VariantVisitor Visitor{
+            [BufferCount](RHI::UAVDescOpt& UavDesc)
+            {
+                UavDesc = RHI::UAVDesc{
+                    .View = RHI::UAVDesc::Buffer{
+                        .FirstElement = 1,
+                        .Count        = BufferCount,
+                        .SizeOfStruct = sizeof(uint32_t) }
+                };
+            },
+            [BufferCount](RHI::SRVDescOpt& SrvDesc)
+            {
+                SrvDesc = RHI::SRVDesc{
+                    .View = RHI::SRVDesc::Buffer{
+                        .FirstElement = 1,
+                        .Count        = BufferCount,
+                        .SizeOfStruct = sizeof(uint32_t) }
+                };
+            },
+            [](const auto&) {}
+        };
 
-        uint32_t BufferCount = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
-        for (auto& OpaqueView : OpaqueList.GetViews())
-        {
-            if (auto UavDesc = std::get_if<RHI::UAVDescOpt>(&OpaqueView.second.Desc))
-            {
-                *UavDesc =
-                    RHI::UAVDesc{
-                        .View = RHI::UAVDesc::Buffer{
-                            .FirstElement = 1,
-                            .Count        = BufferCount,
-                            .SizeOfStruct = sizeof(uint32_t) }
-                    };
-            }
-        }
-        for (auto& TransparentView : TransparentList.GetViews())
-        {
-            if (auto UavDesc = std::get_if<RHI::UAVDescOpt>(&TransparentView.second.Desc))
-            {
-                *UavDesc =
-                    RHI::UAVDesc{
-                        .View = RHI::UAVDesc::Buffer{
-                            .FirstElement = 1,
-                            .Count        = BufferCount,
-                            .SizeOfStruct = sizeof(uint32_t) }
-                    };
-            }
-        }
+        OpaqueList.Set(m_LightIndexList_Opaque, Visitor, false);
+        TransparentList.Set(m_LightIndexList_Transparent, Visitor, false);
     }
 } // namespace Neon::RG
