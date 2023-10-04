@@ -190,7 +190,8 @@ namespace Neon::RG
         const Ptr<RHI::IGpuResource>& Resource,
         RHI::GraphicsBufferType       BufferType)
     {
-        return m_Storage.ImportBuffer(Id, Resource, BufferType);
+        m_ResourcesCreated.emplace(Id);
+        m_Storage.ImportBuffer(Id, Resource, BufferType);
     }
 
     void ResourceResolver::ImportTexture(
@@ -198,7 +199,8 @@ namespace Neon::RG
         const Ptr<RHI::IGpuResource>& Resource,
         const RHI::ClearOperationOpt& ClearValue)
     {
-        return m_Storage.ImportTexture(Id, Resource, ClearValue);
+        m_ResourcesCreated.emplace(Id);
+        m_Storage.ImportTexture(Id, Resource, ClearValue);
     }
 
     std::pair<const RHI::ResourceDesc*, MResourceFlags> IRenderPass::ResourceResolver::GetResourceDescAndFlags(

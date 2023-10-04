@@ -68,19 +68,14 @@ namespace Neon::RG
         m_Storage.UnmapFrameData();
     }
 
-    void RenderGraph::Draw()
+    void RenderGraph::Dispatch()
     {
-        for (auto& ImportedResource : m_Storage.m_ImportedResources)
-        {
-            auto& Handle = m_Storage.GetResourceMut(ImportedResource);
-            m_Storage.CreateViews(Handle);
-        }
-
         m_CommandListContext.Begin();
 
-        for (size_t i = 0; i < m_Levels.size(); i++)
+        m_Storage.PrepareDispatch();
+        for (auto& Level : m_Levels)
         {
-            m_Levels[i].Execute();
+            Level.Execute();
         }
 
         m_CommandListContext.End();
@@ -121,7 +116,7 @@ namespace Neon::RG
             if (PrevLevel)
             {
                 PrevLevel->m_FlushCommands |= (GraphicsCount != PrevLevel->m_GraphicsCommandsToFlush) ||
-                                               (ComputeCount != PrevLevel->m_ComputeCommandsToFlush) ||
+                                              (ComputeCount != PrevLevel->m_ComputeCommandsToFlush) ||
                                               ThisLevel->m_FlushBarriers;
 
                 bool FlushedCommands       = PrevLevel->m_FlushCommands;
@@ -256,7 +251,7 @@ namespace Neon::RG
         size_t GraphicsCount,
         size_t ComputeCount)
     {
-        FlushCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList,GraphicsCount);
+        FlushCommandLists(m_GraphicsCommandList, m_ActiveGraphicsCommandList, GraphicsCount);
         FlushCommandLists(m_ComputeCommandList, m_ActiveComputeCommandList, ComputeCount);
 
         if (ComputeCount)
@@ -356,16 +351,19 @@ namespace Neon::RG
     {
         auto& Storage = m_Context.GetStorage();
 
-        for (auto& Id : m_ResourcesToCreate)
-        {
-            auto& Handle = Storage.GetResourceMut(Id);
-            Storage.ReallocateResource(Handle);
-            Storage.CreateViews(Handle);
-        }
-
         for (auto& PassInfo : m_Passes)
         {
             PassInfo.Pass->PreDispatch(Storage);
+        }
+
+        for (auto& Id : m_ResourcesToCreate)
+        {
+            auto& Handle = Storage.GetResourceMut(Id);
+            if (!Handle.IsImported())
+            {
+                Storage.ReallocateResource(Handle);
+            }
+            Storage.CreateViews(Handle);
         }
 
         ExecuteBarriers();

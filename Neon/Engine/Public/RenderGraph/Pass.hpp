@@ -41,7 +41,7 @@ namespace Neon::RG
         /// Called to check if the pass should implements its own viewports
         /// </summary>
         virtual bool OverrideViewport(
-            const GraphStorage&,
+            GraphStorage& Storage,
             RHI::ICommandList*)
         {
             return false;
@@ -51,7 +51,7 @@ namespace Neon::RG
         /// Called before executing the barriers for passes.
         /// </summary>
         virtual void PreDispatch(
-            const GraphStorage&)
+            GraphStorage& Storage)
         {
         }
 
@@ -59,7 +59,7 @@ namespace Neon::RG
         /// Called when the render pass wants to dispatch.
         /// </summary>
         virtual void Dispatch(
-            const GraphStorage&,
+            GraphStorage& Storage,
             RHI::ICommandList*)
         {
         }
@@ -138,8 +138,8 @@ namespace Neon::RG
         }
 
         void Dispatch(
-            const GraphStorage& Graph,
-            RHI::ICommandList*  CommandList) final
+            GraphStorage&      Graph,
+            RHI::ICommandList* CommandList) final
         {
             if constexpr (_Type == PassQueueType::Unknown)
             {

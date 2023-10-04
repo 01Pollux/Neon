@@ -78,7 +78,7 @@ namespace Neon::RG
         /// <summary>
         /// Write resource as uav
         /// </summary>
-        void WriteResource(
+        void WriteTexture(
             const ResourceViewId& ViewId,
             RHI::UAVDescOpt       Desc        = std::nullopt,
             SubresourceView       Subresource = {})

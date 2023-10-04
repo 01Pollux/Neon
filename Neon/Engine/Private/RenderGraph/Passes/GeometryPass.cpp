@@ -2,6 +2,8 @@
 
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/GeometryPass.hpp>
+#include <RenderGraph/Passes/LightCullPass.hpp>
+#include <RenderGraph/Passes/DepthPrepass.hpp>
 
 namespace Neon::RG
 {
@@ -22,25 +24,39 @@ namespace Neon::RG
             .Value  = Colors::Magenta
         };
 
-        const ResourceId ShadedImage("ShadedImage");
-        const ResourceId DepthBuffer("DepthBuffer");
-
         Resolver.CreateWindowTexture(
-            ShadedImage,
+            GeometryPass::ShadedImage,
             Desc);
 
-        Resolver.ReadResourceEmpty(
-            DepthBuffer);
+        //
+
+        // Resolver.ReadTexture(
+        //     LightCullPass::LightIndexList_Opaque.CreateView("Geometry"),
+        //     ResourceReadAccess::PixelShader);
+
+        // Resolver.ReadTexture(
+        //     LightCullPass::LightIndexList_Transparent.CreateView("Geometry"),
+        //     ResourceReadAccess::PixelShader);
+
+        Resolver.ReadTexture(
+            LightCullPass::LightGrid_Opaque.CreateView("Geometry"),
+            ResourceReadAccess::PixelShader);
+
+        Resolver.ReadTexture(
+            LightCullPass::LightGrid_Transparent.CreateView("Geometry"),
+            ResourceReadAccess::PixelShader);
+
+        //
 
         Resolver.WriteRenderTarget(
-            ShadedImage.CreateView("GeometryPass"),
+            GeometryPass::ShadedImage.CreateView("GeometryPass"),
             RHI::RTVDesc{
                 .View      = RHI::RTVDesc::Texture2D{},
                 .ClearType = RHI::ERTClearType::Color,
                 .Format    = Resolver.GetSwapchainFormat() });
 
         Resolver.WriteDepthStencil(
-            DepthBuffer.CreateView("GeometryPass"),
+            DepthPrepass::DepthBuffer.CreateView("GeometryPass"),
             RHI::DSVDesc{
                 .View      = RHI::DSVDesc::Texture2D{},
                 .ClearType = RHI::EDSClearType::Ignore,

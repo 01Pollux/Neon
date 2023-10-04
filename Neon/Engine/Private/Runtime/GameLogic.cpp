@@ -170,7 +170,7 @@ namespace Neon::Runtime
                         Camera.Viewport.Height = float(Size.Height());
                     }
 
-                    RenderGraph->Draw();
+                    RenderGraph->Dispatch();
                 }
             });
     }

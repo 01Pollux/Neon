@@ -274,7 +274,8 @@ namespace Neon::RG
         /// Set the underlying resource
         /// </summary>
         [[nodiscard]] void Set(
-            const Ptr<RHI::IGpuResource>& Resource) noexcept;
+            const Ptr<RHI::IGpuResource>& Resource,
+            bool                          Rename = true) noexcept;
 
         /// <summary>
         /// Get the underlying resource

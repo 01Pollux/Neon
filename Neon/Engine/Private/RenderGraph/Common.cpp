@@ -88,9 +88,10 @@ namespace Neon::RG
     }
 
     void ResourceHandle::Set(
-        const Ptr<RHI::IGpuResource>& Resource) noexcept
+        const Ptr<RHI::IGpuResource>& Resource,
+        bool                          Rename) noexcept
     {
-        bool ShouldRename = Resource && m_Resource != Resource;
+        bool ShouldRename = Rename && Resource && m_Resource != Resource;
         m_Resource        = Resource;
         if (ShouldRename)
         {

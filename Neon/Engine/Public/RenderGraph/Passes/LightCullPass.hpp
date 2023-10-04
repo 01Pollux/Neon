@@ -10,6 +10,12 @@ namespace Neon::RG
         friend class RenderPass;
 
     public:
+        static inline const ResourceId LightIndexList_Opaque{ "LightIndexList_Opaque" };
+        static inline const ResourceId LightIndexList_Transparent{ "LightIndexList_Transparent" };
+        static inline const ResourceId LightGrid_Opaque{ "LightGrid_Opaque" };
+        static inline const ResourceId LightGrid_Transparent{ "LightGrid_Transparent" };
+
+    public:
         struct LightInfo
         {
             uint32_t LightCount;
@@ -39,16 +45,25 @@ namespace Neon::RG
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
+        void PreDispatch(
+            GraphStorage& Storage) override;
+
         void DispatchTyped(
-            const GraphStorage&     Storage,
+            GraphStorage&           Storage,
             RHI::ComputeCommandList CommandList);
 
     private:
         /// <summary>
+        /// Gets the number of groups needed to dispatch the light culling pass.
+        /// </summary>
+        [[nodiscard]] Size2I GetGroupCount(
+            const Size2I& OutputSize) const;
+
+        /// <summary>
         /// Recreates the grid frustum resource if needed. (window size changed)
         /// </summary>
         void RecreateGridFrustumIfNeeded(
-            const GraphStorage&     Storage,
+            GraphStorage&           Storage,
             RHI::ComputeCommandList CommandList);
 
         /// <summary>
@@ -70,6 +85,13 @@ namespace Neon::RG
         /// Recreates the light grid resource if needed. (window size changed)
         /// </summary>
         void RecreateLightGrid(
+            const Size2I& GridCount);
+
+        /// <summary>
+        /// Updates the light grid resource.
+        /// </summary>
+        void UpdateResources(
+            GraphStorage& Storage,
             const Size2I& GridCount);
 
         /// <summary>

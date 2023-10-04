@@ -173,6 +173,12 @@ namespace Neon::RG
 
     private:
         /// <summary>
+        /// Prepare storage for graph dispatching.
+        /// </summary>
+        void PrepareDispatch();
+
+    private:
+        /// <summary>
         /// The graphics buffer of the camera.
         /// Structured as CameraFrameData.
         /// </summary>

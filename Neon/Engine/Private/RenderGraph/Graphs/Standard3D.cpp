@@ -27,7 +27,7 @@ namespace Neon::RG
         Builder.AddPass<CopyToTexturePass>(
             CopyToTexturePass::CopyToTextureData{
                 .ViewName    = "Finalize",
-                .Source      = ResourceId("ShadedImage"),
+                .Source      = GeometryPass::ShadedImage,
                 .Destination = ResourceResolver::GetOutputImage() });
 
         Builder.Build();

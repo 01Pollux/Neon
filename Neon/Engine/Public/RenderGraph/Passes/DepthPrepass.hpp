@@ -10,6 +10,9 @@ namespace Neon::RG
         friend class RenderPass;
 
     public:
+        static inline const ResourceId DepthBuffer{ "DepthBuffer" };
+
+    public:
         DepthPrepass();
 
     protected:

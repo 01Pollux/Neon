@@ -3,6 +3,7 @@
 #include <Math/Frustum.hpp>
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/LightCullPass.hpp>
+#include <RenderGraph/Passes/DepthPrepass.hpp>
 
 #include <RHI/Shaders/GridFrustumGen.hpp>
 #include <RHI/Shaders/LightCull.hpp>
@@ -43,11 +44,10 @@ namespace Neon::RG
                         .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, DescriptorOffset++)
                         .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, DescriptorOffset++)
                         .AddSrvRangeAt("c_Lights", 2, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightResult", 0, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightIndexList_Opaque", 1, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightIndexList_Transparent", 2, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightGrid_Opaque", 3, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightGrid_Transparent", 4, 1, 1, DescriptorOffset++),
+                        .AddUavRangeAt("c_LightIndexList_Opaque", 0, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightIndexList_Transparent", 1, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightGrid_Opaque", 2, 1, 1, DescriptorOffset++)
+                        .AddUavRangeAt("c_LightGrid_Transparent", 3, 1, 1, DescriptorOffset++),
                     RHI::ShaderVisibility::All)
                 .ComputeOnly()
                 .AddStandardSamplers()
@@ -79,23 +79,47 @@ namespace Neon::RG
     void LightCullPass::ResolveResources(
         ResourceResolver& Resolver)
     {
-        // const ResourceId DepthBuffer("DepthBuffer");
-        // const ResourceId LightCullResult("LightCullResult");
+        Resolver.ReadTexture(
+            DepthPrepass::DepthBuffer.CreateView("LightCull"),
+            ResourceReadAccess::NonPixelShader,
+            RHI::SRVDesc{
+                .View   = RHI::SRVDesc::Texture2D{},
+                .Format = RHI::EResourceFormat::R32_Float });
 
-        ////
+        Resolver.ImportTexture(LightCullPass::LightIndexList_Opaque, nullptr);
+        Resolver.ImportTexture(LightCullPass::LightIndexList_Transparent, nullptr);
+        Resolver.ImportTexture(LightCullPass::LightGrid_Opaque, nullptr);
+        Resolver.ImportTexture(LightCullPass::LightGrid_Transparent, nullptr);
 
-        ////
+        Resolver.WriteTexture(
+            LightCullPass::LightIndexList_Opaque.CreateView("Main"));
+        Resolver.WriteTexture(
+            LightCullPass::LightIndexList_Transparent.CreateView("Main"));
 
-        // Resolver.ReadTexture(
-        //     DepthBuffer.CreateView("LightCull"),
-        //     ResourceReadAccess::NonPixelShader,
-        //     RHI::SRVDesc{
-        //         .View   = RHI::SRVDesc::Texture2D{},
-        //         .Format = RHI::EResourceFormat::R32_Float });
+        Resolver.WriteTexture(
+            LightCullPass::LightGrid_Opaque.CreateView("Main"));
+        Resolver.WriteTexture(
+            LightCullPass::LightGrid_Transparent.CreateView("Main"));
+    }
+
+    void LightCullPass::PreDispatch(
+        GraphStorage& Storage)
+    {
+        auto OutputSize = Storage.GetOutputImageSize();
+        if (m_GridSize == OutputSize) [[likely]]
+        {
+            return;
+        }
+
+        Size2I GridCount = GetGroupCount(OutputSize);
+
+        RecreateGridFrustum(GridCount);
+        RecreateLightGrid(GridCount);
+        UpdateResources(Storage, GridCount);
     }
 
     void LightCullPass::DispatchTyped(
-        const GraphStorage&     Storage,
+        GraphStorage&           Storage,
         RHI::ComputeCommandList CommandList)
     {
         RecreateGridFrustumIfNeeded(Storage, CommandList);
@@ -103,8 +127,21 @@ namespace Neon::RG
 
     //
 
+    Size2I LightCullPass::GetGroupCount(
+        const Size2I& OutputSize) const
+    {
+        auto& GroupSize = m_GridFrustumPSO->GetComputeGroupSize();
+
+        return Size2I{
+            int(Math::DivideByMultiple(OutputSize.x, GroupSize.x)),
+            int(Math::DivideByMultiple(OutputSize.y, GroupSize.y))
+        };
+    }
+
+    //
+
     void LightCullPass::RecreateGridFrustumIfNeeded(
-        const GraphStorage&     Storage,
+        GraphStorage&           Storage,
         RHI::ComputeCommandList CommandList)
     {
         auto OutputSize = Storage.GetOutputImageSize();
@@ -113,17 +150,11 @@ namespace Neon::RG
             return;
         }
 
-        m_GridSize      = OutputSize;
-        auto& GroupSize = m_GridFrustumPSO->GetComputeGroupSize();
-
-        Size2I GridCount(
-            int(Math::DivideByMultiple(OutputSize.x, GroupSize.x)),
-            int(Math::DivideByMultiple(OutputSize.y, GroupSize.y)));
-
-        RecreateGridFrustum(GridCount);
-        DispatchGridFrustum(Storage, CommandList, GridCount);
-        RecreateLightGrid(GridCount);
+        m_GridSize = OutputSize;
+        DispatchGridFrustum(Storage, CommandList, GetGroupCount(OutputSize));
     }
+
+    //
 
     void LightCullPass::RecreateGridFrustum(
         const Size2I& GridCount)
@@ -170,6 +201,8 @@ namespace Neon::RG
             &SrvDesc);
     }
 
+    //
+
     void LightCullPass::DispatchGridFrustum(
         const GraphStorage&     Storage,
         RHI::ComputeCommandList CommandList,
@@ -215,7 +248,7 @@ namespace Neon::RG
         const Size2I& GridCount)
     {
         uint32_t BufferCount           = GridCount.x * GridCount.y;
-        size_t   SizeInBytesForIndices = sizeof(uint32_t) * BufferCount * MaxOverlappingLightsPerTile;
+        size_t   SizeInBytesForIndices = sizeof(uint32_t) * (BufferCount * MaxOverlappingLightsPerTile + 1);
 
         RHI::MResourceFlags Flags;
         Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
@@ -258,6 +291,51 @@ namespace Neon::RG
                 { .Name = STR("LightCull::LightGrid_Transparent") }));
         }
     }
+
+    //
+
+    void LightCullPass::UpdateResources(
+        GraphStorage& Storage,
+        const Size2I& GridCount)
+    {
+        auto& OpaqueList      = Storage.GetResourceMut(LightCullPass::LightIndexList_Opaque);
+        auto& TransparentList = Storage.GetResourceMut(LightCullPass::LightIndexList_Transparent);
+        Storage.GetResourceMut(LightCullPass::LightGrid_Transparent).Set(m_LightGrid_Transparent, false);
+        Storage.GetResourceMut(LightCullPass::LightGrid_Opaque).Set(m_LightGrid_Opaque, false);
+
+        OpaqueList.Set(m_LightIndexList_Opaque, false);
+        TransparentList.Set(m_LightIndexList_Transparent, false);
+
+        uint32_t BufferCount = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
+        for (auto& OpaqueView : OpaqueList.GetViews())
+        {
+            if (auto UavDesc = std::get_if<RHI::UAVDescOpt>(&OpaqueView.second.Desc))
+            {
+                *UavDesc =
+                    RHI::UAVDesc{
+                        .View = RHI::UAVDesc::Buffer{
+                            .FirstElement = 1,
+                            .Count        = BufferCount,
+                            .SizeOfStruct = sizeof(uint32_t) }
+                    };
+            }
+        }
+        for (auto& TransparentView : TransparentList.GetViews())
+        {
+            if (auto UavDesc = std::get_if<RHI::UAVDescOpt>(&TransparentView.second.Desc))
+            {
+                *UavDesc =
+                    RHI::UAVDesc{
+                        .View = RHI::UAVDesc::Buffer{
+                            .FirstElement = 1,
+                            .Count        = BufferCount,
+                            .SizeOfStruct = sizeof(uint32_t) }
+                    };
+            }
+        }
+    }
+
+    //
 
     void LightCullPass::CreateResources()
     {

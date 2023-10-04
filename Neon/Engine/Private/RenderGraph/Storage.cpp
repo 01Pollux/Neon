@@ -334,4 +334,9 @@ namespace Neon::RG
                 ViewDesc.Desc);
         }
     }
+
+    void GraphStorage::PrepareDispatch()
+    {
+        CreateViews(GetResourceMut(ResourceResolver::GetOutputImage()));
+    }
 } // namespace Neon::RG

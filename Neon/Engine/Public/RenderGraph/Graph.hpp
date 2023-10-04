@@ -116,9 +116,8 @@ namespace Neon::RG
 
         /// <summary>
         /// Run the graph
-        /// For convinience, the graph will copy the final output to the back buffer
         /// </summary>
-        void Draw();
+        void Dispatch();
 
     private:
         /// <summary>
