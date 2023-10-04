@@ -16,6 +16,8 @@
 
 #include <Scene/Component/Physics.hpp>
 
+#include <Scene/Component/Light.hpp>
+
 namespace Neon::Scene::Exports
 {
     void RegisterActorComponents(
@@ -42,6 +44,10 @@ namespace Neon::Scene::Exports
 
         NEON_REGISTER_FLECS(Component::CollisionShape);
         NEON_REGISTER_FLECS(Component::CollisionObject);
+
+        NEON_REGISTER_FLECS(Component::DirectionalLight);
+        NEON_REGISTER_FLECS(Component::PointLight);
+        NEON_REGISTER_FLECS(Component::SpotLight);
     }
 
     void RegisterActorRelations(
