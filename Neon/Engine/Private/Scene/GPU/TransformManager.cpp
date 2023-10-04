@@ -1,5 +1,5 @@
 #include <EnginePCH.hpp>
-#include <Scene/GPUTransformManager.hpp>
+#include <Scene/GPU/TransformManager.hpp>
 #include <Scene/EntityWorld.hpp>
 
 #include <Scene/Component/Transform.hpp>
@@ -8,34 +8,10 @@
 
 #include <RHI/Material/Material.hpp>
 
-#include <Log/Logger.hpp>
-
 namespace Neon::Scene
 {
-    GPUTransformManager::InstanceBufferPage::InstanceBufferPage(
-        size_t PageIndex) :
-        Instances(RHI::IGpuResource::Create(
-            RHI::ResourceDesc::Buffer(
-                SizeOfPage * SizeOfInstanceData,
-                {},
-                RHI::GraphicsBufferType::Upload),
-            {
-#ifndef NEON_DIST
-                .Name = StringUtils::Format(STR("InstanceBufferPage_{}"), PageIndex).c_str(),
-#endif
-                .InitialState = RHI::IGpuResource::DefaultUploadResourceState })),
-        Allocator(SizeOfPage),
-        MappedInstances(Instances->Map<InstanceData>())
-    {
-    }
-
-    //
-
     GPUTransformManager::GPUTransformManager()
     {
-        // Reserve at least one page.
-        m_PagesInstances.emplace_back(0);
-
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform, Component::Renderable>()
@@ -118,66 +94,30 @@ namespace Neon::Scene
     uint32_t GPUTransformManager::AddInstance(
         InstanceData** InstanceData)
     {
-        uint32_t InstanceId = InvalidInstanceId;
-
-        for (uint32_t i = 0; i < uint32_t(m_PagesInstances.size()); i++)
-        {
-            auto& Page = m_PagesInstances[i];
-            if (auto Instance = Page.Allocator.Allocate(1))
-            {
-                InstanceId = uint32_t(i << 16) | uint32_t(Instance.Offset);
-                if (InstanceData)
-                {
-                    *InstanceData = Page.MappedInstances + Instance.Offset;
-                }
-            }
-        }
-
-        if (InstanceId == InvalidInstanceId)
-        {
-            size_t Offset = m_PagesInstances.size();
-            NEON_ASSERT(Offset < NumberOfPages, "No more space for instances.");
-            auto& Page     = m_PagesInstances.emplace_back(Offset);
-            auto  Instance = Page.Allocator.Allocate(1);
-            InstanceId     = uint32_t(Offset << 16) | uint32_t(Instance.Offset);
-            if (InstanceData)
-            {
-                *InstanceData = Page.MappedInstances + Instance.Offset;
-            }
-        }
-
-        return InstanceId;
+        return m_PagesInstances.AddInstance(InstanceData);
     }
 
     void GPUTransformManager::RemoveInstance(
         uint32_t InstanceId)
     {
-        uint32_t PageIndex = InstanceId >> 16;
-        uint32_t Offset    = InstanceId & 0xFFFF;
-        m_PagesInstances[PageIndex].Allocator.Free({ .Offset = Offset, .Size = 1 });
+        m_PagesInstances.RemoveInstance(InstanceId);
     }
 
     auto GPUTransformManager::GetInstanceData(
         uint32_t InstanceId) -> InstanceData*
     {
-        uint32_t PageIndex = InstanceId >> 16;
-        uint32_t Offset    = InstanceId & 0xFFFF;
-        return m_PagesInstances[PageIndex].MappedInstances + Offset;
+        return m_PagesInstances.GetInstanceData(InstanceId);
     }
 
     auto GPUTransformManager::GetInstanceData(
         uint32_t InstanceId) const -> const InstanceData*
     {
-        uint32_t PageIndex = InstanceId >> 16;
-        uint32_t Offset    = InstanceId & 0xFFFF;
-        return m_PagesInstances[PageIndex].MappedInstances + Offset;
+        return m_PagesInstances.GetInstanceData(InstanceId);
     }
 
     RHI::GpuResourceHandle GPUTransformManager::GetInstanceHandle(
         uint32_t InstanceId) const
     {
-        uint32_t PageIndex = InstanceId >> 16;
-        uint32_t Offset    = InstanceId & 0xFFFF;
-        return m_PagesInstances[PageIndex].Instances->GetHandle(Offset * SizeOfInstanceData);
+        return m_PagesInstances.GetInstanceHandle(InstanceId);
     }
 } // namespace Neon::Scene

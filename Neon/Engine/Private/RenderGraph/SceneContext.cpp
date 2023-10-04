@@ -4,7 +4,7 @@
 
 #include <Runtime/GameLogic.hpp>
 #include <Scene/EntityWorld.hpp>
-#include <Scene/GPUScene.hpp>
+#include <Scene/GPU/Scene.hpp>
 
 #include <Mdl/Mesh.hpp>
 #include <RHI/Material/Material.hpp>
@@ -27,7 +27,7 @@ namespace Neon::RG
         RHI::ICommandList* CommandList,
         RenderType         Type) const
     {
-        auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetGPUTransform();
+        auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetTransformManager();
         auto& Meshes              = GpuTransformManager.GetMeshes();
         auto& MeshInstances       = GpuTransformManager.GetMeshInstanceIds();
 

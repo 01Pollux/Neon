@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Scene/GPU/PagedInstance.hpp>
+
 #include <Math/Matrix.hpp>
 #include <Math/Vector.hpp>
 #include <Math/Common.hpp>
@@ -22,28 +24,10 @@ namespace Neon::Scene
             Matrix4x4 World;
         };
 
-        static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
-        static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
-        static constexpr size_t   SizeOfPage         = std::numeric_limits<uint16_t>::max();
-        static constexpr size_t   NumberOfPages      = std::numeric_limits<uint16_t>::max();
-
-        using InstanceIdList          = std::vector<uint32_t>;
+        using PagedInstaceData        = GPUPagedInstance<InstanceData>;
+        using InstanceIdList          = PagedInstaceData::InstanceIdList;
         using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
-
-        using InstanceIdMeshMap = std::unordered_map<uint32_t, const Mdl::Mesh*>;
-
-        using InstanceDataBuffer = Ptr<RHI::IGpuResource>;
-        struct InstanceBufferPage
-        {
-            InstanceDataBuffer        Instances;
-            Allocator::BuddyAllocator Allocator;
-            InstanceData*             MappedInstances;
-
-            InstanceBufferPage(
-                size_t PageIndex);
-        };
-
-        using PagedInstanceBufferArray = std::vector<InstanceBufferPage>;
+        using InstanceIdMeshMap       = std::unordered_map<uint32_t, const Mdl::Mesh*>;
 
     public:
         GPUTransformManager();
@@ -91,9 +75,8 @@ namespace Neon::Scene
         }
 
     private:
-        PagedInstanceBufferArray m_PagesInstances;
-
-        InstanceIdMeshMap       m_Meshes;
-        InstanceIdPipelineGroup m_MeshInstanceIds;
+        GPUPagedInstance<InstanceData> m_PagesInstances;
+        InstanceIdMeshMap              m_Meshes;
+        InstanceIdPipelineGroup        m_MeshInstanceIds;
     };
 } // namespace Neon::Scene
