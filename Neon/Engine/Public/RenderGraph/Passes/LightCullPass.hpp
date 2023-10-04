@@ -54,6 +54,14 @@ namespace Neon::RG
 
     private:
         /// <summary>
+        /// Dispatch the light cull pass
+        /// </summary>
+        void DispatchLightCull(
+            GraphStorage&           Storage,
+            RHI::ComputeCommandList CommandList);
+
+    private:
+        /// <summary>
         /// Gets the number of groups needed to dispatch the light culling pass.
         /// </summary>
         [[nodiscard]] Size2I GetGroupCount(
@@ -93,11 +101,6 @@ namespace Neon::RG
         void UpdateResources(
             GraphStorage& Storage,
             const Size2I& GridCount);
-
-        /// <summary>
-        /// Create resources such as light grid, light frustum, etc.
-        /// </summary>
-        void CreateResources();
 
     private:
         Ptr<RHI::IGpuResource> m_LightIndexList_Opaque;

@@ -12,13 +12,38 @@
 
 namespace Neon::RG
 {
+    enum class GridFrustumRS : uint8_t
+    {
+        Constants_DispatchConstants,
+        Cbv_FrameConstants,
+        Table_Frustum
+    };
+
+    enum class LightCullRS : uint8_t
+    {
+        Constants_LightInfo,
+        Cbv_FrameConstants,
+        Table_Resources
+    };
+
+    enum class LightCullRS_Resources : uint8_t
+    {
+        DepthBuffer,
+        FrustumGrid,
+        Lights,
+        LightIndexList_Opaque,
+        LightIndexList_Transaprent,
+        LightGrid_Opaque,
+        LightGrid_Transaprent
+    };
+
+    //
+
     LightCullPass::LightCullPass() :
         RenderPass("LightCullPass")
     {
         RHI::Shaders::GridFrustumGenShader GridFrustumGenShader;
         RHI::Shaders::LightCullShader      LightCullShader;
-
-        CreateResources();
 
         m_GridFrustumRS =
             RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
@@ -33,21 +58,20 @@ namespace Neon::RG
                 .AddStandardSamplers()
                 .Build();
 
-        uint32_t DescriptorOffset = 0;
         m_LightCullRS =
             RHI::RootSignatureBuilder(STR("LightCull::RootSignature"))
                 .Add32BitConstants<LightInfo>("c_LightInfo", 0, 1)
                 .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
                 .AddDescriptorTable(
-                    "c_TextureTable",
+                    "c_ResourcesTable",
                     RHI::RootDescriptorTable()
-                        .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, DescriptorOffset++)
-                        .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, DescriptorOffset++)
-                        .AddSrvRangeAt("c_Lights", 2, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightIndexList_Opaque", 0, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightIndexList_Transparent", 1, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightGrid_Opaque", 2, 1, 1, DescriptorOffset++)
-                        .AddUavRangeAt("c_LightGrid_Transparent", 3, 1, 1, DescriptorOffset++),
+                        .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, uint32_t(LightCullRS_Resources::DepthBuffer))
+                        .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, uint32_t(LightCullRS_Resources::FrustumGrid))
+                        .AddSrvRangeAt("c_Lights", 2, 1, 1, uint32_t(LightCullRS_Resources::Lights))
+                        .AddUavRangeAt("c_LightIndexList_Opaque", 0, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Opaque))
+                        .AddUavRangeAt("c_LightIndexList_Transparent", 1, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Transaprent))
+                        .AddUavRangeAt("c_LightGrid_Opaque", 2, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Opaque))
+                        .AddUavRangeAt("c_LightGrid_Transparent", 3, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Transaprent)),
                     RHI::ShaderVisibility::All)
                 .ComputeOnly()
                 .AddStandardSamplers()
@@ -123,6 +147,17 @@ namespace Neon::RG
         RHI::ComputeCommandList CommandList)
     {
         RecreateGridFrustumIfNeeded(Storage, CommandList);
+        DispatchLightCull(Storage, CommandList);
+    }
+
+    //
+
+    void LightCullPass::DispatchLightCull(
+        GraphStorage&           Storage,
+        RHI::ComputeCommandList CommandList)
+    {
+        CommandList.SetRootSignature(m_LightCullRS);
+        CommandList.SetPipelineState(m_LightCullPSO);
     }
 
     //
@@ -216,17 +251,17 @@ namespace Neon::RG
         CommandList.SetRootSignature(m_GridFrustumRS);
 
         CommandList.SetConstants(
-            0,
+            uint32_t(GridFrustumRS::Constants_DispatchConstants),
             &GridCount.x,
             Math::DivideByMultiple(sizeof(GridCount), sizeof(uint32_t)));
 
         CommandList.SetResourceView(
             RHI::CstResourceViewType::Cbv,
-            1,
+            uint32_t(GridFrustumRS::Cbv_FrameConstants),
             Storage.GetFrameDataHandle());
 
         CommandList.SetDynamicDescriptorTable(
-            2,
+            uint32_t(GridFrustumRS::Table_Frustum),
             m_GridFrustumViews.GetCpuHandle(),
             1,
             false);
@@ -333,11 +368,5 @@ namespace Neon::RG
                     };
             }
         }
-    }
-
-    //
-
-    void LightCullPass::CreateResources()
-    {
     }
 } // namespace Neon::RG
