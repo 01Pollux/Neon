@@ -23,7 +23,7 @@ namespace Neon::Scene::Component::Impl
                 .component<Class>(Name));            \
     }                                                \
     static void _HandleComponent(                    \
-        flecs::entity Component)
+        flecs::component<Class> Component)
 
 #define NEON_EXPORT_FLECS_ENUM(Enum, Name)           \
     static void Enum##_RegisterFlecs()               \
@@ -33,27 +33,27 @@ namespace Neon::Scene::Component::Impl
                 .component<Enum>(Name));             \
     }                                                \
     static void Enum##_HandleComponent(              \
-        flecs::entity Component)
+        flecs::component<Enum> Component)
 
 #if NEON_EDITOR
-#define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                                             \
-    static void RegisterFlecs()                                                              \
-    {                                                                                        \
-        extern void Insecptor_Component_On##Class(                                           \
-            flecs::entity_t, flecs::id_t);                                                   \
-        _HandleComponent(                                                                    \
-            Neon::Scene::Component::Impl::GetWorld()                                         \
-                .component<Class>(Name)                                                      \
-                .emplace<Neon::Scene::Component::EditorMetaData>(                            \
-                    &Insecptor_Component_On##Class,                                          \
-                    [](flecs::entity_t Ent, flecs::id_t Id)                                  \
-                    {                                                                        \
-                        flecs::entity Entity(Neon::Scene::Component::Impl::GetWorld(), Ent); \
-                        Entity.set<Class>({});                                               \
-                    }));                                                                     \
-    }                                                                                        \
-    static void _HandleComponent(                                                            \
-        flecs::entity Component)
+#define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                                     \
+    static void RegisterFlecs()                                                      \
+    {                                                                                \
+        extern void Insecptor_Component_On##Class(                                   \
+            flecs::entity_t, flecs::id_t);                                           \
+        auto Component = Neon::Scene::Component::Impl::GetWorld()                    \
+                             .component<Class>(Name);                                \
+        _HandleComponent(Component);                                                 \
+        Component.emplace<Neon::Scene::Component::EditorMetaData>(                   \
+            &Insecptor_Component_On##Class,                                          \
+            [](flecs::entity_t Ent, flecs::id_t Id)                                  \
+            {                                                                        \
+                flecs::entity Entity(Neon::Scene::Component::Impl::GetWorld(), Ent); \
+                Entity.set<Class>({});                                               \
+            });                                                                      \
+    }                                                                                \
+    static void _HandleComponent(                                                    \
+        flecs::component<Class> Component)
 #else
 #define NEON_EXPORT_FLECS_COMPONENT NEON_EXPORT_FLECS
 #endif

@@ -29,19 +29,19 @@ namespace Neon::Scene
     uint32_t GPULightManager::AddInstance(
         InstanceData** InstanceData)
     {
-        auto Id = m_LightsInScene.Allocate(1);
+        auto Id = uint32_t(m_LightsInScene.Allocate(1));
         if (!Id)
         {
-            Id.Offset = InvalidInstanceId;
+            Id = InvalidInstanceId;
         }
         else
         {
             if (InstanceData)
             {
-                *InstanceData = GetInstanceData(Id.Offset);
+                *InstanceData = GetInstanceData(Id);
             }
         }
-        return Id.Offset;
+        return Id;
     }
 
     void GPULightManager::RemoveInstance(

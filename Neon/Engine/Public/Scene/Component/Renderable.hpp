@@ -12,6 +12,7 @@ namespace Neon::Scene::Component
     struct Renderable
     {
         friend class GPUTransformManager;
+
         NEON_COMPONENT_SERIALIZE_IMPL
         {
         }

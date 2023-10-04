@@ -32,7 +32,6 @@ namespace Neon::RG
     public:
         enum class RenderType : uint8_t
         {
-            // Deferred,
             DepthPrepass,
             RenderPass
         };
@@ -41,7 +40,7 @@ namespace Neon::RG
             const GraphStorage& Storage);
 
         /// <summary>
-        /// Dispatch the renderers depending on the type
+        /// Render the scene depending on the type
         /// </summary>
         void Render(
             RHI::ICommandList* CommandList,

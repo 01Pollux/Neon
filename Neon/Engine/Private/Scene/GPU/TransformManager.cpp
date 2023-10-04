@@ -14,30 +14,33 @@ namespace Neon::Scene
     {
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
-            .observer<const Component::Transform, Component::Renderable>()
+            .observer<const Component::Transform>()
+            .with<Component::MeshInstance>()
+            .in()
             .event(flecs::OnSet)
             .event(flecs::OnRemove)
             .each(
-                [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform, Component::Renderable& Renderable)
+                [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform)
                 {
-                    if (Renderable)
-                    {
-                        this->RemoveInstance(Renderable.InstanceId);
-                        Renderable = {};
-                    }
-
+                    auto Entity = Iter.entity(Idx);
                     if (Iter.event() == flecs::OnSet)
                     {
+                        auto Renderable = Entity.get_mut<Component::Renderable>();
+
                         InstanceData* Data = nullptr;
-                        if (Renderable) [[likely]]
+                        if (*Renderable) [[likely]]
                         {
-                            Data = this->GetInstanceData(Renderable.GetInstanceId());
+                            Data = this->GetInstanceData(Renderable->InstanceId);
                         }
                         else
                         {
-                            Renderable.InstanceId = this->AddInstance(&Data);
+                            Renderable->InstanceId = this->AddInstance(&Data);
                         }
                         Data->World = Transform.World.ToMat4x4Transposed();
+                    }
+                    else
+                    {
+                        Entity.remove<Component::Renderable>();
                     }
                 });
 
@@ -49,8 +52,6 @@ namespace Neon::Scene
                 .query_builder<
                     const Scene::Component::MeshInstance,
                     const Scene::Component::Renderable>()
-                .with<Scene::Component::Transform>()
-                .in()
                 .with<Scene::Component::ActiveSceneEntity>()
                 .in()
                 .build();
