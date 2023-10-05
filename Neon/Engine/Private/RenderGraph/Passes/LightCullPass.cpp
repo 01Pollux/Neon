@@ -9,6 +9,7 @@
 #include <RHI/Shaders/LightCull.hpp>
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
+#include <RHI/GlobalDescriptors.hpp>
 
 namespace Neon::RG
 {
@@ -34,7 +35,9 @@ namespace Neon::RG
         LightIndexList_Opaque,
         LightIndexList_Transaprent,
         LightGrid_Opaque,
-        LightGrid_Transaprent
+        LightGrid_Transaprent,
+
+        Count
     };
 
     //
@@ -156,8 +159,55 @@ namespace Neon::RG
         GraphStorage&           Storage,
         RHI::ComputeCommandList CommandList)
     {
+        auto& SceneContext = Storage.GetSceneContext();
+
         CommandList.SetRootSignature(m_LightCullRS);
         CommandList.SetPipelineState(m_LightCullPSO);
+
+        CommandList.SetConstants(uint32_t(LightCullRS::Constants_LightInfo), SceneContext.GetLightsCount());
+        CommandList.SetResourceView(RHI::CstResourceViewType::Cbv, uint32_t(LightCullRS::Cbv_FrameConstants), Storage.GetFrameDataHandle());
+        {
+            auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(uint32_t(LightCullRS_Resources::Count));
+
+            std::array Sources{
+                // DepthBuffer
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = Storage.GetResourceViewHandle(DepthPrepass::DepthBuffer.CreateView("LightCull")),
+                    .CopySize   = 1 },
+                // FrustumGrid
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = m_GridFrustumViews.GetCpuHandle(1),
+                    .CopySize   = 1 },
+                // Lights
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = SceneContext.GetLightsResourceView(),
+                    .CopySize   = 1 },
+                // Light index list opaque
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightIndexList_Opaque.CreateView("Main")),
+                    .CopySize   = 1 },
+                // Light index list transparent
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightIndexList_Transparent.CreateView("Main")),
+                    .CopySize   = 1 },
+                // Light grid opaque
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Opaque.CreateView("Main")),
+                    .CopySize   = 1 },
+                // Light grid transparent
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Transparent.CreateView("Main")),
+                    .CopySize   = 1 }
+            };
+
+            Descriptor->Copy(
+                Descriptor.Offset,
+                Sources);
+
+            CommandList.SetDescriptorTable(uint32_t(LightCullRS::Table_Resources), Descriptor.GetGpuHandle());
+        }
+
+        CommandList.Dispatch(m_GridSize.x, m_GridSize.y);
     }
 
     //

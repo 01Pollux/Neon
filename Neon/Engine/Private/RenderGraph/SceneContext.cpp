@@ -87,6 +87,11 @@ namespace Neon::RG
             auto PassType = Passes[Pass];
             for (auto& InstanceList : MeshInstances | std::views::values)
             {
+                if (InstanceList.empty())
+                {
+                    continue;
+                }
+
                 uint32_t FirstInstanceId = InstanceList.back();
                 auto     FirstMesh       = Meshes.at(FirstInstanceId);
                 auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
@@ -163,5 +168,17 @@ namespace Neon::RG
             }
 #endif
         }
+    }
+
+    RHI::CpuDescriptorHandle SceneContext::GetLightsResourceView() const noexcept
+    {
+        auto& GpuLightManager = Runtime::GameLogic::Get()->GetGPUScene()->GetLightManager();
+        return GpuLightManager.GetInstancesView();
+    }
+
+    uint32_t SceneContext::GetLightsCount() const noexcept
+    {
+        auto& GpuLightManager = Runtime::GameLogic::Get()->GetGPUScene()->GetLightManager();
+        return GpuLightManager.GetInstancesCount();
     }
 } // namespace Neon::RG

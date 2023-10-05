@@ -6,6 +6,7 @@
 #include <Scene/Component/Light.hpp>
 
 #include <RHI/Material/Material.hpp>
+#include <RHI/GlobalDescriptors.hpp>
 
 namespace Neon::Scene
 {
@@ -36,6 +37,18 @@ namespace Neon::Scene
         m_LightsInScene(MaxLightsInScene),
         m_LightsBufferPtr(m_LightsBuffer->Map<InstanceData>())
     {
+        m_LightsView = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
+
+        RHI::SRVDesc SrvDesc{
+            .View = RHI::SRVDesc::Buffer{
+                .Count        = MaxLightsInScene,
+                .SizeOfStruct = SizeOfInstanceData }
+        };
+        m_LightsView->CreateShaderResourceView(
+            m_LightsView.Offset,
+            m_LightsBuffer.get(),
+            &SrvDesc);
+
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform>()
@@ -99,6 +112,15 @@ namespace Neon::Scene
                 });
     }
 
+    GPULightManager::~GPULightManager()
+    {
+        if (m_LightsView)
+        {
+            RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Free(m_LightsView);
+            m_LightsView = {};
+        }
+    }
+
     uint32_t GPULightManager::AddInstance(
         InstanceData** OutData)
     {
@@ -115,6 +137,7 @@ namespace Neon::Scene
             {
                 *OutData = Data;
             }
+            ++m_InstancesCount;
         }
         return uint32_t(Id.Offset);
     }
@@ -125,6 +148,7 @@ namespace Neon::Scene
         auto Data = GetInstanceData(InstanceId);
         Data->Flags &= ~uint32_t(LightFlags::Enabled);
         m_LightsInScene.Free({ .Offset = InstanceId, .Size = 1 });
+        m_InstancesCount--;
     }
 
     auto GPULightManager::GetInstanceData(
@@ -139,9 +163,13 @@ namespace Neon::Scene
         return m_LightsBufferPtr + InstanceId;
     }
 
-    RHI::GpuResourceHandle GPULightManager::GetInstanceHandle(
-        uint32_t InstanceId) const
+    RHI::CpuDescriptorHandle GPULightManager::GetInstancesView() const
     {
-        return m_LightsBuffer->GetHandle(InstanceId * SizeOfInstanceData);
+        return m_LightsView.GetCpuHandle();
+    }
+
+    uint32_t GPULightManager::GetInstancesCount() const
+    {
+        return m_InstancesCount;
     }
 } // namespace Neon::Scene

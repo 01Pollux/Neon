@@ -124,6 +124,14 @@ namespace Neon::RG
         std::unreachable();
     }
 
+    RHI::CpuDescriptorHandle GraphStorage::GetResourceViewHandle(
+        ResourceViewId ViewId) const
+    {
+        RHI::CpuDescriptorHandle Handle;
+        GetResourceView(ViewId, &Handle);
+        return Handle;
+    }
+
     const ResourceHandle& GraphStorage::GetOutputImage() const
     {
         return GetResource(ResourceResolver::GetOutputImage());

@@ -72,6 +72,12 @@ namespace Neon::RG
             RHI::CpuDescriptorHandle* CpuHandle        = nullptr,
             uint32_t*                 SubresourceIndex = nullptr) const;
 
+        /// <summary>
+        /// Get resource's view handle from id
+        /// </summary>
+        [[nodiscard]] RHI::CpuDescriptorHandle GetResourceViewHandle(
+            ResourceViewId ViewId) const;
+
     public:
         /// <summary>
         /// Get output image

@@ -4,6 +4,7 @@
 #include <Math/Vector.hpp>
 #include <Math/Common.hpp>
 
+#include <RHI/Resource/Descriptor.hpp>
 #include <RHI/Resource/Resource.hpp>
 #include <Allocator/Buddy.hpp>
 #include <vector>
@@ -50,6 +51,11 @@ namespace Neon::Scene
     public:
         GPULightManager();
 
+        NEON_CLASS_NO_COPY(GPULightManager);
+        NEON_CLASS_NO_MOVE(GPULightManager);
+
+        ~GPULightManager();
+
     public:
         /// <summary>
         /// Create a new instance data, returns instance id and fill the instance data pointer if not null
@@ -78,8 +84,12 @@ namespace Neon::Scene
         /// <summary>
         /// Get the instance resource's handle
         /// </summary>
-        [[nodiscard]] RHI::GpuResourceHandle GetInstanceHandle(
-            uint32_t InstanceId) const;
+        [[nodiscard]] RHI::CpuDescriptorHandle GetInstancesView() const;
+
+        /// <summary>
+        /// Get the instance's count
+        /// </summary>
+        [[nodiscard]] uint32_t GetInstancesCount() const;
 
     public:
         [[nodiscard]] auto& GetLightInstanceIds() const noexcept
@@ -95,6 +105,8 @@ namespace Neon::Scene
     private:
         Ptr<RHI::IGpuResource>    m_LightsBuffer;
         Allocator::BuddyAllocator m_LightsInScene;
+        RHI::DescriptorHeapHandle m_LightsView;
+        uint32_t                  m_InstancesCount = 0;
         InstanceData*             m_LightsBufferPtr;
 
         InstanceIdLightMap      m_Lights;

@@ -46,6 +46,16 @@ namespace Neon::RG
             RHI::ICommandList* CommandList,
             RenderType         Type) const;
 
+        /// <summary>
+        /// Get the light's resource view
+        /// </summary>
+        [[nodiscard]] RHI::CpuDescriptorHandle GetLightsResourceView() const noexcept;
+
+        /// <summary>
+        /// Get the light's resource count
+        /// </summary>
+        [[nodiscard]] uint32_t GetLightsCount() const noexcept;
+
     private:
         const GraphStorage& m_Storage;
     };
