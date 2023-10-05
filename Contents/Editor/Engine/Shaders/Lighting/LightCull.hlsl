@@ -12,8 +12,6 @@
 #define CS_KERNEL_SIZE_Y 16
 #endif
 
-#define MAX_LIGHTS 1024
-
 //
 
 struct LightInfo
@@ -109,11 +107,11 @@ void CS_Main(
 	float MinDepth = asfloat(c_MinDepth);
 	float MaxDepth = asfloat(c_MaxDepth);
 	
-	float MinDepthVS = ScreenToViewPosition(float4(0.f, 0.f, MinDepth, 1.f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).z;
-	float MaxDepthVS = ScreenToViewPosition(float4(0.f, 0.f, MaxDepth, 1.f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).z;
-	float NearClipVS = ScreenToViewPosition(float4(0.f, 0.f, 0.f, 1.f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).z;
-
-	Plane MinPlane = { float3(0.f, 0.f, -1.f), -MinDepthVS };
+	float MinDepthWS = ScreenToPosition(float4(0.f, 0.f, MinDepth, 1.f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).z;
+	float MaxDepthWS = ScreenToPosition(float4(0.f, 0.f, MaxDepth, 1.f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).z;
+	float NearClipWS = ScreenToPosition(float4(0.f, 0.f, 0.f, 1.f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).z;
+	
+	Plane MinPlane = { float3(0.f, 0.f, -1.f), -MinDepthWS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
 	uint i;
@@ -125,15 +123,15 @@ void CS_Main(
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:
-				{
+					{
 						AppendLight_Opaque(i);
 						AppendLight_Transparent(i);
 						break;
 					}
 				case LIGHT_FLAGS_TYPE_POINT:
-				{
-						Sphere LightSphere = { CurLight.PositionVS, CurLight.Range };
-						if (SphereInsideFrustum(c_GroupFrustum, LightSphere, MinDepthVS, MaxDepthVS))
+					{
+						Sphere LightSphere = { CurLight.Position, CurLight.Range };
+						if (SphereInsideFrustum(c_GroupFrustum, LightSphere, MinDepthWS, MaxDepthWS))
 						{
 							AppendLight_Transparent(i);
 							if (SphereInsidePlane(LightSphere, MinPlane))
@@ -144,10 +142,10 @@ void CS_Main(
 						break;
 					}
 				case LIGHT_FLAGS_TYPE_SPOT_LIGHT:
-				{
-						float Radius = tan(radians(CurLight.SpotlightAngle)) * CurLight.Range;
-						Cone LightCone = { CurLight.PositionVS, CurLight.Range, CurLight.DirectionVS, Radius };
-						if (ConeInsideFrustum(c_GroupFrustum, LightCone, MinDepthVS, MaxDepthVS))
+					{
+						float Radius = tan(radians(CurLight.Spot_GetAngle())) * CurLight.Range;
+						Cone LightCone = { CurLight.Position, CurLight.Range, CurLight.Direction, Radius };
+						if (ConeInsideFrustum(c_GroupFrustum, LightCone, MinDepthWS, MaxDepthWS))
 						{
 							AppendLight_Transparent(i);
 							if (ConeInsidePlane(LightCone, MinPlane))

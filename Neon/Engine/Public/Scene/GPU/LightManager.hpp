@@ -17,8 +17,24 @@ namespace Neon::Scene
 
     class GPULightManager
     {
+        enum class LightFlags : uint32_t
+        {
+            Directional = 1 << 0,
+            Point       = 1 << 1,
+            Spot        = 1 << 2,
+            TypeMask    = Directional | Point | Spot,
+
+            Enabled = 1 << 3
+        };
+
         struct InstanceData
         {
+            Vector4  Color{};
+            Vector3  PositionVS{};
+            float    Range = 0.f; // 0 for directional light, Point light + spot light
+            Vector3  Direction{};
+            uint32_t Flags = 0;           // LightFlags::* flags
+            Vector3  Attenuation_Angle{}; // 0 for directional light, (attenuation, 0, 0) for point light, (attenuation, angle, attenuation) for spot light
         };
 
         using InstanceIdList          = std::vector<uint32_t>;
@@ -27,7 +43,7 @@ namespace Neon::Scene
         using InstanceIdLightMap = std::unordered_map<uint32_t, const Component::Light*>;
 
     public:
-        static constexpr size_t   MaxLightsInScene   = 1024;
+        static constexpr size_t   MaxLightsInScene   = 1024; // MAX_LIGHTS
         static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
         static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
 

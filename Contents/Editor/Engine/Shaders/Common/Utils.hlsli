@@ -3,26 +3,26 @@
 
 //
 
-// Convert clip space coordinates to view space
+// Convert clip space coordinates to matrix space
 float4 ClipToViewPosition(
 	in const float4 ClipPos,
-	in const matrix ProjectionInverse)
+	in const matrix MatrixInverse)
 {
-	float4 WorldPos = mul(ClipPos, ProjectionInverse);
+	float4 WorldPos = mul(ClipPos, MatrixInverse);
 	return WorldPos / WorldPos.w;
 }
 
-// Convert screen space coordinates to view space
-float4 ScreenToViewPosition(
+// Convert screen space coordinates to matrix space
+float4 ScreenToPosition(
 	in const float4 ScreenPos,
 	in const float2 ScreenSize,
-	in const matrix ProjectionInverse)
+	in const matrix MatrixInverse)
 {
 	float2 ScreenUV = ScreenPos.xy / ScreenSize;
 	ScreenUV.y = 1.0f - ScreenUV.y;
 	ScreenUV = ScreenUV * 2.0f - 1.0f;
 	
-	return ClipToViewPosition(float4(ScreenUV, ScreenPos.z, 1.0f), ProjectionInverse);
+	return ClipToViewPosition(float4(ScreenUV, ScreenPos.z, 1.0f), MatrixInverse);
 }
 
 //

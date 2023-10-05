@@ -39,13 +39,13 @@ void CS_Main(
 	float3 ViewSpace[4];
 	
 	// Top left
-	ViewSpace[0] = ScreenToViewPosition(float4(DTID.x * CS_KERNEL_SIZE_X, DTID.y * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).xyz;
+	ViewSpace[0] = ScreenToPosition(float4(DTID.x * CS_KERNEL_SIZE_X, DTID.y * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).xyz;
 	// Top right
-	ViewSpace[1] = ScreenToViewPosition(float4((DTID.x + 1) * CS_KERNEL_SIZE_X, DTID.y * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).xyz;
+	ViewSpace[1] = ScreenToPosition(float4((DTID.x + 1) * CS_KERNEL_SIZE_X, DTID.y * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).xyz;
 	// Bottom left
-	ViewSpace[2] = ScreenToViewPosition(float4(DTID.x * CS_KERNEL_SIZE_X, (DTID.y + 1) * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).xyz;
+	ViewSpace[2] = ScreenToPosition(float4(DTID.x * CS_KERNEL_SIZE_X, (DTID.y + 1) * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).xyz;
 	// Bottom right
-	ViewSpace[3] = ScreenToViewPosition(float4((DTID.x + 1) * CS_KERNEL_SIZE_X, (DTID.y + 1) * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ProjectionInverse).xyz;
+	ViewSpace[3] = ScreenToPosition(float4((DTID.x + 1) * CS_KERNEL_SIZE_X, (DTID.y + 1) * CS_KERNEL_SIZE_Y, -1.0f, 1.0f), g_FrameData.ScreenResolution, g_FrameData.ViewProjectionInverse).xyz;
 
 	// Get it from g_FrameData.World
 	float3 EyePosition = (float3) 0;

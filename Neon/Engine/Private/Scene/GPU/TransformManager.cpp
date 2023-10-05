@@ -4,12 +4,24 @@
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
-#include <Scene/Component/Renderable.hpp>
 
 #include <RHI/Material/Material.hpp>
 
 namespace Neon::Scene
 {
+    struct RenderableHandle
+    {
+        constexpr operator bool() const noexcept
+        {
+            return InstanceId != std::numeric_limits<uint32_t>::max();
+        }
+
+        /// <summary>
+        /// Instance ID of the renderable in GPUTransformManager.
+        /// </summary>
+        uint32_t InstanceId = std::numeric_limits<uint32_t>::max();
+    };
+
     GPUTransformManager::GPUTransformManager()
     {
         // Create observer for the transform and renderable components.
@@ -23,24 +35,27 @@ namespace Neon::Scene
                 [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform)
                 {
                     auto Entity = Iter.entity(Idx);
+                    auto Handle = Entity.get_mut<RenderableHandle>();
                     if (Iter.event() == flecs::OnSet)
                     {
-                        auto Renderable = Entity.get_mut<Component::Renderable>();
-
                         InstanceData* Data = nullptr;
-                        if (*Renderable) [[likely]]
+                        if (*Handle) [[likely]]
                         {
-                            Data = this->GetInstanceData(Renderable->InstanceId);
+                            Data = this->GetInstanceData(Handle->InstanceId);
                         }
                         else
                         {
-                            Renderable->InstanceId = this->AddInstance(&Data);
+                            Handle->InstanceId = this->AddInstance(&Data);
                         }
                         Data->World = Transform.World.ToMat4x4Transposed();
                     }
                     else
                     {
-                        Entity.remove<Component::Renderable>();
+                        if (*Handle) [[likely]]
+                        {
+                            this->RemoveInstance(Handle->InstanceId);
+                        }
+                        Entity.remove<RenderableHandle>();
                     }
                 });
 
@@ -50,9 +65,9 @@ namespace Neon::Scene
         auto MeshQuery =
             EntityWorld::Get()
                 .query_builder<
-                    const Scene::Component::MeshInstance,
-                    const Scene::Component::Renderable>()
-                .with<Scene::Component::ActiveSceneEntity>()
+                    const Component::MeshInstance,
+                    const RenderableHandle>()
+                .with<Component::ActiveSceneEntity>()
                 .in()
                 .build();
 
@@ -72,9 +87,9 @@ namespace Neon::Scene
                     m_Meshes.clear();
 
                     MeshQuery.iter(
-                        [this](flecs::iter&                          Iter,
-                               const Scene::Component::MeshInstance* MeshInstances,
-                               const Scene::Component::Renderable*   Renderables)
+                        [this](flecs::iter&                   Iter,
+                               const Component::MeshInstance* MeshInstances,
+                               const RenderableHandle*        Renderables)
                         {
                             for (size_t Idx : Iter)
                             {
@@ -85,8 +100,8 @@ namespace Neon::Scene
                                 auto& MeshMaterial  = Mesh.GetModel()->GetMaterial(MeshData.MaterialIndex);
                                 auto& PipelineState = MeshMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
 
-                                m_MeshInstanceIds[PipelineState.get()].emplace_back(Renderable.GetInstanceId());
-                                m_Meshes[Renderable.GetInstanceId()] = &Mesh;
+                                m_MeshInstanceIds[PipelineState.get()].emplace_back(Renderable.InstanceId);
+                                m_Meshes[Renderable.InstanceId] = &Mesh;
                             }
                         });
                 });

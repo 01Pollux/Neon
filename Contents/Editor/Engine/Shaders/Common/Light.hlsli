@@ -1,37 +1,24 @@
 #ifndef COMMON_LIGHT_H
 #define COMMON_LIGHT_H
 
-#define LIGHT_FLAGS_ENABLED (1 << 0)
-#define LIGHT_FLAGS_SELECTED (1 << 1)
+#define MAX_LIGHTS 1024
 
-#define LIGHT_FLAGS_TYPE_DIRECTIONAL (1 << 31)
-#define LIGHT_FLAGS_TYPE_POINT (1 << 30)
-#define LIGHT_FLAGS_TYPE_SPOT_LIGHT (1 << 29)
+#define LIGHT_FLAGS_TYPE_DIRECTIONAL (1 << 0)
+#define LIGHT_FLAGS_TYPE_POINT (1 << 1)
+#define LIGHT_FLAGS_TYPE_SPOT_LIGHT (1 << 2)
 #define LIGHT_FLAGS_TYPE_MASK (LIGHT_FLAGS_TYPE_DIRECTIONAL | LIGHT_FLAGS_TYPE_POINT | LIGHT_FLAGS_TYPE_SPOT_LIGHT)
+
+#define LIGHT_FLAGS_ENABLED (1 << 3)
 
 struct Light
 {
-    // Position for point and spot lights (View space).
-	float3 PositionVS;
-    
-    // The half angle of the spotlight cone.
-	float SpotlightAngle;
-    
-    // Direction for spot and directional lights (View space).
-	float3 DirectionVS;
-    
-    // Color of the light. Diffuse and specular colors are not seperated.
 	float4 Color;
-    
-    // The range of the light.
+	float3 Position;
 	float Range;
-
-    // The intensity of the light.
-	float Intensity;
-    
-    // LIGHT_FLAGS_*
+	float3 Direction;
 	uint Flags;
-
+	float3 Attenuation_Angle;
+    
     //
     
 	bool IsEnabled()
@@ -42,6 +29,30 @@ struct Light
 	uint GetType()
 	{
 		return (Flags & LIGHT_FLAGS_TYPE_MASK);
+	}
+	
+	//
+	
+	float3 Point_GetAttenuation()
+	{
+		return Attenuation_Angle.x;
+	}
+	
+	//
+	
+	float Spot_GetAttenuation()
+	{
+		return Attenuation_Angle.x;
+	}
+	
+	float Spot_GetAngle()
+	{
+		return Attenuation_Angle.y;
+	}
+	
+	float Spot_GetAngleAttenuation()
+	{
+		return Attenuation_Angle.z;
 	}
 };
 
