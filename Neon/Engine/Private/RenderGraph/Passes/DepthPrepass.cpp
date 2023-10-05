@@ -39,6 +39,6 @@ namespace Neon::RG
         RHI::GraphicsCommandList CommandList)
     {
         auto& SceneContext = Storage.GetSceneContext();
-        SceneContext.Render(CommandList, SceneContext::RenderType::DepthPrepass);
+        SceneContext.Render(CommandList, SceneContext::RenderType::DepthPrepass, {}, {});
     }
 } // namespace Neon::RG

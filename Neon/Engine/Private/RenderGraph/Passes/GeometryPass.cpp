@@ -7,6 +7,22 @@
 
 namespace Neon::RG
 {
+    enum class LightDataRS_Resources : uint8_t
+    {
+        Lights_0,
+        LightIndexList_Opaque,
+        LightGrid_Opaque,
+
+        Lights_1,
+        LightIndexList_Transparent,
+        LightGrid_Transparent,
+
+        Count,
+
+        OpaqueStart      = Lights_0,
+        TransparentStart = Lights_1
+    };
+
     GeometryPass::GeometryPass() :
         RenderPass("GeometryPass")
     {
@@ -68,6 +84,43 @@ namespace Neon::RG
         RHI::GraphicsCommandList CommandList)
     {
         auto& SceneContext = Storage.GetSceneContext();
-        SceneContext.Render(CommandList, SceneContext::RenderType::RenderPass);
+        auto  Descriptor   = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(uint32_t(LightDataRS_Resources::Count));
+
+        std::array Sources{
+            // Lights_0
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = SceneContext.GetLightsResourceView(),
+                .CopySize   = 1 },
+            // LightIndexList_Opaque
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightIndexList_Opaque.CreateView("Geometry")),
+                .CopySize   = 1 },
+            // LightGrid_Opaque
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Transparent.CreateView("Geometry")),
+                .CopySize   = 1 },
+            // Lights_1
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = SceneContext.GetLightsResourceView(),
+                .CopySize   = 1 },
+            // LightIndexList_Transparent
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightIndexList_Transparent.CreateView("Geometry")),
+                .CopySize   = 1 },
+            // LightGrid_Transparent
+            RHI::IDescriptorHeap::CopyInfo{
+                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Transparent.CreateView("Geometry")),
+                .CopySize   = 1 }
+        };
+
+        Descriptor->Copy(
+            Descriptor.Offset,
+            Sources);
+
+        SceneContext.Render(
+            CommandList,
+            SceneContext::RenderType::RenderPass,
+            Descriptor.GetGpuHandle(uint32_t(LightDataRS_Resources::OpaqueStart)),
+            Descriptor.GetGpuHandle(uint32_t(LightDataRS_Resources::TransparentStart)));
     }
 } // namespace Neon::RG

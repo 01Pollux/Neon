@@ -168,6 +168,11 @@ namespace Neon::Scene
         return m_LightsView.GetCpuHandle();
     }
 
+    const Ptr<RHI::IGpuResource>& GPULightManager::GetInstancesBuffer() const
+    {
+        return m_LightsBuffer;
+    }
+
     uint32_t GPULightManager::GetInstancesCount() const
     {
         return m_InstancesCount;

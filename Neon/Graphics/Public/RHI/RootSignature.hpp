@@ -608,7 +608,7 @@ namespace Neon::RHI
             }
         };
 
-        using ParamInfo = boost::variant<ParamConstant, ParamRoot, ParamDescriptor>;
+        using ParamInfo = std::variant<ParamConstant, ParamRoot, ParamDescriptor>;
 
     public:
         [[nodiscard]] static Ptr<IRootSignature> Create(
@@ -640,6 +640,16 @@ namespace Neon::RHI
         {
             auto Iter = m_NamedParams.find(Name);
             return Iter != m_NamedParams.end() ? &m_Params[Iter->second] : nullptr;
+        }
+
+        /// <summary>
+        /// Get parameter by name else return nullptr
+        /// </summary>
+        [[nodiscard]] uint32_t FindParamIndex(
+            const StringU8& Name) const
+        {
+            auto Iter = m_NamedParams.find(Name);
+            return Iter != m_NamedParams.end() ? Iter->second : std::numeric_limits<uint32_t>::max();
         }
 
     protected:

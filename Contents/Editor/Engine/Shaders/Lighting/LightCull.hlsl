@@ -4,13 +4,8 @@
 #include "../Common/Light.hlsli"
 #include "../Geometry/Frustum.hlsli"
 
-#ifndef CS_KERNEL_SIZE_X
-#define CS_KERNEL_SIZE_X 16
-#endif
-
-#ifndef CS_KERNEL_SIZE_Y
-#define CS_KERNEL_SIZE_Y 16
-#endif
+#define CS_KERNEL_SIZE_X LIGHT_CLUSTER_SIZE
+#define CS_KERNEL_SIZE_Y LIGHT_CLUSTER_SIZE
 
 //
 
@@ -114,12 +109,13 @@ void CS_Main(
 	Plane MinPlane = { float3(0.f, 0.f, -1.f), -MinDepthWS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
-	uint i;
-	for (i = GID; i < c_LightInfo.LightCount; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
+	uint i = GID;
+	while (i < c_LightInfo.LightCount)
 	{
 		Light CurLight = c_Lights[i];
 		if (CurLight.IsEnabled())
 		{
+			i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y;
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:

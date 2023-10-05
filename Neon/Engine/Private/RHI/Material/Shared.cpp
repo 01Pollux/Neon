@@ -33,13 +33,20 @@ namespace Neon::RHI
                         .AddDescriptorTable(
                             "TextureMaps",
                             RHI::RootDescriptorTable(true)
-                                .AddSrvRange("Albedo", 0, 2, 1)
-                                .AddSrvRange("Normal", 0, 2, 1)
-                                .AddSrvRange("Specular", 0, 2, 1)
-                                .AddSrvRange("Emissive", 0, 2, 1),
+                                .AddSrvRange("Albedo", 0, 3, 1)
+                                .AddSrvRange("Normal", 0, 3, 1)
+                                .AddSrvRange("Specular", 0, 3, 1)
+                                .AddSrvRange("Emissive", 0, 3, 1),
                             RHI::ShaderVisibility::Pixel)
-                        .AddShaderResourceView("_PerInstanceData", 0, 1, RHI::ShaderVisibility::Vertex)
-                        .AddShaderResourceView("_PerMaterialData", 0, 1, RHI::ShaderVisibility::Pixel)
+                        .AddDescriptorTable(
+                            "_LightData",
+                            RHI::RootDescriptorTable()
+                                .AddSrvRange("Data", 0, 1, 1)
+                                .AddSrvRange("IndexList", 1, 1, 1)
+                                .AddSrvRange("Grid", 2, 1, 1),
+                            RHI::ShaderVisibility::Pixel)
+                        .AddShaderResourceView("_PerInstanceData", 0, 2, RHI::ShaderVisibility::Vertex)
+                        .AddShaderResourceView("_PerMaterialData", 0, 2, RHI::ShaderVisibility::Pixel)
                         .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
                         .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
                         .AddStandardSamplers()

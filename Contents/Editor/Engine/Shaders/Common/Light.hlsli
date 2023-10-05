@@ -2,6 +2,7 @@
 #define COMMON_LIGHT_H
 
 #define MAX_LIGHTS 1024
+#define LIGHT_CLUSTER_SIZE 16
 
 #define LIGHT_FLAGS_TYPE_DIRECTIONAL (1 << 0)
 #define LIGHT_FLAGS_TYPE_POINT (1 << 1)
@@ -9,6 +10,30 @@
 #define LIGHT_FLAGS_TYPE_MASK (LIGHT_FLAGS_TYPE_DIRECTIONAL | LIGHT_FLAGS_TYPE_POINT | LIGHT_FLAGS_TYPE_SPOT_LIGHT)
 
 #define LIGHT_FLAGS_ENABLED (1 << 3)
+
+struct LightingResult
+{
+	float4 Diffuse;
+	float4 Specular;
+};
+
+//
+
+static float4 Light_Diffuse(in const float4 Color, in const float4 L, in const float4 N)
+{
+	float NdotL = max(dot(N, L), 0);
+	return Color * NdotL;
+}
+
+static float4 Light_DoSpecular(in const float4 Color, in const float SpecularPower, float4 V, float4 L, float4 N)
+{
+	float4 R = normalize(reflect(-L, N));
+	float RdotV = max(dot(R, V), 0);
+
+	return Color * pow(RdotV, SpecularPower);
+}
+
+//
 
 struct Light
 {
@@ -54,6 +79,24 @@ struct Light
 	{
 		return Attenuation_Angle.z;
 	}
+	
+	//
+	
+	void Process(in const float4 TargetToEye, in const float4 TargetPosition, in const float4 Normal, inout LightingResult Result)
+	{
+		switch (GetType())
+		{
+			case LIGHT_FLAGS_TYPE_DIRECTIONAL:
+				{
+					float4 L = float4(normalize(-Direction), 1.f);
+					
+					Result.Diffuse += Light_Diffuse(Color, L, Normal);
+					break;
+				}
+		}
+
+	}
 };
+
 
 #endif

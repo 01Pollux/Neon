@@ -96,7 +96,7 @@ namespace Neon::RHI
         for (auto& [VarName, ParamIndex] : RootSignature->GetNamedParams())
         {
             auto& Param = RootSignature->GetParams()[ParamIndex];
-            boost::apply_visitor(
+            std::visit(
                 VariantVisitor{
                     [&BufferSize](const IRootSignature::ParamConstant& Constant)
                     {
@@ -370,7 +370,7 @@ namespace Neon::RHI
         for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
         {
             auto& Param = Params[i];
-            boost::apply_visitor(
+            std::visit(
                 VariantVisitor{
                     [&](const IRootSignature::ParamConstant& Constant)
                     {
@@ -408,7 +408,7 @@ namespace Neon::RHI
         for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
         {
             auto& Param = Params[i];
-            boost::apply_visitor(
+            std::visit(
                 VariantVisitor{
                     [&](const auto&) {},
                     [&](const IRootSignature::ParamDescriptor& Descriptor)

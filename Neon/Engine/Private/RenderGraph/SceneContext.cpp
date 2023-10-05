@@ -7,9 +7,10 @@
 #include <Scene/GPU/Scene.hpp>
 
 #include <Mdl/Mesh.hpp>
+#include <RHI/GlobalBuffer.hpp>
+#include <RHI/RootSignature.hpp>
 #include <RHI/Material/Material.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
-#include <RHI/GlobalBuffer.hpp>
 
 namespace Component = Neon::Scene::Component;
 
@@ -24,12 +25,16 @@ namespace Neon::RG
     //
 
     void SceneContext::Render(
-        RHI::ICommandList* CommandList,
-        RenderType         Type) const
+        RHI::ICommandList*       CommandList,
+        RenderType               Type,
+        RHI::GpuDescriptorHandle OpaqueLightDataHandle,
+        RHI::GpuDescriptorHandle TransparentLightDataHandle) const
     {
         auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetTransformManager();
-        auto& Meshes              = GpuTransformManager.GetMeshes();
-        auto& MeshInstances       = GpuTransformManager.GetMeshInstanceIds();
+        auto& GpuLightManager     = Runtime::GameLogic::Get()->GetGPUScene()->GetLightManager();
+
+        auto& Meshes        = GpuTransformManager.GetMeshes();
+        auto& MeshInstances = GpuTransformManager.GetMeshInstanceIds();
 
         // Accumulate count of instances
         size_t Count = 0;
@@ -136,6 +141,20 @@ namespace Neon::RG
                         MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
 
                         MeshMaterial->BindSharedParams(CommandList);
+                        {
+                            auto& RootSignature = MeshMaterial->GetRootSignature();
+                            if (auto LightingParam = RootSignature->FindParamIndex("_LightData"))
+                            {
+                                auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
+                                if (LightDataHandle)
+                                {
+                                    CommandList->SetDescriptorTable(
+                                        !MeshMaterial->IsCompute(),
+                                        LightingParam,
+                                        LightDataHandle);
+                                }
+                            }
+                        }
                     }
 
                     MeshMaterial->BindLocalParams(CommandList);

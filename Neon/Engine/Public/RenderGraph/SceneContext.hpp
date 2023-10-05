@@ -43,8 +43,10 @@ namespace Neon::RG
         /// Render the scene depending on the type
         /// </summary>
         void Render(
-            RHI::ICommandList* CommandList,
-            RenderType         Type) const;
+            RHI::ICommandList*       CommandList,
+            RenderType               Type,
+            RHI::GpuDescriptorHandle OpaqueLightDataHandle,
+            RHI::GpuDescriptorHandle TransparentLightDataHandle) const;
 
         /// <summary>
         /// Get the light's resource view

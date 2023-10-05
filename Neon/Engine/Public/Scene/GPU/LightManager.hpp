@@ -87,6 +87,11 @@ namespace Neon::Scene
         [[nodiscard]] RHI::CpuDescriptorHandle GetInstancesView() const;
 
         /// <summary>
+        /// Get the instance resource's buffer
+        /// </summary>
+        [[nodiscard]] const Ptr<RHI::IGpuResource>& GetInstancesBuffer() const;
+
+        /// <summary>
         /// Get the instance's count
         /// </summary>
         [[nodiscard]] uint32_t GetInstancesCount() const;

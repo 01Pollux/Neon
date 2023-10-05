@@ -1,6 +1,7 @@
 
 #include "../Common/Frame.hlsli"
 #include "../Common/Utils.hlsli"
+#include "../Common/Light.hlsli"
 #include "../Common/StdMaterial.hlsli"
 
 enum
@@ -50,7 +51,7 @@ struct PSInput
 // Vertex Shader
 // --------------------
 
-StructuredBuffer<PerObjectData> v_ObjectData : register(t0, space1);
+StructuredBuffer<PerObjectData> v_ObjectData : register(t0, space2);
 
 
 PSInput VS_Main(VSInput Vs)
@@ -79,9 +80,12 @@ PSInput VS_Main(VSInput Vs)
 // Pixel Shader
 // --------------------
 
-StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space1);
+StructuredBuffer<Light> p_Lights : register(t0, space1);
+StructuredBuffer<uint> p_LightIndexList : register(t1, space1);
+Texture2D<uint2> p_LightGrid : register(t2, space1);
 
-Texture2D p_TextureTable[] : register(t0, space2);
+StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space2);
+Texture2D p_TextureTable[] : register(t0, space3);
 
 
 [earlydepthstencil]
@@ -102,7 +106,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 		Albedo.rgb *= Color.rgb;
 	}
 	
-	float3 Normal = Ps.NormalWS;
+	float4 Normal = float4(Ps.NormalWS, 1.f);
 	
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
@@ -110,10 +114,10 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 		Texture2D NormalMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_NORMAL];
 		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
 		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
-		Normal = mul(Normal, TBN);
+		Normal.xyz = mul(Normal.xyz, TBN);
 	}
 	
-	Normal = normalize(mul(Normal, (float3x3) g_FrameData.View));
+	Normal = normalize(mul(Normal, g_FrameData.View));
 	
 	float4 Specular = float4(Material.Specular, 1.f);
 	[branch]
@@ -130,6 +134,23 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 		Texture2D EmissiveMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_EMISSIVE];
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
+
+	//
 	
-	return float4(Albedo, 1.f);
+	float4 TargetToEye = normalize(float4(g_FrameData.World._41_42_43, 0.f) - Ps.Position);
+
+	// Perform lighting
+	
+	uint2 LightInfo = p_LightGrid[uint2(floor(Ps.Position.xy / LIGHT_CLUSTER_SIZE))];
+	uint StartOffset = LightInfo.x;
+	uint LightCount = LightInfo.y;
+	
+	LightingResult LightRes = (LightingResult) 0;
+	for (uint i = 0; i < LightCount; i++)
+	{
+		Light CurLight = p_Lights[p_LightIndexList[StartOffset + i]];
+		CurLight.Process(TargetToEye, Ps.Position, Normal, LightRes);
+	}
+	
+	return float4(Albedo, 1.f) * LightRes.Diffuse + Emissive + Specular * LightRes.Specular;
 }
