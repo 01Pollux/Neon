@@ -56,6 +56,12 @@ namespace Neon::Editor
     }
 } // namespace Neon::Editor
 
+void Insecptor_Component_OnLight(
+    flecs::entity_t EntityId,
+    flecs::id_t     ComponentId)
+{
+}
+
 void Insecptor_Component_OnDirectionalLight(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)

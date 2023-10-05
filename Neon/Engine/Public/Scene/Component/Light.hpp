@@ -7,13 +7,8 @@ namespace Neon::Scene::Component
 {
     struct Light
     {
-        NEON_COMPONENT_SERIALIZE_IMPL
+        NEON_EXPORT_FLECS(Light, "Light")
         {
-        }
-
-        NEON_EXPORT_FLECS_COMPONENT(Light, "Light")
-        {
-            NEON_COMPONENT_SERIALIZE(Light);
         }
 
         /// <summary>
@@ -26,6 +21,7 @@ namespace Neon::Scene::Component
     {
         NEON_COMPONENT_SERIALIZE_IMPL
         {
+            Archive& Color;
         }
 
         NEON_EXPORT_FLECS_COMPONENT(DirectionalLight, "DirectionalLight")
@@ -33,17 +29,16 @@ namespace Neon::Scene::Component
             Component.is_a<Light>();
             NEON_COMPONENT_SERIALIZE(DirectionalLight);
         }
-
-        /// <summary>
-        /// Direction of light.
-        /// </summary>
-        Vector3 Direction = Vec::Zero<Vector3>;
     };
 
     struct PointLight : Light
     {
         NEON_COMPONENT_SERIALIZE_IMPL
         {
+            Archive& Color;
+
+            Archive& Range;
+            Archive& Attenuation;
         }
 
         NEON_EXPORT_FLECS_COMPONENT(PointLight, "PointLight")
@@ -67,6 +62,12 @@ namespace Neon::Scene::Component
     {
         NEON_COMPONENT_SERIALIZE_IMPL
         {
+            Archive& Color;
+
+            Archive& Range;
+            Archive& Attenuation;
+            Archive& Angle;
+            Archive& AngleAttenuation;
         }
 
         NEON_EXPORT_FLECS_COMPONENT(SpotLight, "SpotLight")

@@ -10,8 +10,6 @@
 
 #include <Scene/Component/Script.hpp>
 
-#include <Scene/Component/Renderable.hpp>
-
 #include <Scene/Component/Mesh.hpp>
 
 #include <Scene/Component/Physics.hpp>
@@ -31,7 +29,6 @@ namespace Neon::Scene::Exports
 
         NEON_REGISTER_FLECS(Component::ScriptInstance);
 
-        NEON_REGISTER_FLECS(Component::Renderable);
         NEON_REGISTER_FLECS(Component::MeshInstance);
 
         NEON_REGISTER_FLECS(Component::CollisionEnter);
@@ -45,6 +42,7 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_FLECS(Component::CollisionShape);
         NEON_REGISTER_FLECS(Component::CollisionObject);
 
+        NEON_REGISTER_FLECS(Component::Light);
         NEON_REGISTER_FLECS(Component::DirectionalLight);
         NEON_REGISTER_FLECS(Component::PointLight);
         NEON_REGISTER_FLECS(Component::SpotLight);

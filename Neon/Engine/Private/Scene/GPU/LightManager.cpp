@@ -39,8 +39,7 @@ namespace Neon::Scene
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform>()
-            .with<Component::Light>()
-            .in()
+            .expr("[in] ActiveSceneEntity, [in] DirectionalLight || [in] PointLight || [in] SpotLight")
             .event(flecs::OnSet)
             .event(flecs::OnRemove)
             .each(
@@ -59,6 +58,35 @@ namespace Neon::Scene
                         {
                             Handle->InstanceId = this->AddInstance(&Data);
                         }
+
+                        uint32_t Type  = 0;
+                        uint32_t Flags = (Data->Flags & ~uint32_t(LightFlags::TypeMask));
+
+                        if (auto DirectionalLight = Entity.get<Component::DirectionalLight>())
+                        {
+                            Data->Color = DirectionalLight->Color;
+                            Flags |= uint32_t(LightFlags::Directional);
+                        }
+                        else if (auto PointLight = Entity.get<Component::PointLight>())
+                        {
+                            Data->Color               = PointLight->Color;
+                            Data->Range               = PointLight->Range;
+                            Data->Attenuation_Angle.x = PointLight->Attenuation;
+                            Flags |= uint32_t(LightFlags::Point);
+                        }
+                        else if (auto SpotLight = Entity.get<Component::SpotLight>())
+                        {
+                            Data->Color               = SpotLight->Color;
+                            Data->Range               = SpotLight->Range;
+                            Data->Attenuation_Angle.x = SpotLight->Attenuation;
+                            Data->Attenuation_Angle.y = SpotLight->Angle;
+                            Data->Attenuation_Angle.z = SpotLight->AngleAttenuation;
+                            Flags |= uint32_t(LightFlags::Spot);
+                        }
+
+                        Data->Flags     = Flags;
+                        Data->Position  = Transform.World.GetPosition();
+                        Data->Direction = Transform.World.GetLookDir();
                     }
                     else
                     {
@@ -72,26 +100,30 @@ namespace Neon::Scene
     }
 
     uint32_t GPULightManager::AddInstance(
-        InstanceData** InstanceData)
+        InstanceData** OutData)
     {
-        auto Id = uint32_t(m_LightsInScene.Allocate(1));
+        auto Id = m_LightsInScene.Allocate(1);
         if (!Id)
         {
-            Id = InvalidInstanceId;
+            Id.Offset = InvalidInstanceId;
         }
         else
         {
-            if (InstanceData)
+            InstanceData* Data = GetInstanceData(uint32_t(Id.Offset));
+            Data->Flags |= uint32_t(LightFlags::Enabled);
+            if (OutData)
             {
-                *InstanceData = GetInstanceData(Id);
+                *OutData = Data;
             }
         }
-        return Id;
+        return uint32_t(Id.Offset);
     }
 
     void GPULightManager::RemoveInstance(
         uint32_t InstanceId)
     {
+        auto Data = GetInstanceData(InstanceId);
+        Data->Flags &= ~uint32_t(LightFlags::Enabled);
         m_LightsInScene.Free({ .Offset = InstanceId, .Size = 1 });
     }
 

@@ -8,7 +8,7 @@
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
-#include <Scene/Component/Renderable.hpp>
+#include <Scene/Component/Light.hpp>
 
 namespace Neon::Editor::Views
 {
@@ -102,6 +102,27 @@ namespace Neon::Editor::Views
             m_Asset = Asset;
 
             CreateSceneModel(Asset->GetModel());
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Add Light"))
+        {
+            auto& CurScene = Project::Get()->GetActiveScene()->GetScene();
+
+            flecs::entity Entity = Scene::EntityHandle::Create(CurScene.GetRoot(), CurScene.GetRoot());
+
+            Scene::Component::Transform Transform;
+            Transform.World.SetRotationEuler(
+                Vector3(
+                    glm::radians(180.0f),
+                    glm::radians(0.0f),
+                    glm::radians(0.0f)));
+            Transform.World.SetPosition(
+                Vector3(1.0f, 5.0f, 0.0f));
+
+            Entity.set(Transform);
+            Entity.emplace<Scene::Component::DirectionalLight>();
         }
     }
 } // namespace Neon::Editor::Views

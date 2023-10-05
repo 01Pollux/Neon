@@ -30,7 +30,7 @@ namespace Neon::Scene
         struct InstanceData
         {
             Vector4  Color{};
-            Vector3  PositionVS{};
+            Vector3  Position{};
             float    Range = 0.f; // 0 for directional light, Point light + spot light
             Vector3  Direction{};
             uint32_t Flags = 0;           // LightFlags::* flags
@@ -55,7 +55,7 @@ namespace Neon::Scene
         /// Create a new instance data, returns instance id and fill the instance data pointer if not null
         /// </summary>
         [[nodiscard]] uint32_t AddInstance(
-            InstanceData** InstanceData = nullptr);
+            InstanceData** OutData = nullptr);
 
         /// <summary>
         /// Remove an instance data
