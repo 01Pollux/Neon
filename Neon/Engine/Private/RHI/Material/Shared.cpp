@@ -52,11 +52,9 @@ namespace Neon::RHI
                         .AddStandardSamplers()
                         .Build());
 
-            RHI::MShaderCompileFlags Flags;
-
             LitMaterial
-                .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex, .Flags = Flags }))
-                .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel, .Flags = Flags }));
+                .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
+                .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }));
 
             s_DefaultMaterials[Type::Lit] = LitMaterial.Build();
         }

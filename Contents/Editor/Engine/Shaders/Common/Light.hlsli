@@ -21,7 +21,7 @@ struct LightingResult
 
 static float4 Light_Diffuse(in const float4 Color, in const float4 L, in const float4 N)
 {
-	float NdotL = max(dot(N, L), 0);
+	float NdotL = max(dot(L, N), 0);
 	return Color * NdotL;
 }
 
@@ -88,9 +88,7 @@ struct Light
 		{
 			case LIGHT_FLAGS_TYPE_DIRECTIONAL:
 				{
-					float4 L = float4(normalize(-Direction), 1.f);
-					
-					Result.Diffuse += Light_Diffuse(Color, L, Normal);
+					Result.Diffuse += Light_Diffuse(Color, float4(-Direction, 0.f), Normal);
 					break;
 				}
 		}

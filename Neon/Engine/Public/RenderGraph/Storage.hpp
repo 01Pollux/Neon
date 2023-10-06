@@ -24,6 +24,8 @@ namespace Neon::RG
 
         using ResourceMapType = std::map<ResourceId, ResourceHandle>;
 
+        static constexpr size_t CameraFrameDataSize = Math::AlignUp(sizeof(CameraFrameData), 255);
+
     public:
         GraphStorage();
 
@@ -100,12 +102,12 @@ namespace Neon::RG
         /// <summary>
         /// Map global frame data to system memory
         /// </summary>
-        [[nodiscard]] CameraFrameData& MapFrameData() const;
+        [[nodiscard]] const CameraFrameData& GetFrameData() const;
 
         /// <summary>
-        /// Unmap global frame data from system memory
+        /// Map global frame data to system memory
         /// </summary>
-        void UnmapFrameData() const;
+        [[nodiscard]] CameraFrameData& GetFrameData();
 
         /// <summary>
         /// Get global frame data
@@ -189,8 +191,10 @@ namespace Neon::RG
         /// Structured as CameraFrameData.
         /// </summary>
         Ptr<RHI::IGpuResource> m_CameraFrameData;
-        ResourceMapType        m_Resources;
-        std::set<ResourceId>   m_ImportedResources;
-        SceneContext           m_SceneContext;
+        uint8_t*               m_CameraFrameDataPtr;
+
+        ResourceMapType      m_Resources;
+        std::set<ResourceId> m_ImportedResources;
+        SceneContext         m_SceneContext;
     };
 } // namespace Neon::RG

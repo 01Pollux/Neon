@@ -29,22 +29,21 @@ namespace Neon::Scene
         {
             InstanceDataBuffer        Instances;
             Allocator::BuddyAllocator Allocator;
-            InstanceData*             MappedInstances;
+            uint8_t*                  MappedInstances;
 
             InstanceBufferPage(
                 size_t PageIndex) :
                 Instances(RHI::IGpuResource::Create(
-                    RHI::ResourceDesc::Buffer(
+                    RHI::ResourceDesc::BufferUpload(
                         SizeOfPage * SizeOfInstanceData,
-                        {},
-                        RHI::GraphicsBufferType::Upload),
+                        {}),
                     {
 #ifndef NEON_DIST
-                        .Name = StringUtils::Format(STR("InstanceBufferPage_{}"), PageIndex).c_str(),
+                        .Name = StringUtils::Format(STR("InstanceBufferPage_{}"), PageIndex).c_str()
 #endif
-                        .InitialState = RHI::IGpuResource::DefaultUploadResourceState })),
+                    })),
                 Allocator(SizeOfPage),
-                MappedInstances(Instances->Map<InstanceData>())
+                MappedInstances(Instances->Map())
             {
             }
         };
@@ -63,7 +62,7 @@ namespace Neon::Scene
         /// Create a new instance data, returns instance id and fill the instance data pointer if not null
         /// </summary>
         [[nodiscard]] uint32_t AddInstance(
-            InstanceData** InstanceData = nullptr)
+            InstanceData** OutData = nullptr)
         {
             uint32_t InstanceId = InvalidInstanceId;
 
@@ -73,28 +72,28 @@ namespace Neon::Scene
                 if (auto Instance = Page.Allocator.Allocate(1))
                 {
                     InstanceId = uint32_t(i << 16) | uint32_t(Instance.Offset);
-                    if (InstanceData)
+                    if (OutData)
                     {
-                        *InstanceData = Page.MappedInstances + Instance.Offset;
+                        *OutData = std::bit_cast<InstanceData*>(Page.MappedInstances + SizeOfInstanceData * Instance.Offset);
                     }
                 }
             }
 
             if (InstanceId == InvalidInstanceId)
             {
-                size_t Offset = m_PagesInstances.size();
-#if NEON_DEBUG
-                if (Offset >= NumberOfPages)
+                size_t PageIndex = m_PagesInstances.size();
+#ifdef NEON_DEBUG
+                if (PageIndex >= NumberOfPages)
                 {
                     std::unreachable();
                 }
 #endif
-                auto& Page     = m_PagesInstances.emplace_back(Offset);
+                auto& Page     = m_PagesInstances.emplace_back(PageIndex);
                 auto  Instance = Page.Allocator.Allocate(1);
-                InstanceId     = uint32_t(Offset << 16) | uint32_t(Instance.Offset);
-                if (InstanceData)
+                InstanceId     = uint32_t(PageIndex << 16) | uint32_t(Instance.Offset);
+                if (OutData)
                 {
-                    *InstanceData = Page.MappedInstances + Instance.Offset;
+                    *OutData = std::bit_cast<InstanceData*>(Page.MappedInstances + SizeOfInstanceData * Instance.Offset);
                 }
             }
 
@@ -120,7 +119,7 @@ namespace Neon::Scene
         {
             uint32_t PageIndex = InstanceId >> 16;
             uint32_t Offset    = InstanceId & 0xFFFF;
-            return m_PagesInstances[PageIndex].MappedInstances + Offset;
+            return std::bit_cast<InstanceData*>(m_PagesInstances[PageIndex].MappedInstances + SizeOfInstanceData * Offset);
         }
 
         /// <summary>
@@ -131,7 +130,7 @@ namespace Neon::Scene
         {
             uint32_t PageIndex = InstanceId >> 16;
             uint32_t Offset    = InstanceId & 0xFFFF;
-            return m_PagesInstances[PageIndex].MappedInstances + Offset;
+            return std::bit_cast<const InstanceData*>(m_PagesInstances[PageIndex].MappedInstances + SizeOfInstanceData * Offset);
         }
 
         /// <summary>

@@ -37,7 +37,7 @@ namespace Neon::RHI::ImGuiRHI
         // Setting descriptor heap and font heaps to null since we are using our own allocator.
         ImGui_ImplDX12_Init(
             RHI::Dx12RenderDevice::Get()->GetDevice(),
-            UINT(Swapchain->GetBackbufferCount()),
+            UINT(Swapchain->GetFrameCount()),
             RHI::CastFormat(Swapchain->GetFormat()),
             nullptr,
             {},

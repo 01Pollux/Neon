@@ -138,9 +138,11 @@ namespace Neon::RG
             return;
         }
 
+        m_GridSize       = OutputSize;
         Size2I GridCount = GetGroupCount(OutputSize);
 
         RecreateGridFrustum(GridCount);
+        DispatchGridFrustum(Storage, GridCount);
         RecreateLightGrid(GridCount);
         UpdateResources(Storage, GridCount);
     }
@@ -149,7 +151,6 @@ namespace Neon::RG
         GraphStorage&           Storage,
         RHI::ComputeCommandList CommandList)
     {
-        RecreateGridFrustumIfNeeded(Storage, CommandList);
         DispatchLightCull(Storage, CommandList);
     }
 
@@ -225,22 +226,6 @@ namespace Neon::RG
 
     //
 
-    void LightCullPass::RecreateGridFrustumIfNeeded(
-        GraphStorage&           Storage,
-        RHI::ComputeCommandList CommandList)
-    {
-        auto OutputSize = Storage.GetOutputImageSize();
-        if (m_GridSize == OutputSize) [[likely]]
-        {
-            return;
-        }
-
-        m_GridSize = OutputSize;
-        DispatchGridFrustum(Storage, CommandList, GetGroupCount(OutputSize));
-    }
-
-    //
-
     void LightCullPass::RecreateGridFrustum(
         const Size2I& GridCount)
     {
@@ -261,7 +246,8 @@ namespace Neon::RG
             RHI::ResourceDesc::Buffer(
                 SizeInBytes,
                 Flags),
-            { .Name = STR("LightCull::GridFrustum") }));
+            { .Name         = STR("LightCull::GridFrustum"),
+              .InitialState = BitMask_Or(RHI::EResourceState::UnorderedAccess) }));
 
         m_GridFrustumViews = Descriptor->Allocate(2);
 
@@ -289,11 +275,13 @@ namespace Neon::RG
     //
 
     void LightCullPass::DispatchGridFrustum(
-        const GraphStorage&     Storage,
-        RHI::ComputeCommandList CommandList,
-        const Size2I&           GridCount)
+        const GraphStorage& Storage,
+        const Size2I&       GridCount)
     {
         auto StateManager = RHI::IResourceStateManager::Get();
+
+        RHI::CommandContext     CommandContext;
+        RHI::ComputeCommandList CommandList(CommandContext.Append());
 
         //
 
@@ -316,7 +304,7 @@ namespace Neon::RG
             1,
             false);
 
-        StateManager->TransitionResource(m_GridFrustum.get(), RHI::EResourceState::UnorderedAccess);
+        // Flush pending UnorderedAccess transition
         StateManager->FlushBarriers(CommandList);
 
         CommandList.Dispatch(
@@ -324,7 +312,6 @@ namespace Neon::RG
             m_GridSize.y);
 
         StateManager->TransitionResource(m_GridFrustum.get(), RHI::EResourceState::NonPixelShaderResource);
-        StateManager->FlushBarriers(CommandList);
     }
 
     //
@@ -333,7 +320,7 @@ namespace Neon::RG
         const Size2I& GridCount)
     {
         uint32_t BufferCount           = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
-        size_t   SizeInBytesForIndices = sizeof(uint32_t) * (BufferCount + 1);
+        size_t   SizeInBytesForIndices = Math::AlignUp(sizeof(uint32_t) * (BufferCount + 1), 16);
 
         RHI::MResourceFlags Flags;
         Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);

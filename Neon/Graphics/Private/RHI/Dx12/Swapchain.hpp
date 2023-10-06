@@ -45,8 +45,6 @@ namespace Neon::RHI
             const Size2I&   Size,
             EResourceFormat NewFormat) override;
 
-        uint32_t GetBackbufferCount() override;
-
         [[nodiscard]] ICommandQueue* GetQueue(
             bool IsDirect) override;
 

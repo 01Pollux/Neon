@@ -97,7 +97,7 @@ namespace Neon::RG
                 .CopySize   = 1 },
             // LightGrid_Opaque
             RHI::IDescriptorHeap::CopyInfo{
-                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Transparent.CreateView("Geometry")),
+                .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Opaque.CreateView("Geometry")),
                 .CopySize   = 1 },
             // Lights_1
             RHI::IDescriptorHeap::CopyInfo{

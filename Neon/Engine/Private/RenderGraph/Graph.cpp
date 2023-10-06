@@ -37,16 +37,12 @@ namespace Neon::RG
         const Scene::Component::Camera&    Camera,
         const Scene::Component::Transform& Transform)
     {
-        auto& CameraBuffer = m_Storage.MapFrameData();
-
-        auto Rotation = Transform.World.GetRotation();
-        auto Forward  = Rotation * Vec::Forward<Vector3>;
-        auto Up       = Rotation * Vec::Up<Vector3>;
+        auto& CameraBuffer = m_Storage.GetFrameData();
 
         auto View = glm::lookAt(
             Transform.World.GetPosition(),
-            Transform.World.GetPosition() + Forward,
-            Up);
+            Transform.World.GetPosition() + Transform.World.GetLookDir(),
+            Transform.World.GetUpDir());
 
         CameraBuffer.World = Transform.World.ToMat4x4Transposed();
 
@@ -65,7 +61,6 @@ namespace Neon::RG
         CameraBuffer.DeltaTime  = float(Runtime::GameEngine::Get()->GetDeltaTime());
 
         m_Storage.UpdateOutputImage(CameraBuffer.ScreenResolution);
-        m_Storage.UnmapFrameData();
     }
 
     void RenderGraph::Dispatch()

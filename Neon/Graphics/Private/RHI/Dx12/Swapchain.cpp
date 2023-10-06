@@ -177,11 +177,6 @@ namespace Neon::RHI
         m_FrameManager->IdleGPU();
     }
 
-    uint32_t Dx12Swapchain::GetBackbufferCount()
-    {
-        return uint32_t(m_BackBuffers.size());
-    }
-
     //
 
     void Dx12Swapchain::CreateSwapchain(

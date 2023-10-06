@@ -85,11 +85,6 @@ namespace Neon::RHI
             EResourceFormat NewFormat = EResourceFormat::Unknown) = 0;
 
         /// <summary>
-        /// Get the swapchain's backbuffer count.
-        /// </summary>
-        [[nodiscard]] virtual uint32_t GetBackbufferCount() = 0;
-
-        /// <summary>
         /// Get direct/copy command queue
         /// </summary>
         [[nodiscard]] virtual ICommandQueue* GetQueue(

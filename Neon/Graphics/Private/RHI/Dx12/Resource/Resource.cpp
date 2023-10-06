@@ -61,7 +61,6 @@ namespace Neon::RHI
         const ResourceDesc&  Desc,
         const InitDesc&      Init,
         D3D12_RESOURCE_FLAGS Flags)
-
     {
         D3D12_RESOURCE_DESC Dx12Desc{
             .Width            = Desc.Width,
@@ -92,6 +91,9 @@ namespace Neon::RHI
             break;
         }
 
+        D3D12_RESOURCE_STATES Dx12DefaultInitialState = D3D12_RESOURCE_STATE_COMMON;
+        auto                  Dx12WantedInitialState  = CastResourceStates(Init.InitialState);
+
         D3D12MA::ALLOCATION_DESC AllocDesc{};
         AllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
         switch (Desc.Type)
@@ -101,24 +103,29 @@ namespace Neon::RHI
             switch (Desc.BufferType)
             {
             case GraphicsBufferType::Upload:
-                AllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+                AllocDesc.HeapType      = D3D12_HEAP_TYPE_UPLOAD;
+                Dx12DefaultInitialState = D3D12_RESOURCE_STATE_GENERIC_READ;
                 break;
             case GraphicsBufferType::Readback:
-                AllocDesc.HeapType = D3D12_HEAP_TYPE_READBACK;
+                AllocDesc.HeapType      = D3D12_HEAP_TYPE_READBACK;
+                Dx12DefaultInitialState = D3D12_RESOURCE_STATE_COPY_DEST;
                 break;
             }
             break;
         case ResourceType::Texture1D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
+            Dx12DefaultInitialState = Dx12WantedInitialState;
+            Dx12Desc.Dimension      = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
             break;
         case ResourceType::Texture2D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+            Dx12DefaultInitialState = Dx12WantedInitialState;
+            Dx12Desc.Dimension      = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
             break;
         case ResourceType::Texture3D:
-            Dx12Desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+            Dx12DefaultInitialState = Dx12WantedInitialState;
+            Dx12Desc.Dimension      = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
             break;
         default:
-            NEON_ASSERT(false, "Invalid texture type");
+            NEON_ASSERT(false, "Invalid resource type");
             break;
         }
 
@@ -146,9 +153,8 @@ namespace Neon::RHI
             m_ClearValue = Desc.ClearValue;
         }
 
-        auto Dx12InitialState = Init.Subresources.empty() ? CastResourceStates(Init.InitialState) : D3D12_RESOURCE_STATE_COPY_DEST;
-
-        auto Allocator = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
+        auto Dx12InitialState = Init.Subresources.empty() ? Dx12DefaultInitialState : D3D12_RESOURCE_STATE_COPY_DEST;
+        auto Allocator        = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
         ThrowIfFailed(Allocator->CreateResource(
             &AllocDesc,
             &Dx12Desc,
@@ -170,6 +176,10 @@ namespace Neon::RHI
         if (!Init.Subresources.empty())
         {
             *Init.CopyTask = CopyFrom(0, Init.Subresources, Init.InitialState);
+        }
+        else if (Dx12InitialState != Dx12WantedInitialState)
+        {
+            Dx12ResourceStateManager::Get()->TransitionResource(this, Init.InitialState);
         }
     }
 

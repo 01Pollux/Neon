@@ -25,17 +25,16 @@ namespace Neon::Scene
 
     GPULightManager::GPULightManager() :
         m_LightsBuffer(RHI::IGpuResource::Create(
-            RHI::ResourceDesc::Buffer(
+            RHI::ResourceDesc::BufferUpload(
                 MaxLightsInScene * SizeOfInstanceData,
-                {},
-                RHI::GraphicsBufferType::Upload),
+                {}),
             {
 #ifndef NEON_DIST
-                .Name = STR("InstanceLightBuffer"),
+                .Name = STR("InstanceLightBuffer")
 #endif
-                .InitialState = RHI::IGpuResource::DefaultUploadResourceState })),
+            })),
         m_LightsInScene(MaxLightsInScene),
-        m_LightsBufferPtr(m_LightsBuffer->Map<InstanceData>())
+        m_LightsBufferPtr(m_LightsBuffer->Map())
     {
         m_LightsView = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
 
@@ -110,7 +109,7 @@ namespace Neon::Scene
                         Entity.remove<LightHandle>();
                     }
                 });
-    }
+    } // namespace Neon::Scene
 
     GPULightManager::~GPULightManager()
     {
@@ -154,13 +153,13 @@ namespace Neon::Scene
     auto GPULightManager::GetInstanceData(
         uint32_t InstanceId) -> InstanceData*
     {
-        return m_LightsBufferPtr + InstanceId;
+        return std::bit_cast<InstanceData*>(m_LightsBufferPtr + InstanceId * SizeOfInstanceData);
     }
 
     auto GPULightManager::GetInstanceData(
         uint32_t InstanceId) const -> const InstanceData*
     {
-        return m_LightsBufferPtr + InstanceId;
+        return std::bit_cast<const InstanceData*>(m_LightsBufferPtr + InstanceId * SizeOfInstanceData);
     }
 
     RHI::CpuDescriptorHandle GPULightManager::GetInstancesView() const

@@ -33,14 +33,14 @@ struct VSInput
 struct PSInput
 {
 	float4 Position : SV_POSITION;
-	float2 TexCoord : TEX_COORD;
+	float4 PositionWS : POSITION_WORLD;
 	
-	float3 NormalLS : NORMAL_LOCAL;
 	float3 NormalWS : NORMAL_WORLD;
 	
 	float3 TangentWS : TANGENT_WORLD;
 	float3 BitangentWS : BITANGENT_WORLD;
 	
+	float2 TexCoord : TEX_COORD;
 	nointerpolation uint InstanceId : INSTANCE_INDEX;
 };
 
@@ -59,18 +59,15 @@ PSInput VS_Main(VSInput Vs)
 	PerObjectData Object = v_ObjectData[Vs.InstanceId];
 	PSInput Ps = (PSInput) 0;
 	
-	Ps.Position = mul(
-		mul(
-			float4(Vs.Position, 1.f),
-			Object.World),
-		g_FrameData.ViewProjection);
+	Ps.PositionWS = mul(float4(Vs.Position, 1.f), Object.World);
+	Ps.Position = mul(Ps.PositionWS, g_FrameData.ViewProjection);
+	
+	Ps.NormalWS = mul(float4(Vs.Normal, 0.f), Object.World).xyz;
+	
+	Ps.TangentWS = mul(float4(Vs.Tangent, 0.f), Object.World).xyz;
+	Ps.BitangentWS = mul(float4(Vs.Bitangent, 0.f), Object.World).xyz;
 	Ps.TexCoord = Vs.TexCoord;
-	
-	Ps.NormalLS = Vs.Normal;
-	Ps.NormalWS = mul(float4(Vs.Normal, 0.f), (float4x3) Object.World);
-	
-	Ps.TangentWS = mul(float4(Vs.Tangent, 0.f), (float4x3) Object.World);
-	Ps.BitangentWS = mul(float4(Vs.Bitangent, 0.f), (float4x3) Object.World);
+	Ps.InstanceId = Vs.InstanceId;
 	
 	return Ps;
 }
@@ -106,7 +103,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 		Albedo.rgb *= Color.rgb;
 	}
 	
-	float4 Normal = float4(Ps.NormalWS, 1.f);
+	float4 Normal = float4(Ps.NormalWS, 0.f);
 	
 	[branch]
 	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
@@ -137,7 +134,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 
 	//
 	
-	float4 TargetToEye = normalize(float4(g_FrameData.World._41_42_43, 0.f) - Ps.Position);
+	float4 TargetToEye = normalize(float4(g_FrameData.World._41_42_43, 1.f) - Ps.PositionWS);
 
 	// Perform lighting
 	
@@ -149,7 +146,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	for (uint i = 0; i < LightCount; i++)
 	{
 		Light CurLight = p_Lights[p_LightIndexList[StartOffset + i]];
-		CurLight.Process(TargetToEye, Ps.Position, Normal, LightRes);
+		CurLight.Process(TargetToEye, Ps.PositionWS, Normal, LightRes);
 	}
 	
 	return float4(Albedo, 1.f) * LightRes.Diffuse + Emissive + Specular * LightRes.Specular;

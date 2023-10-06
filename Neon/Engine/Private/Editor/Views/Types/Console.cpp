@@ -115,11 +115,11 @@ namespace Neon::Editor::Views
             Scene::Component::Transform Transform;
             Transform.World.SetRotationEuler(
                 Vector3(
-                    glm::radians(180.0f),
+                    glm::radians(90.f),
                     glm::radians(0.0f),
                     glm::radians(0.0f)));
             Transform.World.SetPosition(
-                Vector3(1.0f, 5.0f, 0.0f));
+                Vector3(5.0f, 10.0f, 0.0f));
 
             Entity.set(Transform);
             Entity.emplace<Scene::Component::DirectionalLight>();

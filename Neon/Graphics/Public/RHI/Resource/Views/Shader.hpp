@@ -60,7 +60,7 @@ namespace Neon::RHI::Views
             size_t            Stride,
             size_t            Size)
         {
-            m_Views.emplace_back(GpuResourceHandle{ Handle.Value + Offset * Stride }, uint32_t(Stride), uint32_t(Size));
+            m_Views.emplace_back(GpuResourceHandle{ Handle.Value + Offset }, uint32_t(Stride), uint32_t(Size));
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Neon::RHI::Views
             uint32_t          Offset,
             uint32_t          Count)
         {
-            Append(BaseHandle, Offset, sizeof(_Ty), Count * sizeof(_Ty));
+            Append(BaseHandle, Offset * sizeof(_Ty), sizeof(_Ty), Count * sizeof(_Ty));
         }
 
         /// <summary>

@@ -112,7 +112,7 @@ namespace Neon::Scene
         Allocator::BuddyAllocator m_LightsInScene;
         RHI::DescriptorHeapHandle m_LightsView;
         uint32_t                  m_InstancesCount = 0;
-        InstanceData*             m_LightsBufferPtr;
+        uint8_t*                  m_LightsBufferPtr;
 
         InstanceIdLightMap      m_Lights;
         InstanceIdPipelineGroup m_LightInstanceIds;

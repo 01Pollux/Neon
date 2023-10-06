@@ -53,9 +53,9 @@ namespace Neon::RG
             AlignOfPerMaterialData,
             RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
 
-        auto   MaterialData  = Buffer.AsUpload().Map<PerMaterialData>(Buffer.Offset);
-        size_t MaterialIndex = 0;
-        size_t PassesCount   = 1;
+        uint8_t* MaterialDataPtr = Buffer.AsUpload().Map() + Buffer.Offset;
+        size_t   MaterialIndex   = 0;
+        size_t   PassesCount     = 1;
 
         std::array<RHI::IMaterial::PipelineVariant, 2> Passes;
 
@@ -92,26 +92,31 @@ namespace Neon::RG
             auto PassType = Passes[Pass];
             for (auto& InstanceList : MeshInstances | std::views::values)
             {
-                if (InstanceList.empty())
-                {
-                    continue;
-                }
-
                 uint32_t FirstInstanceId = InstanceList.back();
                 auto     FirstMesh       = Meshes.at(FirstInstanceId);
                 auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
+
+                bool WasSet              = false;
+                auto UpdatePipelineState = [&]()
+                {
+                    if (WasSet)
+                    {
+                        return;
+                    }
+
+                    WasSet = true;
+                    FirstMaterial->SetResourceView(
+                        "_FrameConstant",
+                        m_Storage.GetFrameDataHandle());
+
+                    CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
+                    CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
+                };
 
                 if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
                 {
                     continue;
                 }
-
-                FirstMaterial->SetResourceView(
-                    "_FrameConstant",
-                    m_Storage.GetFrameDataHandle());
-
-                CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
-                CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
 
                 for (auto InstanceId : InstanceList)
                 {
@@ -132,8 +137,11 @@ namespace Neon::RG
                         continue;
                     }
 
+                    UpdatePipelineState();
+
                     // Update shared params
                     {
+                        auto MaterialData    = std::bit_cast<PerMaterialData*>(MaterialDataPtr);
                         *MaterialData        = {};
                         MaterialData->Albedo = Colors::DarkGreen;
 
@@ -175,7 +183,7 @@ namespace Neon::RG
                     CommandList->SetVertexBuffer(0, VtxView);
                     CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
 
-                    MaterialData++;
+                    MaterialDataPtr += SizeOfPerMaterialData;
                     MaterialIndex++;
                 }
             }

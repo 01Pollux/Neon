@@ -68,13 +68,6 @@ namespace Neon::RG
             const Size2I& OutputSize) const;
 
         /// <summary>
-        /// Recreates the grid frustum resource if needed. (window size changed)
-        /// </summary>
-        void RecreateGridFrustumIfNeeded(
-            GraphStorage&           Storage,
-            RHI::ComputeCommandList CommandList);
-
-        /// <summary>
         /// Recreates the grid frustum resource.
         /// </summary>
         void RecreateGridFrustum(
@@ -85,7 +78,6 @@ namespace Neon::RG
         /// </summary>
         void DispatchGridFrustum(
             const GraphStorage&     Storage,
-            RHI::ComputeCommandList CommandList,
             const Size2I&           GridCount);
 
     private:
