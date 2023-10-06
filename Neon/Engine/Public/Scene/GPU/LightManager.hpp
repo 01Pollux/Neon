@@ -36,6 +36,7 @@ namespace Neon::Scene
             Vector3  Direction{};
             uint32_t Flags = 0;           // LightFlags::* flags
             Vector3  Attenuation_Angle{}; // 0 for directional light, (attenuation, 0, 0) for point light, (attenuation, angle, attenuation) for spot light
+            float    _Pad;
         };
 
         using InstanceIdList          = std::vector<uint32_t>;
@@ -46,7 +47,7 @@ namespace Neon::Scene
     public:
         static constexpr size_t   MaxLightsInScene   = 1024; // MAX_LIGHTS
         static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
-        static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
+        static constexpr size_t   SizeOfInstanceData = sizeof(InstanceData);
 
     public:
         GPULightManager();

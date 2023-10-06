@@ -362,7 +362,7 @@ namespace Neon::RG
         const Size2I& GridCount)
     {
         uint32_t BufferCount           = GridCount.x * GridCount.y * MaxOverlappingLightsPerTile;
-        size_t   SizeInBytesForIndices = Math::AlignUp(sizeof(uint32_t) * (BufferCount + 1), 16);
+        size_t   SizeInBytesForIndices = Math::AlignUp(sizeof(uint32_t) * BufferCount, 16);
 
         RHI::MResourceFlags Flags;
         Flags.Set(RHI::EResourceFlags::AllowUnorderedAccess);
@@ -423,7 +423,6 @@ namespace Neon::RG
             {
                 UavDesc = RHI::UAVDesc{
                     .View = RHI::UAVDesc::Buffer{
-                        .FirstElement = sizeof(uint32_t),
                         .Count        = BufferCount,
                         .SizeOfStruct = sizeof(uint32_t) }
                 };
@@ -432,7 +431,6 @@ namespace Neon::RG
             {
                 SrvDesc = RHI::SRVDesc{
                     .View = RHI::SRVDesc::Buffer{
-                        .FirstElement = sizeof(uint32_t),
                         .Count        = BufferCount,
                         .SizeOfStruct = sizeof(uint32_t) }
                 };

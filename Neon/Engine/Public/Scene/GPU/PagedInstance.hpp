@@ -17,8 +17,9 @@ namespace Neon::Scene
         using InstanceData = _Ty;
 
         static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
-        static constexpr size_t   SizeOfInstanceData = Math::AlignUp(sizeof(InstanceData), 16);
+        static constexpr size_t   SizeOfInstanceData = sizeof(InstanceData);
         static constexpr size_t   SizeOfPage         = std::numeric_limits<uint16_t>::max();
+        static constexpr size_t   SizeOfInstancePage = Math::AlignUp(SizeOfInstanceData * SizeOfPage, 16);
         static constexpr size_t   NumberOfPages      = std::numeric_limits<uint16_t>::max();
 
         using InstanceIdList          = std::vector<uint32_t>;
@@ -35,7 +36,7 @@ namespace Neon::Scene
                 size_t PageIndex) :
                 Instances(RHI::IGpuResource::Create(
                     RHI::ResourceDesc::BufferUpload(
-                        SizeOfPage * SizeOfInstanceData,
+                        SizeOfInstancePage,
                         {}),
                     {
 #ifndef NEON_DIST

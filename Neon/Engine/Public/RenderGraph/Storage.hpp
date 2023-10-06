@@ -24,8 +24,6 @@ namespace Neon::RG
 
         using ResourceMapType = std::map<ResourceId, ResourceHandle>;
 
-        static constexpr size_t CameraFrameDataSize = Math::AlignUp(sizeof(CameraFrameData), 255);
-
     public:
         GraphStorage();
 

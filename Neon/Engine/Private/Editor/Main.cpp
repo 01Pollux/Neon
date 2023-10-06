@@ -16,7 +16,6 @@ NEON_MAIN(Argc, Argv)
           .Renderer{ .Device = { .EnableDebugLayer = true /*, .EnableGPUDebugger = true*/ /*, .EnableGpuBasedValidation = true*/ } } }
     };
 
-    Config.Renderer.Swapchain.VSync = false;
     {
         bpo::options_description Description("Allowed options");
         Description.add_options()(

@@ -114,9 +114,9 @@ void CS_Main(
 	while (i < c_LightInfo.LightCount)
 	{
 		Light CurLight = c_Lights[i];
+		i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y;
 		if (CurLight.IsEnabled())
 		{
-			i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y;
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:

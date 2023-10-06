@@ -20,7 +20,7 @@ namespace Neon::RG
     GraphStorage::GraphStorage() :
         m_CameraFrameData(RHI::IGpuResource::Create(
             RHI::ResourceDesc::BufferUpload(
-                CameraFrameDataSize * RHI::ISwapchain::Get()->GetFrameCount()))),
+                Math::AlignUp(sizeof(CameraFrameData) * RHI::ISwapchain::Get()->GetFrameCount(), 256)))),
         m_CameraFrameDataPtr(m_CameraFrameData->Map()),
         m_SceneContext(*this)
     {
@@ -160,12 +160,12 @@ namespace Neon::RG
 
     const CameraFrameData& GraphStorage::GetFrameData() const
     {
-        return *std::bit_cast<const CameraFrameData*>(m_CameraFrameDataPtr + CameraFrameDataSize * RHI::ISwapchain::Get()->GetFrameIndex());
+        return *std::bit_cast<const CameraFrameData*>(m_CameraFrameDataPtr + sizeof(CameraFrameData) * RHI::ISwapchain::Get()->GetFrameIndex());
     }
 
     CameraFrameData& GraphStorage::GetFrameData()
     {
-        return *std::bit_cast<CameraFrameData*>(m_CameraFrameDataPtr + CameraFrameDataSize * RHI::ISwapchain::Get()->GetFrameIndex());
+        return *std::bit_cast<CameraFrameData*>(m_CameraFrameDataPtr + sizeof(CameraFrameData) * RHI::ISwapchain::Get()->GetFrameIndex());
     }
 
     RHI::GpuResourceHandle GraphStorage::GetFrameDataHandle() const
