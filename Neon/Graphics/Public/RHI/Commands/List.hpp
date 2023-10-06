@@ -234,6 +234,41 @@ namespace Neon::RHI
 
     public:
         /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        virtual void ClearUavFloat(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>) = 0;
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        virtual void ClearUavUInt(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>) = 0;
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>);
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>);
+
+    public:
+        /// <summary>
         /// Clear render target view
         /// </summary>
         virtual void ClearRtv(
@@ -563,6 +598,53 @@ namespace Neon::RHI
                 Handle,
                 Size,
                 IsSampler);
+        }
+
+    public:
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>)
+        {
+            m_CmdList->ClearUavFloat(Resource, GpuUavHandle, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>)
+        {
+            m_CmdList->ClearUavUInt(Resource, GpuUavHandle, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>)
+        {
+            m_CmdList->ClearUavFloat(Resource, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>)
+        {
+            m_CmdList->ClearUavUInt(Resource, CpuUavHandle, Value);
         }
 
     public:
@@ -955,6 +1037,53 @@ namespace Neon::RHI
                 GroupCountX,
                 GroupCountY,
                 GroupCountZ);
+        }
+
+    public:
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>)
+        {
+            m_CmdList->ClearUavFloat(Resource, GpuUavHandle, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>)
+        {
+            m_CmdList->ClearUavUInt(Resource, GpuUavHandle, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>)
+        {
+            m_CmdList->ClearUavFloat(Resource, CpuUavHandle, Value);
+        }
+
+        /// <summary>
+        /// Clear unordered access view
+        /// </summary>
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>)
+        {
+            m_CmdList->ClearUavUInt(Resource, CpuUavHandle, Value);
         }
 
     private:

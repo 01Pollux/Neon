@@ -92,6 +92,19 @@ namespace Neon::RHI
             bool                IsSampler) override;
 
     public:
+        void ClearUavFloat(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4&      Value = Vec::Zero<Vector4>) override;
+
+        void ClearUavUInt(
+            IGpuResource*       Resource,
+            GpuDescriptorHandle GpuUavHandle,
+            CpuDescriptorHandle CpuUavHandle,
+            const Vector4U&     Value = Vec::Zero<Vector4U>) override;
+
+    public:
         void ClearRtv(
             CpuDescriptorHandle RtvHandle,
             const Color4&       Color) override;

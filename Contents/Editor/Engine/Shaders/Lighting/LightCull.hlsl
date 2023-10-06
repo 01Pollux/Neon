@@ -23,11 +23,12 @@ StructuredBuffer<Frustum> c_FrustumGrid : register(t1, space1);
 StructuredBuffer<Light> c_Lights : register(t2, space1);
 
 // First index is the number of lights
-RWStructuredBuffer<uint> c_LightIndexList_Opaque : register(u0, space1);
-RWStructuredBuffer<uint> c_LightIndexList_Transparent : register(u1, space1);
+RWByteAddressBuffer c_LightIndexList_Counters : register(u0, space1);
+RWStructuredBuffer<uint> c_LightIndexList_Opaque : register(u1, space1);
+RWStructuredBuffer<uint> c_LightIndexList_Transparent : register(u2, space1);
 
-RWTexture2D<uint2> c_LightGrid_Opaque : register(u2, space1);
-RWTexture2D<uint2> c_LightGrid_Transparent : register(u3, space1);
+RWTexture2D<uint2> c_LightGrid_Opaque : register(u3, space1);
+RWTexture2D<uint2> c_LightGrid_Transparent : register(u4, space1);
 
 //
 
@@ -159,10 +160,10 @@ void CS_Main(
 	
 	if (GID == 0)
 	{
-		InterlockedAdd(c_LightIndexList_Opaque[0], c_LightCount_Opaque, c_LightIndexStartOffset_Opaque);
+		c_LightIndexList_Counters.InterlockedAdd(0, c_LightCount_Opaque, c_LightIndexStartOffset_Opaque);
 		c_LightGrid_Opaque[GTID.xy] = uint2(c_LightIndexStartOffset_Opaque, c_LightCount_Opaque);
 
-		InterlockedAdd(c_LightIndexList_Transparent[0], c_LightCount_Transparent, c_LightIndexStartOffset_Transparent);
+		c_LightIndexList_Counters.InterlockedAdd(4, c_LightCount_Transparent, c_LightIndexStartOffset_Transparent);
 		c_LightGrid_Transparent[GTID.xy] = uint2(c_LightIndexStartOffset_Transparent, c_LightCount_Transparent);
 	}
 	
@@ -170,10 +171,10 @@ void CS_Main(
 	
 	for (i = 0; i < c_LightCount_Opaque; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
-		c_LightIndexList_Opaque[1 + c_LightIndexStartOffset_Opaque + i] = c_LightList_Opaque[i];
+		c_LightIndexList_Opaque[c_LightIndexStartOffset_Opaque + i] = c_LightList_Opaque[i];
 	}
 	for (i = 0; i < c_LightCount_Transparent; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
-		c_LightIndexList_Transparent[1 + c_LightIndexStartOffset_Transparent + i] = c_LightList_Transparent[i];
+		c_LightIndexList_Transparent[c_LightIndexStartOffset_Transparent + i] = c_LightList_Transparent[i];
 	}
 }

@@ -77,8 +77,8 @@ namespace Neon::RG
         /// Dispatches the grid frustum pass.
         /// </summary>
         void DispatchGridFrustum(
-            const GraphStorage&     Storage,
-            const Size2I&           GridCount);
+            const GraphStorage& Storage,
+            const Size2I&       GridCount);
 
     private:
         /// <summary>
@@ -95,6 +95,9 @@ namespace Neon::RG
             const Size2I& GridCount);
 
     private:
+        Ptr<RHI::IGpuResource>    m_LightIndexList_Counters;
+        RHI::DescriptorHeapHandle m_LightIndexList_CountersView;
+
         Ptr<RHI::IGpuResource> m_LightIndexList_Opaque;
         Ptr<RHI::IGpuResource> m_LightIndexList_Transparent;
 

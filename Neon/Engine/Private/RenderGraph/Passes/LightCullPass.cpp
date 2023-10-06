@@ -32,6 +32,7 @@ namespace Neon::RG
         DepthBuffer,
         FrustumGrid,
         Lights,
+        LightIndexList_Counters,
         LightIndexList_Opaque,
         LightIndexList_Transaprent,
         LightGrid_Opaque,
@@ -71,10 +72,11 @@ namespace Neon::RG
                         .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, uint32_t(LightCullRS_Resources::DepthBuffer))
                         .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, uint32_t(LightCullRS_Resources::FrustumGrid))
                         .AddSrvRangeAt("c_Lights", 2, 1, 1, uint32_t(LightCullRS_Resources::Lights))
-                        .AddUavRangeAt("c_LightIndexList_Opaque", 0, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Opaque))
-                        .AddUavRangeAt("c_LightIndexList_Transparent", 1, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Transaprent))
-                        .AddUavRangeAt("c_LightGrid_Opaque", 2, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Opaque))
-                        .AddUavRangeAt("c_LightGrid_Transparent", 3, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Transaprent)),
+                        .AddUavRangeAt("c_LightIndexList_Counters", 0, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Counters))
+                        .AddUavRangeAt("c_LightIndexList_Opaque", 1, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Opaque))
+                        .AddUavRangeAt("c_LightIndexList_Transparent", 2, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Transaprent))
+                        .AddUavRangeAt("c_LightGrid_Opaque", 3, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Opaque))
+                        .AddUavRangeAt("c_LightGrid_Transparent", 4, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Transaprent)),
                     RHI::ShaderVisibility::All)
                 .ComputeOnly()
                 .AddStandardSamplers()
@@ -93,13 +95,44 @@ namespace Neon::RG
                 .ComputeShader = LightCullShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
             }
                 .Build();
+
+        //
+
+        m_LightIndexList_Counters.reset(
+            RHI::IGpuResource::Create(
+                RHI::ResourceDesc::Buffer(
+                    sizeof(uint32_t) * 2,
+                    BitMask_Or(RHI::EResourceFlags::AllowUnorderedAccess)),
+                { .Name         = STR("LightIndexList_Counters"),
+                  .InitialState = BitMask_Or(RHI::EResourceState::UnorderedAccess) }));
+
+        auto Descriptor               = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
+        m_LightIndexList_CountersView = Descriptor->Allocate(1);
+
+        RHI::UAVDesc UavDesc{
+            .View = RHI::UAVDesc::Buffer{
+                .Count = 2,
+                .Raw   = true },
+            .Format = RHI::EResourceFormat::R32_Typeless
+        };
+        m_LightIndexList_CountersView->CreateUnorderedAccessView(
+            m_LightIndexList_CountersView.Offset,
+            m_LightIndexList_Counters.get(),
+            &UavDesc);
     }
 
     LightCullPass::~LightCullPass()
     {
+        auto Descriptor = RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
         if (m_GridFrustumViews)
         {
-            RHI::IStaticDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Free(m_GridFrustumViews);
+            Descriptor->Free(m_GridFrustumViews);
+            m_GridFrustumViews = {};
+        }
+        if (m_LightIndexList_CountersView)
+        {
+            Descriptor->Free(m_LightIndexList_CountersView);
+            m_LightIndexList_CountersView = {};
         }
     }
 
@@ -183,6 +216,10 @@ namespace Neon::RG
                 RHI::IDescriptorHeap::CopyInfo{
                     .Descriptor = SceneContext.GetLightsResourceView(),
                     .CopySize   = 1 },
+                // Light index counters
+                RHI::IDescriptorHeap::CopyInfo{
+                    .Descriptor = m_LightIndexList_CountersView.GetCpuHandle(),
+                    .CopySize   = 1 },
                 // Light index list opaque
                 RHI::IDescriptorHeap::CopyInfo{
                     .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightIndexList_Opaque.CreateView("Main")),
@@ -200,12 +237,17 @@ namespace Neon::RG
                     .Descriptor = Storage.GetResourceViewHandle(LightCullPass::LightGrid_Transparent.CreateView("Main")),
                     .CopySize   = 1 }
             };
+            static_assert(Sources.size() == uint32_t(LightCullRS_Resources::Count));
 
             Descriptor->Copy(
                 Descriptor.Offset,
                 Sources);
 
             CommandList.SetDescriptorTable(uint32_t(LightCullRS::Table_Resources), Descriptor.GetGpuHandle());
+            CommandList.ClearUavUInt(
+                m_LightIndexList_Counters.get(),
+                Descriptor.GetGpuHandle(uint32_t(LightCullRS_Resources::LightIndexList_Counters)),
+                m_LightIndexList_CountersView.GetCpuHandle());
         }
 
         CommandList.Dispatch(m_GridSize.x, m_GridSize.y);
@@ -381,7 +423,7 @@ namespace Neon::RG
             {
                 UavDesc = RHI::UAVDesc{
                     .View = RHI::UAVDesc::Buffer{
-                        .FirstElement = 1,
+                        .FirstElement = sizeof(uint32_t),
                         .Count        = BufferCount,
                         .SizeOfStruct = sizeof(uint32_t) }
                 };
@@ -390,7 +432,7 @@ namespace Neon::RG
             {
                 SrvDesc = RHI::SRVDesc{
                     .View = RHI::SRVDesc::Buffer{
-                        .FirstElement = 1,
+                        .FirstElement = sizeof(uint32_t),
                         .Count        = BufferCount,
                         .SizeOfStruct = sizeof(uint32_t) }
                 };

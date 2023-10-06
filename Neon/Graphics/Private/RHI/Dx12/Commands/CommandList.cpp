@@ -368,11 +368,43 @@ namespace Neon::RHI
         Descriptor.Heap->Copy(
             Descriptor.Offset,
             { .Descriptor = Handle,
-              .CopySize = Size });
+              .CopySize   = Size });
         SetDescriptorTable(
-			IsDirect,
-			RootIndex,
-			Descriptor.GetGpuHandle());
+            IsDirect,
+            RootIndex,
+            Descriptor.GetGpuHandle());
+    }
+
+    //
+
+    void Dx12CommandList::ClearUavFloat(
+        IGpuResource*       Resource,
+        GpuDescriptorHandle GpuUavHandle,
+        CpuDescriptorHandle CpuUavHandle,
+        const Vector4&      Value)
+    {
+        m_CommandList->ClearUnorderedAccessViewFloat(
+            { GpuUavHandle.Value },
+            { CpuUavHandle.Value },
+            static_cast<Dx12GpuResource*>(Resource)->GetResource(),
+            glm::value_ptr(Value),
+            0,
+            nullptr);
+    }
+
+    void Dx12CommandList::ClearUavUInt(
+        IGpuResource*       Resource,
+        GpuDescriptorHandle GpuUavHandle,
+        CpuDescriptorHandle CpuUavHandle,
+        const Vector4U&     Value)
+    {
+        m_CommandList->ClearUnorderedAccessViewUint(
+            { GpuUavHandle.Value },
+            { CpuUavHandle.Value },
+            static_cast<Dx12GpuResource*>(Resource)->GetResource(),
+            glm::value_ptr(Value),
+            0,
+            nullptr);
     }
 
     //
