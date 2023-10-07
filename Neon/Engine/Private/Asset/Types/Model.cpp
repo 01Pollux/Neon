@@ -258,12 +258,11 @@ namespace Neon::Asset
                                     if (auto AITexture = AIScene->GetEmbeddedTexture(TexturePath.C_Str()))
                                     {
                                         std::array Subresources{
-                                            RHI::SubresourceDesc{
-                                                RHI::ComputeSubresource(
-                                                    RHI::EResourceFormat::R8G8B8A8_UNorm,
-                                                    AITexture->pcData,
-                                                    AITexture->mWidth,
-                                                    AITexture->mHeight) }
+                                            RHI::ComputeSubresource(
+                                                RHI::EResourceFormat::R8G8B8A8_UNorm,
+                                                AITexture->pcData,
+                                                AITexture->mWidth,
+                                                AITexture->mHeight)
                                         };
                                         auto Texture = RHI::SSyncGpuResource(
                                             RHI::ResourceDesc::Tex2D(
@@ -391,7 +390,7 @@ namespace Neon::Asset
                 TraverseAISubMesh(AIScene->mRootNode, Submeshes, MeshNodes);
 
 #ifndef NEON_DIST
-                auto SceneName     = StringUtils::Transform<String>(StringU8View(AIScene->mName.data, AIScene->mName.length));
+                auto SceneName     = AIScene->mName.length ? StringUtils::Transform<String>(StringU8View(AIScene->mName.data, AIScene->mName.length)) : STR("Unnamed Scene");
                 auto VtxBufferName = StringUtils::Format(STR("Assimp_VertexBuffer::{}"), SceneName);
                 auto IdxBufferName = StringUtils::Format(STR("Assimp_IndexBuffer::{}"), SceneName);
 
