@@ -23,6 +23,7 @@ namespace Neon::RG
         friend class GraphDepdencyLevel;
 
         using ResourceMapType = std::map<ResourceId, ResourceHandle>;
+        static constexpr size_t AlignedCameraFrameDataSize = Math::AlignUp(sizeof(CameraFrameData), 256);
 
     public:
         GraphStorage();
