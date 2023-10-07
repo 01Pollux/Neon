@@ -46,6 +46,8 @@ groupshared uint c_LightCount_Transparent;
 groupshared uint c_LightIndexStartOffset_Transparent;
 groupshared uint c_LightList_Transparent[MAX_LIGHTS];
 
+groupshared uint c_LightsProcessed;
+
 //
 
 void AppendLight_Opaque(in const uint Index)
@@ -88,6 +90,7 @@ void CS_Main(
 		c_MaxDepth = 0;
 		c_LightCount_Opaque = 0;
 		c_LightCount_Transparent = 0;
+		c_LightsProcessed = 0;
 		
 		uint Index = (GTID.y * GroupCount) + GTID.x;
 		c_GroupFrustum = c_FrustumGrid[Index];
@@ -110,13 +113,13 @@ void CS_Main(
 	Plane MinPlane = { float3(0.f, 0.f, -1.f), -MinDepthWS };
 
     // Each thread in a group will cull 1 light until all lights have been culled.
-	uint i = GID;
-	while (i < c_LightInfo.LightCount)
+	uint i;
+	for (i = GID; i < MAX_LIGHTS && c_LightsProcessed < c_LightInfo.LightCount; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
 		Light CurLight = c_Lights[i];
-		i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y;
 		if (CurLight.IsEnabled())
 		{
+			InterlockedAdd(c_LightsProcessed, 1);
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:
@@ -169,11 +172,11 @@ void CS_Main(
 	
 	GroupMemoryBarrierWithGroupSync();
 	
-	for (i = 0; i < c_LightCount_Opaque; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
+	for (i = GID; i < c_LightCount_Opaque; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
 		c_LightIndexList_Opaque[c_LightIndexStartOffset_Opaque + i] = c_LightList_Opaque[i];
 	}
-	for (i = 0; i < c_LightCount_Transparent; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
+	for (i = GID; i < c_LightCount_Transparent; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
 		c_LightIndexList_Transparent[c_LightIndexStartOffset_Transparent + i] = c_LightList_Transparent[i];
 	}
