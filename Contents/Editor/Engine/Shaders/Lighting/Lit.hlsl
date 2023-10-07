@@ -114,7 +114,7 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 		Normal.xyz = mul(Normal.xyz, TBN);
 	}
 	
-	Normal = normalize(mul(Normal, g_FrameData.View));
+	Normal = normalize(Normal);
 	
 	float4 Specular = float4(Material.Specular, 1.f);
 	[branch]

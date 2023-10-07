@@ -106,23 +106,24 @@ namespace Neon::Editor::Views
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Add Light"))
+        if (ImGui::Button("Add Lights"))
         {
             auto& CurScene = Project::Get()->GetActiveScene()->GetScene();
 
-            flecs::entity Entity = Scene::EntityHandle::Create(CurScene.GetRoot(), CurScene.GetRoot());
+            for (auto Rotation : {
+                     Vector3{ glm::radians(180.f), 0.f, 0.f },
+                     Vector3{ glm::radians(45.f), 0.f, 0.f },
+                     Vector3{ glm::radians(-45.f), glm::radians(90.f), glm::radians(180.f) } })
+            {
+                flecs::entity Entity = Scene::EntityHandle::Create(CurScene.GetRoot(), CurScene.GetRoot());
 
-            Scene::Component::Transform Transform;
-            Transform.World.SetRotationEuler(
-                Vector3(
-                    glm::radians(90.f),
-                    glm::radians(0.0f),
-                    glm::radians(0.0f)));
-            Transform.World.SetPosition(
-                Vector3(5.0f, 10.0f, 0.0f));
+                Scene::Component::Transform Transform;
+                Transform.World.SetRotationEuler(Rotation);
+                Transform.World.SetPosition(Vector3(5.0f, 10.0f, 0.0f));
 
-            Entity.set(Transform);
-            Entity.emplace<Scene::Component::DirectionalLight>();
+                Entity.set(Transform);
+                Entity.emplace<Scene::Component::DirectionalLight>();
+            }
         }
     }
 } // namespace Neon::Editor::Views
