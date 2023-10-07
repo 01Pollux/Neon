@@ -43,6 +43,7 @@ struct Light
 	float3 Direction;
 	uint Flags;
 	float3 Attenuation_Angle;
+	float _Pad;
     
     //
     

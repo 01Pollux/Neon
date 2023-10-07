@@ -78,10 +78,9 @@ void CS_Main(
 	uint3 GTID : SV_GroupID,
 	uint3 DTID : SV_DispatchThreadID)
 {
-	int2 TexCoord = DTID.xy;
-	float Depth = c_DepthBuffer[TexCoord];
-	
+	float Depth = c_DepthBuffer[DTID.xy];
 	uint DepthUint = asuint(Depth);
+	
 	if (GID == 0)
 	{
 		uint GroupCount = g_FrameData.ScreenResolution.x / CS_KERNEL_SIZE_X;
@@ -98,8 +97,8 @@ void CS_Main(
 
 	GroupMemoryBarrierWithGroupSync();
 	
-	InterlockedMin(c_MinDepth, Depth);
-	InterlockedMax(c_MaxDepth, Depth);
+	InterlockedMin(c_MinDepth, DepthUint);
+	InterlockedMax(c_MaxDepth, DepthUint);
 	
 	GroupMemoryBarrierWithGroupSync();
 	
@@ -112,8 +111,8 @@ void CS_Main(
 	
 	Plane MinPlane = { float3(0.f, 0.f, -1.f), -MinDepthWS };
 
-    // Each thread in a group will cull 1 light until all lights have been culled.
 	uint i;
+    // Each thread in a group will cull 1 light until all lights have been culled.
 	for (i = GID; i < MAX_LIGHTS && c_LightsProcessed < c_LightInfo.LightCount; i += CS_KERNEL_SIZE_X * CS_KERNEL_SIZE_Y)
 	{
 		Light CurLight = c_Lights[i];
@@ -123,7 +122,7 @@ void CS_Main(
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:
-					{
+				{
 						AppendLight_Opaque(i);
 						AppendLight_Transparent(i);
 						break;
