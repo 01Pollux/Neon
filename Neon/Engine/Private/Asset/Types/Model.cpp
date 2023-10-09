@@ -248,7 +248,7 @@ namespace Neon::Asset
                                     NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
 
 #ifndef NEON_DIST
-                                    auto MatTextureName = StringUtils::Transform<String>(StringU8View(TexturePath.data, TexturePath.length));
+                                    auto MatTextureName = TexturePath.length ? StringUtils::Transform<String>(StringU8View(TexturePath.data, TexturePath.length)) : STR("Unnamed Texture");
                                     auto TextureName    = StringUtils::Format(STR("Assimp_Texture::{}"), std::move(MatTextureName));
                                     auto TextureNamePtr = TextureName.c_str();
 #else

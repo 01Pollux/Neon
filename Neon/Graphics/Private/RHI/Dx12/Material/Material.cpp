@@ -369,7 +369,6 @@ namespace Neon::RHI
         auto& Params = m_RootSignature->GetParams();
         for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
         {
-            auto& Param = Params[i];
             std::visit(
                 VariantVisitor{
                     [&](const IRootSignature::ParamConstant& Constant)
@@ -397,7 +396,7 @@ namespace Neon::RHI
                             CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
                         }
                     } },
-                Param);
+                Params[i]);
         }
     }
 
@@ -407,7 +406,6 @@ namespace Neon::RHI
         auto& Params = m_RootSignature->GetParams();
         for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
         {
-            auto& Param = Params[i];
             std::visit(
                 VariantVisitor{
                     [&](const auto&) {},
@@ -423,7 +421,7 @@ namespace Neon::RHI
                             CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
                         }
                     } },
-                Param);
+                Params[i]);
         }
     }
 

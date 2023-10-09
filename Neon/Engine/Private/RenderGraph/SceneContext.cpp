@@ -97,7 +97,7 @@ namespace Neon::RG
                 auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
 
                 bool WasSet              = false;
-                auto UpdatePipelineState = [&]()
+                auto UpdatePipelineState = [&]
                 {
                     if (WasSet)
                     {
