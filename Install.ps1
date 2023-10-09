@@ -87,9 +87,23 @@ Make-Directory $(Get-DepIncPath("ImGui\misc"))
 
 Copy-Item Premake\ImGui.lua $(Get-DepSrcPath("ImGui\premake5.lua"))
 
-Copy-IncludePath "ImGui\*" "ImGui\"
+Copy-IncludePath "ImGui\*.h" "ImGui\"
+Copy-IncludePath "ImGui\*.hpp" "ImGui\"
 Copy-IncludePath "ImGui\misc\*" "ImGui\" -Recurse
 Copy-IncludePath "ImGui\backends\*" "ImGui\backends\" -Recurse
+
+
+#
+# ImGuiNodeEditor
+#
+Write-Output "Copying ImGuiNodeEditor files..."
+Remove-Directory $(Get-DepIncPath("ImGuiNodeEditor"))
+Make-Directory $(Get-DepIncPath("ImGuiNodeEditor\misc"))
+
+Copy-IncludePath "ImGuiNodeEditor\*.h" "ImGuiNodeEditor\"
+Copy-IncludePath "ImGuiNodeEditor\*.hpp" "ImGuiNodeEditor\"
+Copy-IncludePath "ImGuiNodeEditor\*.inl" "ImGuiNodeEditor\"
+Copy-IncludePath "ImGuiNodeEditor\misc\*" "ImGuiNodeEditor\"
 
 
 #
