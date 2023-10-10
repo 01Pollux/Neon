@@ -16,6 +16,9 @@
 
 #include <UI/WindowUtils.hpp>
 
+// TODO: Remove
+#include <Editor/Views/Types/MaterialEditor.hpp>
+
 namespace Neon::Editor
 {
     void EditorEngine::AddStandardViews()
@@ -26,6 +29,8 @@ namespace Neon::Editor
         RegisterView<Views::Inspector>("_Inspector", true);
         RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
         RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", false, false);
+
+        RegisterView<Views::MaterialEditor>("MaterialView::Test Material", false, "Test Material");
     }
 
     bool EditorEngine::BeginEditorSpace()

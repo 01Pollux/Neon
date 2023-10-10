@@ -7,21 +7,23 @@
 
 namespace Neon::UI
 {
+    namespace AxNodeEditor = ax::NodeEditor;
+
     class NodeEditor
     {
     public:
-        using EditorConfig  = ax::NodeEditor::Config;
-        using EditorContext = ax::NodeEditor::Detail::EditorContext;
+        using EditorConfig  = AxNodeEditor::Config;
+        using EditorContext = AxNodeEditor::Detail::EditorContext;
 
-        using Style      = ax::NodeEditor::Style;
-        using StyleColor = ax::NodeEditor::StyleColor;
-        using StyleVar   = ax::NodeEditor::StyleVar;
+        using Style      = AxNodeEditor::Style;
+        using StyleColor = AxNodeEditor::StyleColor;
+        using StyleVar   = AxNodeEditor::StyleVar;
 
-        using NodeId        = ax::NodeEditor::NodeId;
-        using PinId         = ax::NodeEditor::PinId;
-        using PinKind       = ax::NodeEditor::PinKind;
-        using LinkId        = ax::NodeEditor::LinkId;
-        using FlowDirection = ax::NodeEditor::FlowDirection;
+        using NodeId        = AxNodeEditor::NodeId;
+        using PinId         = AxNodeEditor::PinId;
+        using LinkId        = AxNodeEditor::LinkId;
+        using PinKind       = AxNodeEditor::PinKind;
+        using FlowDirection = AxNodeEditor::FlowDirection;
 
     public:
         NodeEditor() = default;
@@ -93,7 +95,7 @@ namespace Neon::UI
 
         void Begin(const char* Id, const ImVec2& Size = ImVec2(0, 0))
         {
-            m_Editor->Begin(Id);
+            m_Editor->Begin(Id, Size);
         }
 
         void End()
@@ -216,14 +218,14 @@ namespace Neon::UI
 
         [[nodiscard]] bool QueryNewLink(PinId* StartId, PinId* EndId)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.QueryLink(StartId, EndId) == Result::True;
         }
 
         [[nodiscard]] bool QueryNewLink(PinId* StartId, PinId* EndId, const ImColor& Color, float Thickness = 1.0f)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
 
             auto result = Context.QueryLink(StartId, EndId);
@@ -235,14 +237,14 @@ namespace Neon::UI
 
         [[nodiscard]] bool QueryNewNode(PinId* Id)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.QueryNode(Id) == Result::True;
         }
 
         [[nodiscard]] bool QueryNewNode(PinId* Id, const ImColor& Color, float Thickness = 1.0f)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
 
             auto result = Context.QueryNode(Id);
@@ -254,14 +256,14 @@ namespace Neon::UI
 
         [[nodiscard]] bool AcceptNewItem()
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.AcceptItem() == Result::True;
         }
 
         [[nodiscard]] bool AcceptNewItem(const ImColor& Color, float Thickness = 1.0f)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
 
             auto result = Context.AcceptItem();
@@ -273,14 +275,14 @@ namespace Neon::UI
 
         void RejectNewItem()
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             Context.RejectItem();
         }
 
         void RejectNewItem(const ImColor& Color, float Thickness = 1.0f)
         {
-            using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
+            using Result  = AxNodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
 
             auto result = Context.RejectItem();
@@ -715,14 +717,29 @@ namespace Neon::UI
             return m_Editor->ToScreen(Pos);
         }
 
-    private:
-        [[nodiscard]] uint64_t NewNodeId()
+    public:
+        [[nodiscard]] uint64_t NewId()
         {
-            return m_NextNodeId++;
+            return m_NextId++;
+        }
+
+        [[nodiscard]] NodeId NewNodeId()
+        {
+            return m_NextId++;
+        }
+
+        [[nodiscard]] LinkId NewLinkId()
+        {
+            return m_NextId++;
+        }
+
+        [[nodiscard]] PinId NewPinId()
+        {
+            return m_NextId++;
         }
 
     private:
         std::unique_ptr<EditorContext> m_Editor;
-        uint64_t                       m_NextNodeId = 0;
+        uint64_t                       m_NextId = 1;
     };
 } // namespace Neon::UI

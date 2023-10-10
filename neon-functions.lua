@@ -191,6 +191,7 @@ function link_engine_library_no_engine()
         "BulletLinearMath",
 
         "ImGui",
+        "ImGuiNodeEditor",
         "glfw",
         "Flecs",
         "spdlog",
