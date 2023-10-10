@@ -45,18 +45,18 @@ namespace Neon::UI
         /// <summary>
         /// Get editor's config
         /// </summary>
-        const EditorConfig& GetConfig()
+        [[nodiscard]] const EditorConfig& GetConfig()
         {
             return m_Editor->GetConfig();
         }
 
     public:
-        Style& GetStyle()
+        [[nodiscard]] Style& GetStyle()
         {
             return m_Editor->GetStyle();
         }
 
-        const char* GetStyleColorName(StyleColor ColorIndex)
+        [[nodiscard]] const char* GetStyleColorName(StyleColor ColorIndex)
         {
             return m_Editor->GetStyle().GetColorName(ColorIndex);
         }
@@ -151,27 +151,27 @@ namespace Neon::UI
             m_Editor->GetNodeBuilder().End();
         }
 
-        bool BeginGroupHint(NodeId Id)
+        [[nodiscard]] bool BeginGroupHint(NodeId Id)
         {
             return m_Editor->GetHintBuilder().Begin(Id);
         }
 
-        ImVec2 GetGroupMin()
+        [[nodiscard]] ImVec2 GetGroupMin()
         {
             return m_Editor->GetHintBuilder().GetGroupMin();
         }
 
-        ImVec2 GetGroupMax()
+        [[nodiscard]] ImVec2 GetGroupMax()
         {
             return m_Editor->GetHintBuilder().GetGroupMax();
         }
 
-        ImDrawList* GetHintForegroundDrawList()
+        [[nodiscard]] ImDrawList* GetHintForegroundDrawList()
         {
             return m_Editor->GetHintBuilder().GetForegroundDrawList();
         }
 
-        ImDrawList* GetHintBackgroundDrawList()
+        [[nodiscard]] ImDrawList* GetHintBackgroundDrawList()
         {
             return m_Editor->GetHintBuilder().GetBackgroundDrawList();
         }
@@ -182,7 +182,7 @@ namespace Neon::UI
         }
 
         // TODO: Add Min way to manage node background channels
-        ImDrawList* GetNodeBackgroundDrawList(NodeId Id)
+        [[nodiscard]] ImDrawList* GetNodeBackgroundDrawList(NodeId Id)
         {
             auto Node = m_Editor->FindNode(Id);
             return Node ? m_Editor->GetNodeBuilder().GetUserBackgroundDrawList(Node) : nullptr;
@@ -199,7 +199,7 @@ namespace Neon::UI
                 m_Editor->Flow(Link, Direction);
         }
 
-        bool BeginCreate(const ImColor& Color = ImColor(1, 1, 1, 1), float Thickness = 1.0f)
+        [[nodiscard]] bool BeginCreate(const ImColor& Color = ImColor(1, 1, 1, 1), float Thickness = 1.0f)
         {
             auto& Context = m_Editor->GetItemCreator();
 
@@ -214,14 +214,14 @@ namespace Neon::UI
             }
         }
 
-        bool QueryNewLink(PinId* StartId, PinId* EndId)
+        [[nodiscard]] bool QueryNewLink(PinId* StartId, PinId* EndId)
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.QueryLink(StartId, EndId) == Result::True;
         }
 
-        bool QueryNewLink(PinId* StartId, PinId* EndId, const ImColor& Color, float Thickness = 1.0f)
+        [[nodiscard]] bool QueryNewLink(PinId* StartId, PinId* EndId, const ImColor& Color, float Thickness = 1.0f)
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
@@ -233,14 +233,14 @@ namespace Neon::UI
             return result == Result::True;
         }
 
-        bool QueryNewNode(PinId* Id)
+        [[nodiscard]] bool QueryNewNode(PinId* Id)
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.QueryNode(Id) == Result::True;
         }
 
-        bool QueryNewNode(PinId* Id, const ImColor& Color, float Thickness = 1.0f)
+        [[nodiscard]] bool QueryNewNode(PinId* Id, const ImColor& Color, float Thickness = 1.0f)
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
@@ -252,14 +252,14 @@ namespace Neon::UI
             return result == Result::True;
         }
 
-        bool AcceptNewItem()
+        [[nodiscard]] bool AcceptNewItem()
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
             return Context.AcceptItem() == Result::True;
         }
 
-        bool AcceptNewItem(const ImColor& Color, float Thickness = 1.0f)
+        [[nodiscard]] bool AcceptNewItem(const ImColor& Color, float Thickness = 1.0f)
         {
             using Result  = ax::NodeEditor::Detail::CreateItemAction::Result;
             auto& Context = m_Editor->GetItemCreator();
@@ -294,25 +294,25 @@ namespace Neon::UI
             Context.End();
         }
 
-        bool BeginDelete()
+        [[nodiscard]] bool BeginDelete()
         {
             auto& Context = m_Editor->GetItemDeleter();
             return Context.Begin();
         }
 
-        bool QueryDeletedLink(LinkId* Id, PinId* StartId = nullptr, PinId* EndId = nullptr)
+        [[nodiscard]] bool QueryDeletedLink(LinkId* Id, PinId* StartId = nullptr, PinId* EndId = nullptr)
         {
             auto& Context = m_Editor->GetItemDeleter();
             return Context.QueryLink(Id, StartId, EndId);
         }
 
-        bool QueryDeletedNode(NodeId* Id)
+        [[nodiscard]] bool QueryDeletedNode(NodeId* Id)
         {
             auto& Context = m_Editor->GetItemDeleter();
             return Context.QueryNode(Id);
         }
 
-        bool AcceptDeletedItem(bool DeleteDependencies = true)
+        [[nodiscard]] bool AcceptDeletedItem(bool DeleteDependencies = true)
         {
             auto& Context = m_Editor->GetItemDeleter();
             return Context.AcceptItem(DeleteDependencies);
@@ -340,12 +340,12 @@ namespace Neon::UI
             m_Editor->SetGroupSize(Id, Size);
         }
 
-        ImVec2 GetNodePosition(NodeId Id)
+        [[nodiscard]] ImVec2 GetNodePosition(NodeId Id)
         {
             return m_Editor->GetNodePosition(Id);
         }
 
-        ImVec2 GetNodeSize(NodeId Id)
+        [[nodiscard]] ImVec2 GetNodeSize(NodeId Id)
         {
             return m_Editor->GetNodeSize(Id);
         }
@@ -363,7 +363,7 @@ namespace Neon::UI
         }
 
         // Returns node z position, defaults is 0.0f
-        float GetNodeZPosition(NodeId Id)
+        [[nodiscard]] float GetNodeZPosition(NodeId Id)
         {
             return m_Editor->GetNodeZPosition(Id);
         }
@@ -384,27 +384,27 @@ namespace Neon::UI
             m_Editor->Resume();
         }
 
-        bool IsSuspended()
+        [[nodiscard]] bool IsSuspended()
         {
             return m_Editor->IsSuspended();
         }
 
-        bool IsActive()
+        [[nodiscard]] bool IsActive()
         {
             return m_Editor->IsFocused();
         }
 
-        bool HasSelectionChanged()
+        [[nodiscard]] bool HasSelectionChanged()
         {
             return m_Editor->HasSelectionChanged();
         }
 
-        auto& GetSelectedObject()
+        [[nodiscard]] auto& GetSelectedObject()
         {
             return m_Editor->GetSelectedObjects();
         }
 
-        auto GetSelectedNodes()
+        [[nodiscard]] auto GetSelectedNodes()
         {
             std::vector<NodeId> Nodes;
             for (auto& Node : GetSelectedObject())
@@ -417,7 +417,7 @@ namespace Neon::UI
             return Nodes;
         }
 
-        auto GetSelectedLinks()
+        [[nodiscard]] auto GetSelectedLinks()
         {
             std::vector<LinkId> Links;
             for (auto& Link : GetSelectedObject())
@@ -430,13 +430,13 @@ namespace Neon::UI
             return Links;
         }
 
-        bool IsNodeSelected(NodeId Id)
+        [[nodiscard]] bool IsNodeSelected(NodeId Id)
         {
             auto Node = m_Editor->FindNode(Id);
             return Node ? m_Editor->IsSelected(Node) : false;
         }
 
-        bool IsLinkSelected(LinkId Id)
+        [[nodiscard]] bool IsLinkSelected(LinkId Id)
         {
             auto Link = m_Editor->FindLink(Id);
             return Link ? m_Editor->IsSelected(Link) : false;
@@ -494,13 +494,13 @@ namespace Neon::UI
         }
 
         // Returns true if node has any link connected
-        bool HasAnyLinks(NodeId Id)
+        [[nodiscard]] bool HasAnyLinks(NodeId Id)
         {
             return m_Editor->HasAnyLinks(Id);
         }
 
         // Return true if pin has any link connected
-        bool HasAnyLinks(PinId Id)
+        [[nodiscard]] bool HasAnyLinks(PinId Id)
         {
             return m_Editor->HasAnyLinks(Id);
         }
@@ -527,22 +527,22 @@ namespace Neon::UI
             m_Editor->NavigateTo(m_Editor->GetSelectionBounds(), ZoomIn, Duration);
         }
 
-        bool ShowNodeContextMenu(NodeId* Id)
+        [[nodiscard]] bool ShowNodeContextMenu(NodeId* Id)
         {
             return m_Editor->GetContextMenu().ShowNodeContextMenu(Id);
         }
 
-        bool ShowPinContextMenu(PinId* Id)
+        [[nodiscard]] bool ShowPinContextMenu(PinId* Id)
         {
             return m_Editor->GetContextMenu().ShowPinContextMenu(Id);
         }
 
-        bool ShowLinkContextMenu(LinkId* Id)
+        [[nodiscard]] bool ShowLinkContextMenu(LinkId* Id)
         {
             return m_Editor->GetContextMenu().ShowLinkContextMenu(Id);
         }
 
-        bool ShowBackgroundContextMenu()
+        [[nodiscard]] bool ShowBackgroundContextMenu()
         {
             return m_Editor->GetContextMenu().ShowBackgroundContextMenu();
         }
@@ -552,47 +552,47 @@ namespace Neon::UI
             m_Editor->EnableShortcuts(Enable);
         }
 
-        bool AreShortcutsEnabled()
+        [[nodiscard]] bool AreShortcutsEnabled()
         {
             return m_Editor->AreShortcutsEnabled();
         }
 
-        bool BeginShortcut()
+        [[nodiscard]] bool BeginShortcut()
         {
             return m_Editor->GetShortcut().Begin();
         }
 
-        bool AcceptCut()
+        [[nodiscard]] bool AcceptCut()
         {
             return m_Editor->GetShortcut().AcceptCut();
         }
 
-        bool AcceptCopy()
+        [[nodiscard]] bool AcceptCopy()
         {
             return m_Editor->GetShortcut().AcceptCopy();
         }
 
-        bool AcceptPaste()
+        [[nodiscard]] bool AcceptPaste()
         {
             return m_Editor->GetShortcut().AcceptPaste();
         }
 
-        bool AcceptDuplicate()
+        [[nodiscard]] bool AcceptDuplicate()
         {
             return m_Editor->GetShortcut().AcceptDuplicate();
         }
 
-        bool AcceptCreateNode()
+        [[nodiscard]] bool AcceptCreateNode()
         {
             return m_Editor->GetShortcut().AcceptCreateNode();
         }
 
-        const auto& GetActionContext()
+        [[nodiscard]] const auto& GetActionContext()
         {
             return m_Editor->GetShortcut().m_Context;
         }
 
-        auto GetActionContextNodes()
+        [[nodiscard]] auto GetActionContextNodes()
         {
             std::vector<NodeId> Nodes;
             for (auto Node : GetActionContext())
@@ -605,7 +605,7 @@ namespace Neon::UI
             return Nodes;
         }
 
-        auto GetActionContextLinks()
+        [[nodiscard]] auto GetActionContextLinks()
         {
             std::vector<LinkId> Links;
             for (auto Link : GetActionContext())
@@ -623,65 +623,65 @@ namespace Neon::UI
             m_Editor->GetShortcut().End();
         }
 
-        float GetCurrentZoom()
+        [[nodiscard]] float GetCurrentZoom()
         {
             return m_Editor->GetView().InvScale;
         }
 
-        NodeId GetHoveredNode()
+        [[nodiscard]] NodeId GetHoveredNode()
         {
             return m_Editor->GetHoveredNode();
         }
 
-        PinId GetHoveredPin()
+        [[nodiscard]] PinId GetHoveredPin()
         {
             return m_Editor->GetHoveredPin();
         }
 
-        LinkId GetHoveredLink()
+        [[nodiscard]] LinkId GetHoveredLink()
         {
             return m_Editor->GetHoveredLink();
         }
 
-        NodeId GetDoubleClickedNode()
+        [[nodiscard]] NodeId GetDoubleClickedNode()
         {
             return m_Editor->GetDoubleClickedNode();
         }
 
-        PinId GetDoubleClickedPin()
+        [[nodiscard]] PinId GetDoubleClickedPin()
         {
             return m_Editor->GetDoubleClickedPin();
         }
 
-        LinkId GetDoubleClickedLink()
+        [[nodiscard]] LinkId GetDoubleClickedLink()
         {
             return m_Editor->GetDoubleClickedLink();
         }
 
-        bool IsBackgroundClicked()
+        [[nodiscard]] bool IsBackgroundClicked()
         {
             return m_Editor->IsBackgroundClicked();
         }
 
-        bool IsBackgroundDoubleClicked()
+        [[nodiscard]] bool IsBackgroundDoubleClicked()
         {
             return m_Editor->IsBackgroundDoubleClicked();
         }
 
         // -1 if none
-        ImGuiMouseButton GetBackgroundClickButtonIndex()
+        [[nodiscard]] ImGuiMouseButton GetBackgroundClickButtonIndex()
         {
             return m_Editor->GetBackgroundClickButtonIndex();
         }
 
         // -1 if none
-        ImGuiMouseButton GetBackgroundDoubleClickButtonIndex()
+        [[nodiscard]] ImGuiMouseButton GetBackgroundDoubleClickButtonIndex()
         {
             return m_Editor->GetBackgroundDoubleClickButtonIndex();
         }
 
         // pass nullptr if particular pin do not interest you
-        bool GetLinkPins(LinkId Id, PinId* StartPinId, PinId* EndPinId)
+        [[nodiscard]] bool GetLinkPins(LinkId Id, PinId* StartPinId, PinId* EndPinId)
         {
             auto Link = m_Editor->FindLink(Id);
             if (!Link)
@@ -695,27 +695,34 @@ namespace Neon::UI
             return true;
         }
 
-        bool PinHadAnyLinks(PinId Id)
+        [[nodiscard]] bool PinHadAnyLinks(PinId Id)
         {
             return m_Editor->PinHadAnyLinks(Id);
         }
 
-        ImVec2 GetScreenSize()
+        [[nodiscard]] ImVec2 GetScreenSize()
         {
             return m_Editor->GetRect().GetSize();
         }
 
-        ImVec2 ScreenToCanvas(const ImVec2& Pos)
+        [[nodiscard]] ImVec2 ScreenToCanvas(const ImVec2& Pos)
         {
             return m_Editor->ToCanvas(Pos);
         }
 
-        ImVec2 CanvasToScreen(const ImVec2& Pos)
+        [[nodiscard]] ImVec2 CanvasToScreen(const ImVec2& Pos)
         {
             return m_Editor->ToScreen(Pos);
         }
 
     private:
+        [[nodiscard]] uint64_t NewNodeId()
+        {
+            return m_NextNodeId++;
+        }
+
+    private:
         std::unique_ptr<EditorContext> m_Editor;
+        uint64_t                       m_NextNodeId = 0;
     };
 } // namespace Neon::UI
