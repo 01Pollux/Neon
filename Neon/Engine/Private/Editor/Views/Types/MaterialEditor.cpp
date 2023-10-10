@@ -93,7 +93,6 @@ namespace Neon::Editor::Views
         }
 
         m_NodeEditor.Begin("Material Editor");
-        if (0)
         {
             UI::NodeBuilder Builder(&m_NodeEditor);
 
