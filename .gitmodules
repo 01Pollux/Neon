@@ -39,6 +39,3 @@
 	path = Deps/Externals/flecs
 	url = https://github.com/01Pollux/flecs
 	branch = main
-[submodule "Deps/Externals/ImGuiNodeEditor"]
-	path = Deps/Externals/ImGuiNodeEditor
-	url = https://github.com/01Pollux/imgui-node-editor
