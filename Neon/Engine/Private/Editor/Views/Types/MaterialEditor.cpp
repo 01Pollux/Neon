@@ -19,5 +19,7 @@ namespace Neon::Editor::Views
         {
             return;
         }
+
+        auto Context = m_NodeEditor.Attach();
     }
 } // namespace Neon::Editor::Views
