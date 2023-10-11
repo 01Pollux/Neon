@@ -93,9 +93,9 @@ namespace Neon::UI
             m_Editor->GetStyle().PopVar(Count);
         }
 
-        void Begin(const char* Id, const ImVec2& Size = ImVec2(0, 0))
+        [[nodiscard]] bool Begin(const char* Id, const ImVec2& Size = ImVec2(0, 0))
         {
-            m_Editor->Begin(Id, Size);
+            return m_Editor->Begin(Id, Size);
         }
 
         void End()

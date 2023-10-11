@@ -8,6 +8,27 @@
 
 namespace Neon::Editor::Views
 {
+    struct Link
+    {
+        UI::NodeEditor::LinkId ID;
+
+        UI::NodeEditor::PinId Source;
+        UI::NodeEditor::PinId Dest;
+
+        ImColor Color;
+        float   Thickness = 1.f;
+
+        Link(
+            UI::NodeEditor&       Editor,
+            UI::NodeEditor::PinId Source,
+            UI::NodeEditor::PinId Dest) :
+            ID(Editor.NewLinkId()),
+            Source(Source),
+            Dest(Dest), Color(255, 255, 255)
+        {
+        }
+    };
+
     struct Pin
     {
         UI::NodeEditor::PinId Id;
@@ -54,6 +75,36 @@ namespace Neon::Editor::Views
     };
 
     static std::vector<Node> s_Nodes;
+    static std::vector<Link> s_Links;
+
+    std::pair<Pin*, bool> FindPin(
+        UI::NodeEditor::PinId Pin)
+    {
+        if (!Pin)
+        {
+            return {};
+        }
+
+        for (auto& Node : s_Nodes)
+        {
+            for (auto& Input : Node.Inputs)
+            {
+                if (Input.Id == Pin)
+                {
+                    return { &Input, true };
+                }
+            }
+            for (auto& Output : Node.Outputs)
+            {
+                if (Output.Id == Pin)
+                {
+                    return { &Output, false };
+                }
+            }
+        }
+
+        return {};
+    }
 
     //
 
@@ -69,7 +120,7 @@ namespace Neon::Editor::Views
         InputTexture.AddOutput(m_NodeEditor, "[0]");
 
         auto& InputUV = s_Nodes.emplace_back(m_NodeEditor, "Input: UV");
-        InputUV.AddInput(m_NodeEditor, "Out");
+        InputUV.AddOutput(m_NodeEditor, "Out");
 
         auto& SampleTexture = s_Nodes.emplace_back(m_NodeEditor, "Sample Texture");
         SampleTexture.AddInput(m_NodeEditor, "Texture");
@@ -92,11 +143,13 @@ namespace Neon::Editor::Views
             return;
         }
 
-        m_NodeEditor.Begin("Material Editor");
+        if (m_NodeEditor.Begin("Material Editor"))
         {
             UI::NodeBuilder Builder(&m_NodeEditor);
 
-            static Pin* newLinkPin = nullptr;
+            static Pin* NewLinkPin     = nullptr;
+            static Pin* NewNodeLinkPin = nullptr;
+            static bool CreateNewNode  = false;
 
             for (auto& Node : s_Nodes)
             {
@@ -118,6 +171,8 @@ namespace Neon::Editor::Views
                     {
                         Builder.Input(Input.Id);
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
+                        UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
+                        ImGui::SameLine();
                         ImGui::TextUnformatted(Input.Name.c_str());
                         ImGui::PopStyleVar();
                         Builder.EndInput();
@@ -134,12 +189,104 @@ namespace Neon::Editor::Views
                         Builder.Output(Output.Id);
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
                         ImGui::TextUnformatted(Output.Name.c_str());
+                        ImGui::SameLine();
+                        UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
                         ImGui::PopStyleVar();
                         Builder.EndOutput();
                     }
                 }
 
                 Builder.End();
+            }
+
+            for (auto& Link : s_Links)
+            {
+                m_NodeEditor.Link(Link.ID, Link.Source, Link.Dest, Link.Color, Link.Thickness);
+            }
+
+            if (!CreateNewNode)
+            {
+                if (m_NodeEditor.BeginCreate())
+                {
+                    auto showLabel = [](const char* label, ImColor color)
+                    {
+                        ImGui::SetCursorPosY(ImGui::GetCursorPosY() - ImGui::GetTextLineHeight());
+                        auto size = ImGui::CalcTextSize(label);
+
+                        auto padding = ImGui::GetStyle().FramePadding;
+                        auto spacing = ImGui::GetStyle().ItemSpacing;
+
+                        ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(spacing.x, -spacing.y));
+
+                        auto rectMin = ImGui::GetCursorScreenPos() - padding;
+                        auto rectMax = ImGui::GetCursorScreenPos() + size + padding;
+
+                        auto drawList = ImGui::GetWindowDrawList();
+                        drawList->AddRectFilled(rectMin, rectMax, color, size.y * 0.15f);
+                        ImGui::TextUnformatted(label);
+                    };
+
+                    UI::NodeEditor::PinId StartPinId = 0, EndPinId = 0;
+                    if (m_NodeEditor.QueryNewLink(&StartPinId, &EndPinId))
+                    {
+                        auto [StartPin, StartIsInput] = FindPin(StartPinId);
+                        auto [EndPin, EndIsInput]     = FindPin(EndPinId);
+
+                        NewLinkPin = StartPin ? StartPin : EndPin;
+                        if (StartIsInput)
+                        {
+                            std::swap(EndPin, StartPin);
+                            std::swap(StartPinId, EndPinId);
+                        }
+
+                        if (StartPin && EndPin)
+                        {
+                            if (StartPin == EndPin)
+                            {
+                                m_NodeEditor.RejectNewItem(ImColor(255, 0, 0), 2.0f);
+                            }
+                            else if (StartIsInput == EndIsInput)
+                            {
+                                showLabel("x Incompatible Pin Kind", ImColor(45, 32, 32, 180));
+                                m_NodeEditor.RejectNewItem(ImColor(255, 0, 0), 2.0f);
+                            }
+                            else
+                            {
+                                showLabel("+ Create Link", ImColor(32, 45, 32, 180));
+                                if (m_NodeEditor.AcceptNewItem(ImColor(128, 255, 128), 4.0f))
+                                {
+                                    s_Links.emplace_back(m_NodeEditor, StartPinId, EndPinId);
+                                }
+                            }
+                        }
+                    }
+
+                    UI::NodeEditor::PinId PinId = 0;
+                    if (m_NodeEditor.QueryNewNode(&PinId))
+                    {
+                        std::tie(NewLinkPin, std::ignore) = FindPin(PinId);
+                        if (NewLinkPin)
+                            showLabel("+ Create Node", ImColor(32, 45, 32, 180));
+
+                        if (m_NodeEditor.AcceptNewItem())
+                        {
+                            std::tie(NewNodeLinkPin, std::ignore) = FindPin(PinId);
+
+                            CreateNewNode = true;
+                            NewLinkPin    = nullptr;
+
+                            m_NodeEditor.Suspend();
+                            ImGui::OpenPopup("Create New Node");
+                            m_NodeEditor.Resume();
+                        }
+                    }
+                }
+                else
+                {
+                    NewLinkPin = nullptr;
+                }
+
+                m_NodeEditor.EndCreate();
             }
         }
         m_NodeEditor.End();

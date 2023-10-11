@@ -430,4 +430,40 @@ namespace Neon::UI::Utils
                                     ImGuiColorEditFlags_NoSmallPreview |
                                     ImGuiColorEditFlags_AlphaBar |
                                     ImGuiColorEditFlags_HDR);
+
+    //
+
+    enum class BasicIconType : uint8_t
+    {
+        Flow,
+        Circle,
+        Square,
+        Grid,
+        RoundSquare,
+        Diamond
+    };
+
+    /// <summary>
+    /// Draw basic shape icon to draw list
+    /// </summary>
+    void DrawIcon(
+        ImDrawList*   DrawList,
+        const ImVec2& Size,
+        BasicIconType Type,
+        bool          Filled,
+        ImU32         Color,
+        ImU32         FillColor);
+
+    /// <summary>
+    /// Draw basic shape icon to current window's draw list
+    /// </summary>
+    inline void DrawIcon(
+        const ImVec2& Size,
+        BasicIconType Type,
+        bool          Filled,
+        ImU32         Color,
+        ImU32         FillColor)
+    {
+        DrawIcon(ImGui::GetWindowDrawList(), Size, Type, Filled, Color, FillColor);
+    }
 } // namespace Neon::UI::Utils

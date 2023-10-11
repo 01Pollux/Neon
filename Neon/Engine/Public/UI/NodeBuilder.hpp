@@ -8,6 +8,19 @@ namespace Neon::UI
     class NodeBuilder
     {
     public:
+        enum class StageType : uint8_t
+        {
+            Invalid,
+            Begin,
+            Header,
+            Content,
+            Input,
+            Output,
+            Middle,
+            End
+        };
+
+    public:
         NodeBuilder(
             NodeEditor* Editor,
             ImTextureID Texture = nullptr,
@@ -33,26 +46,16 @@ namespace Neon::UI
         void EndOutput();
 
     private:
-        enum class Stage : uint8_t
-        {
-            Invalid,
-            Begin,
-            Header,
-            Content,
-            Input,
-            Output,
-            Middle,
-            End
-        };
-
         bool SetStage(
-            Stage NewStage);
+            StageType NewStage);
 
         void Pin(
             NodeEditor::PinId       Id,
             ax::NodeEditor::PinKind Kind);
+
         void EndPin();
 
+    private:
         NodeEditor* m_Editor;
 
         ImTextureID m_HeaderTextureId;
@@ -69,7 +72,7 @@ namespace Neon::UI
         ImVec2 m_ContentMax{};
         ImU32  m_HeaderColor{};
 
-        bool  m_HasHeader    : 1 = false;
-        Stage m_CurrentStage : 4 = Stage::Invalid;
+        bool      m_HasHeader    : 1 = false;
+        StageType m_CurrentStage : 4 = StageType::Invalid;
     };
 } // namespace Neon::UI

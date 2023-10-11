@@ -27,12 +27,12 @@ namespace Neon::UI
         ImGui::PushID(Id.AsPointer());
         m_CurrentNodeId = Id;
 
-        SetStage(Stage::Begin);
+        SetStage(StageType::Begin);
     }
 
     void NodeBuilder::End()
     {
-        SetStage(Stage::End);
+        SetStage(StageType::End);
 
         m_Editor->EndNode();
 
@@ -73,28 +73,28 @@ namespace Neon::UI
 
         m_Editor->PopStyleVar();
 
-        SetStage(Stage::Invalid);
+        SetStage(StageType::Invalid);
     }
 
     void NodeBuilder::Header(
         const ImColor& Color)
     {
         m_HeaderColor = Color;
-        SetStage(Stage::Header);
+        SetStage(StageType::Header);
     }
 
     void NodeBuilder::EndHeader()
     {
-        SetStage(Stage::Content);
+        SetStage(StageType::Content);
     }
 
     void NodeBuilder::Input(
         NodeEditor::PinId Id)
     {
-        if (m_CurrentStage == Stage::Begin)
-            SetStage(Stage::Content);
+        if (m_CurrentStage == StageType::Begin)
+            SetStage(StageType::Content);
 
-        SetStage(Stage::Input);
+        SetStage(StageType::Input);
 
         Pin(Id, AxNodeEditor::PinKind::Input);
     }
@@ -106,19 +106,19 @@ namespace Neon::UI
 
     void NodeBuilder::Middle()
     {
-        if (m_CurrentStage == Stage::Begin)
-            SetStage(Stage::Content);
+        if (m_CurrentStage == StageType::Begin)
+            SetStage(StageType::Content);
 
-        SetStage(Stage::Middle);
+        SetStage(StageType::Middle);
     }
 
     void NodeBuilder::Output(
         NodeEditor::PinId id)
     {
-        if (m_CurrentStage == Stage::Begin)
-            SetStage(Stage::Content);
+        if (m_CurrentStage == StageType::Begin)
+            SetStage(StageType::Content);
 
-        SetStage(Stage::Output);
+        SetStage(StageType::Output);
 
         Pin(id, AxNodeEditor::PinKind::Output);
     }
@@ -129,7 +129,7 @@ namespace Neon::UI
     }
 
     bool NodeBuilder::SetStage(
-        Stage NewStage)
+        StageType NewStage)
     {
         if (NewStage == m_CurrentStage)
             return false;
@@ -140,42 +140,42 @@ namespace Neon::UI
         ImVec2 cursor;
         switch (oldStage)
         {
-        case Stage::Header:
+        case StageType::Header:
             m_HeaderMin = ImGui::GetItemRectMin();
             m_HeaderMax = ImGui::GetItemRectMax();
             break;
 
-        case Stage::Input:
+        case StageType::Input:
             m_Editor->PopStyleVar(2);
             break;
 
-        case Stage::Output:
+        case StageType::Output:
             m_Editor->PopStyleVar(2);
             break;
         }
 
         switch (NewStage)
         {
-        case Stage::Header:
+        case StageType::Header:
             m_HasHeader = true;
             break;
 
-        case Stage::Input:
+        case StageType::Input:
             m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(0, 0.5f));
             m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
             break;
 
-        case Stage::Output:
+        case StageType::Output:
             m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));
             m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
             break;
 
-        case Stage::End:
+        case StageType::End:
             m_NodeMin = ImGui::GetItemRectMin();
             m_NodeMax = ImGui::GetItemRectMax();
             break;
 
-        case Stage::Invalid:
+        case StageType::Invalid:
             break;
         }
 
