@@ -162,37 +162,47 @@ namespace Neon::Editor::Views
                     Builder.EndHeader();
                 }
 
-                for (auto& Input : Node.Inputs)
+                if (imcxx::window_child{ "LeftSide", {}, true, ImGuiWindowFlags_AlwaysAutoResize })
                 {
-                    float Alpha = ImGui::GetStyle().Alpha;
-                    /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
-                           alpha *= (48.0f / 255.0f);*/
-
+                    for (auto& Input : Node.Inputs)
                     {
-                        Builder.Input(Input.Id);
-                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
-                        UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
-                        ImGui::SameLine();
-                        ImGui::TextUnformatted(Input.Name.c_str());
-                        ImGui::PopStyleVar();
-                        Builder.EndInput();
+                        float Alpha = ImGui::GetStyle().Alpha;
+                        /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
+                               alpha *= (48.0f / 255.0f);*/
+
+                        {
+                            Builder.Input(Input.Id);
+                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
+                            UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
+                            ImGui::SameLine();
+                            ImGui::TextUnformatted(Input.Name.c_str());
+                            ImGui::PopStyleVar();
+                            Builder.EndInput();
+                        }
                     }
                 }
 
-                for (auto& Output : Node.Outputs)
+                ImGui::SameLine();
                 {
-                    float Alpha = ImGui::GetStyle().Alpha;
-                    /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
-                           alpha *= (48.0f / 255.0f);*/
-
+                    imcxx::group LockHorz;
+                    if (imcxx::window_child{ "RightSide", {}, true, ImGuiWindowFlags_AlwaysAutoResize })
                     {
-                        Builder.Output(Output.Id);
-                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
-                        ImGui::TextUnformatted(Output.Name.c_str());
-                        ImGui::SameLine();
-                        UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
-                        ImGui::PopStyleVar();
-                        Builder.EndOutput();
+                        for (auto& Output : Node.Outputs)
+                        {
+                            float Alpha = ImGui::GetStyle().Alpha;
+                            /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
+                                   alpha *= (48.0f / 255.0f);*/
+
+                            {
+                                Builder.Output(Output.Id);
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, Alpha);
+                                ImGui::TextUnformatted(Output.Name.c_str());
+                                ImGui::SameLine();
+                                UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
+                                ImGui::PopStyleVar();
+                                Builder.EndOutput();
+                            }
+                        }
                     }
                 }
 
