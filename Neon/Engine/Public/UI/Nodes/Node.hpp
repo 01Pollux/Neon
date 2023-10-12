@@ -82,9 +82,27 @@ namespace Neon::UI::Graph
             return m_Type;
         }
 
+        /// <summary>
+        /// Get node's color
+        /// </summary>
+        [[nodiscard]] ImColor GetColor() const noexcept
+        {
+            return m_Color;
+        }
+
+        /// <summary>
+        /// Set node's color
+        /// </summary>
+        [[nodiscard]] void GetColor(
+            ImColor Color) noexcept
+        {
+            m_Color = Color;
+        }
+
     public:
         Node(StringU8 Name,
-             Type     NodeType) :
+             Type     NodeType,
+             ImColor  Color = ImColor(48, 44, 51)) :
             m_Name(std::move(Name)),
             m_Type(NodeType)
         {
@@ -95,6 +113,7 @@ namespace Neon::UI::Graph
 
     private:
         StringU8 m_Name;
+        ImColor  m_Color;
         Type     m_Type;
     };
 

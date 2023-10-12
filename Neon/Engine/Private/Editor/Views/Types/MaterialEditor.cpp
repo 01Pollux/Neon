@@ -23,7 +23,7 @@ namespace Neon::Editor::Views
             UI::Graph::Node::Type::Blueprint);
 
         m_NodeGraph.AddPin(
-            InputTexture,
+            InputUV,
             false,
             { "Out", UI::Graph::Pin::Type::Float });
 
@@ -32,19 +32,19 @@ namespace Neon::Editor::Views
             UI::Graph::Node::Type::Blueprint);
 
         m_NodeGraph.AddPin(
-            InputTexture,
+            SampleTexture,
             true,
             { "Texture", UI::Graph::Pin::Type::Object });
         m_NodeGraph.AddPin(
-            InputTexture,
+            SampleTexture,
             true,
             { "Sampler", UI::Graph::Pin::Type::Object });
         m_NodeGraph.AddPin(
-            InputTexture,
+            SampleTexture,
             true,
             { "UV", UI::Graph::Pin::Type::Float });
         m_NodeGraph.AddPin(
-            InputTexture,
+            SampleTexture,
             false,
             { "Out", UI::Graph::Pin::Type::Float });
 
@@ -53,19 +53,19 @@ namespace Neon::Editor::Views
             UI::Graph::Node::Type::Blueprint);
 
         m_NodeGraph.AddPin(
-            InputTexture,
+            OutputPixel,
             true,
             { "Base Color (3)", UI::Graph::Pin::Type::Float });
         m_NodeGraph.AddPin(
-            InputTexture,
+            OutputPixel,
             true,
             { "Alpha (1)", UI::Graph::Pin::Type::Float });
         m_NodeGraph.AddPin(
-            InputTexture,
+            OutputPixel,
             true,
             { "Normal (3)", UI::Graph::Pin::Type::Float });
         m_NodeGraph.AddPin(
-            InputTexture,
+            OutputPixel,
             true,
             { "Emissive (4)", UI::Graph::Pin::Type::Float });
     }

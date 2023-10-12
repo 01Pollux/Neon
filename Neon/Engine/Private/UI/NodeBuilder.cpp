@@ -104,6 +104,98 @@ namespace Neon::UI::Graph
 
     void NodeBuilder::Render()
     {
+        float  TextHeight = ImGui::GetTextLineHeight();
+        ImVec2 HeaderPad{ 0.f, TextHeight };
+        HeaderPad /= 2.f;
+
+        for (auto& [Id, Node] : m_Nodes)
+        {
+            BeginNode(Id);
+
+            // Draw header
+            {
+                BeginHeader(Node.NodeData->GetColor());
+
+                ImGui::Dummy(HeaderPad);
+                ImGui::SameLine();
+
+                float       OldScale = UI::Utils::PushFontScaleMul(2.f);
+                imcxx::text NodeName{ Node.NodeData->GetName() };
+                UI::Utils::PopFontScale(OldScale);
+
+                ImGui::Dummy(ImVec2(0, HeaderPad.y));
+
+                EndHeader();
+            }
+
+            // Draw input ports
+            bool HasOutput = false;
+            {
+                imcxx::group LockHorz;
+                for (auto& Input : Node.Pins)
+                {
+                    auto& PinDesc = m_Pins.at(Input);
+                    if (!PinDesc.IsInput)
+                    {
+                        HasOutput = true;
+                        continue;
+                    }
+
+                    float Alpha = ImGui::GetStyle().Alpha;
+                    /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
+                           alpha *= (48.0f / 255.0f);*/
+
+                    BeginInput(Input);
+
+                    {
+
+                        imcxx::shared_style AlphaOverride{ ImGuiStyleVar_Alpha, Alpha };
+                        UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
+                        ImGui::SameLine();
+                        imcxx::text PortName{ PinDesc.PinData.GetName() };
+                    }
+
+                    EndInput();
+                }
+            }
+
+            if (HasOutput)
+            {
+                ImGui::SameLine(0.f, 35.f);
+            }
+
+            // Draw output ports
+            {
+                imcxx::group LockHorz;
+                {
+                    for (auto& Output : Node.Pins)
+                    {
+                        auto& PinDesc = m_Pins.at(Output);
+                        if (PinDesc.IsInput)
+                        {
+                            continue;
+                        }
+
+                        float Alpha = ImGui::GetStyle().Alpha;
+                        /*   if (newLinkPin && !CanCreateLink(newLinkPin, &Input) && &Input != newLinkPin)
+                               alpha *= (48.0f / 255.0f);*/
+
+                        BeginOutput(Output);
+
+                        {
+                            imcxx::shared_style AlphaOverride{ ImGuiStyleVar_Alpha, Alpha };
+                            imcxx::text         PortName{ PinDesc.PinData.GetName() };
+                            ImGui::SameLine();
+                            UI::Utils::DrawIcon({ 24, 24 }, UI::Utils::BasicIconType::Circle, false, ImColor(220, 48, 48), ImColor(32.f, 32.f, 32.f, Alpha));
+                        }
+
+                        EndOutput();
+                    }
+                }
+            }
+
+            EndNode();
+        }
     }
 
     //
@@ -137,27 +229,10 @@ namespace Neon::UI::Graph
                 ImVec2 MinPos = m_StartPos - ImVec2(8 - HalfBorderWidth, 4 - HalfBorderWidth);
                 ImVec2 MaxPos = m_EndPos + ImVec2(8 - HalfBorderWidth, 0);
 
-                if (m_HeaderTextureId)
-                {
-                    ImVec2 UV{
-                        (m_EndPos.x - m_StartPos.x) / m_HeaderTextureWidth,
-                        (m_EndPos.y - m_StartPos.y) / m_HeaderTextureHeight
-                    };
-
-                    DrawList->AddImageRounded(m_HeaderTextureId,
-                                              MinPos,
-                                              MaxPos,
-                                              ImVec2(0.0f, 0.0f),
-                                              UV,
-                                              m_HeaderColor, m_NodeGraph.GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
-                }
-                else
-                {
-                    DrawList->AddRectFilled(
-                        MinPos,
-                        MaxPos,
-                        m_HeaderColor, m_NodeGraph.GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
-                }
+                DrawList->AddRectFilled(
+                    MinPos,
+                    MaxPos,
+                    m_HeaderColor, m_NodeGraph.GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
 
                 uint32_t Alpha = (m_HeaderColor & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
                 DrawList->AddLine(
@@ -174,17 +249,11 @@ namespace Neon::UI::Graph
         m_NodeGraph.PopStyleVar();
     }
 
-    void NodeBuilder::Header(
-        ImTextureID    Texture,
-        uint32_t       Width,
-        uint32_t       Height,
+    void NodeBuilder::BeginHeader(
         const ImColor& Color)
     {
-        m_HeaderTextureId     = Texture;
-        m_HeaderTextureWidth  = Width;
-        m_HeaderTextureHeight = Height;
-        m_HeaderColor         = Color;
-        m_HasHeader           = true;
+        m_HeaderColor = Color;
+        m_HasHeader   = true;
 
         ImGui::BeginGroup();
         m_StartPos = ImGui::GetCurrentWindow()->DC.CursorPos;
@@ -196,7 +265,7 @@ namespace Neon::UI::Graph
         m_EndPos = ImGui::GetCurrentWindow()->DC.CursorMaxPos;
     }
 
-    void NodeBuilder::Input(
+    void NodeBuilder::BeginInput(
         NodeGraph::PinId Id)
     {
         m_NodeGraph.PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(0, 0.5f));
@@ -213,7 +282,7 @@ namespace Neon::UI::Graph
         m_EndPos.x = std::max(m_EndPos.x, ImGui::GetCurrentWindow()->DC.CursorMaxPos.x);
     }
 
-    void NodeBuilder::Output(
+    void NodeBuilder::BeginOutput(
         NodeGraph::PinId id)
     {
         m_NodeGraph.PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));

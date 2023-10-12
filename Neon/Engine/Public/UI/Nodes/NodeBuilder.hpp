@@ -88,18 +88,15 @@ namespace Neon::UI::Graph
             NodeGraph::NodeId Id);
         void EndNode();
 
-        void Header(
-            ImTextureID    Texture = nullptr,
-            uint32_t       Width   = 0,
-            uint32_t       Height  = 0,
-            const ImColor& Color   = ImColor(255, 255, 255, 255));
+        void BeginHeader(
+            const ImColor& Color = ImColor(255, 255, 255, 255));
         void EndHeader();
 
-        void Input(
+        void BeginInput(
             NodeGraph::PinId Id);
         void EndInput();
 
-        void Output(
+        void BeginOutput(
             NodeGraph::PinId Id);
         void EndOutput();
 
@@ -117,10 +114,6 @@ namespace Neon::UI::Graph
         std::map<NodeGraph::NodeId, NodeDescriptor> m_Nodes;
         std::map<NodeGraph::PinId, PinDescriptor>   m_Pins;
         std::map<NodeGraph::LinkId, Link>           m_Links;
-
-        ImTextureID m_HeaderTextureId;
-        uint32_t    m_HeaderTextureWidth;
-        uint32_t    m_HeaderTextureHeight;
 
         NodeGraph::NodeId m_CurrentNodeId;
 
