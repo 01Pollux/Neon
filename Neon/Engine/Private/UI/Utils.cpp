@@ -44,7 +44,7 @@ namespace Neon::UI::Utils
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetColumnWidth() / 2.0f - Width / 2.0f);
     }
 
-    void CenteredText(
+    void CursorMiddleScreen(
         const char* Label)
     {
         float textW = ImGui::CalcTextSize(Label).x;
@@ -62,10 +62,62 @@ namespace Neon::UI::Utils
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() / 2.0f);
     }
 
-    void CenterCursor()
+    void CenterCursor(
+        bool   Region,
+        ImVec2 Offset,
+        bool   CenterX,
+        bool   CenterY)
     {
-        auto RectSize = ImGui::GetWindowSize();
-        ImGui::SetCursorPos(ImVec2(RectSize.x / 2.0f, RectSize.y / 2.0f));
+        ImVec2 Middle    = (Region ? ImGui::GetContentRegionAvail() : ImGui::GetWindowSize()) / 2.f;
+        ImVec2 CursorPos = ImGui::GetCursorPos() + Offset;
+        if (CenterX)
+        {
+            CursorPos.x += Middle.x;
+        }
+        if (CenterY)
+        {
+            CursorPos.y += Middle.y;
+        }
+        ImGui::SetCursorPos(CursorPos);
+    }
+
+    void CenterText(
+        const char* Text,
+        bool        Region,
+        bool        CenterX,
+        bool        CenterY)
+    {
+        ImVec2 TextSize = ImGui::CalcTextSize(Text);
+        CenterCursor(Region, -TextSize / 2.f, CenterX, CenterY);
+        ImGui::Text(Text);
+    }
+
+    //
+
+    float PushFontScale(
+        float Scale)
+    {
+        ImFont* Font = ImGui::GetFont();
+        return std::exchange(Font->Scale, Scale);
+    }
+
+    float PushFontScaleMul(float Scale)
+    {
+        ImFont* Font = ImGui::GetFont();
+        return std::exchange(Font->Scale, Font->Scale * Scale);
+    }
+
+    float PushFontScaleAccumulate(float Scale)
+    {
+        ImFont* Font = ImGui::GetFont();
+        return std::exchange(Font->Scale, Font->Scale + Scale);
+    }
+
+    void PopFontScale(
+        float OldScane)
+    {
+        ImFont* Font = ImGui::GetFont();
+        std::exchange(Font->Scale, OldScane);
     }
 
     //

@@ -19,51 +19,60 @@ namespace Neon::UI
         NodeEditor::NodeId Id)
     {
         m_HasHeader = false;
-        m_HeaderMin = m_HeaderMax = ImVec2();
+
+        // ImGui get absolute position of current cusror position
+        // (relative to the top left corner of the current window)
+        m_StartPos = {};
+        m_EndPos   = {};
 
         m_Editor->PushStyleVar(AxNodeEditor::StyleVar_NodePadding, ImVec4(8, 4, 8, 8));
         m_Editor->BeginNode(Id);
 
         ImGui::PushID(Id.AsPointer());
         m_CurrentNodeId = Id;
-
-        SetStage(StageType::Begin);
     }
 
     void NodeBuilder::End()
     {
-        SetStage(StageType::End);
-
         m_Editor->EndNode();
 
-        if (ImGui::IsItemVisible() && m_HeaderTextureId)
+        if (ImGui::IsItemVisible())
         {
-            auto Alpha = static_cast<int>(255 * ImGui::GetStyle().Alpha);
+            auto  DrawList        = m_Editor->GetNodeBackgroundDrawList(m_CurrentNodeId);
+            float HalfBorderWidth = m_Editor->GetStyle().NodeBorderWidth * 0.5f;
 
-            auto DrawList = m_Editor->GetNodeBackgroundDrawList(m_CurrentNodeId);
-
-            const auto HalfBorderWidth = m_Editor->GetStyle().NodeBorderWidth * 0.5f;
-
-            auto HeaderColor = IM_COL32(0, 0, 0, Alpha) | (m_HeaderColor & IM_COL32(255, 255, 255, 0));
-            if ((m_HeaderMax.x > m_HeaderMin.x) && (m_HeaderMax.y > m_HeaderMin.y))
+            if (m_HasHeader)
             {
-                const auto uv = ImVec2(
-                    (m_HeaderMax.x - m_HeaderMin.x) / (float)(4.0f * m_HeaderTextureWidth),
-                    (m_HeaderMax.y - m_HeaderMin.y) / (float)(4.0f * m_HeaderTextureHeight));
+                ImVec2 MinPos = m_StartPos - ImVec2(8 - HalfBorderWidth, 4 - HalfBorderWidth);
+                ImVec2 MaxPos = m_EndPos + ImVec2(8 - HalfBorderWidth, 0);
 
-                DrawList->AddImageRounded(m_HeaderTextureId,
-                                          m_HeaderMin - ImVec2(8 - HalfBorderWidth, 4 - HalfBorderWidth),
-                                          m_HeaderMax + ImVec2(8 - HalfBorderWidth, 0),
-                                          ImVec2(0.0f, 0.0f), uv,
-                                          HeaderColor, m_Editor->GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
-
-                if (m_ContentMin.y > m_HeaderMax.y)
+                if (m_HeaderTextureId)
                 {
-                    DrawList->AddLine(
-                        ImVec2(m_HeaderMin.x - (8 - HalfBorderWidth), m_HeaderMax.y - 0.5f),
-                        ImVec2(m_HeaderMax.x + (8 - HalfBorderWidth), m_HeaderMax.y - 0.5f),
-                        ImColor(255, 255, 255, 96 * Alpha / (3 * 255)), 1.0f);
+                    ImVec2 UV{
+                        (m_EndPos.x - m_StartPos.x) / m_HeaderTextureWidth,
+                        (m_EndPos.y - m_StartPos.y) / m_HeaderTextureHeight
+                    };
+
+                    DrawList->AddImageRounded(m_HeaderTextureId,
+                                              MinPos,
+                                              MaxPos,
+                                              ImVec2(0.0f, 0.0f),
+                                              UV,
+                                              m_HeaderColor, m_Editor->GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
                 }
+                else
+                {
+                    DrawList->AddRectFilled(
+                        MinPos,
+                        MaxPos,
+                        m_HeaderColor, m_Editor->GetStyle().NodeRounding, ImDrawFlags_RoundCornersTop);
+                }
+
+                uint32_t Alpha = (m_HeaderColor & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT;
+                DrawList->AddLine(
+                    ImVec2(MinPos.x - 0.5f, MaxPos.y - 0.5f),
+                    ImVec2(MaxPos.x - 0.5f, MaxPos.y - 0.5f),
+                    ImColor(255, 255, 255, 96 * Alpha / (3 * 255)), 1.0f);
             }
         }
 
@@ -72,114 +81,60 @@ namespace Neon::UI
         ImGui::PopID();
 
         m_Editor->PopStyleVar();
-
-        SetStage(StageType::Invalid);
     }
 
     void NodeBuilder::Header(
         const ImColor& Color)
     {
         m_HeaderColor = Color;
-        SetStage(StageType::Header);
+        m_HasHeader   = true;
+
+        ImGui::BeginGroup();
+        m_StartPos = ImGui::GetCurrentWindow()->DC.CursorPos;
     }
 
     void NodeBuilder::EndHeader()
     {
-        SetStage(StageType::Content);
+        ImGui::EndGroup();
+        m_EndPos = ImGui::GetCurrentWindow()->DC.CursorMaxPos;
     }
 
     void NodeBuilder::Input(
         NodeEditor::PinId Id)
     {
-        if (m_CurrentStage == StageType::Begin)
-            SetStage(StageType::Content);
-
-        SetStage(StageType::Input);
+        m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(0, 0.5f));
+        m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
 
         Pin(Id, AxNodeEditor::PinKind::Input);
     }
 
     void NodeBuilder::EndInput()
     {
+        m_Editor->PopStyleVar(2);
         EndPin();
+
+        m_EndPos.x = std::max(m_EndPos.x, ImGui::GetCurrentWindow()->DC.CursorMaxPos.x);
     }
 
     void NodeBuilder::Middle()
     {
-        if (m_CurrentStage == StageType::Begin)
-            SetStage(StageType::Content);
-
-        SetStage(StageType::Middle);
     }
 
     void NodeBuilder::Output(
         NodeEditor::PinId id)
     {
-        if (m_CurrentStage == StageType::Begin)
-            SetStage(StageType::Content);
-
-        SetStage(StageType::Output);
+        m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));
+        m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
 
         Pin(id, AxNodeEditor::PinKind::Output);
     }
 
     void NodeBuilder::EndOutput()
     {
+        m_Editor->PopStyleVar(2);
         EndPin();
-    }
 
-    bool NodeBuilder::SetStage(
-        StageType NewStage)
-    {
-        if (NewStage == m_CurrentStage)
-            return false;
-
-        auto oldStage  = m_CurrentStage;
-        m_CurrentStage = NewStage;
-
-        ImVec2 cursor;
-        switch (oldStage)
-        {
-        case StageType::Header:
-            m_HeaderMin = ImGui::GetItemRectMin();
-            m_HeaderMax = ImGui::GetItemRectMax();
-            break;
-
-        case StageType::Input:
-            m_Editor->PopStyleVar(2);
-            break;
-
-        case StageType::Output:
-            m_Editor->PopStyleVar(2);
-            break;
-        }
-
-        switch (NewStage)
-        {
-        case StageType::Header:
-            m_HasHeader = true;
-            break;
-
-        case StageType::Input:
-            m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(0, 0.5f));
-            m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
-            break;
-
-        case StageType::Output:
-            m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotAlignment, ImVec2(1.0f, 0.5f));
-            m_Editor->PushStyleVar(AxNodeEditor::StyleVar_PivotSize, ImVec2(0, 0));
-            break;
-
-        case StageType::End:
-            m_NodeMin = ImGui::GetItemRectMin();
-            m_NodeMax = ImGui::GetItemRectMax();
-            break;
-
-        case StageType::Invalid:
-            break;
-        }
-
-        return true;
+        m_EndPos.x = std::max(m_EndPos.x, ImGui::GetCurrentWindow()->DC.CursorMaxPos.x);
     }
 
     void NodeBuilder::Pin(

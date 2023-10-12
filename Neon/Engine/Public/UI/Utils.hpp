@@ -54,12 +54,6 @@ namespace Neon::UI::Utils
         float Width);
 
     /// <summary>
-    /// Write a text at the center of the window.
-    /// </summary>
-    void CenteredText(
-        const char* Label);
-
-    /// <summary>
     /// Center the cursor position on the X axis.
     /// </summary>
     void CenterCursorX();
@@ -72,7 +66,46 @@ namespace Neon::UI::Utils
     /// <summary>
     /// Center the cursor position.
     /// </summary>
-    void CenterCursor();
+    void CenterCursor(
+        bool   Region,
+        ImVec2 Offset  = {},
+        bool   CenterX = true,
+        bool   CenterY = false);
+
+    /// <summary>
+    /// Center the text position.
+    /// </summary>
+    void CenterText(
+        const char* Text,
+        bool        Region,
+        bool        CenterX = true,
+        bool        CenterY = false);
+
+    //
+
+    /// <summary>
+    /// Push a font scale.
+    /// </summary>
+    [[nodiscard]] float PushFontScale(
+        float Scale);
+
+    /// <summary>
+    /// Push a font scale while multiplying with old value.
+    /// </summary>
+    [[nodiscard]] float PushFontScaleMul(
+        float Scale);
+
+    /// <summary>
+    /// Push a font scale while adding with old value.
+    /// </summary>
+    [[nodiscard]] float PushFontScaleMul(
+        float Scale);
+
+    /// <summary>
+    /// Pop a font scale.
+    /// </summary>
+    void PopFontScale(
+        float OldScale);
 
     //
 

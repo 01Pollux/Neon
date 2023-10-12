@@ -49,13 +49,15 @@ namespace Neon::Editor::Views
         StringU8               Name;
         std::vector<Pin>       Inputs, Outputs;
 
-        ImColor Color = ImColor(1.f, 1.f, 1.f, 1.f);
+        ImColor Color;
 
         Node(
             UI::NodeEditor& Editor,
-            StringU8        Name) :
+            StringU8        Name,
+            ImColor         Color = ImColor(48, 44, 51)) :
             Id(Editor.NewNodeId()),
-            Name(std::move(Name))
+            Name(std::move(Name)),
+            Color(Color)
         {
         }
 
@@ -151,19 +153,33 @@ namespace Neon::Editor::Views
             static Pin* NewNodeLinkPin = nullptr;
             static bool CreateNewNode  = false;
 
+            float  TextHeight = ImGui::GetTextLineHeight();
+            ImVec2 HeaderPad{ 0.f, TextHeight };
+            HeaderPad /= 2.f;
+
             for (auto& Node : s_Nodes)
             {
                 Builder.Begin(Node.Id);
 
                 {
                     Builder.Header(Node.Color);
-                    ImGui::TextUnformatted(Node.Name.c_str(), Node.Name.c_str() + Node.Name.size());
-                    ImGui::Dummy(ImVec2(0, 28));
+
+                    {
+                        ImGui::Dummy(HeaderPad);
+                        ImGui::SameLine();
+
+                        float OldScale = UI::Utils::PushFontScaleMul(2.f);
+                        ImGui::Text(Node.Name.c_str());
+                        UI::Utils::PopFontScale(OldScale);
+
+                        ImGui::Dummy(ImVec2(0, HeaderPad.y));
+                    }
+
                     Builder.EndHeader();
                 }
 
-                if (imcxx::window_child{ "LeftSide", {}, true, ImGuiWindowFlags_AlwaysAutoResize })
                 {
+                    imcxx::group LockHorz;
                     for (auto& Input : Node.Inputs)
                     {
                         float Alpha = ImGui::GetStyle().Alpha;
@@ -182,10 +198,10 @@ namespace Neon::Editor::Views
                     }
                 }
 
-                ImGui::SameLine();
+                float Spacing = Node.Outputs.empty() ? 0.f : 35.f;
+                ImGui::SameLine(0.f, Spacing);
                 {
                     imcxx::group LockHorz;
-                    if (imcxx::window_child{ "RightSide", {}, true, ImGuiWindowFlags_AlwaysAutoResize })
                     {
                         for (auto& Output : Node.Outputs)
                         {
