@@ -149,6 +149,10 @@ namespace Neon::Editor::Views
         {
             UI::NodeBuilder Builder(&m_NodeEditor);
 
+            static UI::NodeEditor::NodeId contextNodeId = 0;
+            static UI::NodeEditor::LinkId contextLinkId = 0;
+            static UI::NodeEditor::PinId  contextPinId  = 0;
+
             static Pin* NewLinkPin     = nullptr;
             static Pin* NewNodeLinkPin = nullptr;
             static bool CreateNewNode  = false;
@@ -314,7 +318,23 @@ namespace Neon::Editor::Views
 
                 m_NodeEditor.EndCreate();
             }
+
+            // auto openPopupPosition = ImGui::GetMousePos();
+            // m_NodeEditor.Suspend();
+            // if (m_NodeEditor.ShowNodeContextMenu(&contextNodeId))
+            //     ImGui::OpenPopup("Node Context Menu");
+            // else if (m_NodeEditor.ShowPinContextMenu(&contextPinId))
+            //     ImGui::OpenPopup("Pin Context Menu");
+            // else if (m_NodeEditor.ShowLinkContextMenu(&contextLinkId))
+            //     ImGui::OpenPopup("Link Context Menu");
+            // else if (m_NodeEditor.ShowBackgroundContextMenu())
+            //{
+            //     ImGui::OpenPopup("Create New Node");
+            //     NewNodeLinkPin = nullptr;
+            // }
+            // m_NodeEditor.Resume();
         }
+
         m_NodeEditor.End();
     }
 } // namespace Neon::Editor::Views

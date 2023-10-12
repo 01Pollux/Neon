@@ -201,7 +201,7 @@ namespace Neon::UI
                 m_Editor->Flow(Link, Direction);
         }
 
-        [[nodiscard]] bool BeginCreate(const ImColor& Color = ImColor(1, 1, 1, 1), float Thickness = 1.0f)
+        [[nodiscard]] bool BeginCreate(const ImColor& Color = ImColor(255, 255, 255, 255), float Thickness = 1.5f)
         {
             auto& Context = m_Editor->GetItemCreator();
 
