@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Editor/Views/View.hpp>
-#include <UI/NodeEditor.hpp>
+#include <UI/Nodes/NodeBuilder.hpp>
 
 namespace Neon::Editor::Views
 {
@@ -14,6 +14,6 @@ namespace Neon::Editor::Views
         void OnRender() override;
 
     private:
-        UI::NodeEditor m_NodeEditor;
+        UI::Graph::NodeBuilder m_NodeGraph;
     };
 } // namespace Neon::Editor::Views

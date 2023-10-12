@@ -5,11 +5,11 @@
 #include <ImGuiNodeEditor/imgui_node_editor.h>
 #include <ImGuiNodeEditor/imgui_node_editor_internal.h>
 
-namespace Neon::UI
+namespace Neon::UI::Graph
 {
     namespace AxNodeEditor = ax::NodeEditor;
 
-    class NodeEditor
+    class NodeGraph
     {
     public:
         using EditorConfig  = AxNodeEditor::Config;
@@ -26,8 +26,8 @@ namespace Neon::UI
         using FlowDirection = AxNodeEditor::FlowDirection;
 
     public:
-        NodeEditor() = default;
-        NodeEditor(
+        NodeGraph() = default;
+        NodeGraph(
             const EditorConfig& Config)
         {
             m_Editor.reset(NEON_NEW EditorContext(&Config));
@@ -717,29 +717,7 @@ namespace Neon::UI
             return m_Editor->ToScreen(Pos);
         }
 
-    public:
-        [[nodiscard]] uint64_t NewId()
-        {
-            return m_NextId++;
-        }
-
-        [[nodiscard]] NodeId NewNodeId()
-        {
-            return m_NextId++;
-        }
-
-        [[nodiscard]] LinkId NewLinkId()
-        {
-            return m_NextId++;
-        }
-
-        [[nodiscard]] PinId NewPinId()
-        {
-            return m_NextId++;
-        }
-
     private:
         std::unique_ptr<EditorContext> m_Editor;
-        uint64_t                       m_NextId = 1;
     };
-} // namespace Neon::UI
+} // namespace Neon::UI::Graph
