@@ -10,6 +10,7 @@ namespace Neon::RHI
 {
     std::mutex                                           s_RootSignatureCacheMutex;
     std::map<Crypto::Sha256::Bytes, Ptr<IRootSignature>> s_RootSignatureCache;
+    IRootSignature::CommonRootsignatureList              s_CommonRootSignatureCache;
 
     //
 
@@ -183,6 +184,12 @@ namespace Neon::RHI
         return Dx12RootSignatureCache::Load(Builder);
     }
 
+    Ptr<IRootSignature> IRootSignature::Get(
+        RSCommon::Type Type)
+    {
+        return s_CommonRootSignatureCache[size_t(Type)];
+    }
+
     //
 
     Dx12RootSignature::Dx12RootSignature(
@@ -206,73 +213,6 @@ namespace Neon::RHI
             RenameObject(m_RootSignature.Get(), Name);
         }
 #endif
-
-        // Parse params names from Builder
-        uint32_t RootIndex = 0;
-        m_Params.reserve(Builder.GetParameters().size());
-        for (auto& [ParamName, Param] : Builder.GetParameters())
-        {
-            boost::apply_visitor(
-                VariantVisitor{
-                    [this, &ParamName](const RootParameter::DescriptorTable& Table)
-                    {
-                        ParamDescriptor FinalParam{
-                            { .Name = ParamName },
-                        };
-                        FinalParam.Instanced = Table.Instanced();
-
-                        uint32_t Size = 0;
-
-                        for (auto& [Name, Range] : Table.GetRanges())
-                        {
-                            ParamDescriptorRange Param{
-                                { .Name = Name },
-                                Range.Offset,
-                                Range.DescriptorCount,
-                                Range.Type
-                            };
-
-                            if (!FinalParam.NamedRanges.emplace(Name, Param).second)
-                            {
-                                NEON_WARNING_TAG("Root signature parameter name for descriptor table is not unique: {}", Name);
-                            }
-                            else
-                            {
-                                Size += Range.DescriptorCount;
-                            }
-                        }
-
-                        FinalParam.Size = Size;
-                        m_Params.emplace_back(std::move(FinalParam));
-                    },
-                    [this, &ParamName](const RootParameter::Constants& Constants)
-                    {
-                        ParamConstant FinalParam{
-                            { .Name = ParamName },
-                            uint8_t(Constants.Num32BitValues)
-                        };
-                        m_Params.emplace_back(std::move(FinalParam));
-                    },
-                    [this, &ParamName](const RootParameter::Root& RootParam)
-                    {
-                        ParamRoot FinalParam{
-                            { .Name = ParamName },
-                            RootParam.Type
-                        };
-                        m_Params.emplace_back(std::move(FinalParam));
-                    } },
-                Param.GetParameter());
-
-            if (!m_NamedParams.emplace(ParamName, uint32_t(m_Params.size() - 1)).second) [[unlikely]]
-            {
-                NEON_WARNING_TAG("Root signature parameter name is not unique: {}", ParamName);
-                m_Params.pop_back();
-            }
-            else
-            {
-                RootIndex++;
-            }
-        }
     }
 
     ID3D12RootSignature* Dx12RootSignature::Get()
@@ -287,11 +227,19 @@ namespace Neon::RHI
 
     //
 
+    void Dx12RootSignatureCache::Load()
+    {
+        s_CommonRootSignatureCache = IRootSignature::Load();
+    }
+
     void Dx12RootSignatureCache::Flush()
     {
         std::scoped_lock Lock(s_RootSignatureCacheMutex);
+        s_CommonRootSignatureCache = {};
         s_RootSignatureCache.clear();
     }
+
+    //
 
     Ptr<IRootSignature> Dx12RootSignatureCache::Load(
         const RootSignatureBuilder& Builder)
@@ -347,7 +295,7 @@ namespace Neon::RHI
 
         auto& NParameters = Builder.GetParameters();
         Result.Parameters.reserve(NParameters.size());
-        for (auto& Param : NParameters | std::views::values)
+        for (auto& Param : NParameters)
         {
             auto Visibility = CastShaderVisibility(Param.Visibility());
 
@@ -368,101 +316,36 @@ namespace Neon::RHI
                         };
 
                         // Instanced will allocate unbounded descriptors
-                        if (Table.Instanced())
+
+                        for (auto& Range : NRanges)
                         {
-                            std::map<std::pair<D3D12_DESCRIPTOR_RANGE_TYPE, uint32_t>, PreExistingRange> PreExistingRanges;
+                            D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
-                            for (auto& Range : NRanges | std::views::values)
+                            switch (Range.Type)
                             {
-                                D3D12_DESCRIPTOR_RANGE_TYPE Type;
-
-                                switch (Range.Type)
-                                {
-                                case DescriptorTableParam::ConstantBuffer:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-                                    break;
-                                case DescriptorTableParam::ShaderResource:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-                                    break;
-                                case DescriptorTableParam::UnorderedAccess:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-                                    break;
-                                case DescriptorTableParam::Sampler:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-                                    break;
-                                default:
-                                    std::unreachable();
-                                }
-
-                                auto Flags = CastRootDescriptorTableFlags(Range.Flags);
-                                Flags |= D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
-                                Flags &= ~D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_STATIC_KEEPING_BUFFER_BOUNDS_CHECKS;
-
-                                std::pair Key  = { Type, Range.RegisterSpace };
-                                auto      Iter = PreExistingRanges.find(Key);
-                                if (Iter == PreExistingRanges.end())
-                                {
-                                    PreExistingRanges.emplace(
-                                        Key,
-                                        PreExistingRange{
-                                            .Flags          = Flags,
-                                            .ShaderRegister = Range.ShaderRegister,
-                                            .Offset         = Range.Offset });
-                                }
-                                else
-                                {
-                                    auto& CurRange = Iter->second;
-
-                                    CurRange.Flags |= Flags;
-                                    CurRange.ShaderRegister = std::min(CurRange.ShaderRegister, Range.ShaderRegister);
-                                    CurRange.Offset         = std::min(CurRange.Offset, Range.Offset);
-                                }
+                            case DescriptorTableParam::ConstantBuffer:
+                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+                                break;
+                            case DescriptorTableParam::ShaderResource:
+                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+                                break;
+                            case DescriptorTableParam::UnorderedAccess:
+                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+                                break;
+                            case DescriptorTableParam::Sampler:
+                                Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+                                break;
+                            default:
+                                std::unreachable();
                             }
-                            for (auto& [Key, Range] : PreExistingRanges)
-                            {
-                                auto& [Type, RegisterSpace] = Key;
-                                Ranges.emplace_back()
-                                    .Init(
-                                        Type,
-                                        UINT32_MAX,
-                                        Range.ShaderRegister,
-                                        RegisterSpace,
-                                        Range.Flags,
-                                        Range.Offset);
-                            }
-                        }
-                        else
-                        {
-                            for (auto& Range : NRanges | std::views::values)
-                            {
-                                D3D12_DESCRIPTOR_RANGE_TYPE Type;
 
-                                switch (Range.Type)
-                                {
-                                case DescriptorTableParam::ConstantBuffer:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-                                    break;
-                                case DescriptorTableParam::ShaderResource:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-                                    break;
-                                case DescriptorTableParam::UnorderedAccess:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-                                    break;
-                                case DescriptorTableParam::Sampler:
-                                    Type = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-                                    break;
-                                default:
-                                    std::unreachable();
-                                }
-
-                                Ranges.emplace_back().Init(
-                                    Type,
-                                    Range.DescriptorCount,
-                                    Range.ShaderRegister,
-                                    Range.RegisterSpace,
-                                    CastRootDescriptorTableFlags(Range.Flags),
-                                    Range.Offset);
-                            }
+                            Ranges.emplace_back().Init(
+                                Type,
+                                Range.DescriptorCount,
+                                Range.ShaderRegister,
+                                Range.RegisterSpace,
+                                CastRootDescriptorTableFlags(Range.Flags),
+                                Range.Offset);
                         }
 
                         Result.Parameters.emplace_back().InitAsDescriptorTable(UINT(Ranges.size()), Ranges.data(), Visibility);

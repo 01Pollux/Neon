@@ -1,10 +1,9 @@
+#ifndef COMMON_STD_MATERIAL_H
+#define COMMON_STD_MATERIAL_H
 
-#define	MATERIAL_FLAG_ALBEDO_MAP (1 << 0)
-#define MATERIAL_FLAG_NORMAL_MAP (1 << 1)
-#define	MATERIAL_FLAG_SPECULAR_MAP (1 << 2)
-#define	MATERIAL_FLAG_EMISSIVE_MAP (1 << 3)
+#include "Material.hlsli"
 
-struct PerMaterialData
+struct StdMaterialData
 {
 	float3 Albedo;
 	uint AlbedoMapIndex;
@@ -16,7 +15,6 @@ struct PerMaterialData
 	uint EmissiveMapIndex;
 	
 	uint NormalMapIndex;
-	
-	// MATERIAL_FLAG_*
-	uint Flags;
 };
+
+#endif

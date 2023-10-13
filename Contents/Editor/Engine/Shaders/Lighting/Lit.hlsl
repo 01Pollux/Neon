@@ -1,23 +1,6 @@
-
-#include "../Common/Frame.hlsli"
-#include "../Common/Utils.hlsli"
-#include "../Common/Light.hlsli"
 #include "../Common/StdMaterial.hlsli"
 
-enum
-{
-	TEXTURE_OFFSET_ALBEDO,
-	TEXTURE_OFFSET_NORMAL,
-	TEXTURE_OFFSET_SPECULAR,
-	TEXTURE_OFFSET_EMISSIVE
-};
-
 //
-
-struct PerObjectData
-{
-	matrix World;
-};
 
 struct VSInput
 {
@@ -44,6 +27,12 @@ struct PSInput
 	nointerpolation uint InstanceId : INSTANCE_INDEX;
 };
 
+//
+
+struct MaterialData : StdMaterialData
+{
+};
+NEON_MATERIAL_LOCAL(MaterialData);
 
 //
 
@@ -51,12 +40,11 @@ struct PSInput
 // Vertex Shader
 // --------------------
 
-StructuredBuffer<PerObjectData> v_ObjectData : register(t0, space2);
 
 
 PSInput VS_Main(VSInput Vs)
 {
-	PerObjectData Object = v_ObjectData[Vs.InstanceId];
+	PerInstanceData Object = g_InstanceData[Vs.InstanceId];
 	PSInput Ps = (PSInput) 0;
 	
 	Ps.PositionWS = mul(float4(Vs.Position, 1.f), Object.World);
@@ -77,24 +65,16 @@ PSInput VS_Main(VSInput Vs)
 // Pixel Shader
 // --------------------
 
-StructuredBuffer<Light> p_Lights : register(t0, space1);
-StructuredBuffer<uint> p_LightIndexList : register(t1, space1);
-Texture2D<uint2> p_LightGrid : register(t2, space1);
-
-StructuredBuffer<PerMaterialData> p_MaterialData : register(t0, space2);
-Texture2D p_TextureTable[] : register(t0, space3);
-
-
 [earlydepthstencil]
-float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
+float4 PS_Main(PSInput Ps) : SV_Target
 {
-	PerMaterialData Material = p_MaterialData[Ps.InstanceId];
+	MaterialData Material = g_Local[Ps.InstanceId];
 	
 	float3 Albedo = Material.Albedo;
 	[branch]
-	if (Material.Flags & MATERIAL_FLAG_ALBEDO_MAP)
+	if (Material.AlbedoMapIndex != -1)
 	{
-		Texture2D AlbedoMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_ALBEDO];
+		Texture2D AlbedoMap = g_Texture2D[Material.AlbedoMapIndex];
 		float4 Color = AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 		if (Color.a < 0.1f)
 		{
@@ -106,9 +86,9 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	float4 Normal = float4(Ps.NormalWS, 0.f);
 	
 	[branch]
-	if (Material.Flags & MATERIAL_FLAG_NORMAL_MAP)
+	if (Material.NormalMapIndex != -1)
 	{
-		Texture2D NormalMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_NORMAL];
+		Texture2D NormalMap = g_Texture2D[Material.NormalMapIndex];
 		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
 		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
 		Normal.xyz = mul(Normal.xyz, TBN);
@@ -118,17 +98,17 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 	
 	float4 Specular = float4(Material.Specular, 1.f);
 	[branch]
-	if (Material.Flags & MATERIAL_FLAG_SPECULAR_MAP)
+	if (Material.SpecularMapIndex != -1)
 	{
-		Texture2D SpecularMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_SPECULAR];
+		Texture2D SpecularMap = g_Texture2D[Material.SpecularMapIndex];
 		Specular *= SpecularMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	
 	float4 Emissive = float4(Material.Emissive, 1.f);
 	[branch]
-	if (Material.Flags & MATERIAL_FLAG_EMISSIVE_MAP)
+	if (Material.EmissiveMapIndex != -1)
 	{
-		Texture2D EmissiveMap = p_TextureTable[Material.AlbedoMapIndex + TEXTURE_OFFSET_EMISSIVE];
+		Texture2D EmissiveMap = g_Texture2D[Material.EmissiveMapIndex];
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 
@@ -138,14 +118,14 @@ float4 PS_Main(PSInput Ps, bool IsFrontFace : SV_IsFrontFace) : SV_Target
 
 	// Perform lighting
 	
-	uint2 LightInfo = p_LightGrid[uint2(floor(Ps.Position.xy / LIGHT_CLUSTER_SIZE))];
+	uint2 LightInfo = _LightGrid[uint2(floor(Ps.Position.xy / LIGHT_CLUSTER_SIZE))];
 	uint StartOffset = LightInfo.x;
 	uint LightCount = LightInfo.y;
 	
 	LightingResult LightRes = (LightingResult) 0;
 	for (uint i = 0; i < LightCount; i++)
 	{
-		Light CurLight = p_Lights[p_LightIndexList[StartOffset + i]];
+		Light CurLight = _Lights[_LightIndexList[StartOffset + i]];
 		CurLight.Process(TargetToEye, Ps.PositionWS, Normal, LightRes);
 	}
 	

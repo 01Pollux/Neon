@@ -21,11 +21,6 @@ namespace Neon::RHI
         using DescriptorHeapHandle = DescriptorHeapHandle;
 
         template<bool _Compute>
-        friend void Material_CreateDescriptors(
-            const GenericMaterialBuilder<_Compute>& Builder,
-            Material*                               Mat);
-
-        template<bool _Compute>
         friend void Material_CreatePipelineState(
             const GenericMaterialBuilder<_Compute>& Builder,
             Material*                               Mat);
@@ -52,13 +47,6 @@ namespace Neon::RHI
 
         void SetTransparent(
             bool State) noexcept override;
-
-    public:
-        void BindSharedParams(
-            ICommandList* CommandList) override;
-
-        void BindLocalParams(
-            ICommandList* CommandList) override;
 
     public:
         void SetResource(

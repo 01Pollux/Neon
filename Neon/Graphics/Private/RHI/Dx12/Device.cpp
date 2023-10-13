@@ -102,6 +102,7 @@ namespace Neon::RHI
         CreateDevice();
         CheckDeviceFeatures();
         FillInDescriptorSizes();
+        Dx12RootSignatureCache::Load();
     }
 
     Dx12RenderDevice::~Dx12RenderDevice()

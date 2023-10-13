@@ -80,6 +80,11 @@ namespace Neon::RHI
     {
     public:
         /// <summary>
+        /// Load common root signatures
+        /// </summary>
+        static void Load();
+
+        /// <summary>
         /// Clear the root signature cache and release all cached root signatures
         /// </summary>
         static void Flush();

@@ -48,14 +48,15 @@ namespace Neon::RG
             return;
         }
 
+        constexpr size_t       SizeOfBlock = SizeOfPerMaterialData + Scene::GPUTransformManager::SizeOfInstanceData;
         RHI::UBufferPoolHandle Buffer(
-            SizeOfPerMaterialData * Count,
-            AlignOfPerMaterialData,
+            SizeOfBlock * Count,
+            std::max(AlignOfPerMaterialData, Scene::GPUTransformManager::AlignOfInstanceData),
             RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
 
-        uint8_t* MaterialDataPtr = Buffer.AsUpload().Map() + Buffer.Offset;
-        size_t   MaterialIndex   = 0;
-        size_t   PassesCount     = 1;
+        uint8_t* BufferPtr     = Buffer.AsUpload().Map() + Buffer.Offset;
+        size_t   InstanceIndex = 0;
+        size_t   PassesCount   = 1;
 
         std::array<RHI::IMaterial::PipelineVariant, 2> Passes;
 
@@ -141,12 +142,15 @@ namespace Neon::RG
 
                     // Update shared params
                     {
-                        auto MaterialData    = std::bit_cast<PerMaterialData*>(MaterialDataPtr);
+                        auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
                         *MaterialData        = {};
                         MaterialData->Albedo = Colors::DarkGreen;
 
-                        MeshMaterial->SetResourceView("_PerInstanceData", GpuTransformManager.GetInstanceHandle(InstanceId));
-                        MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfPerMaterialData * MaterialIndex));
+                        auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
+                        *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
+
+                        MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
+                        MeshMaterial->SetResourceView("_PerInstanceData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex + SizeOfPerMaterialData));
 
                         MeshMaterial->BindSharedParams(CommandList);
                         {
@@ -183,8 +187,8 @@ namespace Neon::RG
                     CommandList->SetVertexBuffer(0, VtxView);
                     CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
 
-                    MaterialDataPtr += SizeOfPerMaterialData;
-                    MaterialIndex++;
+                    BufferPtr += SizeOfBlock;
+                    InstanceIndex++;
                 }
             }
 

@@ -19,12 +19,16 @@ namespace Neon::Scene
 {
     class GPUTransformManager
     {
+    public:
         struct InstanceData
         {
             Matrix4x4 World;
         };
 
-        using PagedInstaceData        = GPUPagedInstance<InstanceData>;
+        using PagedInstaceData                        = GPUPagedInstance<InstanceData>;
+        static constexpr size_t   SizeOfInstanceData  = PagedInstaceData::SizeOfInstanceData;
+        static constexpr uint32_t AlignOfInstanceData = PagedInstaceData::SizeOfInstanceData;
+
         using InstanceIdList          = PagedInstaceData::InstanceIdList;
         using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
         using InstanceIdMeshMap       = std::unordered_map<uint32_t, const Mdl::Mesh*>;

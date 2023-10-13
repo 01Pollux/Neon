@@ -81,14 +81,6 @@ namespace Neon::RHI
             bool State = true) noexcept = 0;
 
         /// <summary>
-        /// Get the root signature.
-        /// </summary>
-        const Ptr<IRootSignature>& GetRootSignature() const noexcept
-        {
-            return m_RootSignature;
-        }
-
-        /// <summary>
         /// Get pipeline state.
         /// </summary>
         const Ptr<IPipelineState>& GetPipelineState(
@@ -96,19 +88,6 @@ namespace Neon::RHI
         {
             return m_PipelineStates[static_cast<uint8_t>(Variant)];
         }
-
-    public:
-        /// <summary>
-        /// Bind shared parameters directly into the command list.
-        /// </summary>
-        virtual void BindSharedParams(
-            ICommandList* CommandList) = 0;
-
-        /// <summary>
-        /// Bind local parameters directly into the command list.
-        /// </summary>
-        virtual void BindLocalParams(
-            ICommandList* CommandList) = 0;
 
     public:
         /// <summary>
@@ -250,7 +229,6 @@ namespace Neon::RHI
         }
 
     protected:
-        Ptr<IRootSignature> m_RootSignature;
-        PipelineStateList   m_PipelineStates;
+        PipelineStateList m_PipelineStates;
     };
 } // namespace Neon::RHI

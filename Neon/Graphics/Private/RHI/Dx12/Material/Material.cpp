@@ -75,147 +75,6 @@ namespace Neon::RHI
     //
 
     template<bool _Compute>
-    void Material_CreateDescriptors(
-        const GenericMaterialBuilder<_Compute>& Builder,
-        Material*                               Mat)
-    {
-        auto& RootSignature = Builder.RootSignature();
-        NEON_ASSERT(RootSignature);
-
-        Mat->m_RootSignature = RootSignature;
-
-        // Calculate number of descriptors needed (for shared and local descriptors)
-        uint32_t TableSharedResourceCount = 0;
-        uint32_t TableSharedSamplerCount  = 0;
-        uint32_t TableResourceCount       = 0;
-        uint32_t TableSamplerCount        = 0;
-
-        // Calculate size of constants
-        uint8_t BufferSize = 0;
-
-        for (auto& [VarName, ParamIndex] : RootSignature->GetNamedParams())
-        {
-            auto& Param = RootSignature->GetParams()[ParamIndex];
-            std::visit(
-                VariantVisitor{
-                    [&BufferSize](const IRootSignature::ParamConstant& Constant)
-                    {
-                        BufferSize += Constant.Num32BitValues * sizeof(uint32_t);
-                    },
-                    [Mat, &VarName](const IRootSignature::ParamRoot& Root)
-                    {
-                        CstResourceViewType ViewType;
-                        switch (Root.Type)
-                        {
-                        case RootParameter::RootType::ConstantBuffer:
-                        {
-                            ViewType = CstResourceViewType::Cbv;
-                            break;
-                        }
-                        case RootParameter::RootType::ShaderResource:
-                        {
-                            ViewType = CstResourceViewType::Srv;
-                            break;
-                        }
-                        case RootParameter::RootType::UnorderedAccess:
-                        {
-                            ViewType = CstResourceViewType::Uav;
-                            break;
-                        }
-                        default:
-                        {
-                            NEON_ASSERT(false, "Invalid root type");
-                            break;
-                        }
-                        }
-                        Mat->m_SharedParameters->SharedEntries.emplace(VarName, Material::RootEntry{ .ViewType = ViewType });
-                    },
-                    [&](const IRootSignature::ParamDescriptor& Descriptor)
-                    {
-                        const bool IsSamplerDescriptor = Descriptor.NamedRanges.begin()->second.Type == DescriptorTableParam::Sampler;
-                        if (IsSamplerDescriptor)
-                        {
-                            auto& DescriptorCount = Descriptor.Instanced ? TableSamplerCount : TableSharedSamplerCount;
-
-                            Material::DescriptorVariantMap SamplerMap{
-                                .Offset = DescriptorCount
-                            };
-                            for (auto& [Name, Range] : Descriptor.NamedRanges)
-                            {
-                                Material::SamplerEntry Entry{
-                                    .Offset = DescriptorCount,
-                                    .Count  = Range.Size,
-                                };
-
-                                DescriptorCount += Range.Size;
-                                Entry.Descs.resize(Range.Size);
-
-                                bool WasInserted = SamplerMap.Entries.emplace(Name, std::move(Entry)).second;
-                                NEON_ASSERT(WasInserted, "Duplicate sampler variable");
-                            }
-
-                            bool WasInserted = false;
-                            if (Descriptor.Instanced)
-                            {
-                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(SamplerMap)).second;
-                            }
-                            else
-                            {
-                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(SamplerMap)).second;
-                            }
-                            NEON_ASSERT(WasInserted, "Duplicate descriptor sampler table");
-                        }
-                        else
-                        {
-                            auto& DescriptorCount = Descriptor.Instanced ? TableResourceCount : TableSharedResourceCount;
-
-                            Material::DescriptorVariantMap DescriptorMap{
-                                .Offset = DescriptorCount
-                            };
-
-                            for (auto& [Name, Range] : Descriptor.NamedRanges)
-                            {
-                                Material::DescriptorEntry Entry{
-                                    .Offset = DescriptorCount,
-                                    .Count  = Range.Size,
-                                    .Type   = Range.Type
-                                };
-
-                                DescriptorCount += Range.Size;
-                                Entry.Resources.resize(Range.Size);
-
-                                bool WasInserted = DescriptorMap.Entries.emplace(Name, std::move(Entry)).second;
-                                NEON_ASSERT(WasInserted, "Duplicate descriptor variable");
-                            }
-
-                            bool WasInserted = false;
-                            if (Descriptor.Instanced)
-                            {
-                                WasInserted = Mat->m_LocalParameters.LocalEntries.emplace(VarName, std::move(DescriptorMap)).second;
-                            }
-                            else
-                            {
-                                WasInserted = Mat->m_SharedParameters->SharedEntries.emplace(VarName, std::move(DescriptorMap)).second;
-                            }
-                            NEON_ASSERT(WasInserted, "Duplicate descriptor table");
-                        }
-                    },
-                },
-                Param);
-
-            if (BufferSize)
-            {
-                Mat->m_SharedParameters->ConstantData = std::make_unique<uint8_t[]>(BufferSize);
-            }
-
-            Mat->m_SharedParameters->Descriptors = Material::UnqiueDescriptorHeapHandle(TableSharedResourceCount, TableSharedSamplerCount);
-            Mat->m_LocalParameters.Descriptors   = Material::UnqiueDescriptorHeapHandle(TableResourceCount, TableSamplerCount);
-        }
-    }
-
-    //
-
-    template<bool _Compute>
     void Material_CreatePipelineState(
         const GenericMaterialBuilder<_Compute>& Builder,
         Material*                               Mat)
@@ -223,7 +82,7 @@ namespace Neon::RHI
         if constexpr (!_Compute)
         {
             PipelineStateBuilderG PipelineDesc{
-                .RootSignature = Mat->m_RootSignature,
+                .RootSignature = IRootSignature::Get(RSCommon::Type::Material),
 
                 .VertexShader   = Builder.VertexShader(),
                 .GeometryShader = Builder.GeometryShader(),
@@ -297,7 +156,7 @@ namespace Neon::RHI
         else
         {
             PipelineStateBuilderC PipelineDesc{
-                .RootSignature = Mat->m_RootSignature,
+                .RootSignature = IRootSignature::Get(RSCommon::Type::Material),
                 .ComputeShader = Builder.ComputeShader()
             };
 
@@ -310,10 +169,6 @@ namespace Neon::RHI
     Material::Material(
         const RenderMaterialBuilder& Builder)
     {
-        Material_CreateDescriptors(
-            Builder,
-            this);
-
         Material_CreatePipelineState(
             Builder,
             this);
@@ -322,10 +177,6 @@ namespace Neon::RHI
     Material::Material(
         const ComputeMaterialBuilder& Builder)
     {
-        Material_CreateDescriptors(
-            Builder,
-            this);
-
         Material_CreatePipelineState(
             Builder,
             this);
@@ -336,7 +187,6 @@ namespace Neon::RHI
         m_SharedParameters(Other->m_SharedParameters),
         m_LocalParameters(Other->m_LocalParameters)
     {
-        m_RootSignature  = Other->m_RootSignature;
         m_PipelineStates = Other->m_PipelineStates;
     }
 
@@ -359,70 +209,6 @@ namespace Neon::RHI
         bool State) noexcept
     {
         m_IsTransparent = State;
-    }
-
-    //
-
-    void Material::BindSharedParams(
-        ICommandList* CommandList)
-    {
-        auto& Params = m_RootSignature->GetParams();
-        for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
-        {
-            std::visit(
-                VariantVisitor{
-                    [&](const IRootSignature::ParamConstant& Constant)
-                    {
-                        auto& Entry = std::get<ConstantEntry>(m_SharedParameters->SharedEntries.at(Constant.Name));
-                        CommandList->SetConstants(!m_IsCompute, i, m_SharedParameters->ConstantData.get() + Entry.DataOffset, Constant.Num32BitValues);
-                    },
-                    [&](const IRootSignature::ParamRoot& Root)
-                    {
-                        auto& Entry = std::get<RootEntry>(m_SharedParameters->SharedEntries.at(Root.Name));
-                        if (Entry.Handle)
-                        {
-                            CommandList->SetResourceView(!m_IsCompute, Entry.ViewType, i, Entry.Handle);
-                        }
-                    },
-                    [&](const IRootSignature::ParamDescriptor& Descriptor)
-                    {
-                        if (!Descriptor.Instanced)
-                        {
-                            auto& Entry          = std::get<DescriptorVariantMap>(m_SharedParameters->SharedEntries.at(Descriptor.Name));
-                            auto& DescriptorHeap = Entry.IsSampler()
-                                                       ? m_SharedParameters->Descriptors.SamplerDescriptors
-                                                       : m_SharedParameters->Descriptors.ResourceDescriptors;
-
-                            CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
-                        }
-                    } },
-                Params[i]);
-        }
-    }
-
-    void Material::BindLocalParams(
-        ICommandList* CommandList)
-    {
-        auto& Params = m_RootSignature->GetParams();
-        for (uint32_t i = 0; i < uint32_t(Params.size()); i++)
-        {
-            std::visit(
-                VariantVisitor{
-                    [&](const auto&) {},
-                    [&](const IRootSignature::ParamDescriptor& Descriptor)
-                    {
-                        if (Descriptor.Instanced)
-                        {
-                            auto& Entry          = m_LocalParameters.LocalEntries.at(Descriptor.Name);
-                            auto& DescriptorHeap = Entry.IsSampler()
-                                                       ? m_LocalParameters.Descriptors.SamplerDescriptors
-                                                       : m_LocalParameters.Descriptors.ResourceDescriptors;
-
-                            CommandList->SetDynamicDescriptorTable(!m_IsCompute, i, DescriptorHeap.GetCpuHandle(Entry.Offset), Descriptor.Size, Entry.IsSampler());
-                        }
-                    } },
-                Params[i]);
-        }
     }
 
     //

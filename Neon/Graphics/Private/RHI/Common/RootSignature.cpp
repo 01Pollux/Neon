@@ -6,16 +6,13 @@
 namespace Neon::RHI
 {
     RootDescriptorTable& RootDescriptorTable::AddSrvRangeAt(
-        StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
         uint32_t                  Offset,
         MRootDescriptorTableFlags Flags)
     {
-        NEON_ASSERT(!Instanced() || NumDescriptors != std::numeric_limits<uint32_t>::max());
         m_DescriptorRanges.emplace_back(
-            std::move(Name),
             RootDescriptorTableParam{
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
@@ -27,16 +24,13 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddUavRangeAt(
-        StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
         uint32_t                  Offset,
         MRootDescriptorTableFlags Flags)
     {
-        NEON_ASSERT(!Instanced() || NumDescriptors != std::numeric_limits<uint32_t>::max());
         m_DescriptorRanges.emplace_back(
-            std::move(Name),
             RootDescriptorTableParam{
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
@@ -48,16 +42,13 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddCbvRangeAt(
-        StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
         uint32_t                  Offset,
         MRootDescriptorTableFlags Flags)
     {
-        NEON_ASSERT(!Instanced() || NumDescriptors != std::numeric_limits<uint32_t>::max());
         m_DescriptorRanges.emplace_back(
-            std::move(Name),
             RootDescriptorTableParam{
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
@@ -69,16 +60,13 @@ namespace Neon::RHI
     }
 
     RootDescriptorTable& RootDescriptorTable::AddSamplerRangeAt(
-        StringU8                  Name,
         uint32_t                  BaseShaderRegister,
         uint32_t                  RegisterSpace,
         uint32_t                  NumDescriptors,
         uint32_t                  Offset,
         MRootDescriptorTableFlags Flags)
     {
-        NEON_ASSERT(!Instanced() || NumDescriptors != std::numeric_limits<uint32_t>::max());
         m_DescriptorRanges.emplace_back(
-            std::move(Name),
             RootDescriptorTableParam{
                 .ShaderRegister  = BaseShaderRegister,
                 .RegisterSpace   = RegisterSpace,
@@ -102,12 +90,10 @@ namespace Neon::RHI
     //
 
     RootSignatureBuilder& RootSignatureBuilder::AddDescriptorTable(
-        StringU8            Name,
         RootDescriptorTable Table,
         ShaderVisibility    Visibility)
     {
         m_Parameters.emplace_back(
-            std::move(Name),
             RootParameter{
                 std::move(Table),
                 Visibility });
@@ -115,14 +101,12 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::Add32BitConstants(
-        StringU8         Name,
         uint32_t         ShaderRegister,
         uint32_t         RegisterSpace,
         uint32_t         Num32BitValues,
         ShaderVisibility Visibility)
     {
         m_Parameters.emplace_back(
-            std::move(Name),
             RootParameter{
                 RootParameter::Constants{
                     .ShaderRegister = ShaderRegister,
@@ -133,14 +117,12 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddConstantBufferView(
-        StringU8             Name,
         uint32_t             ShaderRegister,
         uint32_t             RegisterSpace,
         ShaderVisibility     Visibility,
         MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
-            std::move(Name),
             RootParameter{
                 RootParameter::Root{
                     .ShaderRegister = ShaderRegister,
@@ -152,14 +134,12 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddShaderResourceView(
-        StringU8             Name,
         uint32_t             ShaderRegister,
         uint32_t             RegisterSpace,
         ShaderVisibility     Visibility,
         MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
-            std::move(Name),
             RootParameter{
                 RootParameter::Root{
                     .ShaderRegister = ShaderRegister,
@@ -171,14 +151,12 @@ namespace Neon::RHI
     }
 
     RootSignatureBuilder& RootSignatureBuilder::AddUnorderedAccessView(
-        StringU8             Name,
         uint32_t             ShaderRegister,
         uint32_t             RegisterSpace,
         ShaderVisibility     Visibility,
         MRootDescriptorFlags Flags)
     {
         m_Parameters.emplace_back(
-            std::move(Name),
             RootParameter{
                 RootParameter::Root{
                     .ShaderRegister = ShaderRegister,
@@ -272,5 +250,131 @@ namespace Neon::RHI
     Ptr<IRootSignature> RootSignatureBuilder::Build() const
     {
         return IRootSignature::Create(*this);
+    }
+
+    //
+
+    auto IRootSignature::Load() -> CommonRootsignatureList
+    {
+        CommonRootsignatureList RootSignatures;
+
+        auto StoreRootSignature = [&RootSignatures](RSCommon::Type Type, Ptr<IRootSignature> Rs)
+        {
+            RootSignatures[size_t(Type)] = std::move(Rs);
+        };
+
+        //
+
+        // RSCommon::Material
+        {
+            RootSignatureBuilder Builder(STR("RSCommon::Material"));
+            Builder.AddShaderResourceView(0, 47); // MaterialRS::Local
+            Builder.AddConstantBufferView(0, 47); // MaterialRS::SharedData
+            Builder.AddShaderResourceView(0, 2);  // MaterialRS::InstanceData
+
+            Builder.AddDescriptorTable(
+                RHI::RootDescriptorTable() // MaterialRS::LightData
+                    .AddSrvRange(0, 1, 1)  // _Lights
+                    .AddSrvRange(1, 1, 1)  // _LightIndexList
+                    .AddSrvRange(2, 1, 1), // _LightGrid
+                RHI::ShaderVisibility::Pixel);
+            Builder.AddConstantBufferView(0, 0, RHI::ShaderVisibility::All);
+
+            for (auto& [IsUav, SpaceSlot] : {
+                     std::pair{ true, 48 },
+                     std::pair{ false, 49 },
+
+                     std::pair{ true, 64 },
+                     std::pair{ true, 65 },
+                     std::pair{ true, 66 },
+                     std::pair{ true, 67 },
+
+                     std::pair{ true, 68 },
+                     std::pair{ true, 69 },
+                     std::pair{ true, 70 },
+                     std::pair{ true, 71 },
+
+                     std::pair{ true, 72 },
+                     std::pair{ true, 73 },
+                     std::pair{ true, 74 },
+                     std::pair{ true, 75 },
+
+                     std::pair{ false, 76 },
+
+                     std::pair{ true, 77 },
+                     std::pair{ true, 78 },
+                     std::pair{ true, 79 },
+                     std::pair{ true, 80 },
+
+                     std::pair{ true, 81 },
+                     std::pair{ true, 82 },
+                     std::pair{ true, 83 },
+                     std::pair{ true, 84 },
+
+                     std::pair{ true, 85 },
+                     std::pair{ true, 86 },
+                     std::pair{ true, 87 },
+                     std::pair{ true, 88 },
+
+                     std::pair{ false, 89 },
+
+                     std::pair{ true, 90 },
+                     std::pair{ true, 91 },
+                     std::pair{ true, 92 },
+                     std::pair{ true, 93 },
+
+                     std::pair{ true, 102 },
+                     std::pair{ true, 103 },
+                     std::pair{ true, 104 },
+                     std::pair{ true, 105 },
+
+                     std::pair{ true, 106 },
+                     std::pair{ true, 107 },
+                     std::pair{ true, 108 },
+                     std::pair{ true, 109 },
+
+                     std::pair{ true, 110 },
+                     std::pair{ true, 111 },
+                     std::pair{ true, 112 },
+                     std::pair{ true, 113 },
+
+                     std::pair{ false, 114 },
+                     std::pair{ false, 115 } })
+            {
+                if (IsUav)
+                {
+                    Builder.AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddUavRange(0, SpaceSlot, std::numeric_limits<uint32_t>::max()),
+                        RHI::ShaderVisibility::All);
+                }
+                else
+                {
+                    Builder.AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddSrvRange(0, SpaceSlot, std::numeric_limits<uint32_t>::max()),
+                        RHI::ShaderVisibility::All);
+                }
+            }
+
+            Builder.AddDescriptorTable(
+                RHI::RootDescriptorTable()
+                    .AddSamplerRange(0, 48, std::numeric_limits<uint32_t>::max()),
+                RHI::ShaderVisibility::All);
+
+            Builder.AddDescriptorTable(
+                RHI::RootDescriptorTable()
+                    .AddSamplerRange(0, 49, std::numeric_limits<uint32_t>::max()),
+                RHI::ShaderVisibility::All);
+
+            Builder.SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout);
+            Builder.AddStandardSamplers();
+
+            StoreRootSignature(RSCommon::Type::Material, Builder.Build());
+        }
+
+        //
+
+        return RootSignatures;
     }
 } // namespace Neon::RHI

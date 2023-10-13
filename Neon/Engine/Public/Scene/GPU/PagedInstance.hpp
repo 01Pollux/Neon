@@ -16,11 +16,12 @@ namespace Neon::Scene
     public:
         using InstanceData = _Ty;
 
-        static constexpr uint32_t InvalidInstanceId  = std::numeric_limits<uint32_t>::max();
-        static constexpr size_t   SizeOfInstanceData = sizeof(InstanceData);
-        static constexpr size_t   SizeOfPage         = std::numeric_limits<uint16_t>::max();
-        static constexpr size_t   SizeOfInstancePage = Math::AlignUp(SizeOfInstanceData * SizeOfPage, 16);
-        static constexpr size_t   NumberOfPages      = std::numeric_limits<uint16_t>::max();
+        static constexpr uint32_t InvalidInstanceId   = std::numeric_limits<uint32_t>::max();
+        static constexpr size_t   SizeOfInstanceData  = sizeof(InstanceData);
+        static constexpr uint32_t AlignOfInstanceData = uint32_t(alignof(InstanceData));
+        static constexpr size_t   SizeOfPage          = std::numeric_limits<uint16_t>::max();
+        static constexpr size_t   SizeOfInstancePage  = Math::AlignUp(SizeOfInstanceData * SizeOfPage, AlignOfInstanceData);
+        static constexpr size_t   NumberOfPages       = std::numeric_limits<uint16_t>::max();
 
         using InstanceIdList          = std::vector<uint32_t>;
         using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
