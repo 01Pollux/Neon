@@ -17,18 +17,10 @@ namespace Neon::RG
     {
         RHI::Shaders::CopyToTextureShader Shader;
 
-        m_CopyToRootSignature =
-            RHI::RootSignatureBuilder(STR("CopyToTexturePass::RootSignature"))
-                .AddDescriptorTable(
-                    "InputTextures",
-                    RHI::RootDescriptorTable()
-                        .AddSrvRange("", 0, 0, 1),
-                    RHI::ShaderVisibility::Pixel)
-                .AddStandardSamplers()
-                .Build();
+        auto RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::CopyToTexture);
 
         RHI::PipelineStateBuilderG PipeineStateBuilder{
-            .RootSignature = m_CopyToRootSignature,
+            .RootSignature = RootSignature,
             .VertexShader  = Shader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }),
             .PixelShader   = Shader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }),
             .DepthStencil  = { .DepthEnable = false },
@@ -86,7 +78,9 @@ namespace Neon::RG
         auto Descriptor = RHI::IFrameDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
         Descriptor->Copy(Descriptor.Offset, { Resource, 1 });
 
-        CommandList.SetRootSignature(m_CopyToRootSignature);
+        auto RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::CopyToTexture);
+
+        CommandList.SetRootSignature(RootSignature);
         CommandList.SetPipelineState(PipelineState);
         CommandList.SetDescriptorTable(0, Descriptor.GetGpuHandle());
         CommandList.SetPrimitiveTopology(RHI::PrimitiveTopology::TriangleStrip);

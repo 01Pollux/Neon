@@ -102,7 +102,6 @@ namespace Neon::RHI
         CreateDevice();
         CheckDeviceFeatures();
         FillInDescriptorSizes();
-        Dx12RootSignatureCache::Load();
     }
 
     Dx12RenderDevice::~Dx12RenderDevice()
@@ -133,6 +132,7 @@ namespace Neon::RHI
         Windowing::WindowApp*      Window,
         const SwapchainCreateDesc& SwapchainDesc)
     {
+        Dx12RootSignatureCache::Load();
         m_MemoryAllocator.reset(NEON_NEW GraphicsMemoryAllocator);
         m_Swapchain.reset(NEON_NEW Dx12Swapchain(Window, SwapchainDesc));
         m_Swapchain->PostInitialize(SwapchainDesc);

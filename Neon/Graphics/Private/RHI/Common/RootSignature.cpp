@@ -265,7 +265,7 @@ namespace Neon::RHI
 
         //
 
-        // RSCommon::Material
+        // RSCommon::Type::Material
         {
             RootSignatureBuilder Builder(STR("RSCommon::Material"));
             Builder.AddShaderResourceView(0, 47); // MaterialRS::Local
@@ -278,7 +278,7 @@ namespace Neon::RHI
                     .AddSrvRange(1, 1, 1)  // _LightIndexList
                     .AddSrvRange(2, 1, 1), // _LightGrid
                 RHI::ShaderVisibility::Pixel);
-            Builder.AddConstantBufferView(0, 0, RHI::ShaderVisibility::All);
+            Builder.AddConstantBufferView(0, 0); // MaterialRS::FrameData
 
             for (auto& [IsUav, SpaceSlot] : {
                      std::pair{ true, 48 },
@@ -372,6 +372,83 @@ namespace Neon::RHI
 
             StoreRootSignature(RSCommon::Type::Material, Builder.Build());
         }
+
+        // RSCommon::Type::BlurPass
+        {
+            StoreRootSignature(
+                RSCommon::Type::BlurPass,
+                RHI::RootSignatureBuilder(STR("BlurPass::RootSignature"))
+                    .Add32BitConstants<uint32_t[2]>(0, 1) // Source/Output
+                    .Add32BitConstants<uint32_t[9]>(1, 1) // BlurPass::GaussWeightsList
+                    .AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddUavRange(0, 1, 3))
+                    .ComputeOnly()
+                    .Build());
+        }
+
+        // RSCommon::Type::CopyToTexture
+        {
+            StoreRootSignature(
+                RSCommon::Type::CopyToTexture,
+                RHI::RootSignatureBuilder(STR("CopyToTexturePass::RootSignature"))
+                    .AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddSrvRange(0, 0, 1),
+                        RHI::ShaderVisibility::Pixel)
+                    .AddStandardSamplers()
+                    .Build());
+        }
+
+        // RSCommon::Type::GridFrustum
+        {
+
+            StoreRootSignature(
+                RSCommon::Type::GridFrustum,
+                RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
+                    .Add32BitConstants<Size2I>(0, 1)
+                    .AddConstantBufferView(0, 0)
+                    .AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddUavRange(0, 1, 1))
+                    .ComputeOnly()
+                    .AddStandardSamplers()
+                    .Build());
+        }
+
+        // RSCommon::Type::LightCull
+        {
+            StoreRootSignature(
+                RSCommon::Type::LightCull,
+                RHI::RootSignatureBuilder(STR("LightCull::RootSignature"))
+                    .Add32BitConstants<uint32_t>(0, 1) // LightCullPass::LightInfo
+                    .AddConstantBufferView(0, 0)
+                    .AddDescriptorTable(
+                        RHI::RootDescriptorTable()
+                            .AddSrvRange(0, 1, 1)
+                            .AddSrvRange(1, 1, 1)
+                            .AddSrvRange(2, 1, 1)
+                            .AddUavRange(0, 1, 1)
+                            .AddUavRange(1, 1, 1)
+                            .AddUavRange(2, 1, 1)
+                            .AddUavRange(3, 1, 1)
+                            .AddUavRange(4, 1, 1))
+                    .ComputeOnly()
+                    .AddStandardSamplers()
+                    .Build());
+        }
+
+#ifndef NEON_DIST
+        // RSCommon::Type::DebugLine
+        {
+            StoreRootSignature(
+                RSCommon::Type::DebugLine,
+                RHI::RootSignatureBuilder()
+                    .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
+                    .AddConstantBufferView(0, 0)
+                    .Build());
+        }
+#endif
 
         //
 

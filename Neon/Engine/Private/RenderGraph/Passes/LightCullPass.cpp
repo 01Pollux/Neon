@@ -49,49 +49,19 @@ namespace Neon::RG
         RHI::Shaders::GridFrustumGenShader GridFrustumGenShader;
         RHI::Shaders::LightCullShader      LightCullShader;
 
-        m_GridFrustumRS =
-            RHI::RootSignatureBuilder(STR("GridFrustumGen::RootSignature"))
-                .Add32BitConstants<Size2I>("c_DispatchConstants", 0, 1)
-                .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
-                .AddDescriptorTable(
-                    "c_Frustum",
-                    RHI::RootDescriptorTable()
-                        .AddUavRange("", 0, 1, 1),
-                    RHI::ShaderVisibility::All)
-                .ComputeOnly()
-                .AddStandardSamplers()
-                .Build();
-
-        m_LightCullRS =
-            RHI::RootSignatureBuilder(STR("LightCull::RootSignature"))
-                .Add32BitConstants<LightInfo>("c_LightInfo", 0, 1)
-                .AddConstantBufferView("_FrameConstant", 0, 0, RHI::ShaderVisibility::All)
-                .AddDescriptorTable(
-                    "c_ResourcesTable",
-                    RHI::RootDescriptorTable()
-                        .AddSrvRangeAt("c_DepthBuffer", 0, 1, 1, uint32_t(LightCullRS_Resources::DepthBuffer))
-                        .AddSrvRangeAt("c_FrustumGrid", 1, 1, 1, uint32_t(LightCullRS_Resources::FrustumGrid))
-                        .AddSrvRangeAt("c_Lights", 2, 1, 1, uint32_t(LightCullRS_Resources::Lights))
-                        .AddUavRangeAt("c_LightIndexList_Counters", 0, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Counters))
-                        .AddUavRangeAt("c_LightIndexList_Opaque", 1, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Opaque))
-                        .AddUavRangeAt("c_LightIndexList_Transparent", 2, 1, 1, uint32_t(LightCullRS_Resources::LightIndexList_Transaprent))
-                        .AddUavRangeAt("c_LightGrid_Opaque", 3, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Opaque))
-                        .AddUavRangeAt("c_LightGrid_Transparent", 4, 1, 1, uint32_t(LightCullRS_Resources::LightGrid_Transaprent)),
-                    RHI::ShaderVisibility::All)
-                .ComputeOnly()
-                .AddStandardSamplers()
-                .Build();
+        auto GridFrustumRootSig = RHI::IRootSignature::Get(RHI::RSCommon::Type::GridFrustum);
+        auto LightCullRootSig   = RHI::IRootSignature::Get(RHI::RSCommon::Type::LightCull);
 
         m_GridFrustumPSO =
             RHI::PipelineStateBuilderC{
-                .RootSignature = m_GridFrustumRS,
+                .RootSignature = GridFrustumRootSig,
                 .ComputeShader = GridFrustumGenShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
             }
                 .Build();
 
         m_LightCullPSO =
             RHI::PipelineStateBuilderC{
-                .RootSignature = m_LightCullRS,
+                .RootSignature = LightCullRootSig,
                 .ComputeShader = LightCullShader->LoadShader({ .Stage = RHI::ShaderStage::Compute })
             }
                 .Build();
@@ -195,7 +165,9 @@ namespace Neon::RG
     {
         auto& SceneContext = Storage.GetSceneContext();
 
-        CommandList.SetRootSignature(m_LightCullRS);
+        auto LightCullRootSig = RHI::IRootSignature::Get(RHI::RSCommon::Type::LightCull);
+
+        CommandList.SetRootSignature(LightCullRootSig);
         CommandList.SetPipelineState(m_LightCullPSO);
 
         CommandList.SetConstants(uint32_t(LightCullRS::Constants_LightInfo), SceneContext.GetLightsCount());
@@ -326,9 +298,10 @@ namespace Neon::RG
         RHI::ComputeCommandList CommandList(CommandContext.Append());
 
         //
+        auto GridFrustumRootSig = RHI::IRootSignature::Get(RHI::RSCommon::Type::GridFrustum);
 
+        CommandList.SetRootSignature(GridFrustumRootSig);
         CommandList.SetPipelineState(m_GridFrustumPSO);
-        CommandList.SetRootSignature(m_GridFrustumRS);
 
         CommandList.SetConstants(
             uint32_t(GridFrustumRS::Constants_DispatchConstants),

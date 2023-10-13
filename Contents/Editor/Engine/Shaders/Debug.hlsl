@@ -36,7 +36,7 @@ struct PSInput
 // Global
 // --------------------
 
-ConstantBuffer<PerFrameData> g_FrameData : register(b0, space1);
+ConstantBuffer<PerFrameData> g_FrameData : register(b0, space0);
 
 // --------------------
 // Vertex Shader

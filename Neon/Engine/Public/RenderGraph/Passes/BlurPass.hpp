@@ -70,7 +70,6 @@ namespace Neon::RG
     private:
         BlurPassData m_Data;
 
-        Ptr<RHI::IRootSignature> m_BlurSubPassRootSignature;
         Ptr<RHI::IPipelineState> m_BlurSubPassPipelineStateH, m_BlurSubPassPipelineStateV;
 
         float            m_Sigma;

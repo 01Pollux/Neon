@@ -216,11 +216,7 @@ namespace Neon::Runtime
 
         Material =
             RHI::RenderMaterialBuilder()
-                .RootSignature(
-                    RHI::IRootSignature::Create(
-                        RHI::RootSignatureBuilder()
-                            .SetFlags(RHI::ERootSignatureBuilderFlags::AllowInputLayout)
-                            .AddConstantBufferView("_FrameConstant", 0, 1)))
+                .RootSignature(RHI::IRootSignature::Get(RHI::RSCommon::Type::DebugLine))
                 .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
                 .DepthStencil(RHI::MaterialStates::DepthStencil::None)
                 .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
@@ -262,9 +258,9 @@ namespace Neon::Runtime
             return;
         }
 
-        VertexBuffers.back()->Unmap();
+        auto RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::DebugLine);
 
-        CommandList->SetRootSignature(true, Material->GetRootSignature());
+        CommandList->SetRootSignature(true, RootSignature);
         CommandList->SetResourceView(true, RHI::CstResourceViewType::Cbv, 0, PerFrameData);
 
         CommandList->SetPipelineState(Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass));
@@ -286,10 +282,6 @@ namespace Neon::Runtime
     {
         if (DrawCount >= Overlay_Debug_Line::MaxVertices || VertexBuffers.empty()) [[unlikely]]
         {
-            if (!VertexBuffers.empty())
-            {
-                VertexBuffers.back()->Unmap();
-            }
             VertexBuffers.emplace_back(RHI::IGpuResource::Create({ .Size = Overlay_Debug_Line::MaxVertices * sizeof(Overlay_Debug_Line::Vertex) }));
             VertexBufferPtr = VertexBuffers.back()->Map<Overlay_Debug_Line::Vertex>();
         }

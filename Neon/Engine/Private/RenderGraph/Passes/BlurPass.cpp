@@ -30,20 +30,11 @@ namespace Neon::RG
             .Stage = RHI::ShaderStage::Compute
         };
 
-        m_BlurSubPassRootSignature =
-            RHI::RootSignatureBuilder(STR("BlurPass::RootSignature"))
-                .Add32BitConstants<uint32_t[2]>("SourceOutputIndex", 0, 1)
-                .Add32BitConstants<GaussWeightsList>("GaussWeightsList", 1, 1)
-                .AddDescriptorTable(
-                    "InputTextures",
-                    RHI::RootDescriptorTable()
-                        .AddUavRange("", 0, 1, 3))
-                .ComputeOnly()
-                .Build();
+        auto RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::BlurPass);
 
         m_BlurSubPassPipelineStateV =
             RHI::PipelineStateBuilderC{
-                .RootSignature = m_BlurSubPassRootSignature,
+                .RootSignature = RootSignature,
                 .ComputeShader = Shader->LoadShader(ShaderDesc)
             }
                 .Build();
@@ -52,7 +43,7 @@ namespace Neon::RG
 
         m_BlurSubPassPipelineStateH =
             RHI::PipelineStateBuilderC{
-                .RootSignature = m_BlurSubPassRootSignature,
+                .RootSignature = RootSignature,
                 .ComputeShader = Shader->LoadShader(ShaderDesc)
             }
                 .Build();
@@ -178,7 +169,9 @@ namespace Neon::RG
             Descriptor->Copy(Descriptor.Offset, SrcInfo);
         }
 
-        CommandList.SetRootSignature(m_BlurSubPassRootSignature);
+        auto RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::BlurPass);
+
+        CommandList.SetRootSignature(RootSignature);
         CommandList.SetConstants(uint32_t(BlurPassRS::BlurParams), m_GaussWeights.data(), m_GaussWeights.size());
         CommandList.SetDescriptorTable(uint32_t(BlurPassRS::InputOutput_TextureMap), Descriptor.GetGpuHandle());
 

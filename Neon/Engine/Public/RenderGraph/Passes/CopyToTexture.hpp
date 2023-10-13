@@ -48,7 +48,6 @@ namespace Neon::RG
     private:
         CopyToTextureData m_Data;
 
-        Ptr<RHI::IRootSignature> m_CopyToRootSignature;
         Ptr<RHI::IPipelineState> m_CopyToPipeline[static_cast<size_t>(BlendMode::Count)];
     };
 } // namespace Neon::RG

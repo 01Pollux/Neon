@@ -107,10 +107,8 @@ namespace Neon::RG
         Size2I                    m_GridSize;
         UPtr<RHI::IGpuResource>   m_GridFrustum;
         RHI::DescriptorHeapHandle m_GridFrustumViews; // 0: UAV, 1: SRV
-        Ptr<RHI::IRootSignature>  m_GridFrustumRS;
         Ptr<RHI::IPipelineState>  m_GridFrustumPSO;
 
-        Ptr<RHI::IRootSignature> m_LightCullRS;
         Ptr<RHI::IPipelineState> m_LightCullPSO;
     };
 } // namespace Neon::RG

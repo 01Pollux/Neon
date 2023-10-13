@@ -110,7 +110,6 @@ namespace Neon::RG
                         "_FrameConstant",
                         m_Storage.GetFrameDataHandle());
 
-                    CommandList->SetRootSignature(!FirstMaterial->IsCompute(), FirstMaterial->GetRootSignature());
                     CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
                 };
 
@@ -140,36 +139,34 @@ namespace Neon::RG
 
                     UpdatePipelineState();
 
-                    // Update shared params
-                    {
-                        auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
-                        *MaterialData        = {};
-                        MaterialData->Albedo = Colors::DarkGreen;
+                    //// Update shared params
+                    //{
+                    //    auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
+                    //    *MaterialData        = {};
+                    //    MaterialData->Albedo = Colors::DarkGreen;
 
-                        auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
-                        *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
+                    //    auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
+                    //    *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
 
-                        MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
-                        MeshMaterial->SetResourceView("_PerInstanceData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex + SizeOfPerMaterialData));
+                    //    MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
+                    //    MeshMaterial->SetResourceView("_PerInstanceData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex + SizeOfPerMaterialData));
 
-                        MeshMaterial->BindSharedParams(CommandList);
-                        {
-                            auto& RootSignature = MeshMaterial->GetRootSignature();
-                            if (auto LightingParam = RootSignature->FindParamIndex("_LightData"))
-                            {
-                                auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
-                                if (LightDataHandle)
-                                {
-                                    CommandList->SetDescriptorTable(
-                                        !MeshMaterial->IsCompute(),
-                                        LightingParam,
-                                        LightDataHandle);
-                                }
-                            }
-                        }
-                    }
-
-                    MeshMaterial->BindLocalParams(CommandList);
+                    //    MeshMaterial->BindSharedParams(CommandList);
+                    //    {
+                    //        auto& RootSignature = MeshMaterial->GetRootSignature();
+                    //        if (auto LightingParam = RootSignature->FindParamIndex("_LightData"))
+                    //        {
+                    //            auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
+                    //            if (LightDataHandle)
+                    //            {
+                    //                CommandList->SetDescriptorTable(
+                    //                    !MeshMaterial->IsCompute(),
+                    //                    LightingParam,
+                    //                    LightDataHandle);
+                    //            }
+                    //        }
+                    //    }
+                    //}
 
                     RHI::Views::Vertex VtxView;
                     VtxView.Append<Mdl::MeshVertex>(
@@ -185,7 +182,7 @@ namespace Neon::RG
                     CommandList->SetPrimitiveTopology(MeshData.Topology);
                     CommandList->SetIndexBuffer(IdxView);
                     CommandList->SetVertexBuffer(0, VtxView);
-                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
+                    // CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
 
                     BufferPtr += SizeOfBlock;
                     InstanceIndex++;

@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 #include <RHI/Resource/View.hpp>
+#include <Math/Common.hpp>
 
 #include <list>
 #include <vector>
@@ -20,7 +21,13 @@ namespace Neon::RHI
             Material,
             BlurPass,
             CopyToTexture,
+            GridFrustum,
             LightCull,
+
+#ifndef NEON_DIST
+            DebugLine,
+#endif
+
             _Count
         };
 
@@ -506,7 +513,7 @@ namespace Neon::RHI
             uint32_t         RegisterSpace,
             ShaderVisibility Visibility = ShaderVisibility::All)
         {
-            return Add32BitConstants(ShaderRegister, RegisterSpace, Math::DivideByMultiple(sizeof(_Ty), sizeof(uint32_t)), Visibility);
+            return Add32BitConstants(ShaderRegister, RegisterSpace, uint32_t(Math::DivideByMultiple(sizeof(_Ty), sizeof(uint32_t))), Visibility);
         }
 
         /// <summary>
