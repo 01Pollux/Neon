@@ -122,6 +122,60 @@ namespace Neon::UI::Utils
 
     //
 
+    void DrawLabel(
+        const StringU8& Label,
+        const ImColor&  Color,
+        const ImVec2&   MaxSize)
+    {
+        auto DrawList = ImGui::GetWindowDrawList();
+        auto Pos      = ImGui::GetCursorScreenPos();
+        auto Size     = ImGui::CalcTextSize(Label.c_str(), Label.c_str() + Label.size());
+        auto EndPos   = Pos + Size;
+
+        if (MaxSize.x != -FLT_MIN && Size.x > MaxSize.x)
+        {
+            Size.x   = MaxSize.x;
+            EndPos.x = Pos.x + Size.x;
+        }
+        if (MaxSize.y != -FLT_MIN && Size.y > MaxSize.y)
+        {
+            Size.y   = MaxSize.y;
+            EndPos.y = Pos.y + Size.y;
+        }
+
+        DrawList->AddRectFilled(Pos, EndPos, Color);
+        DrawList->AddText(Pos, ImGui::GetColorU32(ImGuiCol_Text), Label.c_str(), Label.c_str() + Label.size());
+        ImGui::Dummy(Size);
+    }
+
+    void DrawLabel(
+        const char*    Label,
+        const ImColor& Color,
+        const ImVec2&  MaxSize)
+    {
+        auto DrawList = ImGui::GetWindowDrawList();
+        auto Pos      = ImGui::GetCursorScreenPos();
+        auto Size     = ImGui::CalcTextSize(Label);
+        auto EndPos   = Pos + Size;
+
+        if (MaxSize.x != -FLT_MIN && Size.x > MaxSize.x)
+        {
+            Size.x   = MaxSize.x;
+            EndPos.x = Pos.x + Size.x;
+        }
+        if (MaxSize.y != -FLT_MIN && Size.y > MaxSize.y)
+        {
+            Size.y   = MaxSize.y;
+            EndPos.y = Pos.y + Size.y;
+        }
+
+        DrawList->AddRectFilled(Pos, EndPos, Color);
+        DrawList->AddText(Pos, ImGui::GetColorU32(ImGuiCol_Text), Label);
+        ImGui::Dummy(Size);
+    }
+
+    //
+
     void DrawComponentLabel(
         const char* Label,
         bool        SameLine,

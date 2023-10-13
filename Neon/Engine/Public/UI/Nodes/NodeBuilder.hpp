@@ -10,8 +10,9 @@ namespace Neon::UI::Graph
     private:
         struct PinDescriptor
         {
-            Pin  PinData;
-            bool IsInput;
+            UPtr<Pin> PinData;
+            uint32_t  LinkCount = 0;
+            bool      IsInput;
         };
 
         struct NodeDescriptor
@@ -39,6 +40,7 @@ namespace Neon::UI::Graph
         /// Add new node to the graph
         /// </summary>
         template<typename _Ty, typename... _Args>
+            requires std::is_base_of_v<Node, _Ty>
         NodeGraph::NodeId AddNode(
             _Args&&... Args)
         {
@@ -57,13 +59,20 @@ namespace Neon::UI::Graph
         NodeGraph::PinId AddPin(
             NodeGraph::NodeId TargetNode,
             bool              IsInput,
-            Pin               NewPin);
+            UPtr<Pin>         NewPin);
 
         /// <summary>
-        /// Remove pin from the node
+        /// Add new pin to the node
         /// </summary>
-        void RemovePin(
-            NodeGraph::PinId TargetPin);
+        template<typename _Ty, typename... _Args>
+            requires std::is_base_of_v<Pin, _Ty>
+        NodeGraph::PinId AddPin(
+            NodeGraph::NodeId TargetNode,
+            bool              IsInput,
+            _Args&&... Args)
+        {
+            return AddPin(TargetNode, IsInput, std::make_unique<_Ty>(std::forward<_Args>(Args)...));
+        }
 
         /// <summary>
         /// Add link between pins
@@ -82,6 +91,17 @@ namespace Neon::UI::Graph
         /// Render graph node
         /// </summary>
         void Render();
+
+    private:
+        /// <summary>
+        /// Render graph nodes and their links
+        /// </summary>
+        void RenderNodes();
+
+        /// <summary>
+        /// Render popups and context menus
+        /// </summary>
+        void RenderCreator();
 
     private:
         void BeginNode(
@@ -116,11 +136,14 @@ namespace Neon::UI::Graph
         std::map<NodeGraph::LinkId, Link>           m_Links;
 
         NodeGraph::NodeId m_CurrentNodeId;
+        NodeGraph::PinId  m_NewLinkPin{};
+        NodeGraph::PinId  m_NewNodeLinkPin{};
 
         ImVec2 m_StartPos{};
         ImVec2 m_EndPos{};
         ImU32  m_HeaderColor{};
 
-        bool m_HasHeader : 1 = false;
+        bool m_HasHeader     : 1 = false;
+        bool m_CreateNewNode : 1 = false;
     };
 } // namespace Neon::UI::Graph

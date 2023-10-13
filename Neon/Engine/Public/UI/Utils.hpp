@@ -109,6 +109,24 @@ namespace Neon::UI::Utils
 
     //
 
+    /// <summary>
+    /// Draw label with the given color.
+    /// </summary>
+    void DrawLabel(
+        const StringU8& Label,
+        const ImColor&  Color,
+        const ImVec2&   MaxSize = { -FLT_MIN, -FLT_MIN });
+
+    /// <summary>
+    /// Draw label with the given color.
+    /// </summary>
+    void DrawLabel(
+        const char*    Label,
+        const ImColor& Color,
+        const ImVec2&  MaxSize = { -FLT_MIN, -FLT_MIN });
+
+    //
+
     // Properties
     enum class ComponentActionType : uint8_t
     {

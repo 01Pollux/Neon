@@ -40,12 +40,50 @@ namespace Neon::UI::Graph
             return m_Type;
         }
 
+        /// <summary>
+        /// Get pin's color from type
+        /// </summary>
+        [[nodiscard]] ImColor GetColorFromType() const noexcept
+        {
+            switch (GetType())
+            {
+            case Type::Flow:
+                return ImColor(255, 255, 255);
+            case Type::Bool:
+                return ImColor(220, 48, 48);
+            case Type::Int:
+                return ImColor(68, 201, 156);
+            case Type::Float:
+                return ImColor(147, 226, 74);
+            case Type::String:
+                return ImColor(124, 21, 153);
+            case Type::Object:
+                return ImColor(51, 150, 215);
+            case Type::Function:
+                return ImColor(218, 0, 183);
+            case Type::Delegate:
+                return ImColor(255, 48, 48);
+            default:
+                return ImColor(255, 255, 255);
+            }
+        }
+
+    public:
         Pin(StringU8 Name,
             Type     PinType) :
             m_Name(std::move(Name)),
             m_Type(PinType)
         {
         }
+
+        NEON_CLASS_NO_COPYMOVE(Pin);
+        virtual ~Pin() = default;
+
+        /// <summary>
+        /// Check if pin can accept link
+        /// </summary>
+        [[nodiscard]] virtual bool AcceptLink(
+            const Pin& Other) const;
 
     private:
         StringU8 m_Name;

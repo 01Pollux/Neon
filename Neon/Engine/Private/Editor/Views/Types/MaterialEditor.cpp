@@ -13,61 +13,61 @@ namespace Neon::Editor::Views
             "Input: Texture",
             UI::Graph::Node::Type::Blueprint);
 
-        m_NodeGraph.AddPin(
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             InputTexture,
             false,
-            { "[0]", UI::Graph::Pin::Type::Object });
+            "[0]", UI::Graph::Pin::Type::Object);
 
         auto InputUV = m_NodeGraph.AddNode<UI::Graph::Node>(
             "Input: UV",
             UI::Graph::Node::Type::Blueprint);
 
-        m_NodeGraph.AddPin(
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             InputUV,
             false,
-            { "Out", UI::Graph::Pin::Type::Float });
+            "Out", UI::Graph::Pin::Type::Float);
 
         auto SampleTexture = m_NodeGraph.AddNode<UI::Graph::Node>(
             "Sample Texture",
             UI::Graph::Node::Type::Blueprint);
 
-        m_NodeGraph.AddPin(
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             SampleTexture,
             true,
-            { "Texture", UI::Graph::Pin::Type::Object });
-        m_NodeGraph.AddPin(
+            "Texture", UI::Graph::Pin::Type::Object);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             SampleTexture,
             true,
-            { "Sampler", UI::Graph::Pin::Type::Object });
-        m_NodeGraph.AddPin(
+            "Sampler", UI::Graph::Pin::Type::Object);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             SampleTexture,
             true,
-            { "UV", UI::Graph::Pin::Type::Float });
-        m_NodeGraph.AddPin(
+            "UV", UI::Graph::Pin::Type::Float);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             SampleTexture,
             false,
-            { "Out", UI::Graph::Pin::Type::Float });
+            "Out", UI::Graph::Pin::Type::Float);
 
         auto OutputPixel = m_NodeGraph.AddNode<UI::Graph::Node>(
             "Output: Pixel",
             UI::Graph::Node::Type::Blueprint);
 
-        m_NodeGraph.AddPin(
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             OutputPixel,
             true,
-            { "Base Color (3)", UI::Graph::Pin::Type::Float });
-        m_NodeGraph.AddPin(
+            "Base Color (3)", UI::Graph::Pin::Type::Float);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             OutputPixel,
             true,
-            { "Alpha (1)", UI::Graph::Pin::Type::Float });
-        m_NodeGraph.AddPin(
+            "Alpha (1)", UI::Graph::Pin::Type::Float);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             OutputPixel,
             true,
-            { "Normal (3)", UI::Graph::Pin::Type::Float });
-        m_NodeGraph.AddPin(
+            "Normal (3)", UI::Graph::Pin::Type::Float);
+        m_NodeGraph.AddPin<UI::Graph::Pin>(
             OutputPixel,
             true,
-            { "Emissive (4)", UI::Graph::Pin::Type::Float });
+            "Emissive (4)", UI::Graph::Pin::Type::Float);
     }
 
     void MaterialEditor::OnRender()
