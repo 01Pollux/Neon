@@ -29,8 +29,6 @@ namespace Neon::Editor
         RegisterView<Views::Inspector>("_Inspector", true);
         RegisterView<Views::SceneDisplay>("_EditorSceneDisplay", true, true);
         RegisterView<Views::SceneDisplay>("_RuntimeSceneDisplay", false, false);
-
-        RegisterView<Views::MaterialEditor>("MaterialView::Test Material", false, "Test Material");
     }
 
     bool EditorEngine::BeginEditorSpace()
