@@ -436,6 +436,14 @@ namespace Neon::Structured
         Element::ProcessElement(GPULayout, m_CookedLayout, LayoutElement, m_Size, Alignement);
     }
 
+    void Layout::Append(
+        bool                 GPULayout,
+        size_t               Alignement,
+        const LayoutBuilder& Layout)
+    {
+        Element::ProcessElement(GPULayout, m_CookedLayout, Layout.m_Element, m_Size, Alignement);
+    }
+
     auto Layout::operator[](
         const StringU8& Name) const -> ElementView
     {

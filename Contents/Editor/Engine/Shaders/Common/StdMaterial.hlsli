@@ -5,16 +5,14 @@
 
 struct StdMaterialData
 {
-	float3 Albedo;
-	uint AlbedoMapIndex;
+	uint _Tex2D_AlbedoIndex;
+	uint _Tex2D_SpecularIndex;
+	uint _Tex2D_EmissiveIndex;
+	uint _Tex2D_NormalIndex;
 	
-	float3 Specular;
-	uint SpecularMapIndex;
-	
-	float3 Emissive;
-	uint EmissiveMapIndex;
-	
-	uint NormalMapIndex;
+	float3 Color_Albedo;
+	float3 Color_Specular;
+	float3 Color_Emissive;
 };
 
 #endif

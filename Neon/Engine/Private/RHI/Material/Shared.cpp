@@ -25,8 +25,19 @@ namespace Neon::RHI
         {
             RHI::RenderMaterialBuilder LitMaterial;
 
+            Structured::LayoutBuilder Local;
+            Local.Append(Structured::Type::Float3, "Color_Albedo");
+            Local.Append(Structured::Type::Float3, "Color_Specular");
+            Local.Append(Structured::Type::Float3, "Color_Emissive");
+
+            LitMaterial.VarBuilder()
+                .AddResource("Tex2D_Albedo", true)
+                .AddResource("Tex2D_Specular", true)
+                .AddResource("Tex2D_Emissive", true)
+                .AddResource("Tex2D_Normal", true)
+                .SetData(std::move(Local), true);
+
             LitMaterial
-                .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
                 .Topology(RHI::PrimitiveTopologyCategory::Triangle);
 
             LitMaterial

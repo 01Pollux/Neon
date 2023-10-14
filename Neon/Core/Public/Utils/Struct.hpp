@@ -386,6 +386,14 @@ namespace Neon::Structured
             const LayoutBuilder::Element& LayoutElement);
 
         /// <summary>
+        /// Helper function to insert to preexisting layout
+        /// </summary>
+        void Append(
+            bool                 GPULayout,
+            size_t               Alignement,
+            const LayoutBuilder& Layout);
+
+        /// <summary>
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] ElementView operator[](

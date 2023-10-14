@@ -70,11 +70,11 @@ float4 PS_Main(PSInput Ps) : SV_Target
 {
 	MaterialData Material = g_Local[Ps.InstanceId];
 	
-	float3 Albedo = Material.Albedo;
+	float3 Albedo = Material.Color_Albedo;
 	[branch]
-	if (Material.AlbedoMapIndex != -1)
+	if (Material._Tex2D_AlbedoIndex != -1)
 	{
-		Texture2D AlbedoMap = g_Texture2D[Material.AlbedoMapIndex];
+		Texture2D AlbedoMap = g_Texture2D[Material._Tex2D_AlbedoIndex];
 		float4 Color = AlbedoMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 		if (Color.a < 0.1f)
 		{
@@ -86,9 +86,9 @@ float4 PS_Main(PSInput Ps) : SV_Target
 	float4 Normal = float4(Ps.NormalWS, 0.f);
 	
 	[branch]
-	if (Material.NormalMapIndex != -1)
+	if (Material._Tex2D_NormalIndex != -1)
 	{
-		Texture2D NormalMap = g_Texture2D[Material.NormalMapIndex];
+		Texture2D NormalMap = g_Texture2D[Material._Tex2D_NormalIndex];
 		float3 BumpNormal = NormalMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord).xyz * 2.f - 1.f;
 		float3x3 TBN = float3x3(Ps.TangentWS, Ps.BitangentWS, BumpNormal);
 		Normal.xyz = mul(Normal.xyz, TBN);
@@ -96,19 +96,19 @@ float4 PS_Main(PSInput Ps) : SV_Target
 	
 	Normal = normalize(Normal);
 	
-	float4 Specular = float4(Material.Specular, 1.f);
+	float4 Specular = float4(Material.Color_Specular, 1.f);
 	[branch]
-	if (Material.SpecularMapIndex != -1)
+	if (Material._Tex2D_SpecularIndex != -1)
 	{
-		Texture2D SpecularMap = g_Texture2D[Material.SpecularMapIndex];
+		Texture2D SpecularMap = g_Texture2D[Material._Tex2D_SpecularIndex];
 		Specular *= SpecularMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 	
-	float4 Emissive = float4(Material.Emissive, 1.f);
+	float4 Emissive = float4(Material.Color_Emissive, 1.f);
 	[branch]
-	if (Material.EmissiveMapIndex != -1)
+	if (Material._Tex2D_EmissiveIndex != -1)
 	{
-		Texture2D EmissiveMap = g_Texture2D[Material.EmissiveMapIndex];
+		Texture2D EmissiveMap = g_Texture2D[Material._Tex2D_EmissiveIndex];
 		Emissive = EmissiveMap.Sample(s_Sampler_LinearWrap, Ps.TexCoord);
 	}
 

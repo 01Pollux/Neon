@@ -169,6 +169,33 @@ namespace Neon::RHI
     Material::Material(
         const RenderMaterialBuilder& Builder)
     {
+        {
+            auto& VarBuilder = Builder.VarBuilder();
+            auto& Layout     = VarBuilder.LocalLayout();
+
+            Structured::LayoutBuilder LocalBuilder(4);
+
+            auto Internal = LocalBuilder.Append(Structured::Type::Struct, "_Internal");
+            for (auto& Resource : Layout.Resources)
+            {
+                Internal.Append(Structured::Type::UInt, Resource);
+            }
+            for (auto& Sampler : Layout.Samplers)
+            {
+                Internal.Append(Structured::Type::UInt, Sampler);
+            }
+
+            for (auto& Sampler : Layout.Samplers)
+            {
+                Internal.Append(Structured::Type::UInt, Sampler);
+            }
+
+            m_LocalParameters.Buffer.Struct.Append(true, 4, LocalBuilder);
+            m_LocalParameters.Buffer.Struct.Append(true, 4, Layout.LayoutBuilder);
+            m_LocalParameters.Buffer.Data       = UBufferPoolHandle{ m_LocalParameters.Buffer.Struct.GetSize(), ShaderResourceAlignement, RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR };
+            m_LocalParameters.Buffer.MappedData = m_LocalParameters.Buffer.Data.AsUpload().Map() + m_LocalParameters.Buffer.Data.Offset;
+        }
+
         Material_CreatePipelineState(
             Builder,
             this);

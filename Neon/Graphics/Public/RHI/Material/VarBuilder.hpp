@@ -7,116 +7,96 @@ namespace Neon::RHI
 {
     class MaterialVarBuilder
     {
-        using ResourceMap = std::map<StringU8, RHI::DescriptorViewDesc>;
-        using SamplerMap  = std::map<StringU8, RHI::SamplerDesc>;
+        using ResourceList = std::list<StringU8>;
+        using SamplerList  = std::list<StringU8>;
 
+    public:
         struct LayoutDescriptor
         {
-            Structured::Layout Layout;
-            ResourceMap        Resources;
-            SamplerMap         Samplers;
+            Structured::LayoutBuilder LayoutBuilder;
+            ResourceList              Resources;
+            SamplerList               Samplers;
         };
 
     public:
         /// <summary>
-        /// Simple helper for constant buffer layout
+        /// Set data layout
         /// </summary>
-        [[nodiscard]] static Structured::LayoutBuilder SharedDataBuilder()
+        MaterialVarBuilder& SetData(
+            Structured::LayoutBuilder Builder,
+            bool                      Local)
         {
-            return Structured::LayoutBuilder(16);
-        }
-
-        /// <summary>
-        /// Simple helper for structured buffer
-        /// </summary>
-        [[nodiscard]] static Structured::LayoutBuilder LocalDataBuilder()
-        {
-            return Structured::LayoutBuilder(4);
-        }
-
-    public:
-        /// <summary>
-        /// Get shared data
-        /// </summary>
-        const auto& SharedData() const noexcept
-        {
-            return m_SharedLayout.Layout;
-        }
-
-        /// <summary>
-        /// Get shared data
-        /// </summary>
-        auto& SharedData() noexcept
-        {
-            return m_SharedLayout.Layout;
-        }
-
-        /// <summary>
-        /// Set local data
-        /// </summary>
-        void SetSharedData(
-            const Structured::LayoutBuilder& Builder);
-
-        /// <summary>
-        /// Get local data
-        /// </summary>
-        const auto& LocalData() const noexcept
-        {
-            return m_LocalLayout.Layout;
-        }
-
-        /// <summary>
-        /// Get local data
-        /// </summary>
-        auto& LocalData() noexcept
-        {
-            return m_LocalLayout.Layout;
-        }
-
-        /// <summary>
-        /// Set local data
-        /// </summary>
-        void SetLocalData(
-            const Structured::LayoutBuilder& Builder);
-
-    public:
-        /// <summary>
-        /// Add resource to be used later when dispatching material
-        /// </summary>
-        void AddResource(
-            const StringU8&                ResourceName,
-            const RHI::DescriptorViewDesc& ViewDesc = {})
-        {
-            m_SharedLayout.Resources.emplace(ResourceName, ViewDesc);
-        }
-
-        /// <summary>
-        /// Remove resource that was created/imported
-        /// </summary>
-        void RemoveResource(
-            const StringU8& ResourceName)
-        {
-            m_SharedLayout.Resources.erase(ResourceName);
+            auto& Layout         = Local ? m_LocalLayout : m_SharedLayout;
+            Layout.LayoutBuilder = std::move(Builder);
+            return *this;
         }
 
     public:
         /// <summary>
         /// Add resource to be used later when dispatching material
         /// </summary>
-        void AddSampler(
-            const StringU8&         SamplerName,
-            const RHI::SamplerDesc& Desc)
+        auto& AddResource(
+            StringU8 ResourceName,
+            bool     Local)
         {
-            m_SharedLayout.Samplers.emplace(SamplerName, Desc);
+            auto& Layout = Local ? m_LocalLayout : m_SharedLayout;
+            Layout.Resources.emplace_back(std::move(ResourceName));
+            return *this;
+        }
+
+        /// <summary>
+        /// Remove resource that was declaqred
+        /// </summary>
+        auto& RemoveResource(
+            const StringU8& ResourceName,
+            bool            Local)
+        {
+            auto& Layout = Local ? m_LocalLayout : m_SharedLayout;
+            Layout.Resources.remove(ResourceName);
+            return *this;
+        }
+
+    public:
+        /// <summary>
+        /// Add resource to be used later when dispatching material
+        /// </summary>
+        auto& AddSampler(
+            StringU8 SamplerName,
+            bool     Local)
+        {
+            auto& Layout = Local ? m_LocalLayout : m_SharedLayout;
+            Layout.Samplers.emplace_back(std::move(SamplerName));
+            return *this;
         }
 
         /// <summary>
         /// Remove resource that was created/imported
         /// </summary>
-        void RemoveSampler(
-            const StringU8& SamplerName)
+        auto& RemoveSampler(
+            const StringU8& SamplerName,
+            bool            Local)
         {
-            m_SharedLayout.Samplers.erase(SamplerName);
+            auto& Layout = Local ? m_LocalLayout : m_SharedLayout;
+            Layout.Samplers.remove(SamplerName);
+            return *this;
+        }
+
+    public:
+        /// <summary>
+        /// Get shared layout
+        /// </summary>
+        const auto& SharedLayout() const noexcept
+        {
+            return m_SharedLayout;
+        }
+
+        /// <summary>
+        /// Get local layout
+        /// </summary>
+        /// <returns></returns>
+        const auto& LocalLayout() const noexcept
+        {
+            return m_LocalLayout;
         }
 
     private:
