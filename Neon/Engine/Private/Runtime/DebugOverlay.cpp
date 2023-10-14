@@ -5,29 +5,19 @@
 #include <Runtime/GameEngine.hpp>
 #include <Runtime/DebugOverlay.hpp>
 
-#include <Asset/Manager.hpp>
-#include <Asset/Types/Shader.hpp>
-
-#include <RHI/Material/Builder.hpp>
-#include <RHI/Material/Material.hpp>
-
 #include <RHI/Swapchain.hpp>
 #include <RHI/Commands/List.hpp>
 #include <RHI/Resource/Resource.hpp>
 #include <RHI/Resource/Views/Shader.hpp>
+#include <RHI/Shaders/Debug.hpp>
+
+#include <RHI/RootSignature.hpp>
+#include <RHI/PipelineState.hpp>
 
 #include <Log/Logger.hpp>
 
 namespace Neon::Runtime
 {
-    namespace AssetGuids
-    {
-        auto DebugOverlayGuid()
-        {
-            return Asset::Handle::FromString("bbd67e6b-afc3-4d55-bbda-ed382b3342f5");
-        }
-    } // namespace AssetGuids
-
     class DefaultEngineDebugOverlay : public DebugOverlay
     {
         struct Overlay_Debug_Line
@@ -46,8 +36,7 @@ namespace Neon::Runtime
 
         struct Overlay_Debug_LineBuffer
         {
-            // TODO: Use normal pipeline/root signature objects
-            Ptr<RHI::IMaterial> Material;
+            Ptr<RHI::IPipelineState> PipelineState;
 
             std::multimap<float, std::pair<LineArgs, bool>> m_TimedLines;
             std::vector<UPtr<RHI::IGpuResource>>            VertexBuffers;
@@ -205,27 +194,28 @@ namespace Neon::Runtime
     // Line
     DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::Overlay_Debug_LineBuffer()
     {
-        using ShaderAssetTaskPtr = Asset::AssetTaskPtr<Asset::ShaderAsset>;
-
-        ShaderAssetTaskPtr DebugShader(Asset::Manager::LoadAsync(AssetGuids::DebugOverlayGuid()));
+        RHI::Shaders::DebugLineShader LineShader;
 
         RHI::ShaderInputLayout VertexInput;
         VertexInput.emplace_back("Position", RHI::EResourceFormat::R32G32B32_Float);
         VertexInput.emplace_back("Color", RHI::EResourceFormat::R8G8B8A8_UNorm);
         VertexInput.emplace_back("NeedsProjection", RHI::EResourceFormat::R32_UInt);
 
-        Material =
-            RHI::RenderMaterialBuilder()
-                .RootSignature(RHI::IRootSignature::Get(RHI::RSCommon::Type::DebugLine))
-                .Rasterizer(RHI::MaterialStates::Rasterizer::CullNone)
-                .DepthStencil(RHI::MaterialStates::DepthStencil::None)
-                .VertexShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
-                .InputLayout(std::move(VertexInput))
-                .PixelShader(DebugShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }))
-                .Topology(RHI::PrimitiveTopologyCategory::Line)
-                .Build();
+        RHI::PipelineStateBuilderG Builder{
+            .RootSignature = RHI::IRootSignature::Get(RHI::RSCommon::Type::DebugLine),
+            .Rasterizer    = { .CullMode = RHI::ECullMode::None },
+            .DepthStencil{ .DepthEnable = false },
+            .Input     = std::move(VertexInput),
+            .RTFormats = { RHI::ISwapchain::Get()->GetFormat() },
+            .Topology  = RHI::PrimitiveTopologyCategory::Line
+        };
 
-        Asset::Manager::Unload(DebugShader->GetGuid());
+        Builder.Blend.RenderTargets[0].BlendEnable = true;
+
+        Builder.VertexShader = LineShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex });
+        Builder.PixelShader  = LineShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel });
+
+        PipelineState = Builder.Build();
     }
 
     bool DefaultEngineDebugOverlay::Overlay_Debug_LineBuffer::ShouldDraw() const
@@ -263,7 +253,7 @@ namespace Neon::Runtime
         CommandList->SetRootSignature(true, RootSignature);
         CommandList->SetResourceView(true, RHI::CstResourceViewType::Cbv, 0, PerFrameData);
 
-        CommandList->SetPipelineState(Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass));
+        CommandList->SetPipelineState(PipelineState);
         CommandList->SetPrimitiveTopology(RHI::PrimitiveTopology::LineList);
 
         RHI::Views::Vertex VtxView;

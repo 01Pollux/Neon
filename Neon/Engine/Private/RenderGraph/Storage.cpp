@@ -223,7 +223,7 @@ namespace Neon::RG
     void GraphStorage::DeclareResourceView(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc,
-        SubresourceView                Subresource)
+        const RHI::SubresourceView&    Subresource)
     {
         auto Iter = m_Resources.find(ViewId.GetResource());
         NEON_ASSERT(Iter != m_Resources.end(), "Resource doesn't exists");

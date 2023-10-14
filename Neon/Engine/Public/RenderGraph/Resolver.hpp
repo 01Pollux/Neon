@@ -49,7 +49,7 @@ namespace Neon::RG
         void WriteResource(
             const ResourceViewId&          ViewId,
             const RHI::DescriptorViewDesc& Desc,
-            SubresourceView                Subresource = {});
+            const RHI::SubresourceView&    Subresource = {});
 
         /// <summary>
         /// Write resource in copy operation
@@ -62,10 +62,10 @@ namespace Neon::RG
         /// 0 offset and size means whole buffer
         /// </summary>
         void WriteBuffer(
-            const ResourceViewId& ViewId,
-            size_t                Offset      = 0,
-            size_t                Size        = 0,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            size_t                      Offset      = 0,
+            size_t                      Size        = 0,
+            const RHI::SubresourceView& Subresource = {})
         {
             WriteResource(
                 ViewId,
@@ -79,9 +79,9 @@ namespace Neon::RG
         /// Write resource as uav
         /// </summary>
         void WriteTexture(
-            const ResourceViewId& ViewId,
-            RHI::UAVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            RHI::UAVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
         {
             WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
@@ -90,9 +90,9 @@ namespace Neon::RG
         /// Write resource as renter target
         /// </summary>
         void WriteRenderTarget(
-            const ResourceViewId& ViewId,
-            RHI::RTVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            RHI::RTVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
         {
             WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
@@ -101,9 +101,9 @@ namespace Neon::RG
         /// Write resource as renter target
         /// </summary>
         void WriteDepthStencil(
-            const ResourceViewId& ViewId,
-            RHI::DSVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            RHI::DSVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
         {
             WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
@@ -122,7 +122,7 @@ namespace Neon::RG
             const ResourceViewId&          ViewId,
             ResourceReadAccess             ReadAccess,
             const RHI::DescriptorViewDesc& Desc,
-            SubresourceView                Subresource = {});
+            const RHI::SubresourceView&    Subresource = {});
 
         /// <summary>
         /// Read resource in copy operation
@@ -134,10 +134,10 @@ namespace Neon::RG
         /// Write resource as srv
         /// </summary>
         void ReadConstantBuffer(
-            const ResourceViewId& ViewId,
-            ResourceReadAccess    ReadAccess,
-            RHI::CBVDesc          Desc,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            RHI::CBVDesc                Desc,
+            const RHI::SubresourceView& Subresource = {})
         {
             ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
@@ -146,10 +146,10 @@ namespace Neon::RG
         /// Write resource as srv
         /// </summary>
         void ReadTexture(
-            const ResourceViewId& ViewId,
-            ResourceReadAccess    ReadAccess,
-            RHI::SRVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            RHI::SRVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
         {
             ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }
@@ -158,10 +158,10 @@ namespace Neon::RG
         /// Write resource as uav
         /// </summary>
         void ReadWriteTexture(
-            const ResourceViewId& ViewId,
-            ResourceReadAccess    ReadAccess,
-            RHI::UAVDescOpt       Desc        = std::nullopt,
-            SubresourceView       Subresource = {})
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            RHI::UAVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
         {
             ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
         }

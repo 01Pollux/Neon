@@ -96,11 +96,11 @@ namespace Neon::Structured
 
     //
 
-    class CookedLayout;
+    class Layout;
 
-    class RawLayout
+    class LayoutBuilder
     {
-        friend class CookedLayout;
+        friend class Layout;
 
         class Element
         {
@@ -145,7 +145,7 @@ namespace Neon::Structured
     public:
         class ElementView
         {
-            friend class RawLayout;
+            friend class LayoutBuilder;
 
         public:
             ElementView(
@@ -209,14 +209,12 @@ namespace Neon::Structured
             Element* m_Element;
         };
 
-        static constexpr size_t ShaderAlignement = 16;
-
-        RawLayout(
+        LayoutBuilder(
             size_t Alignement = 1u);
 
-        NEON_CLASS_NO_COPY(RawLayout);
-        NEON_CLASS_MOVE(RawLayout);
-        ~RawLayout() = default;
+        NEON_CLASS_NO_COPY(LayoutBuilder);
+        NEON_CLASS_MOVE(LayoutBuilder);
+        ~LayoutBuilder() = default;
 
         [[nodiscard]] ElementView GetView() noexcept
         {
@@ -263,7 +261,7 @@ namespace Neon::Structured
         /// <summary>
         /// Cook layout into compressed version of mapped offsets
         /// </summary>
-        [[nodiscard]] CookedLayout Cook(
+        [[nodiscard]] Layout Cook(
             bool GPULayout) const noexcept;
 
         /// <summary>
@@ -277,7 +275,9 @@ namespace Neon::Structured
         uint16_t        m_Alignement;
     };
 
-    class CookedLayout
+    //
+
+    class Layout
     {
         class Element
         {
@@ -307,11 +307,11 @@ namespace Neon::Structured
                 size_t Offset);
 
             static void ProcessElement(
-                bool                      GPULayout,
-                CookedLayout::Element&    CookedElement,
-                const RawLayout::Element& LayoutElement,
-                size_t&                   AppendOffset,
-                size_t                    Alignement);
+                bool                          GPULayout,
+                Layout::Element&              CookedElement,
+                const LayoutBuilder::Element& LayoutElement,
+                size_t&                       AppendOffset,
+                size_t                        Alignement);
 
             [[nodiscard]] StructData* AsStruct();
 
@@ -368,12 +368,12 @@ namespace Neon::Structured
             const Element* m_Element;
         };
 
-        CookedLayout() = default;
+        Layout() = default;
 
-        CookedLayout(
-            bool                      GPULayout,
-            size_t                    Alignement,
-            const RawLayout::Element& LayoutElement);
+        Layout(
+            bool                          GPULayout,
+            size_t                        Alignement,
+            const LayoutBuilder::Element& LayoutElement);
 
         /// <summary>
         /// Get element in struct layout
@@ -411,9 +411,9 @@ namespace Neon::Structured
     {
     public:
         BufferView(
-            uint8_t*                  Data,
-            CookedLayout::ElementView View,
-            size_t                    ArrayOffset) :
+            uint8_t*            Data,
+            Layout::ElementView View,
+            size_t              ArrayOffset) :
             m_Data(Data),
             m_View(View),
             m_ArrayOffset(ArrayOffset)
@@ -463,7 +463,7 @@ namespace Neon::Structured
             size_t Offset)
         {
             auto Array = m_View.m_Element->AsArray();
-            return BufferView(m_Data, CookedLayout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
+            return BufferView(m_Data, Layout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
         }
 
         /// <summary>
@@ -473,7 +473,7 @@ namespace Neon::Structured
             size_t Offset) const
         {
             auto Array = m_View.m_Element->AsArray();
-            return BufferView(m_Data, CookedLayout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
+            return BufferView(m_Data, Layout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
         }
 
         template<typename _Ty = uint8_t>
@@ -537,18 +537,18 @@ namespace Neon::Structured
         }
 
     private:
-        CookedLayout::ElementView m_View;
-        size_t                    m_ArrayOffset;
-        uint8_t*                  m_Data;
+        Layout::ElementView m_View;
+        size_t              m_ArrayOffset;
+        uint8_t*            m_Data;
     };
 
     class CBufferView
     {
     public:
         CBufferView(
-            const uint8_t*            Data,
-            CookedLayout::ElementView View,
-            size_t                    ArrayOffset) :
+            const uint8_t*      Data,
+            Layout::ElementView View,
+            size_t              ArrayOffset) :
             m_Data(Data),
             m_View(View),
             m_ArrayOffset(ArrayOffset)
@@ -580,7 +580,7 @@ namespace Neon::Structured
             size_t Offset) const
         {
             auto Array = m_View.m_Element->AsArray();
-            return CBufferView(m_Data, CookedLayout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
+            return CBufferView(m_Data, Layout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
         }
 
         template<typename _Ty = uint8_t>
@@ -627,8 +627,8 @@ namespace Neon::Structured
         }
 
     private:
-        CookedLayout::ElementView m_View;
-        size_t                    m_ArrayOffset;
-        const uint8_t*            m_Data;
+        Layout::ElementView m_View;
+        size_t              m_ArrayOffset;
+        const uint8_t*      m_Data;
     };
 } // namespace Neon::Structured

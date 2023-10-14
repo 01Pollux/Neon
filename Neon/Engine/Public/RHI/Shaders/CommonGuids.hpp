@@ -33,4 +33,11 @@ namespace Neon::RHI::Shaders
     {
         return Asset::Handle::FromString("de5df67e-e0c7-40dc-a73f-fc9ab93deca2");
     }
+
+#ifndef NEON_DIST
+    static inline auto DebugLineShaderGuid()
+    {
+        return Asset::Handle::FromString("bbd67e6b-afc3-4d55-bbda-ed382b3342f5");
+    }
+#endif
 } // namespace Neon::RHI::Shaders

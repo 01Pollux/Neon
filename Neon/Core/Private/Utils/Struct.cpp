@@ -5,7 +5,7 @@
 
 namespace Neon::Structured
 {
-    RawLayout::Element::Element(Type Type)
+    LayoutBuilder::Element::Element(Type Type)
     {
         switch (Type)
         {
@@ -22,37 +22,37 @@ namespace Neon::Structured
         }
     }
 
-    auto RawLayout::Element::AsStruct() -> StructData*
+    auto LayoutBuilder::Element::AsStruct() -> StructData*
     {
         return std::holds_alternative<StructData>(m_Data) ? &std::get<StructData>(m_Data) : nullptr;
     }
 
-    auto RawLayout::Element::AsArray() -> ArrayData*
+    auto LayoutBuilder::Element::AsArray() -> ArrayData*
     {
         return std::holds_alternative<ArrayData>(m_Data) ? &std::get<ArrayData>(m_Data) : nullptr;
     }
 
-    auto RawLayout::Element::AsRaw() -> RawData*
+    auto LayoutBuilder::Element::AsRaw() -> RawData*
     {
         return std::holds_alternative<RawData>(m_Data) ? &std::get<RawData>(m_Data) : nullptr;
     }
 
-    auto RawLayout::Element::AsStruct() const -> const StructData*
+    auto LayoutBuilder::Element::AsStruct() const -> const StructData*
     {
         return std::holds_alternative<StructData>(m_Data) ? &std::get<StructData>(m_Data) : nullptr;
     }
 
-    auto RawLayout::Element::AsArray() const -> const ArrayData*
+    auto LayoutBuilder::Element::AsArray() const -> const ArrayData*
     {
         return std::holds_alternative<ArrayData>(m_Data) ? &std::get<ArrayData>(m_Data) : nullptr;
     }
 
-    auto RawLayout::Element::AsRaw() const -> const RawData*
+    auto LayoutBuilder::Element::AsRaw() const -> const RawData*
     {
         return std::holds_alternative<RawData>(m_Data) ? &std::get<RawData>(m_Data) : nullptr;
     }
 
-    Type RawLayout::Element::GetType() const noexcept
+    Type LayoutBuilder::Element::GetType() const noexcept
     {
         // clang-format off
         return
@@ -62,14 +62,14 @@ namespace Neon::Structured
         // clang-format on
     }
 
-    RawLayout::ElementView::ElementView(
+    LayoutBuilder::ElementView::ElementView(
         Element* Element) :
         m_Element(Element)
     {
         NEON_ASSERT(Element, "Tried to access a null element view");
     }
 
-    auto RawLayout::ElementView::operator[](
+    auto LayoutBuilder::ElementView::operator[](
         const std::string& Name) -> ElementView
     {
         Element::StructData* Struct = m_Element->AsStruct();
@@ -85,7 +85,7 @@ namespace Neon::Structured
         return nullptr;
     }
 
-    auto RawLayout::ElementView::Append(
+    auto LayoutBuilder::ElementView::Append(
         Type        Type,
         std::string Name) -> ElementView
     {
@@ -96,7 +96,7 @@ namespace Neon::Structured
         return ElementView(&NewElement.second);
     }
 
-    auto RawLayout::ElementView::AppendArray(
+    auto LayoutBuilder::ElementView::AppendArray(
         Type        Type,
         std::string Name,
         uint32_t    ArrayCount) -> ElementView
@@ -112,7 +112,7 @@ namespace Neon::Structured
         return ElementView(Array->NestedElement.get());
     }
 
-    auto RawLayout::ElementView::GetArrayType() const -> ElementView
+    auto LayoutBuilder::ElementView::GetArrayType() const -> ElementView
     {
         Element::ArrayData* Array = m_Element->AsArray();
         NEON_ASSERT(Array, "Tried to access view of non-array element");
@@ -120,7 +120,7 @@ namespace Neon::Structured
         return ElementView(Array->NestedElement.get());
     }
 
-    void RawLayout::ElementView::SetArrayType(
+    void LayoutBuilder::ElementView::SetArrayType(
         Type     Type,
         uint32_t ArrayCount)
     {
@@ -131,22 +131,22 @@ namespace Neon::Structured
         Array->NestedElement = std::make_unique<Element>(Type);
     }
 
-    Type RawLayout::ElementView::GetType() const noexcept
+    Type LayoutBuilder::ElementView::GetType() const noexcept
     {
         return m_Element->GetType();
     }
 
-    auto RawLayout::ElementView::AsStruct() const noexcept -> const Element::StructData*
+    auto LayoutBuilder::ElementView::AsStruct() const noexcept -> const Element::StructData*
     {
         return m_Element->AsStruct();
     }
 
-    auto RawLayout::ElementView::AsArray() const noexcept -> const Element::ArrayData*
+    auto LayoutBuilder::ElementView::AsArray() const noexcept -> const Element::ArrayData*
     {
         return m_Element->AsArray();
     }
 
-    void RawLayout::ElementView::GetHashCode(
+    void LayoutBuilder::ElementView::GetHashCode(
         Crypto::Sha256& Hash) const
     {
         auto NestedType = m_Element->GetType();
@@ -166,25 +166,25 @@ namespace Neon::Structured
         }
     }
 
-    RawLayout::RawLayout(size_t Alignement) :
+    LayoutBuilder::LayoutBuilder(size_t Alignement) :
         m_Alignement(uint16_t(Alignement))
     {
     }
 
-    auto RawLayout::operator[](
+    auto LayoutBuilder::operator[](
         const std::string& Name) -> ElementView
     {
         return GetView()[Name];
     }
 
-    auto RawLayout::Append(
+    auto LayoutBuilder::Append(
         Type        Type,
         std::string Name) -> ElementView
     {
         return GetView().Append(Type, std::move(Name));
     }
 
-    auto RawLayout::AppendArray(
+    auto LayoutBuilder::AppendArray(
         Type        Type,
         std::string Name,
         uint32_t    Size) -> ElementView
@@ -192,24 +192,24 @@ namespace Neon::Structured
         return GetView().AppendArray(Type, std::move(Name), Size);
     }
 
-    uint16_t RawLayout::GetAlignement() const noexcept
+    uint16_t LayoutBuilder::GetAlignement() const noexcept
     {
         return m_Alignement;
     }
 
-    void RawLayout::SetAlignement(
+    void LayoutBuilder::SetAlignement(
         uint16_t Alignement) noexcept
     {
         m_Alignement = Alignement;
     }
 
-    CookedLayout RawLayout::Cook(
+    Layout LayoutBuilder::Cook(
         bool GPULayout) const noexcept
     {
-        return CookedLayout(GPULayout, GetAlignement(), m_Element);
+        return Layout(GPULayout, GetAlignement(), m_Element);
     }
 
-    Crypto::Sha256::Bytes RawLayout::GetHashCode(
+    Crypto::Sha256::Bytes LayoutBuilder::GetHashCode(
         bool GPULayout) const
     {
         Crypto::Sha256 Hash;
@@ -221,7 +221,7 @@ namespace Neon::Structured
 
     //
 
-    CookedLayout::Element::Element(
+    Layout::Element::Element(
         Type   Type,
         bool   IsGPULayout,
         size_t Offset) :
@@ -256,47 +256,47 @@ namespace Neon::Structured
         }
     }
 
-    auto CookedLayout::Element::AsStruct() -> StructData*
+    auto Layout::Element::AsStruct() -> StructData*
     {
         return std::holds_alternative<StructData>(m_Data) ? &std::get<StructData>(m_Data) : nullptr;
     }
 
-    auto CookedLayout::Element::AsArray() -> ArrayData*
+    auto Layout::Element::AsArray() -> ArrayData*
     {
         return std::holds_alternative<ArrayData>(m_Data) ? &std::get<ArrayData>(m_Data) : nullptr;
     }
 
-    auto CookedLayout::Element::AsRaw() -> RawData*
+    auto Layout::Element::AsRaw() -> RawData*
     {
         return std::holds_alternative<RawData>(m_Data) ? &std::get<RawData>(m_Data) : nullptr;
     }
 
-    auto CookedLayout::Element::AsStruct() const -> const StructData*
+    auto Layout::Element::AsStruct() const -> const StructData*
     {
         return std::holds_alternative<StructData>(m_Data) ? &std::get<StructData>(m_Data) : nullptr;
     }
 
-    auto CookedLayout::Element::AsArray() const -> const ArrayData*
+    auto Layout::Element::AsArray() const -> const ArrayData*
     {
         return std::holds_alternative<ArrayData>(m_Data) ? &std::get<ArrayData>(m_Data) : nullptr;
     }
 
-    auto CookedLayout::Element::AsRaw() const -> const RawData*
+    auto Layout::Element::AsRaw() const -> const RawData*
     {
         return std::holds_alternative<RawData>(m_Data) ? &std::get<RawData>(m_Data) : nullptr;
     }
 
-    size_t CookedLayout::Element::GetOffset() const
+    size_t Layout::Element::GetOffset() const
     {
         return m_Offset;
     }
 
-    void CookedLayout::Element::ProcessElement(
-        bool                      IsGPULayout,
-        CookedLayout::Element&    CookedElement,
-        const RawLayout::Element& LayoutElement,
-        size_t&                   AppendOffset,
-        size_t                    Alignement)
+    void Layout::Element::ProcessElement(
+        bool                          IsGPULayout,
+        Layout::Element&              CookedElement,
+        const LayoutBuilder::Element& LayoutElement,
+        size_t&                       AppendOffset,
+        size_t                        Alignement)
     {
         switch (LayoutElement.GetType())
         {
@@ -304,10 +304,10 @@ namespace Neon::Structured
         {
             auto Array       = LayoutElement.AsArray();
             auto CookedArray = CookedElement.AsArray();
-            NEON_ASSERT(Array->NestedElement, "Invalid nested element in CookedLayout");
+            NEON_ASSERT(Array->NestedElement, "Invalid nested element in Layout");
 
             CookedArray->ArrayCount    = Array->ArrayCount;
-            CookedArray->NestedElement = std::make_unique<CookedLayout::Element>(
+            CookedArray->NestedElement = std::make_unique<Layout::Element>(
                 Array->NestedElement->GetType(), 0, AppendOffset);
 
             size_t CurOffset = AppendOffset;
@@ -334,7 +334,7 @@ namespace Neon::Structured
                 auto& CookedNestedElement = 
                     *CookedStruct->NestedElements.emplace(
                         NestedElement.first,
-                        CookedLayout::Element(NestedElement.second.GetType(), IsGPULayout, AppendOffset))
+                        Layout::Element(NestedElement.second.GetType(), IsGPULayout, AppendOffset))
                     .first;
                 // clang-format on
 
@@ -353,34 +353,34 @@ namespace Neon::Structured
             break;
         }
 
-#define NEON_MAPPED_BUFFER_FUNC(CPUSize, GPUSize, ElementType)                                     \
-    case Type::ElementType:                                                                        \
-    {                                                                                              \
-        CookedElement = CookedLayout::Element(LayoutElement.GetType(), IsGPULayout, AppendOffset); \
-        if (IsGPULayout)                                                                           \
-            AppendOffset += Impl::AlignIfOutOfBounds(AppendOffset, GPUSize, Alignement);           \
-        else                                                                                       \
-            AppendOffset += Impl::AlignIfOutOfBounds(AppendOffset, CPUSize, Alignement);           \
-        break;                                                                                     \
+#define NEON_MAPPED_BUFFER_FUNC(CPUSize, GPUSize, ElementType)                               \
+    case Type::ElementType:                                                                  \
+    {                                                                                        \
+        CookedElement = Layout::Element(LayoutElement.GetType(), IsGPULayout, AppendOffset); \
+        if (IsGPULayout)                                                                     \
+            AppendOffset += Impl::AlignIfOutOfBounds(AppendOffset, GPUSize, Alignement);     \
+        else                                                                                 \
+            AppendOffset += Impl::AlignIfOutOfBounds(AppendOffset, CPUSize, Alignement);     \
+        break;                                                                               \
     }
 
             NEON_MAPPED_BUFFER_ELEMENT_TYPES(NEON_MAPPED_BUFFER_FUNC)
 #undef NEON_MAPPED_BUFFER_FUNC
         default:
-            NEON_ASSERT(false, "Invalid type in CookedLayout");
+            NEON_ASSERT(false, "Invalid type in Layout");
             break;
         }
     }
 
     //
 
-    CookedLayout::ElementView::ElementView(
+    Layout::ElementView::ElementView(
         const Element* Element) :
         m_Element(Element)
     {
     }
 
-    auto CookedLayout::ElementView::operator[](
+    auto Layout::ElementView::operator[](
         const std::string& Name) const -> ElementView
     {
         const Element::StructData* Struct = m_Element->AsStruct();
@@ -388,12 +388,12 @@ namespace Neon::Structured
         return ElementView(&Struct->NestedElements.find(Name)->second);
     }
 
-    size_t CookedLayout::ElementView::GetOffset() const
+    size_t Layout::ElementView::GetOffset() const
     {
         return m_Element->GetOffset();
     }
 
-    uint32_t CookedLayout::ElementView::GetSize() const noexcept
+    uint32_t Layout::ElementView::GetSize() const noexcept
     {
         if (auto Raw = m_Element->AsRaw())
         {
@@ -410,7 +410,7 @@ namespace Neon::Structured
         }
     }
 
-    uint32_t CookedLayout::ElementView::GetArrayCount() const noexcept
+    uint32_t Layout::ElementView::GetArrayCount() const noexcept
     {
         auto Array = m_Element->AsArray();
         return Array ? Array->ArrayCount : 1;
@@ -418,33 +418,33 @@ namespace Neon::Structured
 
     //
 
-    CookedLayout::CookedLayout(
-        bool                      GPULayout,
-        size_t                    Alignement,
-        const RawLayout::Element& LayoutElement)
+    Layout::Layout(
+        bool                          GPULayout,
+        size_t                        Alignement,
+        const LayoutBuilder::Element& LayoutElement)
     {
         Element::ProcessElement(GPULayout, m_CookedLayout, LayoutElement, m_Size, Alignement);
     }
 
-    auto CookedLayout::operator[](
+    auto Layout::operator[](
         const std::string& Name) const -> ElementView
     {
         return ElementView(&m_CookedLayout)[Name];
     }
 
-    size_t CookedLayout::GetSize() const noexcept
+    size_t Layout::GetSize() const noexcept
     {
         return m_Size;
     }
 
-    BufferView CookedLayout::Access(
+    BufferView Layout::Access(
         void*  Buffer,
         size_t ArrayIndex) const noexcept
     {
         return BufferView(static_cast<uint8_t*>(Buffer), ElementView(&m_CookedLayout), ArrayIndex * GetSize());
     }
 
-    CBufferView CookedLayout::Access(
+    CBufferView Layout::Access(
         const void* Buffer,
         size_t      ArrayIndex) const noexcept
     {

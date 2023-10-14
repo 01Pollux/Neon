@@ -927,4 +927,26 @@ namespace Neon::RHI
         size_t      RowPitch;
         size_t      SlicePitch;
     };
+
+    struct SubresourceView
+    {
+        uint32_t PlaneIndex = 0;
+        uint32_t ArrayIndex = 0;
+        uint32_t MipIndex   = std::numeric_limits<uint32_t>::max();
+
+        /// <summary>
+        /// Calculate subresource's index
+        /// will return -1 if mip index is -1
+        /// </summary>
+        [[nodiscard]] constexpr uint32_t GetSubresourceIndex(
+            uint32_t ArraySize,
+            uint32_t MipSize) const
+        {
+            return (MipIndex == -1)
+                       ? std::numeric_limits<uint32_t>::max()
+                       : MipIndex +
+                             ArrayIndex * MipSize +
+                             PlaneIndex * ArraySize * MipSize;
+        }
+    };
 } // namespace Neon::RHI

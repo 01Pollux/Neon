@@ -184,23 +184,6 @@ namespace Neon::RG
 
     //
 
-    struct SubresourceView
-    {
-        uint32_t PlaneIndex = 0;
-        uint32_t ArrayIndex = 0;
-        uint32_t MipIndex   = std::numeric_limits<uint32_t>::max();
-
-        /// <summary>
-        /// Calculate subresource's index
-        /// will return -1 if mip index is -1
-        /// </summary>
-        [[nodiscard]] constexpr uint32_t GetSubresourceIndex(
-            uint32_t ArraySize,
-            uint32_t MipSize) const;
-    };
-
-    //
-
     class ResourceHandle
     {
     public:
@@ -238,7 +221,7 @@ namespace Neon::RG
         void CreateView(
             const ResourceViewId&          ViewId,
             const RHI::DescriptorViewDesc& Desc,
-            const SubresourceView&         Subresource);
+            const RHI::SubresourceView&    Subresource);
 
         /// <summary>
         /// Get resource views

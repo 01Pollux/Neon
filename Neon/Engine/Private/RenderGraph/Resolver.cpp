@@ -45,7 +45,7 @@ namespace Neon::RG
     void ResourceResolver::WriteResource(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc,
-        SubresourceView                Subresource)
+        const RHI::SubresourceView&    Subresource)
     {
         auto& Id = ViewId.GetResource();
         NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());
@@ -116,7 +116,7 @@ namespace Neon::RG
         const ResourceViewId&          ViewId,
         ResourceReadAccess             ReadAccess,
         const RHI::DescriptorViewDesc& Desc,
-        SubresourceView                Subresource)
+        const RHI::SubresourceView&    Subresource)
     {
         auto& Id = ViewId.GetResource();
         NEON_ASSERT(m_Storage.ContainsResource(Id), "Resource '{}' doesn't exists", Id.GetName());

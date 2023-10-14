@@ -2,9 +2,9 @@
 
 #include <Asset/Handle.hpp>
 #include <RHI/Material/States.hpp>
+#include <RHI/Material/VarBuilder.hpp>
 
 #include <RHI/Shader.hpp>
-#include <RHI/RootSignature.hpp>
 #include <RHI/PipelineState.hpp>
 
 #include <map>
@@ -20,24 +20,6 @@ namespace Neon::RHI
         static constexpr size_t ShaderCount = _ShaderCount;
 
         /// <summary>
-        /// Get root signature.
-        /// </summary>
-        [[nodiscard]] const Ptr<RHI::IRootSignature>& RootSignature() const noexcept
-        {
-            return m_RootSignatuer;
-        }
-
-        /// <summary>
-        /// Set root signature.
-        /// </summary>
-        _Ty& RootSignature(
-            const Ptr<RHI::IRootSignature>& RootSig)
-        {
-            m_RootSignatuer = RootSig;
-            return static_cast<_Ty&>(*this);
-        }
-
-        /// <summary>
         /// Get the shader modules.
         /// </summary>
         [[nodiscard]] const auto& Shaders() const
@@ -45,9 +27,25 @@ namespace Neon::RHI
             return m_ShaderModules;
         }
 
+        /// <summary>
+        /// Get the variable builder.
+        /// </summary>
+        [[nodiscard]] const auto& VarBuilder() const
+        {
+            return m_VarBuilder;
+        }
+
+        /// <summary>
+        /// Get the variable builder.
+        /// </summary>
+        [[nodiscard]] auto& VarBuilder()
+        {
+            return m_VarBuilder;
+        }
+
     protected:
         std::array<Ptr<IShader>, ShaderCount> m_ShaderModules;
-        Ptr<RHI::IRootSignature>              m_RootSignatuer;
+        MaterialVarBuilder                    m_VarBuilder;
     };
 
     template<bool _IsCompute>
@@ -296,13 +294,4 @@ namespace Neon::RHI
     /// </summary>
     [[nodiscard]] SamplerDesc GetSamplerDesc(
         MaterialStates::Sampler Type);
-
-    /// <summary>
-    /// Get the static sampler description based on the type.
-    /// </summary>
-    [[nodiscard]] StaticSamplerDesc GetStaticSamplerDesc(
-        MaterialStates::Sampler Type,
-        uint16_t                Register,
-        uint16_t                Space,
-        ShaderVisibility        Visibility);
 } // namespace Neon::RHI

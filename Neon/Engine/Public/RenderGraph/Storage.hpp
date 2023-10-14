@@ -22,7 +22,7 @@ namespace Neon::RG
         friend class RenderGraph;
         friend class GraphDepdencyLevel;
 
-        using ResourceMapType = std::map<ResourceId, ResourceHandle>;
+        using ResourceMapType                              = std::map<ResourceId, ResourceHandle>;
         static constexpr size_t AlignedCameraFrameDataSize = Math::AlignUp(sizeof(CameraFrameData), 256);
 
     public:
@@ -156,7 +156,7 @@ namespace Neon::RG
         void DeclareResourceView(
             const ResourceViewId&          ViewId,
             const RHI::DescriptorViewDesc& Desc,
-            SubresourceView                Subresource);
+            const RHI::SubresourceView&    Subresource);
 
     private:
         /// <summary>

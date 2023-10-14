@@ -272,17 +272,4 @@ namespace Neon::RHI
         }
         return Desc;
     }
-
-    StaticSamplerDesc GetStaticSamplerDesc(
-        MaterialStates::Sampler Type,
-        uint16_t                Register,
-        uint16_t                Space,
-        ShaderVisibility        Visibility)
-    {
-        auto Desc           = StaticSamplerDesc(GetSamplerDesc(Type));
-        Desc.ShaderRegister = Register;
-        Desc.RegisterSpace  = Space;
-        Desc.Visibility     = Visibility;
-        return Desc;
-    }
 } // namespace Neon::RHI

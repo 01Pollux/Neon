@@ -46,7 +46,7 @@ namespace Neon::RG
     void ResourceHandle::CreateView(
         const ResourceViewId&          ViewId,
         const RHI::DescriptorViewDesc& Desc,
-        const SubresourceView&         Subresource)
+        const RHI::SubresourceView&    Subresource)
     {
         NEON_ASSERT(!m_ViewMap.contains(ViewId), "View name already exists");
 
@@ -143,16 +143,5 @@ namespace Neon::RG
             RHI::RenameObject(m_Resource.get(), StringUtils::Transform<String>(m_Id.GetName()).c_str());
         }
 #endif
-    }
-
-    //
-
-    constexpr uint32_t SubresourceView::GetSubresourceIndex(
-        uint32_t ArraySize,
-        uint32_t MipSize) const
-    {
-        return MipIndex == -1
-                   ? std::numeric_limits<uint32_t>::max()
-                   : RHI::IGpuResource::GetSubresourceIndex(PlaneIndex, ArrayIndex, ArraySize, MipIndex, MipSize);
     }
 } // namespace Neon::RG
