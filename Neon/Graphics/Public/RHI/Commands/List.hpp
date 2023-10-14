@@ -167,6 +167,14 @@ namespace Neon::RHI
 
     public:
         /// <summary>
+        /// Set material root signature and root parameters (base descriptors and frame handle
+        /// </summary>
+        virtual void BindMaterialParameters(
+            bool              IsDirect,
+            GpuResourceHandle FrameData) = 0;
+
+    public:
+        /// <summary>
         /// Sets constants in root signature
         /// </summary>
         virtual void SetConstants(
@@ -500,6 +508,18 @@ namespace Neon::RHI
         {
             m_CmdList->SetPipelineState(
                 State);
+        }
+
+    public:
+        /// <summary>
+        /// Set material root signature and root parameters (base descriptors and frame handle
+        /// </summary>
+        void BindMaterialParameters(
+            GpuResourceHandle FrameData)
+        {
+            m_CmdList->BindMaterialParameters(
+                true,
+                FrameData);
         }
 
     public:
@@ -926,6 +946,18 @@ namespace Neon::RHI
         {
             m_CmdList->SetPipelineState(
                 State);
+        }
+
+    public:
+        /// <summary>
+        /// Set material root signature and root parameters (base descriptors and frame handle
+        /// </summary>
+        void BindMaterialParameters(
+            GpuResourceHandle FrameData)
+        {
+            m_CmdList->BindMaterialParameters(
+                false,
+                FrameData);
         }
 
     public:

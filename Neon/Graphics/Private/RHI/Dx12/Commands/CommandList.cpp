@@ -227,6 +227,55 @@ namespace Neon::RHI
 
     //
 
+    void Dx12CommandList::BindMaterialParameters(
+        bool              IsDirect,
+        GpuResourceHandle FrameData)
+    {
+        auto RootSig = IRootSignature::Get(RSCommon::Type::Material);
+        if (m_RootSignature != RootSig)
+        {
+            if (IsDirect)
+            {
+                m_CommandList->SetGraphicsRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            }
+            else
+            {
+                m_CommandList->SetComputeRootSignature(static_cast<Dx12RootSignature*>(RootSig.get())->Get());
+            }
+            m_RootSignature = RootSig;
+        }
+        else
+        {
+            return;
+        }
+
+        SetResourceView(IsDirect, CstResourceViewType::Cbv, uint32_t(RSCommon::MaterialRS::FrameData), FrameData);
+
+        // Set sampler descriptor
+        {
+            auto Descriptor = static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::ResourceView));
+            auto Handle     = Descriptor->GetHeap()->GetGPUAddress();
+            for (uint32_t i : std::views::iota(uint32_t(RSCommon::MaterialRS::_SamplersStart),
+                                               uint32_t(RSCommon::MaterialRS::_SamplersEnd)))
+            {
+                SetDescriptorTable(IsDirect, i, Handle);
+            }
+        }
+
+        // Set resource descriptor
+        {
+            auto Descriptor = static_cast<Dx12FrameDescriptorHeap*>(IFrameDescriptorHeap::Get(DescriptorType::Sampler));
+            auto Handle     = Descriptor->GetHeap()->GetGPUAddress();
+            for (uint32_t i : std::views::iota(uint32_t(RSCommon::MaterialRS::_ResourcesEnd),
+                                               uint32_t(RSCommon::MaterialRS::_ResourcesEnd)))
+            {
+                SetDescriptorTable(IsDirect, i, Handle);
+            }
+        }
+    }
+
+    //
+
     void Dx12CommandList::SetConstants(
         bool        IsDirect,
         uint32_t    RootIndex,

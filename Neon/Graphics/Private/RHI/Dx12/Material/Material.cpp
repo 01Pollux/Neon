@@ -166,36 +166,99 @@ namespace Neon::RHI
 
     //
 
+    void Material_CreateParameterBlock(
+        const MaterialVarBuilder& VarBuilder,
+        Material*                 Mat)
+    {
+        auto InsertToParameters = [](Material::Blackboard&                       Blackboard,
+                                     Structured::LayoutBuilder&                  Builder,
+                                     const MaterialVarBuilder::LayoutDescriptor& Layout)
+        {
+            auto     Internal = Builder.Append(Structured::Type::Struct, "_Internal");
+            uint32_t Offset   = 0;
+            for (auto& Resource : Layout.Resources)
+            {
+                Internal.Append(Structured::Type::Int, Resource);
+                Blackboard.Entries.emplace(
+                    Resource,
+                    Material::ResourceEntry{
+                        .Offset = Offset++ });
+            }
+
+            Offset = 0;
+            for (auto& Sampler : Layout.Samplers)
+            {
+                Internal.Append(Structured::Type::Int, Sampler);
+                Blackboard.Entries.emplace(
+                    Sampler,
+                    Material::SamplerEntry{
+                        .Offset = Offset++ });
+            }
+        };
+
+        // Local parameters
+        {
+            // Align to 4 bytes
+            constexpr size_t MemberAlignement = 4;
+            constexpr size_t BufferAlignement = ShaderResourceAlignement;
+
+            auto& Layout = VarBuilder.LocalLayout();
+
+            Structured::LayoutBuilder Builder(MemberAlignement);
+            InsertToParameters(Mat->m_LocalParameters, Builder, Layout);
+
+            Mat->m_LocalParameters.Buffer.Struct.Append(true, BufferAlignement, Builder);
+            Mat->m_LocalParameters.Buffer.Struct.Append(true, BufferAlignement, Layout.LayoutBuilder);
+            Mat->m_LocalParameters.Buffer.Data = UBufferPoolHandle{ Mat->m_LocalParameters.Buffer.Struct.GetSize(), ShaderResourceAlignement, IGlobalBufferPool::BufferType::ReadWriteGPUR };
+            if (Mat->m_LocalParameters.Buffer.Data)
+            {
+                Mat->m_LocalParameters.Buffer.MappedData = Mat->m_LocalParameters.Buffer.Data.AsUpload().Map() + Mat->m_LocalParameters.Buffer.Data.Offset;
+
+                auto Descriptor            = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
+                Mat->m_LocalParametersView = Descriptor->Allocate(1);
+
+                auto&   BufferData = Mat->m_LocalParameters.Buffer.Data;
+                SRVDesc ViewDesc{
+                    .View = SRVDesc::Buffer{
+                        .FirstElement = BufferData.Offset,
+                        .SizeOfStruct = uint32_t(BufferData.Size) }
+                };
+                Mat->m_LocalParametersView->CreateShaderResourceView(
+                    Mat->m_LocalParametersView.Offset,
+                    BufferData.Buffer,
+                    &ViewDesc);
+            }
+        }
+
+        // Shared parameters
+        {
+            // Align to 16 bytes
+            constexpr size_t MemberAlignement = 16;
+            constexpr size_t BufferAlignement = ConstantBufferAlignement;
+
+            auto& Layout = VarBuilder.SharedLayout();
+
+            Structured::LayoutBuilder Builder(MemberAlignement);
+            InsertToParameters(*Mat->m_SharedParameters, Builder, Layout);
+
+            Mat->m_SharedParameters->Buffer.Struct.Append(true, BufferAlignement, Builder);
+            Mat->m_SharedParameters->Buffer.Struct.Append(true, BufferAlignement, Layout.LayoutBuilder);
+            Mat->m_SharedParameters->Buffer.Data = UBufferPoolHandle{ Mat->m_SharedParameters->Buffer.Struct.GetSize(), ConstantBufferAlignement, IGlobalBufferPool::BufferType::ReadWriteGPUR };
+            if (Mat->m_SharedParameters->Buffer.Data)
+            {
+                Mat->m_SharedParameters->Buffer.MappedData = Mat->m_SharedParameters->Buffer.Data.AsUpload().Map() + Mat->m_SharedParameters->Buffer.Data.Offset;
+            }
+        }
+    }
+
+    //
+
     Material::Material(
         const RenderMaterialBuilder& Builder)
     {
-        {
-            auto& VarBuilder = Builder.VarBuilder();
-            auto& Layout     = VarBuilder.LocalLayout();
-
-            Structured::LayoutBuilder LocalBuilder(4);
-
-            auto Internal = LocalBuilder.Append(Structured::Type::Struct, "_Internal");
-            for (auto& Resource : Layout.Resources)
-            {
-                Internal.Append(Structured::Type::UInt, Resource);
-            }
-            for (auto& Sampler : Layout.Samplers)
-            {
-                Internal.Append(Structured::Type::UInt, Sampler);
-            }
-
-            for (auto& Sampler : Layout.Samplers)
-            {
-                Internal.Append(Structured::Type::UInt, Sampler);
-            }
-
-            m_LocalParameters.Buffer.Struct.Append(true, 4, LocalBuilder);
-            m_LocalParameters.Buffer.Struct.Append(true, 4, Layout.LayoutBuilder);
-            m_LocalParameters.Buffer.Data       = UBufferPoolHandle{ m_LocalParameters.Buffer.Struct.GetSize(), ShaderResourceAlignement, RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR };
-            m_LocalParameters.Buffer.MappedData = m_LocalParameters.Buffer.Data.AsUpload().Map() + m_LocalParameters.Buffer.Data.Offset;
-        }
-
+        Material_CreateParameterBlock(
+            Builder.VarBuilder(),
+            this);
         Material_CreatePipelineState(
             Builder,
             this);
@@ -215,7 +278,34 @@ namespace Neon::RHI
         m_LocalParameters(Other->m_LocalParameters)
     {
         m_PipelineStates = Other->m_PipelineStates;
+        if (Other->m_LocalParametersView)
+        {
+            auto Descriptor       = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
+            m_LocalParametersView = Descriptor->Allocate(1);
+
+            auto&   BufferData = m_LocalParameters.Buffer.Data;
+            SRVDesc ViewDesc{
+                .View = SRVDesc::Buffer{
+                    .FirstElement = BufferData.Offset,
+                    .SizeOfStruct = uint32_t(BufferData.Size) }
+            };
+            m_LocalParametersView->CreateShaderResourceView(
+                m_LocalParametersView.Offset,
+                BufferData.Buffer,
+                &ViewDesc);
+        }
     }
+
+    Material::~Material()
+    {
+        if (m_LocalParametersView)
+        {
+            auto Descriptor = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
+            Descriptor->Free(m_LocalParametersView);
+        }
+    }
+
+    //
 
     Ptr<IMaterial> Material::CreateInstance()
     {
@@ -240,10 +330,60 @@ namespace Neon::RHI
 
     //
 
+    void Material_UpdateParameterBlock(
+        const Material::Blackboard& Board)
+    {
+        if (!Board.Buffer.Data)
+        {
+            return;
+        }
+
+        auto InternalView = Board.Buffer.Struct["_Internal"];
+        for (auto& [Resource, Entry] : Board.Entries)
+        {
+            int& InternalData = Structured::BufferView{ Board.Buffer.MappedData, InternalView[Resource], 0 };
+            std::visit(
+                VariantVisitor{
+                    [&InternalData](const Material::ResourceEntry& Desc)
+                    {
+                        InternalData = Desc.Resource || Desc.Desc.index() ? Desc.Offset : -1;
+                    },
+                    [&InternalData](const Material::SamplerEntry& Desc)
+                    {
+                        InternalData = Desc.Desc ? Desc.Offset : -1;
+                    } },
+                Entry);
+        }
+    }
+
+    //
+
+    void Material::ReallocateShared()
+    {
+        Material_UpdateParameterBlock(*m_SharedParameters);
+    }
+
+    void Material::ReallocateLocal()
+    {
+        Material_UpdateParameterBlock(m_LocalParameters);
+    }
+
+    GpuResourceHandle Material::GetSharedBlock()
+    {
+        return m_SharedParameters->Buffer.Data ? m_SharedParameters->Buffer.Data.GetGpuHandle() : GpuResourceHandle{};
+    }
+
+    CpuDescriptorHandle Material::GetLocalBlock()
+    {
+        return m_LocalParametersView ? m_LocalParametersView.GetCpuHandle() : CpuDescriptorHandle{};
+    }
+
+    //
+
     void Material::SetResource(
-        const StringU8&                Name,
-        const Ptr<RHI::IGpuResource>&  Resource,
-        const RHI::DescriptorViewDesc& Desc)
+        const StringU8&           Name,
+        const Ptr<IGpuResource>&  Resource,
+        const DescriptorViewDesc& Desc)
     {
         ResourceEntry*        Entry      = nullptr;
         DescriptorHeapHandle* Descriptor = nullptr;
@@ -273,9 +413,9 @@ namespace Neon::RHI
             VariantVisitor{
                 [](const auto&) {},
                 [Entry, Descriptor](
-                    const RHI::CBVDesc& Desc)
+                    const CBVDesc& Desc)
                 {
-                    RHI::CBVDesc FixedDesc{
+                    CBVDesc FixedDesc{
                         Entry->Resource->GetHandle(Desc.Resource),
                         Desc.Size
                     };
@@ -285,7 +425,7 @@ namespace Neon::RHI
                         FixedDesc);
                 },
                 [Entry, Descriptor](
-                    const RHI::SRVDescOpt& Desc)
+                    const SRVDescOpt& Desc)
                 {
                     Descriptor->Heap->CreateShaderResourceView(
                         Entry->Offset + Descriptor->Offset,
@@ -293,7 +433,7 @@ namespace Neon::RHI
                         Desc.has_value() ? &*Desc : nullptr);
                 },
                 [Entry, Descriptor](
-                    const RHI::UAVDescOpt& Desc)
+                    const UAVDescOpt& Desc)
                 {
                     Descriptor->Heap->CreateUnorderedAccessView(
                         Entry->Offset + Descriptor->Offset,
@@ -305,8 +445,8 @@ namespace Neon::RHI
     }
 
     void Material::SetSampler(
-        const StringU8&         Name,
-        const RHI::SamplerDesc& Desc)
+        const StringU8&       Name,
+        const SamplerDescOpt& Desc)
     {
         SamplerEntry*         Entry      = nullptr;
         DescriptorHeapHandle* Descriptor = nullptr;
@@ -333,7 +473,7 @@ namespace Neon::RHI
         Entry->Desc = Desc;
         Descriptor->Heap->CreateSampler(
             Entry->Offset + Descriptor->Offset,
-            Desc);
+            Desc ? *Desc : SamplerDesc::Null);
     }
 
     void Material::SetData(
@@ -365,9 +505,9 @@ namespace Neon::RHI
     //
 
     bool Material::GetResource(
-        const StringU8&          Name,
-        Ptr<RHI::IGpuResource>*  Resource,
-        RHI::DescriptorViewDesc* Desc)
+        const StringU8&     Name,
+        Ptr<IGpuResource>*  Resource,
+        DescriptorViewDesc* Desc)
     {
         ResourceEntry*        Entry      = nullptr;
         DescriptorHeapHandle* Descriptor = nullptr;
@@ -402,8 +542,8 @@ namespace Neon::RHI
     }
 
     bool Material::GetSampler(
-        const StringU8&   Name,
-        RHI::SamplerDesc* Desc)
+        const StringU8& Name,
+        SamplerDescOpt* Desc)
     {
         SamplerEntry*         Entry      = nullptr;
         DescriptorHeapHandle* Descriptor = nullptr;
@@ -425,8 +565,10 @@ namespace Neon::RHI
         {
             return false;
         }
-
-        *Desc = Entry->Desc;
+        if (Desc)
+        {
+            *Desc = Entry->Desc;
+        }
         return true;
     }
 
@@ -543,7 +685,7 @@ namespace Neon::RHI
     Material::RootEntry::RootEntry(
         const RootEntry& Other) :
         Data(Other.Data.Size, ShaderResourceAlignement, Other.Data.Type),
-        MappedData(Data.AsUpload().Map() + Data.Offset),
+        MappedData(Data ? Data.AsUpload().Map() + Data.Offset : nullptr),
         Struct(Other.Struct)
     {
     }

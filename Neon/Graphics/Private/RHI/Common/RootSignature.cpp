@@ -268,16 +268,15 @@ namespace Neon::RHI
         // RSCommon::Type::Material
         {
             RootSignatureBuilder Builder(STR("RSCommon::Material"));
-            Builder.AddShaderResourceView(0, 47); // MaterialRS::Local
+            Builder.AddShaderResourceView(0, 47); // MaterialRS::LocalData
             Builder.AddConstantBufferView(0, 47); // MaterialRS::SharedData
             Builder.AddShaderResourceView(0, 2);  // MaterialRS::InstanceData
 
             Builder.AddDescriptorTable(
-                RHI::RootDescriptorTable() // MaterialRS::LightData
-                    .AddSrvRange(0, 1, 1)  // _Lights
-                    .AddSrvRange(1, 1, 1)  // _LightIndexList
-                    .AddSrvRange(2, 1, 1), // _LightGrid
-                RHI::ShaderVisibility::Pixel);
+                RHI::RootDescriptorTable()       // MaterialRS::LightData
+                    .AddSrvRange(0, 1, 1)        // _Lights
+                    .AddSrvRange(1, 1, 1)        // _LightIndexList
+                    .AddSrvRange(2, 1, 1));      // _LightGrid
             Builder.AddConstantBufferView(0, 0); // MaterialRS::FrameData
 
             for (auto& [IsUav, SpaceSlot] : {

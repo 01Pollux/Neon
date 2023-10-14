@@ -46,6 +46,11 @@ namespace Neon::RHI
                 size_t     Alignement,
                 BufferType Type);
 
+            [[nodiscard]] operator bool() const noexcept
+            {
+                return Buffer != nullptr;
+            }
+
             /// <summary>
             /// Cast to an upload buffer
             /// </summary>

@@ -59,6 +59,11 @@ namespace Neon::RHI
             const Ptr<IPipelineState>& State) override;
 
     public:
+        void BindMaterialParameters(
+            bool              IsDirect,
+            GpuResourceHandle FrameData) override;
+
+    public:
         void SetConstants(
             bool        IsDirect,
             uint32_t    RootIndex,

@@ -91,6 +91,28 @@ namespace Neon::RHI
 
     public:
         /// <summary>
+        /// Reallocate material's shared resources.
+        /// </summary>
+        virtual void ReallocateShared() = 0;
+
+        /// <summary>
+        /// Reallocate material's local resources.
+        /// </summary>
+        virtual void ReallocateLocal() = 0;
+
+    public:
+        /// <summary>
+        /// Get material's shared resource view
+        /// </summary>
+        [[nodiscard]] virtual GpuResourceHandle GetSharedBlock() = 0;
+
+        /// <summary>
+        /// Get material's local descriptor view
+        /// </summary>
+        [[nodiscard]] virtual CpuDescriptorHandle GetLocalBlock() = 0;
+
+    public:
+        /// <summary>
         /// Set the material's resource.
         /// </summary>
         virtual void SetResource(
@@ -102,8 +124,8 @@ namespace Neon::RHI
         /// Set the material's sampler.
         /// </summary>
         virtual void SetSampler(
-            const StringU8&    Name,
-            const SamplerDesc& Desc) = 0;
+            const StringU8&       Name,
+            const SamplerDescOpt& Desc = std::nullopt) = 0;
 
         /// <summary>
         /// Set the material's constant.
@@ -140,7 +162,7 @@ namespace Neon::RHI
         /// </summary>
         virtual bool GetSampler(
             const StringU8& Name,
-            SamplerDesc*    Desc = nullptr) = 0;
+            SamplerDescOpt* Desc = nullptr) = 0;
 
         /// <summary>
         /// Get the material's constant.

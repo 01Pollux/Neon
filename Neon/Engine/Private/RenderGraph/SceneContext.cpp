@@ -1,12 +1,12 @@
 #include <EnginePCH.hpp>
 #include <RenderGraph/SceneContext.hpp>
 #include <RenderGraph/Storage.hpp>
-
 #include <Runtime/GameLogic.hpp>
+
 #include <Scene/EntityWorld.hpp>
 #include <Scene/GPU/Scene.hpp>
-
 #include <Mdl/Mesh.hpp>
+
 #include <RHI/GlobalBuffer.hpp>
 #include <RHI/RootSignature.hpp>
 #include <RHI/Material/Material.hpp>
@@ -81,6 +81,20 @@ namespace Neon::RG
             std::unreachable();
         }
 
+        bool RootSignatureWasBound[2]{};
+        auto BindRootSignatureOnce = [&RootSignatureWasBound, CommandList, this](bool IsDirect)
+        {
+            auto Index = IsDirect ? 0 : 1;
+            if (RootSignatureWasBound[Index])
+            {
+                return;
+            }
+
+            RootSignatureWasBound[Index] = true;
+            CommandList->BindMaterialParameters(IsDirect, m_Storage.GetFrameDataHandle());
+        };
+
+        RHI::GpuDescriptorHandle LastLightHandle;
         for (size_t Pass = 0; Pass < PassesCount; Pass++)
         {
 #ifndef NEON_DIST
@@ -136,34 +150,57 @@ namespace Neon::RG
 
                     UpdatePipelineState();
 
-                    //// Update shared params
-                    //{
-                    //    auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
-                    //    *MaterialData        = {};
-                    //    MaterialData->Albedo = Colors::DarkGreen;
+                    // Update shared params
+                    {
+                        auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
+                        *MaterialData        = {};
+                        MaterialData->Albedo = Colors::DarkGreen;
 
-                    //    auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
-                    //    *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
+                        auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
+                        *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
 
-                    //    MeshMaterial->SetResourceView("_PerMaterialData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
-                    //    MeshMaterial->SetResourceView("_PerInstanceData", Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex + SizeOfPerMaterialData));
+                        // MeshMaterial->BindSharedParams(CommandList);
+                        //  Update light handle
+                        {
+                            auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
+                            if (LastLightHandle)
+                            {
+                                LastLightHandle = LightDataHandle;
+                                CommandList->SetDescriptorTable(
+                                    !MeshMaterial->IsCompute(),
+                                    uint32_t(RHI::RSCommon::MaterialRS::LightData),
+                                    LastLightHandle);
+                            }
+                        }
 
-                    //    MeshMaterial->BindSharedParams(CommandList);
-                    //    {
-                    //        auto& RootSignature = MeshMaterial->GetRootSignature();
-                    //        if (auto LightingParam = RootSignature->FindParamIndex("_LightData"))
-                    //        {
-                    //            auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
-                    //            if (LightDataHandle)
-                    //            {
-                    //                CommandList->SetDescriptorTable(
-                    //                    !MeshMaterial->IsCompute(),
-                    //                    LightingParam,
-                    //                    LightDataHandle);
-                    //            }
-                    //        }
-                    //    }
-                    //}
+                        // Update PerInstanceData
+                        {
+                            CommandList->SetResourceView(
+                                !MeshMaterial->IsCompute(),
+                                RHI::CstResourceViewType::Srv,
+                                uint32_t(RHI::RSCommon::MaterialRS::InstanceData),
+                                Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
+                        }
+
+                        // Update Local and shared data
+                        {
+                            MeshMaterial->ReallocateShared();
+                            MeshMaterial->ReallocateLocal();
+
+                            CommandList->SetResourceView(
+                                !MeshMaterial->IsCompute(),
+                                RHI::CstResourceViewType::Cbv,
+                                uint32_t(RHI::RSCommon::MaterialRS::SharedData),
+                                MeshMaterial->GetSharedBlock());
+
+                            CommandList->SetDynamicDescriptorTable(
+                                !MeshMaterial->IsCompute(),
+                                uint32_t(RHI::RSCommon::MaterialRS::LocalData),
+                                MeshMaterial->GetLocalBlock(),
+                                1,
+                                false);
+                        }
+                    }
 
                     RHI::Views::Vertex VtxView;
                     VtxView.Append<Mdl::MeshVertex>(

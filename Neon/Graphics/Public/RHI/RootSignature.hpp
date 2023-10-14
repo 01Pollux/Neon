@@ -49,7 +49,9 @@ namespace Neon::RHI
             g_Samplers = _SamplersStart,
             g_SamplersCmpState,
 
-            _SamplersEnd,
+            _SamplersEnd = g_SamplersCmpState,
+
+            //
 
             _ResourcesStart,
 
@@ -123,7 +125,7 @@ namespace Neon::RHI
             g_Texture3D,
             g_TextureCube,
 
-            _ResourcesEnd
+            _ResourcesEnd = g_TextureCube
         };
     } // namespace RSCommon
 

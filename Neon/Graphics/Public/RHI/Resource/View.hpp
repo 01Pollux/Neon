@@ -65,7 +65,7 @@ namespace Neon::RHI
         struct Buffer
         {
             size_t   FirstElement = 0;
-            uint32_t Count        = 0;
+            uint32_t Count        = 1;
             uint32_t SizeOfStruct = 0;
             bool     Raw : 1      = false;
         };
@@ -416,4 +416,6 @@ namespace Neon::RHI
 
         static const SamplerDesc Null;
     };
+
+    using SamplerDescOpt = std::optional<SamplerDesc>;
 } // namespace Neon::RHI
