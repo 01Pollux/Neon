@@ -11,14 +11,17 @@ namespace Neon::RHI
         size_t                        Alignement,
         IGlobalBufferPool::BufferType Type) -> Handle
     {
-        auto Allocator    = Dx12RenderDevice::Get()->GetAllocator();
-        auto BufferHandle = Allocator->AllocateBuffer(Type, Size, Alignement);
-
         Handle Hndl{};
-        Hndl.Buffer = BufferHandle.Resource,
-        Hndl.Offset = BufferHandle.Offset,
-        Hndl.Size   = BufferHandle.Size,
-        Hndl.Type   = Type;
+        if (Size) [[likely]]
+        {
+            auto Allocator    = Dx12RenderDevice::Get()->GetAllocator();
+            auto BufferHandle = Allocator->AllocateBuffer(Type, Size, Alignement);
+
+            Hndl.Buffer = BufferHandle.Resource,
+            Hndl.Offset = BufferHandle.Offset,
+            Hndl.Size   = BufferHandle.Size,
+            Hndl.Type   = Type;
+        }
         return Hndl;
     }
 
@@ -29,11 +32,14 @@ namespace Neon::RHI
 
         for (auto& Hndl : Handles)
         {
-            Dx12Swapchain::Get()->SafeRelease(
-                { .Resource = Hndl.Buffer,
-                  .Offset   = Hndl.Offset,
-                  .Size     = Hndl.Size,
-                  .Type     = Hndl.Type });
+            if (Hndl.Size) [[likely]]
+            {
+                Dx12Swapchain::Get()->SafeRelease(
+                    { .Resource = Hndl.Buffer,
+                      .Offset   = Hndl.Offset,
+                      .Size     = Hndl.Size,
+                      .Type     = Hndl.Type });
+            }
         }
     }
 } // namespace Neon::RHI

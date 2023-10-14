@@ -106,9 +106,6 @@ namespace Neon::RG
                     }
 
                     WasSet = true;
-                    FirstMaterial->SetResourceView(
-                        "_FrameConstant",
-                        m_Storage.GetFrameDataHandle());
 
                     CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
                 };

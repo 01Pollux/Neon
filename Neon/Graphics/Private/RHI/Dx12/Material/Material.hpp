@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Utils/Struct.hpp>
 #include <RHI/Material/Material.hpp>
 
 #include <RHI/Resource/Descriptor.hpp>
@@ -52,90 +53,38 @@ namespace Neon::RHI
         void SetResource(
             const StringU8&                Name,
             const Ptr<RHI::IGpuResource>&  Resource,
-            const RHI::DescriptorViewDesc& Desc,
-            uint32_t                       ArrayIndex,
-            const Ptr<RHI::IGpuResource>&  UavCounter) override;
+            const RHI::DescriptorViewDesc& Desc) override;
 
         void SetSampler(
             const StringU8&         Name,
-            const RHI::SamplerDesc& Desc,
-            uint32_t                ArrayIndex = 0) override;
+            const RHI::SamplerDesc& Desc) override;
 
-        void SetConstant(
+        void SetData(
             const StringU8& Name,
-            const void*     Data,
-            size_t          Size,
-            uint32_t        Offset) override;
-
-        void SetResourceView(
-            const StringU8&        Name,
-            RHI::GpuResourceHandle Handle) override;
-
-        void SetDynamicResourceView(
-            const StringU8&          Name,
-            RHI::CstResourceViewType Type,
-            const void*              Data,
-            size_t                   Size) override;
-
-        void SetResourceSize(
-            const StringU8& Name,
-            uint32_t        Size) override;
+            const void*     Data) override;
 
     private:
-        struct ConstantEntry
-        {
-            uint8_t DataOffset;
-        };
-
         struct RootEntry
         {
-            RHI::GpuResourceHandle   Handle{};
+            Structured::Layout       Struct;
+            uint32_t                 Offset;
             RHI::CstResourceViewType ViewType;
-        };
-
-        struct DescriptorEntry
-        {
-            std::vector<Ptr<RHI::IGpuResource>> Resources;
-            std::vector<DescriptorViewDesc>     Descs;
-
-            uint32_t Offset;
-
-            /// <summary>
-            /// Resizable array of resource descriptors.
-            /// </summary>
-            uint32_t Count;
-
-            RHI::DescriptorTableParam Type;
         };
 
         struct SamplerEntry
         {
-            std::vector<RHI::SamplerDesc> Descs;
-
-            uint32_t Offset;
-
-            /// <summary>
-            /// Resizable array of sampler descriptors.
-            /// </summary>
-            uint32_t Count;
+            RHI::SamplerDesc Desc;
+            uint32_t         Offset;
         };
 
-        using DescriptorVariant = std::variant<DescriptorEntry, SamplerEntry>;
-
-        struct DescriptorVariantMap
+        struct DescriptorEntry
         {
-            std::map<StringU8, DescriptorVariant> Entries;
-
-            uint32_t Offset;
-
-            [[nodiscard]] bool IsSampler() const noexcept
-            {
-                return Entries.begin()->second.index() == 1;
-            }
+            DescriptorViewDesc        Desc;
+            uint32_t                  Offset;
+            RHI::DescriptorTableParam Type;
         };
 
-        using SharedEntryVariant = std::variant<ConstantEntry, RootEntry, DescriptorVariantMap>;
-        using LocalEntryVariant  = DescriptorVariantMap;
+        using EntryVariant = std::variant<RootEntry, DescriptorEntry>;
 
         struct UnqiueDescriptorHeapHandle
         {
@@ -159,39 +108,22 @@ namespace Neon::RHI
             void Release();
         };
 
-    private:
-        /// <summary>
-        /// Split resource name into resource group name and resource name.
-        /// </summary>
-        [[nodiscard]] std::pair<StringU8, StringU8> SplitResourceName(
-            const StringU8& Name);
-
-        /// <summary>
-        /// Get descriptor variant from shared/local parameters.
-        /// </summary>
-        DescriptorVariant* GetDescriptorVariant(
-            const StringU8&              Name,
-            const StringU8&              EntryName,
-            DescriptorVariantMap**       VariantMap     = nullptr,
-            UnqiueDescriptorHeapHandle** DescriptorHeap = nullptr);
-
-    public:
-        struct SharedParameters
+        struct Blackboard
         {
-            UnqiueDescriptorHeapHandle             Descriptors;
-            std::map<StringU8, SharedEntryVariant> SharedEntries;
-            std::unique_ptr<uint8_t[]>             ConstantData;
-        };
+            UnqiueDescriptorHeapHandle          Descriptors;
+            std::map<StringU8, DescriptorEntry> Entries;
+            UBufferPoolHandle                   Buffer;
 
-        struct LocalParameters
-        {
-            UnqiueDescriptorHeapHandle            Descriptors;
-            std::map<StringU8, LocalEntryVariant> LocalEntries;
+            Blackboard() = default;
+            Blackboard(const Blackboard& Other);
+            Blackboard& operator=(const Blackboard&) = delete;
+            NEON_CLASS_MOVE(Blackboard);
+            ~Blackboard() = default;
         };
 
     private:
-        Ptr<SharedParameters> m_SharedParameters = std::make_shared<SharedParameters>();
-        LocalParameters       m_LocalParameters;
+        Ptr<Blackboard> m_SharedParameters = std::make_shared<Blackboard>();
+        Blackboard      m_LocalParameters;
 
         bool m_IsCompute     : 1 = false;
         bool m_IsTransparent : 1 = false;
