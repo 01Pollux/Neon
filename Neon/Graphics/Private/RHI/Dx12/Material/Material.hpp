@@ -52,23 +52,53 @@ namespace Neon::RHI
     public:
         void SetResource(
             const StringU8&                Name,
-            const Ptr<RHI::IGpuResource>&  Resource,
+            const Ptr<IGpuResource>&       Resource,
             const RHI::DescriptorViewDesc& Desc) override;
 
         void SetSampler(
-            const StringU8&         Name,
-            const RHI::SamplerDesc& Desc) override;
+            const StringU8&    Name,
+            const SamplerDesc& Desc) override;
 
         void SetData(
             const StringU8& Name,
-            const void*     Data) override;
+            const void*     Data,
+            size_t          ArrayOffset) override;
+
+    public:
+        bool GetResource(
+            const StringU8&     Name,
+            Ptr<IGpuResource>*  Resource,
+            DescriptorViewDesc* Desc) override;
+
+        bool GetSampler(
+            const StringU8& Name,
+            SamplerDesc*    Desc) override;
+
+        size_t GetData(
+            const StringU8& Name,
+            const void*     Data,
+            size_t          ArrayOffset) override;
 
     private:
         struct RootEntry
         {
-            Structured::Layout       Struct;
-            uint32_t                 Offset;
-            RHI::CstResourceViewType ViewType;
+            UBufferPoolHandle  Data;
+            uint8_t*           MappedData;
+            Structured::Layout Struct;
+
+            RootEntry() = default;
+            RootEntry(const RootEntry& Other);
+            RootEntry& operator=(const RootEntry&) = delete;
+            NEON_CLASS_MOVE(RootEntry);
+            ~RootEntry() = default;
+        };
+
+        struct ResourceEntry
+        {
+            RHI::DescriptorViewDesc Desc;
+            Ptr<IGpuResource>       Resource;
+            uint32_t                Offset;
+            DescriptorTableParam    Type;
         };
 
         struct SamplerEntry
@@ -77,14 +107,7 @@ namespace Neon::RHI
             uint32_t         Offset;
         };
 
-        struct DescriptorEntry
-        {
-            DescriptorViewDesc        Desc;
-            uint32_t                  Offset;
-            RHI::DescriptorTableParam Type;
-        };
-
-        using EntryVariant = std::variant<RootEntry, DescriptorEntry>;
+        using EntryVariant = std::variant<ResourceEntry, SamplerEntry>;
 
         struct UnqiueDescriptorHeapHandle
         {
@@ -110,15 +133,9 @@ namespace Neon::RHI
 
         struct Blackboard
         {
-            UnqiueDescriptorHeapHandle          Descriptors;
-            std::map<StringU8, DescriptorEntry> Entries;
-            UBufferPoolHandle                   Buffer;
-
-            Blackboard() = default;
-            Blackboard(const Blackboard& Other);
-            Blackboard& operator=(const Blackboard&) = delete;
-            NEON_CLASS_MOVE(Blackboard);
-            ~Blackboard() = default;
+            UnqiueDescriptorHeapHandle       Descriptors;
+            std::map<StringU8, EntryVariant> Entries;
+            RootEntry                        Buffer;
         };
 
     private:

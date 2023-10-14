@@ -95,31 +95,84 @@ namespace Neon::RHI
         /// </summary>
         virtual void SetResource(
             const StringU8&                Name,
-            const Ptr<RHI::IGpuResource>&  Resource,
+            const Ptr<IGpuResource>&       Resource,
             const RHI::DescriptorViewDesc& Desc) = 0;
 
         /// <summary>
         /// Set the material's sampler.
         /// </summary>
         virtual void SetSampler(
-            const StringU8&         Name,
-            const RHI::SamplerDesc& Desc) = 0;
+            const StringU8&    Name,
+            const SamplerDesc& Desc) = 0;
 
         /// <summary>
         /// Set the material's constant.
         /// </summary>
         virtual void SetData(
             const StringU8& Name,
-            const void*     Data) = 0;
+            const void*     Data,
+            size_t          ArrayOffset = 0) = 0;
+
+    public:
+        /// <summary>
+        /// Set the material's constant.
+        /// </summary>
+        template<typename _Ty>
+        void Set(
+            const StringU8& Name,
+            const _Ty&      Data,
+            size_t          ArrayOffset = 0)
+        {
+            SetData(Name, std::addressof(Data), ArrayOffset);
+        }
+
+    public:
+        /// <summary>
+        /// Get the material's resource.
+        /// </summary>
+        virtual bool GetResource(
+            const StringU8&     Name,
+            Ptr<IGpuResource>*  Resource = nullptr,
+            DescriptorViewDesc* Desc     = nullptr) = 0;
+
+        /// <summary>
+        /// Get the material's sampler.
+        /// </summary>
+        virtual bool GetSampler(
+            const StringU8& Name,
+            SamplerDesc*    Desc = nullptr) = 0;
+
+        /// <summary>
+        /// Get the material's constant.
+        /// if data is null, return the size of the data
+        /// </summary>
+        virtual size_t GetData(
+            const StringU8& Name,
+            const void*     Data        = nullptr,
+            size_t          ArrayOffset = 0) = 0;
+
+    public:
+        /// <summary>
+        /// Get the material's constant.
+        /// </summary>
+        template<typename _Ty>
+        [[nodiscard]] _Ty Get(
+            const StringU8& Name,
+            size_t          ArrayOffset = 0)
+        {
+            _Ty Data{};
+            GetData(Name, std::addressof(Data), ArrayOffset);
+            return Data;
+        }
 
     public:
         /// <summary>
         /// Set the material's resource as a constant buffer view.
         /// </summary>
         void SetConstantBuffer(
-            const StringU8&               Name,
-            const Ptr<RHI::IGpuResource>& Resource,
-            const RHI::CBVDesc&           Desc)
+            const StringU8&          Name,
+            const Ptr<IGpuResource>& Resource,
+            const CBVDesc&           Desc)
         {
             SetResource(Name, Resource, Desc);
         }
@@ -128,9 +181,9 @@ namespace Neon::RHI
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetTexture(
-            const StringU8&               Name,
-            const Ptr<RHI::IGpuResource>& Resource,
-            const RHI::SRVDescOpt&        Desc = std::nullopt)
+            const StringU8&          Name,
+            const Ptr<IGpuResource>& Resource,
+            const SRVDescOpt&        Desc = std::nullopt)
         {
             SetResource(Name, Resource, Desc);
         }
@@ -139,9 +192,9 @@ namespace Neon::RHI
         /// Set the material's resource as a resource view.
         /// </summary>
         void SetStructuredBuffer(
-            const StringU8&               Name,
-            const Ptr<RHI::IGpuResource>& Resource,
-            const RHI::SRVDescOpt&        Desc = std::nullopt)
+            const StringU8&          Name,
+            const Ptr<IGpuResource>& Resource,
+            const SRVDescOpt&        Desc = std::nullopt)
         {
             SetTexture(Name, Resource, Desc);
         }
@@ -150,9 +203,9 @@ namespace Neon::RHI
         /// Set the material's resource as an unordered access view.
         /// </summary>
         void SetUnorderedAcess(
-            const StringU8&               Name,
-            const Ptr<RHI::IGpuResource>& Resource,
-            const RHI::UAVDescOpt&        Desc = std::nullopt)
+            const StringU8&          Name,
+            const Ptr<IGpuResource>& Resource,
+            const UAVDescOpt&        Desc = std::nullopt)
         {
             SetResource(Name, Resource, Desc);
         }

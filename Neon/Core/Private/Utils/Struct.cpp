@@ -70,16 +70,19 @@ namespace Neon::Structured
     }
 
     auto LayoutBuilder::ElementView::operator[](
-        const std::string& Name) -> ElementView
+        const StringU8& Name) -> ElementView
     {
-        Element::StructData* Struct = m_Element->AsStruct();
-        NEON_ASSERT(Struct, "Tried to access view of non-struct element");
-
-        for (auto& NestedElement : Struct->NestedElements)
+        if (m_Element)
         {
-            if (NestedElement.first == Name)
+            Element::StructData* Struct = m_Element->AsStruct();
+            NEON_ASSERT(Struct, "Tried to access view of non-struct element");
+
+            for (auto& NestedElement : Struct->NestedElements)
             {
-                return ElementView(&NestedElement.second);
+                if (NestedElement.first == Name)
+                {
+                    return ElementView(&NestedElement.second);
+                }
             }
         }
         return nullptr;
@@ -172,7 +175,7 @@ namespace Neon::Structured
     }
 
     auto LayoutBuilder::operator[](
-        const std::string& Name) -> ElementView
+        const StringU8& Name) -> ElementView
     {
         return GetView()[Name];
     }
@@ -307,7 +310,7 @@ namespace Neon::Structured
             NEON_ASSERT(Array->NestedElement, "Invalid nested element in Layout");
 
             CookedArray->ArrayCount    = Array->ArrayCount;
-            CookedArray->NestedElement = std::make_unique<Layout::Element>(
+            CookedArray->NestedElement = std::make_shared<Layout::Element>(
                 Array->NestedElement->GetType(), 0, AppendOffset);
 
             size_t CurOffset = AppendOffset;
@@ -381,11 +384,18 @@ namespace Neon::Structured
     }
 
     auto Layout::ElementView::operator[](
-        const std::string& Name) const -> ElementView
+        const StringU8& Name) const -> ElementView
     {
-        const Element::StructData* Struct = m_Element->AsStruct();
-        NEON_ASSERT(Struct, "Tried to access view of non-struct element");
-        return ElementView(&Struct->NestedElements.find(Name)->second);
+        ElementView View(nullptr);
+        if (!m_Element)
+        {
+            const Element::StructData* Struct = m_Element->AsStruct();
+            if (auto Struct = m_Element->AsStruct())
+            {
+                View = ElementView(&Struct->NestedElements.find(Name)->second);
+            }
+        }
+        return View;
     }
 
     size_t Layout::ElementView::GetOffset() const
@@ -427,9 +437,18 @@ namespace Neon::Structured
     }
 
     auto Layout::operator[](
-        const std::string& Name) const -> ElementView
+        const StringU8& Name) const -> ElementView
     {
-        return ElementView(&m_CookedLayout)[Name];
+        ElementView View(&m_CookedLayout);
+        for (auto SubName : std::views::split(Name, "."))
+        {
+            View = View[StringU8(StringU8View(SubName))];
+            if (!View)
+            {
+                break;
+            }
+        }
+        return View;
     }
 
     size_t Layout::GetSize() const noexcept

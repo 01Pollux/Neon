@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Core/Neon.hpp>
+#include <Core/String.hpp>
 #include <Crypto/SHA256.hpp>
 
-#include <string>
 #include <vector>
 #include <memory>
 #include <variant>
@@ -107,7 +107,7 @@ namespace Neon::Structured
         public:
             struct StructData
             {
-                std::vector<std::pair<std::string, Element>> NestedElements;
+                std::vector<std::pair<StringU8, Element>> NestedElements;
             };
 
             struct ArrayData
@@ -155,22 +155,22 @@ namespace Neon::Structured
             /// Get element in struct layout
             /// </summary>
             [[nodiscard]] ElementView operator[](
-                const std::string& Name);
+                const StringU8& Name);
 
             /// <summary>
             /// Append type to the layout
             /// </summary>
             ElementView Append(
-                Type        Type,
-                std::string Name);
+                Type     Type,
+                StringU8 Name);
 
             /// <summary>
             /// Append array to the layout
             /// </summary>
             ElementView AppendArray(
-                Type        Type,
-                std::string Name,
-                uint32_t    ArrayCount);
+                Type     Type,
+                StringU8 Name,
+                uint32_t ArrayCount);
 
             /// <summary>
             /// Get type of the array
@@ -205,6 +205,11 @@ namespace Neon::Structured
             [[nodiscard]] void GetHashCode(
                 Crypto::Sha256& Sha256) const;
 
+            operator bool() const noexcept
+            {
+                return m_Element != nullptr;
+            }
+
         private:
             Element* m_Element;
         };
@@ -230,22 +235,22 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] ElementView operator[](
-            const std::string& Name);
+            const StringU8& Name);
 
         /// <summary>
         /// Append type to the layout
         /// </summary>
         ElementView Append(
-            Type        Type,
-            std::string Name);
+            Type     Type,
+            StringU8 Name);
 
         /// <summary>
         /// Append array to the layout
         /// </summary>
         ElementView AppendArray(
-            Type        Type,
-            std::string Name,
-            uint32_t    Size);
+            Type     Type,
+            StringU8 Name,
+            uint32_t Size);
 
         /// <summary>
         /// Get alignement of the layout
@@ -286,13 +291,13 @@ namespace Neon::Structured
         public:
             struct StructData
             {
-                std::map<std::string, Element> NestedElements;
-                uint32_t                       StructSize;
+                std::map<StringU8, Element> NestedElements;
+                uint32_t                    StructSize;
             };
 
             struct ArrayData
             {
-                std::unique_ptr<Element> NestedElement;
+                std::shared_ptr<Element> NestedElement;
                 uint32_t                 ArrayCount;
             };
 
@@ -347,7 +352,7 @@ namespace Neon::Structured
             /// Get element in struct layout
             /// </summary>
             [[nodiscard]] ElementView operator[](
-                const std::string& Name) const;
+                const StringU8& Name) const;
 
             /// <summary>
             /// Get offset in main struct for layout
@@ -364,6 +369,11 @@ namespace Neon::Structured
             /// </summary>
             [[nodiscard]] uint32_t GetArrayCount() const noexcept;
 
+            operator bool() const noexcept
+            {
+                return m_Element != nullptr;
+            }
+
         private:
             const Element* m_Element;
         };
@@ -379,7 +389,7 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] ElementView operator[](
-            const std::string& Name) const;
+            const StringU8& Name) const;
 
         /// <summary>
         /// Get size of layout
@@ -424,7 +434,7 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] BufferView operator[](
-            const char* Name)
+            const StringU8& Name)
         {
             return BufferView(m_Data, m_View[Name], m_ArrayOffset);
         }
@@ -433,27 +443,9 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] BufferView operator[](
-            const char* Name) const
+            const StringU8& Name) const
         {
             return BufferView(m_Data, m_View[Name], m_ArrayOffset);
-        }
-
-        /// <summary>
-        /// Get element in struct layout
-        /// </summary>
-        [[nodiscard]] BufferView operator[](
-            const std::string& Name)
-        {
-            return (*this)[Name.c_str()];
-        }
-
-        /// <summary>
-        /// Get element in struct layout
-        /// </summary>
-        [[nodiscard]] BufferView operator[](
-            const std::string& Name) const
-        {
-            return (*this)[Name.c_str()];
         }
 
         /// <summary>
@@ -476,22 +468,32 @@ namespace Neon::Structured
             return BufferView(m_Data, Layout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
         }
 
-        template<typename _Ty = uint8_t>
+        const uint8_t* Data() const
+        {
+            return std::bit_cast<const uint8_t*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+        }
+
+        uint8_t* Data()
+        {
+            return std::bit_cast<uint8_t*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+        }
+
+        template<typename _Ty>
         const _Ty* As() const
         {
-            return std::bit_cast<const _Ty*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+            return std::bit_cast<const _Ty*>(Data());
         }
 
         template<typename _Ty = uint8_t>
         _Ty* As()
         {
-            return std::bit_cast<_Ty*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+            return std::bit_cast<_Ty*>(Data());
         }
 
         template<typename _Ty>
         operator const _Ty&() const
         {
-            return *Data<_Ty>();
+            return *As<_Ty>();
         }
 
         template<typename _Ty>
@@ -559,18 +561,9 @@ namespace Neon::Structured
         /// Get element in struct layout
         /// </summary>
         [[nodiscard]] CBufferView operator[](
-            const char* Name) const
+            const StringU8& Name) const
         {
             return CBufferView(m_Data, m_View[Name], m_ArrayOffset);
-        }
-
-        /// <summary>
-        /// Get element in struct layout
-        /// </summary>
-        [[nodiscard]] CBufferView operator[](
-            const std::string& Name) const
-        {
-            return (*this)[Name.c_str()];
         }
 
         /// <summary>
@@ -583,10 +576,15 @@ namespace Neon::Structured
             return CBufferView(m_Data, Layout::ElementView(Array->NestedElement.get()), m_ArrayOffset + Offset * m_View.GetSize());
         }
 
+        const uint8_t* Data() const
+        {
+            return std::bit_cast<const uint8_t*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+        }
+
         template<typename _Ty = uint8_t>
         const _Ty* As() const
         {
-            return std::bit_cast<const _Ty*>(m_Data + m_View.GetOffset() + m_ArrayOffset);
+            return std::bit_cast<const _Ty*>(Data());
         }
 
         template<typename _Ty>

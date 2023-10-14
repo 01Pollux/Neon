@@ -218,309 +218,220 @@ namespace Neon::RHI
         const Ptr<RHI::IGpuResource>&  Resource,
         const RHI::DescriptorViewDesc& Desc)
     {
-        auto Names = std::views::split(Name, ".");
-        if (Names.empty())
+        ResourceEntry*        Entry      = nullptr;
+        DescriptorHeapHandle* Descriptor = nullptr;
+
+        if (auto Iter = m_LocalParameters.Entries.find(Name);
+            Iter != m_LocalParameters.Entries.end())
         {
+            Entry      = std::get_if<ResourceEntry>(&Iter->second);
+            Descriptor = &m_LocalParameters.Descriptors.ResourceDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->Entries.find(Name);
+                 Iter != m_SharedParameters->Entries.end())
+        {
+            Entry      = std::get_if<ResourceEntry>(&Iter->second);
+            Descriptor = &m_SharedParameters->Descriptors.ResourceDescriptors;
+        }
+
+        if (!Entry)
+        {
+            NEON_WARNING_TAG("Material", "Resource '{}' doesn't exist", Name);
             return;
         }
+
+        Entry->Resource = Resource;
+        Entry->Desc     = Desc;
+        std::visit(
+            VariantVisitor{
+                [](const auto&) {},
+                [Entry, Descriptor](
+                    const RHI::CBVDesc& Desc)
+                {
+                    RHI::CBVDesc FixedDesc{
+                        Entry->Resource->GetHandle(Desc.Resource),
+                        Desc.Size
+                    };
+
+                    Descriptor->Heap->CreateConstantBufferView(
+                        Entry->Offset + Descriptor->Offset,
+                        FixedDesc);
+                },
+                [Entry, Descriptor](
+                    const RHI::SRVDescOpt& Desc)
+                {
+                    Descriptor->Heap->CreateShaderResourceView(
+                        Entry->Offset + Descriptor->Offset,
+                        Entry->Resource.get(),
+                        Desc.has_value() ? &*Desc : nullptr);
+                },
+                [Entry, Descriptor](
+                    const RHI::UAVDescOpt& Desc)
+                {
+                    Descriptor->Heap->CreateUnorderedAccessView(
+                        Entry->Offset + Descriptor->Offset,
+                        Entry->Resource.get(),
+                        Desc.has_value() ? &*Desc : nullptr);
+                },
+            },
+            Desc);
     }
 
     void Material::SetSampler(
         const StringU8&         Name,
         const RHI::SamplerDesc& Desc)
     {
+        SamplerEntry*         Entry      = nullptr;
+        DescriptorHeapHandle* Descriptor = nullptr;
+
+        if (auto Iter = m_LocalParameters.Entries.find(Name);
+            Iter != m_LocalParameters.Entries.end())
+        {
+            Entry      = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = &m_LocalParameters.Descriptors.SamplerDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->Entries.find(Name);
+                 Iter != m_SharedParameters->Entries.end())
+        {
+            Entry      = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = &m_SharedParameters->Descriptors.SamplerDescriptors;
+        }
+
+        if (!Entry)
+        {
+            NEON_WARNING_TAG("Material", "Sampler '{}' doesn't exist", Name);
+            return;
+        }
+
+        Entry->Desc = Desc;
+        Descriptor->Heap->CreateSampler(
+            Entry->Offset + Descriptor->Offset,
+            Desc);
     }
 
-    void Material::SetData(const StringU8& Name, const void* Data)
+    void Material::SetData(
+        const StringU8& Name,
+        const void*     Data,
+        size_t          ArrayOffset)
     {
+        RootEntry* Entry = nullptr;
+
+        Entry     = &m_LocalParameters.Buffer;
+        auto View = Entry->Struct[Name];
+
+        if (!View)
+        {
+            Entry = &m_SharedParameters->Buffer;
+            View  = Entry->Struct[Name];
+        }
+
+        if (!View)
+        {
+            NEON_WARNING_TAG("Material", "Resource '{}' doesn't exist", Name);
+            return;
+        }
+
+        Structured::BufferView Buffer(Entry->MappedData, View, ArrayOffset);
+        std::copy(std::bit_cast<uint8_t*>(Data), std::bit_cast<uint8_t*>(Data) + View.GetSize(), Buffer.Data());
     }
 
     //
 
-    // void Material::SetResource(
-    //     const StringU8&                Name,
-    //     const Ptr<RHI::IGpuResource>&  Resource,
-    //     const RHI::DescriptorViewDesc& Desc,
-    //     uint32_t                       ArrayIndex,
-    //     const Ptr<RHI::IGpuResource>&  UavCounter)
-    //{
-    //     auto [GroupName, VarName] = SplitResourceName(Name);
+    bool Material::GetResource(
+        const StringU8&          Name,
+        Ptr<RHI::IGpuResource>*  Resource,
+        RHI::DescriptorViewDesc* Desc)
+    {
+        ResourceEntry*        Entry      = nullptr;
+        DescriptorHeapHandle* Descriptor = nullptr;
 
-    //    UnqiueDescriptorHeapHandle* DescriptorHeap = nullptr;
+        if (auto Iter = m_LocalParameters.Entries.find(Name);
+            Iter != m_LocalParameters.Entries.end())
+        {
+            Entry      = std::get_if<ResourceEntry>(&Iter->second);
+            Descriptor = &m_LocalParameters.Descriptors.ResourceDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->Entries.find(Name);
+                 Iter != m_SharedParameters->Entries.end())
+        {
+            Entry      = std::get_if<ResourceEntry>(&Iter->second);
+            Descriptor = &m_SharedParameters->Descriptors.ResourceDescriptors;
+        }
 
-    //    auto Variant = GetDescriptorVariant(GroupName, VarName, nullptr, &DescriptorHeap);
+        if (!Entry)
+        {
+            return false;
+        }
 
-    //    if (!Variant) [[unlikely]]
-    //    {
-    //        return;
-    //    }
+        if (Resource)
+        {
+            *Resource = Entry->Resource;
+        }
+        if (Desc)
+        {
+            *Desc = Entry->Desc;
+        }
+        return true;
+    }
 
-    //    auto Descriptor = std::get_if<DescriptorEntry>(Variant);
-    //    if (!Descriptor)
-    //    {
-    //        NEON_WARNING_TAG("Material", "'{}' is not a resource", Name);
-    //        return;
-    //    }
+    bool Material::GetSampler(
+        const StringU8&   Name,
+        RHI::SamplerDesc* Desc)
+    {
+        SamplerEntry*         Entry      = nullptr;
+        DescriptorHeapHandle* Descriptor = nullptr;
 
-    //    uint32_t DescriptorOffset = ArrayIndex + Descriptor->Offset;
+        if (auto Iter = m_LocalParameters.Entries.find(Name);
+            Iter != m_LocalParameters.Entries.end())
+        {
+            Entry      = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = &m_LocalParameters.Descriptors.SamplerDescriptors;
+        }
+        else if (auto Iter = m_SharedParameters->Entries.find(Name);
+                 Iter != m_SharedParameters->Entries.end())
+        {
+            Entry      = std::get_if<SamplerEntry>(&Iter->second);
+            Descriptor = &m_SharedParameters->Descriptors.SamplerDescriptors;
+        }
 
-    //    Descriptor->Resources[ArrayIndex] = Resource;
-    //    std::visit(
-    //        VariantVisitor{
-    //            [](std::monostate) {
-    //            },
-    //            [DescriptorHeap, DescriptorOffset](
-    //                const RHI::CBVDesc& Desc)
-    //            {
-    //                if (Desc.Resource.Value)
-    //                {
-    //                    RHI::Views::ConstantBuffer View{ DescriptorHeap->ResourceDescriptors };
-    //                    View.Bind(Desc, DescriptorOffset);
-    //                }
-    //            },
-    //            [DescriptorHeap, &Resource, DescriptorOffset](
-    //                const RHI::SRVDescOpt& Desc)
-    //            {
-    //                if (Resource || Desc.has_value())
-    //                {
-    //                    RHI::Views::ShaderResource View{ DescriptorHeap->ResourceDescriptors };
-    //                    View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
-    //                }
-    //            },
-    //            [DescriptorHeap, &Resource, &UavCounter, DescriptorOffset](
-    //                const RHI::UAVDescOpt& Desc)
-    //            {
-    //                if (Resource || Desc.has_value())
-    //                {
-    //                    RHI::Views::UnorderedAccess View{ DescriptorHeap->ResourceDescriptors };
-    //                    View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, UavCounter.get(), DescriptorOffset);
-    //                }
-    //            },
-    //            [DescriptorHeap, &Resource, DescriptorOffset](
-    //                const RHI::RTVDescOpt& Desc)
-    //            {
-    //                if (Resource || Desc.has_value())
-    //                {
-    //                    RHI::Views::RenderTarget View{ DescriptorHeap->ResourceDescriptors };
-    //                    View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
-    //                }
-    //            },
-    //            [DescriptorHeap, &Resource, DescriptorOffset](
-    //                const RHI::DSVDescOpt& Desc)
-    //            {
-    //                if (Resource || Desc.has_value())
-    //                {
-    //                    RHI::Views::DepthStencil View{ DescriptorHeap->ResourceDescriptors };
-    //                    View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr, DescriptorOffset);
-    //                }
-    //            } },
-    //        Desc);
-    //}
+        if (!Entry)
+        {
+            return false;
+        }
 
-    // void Material::SetSampler(
-    //     const StringU8&         Name,
-    //     const RHI::SamplerDesc& Desc,
-    //     uint32_t                ArrayIndex)
-    //{
-    //     auto [GroupName, VarName] = SplitResourceName(Name);
+        *Desc = Entry->Desc;
+        return true;
+    }
 
-    //    UnqiueDescriptorHeapHandle* DescriptorHeap = nullptr;
+    size_t Material::GetData(
+        const StringU8& Name,
+        const void*     Data,
+        size_t          ArrayOffset)
+    {
+        RootEntry* Entry = nullptr;
 
-    //    auto Variant = GetDescriptorVariant(GroupName, VarName, nullptr, &DescriptorHeap);
+        Entry     = &m_LocalParameters.Buffer;
+        auto View = Entry->Struct[Name];
 
-    //    if (!Variant) [[unlikely]]
-    //    {
-    //        return;
-    //    }
+        if (!View)
+        {
+            Entry = &m_SharedParameters->Buffer;
+            View  = Entry->Struct[Name];
+        }
 
-    //    auto Sampler = std::get_if<SamplerEntry>(Variant);
-    //    if (!Sampler)
-    //    {
-    //        NEON_WARNING_TAG("Material", "'{}' is not a sampler", Name);
-    //        return;
-    //    }
+        if (!View)
+        {
+            return 0;
+        }
 
-    //    uint32_t DescriptorOffset  = ArrayIndex + Sampler->Offset;
-    //    Sampler->Descs[ArrayIndex] = Desc;
-    //    if (Desc)
-    //    {
-    //        RHI::Views::Sampler View{ DescriptorHeap->SamplerDescriptors };
-    //        View.Bind(Desc, DescriptorOffset);
-    //    }
-    //}
+        if (Data)
+        {
+            Structured::BufferView Buffer(Entry->MappedData, View, ArrayOffset);
+            std::copy(Buffer.Data(), Buffer.Data() + View.GetSize(), std::bit_cast<uint8_t*>(Data));
+        }
 
-    // void Material::SetConstant(
-    //     const std::string& Name,
-    //     const void*        Data,
-    //     size_t             Size,
-    //     uint32_t           Offset)
-    //{
-    //     auto Iter = m_SharedParameters->SharedEntries.find(Name);
-    //     if (Iter == m_SharedParameters->SharedEntries.end())
-    //     {
-    //         NEON_WARNING_TAG("Material", "Failed to find constant: {}", Name);
-    //         return;
-    //     }
-
-    //    if (auto Constant = std::get_if<ConstantEntry>(&Iter->second))
-    //    {
-    //        std::copy_n(std::bit_cast<uint8_t*>(Data), Size, m_SharedParameters->ConstantData.get() + Offset);
-    //    }
-    //    else
-    //    {
-    //        NEON_WARNING_TAG("Material", "'{}' is not a constant", Name);
-    //    }
-    //}
-
-    // void Material::SetResourceView(
-    //     const std::string&     Name,
-    //     RHI::GpuResourceHandle Handle)
-    //{
-    //     auto Iter = m_SharedParameters->SharedEntries.find(Name);
-    //     if (Iter == m_SharedParameters->SharedEntries.end())
-    //     {
-    //         NEON_WARNING_TAG("Material", "Failed to find resource view: {}", Name);
-    //         return;
-    //     }
-
-    //    if (auto Root = std::get_if<RootEntry>(&Iter->second))
-    //    {
-    //        Root->Handle = Handle;
-    //    }
-    //    else
-    //    {
-    //        NEON_WARNING_TAG("Material", "'{}' is not a resource view", Name);
-    //    }
-    //}
-
-    // void Material::SetDynamicResourceView(
-    //     const StringU8&          Name,
-    //     RHI::CstResourceViewType Type,
-    //     const void*              Data,
-    //     size_t                   Size)
-    //{
-    //     const uint32_t Alignment =
-    //         Type == RHI::CstResourceViewType::Cbv ? 256 : 1;
-
-    //    using PoolBufferType = RHI::IGlobalBufferPool::BufferType;
-
-    //    PoolBufferType BufferType;
-    //    switch (Type)
-    //    {
-    //    case RHI::CstResourceViewType::Cbv:
-    //    case RHI::CstResourceViewType::Srv:
-    //        BufferType = PoolBufferType::ReadWriteGPUR;
-    //        break;
-    //    case RHI::CstResourceViewType::Uav:
-    //        BufferType = PoolBufferType::ReadWriteGPURW;
-    //        break;
-    //    default:
-    //        std::unreachable();
-    //    }
-
-    //    RHI::UBufferPoolHandle Buffer(
-    //        Size,
-    //        Alignment,
-    //        BufferType);
-
-    //    Buffer.AsUpload().Write(0, Data, Size);
-
-    //    SetResourceView(
-    //        Name,
-    //        Buffer.GetGpuHandle());
-    //}
-
-    // void Material::SetResourceSize(
-    //     const StringU8& Name,
-    //     uint32_t        Size)
-    //{
-    //     auto [GroupName, VarName] = SplitResourceName(Name);
-    //     auto Variant              = GetDescriptorVariant(GroupName, VarName);
-
-    //    if (!Variant) [[unlikely]]
-    //    {
-    //        return;
-    //    }
-
-    //    if (auto Descriptor = std::get_if<DescriptorEntry>(Variant))
-    //    {
-    //        Descriptor->Count = Size;
-    //    }
-    //    else if (auto Sampler = std::get_if<SamplerEntry>(Variant))
-    //    {
-    //        Sampler->Count = Size;
-    //    }
-    //    else
-    //    {
-    //        NEON_WARNING_TAG("Material", "'{}' is not a resource nor sampler", Name);
-    //    }
-    //}
-
-    ////
-
-    // std::pair<StringU8, StringU8> Material::SplitResourceName(
-    //     const StringU8& Name)
-    //{
-    //     auto Names = std::views::split(Name, ".");
-
-    //    StringU8View FirstPart(*Names.begin());
-    //    StringU8View SecondPart;
-    //    if (auto SecondPartIter = std::next(Names.begin()); SecondPartIter != Names.end())
-    //    {
-    //        SecondPart = StringU8View(*SecondPartIter);
-    //    }
-    //    return { StringU8(FirstPart), StringU8(SecondPart) };
-    //}
-
-    // auto Material::GetDescriptorVariant(
-    //     const StringU8&              Name,
-    //     const StringU8&              EntryName,
-    //     DescriptorVariantMap**       VariantMap,
-    //     UnqiueDescriptorHeapHandle** DescriptorHeap) -> DescriptorVariant*
-    //{
-    //     DescriptorVariantMap* InVariantMap = nullptr;
-
-    //    if (auto Iter = m_LocalParameters.LocalEntries.find(Name);
-    //        Iter != m_LocalParameters.LocalEntries.end())
-    //    {
-    //        InVariantMap = &Iter->second;
-    //        if (DescriptorHeap)
-    //        {
-    //            *DescriptorHeap = &m_LocalParameters.Descriptors;
-    //        }
-    //    }
-    //    else if (auto Iter = m_SharedParameters->SharedEntries.find(Name);
-    //             Iter != m_SharedParameters->SharedEntries.end())
-    //    {
-    //        InVariantMap = std::get_if<DescriptorVariantMap>(&Iter->second);
-    //        if (DescriptorHeap)
-    //        {
-    //            *DescriptorHeap = &m_SharedParameters->Descriptors;
-    //        }
-    //    }
-
-    //    if (!InVariantMap) [[unlikely]]
-    //    {
-    //        NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
-    //        return nullptr;
-    //    }
-
-    //    if (VariantMap)
-    //    {
-    //        *VariantMap = InVariantMap;
-    //    }
-
-    //    if (auto Iter = InVariantMap->Entries.find(Name);
-    //        Iter != InVariantMap->Entries.end())
-    //    {
-    //        return &Iter->second;
-    //    }
-    //    else
-    //    {
-    //        NEON_WARNING_TAG("Material", "Failed to find resource: {}", Name);
-    //        return nullptr;
-    //    }
-    //}
+        return View.GetSize();
+    }
 
     //
 
@@ -602,11 +513,11 @@ namespace Neon::RHI
 
     //
 
-    Material::Blackboard::Blackboard(
-        const Blackboard& Other) :
-        Descriptors(Other.Descriptors),
-        Entries(Other.Entries),
-        Buffer(Other.Buffer.Size, ShaderResourceAlignement, Other.Buffer.Type)
+    Material::RootEntry::RootEntry(
+        const RootEntry& Other) :
+        Data(Other.Data.Size, ShaderResourceAlignement, Other.Data.Type),
+        MappedData(Data.AsUpload().Map() + Data.Offset),
+        Struct(Other.Struct)
     {
     }
 } // namespace Neon::RHI
