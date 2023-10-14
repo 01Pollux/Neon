@@ -30,7 +30,9 @@ namespace Neon::RHI
     }
 
     template<typename _Ty, typename... _Args>
-    void ProcessTasks(_Ty& TasksQueue, _Args&&... Args)
+    void ProcessTasks(
+        _Ty& TasksQueue,
+        _Args&&... Args)
     {
 #ifndef NEON_DIST
         for (size_t i = 0; i < CopyContextManager::CommandsToHandleCount && !TasksQueue.empty(); i++)
@@ -49,10 +51,10 @@ namespace Neon::RHI
         }
 
 #else
-        for (size_t i = 0; i < CopyContextManager::CommandsToHandleCount && !m_Queue.empty(); i++)
+        for (size_t i = 0; i < CopyContextManager::CommandsToHandleCount && !TasksQueue.empty(); i++)
         {
-            auto [Task, Promise] = std::move(m_CopyTasks.front());
-            m_CopyTasks.pop();
+            auto [Task, Promise] = std::move(TasksQueue.back());
+            TasksQueue.pop_back();
 
             Task(std::forward<_Args>(Args)...);
             Promise.set_value();
