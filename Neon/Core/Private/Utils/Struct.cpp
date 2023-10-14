@@ -387,7 +387,7 @@ namespace Neon::Structured
         const StringU8& Name) const -> ElementView
     {
         ElementView View(nullptr);
-        if (!m_Element)
+        if (m_Element)
         {
             const Element::StructData* Struct = m_Element->AsStruct();
             if (auto Struct = m_Element->AsStruct())

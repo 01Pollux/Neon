@@ -109,7 +109,7 @@ namespace Neon::RHI
         /// <summary>
         /// Get material's local descriptor view
         /// </summary>
-        [[nodiscard]] virtual CpuDescriptorHandle GetLocalBlock() = 0;
+        [[nodiscard]] virtual GpuResourceHandle GetLocalBlock() = 0;
 
     public:
         /// <summary>

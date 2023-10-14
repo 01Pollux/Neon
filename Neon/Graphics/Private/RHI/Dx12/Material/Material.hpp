@@ -125,7 +125,7 @@ namespace Neon::RHI
     public:
         GpuResourceHandle GetSharedBlock() override;
 
-        CpuDescriptorHandle GetLocalBlock() override;
+        GpuResourceHandle GetLocalBlock() override;
 
     public:
         void SetResource(
@@ -158,9 +158,8 @@ namespace Neon::RHI
             size_t          ArrayOffset) override;
 
     private:
-        Ptr<Blackboard>      m_SharedParameters = std::make_shared<Blackboard>();
-        Blackboard           m_LocalParameters;
-        DescriptorHeapHandle m_LocalParametersView;
+        Ptr<Blackboard> m_SharedParameters = std::make_shared<Blackboard>();
+        Blackboard      m_LocalParameters;
 
         bool m_IsCompute     : 1 = false;
         bool m_IsTransparent : 1 = false;

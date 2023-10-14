@@ -213,20 +213,6 @@ namespace Neon::RHI
             if (Mat->m_LocalParameters.Buffer.Data)
             {
                 Mat->m_LocalParameters.Buffer.MappedData = Mat->m_LocalParameters.Buffer.Data.AsUpload().Map() + Mat->m_LocalParameters.Buffer.Data.Offset;
-
-                auto Descriptor            = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
-                Mat->m_LocalParametersView = Descriptor->Allocate(1);
-
-                auto&   BufferData = Mat->m_LocalParameters.Buffer.Data;
-                SRVDesc ViewDesc{
-                    .View = SRVDesc::Buffer{
-                        .FirstElement = BufferData.Offset,
-                        .SizeOfStruct = uint32_t(BufferData.Size) }
-                };
-                Mat->m_LocalParametersView->CreateShaderResourceView(
-                    Mat->m_LocalParametersView.Offset,
-                    BufferData.Buffer,
-                    &ViewDesc);
             }
         }
 
@@ -278,31 +264,10 @@ namespace Neon::RHI
         m_LocalParameters(Other->m_LocalParameters)
     {
         m_PipelineStates = Other->m_PipelineStates;
-        if (Other->m_LocalParametersView)
-        {
-            auto Descriptor       = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
-            m_LocalParametersView = Descriptor->Allocate(1);
-
-            auto&   BufferData = m_LocalParameters.Buffer.Data;
-            SRVDesc ViewDesc{
-                .View = SRVDesc::Buffer{
-                    .FirstElement = BufferData.Offset,
-                    .SizeOfStruct = uint32_t(BufferData.Size) }
-            };
-            m_LocalParametersView->CreateShaderResourceView(
-                m_LocalParametersView.Offset,
-                BufferData.Buffer,
-                &ViewDesc);
-        }
     }
 
     Material::~Material()
     {
-        if (m_LocalParametersView)
-        {
-            auto Descriptor = IStaticDescriptorHeap::Get(DescriptorType::ResourceView);
-            Descriptor->Free(m_LocalParametersView);
-        }
     }
 
     //
@@ -373,9 +338,9 @@ namespace Neon::RHI
         return m_SharedParameters->Buffer.Data ? m_SharedParameters->Buffer.Data.GetGpuHandle() : GpuResourceHandle{};
     }
 
-    CpuDescriptorHandle Material::GetLocalBlock()
+    GpuResourceHandle Material::GetLocalBlock()
     {
-        return m_LocalParametersView ? m_LocalParametersView.GetCpuHandle() : CpuDescriptorHandle{};
+        return m_LocalParameters.Buffer.Data ? m_LocalParameters.Buffer.Data.GetGpuHandle() : GpuResourceHandle{};
     }
 
     //

@@ -48,15 +48,7 @@ namespace Neon::RG
             return;
         }
 
-        constexpr size_t       SizeOfBlock = SizeOfPerMaterialData + Scene::GPUTransformManager::SizeOfInstanceData;
-        RHI::UBufferPoolHandle Buffer(
-            SizeOfBlock * Count,
-            std::max(AlignOfPerMaterialData, Scene::GPUTransformManager::AlignOfInstanceData),
-            RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
-
-        uint8_t* BufferPtr     = Buffer.AsUpload().Map() + Buffer.Offset;
-        size_t   InstanceIndex = 0;
-        size_t   PassesCount   = 1;
+        size_t PassesCount = 1;
 
         std::array<RHI::IMaterial::PipelineVariant, 2> Passes;
 
@@ -94,7 +86,7 @@ namespace Neon::RG
             CommandList->BindMaterialParameters(IsDirect, m_Storage.GetFrameDataHandle());
         };
 
-        RHI::GpuDescriptorHandle LastLightHandle;
+        RHI::GpuDescriptorHandle LastLightHandle[2];
         for (size_t Pass = 0; Pass < PassesCount; Pass++)
         {
 #ifndef NEON_DIST
@@ -148,28 +140,21 @@ namespace Neon::RG
                         continue;
                     }
 
+                    BindRootSignatureOnce(!MeshMaterial->IsCompute());
                     UpdatePipelineState();
 
                     // Update shared params
                     {
-                        auto MaterialData    = std::bit_cast<PerMaterialData*>(BufferPtr);
-                        *MaterialData        = {};
-                        MaterialData->Albedo = Colors::DarkGreen;
-
-                        auto InstanceData = std::bit_cast<Scene::GPUTransformManager::InstanceData*>(BufferPtr + SizeOfPerMaterialData);
-                        *InstanceData     = *GpuTransformManager.GetInstanceData(InstanceId);
-
-                        // MeshMaterial->BindSharedParams(CommandList);
                         //  Update light handle
                         {
+                            auto  Index           = MeshMaterial->IsTransparent() ? 0 : 1;
                             auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
-                            if (LastLightHandle)
+                            if (LastLightHandle[Index] != LightDataHandle)
                             {
-                                LastLightHandle = LightDataHandle;
                                 CommandList->SetDescriptorTable(
                                     !MeshMaterial->IsCompute(),
                                     uint32_t(RHI::RSCommon::MaterialRS::LightData),
-                                    LastLightHandle);
+                                    LastLightHandle[Index] = LightDataHandle);
                             }
                         }
 
@@ -179,7 +164,7 @@ namespace Neon::RG
                                 !MeshMaterial->IsCompute(),
                                 RHI::CstResourceViewType::Srv,
                                 uint32_t(RHI::RSCommon::MaterialRS::InstanceData),
-                                Buffer.GetGpuHandle(SizeOfBlock * InstanceIndex));
+                                GpuTransformManager.GetInstanceHandle(InstanceId));
                         }
 
                         // Update Local and shared data
@@ -193,12 +178,11 @@ namespace Neon::RG
                                 uint32_t(RHI::RSCommon::MaterialRS::SharedData),
                                 MeshMaterial->GetSharedBlock());
 
-                            CommandList->SetDynamicDescriptorTable(
+                            CommandList->SetResourceView(
                                 !MeshMaterial->IsCompute(),
+                                RHI::CstResourceViewType::Srv,
                                 uint32_t(RHI::RSCommon::MaterialRS::LocalData),
-                                MeshMaterial->GetLocalBlock(),
-                                1,
-                                false);
+                                MeshMaterial->GetLocalBlock());
                         }
                     }
 
@@ -216,10 +200,7 @@ namespace Neon::RG
                     CommandList->SetPrimitiveTopology(MeshData.Topology);
                     CommandList->SetIndexBuffer(IdxView);
                     CommandList->SetVertexBuffer(0, VtxView);
-                    // CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
-
-                    BufferPtr += SizeOfBlock;
-                    InstanceIndex++;
+                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
                 }
             }
 

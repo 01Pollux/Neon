@@ -1,6 +1,7 @@
 #include <EnginePCH.hpp>
 #include <Asset/Handlers/Model.hpp>
 #include <RHI/Material/Shared.hpp>
+#include <Utils/Struct.hpp>
 
 #ifndef NEON_DIST
 #include <Runtime/GameEngine.hpp>
@@ -209,10 +210,16 @@ namespace Neon::Asset
             // Deferred loading of textures until we process all meshes.
             MaterialTextureMap MaterialsToSet;
 
-            std::map<aiTextureType, const char*> TextureKvList{
+            std::map<aiTextureType, const char*> TextureKvMap{
                 std::pair{ aiTextureType_DIFFUSE, "p_AlbedoMap" },
                 std::pair{ aiTextureType_NORMALS, "p_NormalMap" },
                 std::pair{ aiTextureType_EMISSIVE, "p_EmissiveMap" }
+            };
+
+            std::array MaterialKvList{
+                std::tuple{ Structured::Type::Float3, "$clr.diffuse", "Color_Albedo" },
+                std::tuple{ Structured::Type::Float3, "$clr.specular", "Color_Specular" },
+                std::tuple{ Structured::Type::Float4, "$clr.emissive", "Color_Emissive" }
             };
 
             auto& ThreadPool = Runtime::GameEngine::Get()->GetThreadPool();
@@ -239,11 +246,11 @@ namespace Neon::Asset
                             NEON_TRACE_TAG("Model", "Loading material {}", AIMaterial->GetName().C_Str());
 
                             TextureMap TexturesToSet;
+                            aiString   TexturePath;
 
-                            aiString TexturePath;
-                            for (auto& [Type, Tag] : TextureKvList)
+                            for (auto& [Type, Tag] : TextureKvMap)
                             {
-                                if (AIMaterial->GetTexture(Type, 0, &TexturePath))
+                                if (AIMaterial->GetTexture(Type, 0, &TexturePath) == AI_SUCCESS)
                                 {
                                     NEON_TRACE_TAG("Model", "Loading texture '{}'", TexturePath.C_Str());
 
@@ -294,6 +301,35 @@ namespace Neon::Asset
                                             NEON_WARNING("Failed to load texture '{}'", TexturePath.C_Str());
                                         }
                                     }
+                                }
+                            }
+
+                            for (auto& [Type, AIType, Tag] : MaterialKvList)
+                            {
+                                switch (Type)
+                                {
+                                case Structured::Type::Float3:
+                                {
+                                    aiColor3D Color;
+                                    if (AIMaterial->Get(AIType, 0, 0, Color) == AI_SUCCESS)
+                                    {
+                                        Material->Set(Tag, Color);
+                                    }
+                                    break;
+                                }
+                                case Structured::Type::Float4:
+                                {
+                                    aiColor4D Color;
+                                    if (AIMaterial->Get(AIType, 0, 0, Color) == AI_SUCCESS)
+                                    {
+                                        Material->Set(Tag, Color);
+                                    }
+                                    break;
+                                }
+                                default:
+                                {
+                                    NEON_WARNING_TAG("Model", "Unsupported data type: {}", AIType);
+                                }
                                 }
                             }
 
@@ -429,7 +465,7 @@ namespace Neon::Asset
             {
                 for (auto& [Type, Texture] : Textures)
                 {
-                    Material->SetTexture(TextureKvList[Type], Texture.Get());
+                    Material->SetTexture(TextureKvMap[Type], Texture.Get());
                 }
             }
 

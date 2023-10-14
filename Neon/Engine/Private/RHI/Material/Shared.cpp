@@ -28,7 +28,7 @@ namespace Neon::RHI
             Structured::LayoutBuilder Local;
             Local.Append(Structured::Type::Float3, "Color_Albedo");
             Local.Append(Structured::Type::Float3, "Color_Specular");
-            Local.Append(Structured::Type::Float3, "Color_Emissive");
+            Local.Append(Structured::Type::Float4, "Color_Emissive");
 
             LitMaterial.VarBuilder()
                 .AddResource("Tex2D_Albedo", true)
