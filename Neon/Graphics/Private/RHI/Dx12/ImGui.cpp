@@ -132,7 +132,7 @@ namespace Neon::RHI::ImGuiRHI
                 auto Handle = std::bit_cast<D3D12_CPU_DESCRIPTOR_HANDLE>(DrawCmd->TextureId);
                 auto Offset = s_DescriptorHandlesRemapTexID.at(Handle.ptr);
 
-                DrawCmd->TextureId = std::bit_cast<ImTextureID>(DstDescriptor.GetGpuHandle(Offset).Value);
+                DrawCmd->TextureId = std::bit_cast<ImTextureID>(uint64_t(Offset) + DstDescriptor.Offset);
             }
 
             D3D12_CPU_DESCRIPTOR_HANDLE DxDescriptors[]      = { DstDescriptor.GetCpuHandle().Value };
