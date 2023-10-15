@@ -16,9 +16,6 @@
 
 #include <UI/WindowUtils.hpp>
 
-// TODO: Remove
-#include <Editor/Views/Types/MaterialEditor.hpp>
-
 namespace Neon::Editor
 {
     void EditorEngine::AddStandardViews()
