@@ -3,8 +3,10 @@
 #include <RenderGraph/Storage.hpp>
 #include <Runtime/GameLogic.hpp>
 
+#include <Math/Frustum.hpp>
+
 #include <Scene/EntityWorld.hpp>
-#include <Scene/Component/Component.hpp>
+#include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
 #include <Mdl/Mesh.hpp>
@@ -22,24 +24,24 @@ namespace Neon::RG
         const GraphStorage& Storage) :
         m_Storage(Storage)
     {
-        // So that we can sort by distance to camera, we will need access to the camera position
-        m_TransformOrderer =
-            [this](flecs::entity_t,
-                   const void* LhsTransformPtr,
-                   flecs::entity_t,
-                   const void* RhsTransformPtr) -> int
-        {
-            auto LhsTransform = std::bit_cast<const Component::Transform*>(LhsTransformPtr);
-            auto RhsTransform = std::bit_cast<const Component::Transform*>(RhsTransformPtr);
+        //// So that we can sort by distance to camera, we will need access to the camera position
+        // m_TransformOrderer =
+        //     [this](flecs::entity_t,
+        //            const void* LhsTransformPtr,
+        //            flecs::entity_t,
+        //            const void* RhsTransformPtr) -> int
+        //{
+        //     auto LhsTransform = std::bit_cast<const Component::Transform*>(LhsTransformPtr);
+        //     auto RhsTransform = std::bit_cast<const Component::Transform*>(RhsTransformPtr);
 
-            auto&   WorldTransform = m_Storage.GetFrameData().World;
-            Vector3 CameraPosition(WorldTransform[3][0], WorldTransform[3][1], WorldTransform[3][2]);
+        //    auto&   WorldTransform = m_Storage.GetFrameData().World;
+        //    Vector3 CameraPosition(WorldTransform[3][0], WorldTransform[3][1], WorldTransform[3][2]);
 
-            float LhsDistance = glm::distance(CameraPosition, LhsTransform->World.GetPosition());
-            float RhsDistance = glm::distance(CameraPosition, RhsTransform->World.GetPosition());
+        //    float LhsDistance = glm::distance(CameraPosition, LhsTransform->World.GetPosition());
+        //    float RhsDistance = glm::distance(CameraPosition, RhsTransform->World.GetPosition());
 
-            return LhsDistance < RhsDistance ? -1 : 1;
-        };
+        //    return LhsDistance < RhsDistance ? -1 : 1;
+        //};
 
         // Create mesh query
         m_MeshQuery =
@@ -49,10 +51,7 @@ namespace Neon::RG
                     const Component::Transform,
                     const Component::MeshInstance>()
                 .with<Component::ActiveSceneEntity>()
-                .group_by<Scene::GPUTransformManager::PipelineGroup>()
-                .order_by(
-                    Scene::EntityWorld::Get().component<Component::Transform>(),
-                    m_TransformOrderer.target<QueryOrdererC>())
+                .in()
                 .build();
     }
 
@@ -62,6 +61,52 @@ namespace Neon::RG
     }
 
     //
+
+    void SceneContext::Update(
+        const Matrix4x4&            ProjectionMatrix,
+        const Component::Camera&    Camera,
+        const Component::Transform& Transform)
+    {
+        m_EntityLists.clear();
+
+        switch (Camera.Type)
+        {
+        case Component::CameraType::Perspective:
+        {
+            Geometry::Frustum Frustum(ProjectionMatrix);
+            Frustum.Transform(1.f, Transform.World.GetRotation(), Transform.World.GetPosition());
+
+            m_MeshQuery.iter(
+                [&Frustum](flecs::iter&                                        Iter,
+                           const Scene::GPUTransformManager::RenderableHandle* Renderables,
+                           const Component::Transform*                         Transforms,
+                           const Component::MeshInstance*                      Meshes)
+                {
+                    for (size_t Index : Iter)
+                    {
+                        auto CurMesh = Iter.is_self(3) ? &Meshes[Index] : Meshes;
+                        auto Box     = CurMesh->Mesh.GetData().AABB;
+
+                        Box.Min += Transforms[Index].World.GetPosition();
+                        Box.Max += Transforms[Index].World.GetPosition();
+
+                        if (Frustum.Contains(Box) != Geometry::ContainsType::Disjoint)
+                        {
+                        }
+                    }
+                });
+
+            break;
+        }
+        case Component::CameraType::Orthographic:
+        {
+            break;
+        }
+
+        default:
+            std::unreachable();
+        }
+    }
 
     void SceneContext::Render(
         RHI::ICommandList*       CommandList,

@@ -10,14 +10,13 @@ namespace Neon::RG
 
     class SceneContext
     {
-        // Transform
-        using QueryOrdererC = int(const flecs::entity_t, const void*, flecs::entity_t, const void*);
-        using QueryOrderer  = std::function<QueryOrdererC>;
-
         using MeshQuery = flecs::query<
             const Scene::GPUTransformManager::RenderableHandle,
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
+
+        using EntityList      = std::vector<flecs::entity_t>;
+        using EntityListGroup = std::map<RHI::IPipelineState*, EntityList>;
 
     public:
         enum class RenderType : uint8_t
@@ -33,6 +32,15 @@ namespace Neon::RG
 
         ~SceneContext();
 
+    public:
+        /// <summary>
+        /// Update the scene context's entities
+        /// </summary>
+        void Update(
+            const Matrix4x4&                   ProjectionMatrix,
+            const Scene::Component::Camera&    Camera,
+            const Scene::Component::Transform& Transform);
+
         /// <summary>
         /// Render the scene depending on the type
         /// </summary>
@@ -42,6 +50,7 @@ namespace Neon::RG
             RHI::GpuDescriptorHandle OpaqueLightDataHandle,
             RHI::GpuDescriptorHandle TransparentLightDataHandle) const;
 
+    public:
         /// <summary>
         /// Get the light's resource view
         /// </summary>
@@ -55,8 +64,8 @@ namespace Neon::RG
     private:
         const GraphStorage& m_Storage;
 
-        QueryOrderer m_TransformOrderer;
-
         MeshQuery m_MeshQuery;
+
+        EntityListGroup m_EntityLists;
     };
 } // namespace Neon::RG

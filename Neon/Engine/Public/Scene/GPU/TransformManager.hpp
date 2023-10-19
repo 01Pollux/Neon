@@ -21,10 +21,6 @@ namespace Neon::Scene
     class GPUTransformManager
     {
     public:
-        struct PipelineGroup
-        {
-        };
-
         struct RenderableHandle
         {
             constexpr operator bool() const noexcept
