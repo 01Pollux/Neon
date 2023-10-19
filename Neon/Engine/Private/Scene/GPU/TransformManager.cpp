@@ -9,21 +9,16 @@
 
 namespace Neon::Scene
 {
-    struct RenderableHandle
-    {
-        constexpr operator bool() const noexcept
-        {
-            return InstanceId != std::numeric_limits<uint32_t>::max();
-        }
-
-        /// <summary>
-        /// Instance ID of the renderable in GPUTransformManager.
-        /// </summary>
-        uint32_t InstanceId = std::numeric_limits<uint32_t>::max();
-    };
-
     GPUTransformManager::GPUTransformManager()
     {
+        // Register the renderable handle component.
+        EntityWorld::Get()
+            .component<RenderableHandle>("_RenderableHandle");
+
+        // Register pipeline group.
+        EntityWorld::Get()
+            .component<PipelineGroup>("_PipelineGroup");
+
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform>()
@@ -59,52 +54,29 @@ namespace Neon::Scene
                     }
                 });
 
-        //
-
-        // Create mesh query
-        auto MeshQuery =
-            EntityWorld::Get()
-                .query_builder<
-                    const Component::MeshInstance,
-                    const RenderableHandle>()
-                .with<Component::ActiveSceneEntity>()
-                .in()
-                .build();
-
-        // Update the mesh ever frame if needed
+        // Create observer for the transform and renderable components.
         EntityWorld::Get()
-            .system("MeshQueryUpdate")
-            .kind(flecs::PreUpdate)
-            .iter(
-                [this, MeshQuery](flecs::iter& Iter)
+            .observer<const Component::Transform, const Component::MeshInstance>()
+            .event(flecs::OnSet)
+            .event(flecs::OnRemove)
+            .each(
+                [this](flecs::iter& Iter, size_t Idx, const Component::Transform&, const Component::MeshInstance& Instance)
                 {
-                    if (!MeshQuery.changed())
+                    auto Entity = Iter.entity(Idx);
+                    if (Iter.event() == flecs::OnSet)
                     {
-                        return;
+                        uint32_t MaterialIndex = Instance.Mesh.GetData().MaterialIndex;
+                        auto&    Material      = Instance.Mesh.GetModel()->GetMaterial(MaterialIndex);
+                        auto     PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
+                        Entity.add<PipelineGroup>(std::bit_cast<uint64_t>(PipelineState));
                     }
-
-                    m_MeshInstanceIds.clear();
-                    m_Meshes.clear();
-
-                    MeshQuery.iter(
-                        [this](flecs::iter&                   Iter,
-                               const Component::MeshInstance* MeshInstances,
-                               const RenderableHandle*        Renderables)
-                        {
-                            for (size_t Idx : Iter)
-                            {
-                                auto& Mesh       = MeshInstances[Idx].Mesh;
-                                auto& Renderable = Renderables[Idx];
-
-                                auto& MeshData      = Mesh.GetData();
-                                auto& MeshMaterial  = Mesh.GetModel()->GetMaterial(MeshData.MaterialIndex);
-                                auto& PipelineState = MeshMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
-
-                                m_MeshInstanceIds[PipelineState.get()].emplace_back(Renderable.InstanceId);
-                                m_Meshes[Renderable.InstanceId] = &Mesh;
-                            }
-                        });
+                    else
+                    {
+                        Entity.remove<PipelineGroup>();
+                    }
                 });
+
+        //
     }
 
     uint32_t GPUTransformManager::AddInstance(

@@ -295,7 +295,7 @@ namespace Neon::RHI
 
     //
 
-    void Material_UpdateParameterBlock(
+    static void Material_UpdateParameterBlock(
         const Material::Blackboard& Board)
     {
         if (!Board.Buffer.Data)
@@ -304,18 +304,18 @@ namespace Neon::RHI
         }
 
         auto InternalView = Board.Buffer.Struct["_Internal"];
-        for (auto& [Resource, Entry] : Board.Entries)
+        for (auto& [Name, Entry] : Board.Entries)
         {
-            int& InternalData = Structured::BufferView{ Board.Buffer.MappedData, InternalView[Resource], 0 };
+            int& Offset = Structured::BufferView{ Board.Buffer.MappedData, InternalView[Name], 0 };
             std::visit(
                 VariantVisitor{
-                    [&InternalData](const Material::ResourceEntry& Desc)
+                    [&Offset](const Material::ResourceEntry& Desc)
                     {
-                        InternalData = Desc.Resource || Desc.Desc.index() ? Desc.Offset : -1;
+                        Offset = Desc.Resource || Desc.Desc.index() ? Desc.Offset : -1;
                     },
-                    [&InternalData](const Material::SamplerEntry& Desc)
+                    [&Offset](const Material::SamplerEntry& Desc)
                     {
-                        InternalData = Desc.Desc ? Desc.Offset : -1;
+                        Offset = Desc.Desc ? Desc.Offset : -1;
                     } },
                 Entry);
         }

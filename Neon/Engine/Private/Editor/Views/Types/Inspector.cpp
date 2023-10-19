@@ -52,14 +52,14 @@ namespace Neon::Editor::Views
                     auto HeaderInfo = UI::Utils::BeginComponentHeader(Component.name().c_str());
                     if (HeaderInfo)
                     {
-                        MetaData->RenderOnInsecptorCallback(SelectedEntity, ComponentId);
+                        MetaData->RenderOnInspectorCallback(SelectedEntity, ComponentId);
                         UI::Utils::EndComponentHeader();
                         ImGui::Separator();
                     }
                 }
                 else
                 {
-                    MetaData->RenderOnInsecptorCallback(SelectedEntity, ComponentId);
+                    MetaData->RenderOnInspectorCallback(SelectedEntity, ComponentId);
                 }
             });
 

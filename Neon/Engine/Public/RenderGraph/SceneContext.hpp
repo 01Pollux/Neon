@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
+#include <Scene/GPU/Scene.hpp>
 #include <Math/Common.hpp>
 
 namespace Neon::RG
@@ -9,25 +10,14 @@ namespace Neon::RG
 
     class SceneContext
     {
-        struct alignas(16) PerMaterialData
-        {
-            Vector3  Albedo;
-            uint32_t AlbedoMapIndex;
+        // Transform
+        using QueryOrdererC = int(const flecs::entity_t, const void*, flecs::entity_t, const void*);
+        using QueryOrderer  = std::function<QueryOrdererC>;
 
-            Vector3  Specular;
-            uint32_t SpecularMapIndex;
-
-            Vector3  Emissive;
-            uint32_t EmissiveMapIndex;
-
-            uint32_t NormalMapIndex;
-
-            // MATERIAL_FLAG_*
-            uint32_t Flags;
-        };
-
-        static constexpr uint32_t AlignOfPerMaterialData = uint32_t(alignof(PerMaterialData));
-        static constexpr uint32_t SizeOfPerMaterialData  = uint32_t(Math::AlignUp(sizeof(PerMaterialData), AlignOfPerMaterialData));
+        using MeshQuery = flecs::query<
+            const Scene::GPUTransformManager::RenderableHandle,
+            const Scene::Component::Transform,
+            const Scene::Component::MeshInstance>;
 
     public:
         enum class RenderType : uint8_t
@@ -38,6 +28,10 @@ namespace Neon::RG
 
         SceneContext(
             const GraphStorage& Storage);
+
+        NEON_CLASS_NO_COPYMOVE(SceneContext);
+
+        ~SceneContext();
 
         /// <summary>
         /// Render the scene depending on the type
@@ -60,5 +54,9 @@ namespace Neon::RG
 
     private:
         const GraphStorage& m_Storage;
+
+        QueryOrderer m_TransformOrderer;
+
+        MeshQuery m_MeshQuery;
     };
 } // namespace Neon::RG

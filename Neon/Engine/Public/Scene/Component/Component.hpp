@@ -116,7 +116,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// Callback for when the component is being inspected.
         /// </summary>
-        mutable std::move_only_function<void(flecs::entity_t, flecs::id_t)> RenderOnInsecptorCallback;
+        mutable std::move_only_function<void(flecs::entity_t, flecs::id_t)> RenderOnInspectorCallback;
 
         /// <summary>
         /// Callback when the component is added to an entity.

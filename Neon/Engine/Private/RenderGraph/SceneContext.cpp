@@ -4,7 +4,9 @@
 #include <Runtime/GameLogic.hpp>
 
 #include <Scene/EntityWorld.hpp>
-#include <Scene/GPU/Scene.hpp>
+#include <Scene/Component/Component.hpp>
+#include <Scene/Component/Transform.hpp>
+#include <Scene/Component/Mesh.hpp>
 #include <Mdl/Mesh.hpp>
 
 #include <RHI/GlobalBuffer.hpp>
@@ -20,6 +22,43 @@ namespace Neon::RG
         const GraphStorage& Storage) :
         m_Storage(Storage)
     {
+        // So that we can sort by distance to camera, we will need access to the camera position
+        m_TransformOrderer =
+            [this](flecs::entity_t,
+                   const void* LhsTransformPtr,
+                   flecs::entity_t,
+                   const void* RhsTransformPtr) -> int
+        {
+            auto LhsTransform = std::bit_cast<const Component::Transform*>(LhsTransformPtr);
+            auto RhsTransform = std::bit_cast<const Component::Transform*>(RhsTransformPtr);
+
+            auto&   WorldTransform = m_Storage.GetFrameData().World;
+            Vector3 CameraPosition(WorldTransform[3][0], WorldTransform[3][1], WorldTransform[3][2]);
+
+            float LhsDistance = glm::distance(CameraPosition, LhsTransform->World.GetPosition());
+            float RhsDistance = glm::distance(CameraPosition, RhsTransform->World.GetPosition());
+
+            return LhsDistance < RhsDistance ? -1 : 1;
+        };
+
+        // Create mesh query
+        m_MeshQuery =
+            Scene::EntityWorld::Get()
+                .query_builder<
+                    const Scene::GPUTransformManager::RenderableHandle,
+                    const Component::Transform,
+                    const Component::MeshInstance>()
+                .with<Component::ActiveSceneEntity>()
+                .group_by<Scene::GPUTransformManager::PipelineGroup>()
+                .order_by(
+                    Scene::EntityWorld::Get().component<Component::Transform>(),
+                    m_TransformOrderer.target<QueryOrdererC>())
+                .build();
+    }
+
+    SceneContext::~SceneContext()
+    {
+        m_MeshQuery.destruct();
     }
 
     //
@@ -30,23 +69,13 @@ namespace Neon::RG
         RHI::GpuDescriptorHandle OpaqueLightDataHandle,
         RHI::GpuDescriptorHandle TransparentLightDataHandle) const
     {
-        auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetTransformManager();
-        auto& GpuLightManager     = Runtime::GameLogic::Get()->GetGPUScene()->GetLightManager();
-
-        auto& Meshes        = GpuTransformManager.GetMeshes();
-        auto& MeshInstances = GpuTransformManager.GetMeshInstanceIds();
-
-        // Accumulate count of instances
-        size_t Count = 0;
-        for (auto& InstanceList : MeshInstances)
-        {
-            Count += InstanceList.second.size();
-        }
-
-        if (!Count)
+        if (!m_MeshQuery.is_true())
         {
             return;
         }
+
+        auto& GpuTransformManager = Runtime::GameLogic::Get()->GetGPUScene()->GetTransformManager();
+        auto& GpuLightManager     = Runtime::GameLogic::Get()->GetGPUScene()->GetLightManager();
 
         size_t PassesCount = 1;
 
@@ -86,6 +115,8 @@ namespace Neon::RG
             CommandList->BindMaterialParameters(IsDirect, m_Storage.GetFrameDataHandle());
         };
 
+        //
+
         RHI::GpuDescriptorHandle LastLightHandle[2];
         for (size_t Pass = 0; Pass < PassesCount; Pass++)
         {
@@ -96,113 +127,105 @@ namespace Neon::RG
             }
 #endif
 
-            auto PassType = Passes[Pass];
-            for (auto& InstanceList : MeshInstances | std::views::values)
-            {
-                uint32_t FirstInstanceId = InstanceList.back();
-                auto     FirstMesh       = Meshes.at(FirstInstanceId);
-                auto&    FirstMaterial   = FirstMesh->GetModel()->GetMaterial(FirstMesh->GetData().MaterialIndex);
-
-                bool WasSet              = false;
-                auto UpdatePipelineState = [&]
+            m_MeshQuery.iter(
+                [&](flecs::iter&                                        Iter,
+                    const Scene::GPUTransformManager::RenderableHandle* Renderables,
+                    const Component::Transform*                         Transforms,
+                    const Component::MeshInstance*                      Meshes)
                 {
-                    if (WasSet)
+                    auto PassType = Passes[Pass];
+
+                    auto& FirstMaterial = Meshes->Mesh.GetModel()->GetMaterial(Meshes->Mesh.GetData().MaterialIndex);
+                    if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
                     {
                         return;
                     }
 
-                    WasSet = true;
-
                     CommandList->SetPipelineState(FirstMaterial->GetPipelineState(PassType));
-                };
 
-                if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
-                {
-                    continue;
-                }
-
-                for (auto InstanceId : InstanceList)
-                {
-                    auto  Mesh         = Meshes.at(InstanceId);
-                    auto& MeshData     = Mesh->GetData();
-                    auto& MeshModel    = Mesh->GetModel();
-                    auto& MeshMaterial = Mesh->GetModel()->GetMaterial(MeshData.MaterialIndex);
-
-                    if (MeshMaterial->IsCompute() && Type != RenderType::RenderPass)
+                    for (auto Index : Iter)
                     {
-                        continue;
-                    }
+                        auto& Mesh       = Meshes[Index].Mesh;
+                        auto  InstanceId = Renderables[Index].InstanceId;
 
-                    // Pass == 0 opaque materials
-                    // Pass == 1 transparent materials
-                    if ((MeshMaterial->IsTransparent() ? 1 : 0) != Pass)
-                    {
-                        continue;
-                    }
+                        auto& MeshData     = Mesh.GetData();
+                        auto& MeshModel    = Mesh.GetModel();
+                        auto& MeshMaterial = Mesh.GetModel()->GetMaterial(MeshData.MaterialIndex);
 
-                    BindRootSignatureOnce(!MeshMaterial->IsCompute());
-                    UpdatePipelineState();
-
-                    // Update shared params
-                    {
-                        //  Update light handle
+                        if (MeshMaterial->IsCompute() && Type != RenderType::RenderPass)
                         {
-                            auto  Index           = MeshMaterial->IsTransparent() ? 0 : 1;
-                            auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
-                            if (LastLightHandle[Index] != LightDataHandle)
+                            continue;
+                        }
+
+                        // Pass == 0 opaque materials
+                        // Pass == 1 transparent materials
+                        if ((MeshMaterial->IsTransparent() ? 1 : 0) != Pass)
+                        {
+                            continue;
+                        }
+
+                        BindRootSignatureOnce(!MeshMaterial->IsCompute());
+
+                        // Update shared params
+                        {
+                            //  Update light handle
                             {
-                                CommandList->SetDescriptorTable(
+                                auto  Index           = MeshMaterial->IsTransparent() ? 0 : 1;
+                                auto& LightDataHandle = MeshMaterial->IsTransparent() ? TransparentLightDataHandle : OpaqueLightDataHandle;
+                                if (LastLightHandle[Index] != LightDataHandle)
+                                {
+                                    CommandList->SetDescriptorTable(
+                                        !MeshMaterial->IsCompute(),
+                                        uint32_t(RHI::RSCommon::MaterialRS::LightData),
+                                        LastLightHandle[Index] = LightDataHandle);
+                                }
+                            }
+
+                            // Update PerInstanceData
+                            {
+                                CommandList->SetResourceView(
                                     !MeshMaterial->IsCompute(),
-                                    uint32_t(RHI::RSCommon::MaterialRS::LightData),
-                                    LastLightHandle[Index] = LightDataHandle);
+                                    RHI::CstResourceViewType::Srv,
+                                    uint32_t(RHI::RSCommon::MaterialRS::InstanceData),
+                                    GpuTransformManager.GetInstanceHandle(InstanceId));
+                            }
+
+                            // Update Local and shared data
+                            {
+                                MeshMaterial->ReallocateShared();
+                                MeshMaterial->ReallocateLocal();
+
+                                CommandList->SetResourceView(
+                                    !MeshMaterial->IsCompute(),
+                                    RHI::CstResourceViewType::Cbv,
+                                    uint32_t(RHI::RSCommon::MaterialRS::SharedData),
+                                    MeshMaterial->GetSharedBlock());
+
+                                CommandList->SetResourceView(
+                                    !MeshMaterial->IsCompute(),
+                                    RHI::CstResourceViewType::Srv,
+                                    uint32_t(RHI::RSCommon::MaterialRS::LocalData),
+                                    MeshMaterial->GetLocalBlock());
                             }
                         }
 
-                        // Update PerInstanceData
-                        {
-                            CommandList->SetResourceView(
-                                !MeshMaterial->IsCompute(),
-                                RHI::CstResourceViewType::Srv,
-                                uint32_t(RHI::RSCommon::MaterialRS::InstanceData),
-                                GpuTransformManager.GetInstanceHandle(InstanceId));
-                        }
+                        RHI::Views::Vertex VtxView;
+                        VtxView.Append<Mdl::MeshVertex>(
+                            MeshModel->GetVertexBuffer()->GetHandle(),
+                            MeshData.VertexOffset,
+                            MeshData.VertexCount);
 
-                        // Update Local and shared data
-                        {
-                            MeshMaterial->ReallocateShared();
-                            MeshMaterial->ReallocateLocal();
+                        RHI::Views::IndexU32 IdxView(
+                            MeshModel->GetIndexBuffer()->GetHandle(),
+                            MeshData.IndexOffset,
+                            MeshData.IndexCount);
 
-                            CommandList->SetResourceView(
-                                !MeshMaterial->IsCompute(),
-                                RHI::CstResourceViewType::Cbv,
-                                uint32_t(RHI::RSCommon::MaterialRS::SharedData),
-                                MeshMaterial->GetSharedBlock());
-
-                            CommandList->SetResourceView(
-                                !MeshMaterial->IsCompute(),
-                                RHI::CstResourceViewType::Srv,
-                                uint32_t(RHI::RSCommon::MaterialRS::LocalData),
-                                MeshMaterial->GetLocalBlock());
-                        }
+                        CommandList->SetPrimitiveTopology(MeshData.Topology);
+                        CommandList->SetIndexBuffer(IdxView);
+                        CommandList->SetVertexBuffer(0, VtxView);
+                        CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
                     }
-
-                    RHI::Views::Vertex VtxView;
-                    VtxView.Append<Mdl::MeshVertex>(
-                        MeshModel->GetVertexBuffer()->GetHandle(),
-                        MeshData.VertexOffset,
-                        MeshData.VertexCount);
-
-                    RHI::Views::IndexU32 IdxView(
-                        MeshModel->GetIndexBuffer()->GetHandle(),
-                        MeshData.IndexOffset,
-                        MeshData.IndexCount);
-
-                    CommandList->SetPrimitiveTopology(MeshData.Topology);
-                    CommandList->SetIndexBuffer(IdxView);
-                    CommandList->SetVertexBuffer(0, VtxView);
-                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = MeshData.IndexCount });
-                }
-            }
+                });
 
 #ifndef NEON_DIST
             if (Type != RenderType::DepthPrepass)

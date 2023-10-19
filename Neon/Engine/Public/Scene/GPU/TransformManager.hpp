@@ -10,16 +10,34 @@
 #include <Allocator/Buddy.hpp>
 #include <vector>
 
-namespace Neon::Mdl
+namespace Neon::Scene::Component
 {
-    class Mesh;
-}
+    struct Transform;
+    struct MeshInstance;
+} // namespace Neon::Scene::Component
 
 namespace Neon::Scene
 {
     class GPUTransformManager
     {
     public:
+        struct PipelineGroup
+        {
+        };
+
+        struct RenderableHandle
+        {
+            constexpr operator bool() const noexcept
+            {
+                return InstanceId != std::numeric_limits<uint32_t>::max();
+            }
+
+            /// <summary>
+            /// Instance ID of the renderable in GPUTransformManager.
+            /// </summary>
+            uint32_t InstanceId = std::numeric_limits<uint32_t>::max();
+        };
+
         struct InstanceData
         {
             Matrix4x4 World;
@@ -28,10 +46,6 @@ namespace Neon::Scene
         using PagedInstaceData                        = GPUPagedInstance<InstanceData>;
         static constexpr size_t   SizeOfInstanceData  = PagedInstaceData::SizeOfInstanceData;
         static constexpr uint32_t AlignOfInstanceData = PagedInstaceData::SizeOfInstanceData;
-
-        using InstanceIdList          = PagedInstaceData::InstanceIdList;
-        using InstanceIdPipelineGroup = std::unordered_map<RHI::IPipelineState*, InstanceIdList>;
-        using InstanceIdMeshMap       = std::unordered_map<uint32_t, const Mdl::Mesh*>;
 
     public:
         GPUTransformManager();
@@ -67,20 +81,7 @@ namespace Neon::Scene
         [[nodiscard]] RHI::GpuResourceHandle GetInstanceHandle(
             uint32_t InstanceId) const;
 
-    public:
-        [[nodiscard]] auto& GetMeshInstanceIds() const noexcept
-        {
-            return m_MeshInstanceIds;
-        }
-
-        [[nodiscard]] auto& GetMeshes() const noexcept
-        {
-            return m_Meshes;
-        }
-
     private:
         GPUPagedInstance<InstanceData> m_PagesInstances;
-        InstanceIdMeshMap              m_Meshes;
-        InstanceIdPipelineGroup        m_MeshInstanceIds;
     };
 } // namespace Neon::Scene
