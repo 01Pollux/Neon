@@ -3,8 +3,7 @@
 #include <Core/Neon.hpp>
 #include <Core/String.hpp>
 
-#include <Math/AABB.hpp>
-#include <Math/Matrix.hpp>
+#include <Geometry/AABB.hpp>
 
 #include <RHI/Resource/Common.hpp>
 #include <vector>
