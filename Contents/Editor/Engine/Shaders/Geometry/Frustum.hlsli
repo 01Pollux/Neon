@@ -32,7 +32,7 @@ struct Frustum
 	
 	void Init(const in float4x4 InvProjection)
 	{
-		static float4 HomogenousPoints[6] =
+		float4 HomogenousPoints[6] =
 		{
 			float4(1.0f, 0.0f, 1.0f, 1.0f), // right (at far plane)
 			float4(-1.0f, 0.0f, 1.0f, 1.0f), // left
