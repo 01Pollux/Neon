@@ -23,7 +23,7 @@ namespace Neon::Scene
     public:
         struct RenderableHandle
         {
-            constexpr operator bool() const noexcept
+            constexpr bool Valid() const noexcept
             {
                 return InstanceId != std::numeric_limits<uint32_t>::max();
             }

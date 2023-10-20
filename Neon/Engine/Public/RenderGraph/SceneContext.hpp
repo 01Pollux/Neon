@@ -21,7 +21,18 @@ namespace Neon::RG
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
 
-        using EntityList      = std::vector<flecs::entity_t>;
+        struct EntityInfo
+        {
+            flecs::entity_t Id;
+            float           Dist;
+
+            auto operator<=>(const EntityInfo& Other) const noexcept
+            {
+                return Dist <=> Other.Dist;
+            }
+        };
+
+        using EntityList      = std::set<EntityInfo>;
         using EntityListGroup = std::map<RHI::IPipelineState*, EntityList>;
 
     public:

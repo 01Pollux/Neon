@@ -30,7 +30,7 @@ namespace Neon::Scene
                     if (Iter.event() == flecs::OnSet)
                     {
                         InstanceData* Data = nullptr;
-                        if (*Handle) [[likely]]
+                        if (Handle->Valid()) [[likely]]
                         {
                             Data = this->GetInstanceData(Handle->InstanceId);
                         }
@@ -42,7 +42,7 @@ namespace Neon::Scene
                     }
                     else
                     {
-                        if (*Handle) [[likely]]
+                        if (Handle->Valid()) [[likely]]
                         {
                             this->RemoveInstance(Handle->InstanceId);
                         }
