@@ -23,7 +23,7 @@ namespace Neon::Mdl
     {
         Matrix4x4 Transform = Mat::Identity<Matrix4x4>;
 
-        Geometry::AABoundingBox3D AABB;
+        Geometry::AABB AABB;
 
         uint32_t VertexCount;
         uint32_t IndexCount;

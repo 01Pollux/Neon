@@ -1,6 +1,5 @@
 #include <EnginePCH.hpp>
 
-#include <Math/Frustum.hpp>
 #include <RenderGraph/RG.hpp>
 #include <RenderGraph/Passes/LightCullPass.hpp>
 #include <RenderGraph/Passes/DepthPrepass.hpp>
@@ -10,6 +9,8 @@
 #include <RHI/PipelineState.hpp>
 #include <RHI/Resource/State.hpp>
 #include <RHI/GlobalDescriptors.hpp>
+
+#include <Geometry/Frustum.hpp>
 
 namespace Neon::RG
 {

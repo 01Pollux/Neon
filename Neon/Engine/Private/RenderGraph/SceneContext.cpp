@@ -3,7 +3,7 @@
 #include <RenderGraph/Storage.hpp>
 #include <Runtime/GameLogic.hpp>
 
-#include <Math/Frustum.hpp>
+#include <Geometry/Frustum.hpp>
 
 #include <Scene/EntityWorld.hpp>
 #include <Scene/Component/Camera.hpp>
@@ -24,25 +24,6 @@ namespace Neon::RG
         const GraphStorage& Storage) :
         m_Storage(Storage)
     {
-        //// So that we can sort by distance to camera, we will need access to the camera position
-        // m_TransformOrderer =
-        //     [this](flecs::entity_t,
-        //            const void* LhsTransformPtr,
-        //            flecs::entity_t,
-        //            const void* RhsTransformPtr) -> int
-        //{
-        //     auto LhsTransform = std::bit_cast<const Component::Transform*>(LhsTransformPtr);
-        //     auto RhsTransform = std::bit_cast<const Component::Transform*>(RhsTransformPtr);
-
-        //    auto&   WorldTransform = m_Storage.GetFrameData().World;
-        //    Vector3 CameraPosition(WorldTransform[3][0], WorldTransform[3][1], WorldTransform[3][2]);
-
-        //    float LhsDistance = glm::distance(CameraPosition, LhsTransform->World.GetPosition());
-        //    float RhsDistance = glm::distance(CameraPosition, RhsTransform->World.GetPosition());
-
-        //    return LhsDistance < RhsDistance ? -1 : 1;
-        //};
-
         // Create mesh query
         m_MeshQuery =
             Scene::EntityWorld::Get()
@@ -63,7 +44,7 @@ namespace Neon::RG
     //
 
     void SceneContext::Update(
-        const Matrix4x4&            ProjectionMatrix,
+        const Matrix4x4&            InvProjectionMatrix,
         const Component::Camera&    Camera,
         const Component::Transform& Transform)
     {
@@ -73,28 +54,27 @@ namespace Neon::RG
         {
         case Component::CameraType::Perspective:
         {
-            Geometry::Frustum Frustum(ProjectionMatrix);
-            Frustum.Transform(1.f, Transform.World.GetRotation(), Transform.World.GetPosition());
+            Geometry::Frustum Frustum(InvProjectionMatrix);
 
-            m_MeshQuery.iter(
-                [&Frustum](flecs::iter&                                        Iter,
-                           const Scene::GPUTransformManager::RenderableHandle* Renderables,
-                           const Component::Transform*                         Transforms,
-                           const Component::MeshInstance*                      Meshes)
-                {
-                    for (size_t Index : Iter)
-                    {
-                        auto CurMesh = Iter.is_self(3) ? &Meshes[Index] : Meshes;
-                        auto Box     = CurMesh->Mesh.GetData().AABB;
+            // m_MeshQuery.iter(
+            //     [&Frustum](flecs::iter&                                        Iter,
+            //                const Scene::GPUTransformManager::RenderableHandle* Renderables,
+            //                const Component::Transform*                         Transforms,
+            //                const Component::MeshInstance*                      Meshes)
+            //     {
+            //         for (size_t Index : Iter)
+            //         {
+            //             auto CurMesh = Iter.is_self(3) ? &Meshes[Index] : Meshes;
+            //             auto Box     = CurMesh->Mesh.GetData().AABB;
 
-                        Box.Min += Transforms[Index].World.GetPosition();
-                        Box.Max += Transforms[Index].World.GetPosition();
+            //            Box.Min += Transforms[Index].World.GetPosition();
+            //            Box.Max += Transforms[Index].World.GetPosition();
 
-                        if (Frustum.Contains(Box) != Geometry::ContainsType::Disjoint)
-                        {
-                        }
-                    }
-                });
+            //            if (Frustum.Contains(Box) != Geometry::ContainsType::Disjoint)
+            //            {
+            //            }
+            //        }
+            //    });
 
             break;
         }

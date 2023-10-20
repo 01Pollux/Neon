@@ -122,36 +122,34 @@ void CS_Main(
 			switch (CurLight.GetType())
 			{
 				case LIGHT_FLAGS_TYPE_DIRECTIONAL:
-				{
-						AppendLight_Opaque(i);
-						AppendLight_Transparent(i);
-						break;
-					}
+					AppendLight_Opaque(i);
+					AppendLight_Transparent(i);
+					break;
 				case LIGHT_FLAGS_TYPE_POINT:
 					{
-						Sphere LightSphere = { CurLight.Position, CurLight.Range };
-						if (SphereInsideFrustum(c_GroupFrustum, LightSphere, MinDepthWS, MaxDepthWS))
-						{
-							AppendLight_Transparent(i);
-							if (SphereInsidePlane(LightSphere, MinPlane))
-							{
-								AppendLight_Opaque(i);
-							}
-						}
+						//Sphere LightSphere = { CurLight.Position, CurLight.Range };
+						//if (SphereInsideFrustum(c_GroupFrustum, LightSphere, MinDepthWS, MaxDepthWS))
+						//{
+						//	AppendLight_Transparent(i);
+						//	if (SphereInsidePlane(LightSphere, MinPlane))
+						//	{
+						//		AppendLight_Opaque(i);
+						//	}
+						//}
 						break;
 					}
 				case LIGHT_FLAGS_TYPE_SPOT_LIGHT:
 					{
-						float Radius = tan(radians(CurLight.Spot_GetAngle())) * CurLight.Range;
-						Cone LightCone = { CurLight.Position, CurLight.Range, CurLight.Direction, Radius };
-						if (ConeInsideFrustum(c_GroupFrustum, LightCone, MinDepthWS, MaxDepthWS))
-						{
-							AppendLight_Transparent(i);
-							if (ConeInsidePlane(LightCone, MinPlane))
-							{
-								AppendLight_Opaque(i);
-							}
-						}
+						//float Radius = tan(radians(CurLight.Spot_GetAngle())) * CurLight.Range;
+						//Cone LightCone = { CurLight.Position, CurLight.Range, CurLight.Direction, Radius };
+						//if (ConeInsideFrustum(c_GroupFrustum, LightCone, MinDepthWS, MaxDepthWS))
+						//{
+						//	AppendLight_Transparent(i);
+						//	if (ConeInsidePlane(LightCone, MinPlane))
+						//	{
+						//		AppendLight_Opaque(i);
+						//	}
+						//}
 						break;
 					}
 			}

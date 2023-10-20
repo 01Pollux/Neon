@@ -15,10 +15,6 @@ namespace Neon::Scene
         EntityWorld::Get()
             .component<RenderableHandle>("_RenderableHandle");
 
-        // Register pipeline group.
-        EntityWorld::Get()
-            .component<PipelineGroup>("_PipelineGroup");
-
         // Create observer for the transform and renderable components.
         EntityWorld::Get()
             .observer<const Component::Transform>()
@@ -53,30 +49,6 @@ namespace Neon::Scene
                         Entity.remove<RenderableHandle>();
                     }
                 });
-
-        // Create observer for the transform and renderable components.
-        EntityWorld::Get()
-            .observer<const Component::Transform, const Component::MeshInstance>()
-            .event(flecs::OnSet)
-            .event(flecs::OnRemove)
-            .each(
-                [this](flecs::iter& Iter, size_t Idx, const Component::Transform&, const Component::MeshInstance& Instance)
-                {
-                    auto Entity = Iter.entity(Idx);
-                    if (Iter.event() == flecs::OnSet)
-                    {
-                        uint32_t MaterialIndex = Instance.Mesh.GetData().MaterialIndex;
-                        auto&    Material      = Instance.Mesh.GetModel()->GetMaterial(MaterialIndex);
-                        auto     PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
-                        Entity.add<PipelineGroup>(std::bit_cast<uint64_t>(PipelineState));
-                    }
-                    else
-                    {
-                        Entity.remove<PipelineGroup>();
-                    }
-                });
-
-        //
     }
 
     uint32_t GPUTransformManager::AddInstance(

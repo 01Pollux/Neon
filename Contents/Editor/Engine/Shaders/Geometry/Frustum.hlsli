@@ -1,112 +1,113 @@
 #ifndef GEOMETRY_FRUSTUM_H
 #define GEOMETRY_FRUSTUM_H
 
-
 #include "Shapes.hlsli"
+#include "Quaternion.hlsli"
 
 struct Frustum
 {
-	Plane planes[4]; // left, right, top, bottom
+	float4 Orientation;
+	float3 Origin;
+
+	float RightSlope;
+	float LeftSlope;
+	float TopSlope;
+	float BottomSlope;
+	float Near;
+	float Far;
+	
+	void Init()
+	{
+		Origin = float3(0.f, 0.f, 0.f);
+		Orientation = QUATERNION_IDENTITY;
+
+		RightSlope = 1.f;
+		LeftSlope = -1.f;
+		TopSlope = 1.f;
+		BottomSlope = -1.f;
+		
+		Near = 0.f;
+		Far = 1.f;
+	}
+	
+	void Init(const in float4x4 InvProjection)
+	{
+		static float4 HomogenousPoints[6] =
+		{
+			float4(1.0f, 0.0f, 1.0f, 1.0f), // right (at far plane)
+			float4(-1.0f, 0.0f, 1.0f, 1.0f), // left
+			float4(0.0f, 1.0f, 1.0f, 1.0f), // top
+			float4(0.0f, -1.0f, 1.0f, 1.0f), // bottom
+			float4(0.0f, 0.0f, 0.0f, 1.0f), // near
+			float4(0.0f, 0.0f, 1.0f, 1.0f) // far
+		};
+
+		// Compute the frustum corners in world space.
+		float4 Points[6];
+		[unroll(6)]
+		for (int i = 0; i < 6; i++)
+			Points[i] = mul(HomogenousPoints[i], InvProjection);
+		
+		Origin = float3(0.0f, 0.0f, 0.0f);
+		Orientation = QUATERNION_IDENTITY;
+
+		// Compute the slopes.
+		RightSlope = Points[0].x / Points[0].
+z;
+		LeftSlope = Points[1].x / Points[1].z;
+		TopSlope = Points[2].y / Points[2].
+z;
+		BottomSlope = Points[3].y / Points[3].z;
+
+		// Compute near and far.
+		Near = Points[4].z / Points[4].
+w;
+		Far = Points[5].z / Points[5].w;
+	}
+	
+	void GetPlanes(out float4 Planes[6])
+	{
+		Planes[0] = float4(0.0f, 0.0f, -1.0f, Near);
+		Planes[1] = float4(0.0f, 0.0f, 1.0f, -Far);
+		Planes[2] = float4(1.0f, 0.0f, -RightSlope, 0.0f);
+		Planes[3] = float4(-1.0f, 0.0f, LeftSlope, 0.0f);
+		Planes[4] = float4(0.0f, 1.0f, -TopSlope, 0.0f);
+		Planes[5] = float4(0.0f, -1.0f, BottomSlope, 0.0f);
+	}
 };
 
 //
 
-Frustum CreateFrustum(in float fov, in float aspect, in float nearZ, in float farZ)
+bool PointInsideFrustum(const in Frustum frustum, const in float3 pt)
 {
-	Frustum frustum;
-	float tanFov = tan(fov * 0.5f);
-	float nearY = nearZ * tanFov;
-	float nearX = nearY * aspect;
-	float farY = farZ * tanFov;
-	float farX = farY * aspect;
+	float4 Planes[6];
+	frustum.GetPlanes(Planes);
 
-	frustum.planes[0] = PlaneFromPoints(float3(0.0f, 0.0f, 0.0f), float3(1.0f, 0.0f, 1.0f), nearX);
-	frustum.planes[1] = PlaneFromPoints(float3(0.0f, 0.0f, 0.0f), float3(-1.0f, 0.0f, 1.0f), nearX);
-	frustum.planes[2] = PlaneFromPoints(float3(0.0f, 0.0f, 0.0f), float3(0.0f, 1.0f, 1.0f), nearY);
-	frustum.planes[3] = PlaneFromPoints(float3(0.0f, 0.0f, 0.0f), float3(0.0f, -1.0f, 1.0f), nearY);
-	return frustum;
-}
+    // Transform point into local space of frustum.
+	float4 TPoint = float4(q_rotate_vector(pt - frustum.Origin, frustum.Orientation), 1.f);
 
-bool IsInsideFrustum(const in Frustum frustum, const in float3 pt, const in float3 radius, out float3 outPt, out float outDist, out int outPlane)
-{
-	outPt = pt;
-	outDist = 0.0f;
+    // Test point against each plane of the frustum.
 	for (int i = 0; i < 6; ++i)
 	{
-		float dist = dot(frustum.planes[i].Normal, pt) + frustum.planes[i].Distance;
-		if (dist < -radius[i])
+		if (dot(TPoint, Planes[i]) > 0.f)
 		{
-			outPt += frustum.planes[i].Normal * (dist + radius[i]);
-			outDist = dist + radius[i];
-			outPlane = i;
 			return false;
 		}
 	}
+
 	return true;
-}
-
-bool PointInsideFrustum(const in Frustum frustum, const in float3 pt, const in float near, const in float far)
-{
-	bool result = true;
-	if ((pt.z > near) || (pt.z < far))
-	{
-		result = false;
-	}
-
-	for (int i = 0; i < 4 && result; i++)
-	{
-		if (PointInsidePlane(frustum.planes[i], pt))
-		{
-			result = false;
-		}
-	}
-
-	return result;
 }
 
 //
 
-bool SphereInsideFrustum(const in Frustum frustum, const in Sphere sphere, const in float near, const in float far)
+bool SphereInsideFrustum(const in Frustum frustum, const in Sphere sphere)
 {
-	bool result = true;
-	if (((sphere.Center.z - sphere.Radius) > near) || ((sphere.Center.z + sphere.Radius) < far))
-	{
-		result = false;
-	}
-
-	for (int i = 0; i < 4 && result; i++)
-	{
-		if (SphereInsidePlane(sphere, frustum.planes[i]))
-		{
-			result = false;
-		}
-	}
-
-	return result;
+	return true;
 }
 
-bool ConeInsideFrustum(const in Frustum frustum, const in Cone cone, const in float near, const in float far)
+bool ConeInsideFrustum(const in Frustum frustum, const in Cone cone)
 {
-	bool result = true;
-
-	Plane nearPlane = { float3(0, 0, -1), -near };
-	Plane farPlane = { float3(0, 0, 1), far };
-
-    // First check the near and far clipping planes.
-	if (!ConeInsidePlane(cone, nearPlane) && !ConeInsidePlane(cone, farPlane))
-	{
-		// Then check frustum planes
-		for (int i = 0; i < 4; i++)
-		{
-			if (ConeInsidePlane(cone, frustum.planes[i]))
-			{
-				result = false;
-				break;
-			}
-		}
-	}
-
-	return result;
+	return true;
 }
 	
 #endif

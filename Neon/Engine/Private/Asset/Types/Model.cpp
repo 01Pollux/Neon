@@ -355,7 +355,7 @@ namespace Neon::Asset
                     uint32_t VertexCount = AIMesh->mNumVertices;
                     Vertices.reserve(Vertices.size() + VertexCount);
 
-                    Geometry::AABoundingBox3D Box;
+                    Geometry::AABB Box;
                     for (uint32_t j = 0; j < VertexCount; j++)
                     {
                         Vector3 Position(AIMesh->mVertices[j].x, AIMesh->mVertices[j].y, AIMesh->mVertices[j].z);
