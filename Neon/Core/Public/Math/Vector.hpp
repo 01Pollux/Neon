@@ -74,7 +74,7 @@ namespace Neon
         //
 
         template<QuaternionType _Ty>
-        inline constexpr _Ty Identity{ 0, 0, 0, 1 };
+        inline constexpr _Ty Identity{ 1, 0, 0, 0 };
     } // namespace Vec
 } // namespace Neon
 

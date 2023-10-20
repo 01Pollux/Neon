@@ -63,7 +63,16 @@ namespace Neon::Geometry
         /// Transform the frustum
         /// </summary>
         void Transform(
-            float             Scale,
+            const TransformMatrix& Tr)
+        {
+            Transform(Tr.GetScale(), Tr.GetRotation(), Tr.GetPosition());
+        }
+
+        /// <summary>
+        /// Transform the frustum
+        /// </summary>
+        void Transform(
+            const Vector3&    Scale,
             const Quaternion& Rotation,
             const Vector3&    Translation);
 

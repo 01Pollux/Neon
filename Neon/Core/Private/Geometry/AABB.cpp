@@ -5,7 +5,7 @@
 namespace Neon::Geometry
 {
     void AABB::Transform(
-        float             Scale,
+        const Vector3&    Scale,
         const Quaternion& Rotation,
         const Vector3&    Translation)
     {
@@ -25,6 +25,8 @@ namespace Neon::Geometry
         Center  = (Min + Max) * 0.5f;
         Extents = (Max - Min) * 0.5f;
     }
+
+    //
 
     ContainmentType AABB::Contains(
         const AABB& Box) const

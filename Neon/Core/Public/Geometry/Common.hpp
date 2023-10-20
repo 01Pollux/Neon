@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Math/Plane.hpp>
+#include <Math/Transform.hpp>
 
 namespace Neon::Geometry
 {

@@ -33,7 +33,7 @@ namespace Neon::Math
         /// </summary>
         Vector3 AsVec3() const noexcept
         {
-            return static_cast<const Vector3&>(*this);
+            return static_cast<Vector3>(*this);
         }
 
     public:
@@ -107,7 +107,7 @@ namespace Neon::Math
             Quaternion Rotation,
             Vector3    Translation)
         {
-            Vector3 Normal = glm::rotate(Rotation, AsVec3());
+            Vector3 Normal = Rotation * Vector4(AsVec3(), 0.f);
             float   D      = w - glm::dot(Normal, Translation);
             *this          = Plane(Normal, D);
         }

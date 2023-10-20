@@ -22,13 +22,23 @@ namespace Neon::Geometry
 
     public:
         /// <summary>
-        /// Transform the frustum
+        /// Transform the aabb
         /// </summary>
         void Transform(
-            float             Scale,
+            const TransformMatrix& Tr)
+        {
+            Transform(Tr.GetScale(), Tr.GetRotation(), Tr.GetPosition());
+        }
+
+        /// <summary>
+        /// Transform the aabb
+        /// </summary>
+        void Transform(
+            const Vector3&    Scale,
             const Quaternion& Rotation,
             const Vector3&    Translation);
 
+    public:
         /// <summary>
         /// Check collision
         /// </summary>

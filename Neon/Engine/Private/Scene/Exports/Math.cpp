@@ -42,6 +42,5 @@ namespace Neon::Scene::Exports
         //
 
         World.component<TransformMatrix>("TransformMatrix");
-        World.component<AffineTransformMatrix>("AffineTransformMatrix");
     }
 } // namespace Neon::Scene::Exports

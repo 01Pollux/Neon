@@ -26,7 +26,7 @@ namespace Neon::Geometry
     //
 
     void Frustum::Transform(
-        float             Scale,
+        const Vector3&    Scale,
         const Quaternion& Rotation,
         const Vector3&    Translation)
     {
@@ -36,9 +36,11 @@ namespace Neon::Geometry
         // Transform the origin.
         Origin = glm::rotate(Rotation, Origin * Scale) + Translation;
 
+        float L = glm::length(Scale);
+
         // Scale the near and far distances (the slopes remain the same).
-        Near = Near * Scale;
-        Far  = Far * Scale;
+        Near = Near * L;
+        Far  = Far * L;
     }
 
     //

@@ -54,7 +54,7 @@ namespace Neon::RG
         case Component::CameraType::Perspective:
         {
             Geometry::Frustum Frustum(glm::transpose(m_Storage.GetFrameData().ProjectionInverse));
-            Frustum.Transform(1.f, Transform.World.GetRotation(), Transform.World.GetPosition());
+            Frustum.Transform(Transform.World);
 
             m_MeshQuery.iter(
                 [&](flecs::iter& Iter,
@@ -68,8 +68,7 @@ namespace Neon::RG
                         auto  MeshInstance = Iter.is_self(3) ? &Meshes[Index] : Meshes;
                         auto  Box          = MeshInstance->Mesh.GetData().AABB;
 
-                        Box.Transform(1.f, CurTransform.GetRotation(), CurTransform.GetPosition());
-
+                        Box.Transform(CurTransform);
                         if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
                         {
                             auto& Material      = MeshInstance->Mesh.GetMaterial();

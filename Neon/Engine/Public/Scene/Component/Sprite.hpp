@@ -32,8 +32,8 @@ namespace Neon::Scene::Component
         Sprite();
 
         Ptr<RHI::IMaterial> MaterialInstance;
-        AffineTransformMatrix    TextureTransform;
-        Vector2                  SpriteSize{ 1.0f, 1.0f };
-        Color4                   ModulationColor = Colors::White;
+        TransformMatrix     TextureTransform;
+        Vector2             SpriteSize{ 1.0f, 1.0f };
+        Color4              ModulationColor = Colors::White;
     };
 } // namespace Neon::Scene::Component
