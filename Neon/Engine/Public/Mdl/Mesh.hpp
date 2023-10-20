@@ -42,6 +42,14 @@ namespace Neon::Mdl
             return m_Model->GetSubmesh(m_Submesh);
         }
 
+        /// <summary>
+        /// Get material of the mesh.
+        /// </summary>
+        [[nodiscard]] const auto& GetMaterial() const noexcept
+        {
+            return m_Model->GetMaterial(GetData().MaterialIndex);
+        }
+
     private:
         Ptr<Model>          m_Model;
         Model::SubmeshIndex m_Submesh = Model::InvalidSubmeshIndex;

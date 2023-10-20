@@ -51,5 +51,39 @@ namespace Neon::Geometry
             Near = Points[4].z / Points[4].w;
             Far  = Points[5].z / Points[5].w;
         }
+
+    public:
+        /// <summary>
+        /// Get planes for frustum
+        /// </summary>
+        [[nodiscard]] std::array<Math::Plane, 6> GetPlanes() const;
+
+    public:
+        /// <summary>
+        /// Transform the frustum
+        /// </summary>
+        void Transform(
+            float             Scale,
+            const Quaternion& Rotation,
+            const Vector3&    Translation);
+
+    public:
+        /// <summary>
+        /// Check collision
+        /// </summary>
+        [[nodiscard]] ContainmentType Contains(
+            const AABB& Box) const;
+
+        /// <summary>
+        /// Check collision
+        /// </summary>
+        [[nodiscard]] ContainmentType Contains(
+            const Frustum& Fr) const;
+
+        /// <summary>
+        /// Check collision
+        /// </summary>
+        [[nodiscard]] ContainmentType Contains(
+            std::span<const Math::Plane> Planes) const;
     };
 } // namespace Neon::Geometry

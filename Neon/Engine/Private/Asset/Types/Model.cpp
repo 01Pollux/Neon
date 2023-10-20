@@ -355,11 +355,14 @@ namespace Neon::Asset
                     uint32_t VertexCount = AIMesh->mNumVertices;
                     Vertices.reserve(Vertices.size() + VertexCount);
 
-                    Geometry::AABB Box;
+                    Vector3 Min(std::numeric_limits<float>::max()),
+                        Max(std::numeric_limits<float>::lowest());
+
                     for (uint32_t j = 0; j < VertexCount; j++)
                     {
                         Vector3 Position(AIMesh->mVertices[j].x, AIMesh->mVertices[j].y, AIMesh->mVertices[j].z);
-                        Box.Expand(Position);
+                        Min = glm::min(Min, Position);
+                        Max = glm::max(Max, Position);
 
                         auto& Vertex = Vertices.emplace_back(
                             Mdl::MeshVertex{
@@ -404,6 +407,11 @@ namespace Neon::Asset
                         Toplogy = RHI::PrimitiveTopology::TriangleList;
                         break;
                     }
+
+                    Geometry::AABB Box{
+                        .Center  = (Max + Min) * 0.5f,
+                        .Extents = (Max - Min) * 0.5f
+                    };
 
                     Submeshes.emplace_back(
                         Mdl::SubMeshData{

@@ -61,6 +61,10 @@ namespace Neon::RG
         CameraBuffer.DeltaTime  = float(Runtime::GameEngine::Get()->GetDeltaTime());
 
         m_Storage.UpdateOutputImage(CameraBuffer.ScreenResolution);
+
+        m_Storage.GetSceneContext().Update(
+            Camera,
+            Transform);
     }
 
     void RenderGraph::Dispatch()

@@ -44,7 +44,6 @@ namespace Neon::RG
     //
 
     void SceneContext::Update(
-        const Matrix4x4&            InvProjectionMatrix,
         const Component::Camera&    Camera,
         const Component::Transform& Transform)
     {
@@ -54,28 +53,32 @@ namespace Neon::RG
         {
         case Component::CameraType::Perspective:
         {
-            Geometry::Frustum Frustum(InvProjectionMatrix);
+            Geometry::Frustum Frustum(glm::transpose(m_Storage.GetFrameData().ProjectionInverse));
+            Frustum.Transform(1.f, Transform.World.GetRotation(), Transform.World.GetPosition());
 
-            // m_MeshQuery.iter(
-            //     [&Frustum](flecs::iter&                                        Iter,
-            //                const Scene::GPUTransformManager::RenderableHandle* Renderables,
-            //                const Component::Transform*                         Transforms,
-            //                const Component::MeshInstance*                      Meshes)
-            //     {
-            //         for (size_t Index : Iter)
-            //         {
-            //             auto CurMesh = Iter.is_self(3) ? &Meshes[Index] : Meshes;
-            //             auto Box     = CurMesh->Mesh.GetData().AABB;
+            m_MeshQuery.iter(
+                [&](flecs::iter&                                        Iter,
+                    const Scene::GPUTransformManager::RenderableHandle* Renderables,
+                    const Component::Transform*                         Transforms,
+                    const Component::MeshInstance*                      Meshes)
+                {
+                    for (size_t Index : Iter)
+                    {
+                        auto CurMesh = Iter.is_self(3) ? &Meshes[Index] : Meshes;
+                        auto Box     = CurMesh->Mesh.GetData().AABB;
 
-            //            Box.Min += Transforms[Index].World.GetPosition();
-            //            Box.Max += Transforms[Index].World.GetPosition();
+                        Box.Transform(1.f, Transforms[Index].World.GetRotation(), Transforms[Index].World.GetPosition());
 
-            //            if (Frustum.Contains(Box) != Geometry::ContainsType::Disjoint)
-            //            {
-            //            }
-            //        }
-            //    });
+                        if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
+                        {
+                            auto& Material      = CurMesh->Mesh.GetMaterial();
+                            auto  PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
+                            m_EntityLists[PipelineState].push_back(Iter.entity(Index));
+                        }
+                    }
+                });
 
+            printf("\n\n");
             break;
         }
         case Component::CameraType::Orthographic:

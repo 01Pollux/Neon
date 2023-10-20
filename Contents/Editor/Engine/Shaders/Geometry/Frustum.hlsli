@@ -52,16 +52,13 @@ struct Frustum
 		Orientation = QUATERNION_IDENTITY;
 
 		// Compute the slopes.
-		RightSlope = Points[0].x / Points[0].
-z;
+		RightSlope = Points[0].x / Points[0].z;
 		LeftSlope = Points[1].x / Points[1].z;
-		TopSlope = Points[2].y / Points[2].
-z;
+		TopSlope = Points[2].y / Points[2].z;
 		BottomSlope = Points[3].y / Points[3].z;
 
 		// Compute near and far.
-		Near = Points[4].z / Points[4].
-w;
+		Near = Points[4].z / Points[4].w;
 		Far = Points[5].z / Points[5].w;
 	}
 	

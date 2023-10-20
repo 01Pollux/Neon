@@ -43,7 +43,6 @@ namespace Neon::RG
         /// Update the scene context's entities
         /// </summary>
         void Update(
-            const Matrix4x4&                   InvProjectionMatrix,
             const Scene::Component::Camera&    Camera,
             const Scene::Component::Transform& Transform);
 
