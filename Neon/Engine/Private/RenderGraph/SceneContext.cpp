@@ -63,16 +63,17 @@ namespace Neon::RG
                     const Component::Transform*    Transforms,
                     const Component::MeshInstance* Meshes)
                 {
+                    // TODO: Add instancing
                     for (size_t Index : Iter)
                     {
                         auto& CurTransform = Transforms[Index].World;
-                        auto  MeshInstance = Iter.is_self(3) ? &Meshes[Index] : Meshes;
-                        auto  Box          = MeshInstance->Mesh.GetData().AABB;
+                        auto& CurMesh      = Meshes[Index].Mesh;
+                        auto  Box          = CurMesh.GetData().AABB;
 
                         Box.Transform(CurTransform);
                         if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
                         {
-                            auto& Material      = MeshInstance->Mesh.GetMaterial();
+                            auto& Material      = CurMesh.GetMaterial();
                             auto  PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
 
                             float Dist = glm::distance2(Transform.World.GetPosition(), CurTransform.GetPosition());
