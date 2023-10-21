@@ -28,10 +28,12 @@ namespace Neon::RG
         m_MeshQuery =
             Scene::EntityWorld::Get()
                 .query_builder<
-                    const Scene::GPUTransformManager::RenderableHandle,
                     const Component::Transform,
                     const Component::MeshInstance>()
                 .with<Component::ActiveSceneEntity>()
+                .in()
+                .and_()
+                .with<Scene::GPUTransformManager::RenderableHandle>()
                 .in()
                 .build();
     }
@@ -57,8 +59,7 @@ namespace Neon::RG
             Frustum.Transform(Transform.World);
 
             m_MeshQuery.iter(
-                [&](flecs::iter& Iter,
-                    const Scene::GPUTransformManager::RenderableHandle*,
+                [&](flecs::iter&                   Iter,
                     const Component::Transform*    Transforms,
                     const Component::MeshInstance* Meshes)
                 {
@@ -145,20 +146,19 @@ namespace Neon::RG
             CommandList->BindMaterialParameters(IsDirect, m_Storage.GetFrameDataHandle());
         };
 
-        bool LightWasBound[4]{};
-        auto BindLightOnce = [&](
+        RHI::GpuDescriptorHandle LightWasBound[2]{};
+        auto                     BindLightOnce = [&](
                                  bool IsTransparent,
                                  bool IsDirect)
         {
-            auto Index = (IsTransparent ? 0 : 1) + (IsDirect ? 0 : 1) * 2;
-            if (LightWasBound[Index])
+            auto  Index           = IsDirect ? 0 : 1;
+            auto& LightDataHandle = IsTransparent ? TransparentLightDataHandle : OpaqueLightDataHandle;
+            if (LightWasBound[Index] == LightDataHandle)
             {
                 return;
             }
 
-            LightWasBound[Index]  = true;
-            auto& LightDataHandle = IsTransparent ? TransparentLightDataHandle : OpaqueLightDataHandle;
-            if (LightDataHandle)
+            if (LightWasBound[Index] = LightDataHandle)
             {
                 CommandList->SetDescriptorTable(
                     IsDirect,

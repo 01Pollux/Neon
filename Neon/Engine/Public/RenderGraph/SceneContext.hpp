@@ -1,13 +1,13 @@
 #pragma once
 
 #include <RenderGraph/Common.hpp>
-#include <Scene/GPU/Scene.hpp>
 #include <Math/Common.hpp>
 
 namespace Neon::Scene::Component
 {
     struct Camera;
     struct Transform;
+    struct MeshInstance;
 } // namespace Neon::Scene::Component
 
 namespace Neon::RG
@@ -17,7 +17,6 @@ namespace Neon::RG
     class SceneContext
     {
         using MeshQuery = flecs::query<
-            const Scene::GPUTransformManager::RenderableHandle,
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
 
