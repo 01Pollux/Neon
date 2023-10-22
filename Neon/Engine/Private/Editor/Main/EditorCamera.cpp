@@ -249,7 +249,7 @@ namespace Neon::Editor
         Vector2 MouseDelta = Input::GetMouseDelta();
 
         bool Changed = false;
-        if (float Length = glm::length(MouseDelta))
+        if (float Length = glm::length(MouseDelta) * (MouseDelta.x >= 0.f ? 1.f : -1.f))
         {
             Transform.SetPosition(Transform.GetPosition() + Transform.GetLookDir() * Length * Speed * DeltaTime);
             Changed = true;
