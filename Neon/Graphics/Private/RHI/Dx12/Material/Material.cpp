@@ -131,7 +131,8 @@ namespace Neon::RHI
                     PipelineDesc.PixelShader = Builder.PixelShader();
                     PipelineDesc.RTFormats.push_back(ISwapchain::Get()->GetFormat());
                     PipelineDesc.Blend.RenderTargets[0].BlendEnable = false;
-                    PipelineDesc.DepthStencil.DepthWriteEnable      = true;
+                    PipelineDesc.DepthStencil.DepthCmpFunc          = ECompareFunc::Equal;
+                    PipelineDesc.DepthStencil.DepthWriteEnable      = false;
                     break;
                 }
                 case IMaterial::PipelineVariant::RenderPassTransparent:
@@ -139,6 +140,7 @@ namespace Neon::RHI
                     PipelineDesc.PixelShader = Builder.PixelShader();
                     PipelineDesc.RTFormats.push_back(ISwapchain::Get()->GetFormat());
                     PipelineDesc.Blend.RenderTargets[0].BlendEnable = true;
+                    PipelineDesc.DepthStencil.DepthCmpFunc          = ECompareFunc::Equal;
                     PipelineDesc.DepthStencil.DepthWriteEnable      = false;
                     break;
                 }
@@ -146,6 +148,7 @@ namespace Neon::RHI
                 {
                     PipelineDesc.PixelShader                        = nullptr;
                     PipelineDesc.Blend.RenderTargets[0].BlendEnable = false;
+                    PipelineDesc.DepthStencil.DepthCmpFunc          = ECompareFunc::LessEqual;
                     PipelineDesc.DepthStencil.DepthWriteEnable      = true;
                     break;
                 }

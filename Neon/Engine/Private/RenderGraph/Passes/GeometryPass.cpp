@@ -71,12 +71,12 @@ namespace Neon::RG
                 .ClearType = RHI::ERTClearType::Color,
                 .Format    = Resolver.GetSwapchainFormat() });
 
-        Resolver.WriteDepthStencil(
+        Resolver.ReadDepthStencil(
             DepthPrepass::DepthBuffer.CreateView("GeometryPass"),
+            RG::ResourceReadAccess::PixelShader,
             RHI::DSVDesc{
-                .View      = RHI::DSVDesc::Texture2D{},
-                .ClearType = RHI::EDSClearType::Ignore,
-                .Format    = RHI::EResourceFormat::D32_Float });
+                .View   = RHI::DSVDesc::Texture2D{},
+                .Format = RHI::EResourceFormat::D32_Float });
     }
 
     void GeometryPass::DispatchTyped(

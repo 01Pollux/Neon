@@ -72,7 +72,7 @@ namespace Neon::RG
                 RHI::DescriptorViewDesc{ RHI::CBVDesc{
                     .Resource = Offset,
                     .Size     = Size } },
-                std::move(Subresource));
+                Subresource);
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Neon::RG
             RHI::UAVDescOpt             Desc        = std::nullopt,
             const RHI::SubresourceView& Subresource = {})
         {
-            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Neon::RG
             RHI::RTVDescOpt             Desc        = std::nullopt,
             const RHI::SubresourceView& Subresource = {})
         {
-            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace Neon::RG
             RHI::DSVDescOpt             Desc        = std::nullopt,
             const RHI::SubresourceView& Subresource = {})
         {
-            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            WriteResource(ViewId, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
     public:
@@ -131,7 +131,7 @@ namespace Neon::RG
             const ResourceViewId& ViewId);
 
         /// <summary>
-        /// Write resource as srv
+        /// Read resource as srv
         /// </summary>
         void ReadConstantBuffer(
             const ResourceViewId&       ViewId,
@@ -139,11 +139,11 @@ namespace Neon::RG
             RHI::CBVDesc                Desc,
             const RHI::SubresourceView& Subresource = {})
         {
-            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
         /// <summary>
-        /// Write resource as srv
+        /// Read resource as srv
         /// </summary>
         void ReadTexture(
             const ResourceViewId&       ViewId,
@@ -151,11 +151,11 @@ namespace Neon::RG
             RHI::SRVDescOpt             Desc        = std::nullopt,
             const RHI::SubresourceView& Subresource = {})
         {
-            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
         /// <summary>
-        /// Write resource as uav
+        /// Read resource as uav
         /// </summary>
         void ReadWriteTexture(
             const ResourceViewId&       ViewId,
@@ -163,7 +163,19 @@ namespace Neon::RG
             RHI::UAVDescOpt             Desc        = std::nullopt,
             const RHI::SubresourceView& Subresource = {})
         {
-            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, std::move(Subresource));
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
+        }
+
+        /// <summary>
+        /// Read resource as dsv
+        /// </summary>
+        void ReadDepthStencil(
+            const ResourceViewId&       ViewId,
+            ResourceReadAccess          ReadAccess,
+            RHI::DSVDescOpt             Desc        = std::nullopt,
+            const RHI::SubresourceView& Subresource = {})
+        {
+            ReadResource(ViewId, ReadAccess, RHI::DescriptorViewDesc{ std::move(Desc) }, Subresource);
         }
 
     public:

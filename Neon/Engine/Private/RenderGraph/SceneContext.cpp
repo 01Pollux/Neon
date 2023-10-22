@@ -167,7 +167,20 @@ namespace Neon::RG
                     LightDataHandle);
             }
         };
+
+        RHI::IPipelineState* CurrentPipelineState  = nullptr;
+        auto                 BindPipelineStateOnce = [&](const Ptr<RHI::IPipelineState>& PipelineState)
+        {
+            if (CurrentPipelineState != PipelineState.get())
+            {
+                CurrentPipelineState = PipelineState.get();
+                CommandList->SetPipelineState(PipelineState);
+            }
+        };
+
         //
+
+        // TODO: A DescriptorTable batcher to prevent reallocation of resources views
 
         for (size_t Pass = 0; Pass < PassesCount; Pass++)
         {
@@ -180,19 +193,19 @@ namespace Neon::RG
 
             for (auto& EntityList : m_EntityLists | std::views::values)
             {
+                // Ignore compute pipeline state on transparent / depthprepass
                 {
                     flecs::entity FirstEntity = Scene::EntityHandle(EntityList.begin()->Id);
 
                     if (auto MeshInstance = FirstEntity.get<Component::MeshInstance>())
                     {
                         auto& FirstMaterial = MeshInstance->Mesh.GetMaterial();
-                        auto& PipelineState = FirstMaterial->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass);
+                        auto& PipelineState = FirstMaterial->GetPipelineState(Passes[Pass]);
 
-                        if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass)
+                        if (FirstMaterial->IsCompute() && Type != RenderType::RenderPass || Pass == 1)
                         {
                             continue;
                         }
-                        CommandList->SetPipelineState(PipelineState);
                     }
                 }
 
@@ -216,6 +229,7 @@ namespace Neon::RG
 
                     BindRootSignatureOnce(!MeshMaterial->IsCompute());
                     BindLightOnce(MeshMaterial->IsTransparent(), !MeshMaterial->IsCompute());
+                    BindPipelineStateOnce(MeshMaterial->GetPipelineState(Passes[Pass]));
 
                     // Update shared params
                     {
