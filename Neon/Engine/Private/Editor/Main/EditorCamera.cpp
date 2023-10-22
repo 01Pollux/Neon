@@ -16,6 +16,11 @@
 namespace Neon::Editor
 {
     /// <summary>
+    /// Camera movement are active, only set to false when the mouse is released.
+    /// </summary>
+    static bool s_CameraActiveLock = false;
+
+    /// <summary>
     /// Get the speed of the camera with modifiers.
     /// </summary>
     static float GetCameraKeyboardSpeed()
@@ -264,7 +269,7 @@ namespace Neon::Editor
         float DeltaTime)
     {
         auto CameraEnt = EditorEngine::Get()->GetEditorCamera();
-        if (!CameraEnt.enabled() || !CameraEnt.has<Scene::Editor::SceneCameraCanMove>()) [[unlikely]]
+        if (!CameraEnt.enabled() || (!CameraEnt.has<Scene::Editor::SceneCameraCanMove>() && !s_CameraActiveLock)) [[unlikely]]
         {
             return;
         }
@@ -277,18 +282,19 @@ namespace Neon::Editor
         CameraMoveType MoveType = GetCameraMoveType();
         switch (MoveType)
         {
-        case CameraMoveType::None:
-            return;
         case CameraMoveType::Fly:
             Changed |= ProcessCameraKeyboard(DeltaTime, Transform, *Camera);
             [[fallthrough]];
         case CameraMoveType::Orbit:
             Changed |= ProcessCamera_Orbit(DeltaTime, Transform);
+            s_CameraActiveLock = true;
             break;
         case CameraMoveType::Zoom:
             Changed |= ProcessCamera_Zoom(DeltaTime, Transform);
+            s_CameraActiveLock = true;
             break;
         default:
+            s_CameraActiveLock = false;
             break;
         }
 
