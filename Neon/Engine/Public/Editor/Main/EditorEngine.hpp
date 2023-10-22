@@ -124,12 +124,6 @@ namespace Neon::Editor
         /// </summary>
         [[nodiscard]] flecs::entity GetEditorCamera() const;
 
-        /// <summary>
-        /// Get currently active camera.
-        /// For now, it's the editor camera, but in the future, we will have ability to switch cameras.
-        /// </summary>
-        [[nodiscard]] flecs::entity GetActiveCamera() const;
-
     public:
         /// <summary>
         /// Get the editor active root entity.

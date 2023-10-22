@@ -84,6 +84,8 @@ namespace Neon::Editor
         }
         Camera.set(std::move(TransformComponent));
 
+        Camera.add<Scene::Component::ActiveSceneEntity>();
+
         Scene::EntityWorld::Get()
             .system("EditorCamera::Update")
             .kind(flecs::PreUpdate)
@@ -261,8 +263,8 @@ namespace Neon::Editor
     void ProcessCameraInputs(
         float DeltaTime)
     {
-        auto CameraEnt = EditorEngine::Get()->GetActiveCamera();
-        if (!CameraEnt || !CameraEnt.enabled()) [[unlikely]]
+        auto CameraEnt = EditorEngine::Get()->GetEditorCamera();
+        if (!CameraEnt.enabled() || !CameraEnt.has<Scene::Editor::SceneCameraCanMove>()) [[unlikely]]
         {
             return;
         }
@@ -271,8 +273,6 @@ namespace Neon::Editor
         auto  Camera    = CameraEnt.get<Scene::Component::Camera>();
 
         bool Changed = false;
-
-        auto MousePos = Input::GetMousePos();
 
         CameraMoveType MoveType = GetCameraMoveType();
         switch (MoveType)

@@ -31,87 +31,98 @@ namespace Neon::Editor::Views
         }
 
         // If we are in editor scene view, disable/enable camera based on window state.
-        if (m_IsEditorView)
+        flecs::entity Camera = GetCurrentCamera();
+        if (!Camera) [[unlikely]]
         {
-            flecs::entity Camera = EditorEngine::Get()->GetActiveCamera();
-            if (!Camera) [[unlikely]]
-            {
-                return;
-            }
+            return;
+        }
 
-            // Check if window is active and not collapsed to enable/disable camera.
-            if (Window->Hidden || Window->Collapsed) [[unlikely]]
+        // Check if window is active and not collapsed to enable/disable camera.
+        if (Window->Hidden || Window->Collapsed) [[unlikely]]
+        {
+            if (Camera.enabled())
             {
-                if (Camera.enabled())
-                {
-                    Camera.disable();
-                }
-                return;
+                Camera.disable();
             }
-            else
+            return;
+        }
+        else
+        {
+            if (!Camera.enabled())
             {
-                if (!Camera.enabled())
-                {
-                    Camera.enable();
-                }
+                Camera.enable();
             }
+        }
 
-            auto CameraData = Camera.get_mut<Scene::Component::Camera>();
-            if (!CameraData) [[unlikely]]
-            {
-                return;
-            }
+        auto CameraData = Camera.get_mut<Scene::Component::Camera>();
+        if (!CameraData) [[unlikely]]
+        {
+            return;
+        }
 
-            auto RenderGraph = CameraData->GetRenderGraph();
-            if (!RenderGraph) [[unlikely]]
-            {
-                return;
-            }
+        auto RenderGraph = CameraData->GetRenderGraph();
+        if (!RenderGraph) [[unlikely]]
+        {
+            return;
+        }
 
-            Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
-            bool  Changed       = false;
-            bool  HasClientSize = false;
+        Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
+        bool  Changed       = false;
+        bool  HasClientSize = false;
 
-            if (CameraData->Viewport.ClientWidth)
+        if (CameraData->Viewport.ClientWidth)
+        {
+            HasClientSize = true;
+            Size.x        = float(Window->Size.x);
+            if (Size.x != CameraData->Viewport.Width)
             {
-                HasClientSize = true;
-                Size.x        = float(Window->Size.x);
-                if (Size.x != CameraData->Viewport.Width)
-                {
-                    Changed = true;
-                }
+                Changed = true;
             }
-            if (CameraData->Viewport.ClientHeight)
+        }
+        if (CameraData->Viewport.ClientHeight)
+        {
+            HasClientSize = true;
+            Size.y        = float(Window->Size.y);
+            if (Size.y != CameraData->Viewport.Height)
             {
-                HasClientSize = true;
-                Size.y        = float(Window->Size.y);
-                if (Size.y != CameraData->Viewport.Height)
-                {
-                    Changed = true;
-                }
+                Changed = true;
             }
+        }
 
-            if (Changed)
-            {
-                CameraData->Viewport.Width  = Size.x;
-                CameraData->Viewport.Height = Size.y;
-                RenderGraph->GetStorage().SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
+        if (Changed)
+        {
+            CameraData->Viewport.Width  = Size.x;
+            CameraData->Viewport.Height = Size.y;
+            RenderGraph->GetStorage().SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
 
-                Camera.modified<Scene::Component::Camera>();
-            }
+            Camera.modified<Scene::Component::Camera>();
         }
     }
 
     void SceneDisplay::OnRender()
     {
+        flecs::entity Camera = GetCurrentCamera();
+
         imcxx::window Window(GetWidgetId(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse);
+
+        // Only for editor's camera, adding/removing Scene::Editor::SceneCameraCanMove depending on mouse and window state
+        if (m_IsEditorView)
+        {
+            if (Window && ImGui::IsWindowHovered())
+            {
+                Camera.add<Scene::Editor::SceneCameraCanMove>();
+            }
+            else
+            {
+                Camera.remove<Scene::Editor::SceneCameraCanMove>();
+            }
+        }
+
         if (!Window)
         {
             return;
         }
 
-        // TODO: option to switch camera.
-        flecs::entity Camera = EditorEngine::Get()->GetActiveCamera();
         if (!Camera || !Camera.enabled()) [[unlikely]]
         {
             return;
@@ -135,6 +146,7 @@ namespace Neon::Editor::Views
         RHI::IResourceStateManager::Get()->TransitionResource(
             FinalImage.get(),
             RHI::EResourceState::PixelShaderResource);
+
         RHI::IResourceStateManager::Get()->FlushBarriers();
 
         auto StagedDescriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView);
@@ -147,5 +159,40 @@ namespace Neon::Editor::Views
         ImGui::Image(
             ImTextureID(FinalImageSrv.GetCpuHandle().Value),
             ImGui::GetContentRegionAvail());
+    }
+
+    flecs::entity SceneDisplay::GetCurrentCamera()
+    {
+        flecs::entity Camera;
+        if (m_IsEditorView)
+        {
+            Camera = EditorEngine::Get()->GetEditorCamera();
+        }
+        else
+        {
+            auto FirstCameraFilter =
+                Scene::EntityWorld::Get()
+                    .filter_builder<const Scene::Component::Camera>()
+                    .with<Scene::Component::ActiveSceneEntity>()
+                    .in()
+                    .build();
+
+            int MaxPriority = std::numeric_limits<int>::min();
+            FirstCameraFilter.each(
+                [&Camera, &MaxPriority](flecs::entity Entity, const Scene::Component::Camera& CameraData)
+                {
+                    if (Entity != EditorEngine::Get()->GetEditorCamera())
+                    {
+                        return;
+                    }
+
+                    if (MaxPriority < CameraData.RenderPriority)
+                    {
+                        Camera      = Entity;
+                        MaxPriority = CameraData.RenderPriority;
+                    }
+                });
+        }
+        return Camera;
     }
 } // namespace Neon::Editor::Views

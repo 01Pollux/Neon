@@ -124,7 +124,7 @@ namespace Neon::Scene::Component
         /// <summary>
         /// The render order of the camera.
         /// </summary>
-        uint32_t RenderPriority = 0;
+        int RenderPriority = 0;
 
         /// <summary>
         /// The type of the camera.

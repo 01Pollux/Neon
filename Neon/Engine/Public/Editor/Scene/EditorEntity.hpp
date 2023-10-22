@@ -34,4 +34,14 @@ namespace Neon::Scene::Editor
         {
         }
     };
+
+    /// <summary>
+    /// Tag for only editor camera, indicating that we can move the camera (mouse is inside window).
+    /// </summary>
+    struct SceneCameraCanMove
+    {
+        NEON_EXPORT_FLECS(SceneCameraCanMove, "Editor::SceneCameraCanMove")
+        {
+        }
+    };
 } // namespace Neon::Scene::Editor

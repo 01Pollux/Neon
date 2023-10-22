@@ -21,6 +21,7 @@ namespace Neon::Editor
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::EditorAsset);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
+        NEON_REGISTER_FLECS(Scene::Editor::SceneCameraCanMove);
 
         flecs::world World = Scene::EntityWorld::Get();
 
@@ -31,11 +32,6 @@ namespace Neon::Editor
     //
 
     flecs::entity EditorEngine::GetEditorCamera() const
-    {
-        return m_EditorCamera;
-    }
-
-    flecs::entity EditorEngine::GetActiveCamera() const
     {
         return m_EditorCamera;
     }

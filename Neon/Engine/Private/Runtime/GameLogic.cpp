@@ -38,12 +38,15 @@ namespace Neon::Runtime
 
         // Create physics collision add/remove system.
         World
-            .observer<Component::CollisionObject>("Physics(Add/Remove)")
+            .observer<const Component::CollisionObject>("Physics(Add/Remove)")
             .with<Component::CollisionShape>()
+            .in()
+            .with<Component::ActiveSceneEntity>()
+            .in()
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
             .each(
-                [this](flecs::iter& Iter, size_t, Component::CollisionObject& Object)
+                [this](flecs::iter& Iter, size_t, const Component::CollisionObject& Object)
                 {
                     if (Iter.event() == flecs::OnRemove)
                     {
@@ -62,6 +65,8 @@ namespace Neon::Runtime
             .observer<Component::ScriptInstance>("Script(Add/Remove)")
             .event(flecs::OnRemove)
             .event(flecs::OnSet)
+            .with<Component::ActiveSceneEntity>()
+            .in()
             .each(
                 [this](flecs::iter& Iter, size_t Idx, Component::ScriptInstance& Instance)
                 {
@@ -86,6 +91,8 @@ namespace Neon::Runtime
             .in()
             .term<Component::Transform>()
             .in()
+            .with<Component::ActiveSceneEntity>()
+            .in()
             .each(
                 [](const Component::Camera&    Camera,
                    const Component::Transform& Transform)
@@ -104,13 +111,15 @@ namespace Neon::Runtime
                 .query_builder<Component::Camera>()
                 .term<Component::Camera>()
                 .inout()
+                .with<Component::ActiveSceneEntity>()
+                .in()
                 .order_by(
                     +[](flecs::entity_t,
                         const Component::Camera* LhsCamera,
                         flecs::entity_t,
                         const Component::Camera* RhsCamera) -> int
                     {
-                        return int(RhsCamera->RenderPriority - LhsCamera->RenderPriority);
+                        return RhsCamera->RenderPriority - LhsCamera->RenderPriority;
                     })
                 .build();
 

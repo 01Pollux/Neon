@@ -15,6 +15,12 @@ namespace Neon::Editor::Views
         void OnRender() override;
 
     private:
+        /// <summary>
+        /// Get current camera to display
+        /// </summary>
+        [[nodiscard]] flecs::entity GetCurrentCamera();
+
+    private:
         bool m_IsEditorView;
     };
 } // namespace Neon::Editor::Views
