@@ -21,7 +21,6 @@ namespace Neon::Editor
         NEON_REGISTER_FLECS(Scene::Editor::SelectedForEditor);
         NEON_REGISTER_FLECS(Scene::Editor::EditorAsset);
         NEON_REGISTER_FLECS(Scene::Editor::WorldEditorMode);
-        NEON_REGISTER_FLECS(Scene::Editor::EditorSceneDoNotRemove);
 
         flecs::world World = Scene::EntityWorld::Get();
 

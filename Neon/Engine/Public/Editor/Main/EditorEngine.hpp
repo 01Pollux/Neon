@@ -166,9 +166,20 @@ namespace Neon::Editor
         std::unordered_map<StringU8, UPtr<IEditorView>> m_Views;
         std::unordered_set<IEditorView*>                m_OpenViews;
 
-        Scene::EntityHandle m_EditorCamera;
+        /// <summary>
+        /// Scene containing game entities that is currently being played.
+        /// </summary>
         Scene::RuntimeScene m_RuntimeScene;
+
+        /// <summary>
+        /// Scene containing editor entities, such as editor camera, assets, etc.
+        /// </summary>
         Scene::RuntimeScene m_EditorScene;
+
+        /// <summary>
+        /// Editor camera.
+        /// </summary>
+        Scene::EntityHandle m_EditorCamera;
 
         ProjectManager m_ProjectManager;
 

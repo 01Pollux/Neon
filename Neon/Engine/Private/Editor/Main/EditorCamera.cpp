@@ -84,8 +84,6 @@ namespace Neon::Editor
         }
         Camera.set(std::move(TransformComponent));
 
-        Camera.add<Scene::Editor::EditorSceneDoNotRemove>();
-
         Scene::EntityWorld::Get()
             .system("EditorCamera::Update")
             .kind(flecs::PreUpdate)

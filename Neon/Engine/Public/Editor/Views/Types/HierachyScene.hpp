@@ -19,10 +19,24 @@ namespace Neon::Editor::Views
         /// </summary>
         void DispalySceneObject(
             Scene::EntityHandle              EntHandle,
+            std::move_only_function<void()>& DeferredTask,
+            bool                             Editable = true);
+
+        /// <summary>
+        /// Display Editor's entities in the scene
+        /// </summary>
+        void DisplayEditorEntities();
+
+        /// <summary>
+        /// Helper function for displaying popup context on entities
+        /// </summary>
+        void DisplayEntityPopup(
+            const flecs::entity&             ParentEntHandle,
             std::move_only_function<void()>& DeferredTask);
 
     private:
-        char          m_RenameBuffer[256]{};
+        char          m_RenameBuffer[255]{};
+        bool          m_DisplayEditorEntities = false;
         flecs::entity m_EntityToRename;
     };
 } // namespace Neon::Editor::Views
