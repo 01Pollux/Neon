@@ -41,7 +41,7 @@ namespace Neon::Scene
 
         using PagedInstaceData                        = GPUPagedInstance<InstanceData>;
         static constexpr size_t   SizeOfInstanceData  = PagedInstaceData::SizeOfInstanceData;
-        static constexpr uint32_t AlignOfInstanceData = PagedInstaceData::SizeOfInstanceData;
+        static constexpr uint32_t AlignOfInstanceData = PagedInstaceData::AlignOfInstanceData;
 
     public:
         GPUTransformManager();

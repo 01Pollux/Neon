@@ -43,6 +43,11 @@ namespace Neon::Editor
         return IsInEditorMode() ? Scene::EntityWorld::GetCurrentScenerRoot() : m_RuntimeScene.GetRoot().Get();
     }
 
+    flecs::entity EditorEngine::GetEditorScene() const
+    {
+        return m_EditorScene.GetRoot();
+    }
+
     bool EditorEngine::IsInEditorMode() const
     {
         flecs::world World = Scene::EntityWorld::Get();
@@ -52,13 +57,13 @@ namespace Neon::Editor
     flecs::entity EditorEngine::CreateEditorEntity(
         const char* Name)
     {
-        return Scene::EntityHandle::Create(m_EditorScene.GetRoot(), Name);
+        return Scene::EntityHandle::Create(GetEditorScene(), Name);
     }
 
     flecs::entity EditorEngine::CreateEditorEntity(
         const flecs::entity& Parent,
         const char*          Name)
     {
-        return Scene::EntityHandle::Create(m_EditorScene.GetRoot(), Parent, Name);
+        return Scene::EntityHandle::Create(GetEditorScene(), Parent, Name);
     }
 } // namespace Neon::Editor

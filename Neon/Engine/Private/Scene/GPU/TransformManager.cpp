@@ -5,7 +5,7 @@
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
 
-#include <RHI/Material/Material.hpp>
+#include <RHI/GlobalBuffer.hpp>
 
 namespace Neon::Scene
 {
@@ -78,6 +78,8 @@ namespace Neon::Scene
     RHI::GpuResourceHandle GPUTransformManager::GetInstanceHandle(
         uint32_t InstanceId) const
     {
-        return m_PagesInstances.GetInstanceHandle(InstanceId);
+        RHI::UBufferPoolHandle TempBuffer(SizeOfInstanceData, AlignOfInstanceData, RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
+        TempBuffer.AsUpload().Write(TempBuffer.Offset, GetInstanceData(InstanceId), SizeOfInstanceData);
+        return TempBuffer.GetGpuHandle();
     }
 } // namespace Neon::Scene

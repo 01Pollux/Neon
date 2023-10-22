@@ -24,9 +24,8 @@ namespace Neon::Editor::Views
             return;
         }
 
-        flecs::world World = Scene::EntityWorld::Get();
-
-        auto SelectedEntity = World.target<Scene::Editor::SelectedForEditor>();
+        auto EditorScene    = EditorEngine::Get()->GetEditorScene();
+        auto SelectedEntity = EditorScene.target<Scene::Editor::SelectedForEditor>();
         if (!SelectedEntity)
         {
             return;

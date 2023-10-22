@@ -129,6 +129,12 @@ namespace Neon::Editor
         /// Get the editor active root entity.
         /// </summary>
         [[nodiscard]] flecs::entity GetActiveSceneTag() const;
+
+        /// <summary>
+        /// Get editor scene tag.
+        /// </summary>
+        [[nodiscard]] flecs::entity GetEditorScene() const;
+
         /// <summary>
         /// Check if the editor is in editor mode.
         /// </summary>

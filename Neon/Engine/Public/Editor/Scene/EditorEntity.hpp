@@ -5,7 +5,7 @@
 namespace Neon::Scene::Editor
 {
     /// <summary>
-    /// Entites that have this tag will be selected in editor.
+    /// Target for editor's scene, references current entity being edited.
     /// </summary>
     struct SelectedForEditor
     {

@@ -18,6 +18,15 @@ namespace Neon::Editor::Views
         /// Display a scene object in the hierachy view.
         /// </summary>
         void DispalySceneObject(
+            Scene::EntityHandle              SelectedEntity,
+            Scene::EntityHandle              EntHandle,
+            std::move_only_function<void()>& DeferredTask,
+            bool                             Editable = true);
+
+        /// <summary>
+        /// Display a scene object in the hierachy view.
+        /// </summary>
+        void DispalySceneObject(
             Scene::EntityHandle              EntHandle,
             std::move_only_function<void()>& DeferredTask,
             bool                             Editable = true);

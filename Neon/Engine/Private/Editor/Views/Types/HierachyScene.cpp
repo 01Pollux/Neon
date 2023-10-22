@@ -10,6 +10,7 @@
 namespace Neon::Editor::Views
 {
     void SceneHierachy::DispalySceneObject(
+        Scene::EntityHandle              SelectedEntity,
         Scene::EntityHandle              EntHandle,
         std::move_only_function<void()>& DeferredTask,
         bool                             Editable)
@@ -29,6 +30,12 @@ namespace Neon::Editor::Views
         if (!ChidlrenFilter.is_true())
         {
             TableFlags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet;
+        }
+
+        // If entity is being selected, mark it as selected.
+        if (SelectedEntity == Entity)
+        {
+            TableFlags |= ImGuiTreeNodeFlags_Framed;
         }
 
         // If entity is disabled, Make the text gray.
@@ -99,8 +106,8 @@ namespace Neon::Editor::Views
 
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_None) && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
         {
-            flecs::world World = Scene::EntityWorld::Get();
-            World.add<Scene::Editor::SelectedForEditor>(Entity);
+            auto EditorScene = EditorEngine::Get()->GetEditorScene();
+            EditorScene.add<Scene::Editor::SelectedForEditor>(Entity);
         }
 
         if (Editable && !EditingName) [[likely]]
@@ -162,11 +169,20 @@ namespace Neon::Editor::Views
         if (HierachyNode)
         {
             ChidlrenFilter.each(
-                [this, &DeferredTask, Editable](flecs::entity Entity)
+                [this, SelectedEntity, &DeferredTask, Editable](flecs::entity Entity)
                 {
-                    DispalySceneObject(Entity, DeferredTask, Editable);
+                    DispalySceneObject(SelectedEntity, Entity, DeferredTask, Editable);
                 });
         }
+    }
+
+    void SceneHierachy::DispalySceneObject(
+        Scene::EntityHandle              EntHandle,
+        std::move_only_function<void()>& DeferredTask,
+        bool                             Editable)
+    {
+        auto EditorScene = EditorEngine::Get()->GetEditorScene();
+        DispalySceneObject(EditorScene.target<Scene::Editor::SelectedForEditor>(), EntHandle, DeferredTask, Editable);
     }
 
     //
