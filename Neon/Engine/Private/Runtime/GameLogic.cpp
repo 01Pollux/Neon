@@ -124,7 +124,8 @@ namespace Neon::Runtime
                 .build();
 
         // Create an observer for entities that are part of scene
-        World.observer("SceneObserver")
+        World
+            .observer("SceneObserver")
             .term<Component::WorldSceneRoot>(flecs::Wildcard)
             .singleton()
             .event(flecs::OnAdd)
@@ -162,12 +163,21 @@ namespace Neon::Runtime
 
     void GameLogic::Render()
     {
-        m_CameraQuery.each(
-            [](flecs::entity      Entity,
-               Component::Camera& Camera)
+        std::vector<std::future<void>> DispatchTasks;
+        m_CameraQuery.iter(
+            [&](
+                flecs::iter&       Iter,
+                Component::Camera* Cameras)
             {
-                if (auto RenderGraph = Camera.GetRenderGraph())
+                for (size_t i : Iter)
                 {
+                    auto& Camera      = Cameras[i];
+                    auto  RenderGraph = Camera.GetRenderGraph();
+                    if (!RenderGraph)
+                    {
+                        return;
+                    }
+
                     auto Size = RenderGraph->GetStorage().GetOutputImageSize();
 
                     if (Camera.Viewport.ClientWidth)
@@ -179,9 +189,18 @@ namespace Neon::Runtime
                         Camera.Viewport.Height = float(Size.Height());
                     }
 
-                    RenderGraph->Dispatch();
+                    DispatchTasks.emplace_back(
+                        GameEngine::Get()->GetThreadPool().enqueue(
+                            [RenderGraph]()
+                            {
+                                RenderGraph->Dispatch();
+                            }));
                 }
             });
+        for (auto& Task : DispatchTasks)
+        {
+            Task.wait();
+        }
     }
 
     void GameLogic::Update()
