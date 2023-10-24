@@ -49,6 +49,11 @@ namespace Neon::RG
                 .Build();
     }
 
+    UPtr<IRenderPass> BlurPass::Clone()
+    {
+        return std::make_unique<BlurPass>(*this);
+    }
+
     //
 
     void BlurPass::SetSigma(

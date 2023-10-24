@@ -28,6 +28,11 @@ namespace Neon::RG
     {
     }
 
+    UPtr<IRenderPass> GeometryPass::Clone()
+    {
+        return std::make_unique<GeometryPass>(*this);
+    }
+
     void GeometryPass::ResolveResources(
         ResourceResolver& Resolver)
     {

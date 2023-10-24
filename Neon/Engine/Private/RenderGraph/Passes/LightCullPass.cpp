@@ -107,6 +107,13 @@ namespace Neon::RG
         }
     }
 
+    UPtr<IRenderPass> LightCullPass::Clone()
+    {
+        return std::make_unique<LightCullPass>();
+    }
+
+    //
+
     void LightCullPass::ResolveResources(
         ResourceResolver& Resolver)
     {

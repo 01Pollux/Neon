@@ -13,6 +13,11 @@ namespace Neon::RG
     {
     }
 
+    UPtr<IRenderPass> DebugPass::Clone()
+    {
+        return std::make_unique<DebugPass>(*this);
+    }
+
     void DebugPass::ResolveResources(
         ResourceResolver& Resolver)
     {

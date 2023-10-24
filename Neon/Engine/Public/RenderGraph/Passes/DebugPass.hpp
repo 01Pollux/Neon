@@ -13,13 +13,15 @@ namespace Neon::RG
         DebugPass(
             ResourceId DrawTarget);
 
+        UPtr<IRenderPass> Clone() override;
+
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;
 
         void DispatchTyped(
-            const GraphStorage&        Storage,
-            RHI::ICommandList* CommandList);
+            const GraphStorage& Storage,
+            RHI::ICommandList*  CommandList);
 
     private:
         ResourceId m_DrawTarget;

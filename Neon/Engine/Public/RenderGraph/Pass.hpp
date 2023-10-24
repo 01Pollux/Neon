@@ -30,6 +30,11 @@ namespace Neon::RG
         virtual ~IRenderPass() = default;
 
         /// <summary>
+        /// Clone the render pass
+        /// </summary>
+        [[nodiscard]] virtual UPtr<IRenderPass> Clone() = 0;
+
+        /// <summary>
         /// Called when the render pass wants to resolve the dependencies of resources.
         /// </summary>
         virtual void ResolveResources(

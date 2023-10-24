@@ -15,6 +15,8 @@ namespace Neon::RG
     public:
         DepthPrepass();
 
+        UPtr<IRenderPass> Clone() override;
+
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;

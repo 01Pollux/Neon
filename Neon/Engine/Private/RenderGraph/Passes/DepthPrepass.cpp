@@ -10,6 +10,11 @@ namespace Neon::RG
     {
     }
 
+    UPtr<IRenderPass> DepthPrepass::Clone()
+    {
+        return std::make_unique<DepthPrepass>(*this);
+    }
+
     void DepthPrepass::ResolveResources(
         ResourceResolver& Resolver)
     {

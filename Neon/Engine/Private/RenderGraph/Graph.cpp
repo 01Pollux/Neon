@@ -26,6 +26,15 @@ namespace Neon::RG
     void RenderGraph::Reset(
         RenderGraph* Graph)
     {
+        auto Builder = Reset();
+        for (auto& Level : Graph->m_Levels)
+        {
+            for (auto& PassInfo : Level.m_Passes)
+            {
+                Builder.AddPass(PassInfo.Pass->Clone());
+            }
+        }
+        Builder.Build();
     }
 
     //

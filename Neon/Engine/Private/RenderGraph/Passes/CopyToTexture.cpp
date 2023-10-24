@@ -47,6 +47,11 @@ namespace Neon::RG
         m_CopyToPipeline[size_t(BlendMode::Additive)] = PipeineStateBuilder.Build();
     }
 
+    UPtr<IRenderPass> CopyToTexturePass::Clone()
+    {
+        return std::make_unique<CopyToTexturePass>(*this);
+    }
+
     void CopyToTexturePass::ResolveResources(
         ResourceResolver& Resolver)
     {

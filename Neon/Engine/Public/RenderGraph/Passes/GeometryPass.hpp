@@ -15,6 +15,8 @@ namespace Neon::RG
     public:
         GeometryPass();
 
+        UPtr<IRenderPass> Clone() override;
+
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;

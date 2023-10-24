@@ -37,6 +37,8 @@ namespace Neon::RG
         CopyToTexturePass(
             CopyToTextureData Data);
 
+        UPtr<IRenderPass> Clone() override;
+
     protected:
         void ResolveResources(
             ResourceResolver& Resolver) override;

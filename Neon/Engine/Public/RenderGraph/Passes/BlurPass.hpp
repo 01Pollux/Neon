@@ -36,6 +36,8 @@ namespace Neon::RG
         BlurPass(
             BlurPassData Data);
 
+        UPtr<IRenderPass> Clone() override;
+
     public:
         /// <summary>
         /// Set the sigma value for the gaussian blur.

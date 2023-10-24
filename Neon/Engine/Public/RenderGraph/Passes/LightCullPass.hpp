@@ -39,7 +39,17 @@ namespace Neon::RG
     public:
         LightCullPass();
 
-        ~LightCullPass();
+        NEON_CLASS_NO_COPYMOVE(LightCullPass);
+
+        ~LightCullPass() override;
+
+        UPtr<IRenderPass> Clone() override;
+
+    private:
+        /// <summary>
+        /// Release resource view
+        /// </summary>
+        void Release();
 
     protected:
         void ResolveResources(
