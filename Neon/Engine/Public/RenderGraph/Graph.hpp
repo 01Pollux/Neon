@@ -93,9 +93,15 @@ namespace Neon::RG
 
     public:
         /// <summary>
-        /// Reset resource graph for recording
+        /// Reset resource graph for re-recording
         /// </summary>
         [[nodiscard]] GraphBuilder Reset();
+
+        /// <summary>
+        /// Reset resource graph with new nodes similar to other graph
+        /// </summary>
+        void Reset(
+            RenderGraph* Graph);
 
         /// <summary>
         /// Get the storage of the graph

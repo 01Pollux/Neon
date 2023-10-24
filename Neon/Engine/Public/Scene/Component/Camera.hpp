@@ -88,6 +88,10 @@ namespace Neon::Scene::Component
         Camera(
             CameraType Type);
 
+        NEON_CLASS_COPYMOVE_DECL(Camera);
+
+        ~Camera() = default;
+
         /// <summary>
         /// Get the projection matrix of the viewport.
         /// </summary>
@@ -97,15 +101,9 @@ namespace Neon::Scene::Component
         /// <summary>
         /// The render graph of the camera.
         /// </summary>
-        Ptr<RG::RenderGraph> RenderGraph;
+        UPtr<RG::RenderGraph> RenderGraph;
 
     public:
-        /// <summary>
-        /// Create a new render graph for the camera.
-        /// </summary>
-        RG::RenderGraph* NewRenderGraph(
-            const flecs::entity& OwningEntity);
-
         /// <summary>
         /// Get the render graph of the camera.
         /// </summary>

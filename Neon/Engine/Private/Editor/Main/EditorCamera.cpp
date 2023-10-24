@@ -78,7 +78,7 @@ namespace Neon::Editor
         Scene::Component::Camera CameraComponent(Scene::Component::CameraType::Perspective);
         {
             CameraComponent.Viewport.FieldOfView = Project::Config().EditorCameraFOV;
-            RG::CreateStandard3DRenderGraph(CameraComponent, Camera);
+            RG::CreateStandard3DRenderGraph(CameraComponent.GetRenderGraph());
         }
         Camera.set(std::move(CameraComponent));
 

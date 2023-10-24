@@ -23,6 +23,13 @@ namespace Neon::RG
         return GraphBuilder(*this);
     }
 
+    void RenderGraph::Reset(
+        RenderGraph* Graph)
+    {
+    }
+
+    //
+
     GraphStorage& RenderGraph::GetStorage() noexcept
     {
         return m_Storage;

@@ -9,24 +9,20 @@ namespace Neon::RG
     /// This render graph is used for 2D rendering.
     ///
     /// This render graph contains the following passes:
-    /// - GBufferPass
-    /// - DebugPass
     /// </summary>
     [[nodiscard]] void CreateStandard2DRenderGraph(
-        Scene::Component::Camera& CameraComponent,
-        const flecs::entity&      Camera);
+        RG::RenderGraph* Rendergraph);
 
     /// <summary>
     /// Create a standard 3D render graph.
     /// This render graph is used for 3D rendering.
     ///
     /// This render graph contains the following passes:
-    /// - GBufferPass
-    /// - SSAOPass + BlurPass
-    /// - AmbientPass
-    /// - DebugPass
+    /// - DepthPrepass
+    /// - LightCullPass
+    /// - GeometryPass
+    /// - CopyToTexturePass
     /// </summary>
     [[nodiscard]] void CreateStandard3DRenderGraph(
-        Scene::Component::Camera& CameraComponent,
-        const flecs::entity&      Camera);
+        RG::RenderGraph* Rendergraph);
 } // namespace Neon::RG

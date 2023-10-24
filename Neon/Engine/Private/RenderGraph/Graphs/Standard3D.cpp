@@ -12,11 +12,9 @@
 namespace Neon::RG
 {
     void CreateStandard3DRenderGraph(
-        Scene::Component::Camera& CameraComponent,
-        const flecs::entity&      Camera)
+        RG::RenderGraph* Rendergraph)
     {
-        auto Graph   = CameraComponent.NewRenderGraph(Camera);
-        auto Builder = Graph->Reset();
+        auto Builder = Rendergraph->Reset();
 
         Builder.AddPass<DepthPrepass>();
 

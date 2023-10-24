@@ -97,6 +97,10 @@ template<typename _To, typename _From>
     NEON_CLASS_COPY(Class);        \
     NEON_CLASS_MOVE(Class)
 
+#define NEON_CLASS_COPYMOVE_DECL(Class) \
+    NEON_CLASS_COPY_DECL(Class);        \
+    NEON_CLASS_MOVE_DECL(Class)
+
 #define NEON_CLASS_COPYMOVE_IMPL(Class) \
     NEON_CLASS_COPY_IMPL(Class);        \
     NEON_CLASS_MOVE_IMPL(Class)

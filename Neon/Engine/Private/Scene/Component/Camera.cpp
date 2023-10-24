@@ -9,6 +9,7 @@ namespace Neon::Scene::Component
 {
     Camera::Camera(
         CameraType Type) :
+        RenderGraph(NEON_NEW RG::RenderGraph),
         Type(Type)
     {
         if (Type == CameraType::Orthographic)
@@ -18,6 +19,53 @@ namespace Neon::Scene::Component
             Viewport.FarPlane    = 1.f;
         }
     }
+
+    Camera::Camera(
+        const Camera& Other)
+    {
+        RenderGraph.reset(NEON_NEW RG::RenderGraph);
+        *this = Other;
+    }
+
+    Camera& Camera::operator=(
+        const Camera& Other)
+    {
+        if (this != &Other)
+        {
+            RenderGraph->Reset(Other.RenderGraph.get());
+            Viewport       = Other.Viewport;
+            CullMask       = Other.CullMask;
+            RenderPriority = Other.RenderPriority;
+            Type           = Other.Type;
+        }
+        return *this;
+    }
+
+    Camera::Camera(
+        Camera&& Other) :
+        RenderGraph(std::move(Other.RenderGraph)),
+        Viewport(std::move(Other.Viewport)),
+        CullMask(Other.CullMask),
+        RenderPriority(Other.RenderPriority),
+        Type(Other.Type)
+    {
+    }
+
+    Camera& Camera::operator=(
+        Camera&& Other)
+    {
+        if (this != &Other)
+        {
+            RenderGraph    = std::move(Other.RenderGraph);
+            Viewport       = std::move(Other.Viewport);
+            CullMask       = Other.CullMask;
+            RenderPriority = Other.RenderPriority;
+            Type           = Other.Type;
+        }
+        return *this;
+    }
+
+    //
 
     float Camera::Viewport::AspectRatio() const
     {
@@ -65,15 +113,6 @@ namespace Neon::Scene::Component
     Matrix4x4 Camera::ProjectionMatrix() const
     {
         return Viewport.ProjectionMatrix(Type);
-    }
-
-    //
-
-    RG::RenderGraph* Camera::NewRenderGraph(
-        const flecs::entity& OwningEntity)
-    {
-        RenderGraph.reset(NEON_NEW RG::RenderGraph);
-        return RenderGraph.get();
     }
 
     RG::RenderGraph* Camera::GetRenderGraph() const
