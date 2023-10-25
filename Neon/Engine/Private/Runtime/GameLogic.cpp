@@ -85,12 +85,8 @@ namespace Neon::Runtime
 
         // Create camera position update system.
         World
-            .system<Component::Camera, Component::Transform>("CameraPositionUpdate")
+            .system<const Component::Camera, const Component::Transform>("CameraPositionUpdate")
             .kind(flecs::PreUpdate)
-            .term<Component::Camera>()
-            .in()
-            .term<Component::Transform>()
-            .in()
             .with<Component::ActiveSceneEntity>()
             .in()
             .each(
@@ -111,6 +107,8 @@ namespace Neon::Runtime
                 .query_builder<Component::Camera>()
                 .term<Component::Camera>()
                 .inout()
+                .with<Component::Transform>()
+                .in()
                 .with<Component::ActiveSceneEntity>()
                 .in()
                 .order_by(

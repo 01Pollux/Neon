@@ -24,6 +24,7 @@ namespace Neon::RG
         m_CameraFrameDataPtr(m_CameraFrameData->Map()),
         m_SceneContext(*this)
     {
+        Reset();
     }
 
     void GraphStorage::Reset()
