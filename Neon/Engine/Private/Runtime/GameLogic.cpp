@@ -161,7 +161,6 @@ namespace Neon::Runtime
 
     void GameLogic::Render()
     {
-        std::vector<std::future<void>> DispatchTasks;
         m_CameraQuery.iter(
             [&](
                 flecs::iter&       Iter,
@@ -173,7 +172,7 @@ namespace Neon::Runtime
                     auto  RenderGraph = Camera.GetRenderGraph();
                     if (!RenderGraph)
                     {
-                        return;
+                        continue;
                     }
 
                     auto Size = RenderGraph->GetStorage().GetOutputImageSize();
@@ -187,18 +186,9 @@ namespace Neon::Runtime
                         Camera.Viewport.Height = float(Size.Height());
                     }
 
-                    DispatchTasks.emplace_back(
-                        GameEngine::Get()->GetThreadPool().enqueue(
-                            [RenderGraph]()
-                            {
-                                RenderGraph->Dispatch();
-                            }));
+                    RenderGraph->Dispatch();
                 }
             });
-        for (auto& Task : DispatchTasks)
-        {
-            Task.wait();
-        }
     }
 
     void GameLogic::Update()
