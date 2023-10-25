@@ -39,13 +39,13 @@ namespace Neon::Scene::Component::Impl
 #define NEON_EXPORT_FLECS_COMPONENT(Class, Name)                                     \
     static void RegisterFlecs()                                                      \
     {                                                                                \
-        extern void Insecptor_Component_On##Class(                                   \
+        extern void Inspector_Component_On##Class(                                   \
             flecs::entity_t, flecs::id_t);                                           \
         auto Component = Neon::Scene::Component::Impl::GetWorld()                    \
                              .component<Class>(Name);                                \
         _HandleComponent(Component);                                                 \
         Component.emplace<Neon::Scene::Component::EditorMetaData>(                   \
-            &Insecptor_Component_On##Class,                                          \
+            &Inspector_Component_On##Class,                                          \
             [](flecs::entity_t Ent, flecs::id_t Id)                                  \
             {                                                                        \
                 flecs::entity Entity(Neon::Scene::Component::Impl::GetWorld(), Ent); \

@@ -7,7 +7,7 @@
 
 namespace Neon::Editor
 {
-    static void Insecptor_Component_OnCollisionShape(
+    static void Inspector_Component_OnCollisionShape(
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
@@ -18,7 +18,7 @@ namespace Neon::Editor
         }
     }
 
-    static void Insecptor_Component_OnCollisionObject(
+    static void Inspector_Component_OnCollisionObject(
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
@@ -30,16 +30,16 @@ namespace Neon::Editor
     }
 } // namespace Neon::Editor
 
-void Insecptor_Component_OnCollisionShape(
+void Inspector_Component_OnCollisionShape(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Insecptor_Component_OnCollisionShape(Neon::Scene::EntityHandle(EntityId), ComponentId);
+    Neon::Editor::Inspector_Component_OnCollisionShape(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }
 
-void Insecptor_Component_OnCollisionObject(
+void Inspector_Component_OnCollisionObject(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Insecptor_Component_OnCollisionObject(Neon::Scene::EntityHandle(EntityId), ComponentId);
+    Neon::Editor::Inspector_Component_OnCollisionObject(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }

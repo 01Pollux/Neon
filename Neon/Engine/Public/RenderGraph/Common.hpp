@@ -189,9 +189,9 @@ namespace Neon::RG
     public:
         struct ViewDesc
         {
-            RHI::DescriptorViewDesc Desc;
-            RHI::Views::Generic     Handle;
-            uint32_t                SubresourceIndex;
+            RHI::DescriptorViewDesc  Desc;
+            RHI::CpuDescriptorHandle Handle;
+            uint32_t                 SubresourceIndex;
         };
         using ResourceViewMapType = std::map<ResourceViewId, ViewDesc>;
 

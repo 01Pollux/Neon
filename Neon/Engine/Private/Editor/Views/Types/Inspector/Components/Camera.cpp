@@ -2,18 +2,36 @@
 #include <Scene/Component/Camera.hpp>
 #include <Scene/EntityWorld.hpp>
 
-#include <Math/Transform.hpp>
+#include <RenderGraph/Graphs/Standard.hpp>
+
 #include <UI/Utils.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Neon::Editor
 {
-    static void Insecptor_Component_OnCamera(
+    static void Inspector_Component_OnCamera(
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
         auto& Camera  = *static_cast<Scene::Component::Camera*>(Entity.get_mut(ComponentId));
         bool  Changed = false;
+
+        if (ImGui::CollapsingHeader("Render Graph"))
+        {
+            if (ImGui::Button("2D"))
+            {
+                RG::CreateStandard2DRenderGraph(Camera.GetRenderGraph());
+                Changed = true;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("3D"))
+            {
+                RG::CreateStandard3DRenderGraph(Camera.GetRenderGraph());
+                Changed = true;
+            }
+        }
 
         //
 
@@ -148,9 +166,9 @@ namespace Neon::Editor
     }
 } // namespace Neon::Editor
 
-void Insecptor_Component_OnCamera(
+void Inspector_Component_OnCamera(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Insecptor_Component_OnCamera(Neon::Scene::EntityHandle(EntityId), ComponentId);
+    Neon::Editor::Inspector_Component_OnCamera(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }

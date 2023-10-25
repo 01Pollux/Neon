@@ -84,9 +84,8 @@ namespace Neon::Scene::Component
                 CameraType Type) const;
         };
 
-        Camera() = default;
         Camera(
-            CameraType Type);
+            CameraType Type = CameraType::Perspective);
 
         NEON_CLASS_COPYMOVE_DECL(Camera);
 

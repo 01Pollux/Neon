@@ -111,7 +111,7 @@ namespace Neon::RG
                 auto& ViewInfo = ViewIter->second;
                 if (CpuHandle)
                 {
-                    *CpuHandle = ViewInfo.Handle.GetCpuHandle();
+                    *CpuHandle = ViewInfo.Handle;
                 }
                 if (SubresourceIndex)
                 {
@@ -303,7 +303,6 @@ namespace Neon::RG
         {
             auto& ViewDesc = View.second;
 
-            // TODO: batch allocations
             std::visit(
                 VariantVisitor{
                     [](const std::monostate&)
@@ -312,33 +311,47 @@ namespace Neon::RG
                     },
                     [&ViewDesc, this](const RHI::CBVDesc& Desc)
                     {
-                        RHI::Views::ConstantBuffer View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
-                        View.Bind(Desc);
-                        ViewDesc.Handle = View;
+                        auto Descriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
+                        Descriptor->CreateConstantBufferView(
+                            Descriptor.Offset,
+                            Desc);
+                        ViewDesc.Handle = Descriptor.GetCpuHandle();
                     },
                     [&ViewDesc, Resource, this](const RHI::SRVDescOpt& Desc)
                     {
-                        RHI::Views::ShaderResource View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDesc.Handle = View;
+                        auto Descriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
+                        Descriptor->CreateShaderResourceView(
+                            Descriptor.Offset,
+                            Resource.get(),
+                            Desc.has_value() ? &*Desc : nullptr);
+                        ViewDesc.Handle = Descriptor.GetCpuHandle();
                     },
                     [&ViewDesc, Resource, this](const RHI::UAVDescOpt& Desc)
                     {
-                        RHI::Views::UnorderedAccess View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDesc.Handle = View;
+                        auto Descriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::ResourceView)->Allocate(1);
+                        Descriptor->CreateUnorderedAccessView(
+                            Descriptor.Offset,
+                            Resource.get(),
+                            Desc.has_value() ? &*Desc : nullptr);
+                        ViewDesc.Handle = Descriptor.GetCpuHandle();
                     },
                     [&ViewDesc, Resource, this](const RHI::RTVDescOpt& Desc)
                     {
-                        RHI::Views::RenderTarget View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::RenderTargetView)->Allocate(1);
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDesc.Handle = View;
+                        auto Descriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::RenderTargetView)->Allocate(1);
+                        Descriptor->CreateRenderTargetView(
+                            Descriptor.Offset,
+                            Resource.get(),
+                            Desc.has_value() ? &*Desc : nullptr);
+                        ViewDesc.Handle = Descriptor.GetCpuHandle();
                     },
                     [&ViewDesc, Resource, this](const RHI::DSVDescOpt& Desc)
                     {
-                        RHI::Views::DepthStencil View = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::DepthStencilView)->Allocate(1);
-                        View.Bind(Resource.get(), Desc.has_value() ? &*Desc : nullptr);
-                        ViewDesc.Handle = View;
+                        auto Descriptor = RHI::IStagedDescriptorHeap::Get(RHI::DescriptorType::DepthStencilView)->Allocate(1);
+                        Descriptor->CreateDepthStencilView(
+                            Descriptor.Offset,
+                            Resource.get(),
+                            Desc.has_value() ? &*Desc : nullptr);
+                        ViewDesc.Handle = Descriptor.GetCpuHandle();
                     } },
                 ViewDesc.Desc);
         }

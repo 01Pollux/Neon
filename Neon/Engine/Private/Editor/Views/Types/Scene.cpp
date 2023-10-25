@@ -40,18 +40,7 @@ namespace Neon::Editor::Views
         // Check if window is active and not collapsed to enable/disable camera.
         if (Window->Hidden || Window->Collapsed) [[unlikely]]
         {
-            if (Camera.enabled())
-            {
-                Camera.disable();
-            }
             return;
-        }
-        else
-        {
-            if (!Camera.enabled())
-            {
-                Camera.enable();
-            }
         }
 
         auto CameraData = Camera.get_mut<Scene::Component::Camera>();
@@ -181,7 +170,7 @@ namespace Neon::Editor::Views
             FirstCameraFilter.each(
                 [&Camera, &MaxPriority](flecs::entity Entity, const Scene::Component::Camera& CameraData)
                 {
-                    if (Entity != EditorEngine::Get()->GetEditorCamera())
+                    if (Entity == EditorEngine::Get()->GetEditorCamera())
                     {
                         return;
                     }

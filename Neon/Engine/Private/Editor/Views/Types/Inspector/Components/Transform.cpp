@@ -7,7 +7,7 @@
 
 namespace Neon::Editor
 {
-    static void Insecptor_Component_OnTransform(
+    static void Inspector_Component_OnTransform(
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
@@ -62,9 +62,9 @@ namespace Neon::Editor
     }
 } // namespace Neon::Editor
 
-void Insecptor_Component_OnTransform(
+void Inspector_Component_OnTransform(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Insecptor_Component_OnTransform(Neon::Scene::EntityHandle(EntityId), ComponentId);
+    Neon::Editor::Inspector_Component_OnTransform(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }
