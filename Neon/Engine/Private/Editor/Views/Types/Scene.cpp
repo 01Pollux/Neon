@@ -49,14 +49,6 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto RenderGraph = CameraData->GetRenderGraph();
-        if (!RenderGraph) [[unlikely]]
-        {
-            return;
-        }
-
-        auto& GraphStorage = RenderGraph->GetStorage();
-
         Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
         bool  Changed       = false;
         bool  HasClientSize = false;
@@ -84,7 +76,6 @@ namespace Neon::Editor::Views
         {
             CameraData->Viewport.Width  = Size.x;
             CameraData->Viewport.Height = Size.y;
-            GraphStorage.SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
 
             Camera.modified<Scene::Component::Camera>();
         }
