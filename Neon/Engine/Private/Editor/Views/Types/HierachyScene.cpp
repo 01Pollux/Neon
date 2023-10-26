@@ -390,17 +390,9 @@ namespace Neon::Editor::Views
             ImGui::Separator();
         }
 
-        static auto RootFilter = Scene::EntityWorld::Get()
-                                     .query_builder<>()
-                                     .term(flecs::ChildOf, EditorEngine::Get()->GetActiveSceneTag())
-                                     .term(flecs::Disabled)
-                                     .optional()
-                                     .cascade()
-                                     .build();
-        /*
         auto RootFilter = Scene::EntityWorld::GetChildrenFilter(
                               EditorEngine::Get()->GetActiveSceneTag())
-                              .build();*/
+                              .build();
 
         std::move_only_function<void()> DeferredTask;
 

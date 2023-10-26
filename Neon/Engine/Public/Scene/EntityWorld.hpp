@@ -160,8 +160,44 @@ namespace Neon::Scene
         /// <summary>
         /// Create a filter to get all children of an entity regardless of whether they are disabled or not.
         /// </summary>
-        [[nodiscard]] static flecs::filter_builder<> GetChildrenFilter(
-            EntityHandle Parent);
+        template<typename... _Args>
+        [[nodiscard]] static flecs::filter_builder<_Args...> GetChildrenFilter(
+            EntityHandle Parent)
+        {
+            return Get()
+                .filter_builder<_Args...>()
+                .term(flecs::ChildOf, Parent)
+                .term(flecs::Disabled)
+                .optional();
+        }
+
+        /// <summary>
+        /// Create a query to get all children of an entity regardless of whether they are disabled or not.
+        /// </summary>
+        template<typename... _Args>
+        [[nodiscard]] static flecs::query_builder<_Args...> GetChildrenQuery(
+            EntityHandle Parent)
+        {
+            return Get()
+                .query_builder<_Args...>()
+                .term(flecs::ChildOf, Parent)
+                .term(flecs::Disabled)
+                .optional();
+        }
+
+        /// <summary>
+        /// Create a query to get all children of an entity regardless of whether they are disabled or not.
+        /// </summary>
+        template<typename... _Args>
+        [[nodiscard]] static flecs::rule_builder<_Args...> GetChildrenRule(
+            EntityHandle Parent)
+        {
+            return Get()
+                .rule_builder<_Args...>()
+                .term(flecs::ChildOf, Parent)
+                .term(flecs::Disabled)
+                .optional();
+        }
 
         /// <summary>
         /// Get the active scene.

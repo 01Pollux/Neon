@@ -266,16 +266,6 @@ namespace Neon::Scene
         return s_WorldContext->World.get_world();
     }
 
-    flecs::filter_builder<> EntityWorld::GetChildrenFilter(
-        EntityHandle Parent)
-    {
-        return Get()
-            .filter_builder()
-            .term(flecs::ChildOf, Parent)
-            .term(flecs::Disabled)
-            .optional();
-    }
-
     flecs::entity EntityWorld::GetCurrentScenerRoot()
     {
         return Get().target<Scene::Component::WorldSceneRoot>();
