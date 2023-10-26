@@ -55,6 +55,8 @@ namespace Neon::Editor::Views
             return;
         }
 
+        auto& GraphStorage = RenderGraph->GetStorage();
+
         Size2 Size(CameraData->Viewport.Width, CameraData->Viewport.Height);
         bool  Changed       = false;
         bool  HasClientSize = false;
@@ -82,7 +84,7 @@ namespace Neon::Editor::Views
         {
             CameraData->Viewport.Width  = Size.x;
             CameraData->Viewport.Height = Size.y;
-            RenderGraph->GetStorage().SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
+            GraphStorage.SetOutputImageSize(HasClientSize ? Size : std::optional<Size2I>{});
 
             Camera.modified<Scene::Component::Camera>();
         }
@@ -129,7 +131,13 @@ namespace Neon::Editor::Views
             return;
         }
 
-        auto& FinalImage = RenderGraph->GetStorage().GetOutputImage().Get();
+        auto& GraphStorage = RenderGraph->GetStorage();
+        if (GraphStorage.IsEmpty()) [[unlikely]]
+        {
+            return;
+        }
+
+        auto& FinalImage = GraphStorage.GetOutputImage().Get();
 
         // Transition FinalImage to SRV.
         RHI::IResourceStateManager::Get()->TransitionResource(

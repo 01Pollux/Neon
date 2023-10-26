@@ -168,11 +168,16 @@ namespace Neon::Editor::Views
 
         if (HierachyNode)
         {
+            std::set<flecs::entity> Children;
             ChidlrenFilter.each(
-                [this, SelectedEntity, &DeferredTask, Editable](flecs::entity Entity)
+                [&Children](flecs::entity Entity)
                 {
-                    DispalySceneObject(SelectedEntity, Entity, DeferredTask, Editable);
+                    Children.insert(Entity);
                 });
+            for (auto& Child : Children)
+            {
+                DispalySceneObject(SelectedEntity, Child, DeferredTask, Editable);
+            }
         }
     }
 
@@ -385,19 +390,32 @@ namespace Neon::Editor::Views
             ImGui::Separator();
         }
 
+        static auto RootFilter = Scene::EntityWorld::Get()
+                                     .query_builder<>()
+                                     .term(flecs::ChildOf, EditorEngine::Get()->GetActiveSceneTag())
+                                     .term(flecs::Disabled)
+                                     .optional()
+                                     .cascade()
+                                     .build();
+        /*
         auto RootFilter = Scene::EntityWorld::GetChildrenFilter(
                               EditorEngine::Get()->GetActiveSceneTag())
-                              .build();
+                              .build();*/
 
         std::move_only_function<void()> DeferredTask;
 
         // First we need to display the children of root entity.
         {
+            std::set<flecs::entity> Entities;
             RootFilter.each(
-                [this, &DeferredTask](flecs::entity Entity)
+                [&Entities](flecs::entity Entity)
                 {
-                    DispalySceneObject(Entity, DeferredTask);
+                    Entities.insert(Entity);
                 });
+            for (auto& Entity : Entities)
+            {
+                DispalySceneObject(Entity, DeferredTask);
+            }
         }
 
         // Display popup for creating entities in the root

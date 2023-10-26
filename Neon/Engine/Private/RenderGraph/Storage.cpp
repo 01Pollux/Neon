@@ -24,7 +24,6 @@ namespace Neon::RG
         m_CameraFrameDataPtr(m_CameraFrameData->Map()),
         m_SceneContext(*this)
     {
-        Reset();
     }
 
     void GraphStorage::Reset()
@@ -184,6 +183,11 @@ namespace Neon::RG
         return m_SceneContext;
     }
 
+    bool GraphStorage::IsEmpty() const noexcept
+    {
+        return !m_Resources.contains(ResourceResolver::GetOutputImage());
+    }
+
     //
 
     void GraphStorage::DeclareResource(
@@ -236,6 +240,12 @@ namespace Neon::RG
     void GraphStorage::UpdateOutputImage(
         const Size2I& Size)
     {
+        // Dont bother updating output image if it is empty
+        if (IsEmpty())
+        {
+            return;
+        }
+
         auto& OutputImage = GetResourceMut(ResourceResolver::GetOutputImage());
         auto& Desc        = OutputImage.GetDesc();
 

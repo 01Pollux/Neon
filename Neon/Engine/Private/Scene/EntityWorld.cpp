@@ -249,6 +249,7 @@ namespace Neon::Scene
         s_WorldContext->World.set<flecs::Rest>({});
         s_WorldContext->World.import <flecs::monitor>();
 #endif
+
         // Register components & relations.
         Exports::RegisterRelations(s_WorldContext->World);
         Exports::RegisterComponents(s_WorldContext->World);

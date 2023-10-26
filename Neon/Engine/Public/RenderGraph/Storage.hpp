@@ -123,6 +123,11 @@ namespace Neon::RG
         /// </summary>
         [[nodiscard]] SceneContext& GetSceneContext() noexcept;
 
+        /// <summary>
+        /// Check to see if we have any output image
+        /// </summary>
+        [[nodiscard]] bool IsEmpty() const noexcept;
+
     public:
         // TODO: Add sampler
 

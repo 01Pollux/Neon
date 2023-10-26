@@ -170,12 +170,18 @@ namespace Neon::Runtime
                 {
                     auto& Camera      = Cameras[i];
                     auto  RenderGraph = Camera.GetRenderGraph();
-                    if (!RenderGraph)
+                    if (!RenderGraph) [[unlikely]]
                     {
                         continue;
                     }
 
-                    auto Size = RenderGraph->GetStorage().GetOutputImageSize();
+                    auto& GraphStorage = RenderGraph->GetStorage();
+                    if (GraphStorage.IsEmpty()) [[unlikely]]
+                    {
+                        continue;
+                    }
+
+                    auto Size = GraphStorage.GetOutputImageSize();
 
                     if (Camera.Viewport.ClientWidth)
                     {
