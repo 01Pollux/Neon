@@ -104,7 +104,7 @@ namespace Neon::Runtime
         // Create camera render system.
         m_CameraQuery =
             World
-                .query_builder<Component::Camera>()
+                .query_builder<Component::Camera>("CameraQuery")
                 .term<Component::Camera>()
                 .inout()
                 .with<Component::Transform>()
