@@ -85,8 +85,8 @@ namespace Neon::Editor
 
         Scene::Component::Transform TransformComponent;
         {
-            TransformComponent.World.SetRotationEuler(glm::radians(Project::Config().EditorCameraRotation));
-            TransformComponent.World.SetPosition(Project::Config().EditorCameraPosition);
+            TransformComponent.SetRotationEuler(glm::radians(Project::Config().EditorCameraRotation));
+            TransformComponent.SetPosition(Project::Config().EditorCameraPosition);
         }
         Camera.set(std::move(TransformComponent));
 
@@ -159,7 +159,7 @@ namespace Neon::Editor
     /// </summary>
     [[nodiscard]] static bool ProcessCameraKeyboard(
         float                           DeltaTime,
-        TransformMatrix&                Transform,
+        Scene::Component::Transform*    Transform,
         const Scene::Component::Camera& Camera)
     {
         float Speed = GetCameraKeyboardSpeed();
@@ -169,41 +169,41 @@ namespace Neon::Editor
 
         if (Input::IsKeyDown(Input::EKeyboardInput::W))
         {
-            MoveDelta += Transform.GetLookDir() * Speed;
+            MoveDelta += Transform->GetLookDir() * Speed;
             Changed = true;
         }
         if (Input::IsKeyDown(Input::EKeyboardInput::S))
         {
-            MoveDelta -= Transform.GetLookDir() * Speed;
+            MoveDelta -= Transform->GetLookDir() * Speed;
             Changed = true;
         }
 
         if (Input::IsKeyDown(Input::EKeyboardInput::A))
         {
-            MoveDelta -= Transform.GetRightDir() * Speed;
+            MoveDelta -= Transform->GetRightDir() * Speed;
             Changed = true;
         }
         if (Input::IsKeyDown(Input::EKeyboardInput::D))
         {
-            MoveDelta += Transform.GetRightDir() * Speed;
+            MoveDelta += Transform->GetRightDir() * Speed;
             Changed = true;
         }
 
         if (Input::IsKeyDown(Input::EKeyboardInput::Q))
         {
-            MoveDelta -= Transform.GetUpDir() * Speed;
+            MoveDelta -= Transform->GetUpDir() * Speed;
             Changed = true;
         }
         if (Input::IsKeyDown(Input::EKeyboardInput::E))
         {
-            MoveDelta += Transform.GetUpDir() * Speed;
+            MoveDelta += Transform->GetUpDir() * Speed;
             Changed = true;
         }
 
         if (Changed)
         {
             MoveDelta *= DeltaTime;
-            Transform.SetPosition(Transform.GetPosition() + MoveDelta);
+            Transform->SetPosition(Transform->GetPosition() + MoveDelta);
         }
 
         return Changed;
@@ -215,10 +215,10 @@ namespace Neon::Editor
     /// Process the camera orbit inputs.
     /// </summary>
     bool ProcessCamera_Orbit(
-        float            DeltaTime,
-        TransformMatrix& Transform)
+        float                        DeltaTime,
+        Scene::Component::Transform* Transform)
     {
-        Quaternion Rotation = Transform.GetRotation();
+        Quaternion Rotation = Transform->GetRotation();
 
         float Speed = GetCameraMouseSpeed();
 
@@ -227,12 +227,12 @@ namespace Neon::Editor
         bool Changed = false;
         if (MouseDelta.x)
         {
-            Transform.AppendYaw(glm::radians(MouseDelta.x * Speed * DeltaTime));
+            Transform->AppendYaw(glm::radians(MouseDelta.x * Speed * DeltaTime));
             Changed = true;
         }
         if (MouseDelta.y)
         {
-            Transform.AppendPitch(glm::radians(MouseDelta.y * Speed * DeltaTime));
+            Transform->AppendPitch(glm::radians(MouseDelta.y * Speed * DeltaTime));
             Changed = true;
         }
 
@@ -245,10 +245,10 @@ namespace Neon::Editor
     /// Process the camera orbit inputs.
     /// </summary>
     bool ProcessCamera_Zoom(
-        float            DeltaTime,
-        TransformMatrix& Transform)
+        float                        DeltaTime,
+        Scene::Component::Transform* Transform)
     {
-        Quaternion Rotation = Transform.GetRotation();
+        Quaternion Rotation = Transform->GetRotation();
 
         float Speed = GetCameraKeyboardSpeed();
 
@@ -257,7 +257,7 @@ namespace Neon::Editor
         bool Changed = false;
         if (float Length = glm::length(MouseDelta) * (MouseDelta.x >= 0.f ? 1.f : -1.f))
         {
-            Transform.SetPosition(Transform.GetPosition() + Transform.GetLookDir() * Length * Speed * DeltaTime);
+            Transform->SetPosition(Transform->GetPosition() + Transform->GetLookDir() * Length * Speed * DeltaTime);
             Changed = true;
         }
 
@@ -275,8 +275,8 @@ namespace Neon::Editor
             return;
         }
 
-        auto& Transform = CameraEnt.get_mut<Scene::Component::Transform>()->World;
-        auto  Camera    = CameraEnt.get<Scene::Component::Camera>();
+        auto Transform = CameraEnt.get_mut<Scene::Component::Transform>();
+        auto Camera    = CameraEnt.get<Scene::Component::Camera>();
 
         bool Changed = false;
 

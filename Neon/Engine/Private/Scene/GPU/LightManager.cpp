@@ -97,8 +97,8 @@ namespace Neon::Scene
                         }
 
                         Data->Flags     = Flags;
-                        Data->Position  = Transform.World.GetPosition();
-                        Data->Direction = Transform.World.GetLookDir();
+                        Data->Position  = Transform.GetPosition();
+                        Data->Direction = Transform.GetLookDir();
                     }
                     else
                     {

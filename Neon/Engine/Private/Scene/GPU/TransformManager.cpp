@@ -38,7 +38,7 @@ namespace Neon::Scene
                         {
                             Handle->InstanceId = this->AddInstance(&Data);
                         }
-                        Data->World = Transform.World.ToMat4x4Transposed();
+                        Data->World = Transform.ToMat4x4Transposed();
                     }
                     else
                     {

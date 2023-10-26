@@ -56,7 +56,7 @@ namespace Neon::RG
         case Component::CameraType::Perspective:
         {
             Geometry::Frustum Frustum(glm::transpose(m_Storage.GetFrameData().ProjectionInverse));
-            Frustum.Transform(Transform.World);
+            Frustum.Transform(Transform);
 
             m_MeshQuery.iter(
                 [&](flecs::iter&                   Iter,
@@ -66,7 +66,7 @@ namespace Neon::RG
                     // TODO: Add instancing
                     for (size_t Index : Iter)
                     {
-                        auto& CurTransform = Transforms[Index].World;
+                        auto& CurTransform = Transforms[Index];
                         auto& CurMesh      = Meshes[Index].Mesh;
                         auto  Box          = CurMesh.GetData().AABB;
 
@@ -76,7 +76,7 @@ namespace Neon::RG
                             auto& Material      = CurMesh.GetMaterial();
                             auto  PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
 
-                            float Dist = glm::distance2(Transform.World.GetPosition(), CurTransform.GetPosition());
+                            float Dist = glm::distance2(Transform.GetPosition(), CurTransform.GetPosition());
                             m_EntityLists[PipelineState].emplace(Iter.entity(Index), Dist);
                         }
                     }

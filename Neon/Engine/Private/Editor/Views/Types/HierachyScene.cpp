@@ -3,12 +3,46 @@
 
 #include <Editor/Main/EditorEngine.hpp>
 #include <Editor/Scene/EditorEntity.hpp>
-#include <Runtime/GameLogic.hpp>
+
+#include <Scene/Component/Transform.hpp>
 
 #include <UI/imcxx/all_in_one.hpp>
 
 namespace Neon::Editor::Views
 {
+    /// <summary>
+    /// Helper function to create entity
+    /// </summary>
+    static flecs::entity HelperCreateEntity(
+        const flecs::entity& ParentEntHandle)
+    {
+        return ParentEntHandle
+                   ? Scene::EntityHandle::Create(
+                         EditorEngine::Get()->GetActiveSceneTag(),
+                         ParentEntHandle)
+                   : Scene::EntityHandle::Create(
+                         EditorEngine::Get()->GetActiveSceneTag());
+    }
+
+    /// <summary>
+    /// Helper function to create entity
+    /// </summary>
+    static flecs::entity HelperCreateEntityTransform(
+        const flecs::entity& ParentEntHandle)
+    {
+        flecs::entity Entity = HelperCreateEntity(ParentEntHandle);
+
+        auto    Camera        = EditorEngine::Get()->GetEditorCamera();
+        auto    CamTransform  = Camera.get<Scene::Component::Transform>();
+        Vector3 SpawnPosition = CamTransform->GetLookDir() * 10.f + CamTransform->GetPosition();
+
+        Entity.emplace<Scene::Component::Transform>(Mat::Identity<Matrix3x3>, SpawnPosition);
+
+        return Entity;
+    }
+
+    //
+
     void SceneHierachy::DispalySceneObject(
         Scene::EntityHandle              SelectedEntity,
         Scene::EntityHandle              EntHandle,
@@ -215,17 +249,7 @@ namespace Neon::Editor::Views
         {
             DeferredTask = [ParentEntHandle]()
             {
-                if (ParentEntHandle)
-                {
-                    Scene::EntityHandle::Create(
-                        EditorEngine::Get()->GetActiveSceneTag(),
-                        ParentEntHandle);
-                }
-                else
-                {
-                    Scene::EntityHandle::Create(
-                        EditorEngine::Get()->GetActiveSceneTag());
-                }
+                HelperCreateEntity(ParentEntHandle);
             };
         }
 
@@ -305,30 +329,37 @@ namespace Neon::Editor::Views
         {
             if (imcxx::menuitem_entry{ "Cube" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Sphere" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Capsule" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Cylinder" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Cone" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Plane" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
 
             if (imcxx::menuitem_entry{ "Quad" })
             {
+                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
             }
         }
 

@@ -56,11 +56,11 @@ namespace Neon::RG
         auto& CameraBuffer = m_Storage.GetFrameData();
 
         auto View = glm::lookAt(
-            Transform.World.GetPosition(),
-            Transform.World.GetPosition() + Transform.World.GetLookDir(),
-            Transform.World.GetUpDir());
+            Transform.GetPosition(),
+            Transform.GetPosition() + Transform.GetLookDir(),
+            Transform.GetUpDir());
 
-        CameraBuffer.World = Transform.World.ToMat4x4Transposed();
+        CameraBuffer.World = Transform.ToMat4x4Transposed();
 
         CameraBuffer.View           = glm::transpose(View);
         CameraBuffer.Projection     = glm::transpose(Camera.ProjectionMatrix());

@@ -5,18 +5,23 @@
 
 namespace Neon::Scene::Component
 {
-    struct Transform
+    struct Transform : public TransformMatrix
     {
+        using TransformMatrix::TransformMatrix;
+
+        Transform(const TransformMatrix& Mat) :
+            TransformMatrix(Mat)
+        {
+        }
+
         NEON_COMPONENT_SERIALIZE_IMPL
         {
-            Archive& World;
+            Archive&* this;
         }
 
         NEON_EXPORT_FLECS_COMPONENT(Transform, "Transform")
         {
             NEON_COMPONENT_SERIALIZE(Transform);
         }
-
-        TransformMatrix World;
     };
 } // namespace Neon::Scene::Component

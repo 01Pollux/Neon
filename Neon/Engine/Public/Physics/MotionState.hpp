@@ -21,7 +21,7 @@ namespace Neon::Physics
         {
             if (auto Transform = m_Target.get<Scene::Component::Transform>())
             {
-                WorldTransform = ToBullet3(Transform->World);
+                WorldTransform = ToBullet3(*Transform);
             }
         }
 
@@ -30,7 +30,7 @@ namespace Neon::Physics
         {
             if (auto Transform = m_Target.get_mut<Scene::Component::Transform>())
             {
-                Transform->World = FromBullet3(WorldTransform);
+                *Transform = FromBullet3(WorldTransform);
                 m_Target.modified<Scene::Component::Transform>();
             }
         }

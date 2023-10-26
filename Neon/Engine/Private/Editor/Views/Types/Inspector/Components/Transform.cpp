@@ -11,9 +11,9 @@ namespace Neon::Editor
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
-        auto& Transform = static_cast<Scene::Component::Transform*>(Entity.get_mut(ComponentId))->World;
-        auto& Position  = Transform.GetPosition();
-        auto  Rotation  = glm::degrees(Transform.GetRotationEuler());
+        auto  Transform = static_cast<Scene::Component::Transform*>(Entity.get_mut(ComponentId));
+        auto& Position  = Transform->GetPosition();
+        auto  Rotation  = glm::degrees(Transform->GetRotationEuler());
         bool  Changed   = false;
 
         //
@@ -52,7 +52,7 @@ namespace Neon::Editor
         if (UI::Utils::DragVectorComponent(Rotation))
         {
             Changed = true;
-            Transform.SetRotationEuler(glm::radians(Rotation));
+            Transform->SetRotationEuler(glm::radians(Rotation));
         }
 
         if (Changed)

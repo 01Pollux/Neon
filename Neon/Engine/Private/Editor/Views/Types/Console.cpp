@@ -118,8 +118,8 @@ namespace Neon::Editor::Views
                 flecs::entity Entity = Scene::EntityHandle::Create(CurScene.GetRoot(), CurScene.GetRoot());
 
                 Scene::Component::Transform Transform;
-                Transform.World.SetRotationEuler(Rotation);
-                Transform.World.SetPosition(Vector3(5.0f, 10.0f, 0.0f));
+                Transform.SetRotationEuler(Rotation);
+                Transform.SetPosition(Vector3(5.0f, 10.0f, 0.0f));
 
                 Entity.set(Transform);
                 Entity.emplace<Scene::Component::DirectionalLight>();
