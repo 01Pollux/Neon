@@ -12,6 +12,7 @@ namespace Neon::Scene::CSG
         m_Materials(std::move(Materials))
     {
         BuildAABB();
+        BuildGpuBuffer();
     }
 
     Brush::Brush(
@@ -29,6 +30,7 @@ namespace Neon::Scene::CSG
             }
         }
         BuildAABB();
+        BuildGpuBuffer();
     }
 
     //
@@ -51,6 +53,11 @@ namespace Neon::Scene::CSG
     uint32_t Brush::GetIndicesCount() const
     {
         return GetVerticesCount() * 3;
+    }
+
+    bool Brush::Is16BitsIndex() const
+    {
+        return GetIndicesCount() < std::numeric_limits<uint16_t>::max();
     }
 
     //
@@ -77,9 +84,9 @@ namespace Neon::Scene::CSG
 
     void Brush::BuildGpuBuffer()
     {
-        uint32_t VerticesCount = uint32_t(m_Faces.size() * std::size(m_Faces[0].Vertices));
-        uint32_t IndicesCount  = VerticesCount * 3;
-        uint32_t IndexSize     = VerticesCount < std::numeric_limits<uint16_t>::max() ? sizeof(uint16_t) : sizeof(uint32_t);
+        uint32_t VerticesCount = GetVerticesCount();
+        uint32_t IndicesCount  = GetIndicesCount();
+        uint32_t IndexSize     = Is16BitsIndex() ? sizeof(uint16_t) : sizeof(uint32_t);
 
         m_Buffer = RHI::UBufferPoolHandle(
             VerticesCount * sizeof(Mdl::MeshVertex) + IndicesCount * IndexSize,

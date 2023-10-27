@@ -97,6 +97,11 @@ namespace Neon::Scene::CSG
         /// </summary>
         [[nodiscard]] uint32_t GetIndicesCount() const;
 
+        /// <summary>
+        /// Check to see if index buffer is 16 bits size.
+        /// </summary>
+        [[nodiscard]] bool Is16BitsIndex() const;
+
     private:
         /// <summary>
         /// Build aabb of the brush.

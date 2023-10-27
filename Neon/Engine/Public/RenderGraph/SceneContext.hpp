@@ -8,7 +8,12 @@ namespace Neon
     namespace RHI
     {
         class IMaterial;
-    } // namespace RHI
+        namespace Views
+        {
+            class Vertex;
+            class Index;
+        } // namespace Views
+    }     // namespace RHI
 
     namespace Scene::Component
     {
@@ -48,14 +53,6 @@ namespace Neon::RG
 
             RHI::GpuResourceHandle VertexBuffer;
 
-            uint32_t VertexCount;
-            uint32_t IndexCount;
-
-            RHI::GpuResourceHandle IndexBuffer;
-
-            uint32_t VertexOffset;
-            uint32_t IndexOffset;
-
             uint32_t               InstanceId;
             RHI::PrimitiveTopology Topology;
         };
@@ -84,7 +81,9 @@ namespace Neon::RG
             /// <summary>
             /// Get data needed for rendering
             /// </summary>
-            [[nodiscard]] EntityRenderInfo GetRenderInfo() const;
+            [[nodiscard]] EntityRenderInfo GetRenderInfo(
+                RHI::Views::Vertex& VtxView,
+                RHI::Views::Index&  IdxView) const;
 
             auto operator<=>(const EntityInfo& Other) const noexcept
             {

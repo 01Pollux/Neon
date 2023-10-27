@@ -105,7 +105,9 @@ namespace Neon::RG
         return true;
     }
 
-    auto SceneContext::EntityInfo::GetRenderInfo() const -> EntityRenderInfo
+    auto SceneContext::EntityInfo::GetRenderInfo(
+        RHI::Views::Vertex& VtxView,
+        RHI::Views::Index&  IdxView) const -> EntityRenderInfo
     {
         EntityRenderInfo RenderInfo;
 
@@ -121,16 +123,11 @@ namespace Neon::RG
 
             RenderInfo.Material = Mesh.GetMaterial();
 
-            RenderInfo.VertexBuffer = MeshModel->GetVertexBuffer()->GetHandle();
-            RenderInfo.VertexOffset = MeshData.VertexOffset;
-            RenderInfo.VertexCount  = MeshData.VertexCount;
-
-            RenderInfo.IndexBuffer = MeshModel->GetIndexBuffer()->GetHandle();
-            RenderInfo.IndexOffset = MeshData.IndexOffset;
-            RenderInfo.IndexCount  = MeshData.IndexCount;
-
             RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()->InstanceId;
             RenderInfo.Topology   = MeshData.Topology;
+
+            VtxView.Append<Mdl::MeshVertex>(MeshModel->GetVertexBuffer()->GetHandle(), MeshData.VertexOffset, MeshData.VertexCount);
+            IdxView = RHI::Views::IndexU32{ MeshModel->GetIndexBuffer()->GetHandle(), MeshData.IndexOffset, MeshData.IndexCount };
 
             break;
         }
@@ -146,16 +143,19 @@ namespace Neon::RG
                 RenderInfo.Material = Box->GetMaterial();
             }
 
-            RenderInfo.InstanceId   = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::CSGShape>()->InstanceId;
-            RenderInfo.VertexBuffer = Brush->GetVertexBuffer();
-            RenderInfo.VertexOffset = 0;
-            RenderInfo.VertexCount  = Brush->GetVerticesCount();
+            RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::CSGShape>()->InstanceId;
+            RenderInfo.Topology   = RHI::PrimitiveTopology::TriangleList;
 
-            RenderInfo.IndexBuffer = Brush->GetIndexBuffer();
-            RenderInfo.IndexOffset = 0;
-            RenderInfo.IndexCount  = Brush->GetIndicesCount();
+            VtxView.Append<Mdl::MeshVertex>(Brush->GetVertexBuffer(), 0, Brush->GetVerticesCount());
 
-            RenderInfo.Topology = RHI::PrimitiveTopology::TriangleList;
+            if (Brush->Is16BitsIndex())
+            {
+                IdxView = RHI::Views::IndexU16{ Brush->GetIndexBuffer(), 0, Brush->GetIndicesCount() };
+            }
+            else
+            {
+                IdxView = RHI::Views::IndexU32{ Brush->GetIndexBuffer(), 0, Brush->GetIndicesCount() };
+            }
 
             break;
         }
@@ -374,7 +374,10 @@ namespace Neon::RG
 
                 for (auto& Info : EntityList)
                 {
-                    auto RenderInfo = Info.GetRenderInfo();
+                    RHI::Views::Vertex VtxView;
+                    RHI::Views::Index  IdxView;
+
+                    auto RenderInfo = Info.GetRenderInfo(VtxView, IdxView);
 
                     // Pass == 0 opaque materials
                     // Pass == 1 transparent materials
@@ -417,21 +420,10 @@ namespace Neon::RG
                         }
                     }
 
-                    RHI::Views::Vertex VtxView;
-                    VtxView.Append<Mdl::MeshVertex>(
-                        RenderInfo.VertexBuffer,
-                        RenderInfo.VertexOffset,
-                        RenderInfo.VertexCount);
-
-                    RHI::Views::IndexU32 IdxView(
-                        RenderInfo.IndexBuffer,
-                        RenderInfo.IndexOffset,
-                        RenderInfo.IndexCount);
-
                     CommandList->SetPrimitiveTopology(RenderInfo.Topology);
                     CommandList->SetIndexBuffer(IdxView);
                     CommandList->SetVertexBuffer(0, VtxView);
-                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = RenderInfo.IndexCount });
+                    CommandList->Draw(RHI::DrawIndexArgs{ .IndexCountPerInstance = uint32_t(IdxView.Get().Size / (IdxView.Get().Is32Bit ? sizeof(uint32_t) : sizeof(uint16_t))) });
                 }
             }
 

@@ -156,8 +156,9 @@ namespace Neon::RHI::Views
         View m_View;
     };
 
-    struct IndexU16 : public Index
+    class IndexU16 : public Index
     {
+    public:
         constexpr IndexU16() = default;
 
         constexpr IndexU16(
@@ -191,8 +192,9 @@ namespace Neon::RHI::Views
         }
     };
 
-    struct IndexU32 : public Index
+    class IndexU32 : public Index
     {
+    public:
         constexpr IndexU32() = default;
 
         constexpr IndexU32(
