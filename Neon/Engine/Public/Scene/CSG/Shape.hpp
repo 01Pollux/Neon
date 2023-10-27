@@ -2,10 +2,16 @@
 
 #include <Scene/CSG/Brush.hpp>
 
+namespace boost::serialization
+{
+    class access;
+} // namespace boost::serialization
+
 namespace Neon::Scene
 {
     class CSGShape
     {
+
     public:
         /// <summary>
         /// Get the brush of the shape.
@@ -15,11 +21,22 @@ namespace Neon::Scene
             return m_Brush;
         }
 
+    public:
+        friend class boost::serialization::access;
+
+        template<typename _Archive>
+        void serialize(
+            _Archive&          Archive,
+            const unsigned int Version)
+        {
+            Archive& m_Brush;
+        }
+
     protected:
         CSGShape() = default;
 
     protected:
-        mutable CSGBrush m_Brush;
+        CSGBrush m_Brush;
     };
 
     class CSGBox3D : public CSGShape
@@ -67,6 +84,19 @@ namespace Neon::Scene
         /// Rebuild the brush.
         /// </summary>
         void Rebuild();
+
+    public:
+        friend class boost::serialization::access;
+
+        template<typename _Archive>
+        void serialize(
+            _Archive&          Archive,
+            const unsigned int Version)
+        {
+            Archive& boost::serialization::base_object<CSGShape>(*this);
+            Archive& m_Size;
+            Archive& m_Material;
+        }
 
     private:
         Vector3             m_Size;
