@@ -74,6 +74,7 @@ namespace Neon::Scene::CSG
         }
 
         /// <summary>
+        /// Set the material of the box.
         /// </summary>
         void SetMaterial(
             const Ptr<RHI::IMaterial>& Material)

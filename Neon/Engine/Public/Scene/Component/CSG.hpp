@@ -19,14 +19,6 @@ namespace Neon::Scene::Component
     {
         using CSG::Box3D::Box3D;
 
-        CSGBox3D() = default;
-
-        CSGBox3D(
-            const CSG::Box3D& Shape) :
-            CSG::Box3D(Shape)
-        {
-        }
-
         NEON_COMPONENT_SERIALIZE_IMPL
         {
             Archive& static_cast<CSG::Box3D&>(*this);

@@ -23,12 +23,12 @@ namespace Neon::RHI
 
         struct Handle
         {
-            GpuBuffer Buffer;
+            GpuBuffer Buffer{};
 
-            size_t Offset;
-            size_t Size;
+            size_t Offset = 0;
+            size_t Size   = 0;
 
-            BufferType Type;
+            BufferType Type = BufferType::Count;
 
             /// <summary>
             /// Get the GPU handle

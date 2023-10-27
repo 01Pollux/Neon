@@ -3,13 +3,21 @@
 #include <RenderGraph/Common.hpp>
 #include <Math/Common.hpp>
 
-namespace Neon::Scene::Component
+namespace Neon
 {
-    struct Camera;
-    struct Transform;
-    struct MeshInstance;
-    struct CSGShape;
-} // namespace Neon::Scene::Component
+    namespace RHI
+    {
+        class IMaterial;
+    } // namespace RHI
+
+    namespace Scene::Component
+    {
+        struct Camera;
+        struct Transform;
+        struct MeshInstance;
+        struct CSGShape;
+    } // namespace Scene::Component
+} // namespace Neon
 
 namespace Neon::RG
 {
@@ -17,6 +25,14 @@ namespace Neon::RG
 
     class SceneContext
     {
+    public:
+        enum class RenderType : uint8_t
+        {
+            DepthPrepass,
+            RenderPass
+        };
+
+    private:
         using MeshQuery = flecs::query<
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
@@ -25,10 +41,50 @@ namespace Neon::RG
             const Scene::Component::Transform,
             const Scene::Component::CSGShape>;
 
+    private:
+        struct EntityRenderInfo
+        {
+            Ptr<RHI::IMaterial> Material;
+
+            RHI::GpuResourceHandle VertexBuffer;
+
+            uint32_t VertexCount;
+            uint32_t IndexCount;
+
+            RHI::GpuResourceHandle IndexBuffer;
+
+            uint32_t VertexOffset;
+            uint32_t IndexOffset;
+
+            uint32_t               InstanceId;
+            RHI::PrimitiveTopology Topology;
+        };
+
+    private:
+        enum class EntityType : uint8_t
+        {
+            Mesh,
+            CSG
+        };
+
         struct EntityInfo
         {
             flecs::entity_t Id;
             float           Dist;
+            EntityType      Type;
+
+        public:
+            /// <summary>
+            /// Check to see if the entity can be rendered (used for compute materials)
+            /// </summary>
+            [[nodiscard]] bool CanRender(
+                RenderType PassType,
+                uint32_t   PassIndex) const;
+
+            /// <summary>
+            /// Get data needed for rendering
+            /// </summary>
+            [[nodiscard]] EntityRenderInfo GetRenderInfo() const;
 
             auto operator<=>(const EntityInfo& Other) const noexcept
             {
@@ -40,12 +96,6 @@ namespace Neon::RG
         using EntityListGroup = std::map<RHI::IPipelineState*, EntityList>;
 
     public:
-        enum class RenderType : uint8_t
-        {
-            DepthPrepass,
-            RenderPass
-        };
-
         SceneContext(
             const GraphStorage& Storage);
 
