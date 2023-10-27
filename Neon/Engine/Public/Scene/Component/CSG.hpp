@@ -12,25 +12,26 @@ namespace Neon::Scene::Component
     {
     };
 
-    struct CSGBox3D : public CSGShape, public Scene::CSGBox3D
+    struct CSGBox3D : public CSG::Box3D, public CSGShape
     {
-        using BaseClass = Scene::CSGBox3D;
+        using CSG::Box3D::Box3D;
 
-        using BaseClass::BaseClass;
+        CSGBox3D() = default;
 
         CSGBox3D(
-            const BaseClass& Shape) :
-            BaseClass(Shape)
+            const CSG::Box3D& Shape) :
+            CSG::Box3D(Shape)
         {
         }
 
         NEON_COMPONENT_SERIALIZE_IMPL
         {
-            Archive&* this;
+            Archive& static_cast<CSG::Box3D&>(*this);
         }
 
         NEON_EXPORT_FLECS_COMPONENT(CSGBox3D, "CSGBox3D")
         {
+            Component.is_a<CSGShape>();
             NEON_COMPONENT_SERIALIZE(CSGBox3D);
         }
     };

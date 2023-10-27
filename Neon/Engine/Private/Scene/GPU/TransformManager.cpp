@@ -4,11 +4,59 @@
 
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
+#include <Scene/Component/CSG.hpp>
 
 #include <RHI/GlobalBuffer.hpp>
 
 namespace Neon::Scene
 {
+    template<typename _ComponentTy>
+    static void HandleTransformInstance(
+        GPUTransformManager* Manager)
+    {
+        using RenderableHandle = GPUTransformManager::RenderableHandle;
+        using InstanceData     = GPUTransformManager::InstanceData;
+
+        auto HandleInstanceCallback = [Manager](flecs::iter& Iter, const Component::Transform* Transforms, const _ComponentTy*)
+        {
+            for (size_t i : Iter)
+            {
+                auto& Transform = Transforms[i];
+                auto  Entity    = Iter.entity(i);
+
+                auto Handle = Entity.get_mut<RenderableHandle, _ComponentTy>();
+                if (Iter.event() == flecs::OnSet)
+                {
+                    InstanceData* Data = nullptr;
+                    if (Handle->Valid()) [[likely]]
+                    {
+                        Data = Manager->GetInstanceData(Handle->InstanceId);
+                    }
+                    else
+                    {
+                        Handle->InstanceId = Manager->AddInstance(&Data);
+                    }
+                    Data->World = Transform.ToMat4x4Transposed();
+                    Entity.modified<RenderableHandle, _ComponentTy>();
+                }
+                else
+                {
+                    if (Handle->Valid()) [[likely]]
+                    {
+                        Manager->RemoveInstance(Handle->InstanceId);
+                    }
+                    Entity.remove<RenderableHandle, _ComponentTy>();
+                }
+            }
+        };
+
+        EntityWorld::Get()
+            .observer<const Component::Transform, const _ComponentTy>()
+            .event(flecs::OnSet)
+            .event(flecs::OnRemove)
+            .iter(HandleInstanceCallback);
+    }
+
     GPUTransformManager::GPUTransformManager()
     {
         // Register the renderable handle component.
@@ -16,39 +64,8 @@ namespace Neon::Scene
             .component<RenderableHandle>("_RenderableHandle");
 
         // Create observer for the transform and renderable components.
-        EntityWorld::Get()
-            .observer<const Component::Transform>()
-            .with<Component::MeshInstance>()
-            .in()
-            .event(flecs::OnSet)
-            .event(flecs::OnRemove)
-            .each(
-                [this](flecs::iter& Iter, size_t Idx, const Component::Transform& Transform)
-                {
-                    auto Entity = Iter.entity(Idx);
-                    auto Handle = Entity.get_mut<RenderableHandle>();
-                    if (Iter.event() == flecs::OnSet)
-                    {
-                        InstanceData* Data = nullptr;
-                        if (Handle->Valid()) [[likely]]
-                        {
-                            Data = this->GetInstanceData(Handle->InstanceId);
-                        }
-                        else
-                        {
-                            Handle->InstanceId = this->AddInstance(&Data);
-                        }
-                        Data->World = Transform.ToMat4x4Transposed();
-                    }
-                    else
-                    {
-                        if (Handle->Valid()) [[likely]]
-                        {
-                            this->RemoveInstance(Handle->InstanceId);
-                        }
-                        Entity.remove<RenderableHandle>();
-                    }
-                });
+        HandleTransformInstance<Component::MeshInstance>(this);
+        HandleTransformInstance<Component::CSGShape>(this);
     }
 
     uint32_t GPUTransformManager::AddInstance(

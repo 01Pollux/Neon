@@ -2,16 +2,16 @@
 #include <Scene/CSG/Shape.hpp>
 #include <RHI/Material/Shared.hpp>
 
-namespace Neon::Scene
+namespace Neon::Scene::CSG
 {
-    CSGBox3D::CSGBox3D() :
-        CSGBox3D(
+    Box3D::Box3D() :
+        Box3D(
             Vec::One<Vector3>,
             RHI::SharedMaterials::Get(RHI::SharedMaterials::Type::Lit))
     {
     }
 
-    CSGBox3D::CSGBox3D(
+    Box3D::Box3D(
         const Vector3&             Size,
         const Ptr<RHI::IMaterial>& Material) :
         m_Size(Size),
@@ -20,12 +20,12 @@ namespace Neon::Scene
         Rebuild();
     }
 
-    void CSGBox3D::Rebuild()
+    void Box3D::Rebuild()
     {
         constexpr size_t FaceCount = 12;
 
-        CSGBrush::FaceList     Faces(FaceCount * 3);
-        CSGBrush::MaterialList Materials(FaceCount);
+        Brush::FaceList     Faces(FaceCount * 3);
+        Brush::MaterialList Materials(FaceCount);
 
         const Vector3 HalfSize = m_Size * 0.5f;
 
@@ -55,7 +55,7 @@ namespace Neon::Scene
                 HalfSize * (Normal - Tangent + Bitangent)
             };
 
-            const CSGBrush::Face Face{
+            const Brush::Face Face{
                 { Vertices[0], Vertices[1], Vertices[2] },
                 { UVs[0], UVs[1], UVs[2] },
                 0
@@ -63,7 +63,7 @@ namespace Neon::Scene
 
             Faces[FaceIndex] = Face;
 
-            const CSGBrush::Face Face2{
+            const Brush::Face Face2{
                 { Vertices[0], Vertices[2], Vertices[3] },
                 { UVs[0], UVs[2], UVs[3] },
                 0
@@ -73,6 +73,6 @@ namespace Neon::Scene
         }
         Materials[0] = m_Material;
 
-        m_Brush = CSGBrush(std::move(Faces), std::move(Materials));
+        m_Brush = Brush(std::move(Faces), std::move(Materials));
     }
-} // namespace Neon::Scene
+} // namespace Neon::Scene::CSG

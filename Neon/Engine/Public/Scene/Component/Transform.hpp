@@ -16,7 +16,7 @@ namespace Neon::Scene::Component
 
         NEON_COMPONENT_SERIALIZE_IMPL
         {
-            Archive&* this;
+            Archive& boost::serialization::base_object<TransformMatrix>(*this);
         }
 
         NEON_EXPORT_FLECS_COMPONENT(Transform, "Transform")

@@ -49,7 +49,7 @@ namespace Neon::Scene::Component::Impl
             [](flecs::entity_t Ent, flecs::id_t Id)                                  \
             {                                                                        \
                 flecs::entity Entity(Neon::Scene::Component::Impl::GetWorld(), Ent); \
-                Entity.set<Class>({});                                               \
+                Entity.emplace<Class>();                                             \
             });                                                                      \
     }                                                                                \
     static void _HandleComponent(                                                    \

@@ -5,6 +5,7 @@
 #include <Editor/Scene/EditorEntity.hpp>
 
 #include <Scene/Component/Transform.hpp>
+#include <Scene/Component/CSG.hpp>
 
 #include <UI/imcxx/all_in_one.hpp>
 
@@ -14,23 +15,27 @@ namespace Neon::Editor::Views
     /// Helper function to create entity
     /// </summary>
     static flecs::entity HelperCreateEntity(
-        const flecs::entity& ParentEntHandle)
+        const flecs::entity& ParentEntHandle,
+        const char*          Name = nullptr)
     {
         return ParentEntHandle
                    ? Scene::EntityHandle::Create(
                          EditorEngine::Get()->GetActiveSceneTag(),
-                         ParentEntHandle)
+                         ParentEntHandle,
+                         Name)
                    : Scene::EntityHandle::Create(
-                         EditorEngine::Get()->GetActiveSceneTag());
+                         EditorEngine::Get()->GetActiveSceneTag(),
+                         Name);
     }
 
     /// <summary>
     /// Helper function to create entity
     /// </summary>
     static flecs::entity HelperCreateEntityTransform(
-        const flecs::entity& ParentEntHandle)
+        const flecs::entity& ParentEntHandle,
+        const char*          Name = nullptr)
     {
-        flecs::entity Entity = HelperCreateEntity(ParentEntHandle);
+        flecs::entity Entity = HelperCreateEntity(ParentEntHandle, Name);
 
         auto    Camera        = EditorEngine::Get()->GetEditorCamera();
         auto    CamTransform  = Camera.get<Scene::Component::Transform>();
@@ -331,7 +336,8 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Cube");
+                    Entity.emplace<Scene::Component::CSGBox3D>();
                 };
             }
 
@@ -339,7 +345,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Sphere");
                 };
             }
 
@@ -347,7 +353,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Capsule");
                 };
             }
 
@@ -355,7 +361,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Cylinder");
                 };
             }
 
@@ -363,7 +369,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Cone");
                 };
             }
 
@@ -371,7 +377,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Plane");
                 };
             }
 
@@ -379,7 +385,7 @@ namespace Neon::Editor::Views
             {
                 DeferredTask = [ParentEntHandle]
                 {
-                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Quad");
                 };
             }
         }

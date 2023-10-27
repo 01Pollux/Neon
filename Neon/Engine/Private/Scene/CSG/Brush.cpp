@@ -2,9 +2,9 @@
 #include <Scene/CSG/Brush.hpp>
 #include <Math/Matrix.hpp>
 
-namespace Neon::Scene
+namespace Neon::Scene::CSG
 {
-    CSGBrush::CSGBrush(
+    Brush::Brush(
         FaceList     Faces,
         MaterialList Materials) :
         m_Faces(std::move(Faces)),
@@ -12,8 +12,8 @@ namespace Neon::Scene
     {
     }
 
-    CSGBrush::CSGBrush(
-        const CSGBrush&        Brush,
+    Brush::Brush(
+        const Brush&           Brush,
         const TransformMatrix& Transform) :
         m_Faces(Brush.m_Faces),
         m_Materials(Brush.m_Materials)
@@ -28,13 +28,13 @@ namespace Neon::Scene
         }
     }
 
-    auto CSGBrush::GetFaces() const -> const FaceList&
+    auto Brush::GetFaces() const -> const FaceList&
     {
         return m_Faces;
     }
 
-    auto CSGBrush::GetMaterials() const -> const MaterialList&
+    auto Brush::GetMaterials() const -> const MaterialList&
     {
         return m_Materials;
     }
-} // namespace Neon::Scene
+} // namespace Neon::Scene::CSG

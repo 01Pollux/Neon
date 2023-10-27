@@ -1,27 +1,28 @@
 #pragma once
 
 #include <Scene/CSG/Brush.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace boost::serialization
 {
     class access;
 } // namespace boost::serialization
 
-namespace Neon::Scene
+namespace Neon::Scene::CSG
 {
-    class CSGShape
+    class Shape
     {
 
     public:
         /// <summary>
         /// Get the brush of the shape.
         /// </summary>
-        [[nodiscard]] const CSGBrush& GetBrush() const
+        [[nodiscard]] const Brush& GetBrush() const
         {
             return m_Brush;
         }
 
-    public:
+    private:
         friend class boost::serialization::access;
 
         template<typename _Archive>
@@ -33,18 +34,18 @@ namespace Neon::Scene
         }
 
     protected:
-        CSGShape() = default;
+        Shape() = default;
 
     protected:
-        CSGBrush m_Brush;
+        Brush m_Brush;
     };
 
-    class CSGBox3D : public CSGShape
+    class Box3D : public Shape
     {
     public:
-        CSGBox3D();
+        Box3D();
 
-        CSGBox3D(
+        Box3D(
             const Vector3&             Size,
             const Ptr<RHI::IMaterial>& Material);
 
@@ -85,21 +86,22 @@ namespace Neon::Scene
         /// </summary>
         void Rebuild();
 
-    public:
+    private:
         friend class boost::serialization::access;
 
         template<typename _Archive>
         void serialize(
-            _Archive&          Archive,
-            const unsigned int Version)
+            _Archive& Archive,
+            uint32_t)
         {
-            Archive& boost::serialization::base_object<CSGShape>(*this);
+            Archive& boost::serialization::base_object<Shape>(*this);
             Archive& m_Size;
-            Archive& m_Material;
+            // TODO: Add material serialization
+            // Archive& m_Material;
         }
 
     private:
         Vector3             m_Size;
         Ptr<RHI::IMaterial> m_Material;
     };
-} // namespace Neon::Scene
+} // namespace Neon::Scene::CSG

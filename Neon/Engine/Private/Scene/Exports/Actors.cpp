@@ -16,6 +16,8 @@
 
 #include <Scene/Component/Light.hpp>
 
+#include <Scene/Component/CSG.hpp>
+
 namespace Neon::Scene::Exports
 {
     void RegisterActorComponents(
@@ -46,6 +48,8 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_FLECS(Component::DirectionalLight);
         NEON_REGISTER_FLECS(Component::PointLight);
         NEON_REGISTER_FLECS(Component::SpotLight);
+
+        NEON_REGISTER_FLECS(Component::CSGBox3D);
     }
 
     void RegisterActorRelations(

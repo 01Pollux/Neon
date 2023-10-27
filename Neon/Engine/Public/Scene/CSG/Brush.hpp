@@ -10,9 +10,9 @@ namespace Neon::RHI
     class IMaterial;
 }
 
-namespace Neon::Scene
+namespace Neon::Scene::CSG
 {
-    class CSGBrush
+    class Brush
     {
     public:
         struct Face
@@ -39,12 +39,12 @@ namespace Neon::Scene
         using MaterialList = std::vector<Ptr<RHI::IMaterial>>;
 
     public:
-        CSGBrush() = default;
-        CSGBrush(
+        Brush() = default;
+        Brush(
             FaceList     Faces,
             MaterialList Materials);
-        CSGBrush(
-            const CSGBrush&        Brush,
+        Brush(
+            const Brush&           Brush,
             const TransformMatrix& Transform);
 
         /// <summary>
@@ -73,4 +73,4 @@ namespace Neon::Scene
         FaceList     m_Faces;
         MaterialList m_Materials;
     };
-} // namespace Neon::Scene
+} // namespace Neon::Scene::CSG

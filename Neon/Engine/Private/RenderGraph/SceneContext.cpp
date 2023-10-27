@@ -33,7 +33,7 @@ namespace Neon::RG
                 .with<Component::ActiveSceneEntity>()
                 .in()
                 .and_()
-                .with<Scene::GPUTransformManager::RenderableHandle>()
+                .with<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()
                 .in()
                 .build();
     }
@@ -214,7 +214,7 @@ namespace Neon::RG
                     flecs::entity Entity = Scene::EntityHandle(Index);
 
                     auto& Mesh       = Entity.get<Component::MeshInstance>()->Mesh;
-                    auto  InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle>()->InstanceId;
+                    auto  InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()->InstanceId;
 
                     auto& MeshMaterial = Mesh.GetMaterial();
                     auto& MeshModel    = Mesh.GetModel();

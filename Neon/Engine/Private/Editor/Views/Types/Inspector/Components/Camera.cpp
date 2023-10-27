@@ -18,6 +18,9 @@ namespace Neon::Editor
 
         if (ImGui::CollapsingHeader("Render Graph"))
         {
+            float HalfMaxWidth = ImGui::GetContentRegionAvail().x / 2.f - ImGui::GetStyle().ItemSpacing.x / 2.f;
+
+            ImGui::SetNextItemWidth(HalfMaxWidth);
             if (ImGui::Button("2D"))
             {
                 RG::CreateStandard2DRenderGraph(Camera.GetRenderGraph());
@@ -26,6 +29,7 @@ namespace Neon::Editor
 
             ImGui::SameLine();
 
+            ImGui::SetNextItemWidth(HalfMaxWidth);
             if (ImGui::Button("3D"))
             {
                 RG::CreateStandard3DRenderGraph(Camera.GetRenderGraph());

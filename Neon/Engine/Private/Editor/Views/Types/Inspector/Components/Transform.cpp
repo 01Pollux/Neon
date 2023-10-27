@@ -18,6 +18,10 @@ namespace Neon::Editor
 
         //
 
+        if (ImGui::Button("Rebuild"))
+        {
+        }
+
         UI::Utils::DrawComponentLabel("Position");
         if (ImGui::IsItemHovered())
         {
