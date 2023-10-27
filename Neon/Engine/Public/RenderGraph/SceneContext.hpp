@@ -8,6 +8,7 @@ namespace Neon::Scene::Component
     struct Camera;
     struct Transform;
     struct MeshInstance;
+    struct CSGShape;
 } // namespace Neon::Scene::Component
 
 namespace Neon::RG
@@ -19,6 +20,10 @@ namespace Neon::RG
         using MeshQuery = flecs::query<
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
+
+        using CSGRule = flecs::rule<
+            const Scene::Component::Transform,
+            const Scene::Component::CSGShape>;
 
         struct EntityInfo
         {
@@ -80,6 +85,7 @@ namespace Neon::RG
         const GraphStorage& m_Storage;
 
         MeshQuery m_MeshQuery;
+        CSGRule   m_CSGRule;
 
         EntityListGroup m_EntityLists;
     };

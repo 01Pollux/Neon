@@ -9,7 +9,7 @@
 #include <Scene/Component/Camera.hpp>
 #include <Scene/Component/Transform.hpp>
 #include <Scene/Component/Mesh.hpp>
-#include <Mdl/Mesh.hpp>
+#include <Scene/Component/CSG.hpp>
 
 #include <RHI/GlobalBuffer.hpp>
 #include <RHI/RootSignature.hpp>
@@ -20,22 +20,50 @@ namespace Component = Neon::Scene::Component;
 
 namespace Neon::RG
 {
+    /// <summary>
+    /// Create rendering query for specific component
+    /// </summary>
+    template<typename _ComponentTy, typename _RenderHandleTag = _ComponentTy>
+    static auto CreateRenderingQuery()
+    {
+        return Scene::EntityWorld::Get()
+            .query_builder<
+                const Component::Transform,
+                const _ComponentTy>()
+            .with<Component::ActiveSceneEntity>()
+            .in()
+            .and_()
+            .with<Scene::GPUTransformManager::RenderableHandle, _RenderHandleTag>()
+            .in()
+            .build();
+    }
+
+    /// <summary>
+    /// Create rendering query for specific component
+    /// </summary>
+    template<typename _ComponentTy, typename _RenderHandleTag = _ComponentTy>
+    static auto CreateRenderingRule()
+    {
+        return Scene::EntityWorld::Get()
+            .rule_builder<
+                const Component::Transform,
+                const _ComponentTy>("Query")
+            .with<Component::ActiveSceneEntity>()
+            .in()
+            .and_()
+            .with<Scene::GPUTransformManager::RenderableHandle, _ComponentTy>()
+            .in()
+            .build();
+    }
+
+    //
+
     SceneContext::SceneContext(
         const GraphStorage& Storage) :
-        m_Storage(Storage)
+        m_Storage(Storage),
+        m_MeshQuery(CreateRenderingQuery<Component::MeshInstance>()),
+        m_CSGRule(CreateRenderingRule<Component::CSGShape>())
     {
-        // Create mesh query
-        m_MeshQuery =
-            Scene::EntityWorld::Get()
-                .query_builder<
-                    const Component::Transform,
-                    const Component::MeshInstance>()
-                .with<Component::ActiveSceneEntity>()
-                .in()
-                .and_()
-                .with<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()
-                .in()
-                .build();
     }
 
     SceneContext::~SceneContext()
@@ -79,6 +107,18 @@ namespace Neon::RG
                             float Dist = glm::distance2(Transform.GetPosition(), CurTransform.GetPosition());
                             m_EntityLists[PipelineState].emplace(Iter.entity(Index), Dist);
                         }
+                    }
+                });
+
+            m_CSGRule.iter(
+                [&](flecs::iter&                Iter,
+                    const Component::Transform* Transforms,
+                    const Component::CSGShape*  Shapes)
+                {
+                    for (size_t Index : Iter)
+                    {
+                        auto& CurTransform = Transforms[Index];
+                        auto& CurShape     = Shapes[Index];
                     }
                 });
             break;

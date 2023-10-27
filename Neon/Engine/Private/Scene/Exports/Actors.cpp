@@ -49,6 +49,7 @@ namespace Neon::Scene::Exports
         NEON_REGISTER_FLECS(Component::PointLight);
         NEON_REGISTER_FLECS(Component::SpotLight);
 
+        NEON_REGISTER_FLECS(Component::CSGShape);
         NEON_REGISTER_FLECS(Component::CSGBox3D);
     }
 

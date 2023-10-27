@@ -8,8 +8,11 @@ namespace Neon::Scene::Component
     /// <summary>
     /// Tag component for CSG shapes.
     /// </summary>
-    class CSGShape
+    struct CSGShape
     {
+        NEON_EXPORT_FLECS(CSGShape, "CSGShape")
+        {
+        }
     };
 
     struct CSGBox3D : public CSG::Box3D, public CSGShape
