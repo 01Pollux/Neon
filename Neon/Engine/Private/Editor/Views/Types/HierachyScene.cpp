@@ -247,7 +247,7 @@ namespace Neon::Editor::Views
 
         if (imcxx::menuitem_entry{ "Empty" })
         {
-            DeferredTask = [ParentEntHandle]()
+            DeferredTask = [ParentEntHandle]
             {
                 HelperCreateEntity(ParentEntHandle);
             };
@@ -329,37 +329,58 @@ namespace Neon::Editor::Views
         {
             if (imcxx::menuitem_entry{ "Cube" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Sphere" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Capsule" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Cylinder" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Cone" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Plane" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
 
             if (imcxx::menuitem_entry{ "Quad" })
             {
-                auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                DeferredTask = [ParentEntHandle]
+                {
+                    auto Entity = HelperCreateEntityTransform(ParentEntHandle);
+                };
             }
         }
 
