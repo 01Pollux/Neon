@@ -2,6 +2,7 @@
 
 #include <Core/Neon.hpp>
 
+#include <Mdl/Submesh.hpp>
 #include <Math/Transform.hpp>
 #include <Geometry/AABB.hpp>
 #include <RHI/GlobalBuffer.hpp>
@@ -20,22 +21,8 @@ namespace Neon::Scene::CSG
     public:
         struct Face
         {
-            Vector3 Vertices[3];
-            Vector2 UVs[3];
-            int     MaterialIndex;
-
-        public:
-            friend class boost::serialization::access;
-
-            template<typename _Archive>
-            void serialize(
-                _Archive&          Archive,
-                const unsigned int Version)
-            {
-                Archive& Vertices;
-                Archive& UVs;
-                Archive& MaterialIndex;
-            }
+            Mdl::MeshVertex Vertices[4];
+            int             MaterialIndex = 0;
         };
 
         using FaceList     = std::vector<Face>;
@@ -45,12 +32,27 @@ namespace Neon::Scene::CSG
         Brush() = default;
 
         Brush(
-            FaceList     Faces,
-            MaterialList Materials);
+            const FaceList& Faces,
+            MaterialList    Materials,
+            const void*     Indices,
+            size_t          IndicesCount,
+            bool            Is16BitsIndex);
 
         Brush(
-            const Brush&           Brush,
-            const TransformMatrix& Transform);
+            const FaceList&           Faces,
+            MaterialList              Materials,
+            const std::span<uint16_t> Indices) :
+            Brush(Faces, std::move(Materials), Indices.data(), Indices.size(), true)
+        {
+        }
+
+        Brush(
+            const FaceList&           Faces,
+            MaterialList              Materials,
+            const std::span<uint32_t> Indices) :
+            Brush(Faces, std::move(Materials), Indices.data(), Indices.size(), false)
+        {
+        }
 
         /// <summary>
         /// Get aabb of the box.
@@ -58,14 +60,6 @@ namespace Neon::Scene::CSG
         [[nodiscard]] const Geometry::AABB& GetAABB() const
         {
             return m_AABB;
-        }
-
-        /// <summary>
-        /// Get faces of the brush.
-        /// </summary>
-        [[nodiscard]] const FaceList& GetFaces() const
-        {
-            return m_Faces;
         }
 
         /// <summary>
@@ -106,12 +100,16 @@ namespace Neon::Scene::CSG
         /// <summary>
         /// Build aabb of the brush.
         /// </summary>
-        void BuildAABB();
+        void BuildAABB(
+            const FaceList& Faces);
 
         /// <summary>
         /// Build gpu buffer of the brush.
         /// </summary>
-        void BuildGpuBuffer();
+        void BuildGpuBuffer(
+            const FaceList& Faces,
+            const void*     Indices,
+            size_t          IndicesCount);
 
     public:
         friend class boost::serialization::access;
@@ -121,15 +119,16 @@ namespace Neon::Scene::CSG
             _Archive&          Archive,
             const unsigned int Version)
         {
-            Archive& m_Faces;
             // TODO: add material serialization
         }
 
     private:
         Geometry::AABB m_AABB;
-        FaceList       m_Faces;
         MaterialList   m_Materials;
 
         RHI::UBufferPoolHandle m_Buffer;
+        uint32_t               m_VerticesCount;
+        uint32_t               m_IndicesCount;
+        bool                   m_Is16BitsIndex = false;
     };
 } // namespace Neon::Scene::CSG

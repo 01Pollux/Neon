@@ -12,11 +12,11 @@ namespace Neon::Mdl
 {
     struct MeshVertex
     {
-        Vector3 Position;
-        Vector3 Normal;
-        Vector3 Tangent;
-        Vector3 Bitangent;
-        Vector2 TexCoord;
+        Vector3 Position{};
+        Vector3 Normal{};
+        Vector3 Tangent{};
+        Vector3 Bitangent{};
+        Vector2 TexCoord{};
     };
 
     struct SubMeshData

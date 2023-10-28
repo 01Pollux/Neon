@@ -6,31 +6,18 @@
 namespace Neon::Scene::CSG
 {
     Brush::Brush(
-        FaceList     Faces,
-        MaterialList Materials) :
-        m_Faces(std::move(Faces)),
-        m_Materials(std::move(Materials))
+        const FaceList& Faces,
+        MaterialList    Materials,
+        const void*     Indices,
+        size_t          IndicesCount,
+        bool            Is16BitsIndex) :
+        m_Materials(std::move(Materials)),
+        m_VerticesCount(uint32_t(Faces.size() * std::size(Faces[0].Vertices))),
+        m_IndicesCount(uint32_t(IndicesCount)),
+        m_Is16BitsIndex(Is16BitsIndex)
     {
-        BuildAABB();
-        BuildGpuBuffer();
-    }
-
-    Brush::Brush(
-        const Brush&           Brush,
-        const TransformMatrix& Transform) :
-        m_Faces(Brush.m_Faces),
-        m_Materials(Brush.m_Materials)
-    {
-        auto Matrix = Transform.ToMat4x4();
-        for (auto& Face : m_Faces)
-        {
-            for (auto& Vertex : Face.Vertices)
-            {
-                Vertex = Matrix * Vector4(Vertex, 0.f);
-            }
-        }
-        BuildAABB();
-        BuildGpuBuffer();
+        BuildAABB(Faces);
+        BuildGpuBuffer(Faces, Indices, IndicesCount);
     }
 
     //
@@ -47,32 +34,33 @@ namespace Neon::Scene::CSG
 
     uint32_t Brush::GetVerticesCount() const
     {
-        return uint32_t(m_Faces.size() * std::size(m_Faces[0].Vertices));
+        return m_VerticesCount;
     }
 
     uint32_t Brush::GetIndicesCount() const
     {
-        return GetVerticesCount() * 3;
+        return m_IndicesCount;
     }
 
     bool Brush::Is16BitsIndex() const
     {
-        return GetIndicesCount() < std::numeric_limits<uint16_t>::max();
+        return m_Is16BitsIndex;
     }
 
     //
 
-    void Brush::BuildAABB()
+    void Brush::BuildAABB(
+        const FaceList& Faces)
     {
         Vector3 Min(std::numeric_limits<float>::max()),
             Max(std::numeric_limits<float>::lowest());
 
-        for (auto& Face : m_Faces)
+        for (auto& Face : Faces)
         {
             for (auto& Vertex : Face.Vertices)
             {
-                Min = glm::min(Min, Vertex);
-                Max = glm::max(Max, Vertex);
+                Min = glm::min(Min, Vertex.Position);
+                Max = glm::max(Max, Vertex.Position);
             }
         }
 
@@ -82,10 +70,12 @@ namespace Neon::Scene::CSG
         };
     }
 
-    void Brush::BuildGpuBuffer()
+    void Brush::BuildGpuBuffer(
+        const FaceList& Faces,
+        const void*     Indices,
+        size_t          IndicesCount)
     {
         uint32_t VerticesCount = GetVerticesCount();
-        uint32_t IndicesCount  = GetIndicesCount();
         uint32_t IndexSize     = Is16BitsIndex() ? sizeof(uint16_t) : sizeof(uint32_t);
 
         m_Buffer = RHI::UBufferPoolHandle(
@@ -95,59 +85,22 @@ namespace Neon::Scene::CSG
 
         auto BufferPtr = m_Buffer.AsUpload().Map() + m_Buffer.Offset;
 
-        for (auto& Face : m_Faces)
+        for (auto& Face : Faces)
         {
-            Vector3 Normal, Tangent, Bitanget;
-            // Calcuote normal
-            {
-                Vector3 Edge1 = Face.Vertices[1] - Face.Vertices[0];
-                Vector3 Edge2 = Face.Vertices[2] - Face.Vertices[0];
-                Normal        = glm::normalize(glm::cross(Edge1, Edge2));
-
-                Vector2 DeltaUV1 = Face.UVs[1] - Face.UVs[0];
-                Vector2 DeltaUV2 = Face.UVs[2] - Face.UVs[0];
-
-                float f = 1.f / (DeltaUV1.x * DeltaUV2.y - DeltaUV2.x * DeltaUV1.y);
-
-                Tangent.x = f * (DeltaUV2.y * Edge1.x - DeltaUV1.y * Edge2.x);
-                Tangent.y = f * (DeltaUV2.y * Edge1.y - DeltaUV1.y * Edge2.y);
-                Tangent.z = f * (DeltaUV2.y * Edge1.z - DeltaUV1.y * Edge2.z);
-                Tangent   = glm::normalize(Tangent);
-
-                Bitanget.x = f * (-DeltaUV2.x * Edge1.x + DeltaUV1.x * Edge2.x);
-                Bitanget.y = f * (-DeltaUV2.x * Edge1.y + DeltaUV1.x * Edge2.y);
-                Bitanget.z = f * (-DeltaUV2.x * Edge1.z + DeltaUV1.x * Edge2.z);
-                Bitanget   = glm::normalize(Bitanget);
-            }
-
             for (size_t i = 0; i < std::size(Face.Vertices); i++)
             {
-                *std::bit_cast<Mdl::MeshVertex*>(BufferPtr) = {
-                    .Position  = Face.Vertices[i],
-                    .Normal    = Normal,
-                    .Tangent   = Tangent,
-                    .Bitangent = Bitanget,
-                    .TexCoord  = Face.UVs[i],
-                };
+                *std::bit_cast<Mdl::MeshVertex*>(BufferPtr) = Face.Vertices[i];
                 BufferPtr += sizeof(Mdl::MeshVertex);
             }
         }
 
         if (IndexSize == sizeof(uint16_t))
         {
-            for (uint32_t i = 0; i < VerticesCount; i++)
-            {
-                *std::bit_cast<uint16_t*>(BufferPtr) = i;
-                BufferPtr += sizeof(uint16_t);
-            }
+            std::copy_n(std::bit_cast<uint16_t*>(Indices), IndicesCount, std::bit_cast<uint16_t*>(BufferPtr));
         }
         else
         {
-            for (uint32_t i = 0; i < VerticesCount; i++)
-            {
-                *std::bit_cast<uint32_t*>(BufferPtr) = i;
-                BufferPtr += sizeof(uint32_t);
-            }
+            std::copy_n(std::bit_cast<uint32_t*>(Indices), IndicesCount, std::bit_cast<uint32_t*>(BufferPtr));
         }
 
         m_Buffer.AsUpload().Unmap();
