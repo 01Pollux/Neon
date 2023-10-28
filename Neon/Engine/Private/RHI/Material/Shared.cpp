@@ -44,7 +44,8 @@ namespace Neon::RHI
                 .VertexShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Vertex }))
                 .PixelShader(LitShader->LoadShader({ .Stage = RHI::ShaderStage::Pixel }));
 
-            s_DefaultMaterials[Type::Lit] = LitMaterial.Build();
+            auto Material = s_DefaultMaterials[Type::Lit] = LitMaterial.Build();
+            Material->Set("Color_Albedo", Vector3{ 1.f, 1.f, 1.f });
         }
     }
 

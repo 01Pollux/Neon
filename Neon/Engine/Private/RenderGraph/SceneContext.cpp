@@ -244,6 +244,7 @@ namespace Neon::RG
                                 Material = CurBox->GetMaterial();
                             }
 
+                            Box.Transform(CurTransform);
                             if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
                             {
                                 auto PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
