@@ -153,7 +153,7 @@ namespace Neon::RHI
             m_ClearValue = Desc.ClearValue;
         }
 
-        auto Dx12InitialState = Init.Subresources.empty() ? Dx12DefaultInitialState : D3D12_RESOURCE_STATE_COPY_DEST;
+        auto Dx12InitialState = (Init.Subresources.empty() || Desc.Type == ResourceType::Buffer) ? Dx12DefaultInitialState : D3D12_RESOURCE_STATE_COPY_DEST;
         auto Allocator        = Dx12RenderDevice::Get()->GetAllocator()->GetMA();
         ThrowIfFailed(Allocator->CreateResource(
             &AllocDesc,
