@@ -127,6 +127,49 @@ namespace Neon::Mdl
             return m_HasSmallIndices;
         }
 
+    public:
+        /// <summary>
+        /// Get vertex buffer of the model.
+        /// this is used to read the vertex buffer of model.
+        /// returns address of the buffer, the handle is filled with temporary data that'll be used if the vertex buffer was gpu-read only.
+        /// </summary>
+        [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekVertexBuffer() const noexcept;
+
+        /// <summary>
+        /// Get vertex buffer of the model.
+        /// this is used to read the vertex buffer of model.
+        /// returns address of the buffer, the handle is filled with temporary data that'll be used if the vertex buffer was gpu-read only.
+        /// </summary>
+        [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekVertexBuffer(
+            size_t Offset,
+            size_t Size) const noexcept;
+
+        /// <summary>
+        /// Unmap vertex buffer, must be called after PeekVertexBuffer
+        /// </summary>
+        [[nodiscard]] void UnmapVertexBuffer() const noexcept;
+
+        /// <summary>
+        /// Get index buffer of the model.
+        /// this is used to read the index buffer of model.
+        /// returns address of the buffer, the handle is filled with temporary data that'll be used if the index buffer was gpu-read only.
+        /// </summary>
+        [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekIndexBuffer() const noexcept;
+
+        /// <summary>
+        /// Get index buffer of the model.
+        /// this is used to read the index buffer of model.
+        /// returns address of the buffer, the handle is filled with temporary data that'll be used if the index buffer was gpu-read only.
+        /// </summary>
+        [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekIndexBuffer(
+            size_t Offset,
+            size_t Size) const noexcept;
+
+        /// <summary>
+        /// Unmap index buffer, must be called after PeekVertexBuffer
+        /// </summary>
+        void UnmapIndexBuffer() const noexcept;
+
     private:
         GPUBuffer      m_VertexBuffer;
         GPUBuffer      m_IndexBuffer;

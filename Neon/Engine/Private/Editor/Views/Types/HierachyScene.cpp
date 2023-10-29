@@ -337,7 +337,8 @@ namespace Neon::Editor::Views
                 DeferredTask = [ParentEntHandle]
                 {
                     auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Cube");
-                    Entity.emplace<Scene::Component::CSGBrush>(Scene::CSG::CreateSphere());
+                    Entity.emplace<Scene::Component::CSGBrush>(
+                        Scene::CSG::Brush(Scene::CSG::CreateCube(), Scene::CSG::CreateSphere(), Scene::CSG::Brush::Operation::Intersection));
                 };
             }
 

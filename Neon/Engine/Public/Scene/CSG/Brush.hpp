@@ -120,9 +120,26 @@ namespace Neon::Scene::CSG
         }
 
         /// <summary>
+        /// Get snap's epsilon.
+        /// </summary>
+        [[nodiscard]] float GetEpsilon() const
+        {
+            return m_SnapEpsilon;
+        }
+
+        /// <summary>
+        /// Set snap's epsilon.
+        /// </summary>
+        [[nodiscard]] void SetEpsilon(
+            float Val)
+        {
+            m_SnapEpsilon = Val;
+        }
+
+        /// <summary>
         /// Get operation of the brush.
         /// </summary>
-        Operation GetOperation() const noexcept
+        [[nodiscard]] Operation GetOperation() const noexcept
         {
             return m_Operation;
         }
@@ -136,6 +153,7 @@ namespace Neon::Scene::CSG
             m_Operation = Op;
         }
 
+    public:
         /// <summary>
         /// Rebuild the brush.
         /// </summary>
@@ -154,6 +172,7 @@ namespace Neon::Scene::CSG
 
     private:
         Mdl::Mesh m_Target, m_Brush, m_FinalMesh;
-        Operation m_Operation = Operation::Union;
+        float     m_SnapEpsilon = 0.0001f;
+        Operation m_Operation   = Operation::Union;
     };
 } // namespace Neon::Scene::CSG
