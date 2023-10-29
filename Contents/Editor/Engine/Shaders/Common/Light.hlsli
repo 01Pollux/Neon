@@ -97,5 +97,4 @@ struct Light
 	}
 };
 
-
 #endif

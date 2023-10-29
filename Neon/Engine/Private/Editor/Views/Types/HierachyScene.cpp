@@ -337,7 +337,10 @@ namespace Neon::Editor::Views
                 DeferredTask = [ParentEntHandle]
                 {
                     auto Entity = HelperCreateEntityTransform(ParentEntHandle, "Cube");
-                    Entity.emplace<Scene::Component::CSGBox3D>();
+
+                    Scene::Component::CSGBox3D Box;
+                    Box.Rebuild();
+                    Entity.set(std::move(Box));
                 };
             }
 

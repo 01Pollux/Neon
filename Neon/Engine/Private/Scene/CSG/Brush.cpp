@@ -6,18 +6,18 @@
 namespace Neon::Scene::CSG
 {
     Brush::Brush(
-        const FaceList& Faces,
-        MaterialList    Materials,
-        const void*     Indices,
-        size_t          IndicesCount,
-        bool            Is16BitsIndex) :
+        const VertexList& Vertices,
+        MaterialList      Materials,
+        const void*       Indices,
+        size_t            IndicesCount,
+        bool              Is16BitsIndex) :
         m_Materials(std::move(Materials)),
-        m_VerticesCount(uint32_t(Faces.size() * std::size(Faces[0].Vertices))),
+        m_VerticesCount(uint32_t(Vertices.size())),
         m_IndicesCount(uint32_t(IndicesCount)),
         m_Is16BitsIndex(Is16BitsIndex)
     {
-        BuildAABB(Faces);
-        BuildGpuBuffer(Faces, Indices, IndicesCount);
+        BuildAABB(Vertices);
+        BuildGpuBuffer(Vertices, Indices, IndicesCount);
     }
 
     //
@@ -50,18 +50,15 @@ namespace Neon::Scene::CSG
     //
 
     void Brush::BuildAABB(
-        const FaceList& Faces)
+        const VertexList& Vertices)
     {
         Vector3 Min(std::numeric_limits<float>::max()),
             Max(std::numeric_limits<float>::lowest());
 
-        for (auto& Face : Faces)
+        for (auto& Vertex : Vertices)
         {
-            for (auto& Vertex : Face.Vertices)
-            {
-                Min = glm::min(Min, Vertex.Position);
-                Max = glm::max(Max, Vertex.Position);
-            }
+            Min = glm::min(Min, Vertex.Position);
+            Max = glm::max(Max, Vertex.Position);
         }
 
         m_AABB = {
@@ -71,9 +68,9 @@ namespace Neon::Scene::CSG
     }
 
     void Brush::BuildGpuBuffer(
-        const FaceList& Faces,
-        const void*     Indices,
-        size_t          IndicesCount)
+        const VertexList& Vertices,
+        const void*       Indices,
+        size_t            IndicesCount)
     {
         uint32_t VerticesCount = GetVerticesCount();
         uint32_t IndexSize     = Is16BitsIndex() ? sizeof(uint16_t) : sizeof(uint32_t);
@@ -85,14 +82,8 @@ namespace Neon::Scene::CSG
 
         auto BufferPtr = m_Buffer.AsUpload().Map() + m_Buffer.Offset;
 
-        for (auto& Face : Faces)
-        {
-            for (size_t i = 0; i < std::size(Face.Vertices); i++)
-            {
-                *std::bit_cast<Mdl::MeshVertex*>(BufferPtr) = Face.Vertices[i];
-                BufferPtr += sizeof(Mdl::MeshVertex);
-            }
-        }
+        std::copy_n(std::bit_cast<Mdl::MeshVertex*>(Vertices.data()), VerticesCount, std::bit_cast<Mdl::MeshVertex*>(BufferPtr));
+        BufferPtr += VerticesCount * sizeof(Mdl::MeshVertex);
 
         if (IndexSize == sizeof(uint16_t))
         {

@@ -19,38 +19,32 @@ namespace Neon::Scene::CSG
     class Brush
     {
     public:
-        struct Face
-        {
-            Mdl::MeshVertex Vertices[4];
-            int             MaterialIndex = 0;
-        };
-
-        using FaceList     = std::vector<Face>;
+        using VertexList   = std::vector<Mdl::MeshVertex>;
         using MaterialList = std::vector<Ptr<RHI::IMaterial>>;
 
     public:
         Brush() = default;
 
         Brush(
-            const FaceList& Faces,
-            MaterialList    Materials,
-            const void*     Indices,
-            size_t          IndicesCount,
-            bool            Is16BitsIndex);
+            const VertexList& Vertices,
+            MaterialList      Materials,
+            const void*       Indices,
+            size_t            IndicesCount,
+            bool              Is16BitsIndex);
 
         Brush(
-            const FaceList&           Faces,
+            const VertexList&         Vertices,
             MaterialList              Materials,
             const std::span<uint16_t> Indices) :
-            Brush(Faces, std::move(Materials), Indices.data(), Indices.size(), true)
+            Brush(Vertices, std::move(Materials), Indices.data(), Indices.size(), true)
         {
         }
 
         Brush(
-            const FaceList&           Faces,
+            const VertexList&         Vertices,
             MaterialList              Materials,
             const std::span<uint32_t> Indices) :
-            Brush(Faces, std::move(Materials), Indices.data(), Indices.size(), false)
+            Brush(Vertices, std::move(Materials), Indices.data(), Indices.size(), false)
         {
         }
 
@@ -101,15 +95,15 @@ namespace Neon::Scene::CSG
         /// Build aabb of the brush.
         /// </summary>
         void BuildAABB(
-            const FaceList& Faces);
+            const VertexList& Vertices);
 
         /// <summary>
         /// Build gpu buffer of the brush.
         /// </summary>
         void BuildGpuBuffer(
-            const FaceList& Faces,
-            const void*     Indices,
-            size_t          IndicesCount);
+            const VertexList& Vertices,
+            const void*       Indices,
+            size_t            IndicesCount);
 
     public:
         friend class boost::serialization::access;
@@ -127,8 +121,8 @@ namespace Neon::Scene::CSG
         MaterialList   m_Materials;
 
         RHI::UBufferPoolHandle m_Buffer;
-        uint32_t               m_VerticesCount;
-        uint32_t               m_IndicesCount;
+        uint32_t               m_VerticesCount = 0;
+        uint32_t               m_IndicesCount  = 0;
         bool                   m_Is16BitsIndex = false;
     };
 } // namespace Neon::Scene::CSG
