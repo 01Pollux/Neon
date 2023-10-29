@@ -5,9 +5,11 @@
 namespace Neon::Scene::CSG
 {
     Mdl::Mesh CreateCube(
-        const Vector3&             Size,
+        Vector3                    Size,
         const Ptr<RHI::IMaterial>& Material)
     {
+        Size = glm::max(Size, Vector3(0.001f));
+
         const Vector3 HalfSize = Size * 0.5f;
 
         float w2 = HalfSize.x;
@@ -50,6 +52,7 @@ namespace Neon::Scene::CSG
         //
 
         constexpr uint8_t State0110[]{ 0, 1, 1, 0 };
+
         // Fill in the front face vertex data.
         for (int i = 0; i < 4; i++)
         {

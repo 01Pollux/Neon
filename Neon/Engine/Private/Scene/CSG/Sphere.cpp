@@ -4,131 +4,180 @@
 
 namespace Neon::Scene::CSG
 {
-    // Sphere::Sphere(
-    //     float                      Radius,
-    //     uint32_t                   RingCount,
-    //     uint32_t                   SectorCount,
-    //     const Ptr<RHI::IMaterial>& Material) :
-    //     m_Radius(Radius),
-    //     m_RingCount(RingCount),
-    //     m_SectorCount(SectorCount),
-    //     m_Material(Material ? Material : RHI::SharedMaterials::Get(RHI::SharedMaterials::Type::Lit))
-    //{
-    //     Rebuild();
-    // }
+    Mdl::Mesh CreateSphere(
+        float                      Radius,
+        uint32_t                   RingCount,
+        uint32_t                   SectorCount,
+        const Ptr<RHI::IMaterial>& Material)
+    {
+        RingCount   = std::max(RingCount, 1u);
+        SectorCount = std::max(SectorCount, 1u);
 
-    // void Sphere::Rebuild()
-    //{
-    //     Mdl::MeshVertex TopVertex{
-    //         .Position  = { 0.0f, +m_Radius, 0.0f },
-    //         .Normal    = Vec::Up<Vector3>,
-    //         .Tangent   = Vec::Right<Vector3>,
-    //         .Bitangent = Vec::Forward<Vector3>,
-    //         .TexCoord  = { 0.f, 0.f }
-    //     };
+        auto ActualMaterial = Material ? Material : RHI::SharedMaterials::Get(RHI::SharedMaterials::Type::Lit)->CreateInstance();
 
-    //    Mdl::MeshVertex BottomVertex{
-    //        .Position  = { 0.0f, -m_Radius, 0.0f },
-    //        .Normal    = Vec::Down<Vector3>,
-    //        .Tangent   = Vec::Right<Vector3>,
-    //        .Bitangent = Vec::Backward<Vector3>,
-    //        .TexCoord  = { 0.f, 1.f }
-    //    };
+        //
 
-    //    // meshData.Vertices.push_back(topVertex);
+        size_t VerticesCount = size_t(RingCount + 1) * (SectorCount - 1) + 2;
+        size_t IndicesCount  = size_t(RingCount) * size_t(SectorCount - 1) * 6;
+        bool   Is32Bits      = VerticesCount >= std::numeric_limits<uint16_t>::max();
 
-    //    // float phiStep   = XM_PI / stackCount;
-    //    // float thetaStep = 2.0f * XM_PI / sliceCount;
+        RHI::UBufferPoolHandle VertexBuffer(
+            VerticesCount * sizeof(Mdl::MeshVertex),
+            alignof(Mdl::MeshVertex),
+            RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
 
-    //    //// Compute vertices for each stack ring (do not count the poles as rings).
-    //    // for (uint32 i = 1; i <= stackCount - 1; ++i)
-    //    //{
-    //    //     float phi = i * phiStep;
+        RHI::UBufferPoolHandle IndexBuffer(
+            IndicesCount * (Is32Bits ? sizeof(uint32_t) : sizeof(uint16_t)),
+            Is32Bits ? alignof(uint32_t) : alignof(uint16_t),
+            RHI::IGlobalBufferPool::BufferType::ReadWriteGPUR);
 
-    //    //    // Vertices of ring.
-    //    //    for (uint32 j = 0; j <= sliceCount; ++j)
-    //    //    {
-    //    //        float theta = j * thetaStep;
+        //
 
-    //    //        Vertex v;
+        auto VertexBufferPtr = VertexBuffer.AsUpload().Map<Mdl::MeshVertex>(VertexBuffer.Offset);
+        auto IndexBufferU16  = IndexBuffer.AsUpload().Map<uint16_t>(IndexBuffer.Offset);
+        auto IndexBufferU32  = std::bit_cast<uint32_t*>(IndexBufferU16);
 
-    //    //        // spherical to cartesian
-    //    //        v.Position.x = radius * sinf(phi) * cosf(theta);
-    //    //        v.Position.y = radius * cosf(phi);
-    //    //        v.Position.z = radius * sinf(phi) * sinf(theta);
+        auto AppendIndex = [Is32Bits, &IndexBufferU16, &IndexBufferU32](uint32_t Index)
+        {
+            if (Is32Bits)
+            {
+                *IndexBufferU32++ = Index;
+            }
+            else
+            {
+                *IndexBufferU16++ = uint16_t(Index);
+            }
+        };
 
-    //    //        // Partial derivative of P with respect to theta
-    //    //        v.TangentU.x = -radius * sinf(phi) * sinf(theta);
-    //    //        v.TangentU.y = 0.0f;
-    //    //        v.TangentU.z = +radius * sinf(phi) * cosf(theta);
+        //
 
-    //    //        XMVECTOR T = XMLoadFloat3(&v.TangentU);
-    //    //        XMStoreFloat3(&v.TangentU, XMVector3Normalize(T));
+        Mdl::Model::SubmeshList Submeshes{
+            Mdl::SubMeshData{}
+        };
+        Mdl::Model::MeshNodeList Nodes{
+            Mdl::MeshNode{ .Name = "Sphere", .Submeshes = { 0 } }
+        };
+        Mdl::Model::MaterialsTable Materials{ ActualMaterial };
 
-    //    //        XMVECTOR p = XMLoadFloat3(&v.Position);
-    //    //        XMStoreFloat3(&v.Normal, XMVector3Normalize(p));
+        //
 
-    //    //        v.TexC.x = theta / XM_2PI;
-    //    //        v.TexC.y = phi / XM_PI;
+        *VertexBufferPtr++ =
+            Mdl::MeshVertex{
+                .Position  = Vector3(0.f, Radius, 0.f),
+                .Normal    = Vec::Up<Vector3>,
+                .Tangent   = Vec::Right<Vector3>,
+                .Bitangent = Vec::Forward<Vector3>,
+                .TexCoord  = Vector2(0.f, 0.f)
+            };
 
-    //    //        meshData.Vertices.push_back(v);
-    //    //    }
-    //    //}
+        float PhiStep   = std::numbers::pi_v<float> / RingCount;
+        float ThetaStep = 2.0f * std::numbers::pi_v<float> / SectorCount;
 
-    //    // meshData.Vertices.push_back(bottomVertex);
+        Mdl::MeshVertex Vtx;
 
-    //    ////
-    //    //// Compute indices for top stack.  The top stack was written first to the vertex buffer
-    //    //// and connects the top pole to the first ring.
-    //    ////
+        // Compute vertices for each stack ring (do not count the poles as rings).
+        for (uint32_t i = 1; i <= RingCount - 1; ++i)
+        {
+            float Phi = i * PhiStep;
 
-    //    // for (uint32 i = 1; i <= sliceCount; ++i)
-    //    //{
-    //    //     meshData.Indices32.push_back(0);
-    //    //     meshData.Indices32.push_back(i + 1);
-    //    //     meshData.Indices32.push_back(i);
-    //    // }
+            // Vertices of ring.
+            for (uint32_t j = 0; j <= SectorCount; ++j)
+            {
+                float Theta = j * ThetaStep;
 
-    //    ////
-    //    //// Compute indices for inner stacks (not connected to poles).
-    //    ////
+                // spherical to cartesian
+                Vtx.Position.x = Radius * sinf(Phi) * cosf(Theta);
+                Vtx.Position.y = Radius * cosf(Phi);
+                Vtx.Position.z = Radius * sinf(Phi) * sinf(Theta);
 
-    //    //// Offset the indices to the index of the first vertex in the first ring.
-    //    //// This is just skipping the top pole vertex.
-    //    // uint32 baseIndex       = 1;
-    //    // uint32 ringVertexCount = sliceCount + 1;
-    //    // for (uint32 i = 0; i < stackCount - 2; ++i)
-    //    //{
-    //    //     for (uint32 j = 0; j < sliceCount; ++j)
-    //    //     {
-    //    //         meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j);
-    //    //         meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j + 1);
-    //    //         meshData.Indices32.push_back(baseIndex + (i + 1) * ringVertexCount + j);
+                // Partial derivative of P with respect to theta
+                Vtx.Tangent.x = -Radius * sinf(Phi) * sinf(Theta);
+                Vtx.Tangent.y = 0.0f;
+                Vtx.Tangent.z = Radius * sinf(Phi) * cosf(Theta);
 
-    //    //        meshData.Indices32.push_back(baseIndex + (i + 1) * ringVertexCount + j);
-    //    //        meshData.Indices32.push_back(baseIndex + i * ringVertexCount + j + 1);
-    //    //        meshData.Indices32.push_back(baseIndex + (i + 1) * ringVertexCount + j + 1);
-    //    //    }
-    //    //}
+                Vtx.Normal  = glm::normalize(Vtx.Position);
+                Vtx.Tangent = glm::normalize(Vtx.Tangent);
 
-    //    ////
-    //    //// Compute indices for bottom stack.  The bottom stack was written last to the vertex buffer
-    //    //// and connects the bottom pole to the bottom ring.
-    //    ////
+                Vtx.Bitangent = glm::normalize(glm::cross(Vtx.Tangent, Vtx.Normal));
 
-    //    //// South pole vertex was added last.
-    //    // uint32 southPoleIndex = (uint32)meshData.Vertices.size() - 1;
+                Vtx.TexCoord.x = Theta / (2.0f * std::numbers::pi_v<float>);
+                Vtx.TexCoord.y = Phi / std::numbers::pi_v<float>;
 
-    //    //// Offset the indices to the index of the first vertex in the last ring.
-    //    // baseIndex = southPoleIndex - ringVertexCount;
+                *VertexBufferPtr++ = Vtx;
+            }
+        }
 
-    //    // for (uint32 i = 0; i < sliceCount; ++i)
-    //    //{
-    //    //     meshData.Indices32.push_back(southPoleIndex);
-    //    //     meshData.Indices32.push_back(baseIndex + i);
-    //    //     meshData.Indices32.push_back(baseIndex + i + 1);
-    //    // }
+        *VertexBufferPtr++ =
+            Mdl::MeshVertex{
+                .Position  = Vector3(0.f, -Radius, 0.f),
+                .Normal    = Vec::Down<Vector3>,
+                .Tangent   = Vec::Right<Vector3>,
+                .Bitangent = Vec::Backward<Vector3>,
+                .TexCoord  = Vector2(0.f, 1.f)
+            };
 
-    //    // m_Brush = Brush(Faces, { m_Material }, Indices);
-    //}
+        // Compute indices for top stack.  The top stack was written first to the vertex buffer
+        // and connects the top pole to the first ring.
+        //
+
+        for (uint32_t i = 1; i <= SectorCount; ++i)
+        {
+            AppendIndex(0);
+            AppendIndex(i + 1);
+            AppendIndex(i);
+        }
+
+        //
+        // Compute indices for inner stacks (not connected to poles).
+        //
+
+        // Offset the indices to the index of the first vertex in the first ring.
+        // This is just skipping the top pole vertex.
+        uint32_t BaseIndex       = 1;
+        uint32_t RingVertexCount = SectorCount + 1;
+        for (uint32_t i = 0; i < RingCount - 2; ++i)
+        {
+            for (uint32_t j = 0; j < SectorCount; ++j)
+            {
+                AppendIndex(BaseIndex + i * RingVertexCount + j);
+                AppendIndex(BaseIndex + i * RingVertexCount + j + 1);
+                AppendIndex(BaseIndex + (i + 1) * RingVertexCount + j);
+
+                AppendIndex(BaseIndex + (i + 1) * RingVertexCount + j);
+                AppendIndex(BaseIndex + i * RingVertexCount + j + 1);
+                AppendIndex(BaseIndex + (i + 1) * RingVertexCount + j + 1);
+            }
+        }
+
+        //
+        // Compute indices for bottom stack.  The bottom stack was written last to the vertex buffer
+        // and connects the bottom pole to the bottom ring.
+        //
+
+        // South pole vertex was added last.
+        uint32_t SouthPoleIndex = uint32_t(VerticesCount) - 1;
+
+        // Offset the indices to the index of the first vertex in the last ring.
+        BaseIndex = SouthPoleIndex - RingVertexCount;
+
+        for (uint32_t i = 0; i < SectorCount; ++i)
+        {
+            AppendIndex(SouthPoleIndex);
+            AppendIndex(BaseIndex + i);
+            AppendIndex(BaseIndex + i + 1);
+        }
+
+        VertexBuffer.AsUpload().Unmap();
+        IndexBuffer.AsUpload().Unmap();
+
+        return Mdl::Mesh(
+            std::make_shared<Mdl::Model>(
+                std::move(VertexBuffer),
+                std::move(IndexBuffer),
+                true,
+                std::move(Submeshes),
+                std::move(Nodes),
+                std::move(Materials)),
+            0);
+    }
 } // namespace Neon::Scene::CSG

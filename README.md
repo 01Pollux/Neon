@@ -65,12 +65,17 @@
 		- [ ] Ray tracing
 			* GPU Side
 			* CPU Side
-		- [ ] Post process effects
 		- [ ] Light management
+		- [ ] Post process effects
 	* Scene
-		* Game objects
-		* Components
 		* ECS (Flecs)
+		- Components
+			- [x] Transform
+			- [x] Mesh
+			- [ ] CSG
+			- [ ] Sprite
+			- [ ] Audio player
+			- [ ] Lights
 	- [ ] Networking
 	* Cross platform
 		- [x] Windows
