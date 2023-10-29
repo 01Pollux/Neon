@@ -20,7 +20,7 @@ namespace Neon
         struct Camera;
         struct Transform;
         struct MeshInstance;
-        struct CSGShape;
+        struct CSGBrush;
     } // namespace Scene::Component
 } // namespace Neon
 
@@ -42,9 +42,9 @@ namespace Neon::RG
             const Scene::Component::Transform,
             const Scene::Component::MeshInstance>;
 
-        using CSGRule = flecs::rule<
+        using CSGQuery = flecs::query<
             const Scene::Component::Transform,
-            const Scene::Component::CSGShape>;
+            const Scene::Component::CSGBrush>;
 
     private:
         struct EntityRenderInfo
@@ -134,7 +134,7 @@ namespace Neon::RG
         const GraphStorage& m_Storage;
 
         MeshQuery m_MeshQuery;
-        CSGRule   m_CSGRule;
+        CSGQuery  m_CSGQuery;
 
         EntityListGroup m_EntityLists;
     };

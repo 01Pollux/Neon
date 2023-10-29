@@ -2,10 +2,8 @@
 
 #include <Core/Neon.hpp>
 
-#include <Mdl/Submesh.hpp>
+#include <Mdl/Mesh.hpp>
 #include <Math/Transform.hpp>
-#include <Geometry/AABB.hpp>
-#include <RHI/GlobalBuffer.hpp>
 
 #include <vector>
 
@@ -19,91 +17,120 @@ namespace Neon::Scene::CSG
     class Brush
     {
     public:
-        using VertexList   = std::vector<Mdl::MeshVertex>;
-        using MaterialList = std::vector<Ptr<RHI::IMaterial>>;
+        enum class Operation : uint8_t
+        {
+            Union,
+            Subtraction,
+            Intersection
+        };
 
     public:
         Brush() = default;
 
         Brush(
-            const VertexList& Vertices,
-            MaterialList      Materials,
-            const void*       Indices,
-            size_t            IndicesCount,
-            bool              Is16BitsIndex);
-
-        Brush(
-            const VertexList&         Vertices,
-            MaterialList              Materials,
-            const std::span<uint16_t> Indices) :
-            Brush(Vertices, std::move(Materials), Indices.data(), Indices.size(), true)
+            Mdl::Mesh Mesh0) :
+            m_Mesh0(Mesh0),
+            m_FinalMesh(std::move(Mesh0))
         {
         }
 
         Brush(
-            const VertexList&         Vertices,
-            MaterialList              Materials,
-            const std::span<uint32_t> Indices) :
-            Brush(Vertices, std::move(Materials), Indices.data(), Indices.size(), false)
+            Mdl::Mesh Mesh0,
+            Mdl::Mesh Mesh1,
+            Operation Op) :
+            m_Mesh0(std::move(Mesh0)),
+            m_Mesh1(std::move(Mesh1)),
+            m_Operation(Op)
         {
+            Rebuild();
         }
 
-        /// <summary>
-        /// Get aabb of the box.
-        /// </summary>
-        [[nodiscard]] const Geometry::AABB& GetAABB() const
+        Brush(
+            Mdl::Mesh    Mesh0,
+            const Brush& Br1,
+            Operation    Op) :
+            m_Mesh0(Mesh0),
+            m_Mesh1(Br1.m_FinalMesh),
+            m_Operation(Op)
         {
-            return m_AABB;
+            Rebuild();
         }
 
-        /// <summary>
-        /// Get materials of the brush.
-        /// </summary>
-        [[nodiscard]] const MaterialList& GetMaterials() const
+        Brush(
+            const Brush& Br0,
+            const Brush& Br1,
+            Operation    Op) :
+            m_Mesh0(Br0.m_FinalMesh),
+            m_Mesh1(Br1.m_FinalMesh),
+            m_Operation(Op)
         {
-            return m_Materials;
+            Rebuild();
         }
 
     public:
         /// <summary>
-        /// Get vertex buffer of the brush.
+        /// Get the first input mesh of the brush.
         /// </summary>
-        [[nodiscard]] RHI::GpuResourceHandle GetVertexBuffer() const;
+        [[nodiscard]] const auto& GetMesh0() const
+        {
+            return m_Mesh0;
+        }
 
         /// <summary>
-        /// Get index buffer of the brush.
+        /// Set the first input mesh of the brush.
         /// </summary>
-        [[nodiscard]] RHI::GpuResourceHandle GetIndexBuffer() const;
+        [[nodiscard]] void SetMesh0(
+            Mdl::Mesh Mesh)
+        {
+            m_Mesh0 = std::move(Mesh);
+        }
 
         /// <summary>
-        /// Get vertices count of the brush.
+        /// Get the second input mesh of the brush.
         /// </summary>
-        [[nodiscard]] uint32_t GetVerticesCount() const;
+        [[nodiscard]] const auto& GetMesh1() const
+        {
+            return m_Mesh1;
+        }
 
         /// <summary>
-        /// Get indices count of the brush.
+        /// Set the second input mesh of the brush.
         /// </summary>
-        [[nodiscard]] uint32_t GetIndicesCount() const;
+        [[nodiscard]] void SetMesh1(
+            Mdl::Mesh Mesh)
+        {
+            m_Mesh1 = std::move(Mesh);
+        }
 
         /// <summary>
-        /// Check to see if index buffer is 16 bits size.
+        /// Get the final mesh of the brush.
         /// </summary>
-        [[nodiscard]] bool Is16BitsIndex() const;
-
-    private:
-        /// <summary>
-        /// Build aabb of the brush.
-        /// </summary>
-        void BuildAABB(
-            const VertexList& Vertices);
+        [[nodiscard]] const auto& GetMesh() const
+        {
+            return m_FinalMesh;
+        }
 
         /// <summary>
-        /// Build gpu buffer of the brush.
+        /// Get operation of the brush.
         /// </summary>
-        void BuildGpuBuffer(
-            const VertexList& Vertices,
-            const void*       Indices,
-            size_t            IndicesCount);
+        Operation GetOperation() const noexcept
+        {
+            return m_Operation;
+        }
+
+        /// <summary>
+        /// Get operation of the brush.
+        /// </summary>
+        void SetOperation(
+            Operation Op) noexcept
+        {
+            m_Operation = Op;
+        }
+
+        /// <summary>
+        /// Rebuild the brush.
+        /// </summary>
+        void Rebuild();
 
     public:
         friend class boost::serialization::access;
@@ -117,12 +144,7 @@ namespace Neon::Scene::CSG
         }
 
     private:
-        Geometry::AABB m_AABB;
-        MaterialList   m_Materials;
-
-        RHI::UBufferPoolHandle m_Buffer;
-        uint32_t               m_VerticesCount = 0;
-        uint32_t               m_IndicesCount  = 0;
-        bool                   m_Is16BitsIndex = false;
+        Mdl::Mesh m_Mesh0, m_Mesh1, m_FinalMesh;
+        Operation m_Operation = Operation::Union;
     };
 } // namespace Neon::Scene::CSG

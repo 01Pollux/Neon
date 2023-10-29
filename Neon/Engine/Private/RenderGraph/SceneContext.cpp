@@ -68,23 +68,16 @@ namespace Neon::RG
         switch (Type)
         {
         case EntityType::Mesh:
-        {
-            auto& Mesh = Entity.get<Component::MeshInstance>()->Mesh;
-            Material   = Mesh.GetMaterial();
-
-            break;
-        }
-
         case EntityType::CSG:
         {
-            const Scene::CSG::Brush* Brush = nullptr;
-
-            if (auto Box = Entity.get<Component::CSGBox3D>())
+            if (Type == EntityType::Mesh)
             {
-                Brush    = &Box->GetBrush();
-                Material = Box->GetMaterial();
+                Material = Entity.get<Component::MeshInstance>()->Mesh.GetMaterial();
             }
-
+            else
+            {
+                Material = Entity.get<Component::CSGBrush>()->Brush.GetMesh().GetMaterial();
+            }
             break;
         }
 
@@ -115,46 +108,38 @@ namespace Neon::RG
         switch (Type)
         {
         case EntityType::Mesh:
-        {
-            auto& Mesh = Entity.get<Component::MeshInstance>()->Mesh;
-
-            auto& MeshModel = Mesh.GetModel();
-            auto& MeshData  = Mesh.GetData();
-
-            RenderInfo.Material = Mesh.GetMaterial();
-
-            RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()->InstanceId;
-            RenderInfo.Topology   = MeshData.Topology;
-
-            VtxView.Append<Mdl::MeshVertex>(MeshModel->GetVertexBuffer()->GetHandle(), MeshData.VertexOffset, MeshData.VertexCount);
-            IdxView = RHI::Views::IndexU32{ MeshModel->GetIndexBuffer()->GetHandle(), MeshData.IndexOffset, MeshData.IndexCount };
-
-            break;
-        }
-
         case EntityType::CSG:
         {
-            const Scene::CSG::Brush* Brush = nullptr;
+            const Mdl::Mesh* Mesh = nullptr;
 
-            if (auto Box = Entity.get<Component::CSGBox3D>())
+            if (Type == EntityType::Mesh)
             {
-                Brush = &Box->GetBrush();
+                Mesh = &Entity.get<Component::MeshInstance>()->Mesh;
 
-                RenderInfo.Material = Box->GetMaterial();
-            }
-
-            RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::CSGShape>()->InstanceId;
-            RenderInfo.Topology   = RHI::PrimitiveTopology::TriangleList;
-
-            VtxView.Append<Mdl::MeshVertex>(Brush->GetVertexBuffer(), 0, Brush->GetVerticesCount());
-
-            if (Brush->Is16BitsIndex())
-            {
-                IdxView = RHI::Views::IndexU16{ Brush->GetIndexBuffer(), 0, Brush->GetIndicesCount() };
+                RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::MeshInstance>()->InstanceId;
             }
             else
             {
-                IdxView = RHI::Views::IndexU32{ Brush->GetIndexBuffer(), 0, Brush->GetIndicesCount() };
+                Mesh = &Entity.get<Component::CSGBrush>()->Brush.GetMesh();
+
+                RenderInfo.InstanceId = Entity.get<Scene::GPUTransformManager::RenderableHandle, Component::CSGBrush>()->InstanceId;
+            }
+
+            auto& MeshModel = Mesh->GetModel();
+            auto& MeshData  = Mesh->GetData();
+
+            RenderInfo.Material = Mesh->GetMaterial();
+            RenderInfo.Topology = MeshData.Topology;
+
+            VtxView.Append<Mdl::MeshVertex>(MeshModel->GetVertexBuffer(), MeshData.VertexOffset, MeshData.VertexCount);
+
+            if (MeshModel->HasSmallIndices())
+            {
+                IdxView = RHI::Views::IndexU16{ MeshModel->GetIndexBuffer(), MeshData.IndexOffset, MeshData.IndexCount };
+            }
+            else
+            {
+                IdxView = RHI::Views::IndexU32{ MeshModel->GetIndexBuffer(), MeshData.IndexOffset, MeshData.IndexCount };
             }
 
             break;
@@ -175,7 +160,7 @@ namespace Neon::RG
         const GraphStorage& Storage) :
         m_Storage(Storage),
         m_MeshQuery(CreateRenderingQuery<Component::MeshInstance>()),
-        m_CSGRule(CreateRenderingRule<Component::CSGShape>())
+        m_CSGQuery(CreateRenderingQuery<Component::CSGBrush>())
     {
     }
 
@@ -223,35 +208,29 @@ namespace Neon::RG
                     }
                 });
 
-            m_CSGRule.iter(
+            m_CSGQuery.iter(
                 [&](flecs::iter&                Iter,
                     const Component::Transform* Transforms,
-                    const Component::CSGShape*)
+                    const Component::CSGBrush*  Brushes)
                 {
-                    for (size_t Index : Iter)
+                    for (size_t i : Iter)
                     {
-                        auto& CurTransform = Transforms[Index];
-
-                        Geometry::AABB      Box;
-                        Ptr<RHI::IMaterial> Material;
-
-                        for (size_t i : Iter)
+                        auto& CurTransform = Transforms[i];
+                        auto& CurMesh      = Brushes[i].Brush.GetMesh();
+                        if (!CurMesh.GetModel())
                         {
-                            flecs::entity Entity = Iter.entity(i);
-                            if (auto CurBox = Entity.get<Component::CSGBox3D>())
-                            {
-                                Box      = CurBox->GetBrush().GetAABB();
-                                Material = CurBox->GetMaterial();
-                            }
+                            continue;
+                        }
+                        auto Box = CurMesh.GetData().AABB;
 
-                            Box.Transform(CurTransform);
-                            if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
-                            {
-                                auto PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
+                        Box.Transform(CurTransform);
+                        if (Frustum.Contains(Box) != Geometry::ContainmentType::Disjoint)
+                        {
+                            auto& Material      = CurMesh.GetMaterial();
+                            auto  PipelineState = Material->GetPipelineState(RHI::IMaterial::PipelineVariant::RenderPass).get();
 
-                                float Dist = glm::distance2(Transform.GetPosition(), CurTransform.GetPosition());
-                                m_EntityLists[PipelineState].emplace(Entity, Dist, EntityType::CSG);
-                            }
+                            float Dist = glm::distance2(Transform.GetPosition(), CurTransform.GetPosition());
+                            m_EntityLists[PipelineState].emplace(Iter.entity(i), Dist, EntityType::CSG);
                         }
                     }
                 });

@@ -480,6 +480,7 @@ namespace Neon::Asset
             Model = std::make_shared<Mdl::Model>(
                 std::move(VertexBuffer),
                 std::move(IndexBuffer),
+                false,
                 std::move(Submeshes),
                 std::move(MeshNodes),
                 std::move(Materials));

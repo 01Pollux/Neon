@@ -656,5 +656,6 @@ namespace Neon::RHI
         MappedData(Data ? Data.AsUpload().Map() + Data.Offset : nullptr),
         Struct(Other.Struct)
     {
+        std::copy_n(Other.MappedData, Other.Data.Size, MappedData);
     }
 } // namespace Neon::RHI

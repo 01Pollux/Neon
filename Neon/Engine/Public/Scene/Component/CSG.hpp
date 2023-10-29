@@ -5,29 +5,17 @@
 
 namespace Neon::Scene::Component
 {
-    /// <summary>
-    /// Tag component for CSG shapes.
-    /// </summary>
-    struct CSGShape
+    struct CSGBrush
     {
-        NEON_EXPORT_FLECS(CSGShape, "CSGShape")
-        {
-        }
-    };
-
-    struct CSGBox3D : public CSG::Box3D, public CSGShape
-    {
-        using CSG::Box3D::Box3D;
-
         NEON_COMPONENT_SERIALIZE_IMPL
         {
-            Archive& static_cast<CSG::Box3D&>(*this);
         }
 
-        NEON_EXPORT_FLECS_COMPONENT(CSGBox3D, "CSGBox3D")
+        NEON_EXPORT_FLECS_COMPONENT(CSGBrush, "CSGBrush")
         {
-            Component.is_a<CSGShape>();
-            NEON_COMPONENT_SERIALIZE(CSGBox3D);
+            NEON_COMPONENT_SERIALIZE(CSGBrush);
         }
+
+        CSG::Brush Brush;
     };
 } // namespace Neon::Scene::Component

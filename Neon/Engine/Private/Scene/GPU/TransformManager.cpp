@@ -67,7 +67,7 @@ namespace Neon::Scene
 
         // Create observer for the transform and renderable components.
         HandleTransformInstance<Component::MeshInstance>(this);
-        HandleTransformInstance<Component::CSGBox3D, Component::CSGShape>(this);
+        HandleTransformInstance<Component::CSGBrush>(this);
     }
 
     uint32_t GPUTransformManager::AddInstance(

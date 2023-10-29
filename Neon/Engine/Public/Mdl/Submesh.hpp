@@ -26,13 +26,13 @@ namespace Neon::Mdl
         Geometry::AABB AABB;
 
         uint32_t VertexCount;
-        uint32_t IndexCount;
+        uint32_t IndexCount = 0;
 
         uint32_t VertexOffset;
-        uint32_t IndexOffset;
+        uint32_t IndexOffset = 0;
 
-        uint32_t               MaterialIndex;
-        RHI::PrimitiveTopology Topology = RHI::PrimitiveTopology::Undefined;
+        uint32_t               MaterialIndex = 0;
+        RHI::PrimitiveTopology Topology      = RHI::PrimitiveTopology::TriangleList;
     };
 
     struct MeshNode

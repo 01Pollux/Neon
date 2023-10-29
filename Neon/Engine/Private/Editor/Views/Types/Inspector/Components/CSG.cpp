@@ -7,53 +7,35 @@
 
 namespace Neon::Editor
 {
-    static void Inspector_Component_OnCSGBox3D(
+    static void Inspector_Component_OnCSGBrush(
         flecs::entity Entity,
         flecs::id_t   ComponentId)
     {
-        auto Box     = static_cast<Scene::Component::CSGBox3D*>(Entity.get_mut(ComponentId));
-        auto Size    = Box->GetSize();
-        bool Changed = false;
+        auto& Brush   = static_cast<Scene::Component::CSGBrush*>(Entity.get_mut(ComponentId))->Brush;
+        bool  Changed = false;
 
         //
 
         {
-            float MaxWidth = ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ItemSpacing.x / 2.f;
-            if (ImGui::Button("Rebuild"))
+            if (ImGui::Button("Rebuild", { -FLT_MIN, 0.f }))
             {
-                Box->Rebuild();
+                Brush.Rebuild();
                 Changed = true;
             }
-        }
 
-        UI::Utils::DrawComponentLabel("Size");
-        if (ImGui::IsItemHovered())
-        {
-            if (imcxx::tooltip Tooltip{})
-            {
-                ImGui::Text(
-                    "Size: (%.3f, %.3f, %.3f)",
-                    Size.x,
-                    Size.y,
-                    Size.z);
-            }
-        }
-
-        if (UI::Utils::DragVectorComponent(Size))
-        {
-            Box->SetSize(Size);
+            ImGui::Separator();
         }
 
         if (Changed)
         {
-            Entity.modified<Scene::Component::CSGBox3D>();
+            Entity.modified<Scene::Component::CSGBrush>();
         }
     }
 } // namespace Neon::Editor
 
-void Inspector_Component_OnCSGBox3D(
+void Inspector_Component_OnCSGBrush(
     flecs::entity_t EntityId,
     flecs::id_t     ComponentId)
 {
-    Neon::Editor::Inspector_Component_OnCSGBox3D(Neon::Scene::EntityHandle(EntityId), ComponentId);
+    Neon::Editor::Inspector_Component_OnCSGBrush(Neon::Scene::EntityHandle(EntityId), ComponentId);
 }
