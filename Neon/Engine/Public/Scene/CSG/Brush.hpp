@@ -28,40 +28,40 @@ namespace Neon::Scene::CSG
         Brush() = default;
 
         Brush(
-            Mdl::Mesh Mesh0) :
-            m_Mesh0(Mesh0),
-            m_FinalMesh(std::move(Mesh0))
+            Mdl::Mesh Target) :
+            m_Target(Target),
+            m_FinalMesh(std::move(Target))
         {
         }
 
         Brush(
-            Mdl::Mesh Mesh0,
-            Mdl::Mesh Mesh1,
+            Mdl::Mesh Target,
+            Mdl::Mesh Brush,
             Operation Op) :
-            m_Mesh0(std::move(Mesh0)),
-            m_Mesh1(std::move(Mesh1)),
+            m_Target(std::move(Target)),
+            m_Brush(std::move(Brush)),
             m_Operation(Op)
         {
             Rebuild();
         }
 
         Brush(
-            Mdl::Mesh    Mesh0,
-            const Brush& Br1,
+            Mdl::Mesh    Target,
+            const Brush& Brush_,
             Operation    Op) :
-            m_Mesh0(Mesh0),
-            m_Mesh1(Br1.m_FinalMesh),
+            m_Target(Target),
+            m_Brush(Brush_.m_FinalMesh),
             m_Operation(Op)
         {
             Rebuild();
         }
 
         Brush(
-            const Brush& Br0,
-            const Brush& Br1,
+            const Brush& Target,
+            const Brush& Brush_,
             Operation    Op) :
-            m_Mesh0(Br0.m_FinalMesh),
-            m_Mesh1(Br1.m_FinalMesh),
+            m_Target(Target.m_FinalMesh),
+            m_Brush(Brush_.m_FinalMesh),
             m_Operation(Op)
         {
             Rebuild();
@@ -71,35 +71,44 @@ namespace Neon::Scene::CSG
         /// <summary>
         /// Get the first input mesh of the brush.
         /// </summary>
-        [[nodiscard]] const auto& GetMesh0() const
+        [[nodiscard]] const auto& GetTarget() const
         {
-            return m_Mesh0;
+            return m_Target;
         }
 
         /// <summary>
         /// Set the first input mesh of the brush.
         /// </summary>
-        [[nodiscard]] void SetMesh0(
-            Mdl::Mesh Mesh)
+        [[nodiscard]] void SetTarget(
+            Mdl::Mesh Target)
         {
-            m_Mesh0 = std::move(Mesh);
+            m_Target = std::move(Target);
         }
 
         /// <summary>
         /// Get the second input mesh of the brush.
         /// </summary>
-        [[nodiscard]] const auto& GetMesh1() const
+        [[nodiscard]] const auto& GetBrush() const
         {
-            return m_Mesh1;
+            return m_Brush;
         }
 
         /// <summary>
         /// Set the second input mesh of the brush.
         /// </summary>
-        [[nodiscard]] void SetMesh1(
-            Mdl::Mesh Mesh)
+        [[nodiscard]] void SetBrush(
+            Mdl::Mesh Brush_)
         {
-            m_Mesh1 = std::move(Mesh);
+            m_Brush = std::move(Brush_);
+        }
+
+        /// <summary>
+        /// Set the second input mesh of the brush.
+        /// </summary>
+        [[nodiscard]] void SetBrush(
+            const Brush& Brush_)
+        {
+            m_Brush = Brush_.m_FinalMesh;
         }
 
         /// <summary>
@@ -144,7 +153,7 @@ namespace Neon::Scene::CSG
         }
 
     private:
-        Mdl::Mesh m_Mesh0, m_Mesh1, m_FinalMesh;
+        Mdl::Mesh m_Target, m_Brush, m_FinalMesh;
         Operation m_Operation = Operation::Union;
     };
 } // namespace Neon::Scene::CSG
