@@ -17,9 +17,9 @@ namespace Neon::Scene::CSG
 
         //
 
-        size_t VerticesCount = size_t(RingCount + 1) * (SectorCount - 1) + 2;
-        size_t IndicesCount  = size_t(RingCount) * size_t(SectorCount - 1) * 6;
-        bool   Is32Bits      = VerticesCount >= std::numeric_limits<uint16_t>::max();
+        uint32_t VerticesCount = (RingCount + 1) * (SectorCount - 1) + 2;
+        uint32_t IndicesCount  = (RingCount) * (SectorCount - 1) * 6;
+        bool     Is32Bits      = VerticesCount >= std::numeric_limits<uint16_t>::max();
 
         RHI::UBufferPoolHandle VertexBuffer(
             VerticesCount * sizeof(Mdl::MeshVertex),
@@ -52,7 +52,7 @@ namespace Neon::Scene::CSG
         //
 
         Mdl::Model::SubmeshList Submeshes{
-            Mdl::SubMeshData{}
+            Mdl::SubMeshData{ .VertexCount = VerticesCount, .IndexCount = IndicesCount }
         };
         Mdl::Model::MeshNodeList Nodes{
             Mdl::MeshNode{ .Name = "Sphere", .Submeshes = { 0 } }
@@ -61,7 +61,12 @@ namespace Neon::Scene::CSG
 
         //
 
-        *VertexBufferPtr++ =
+        Vector3 Min(std::numeric_limits<float>::max()),
+            Max(std::numeric_limits<float>::lowest());
+
+        //
+
+        *VertexBufferPtr =
             Mdl::MeshVertex{
                 .Position  = Vector3(0.f, Radius, 0.f),
                 .Normal    = Vec::Up<Vector3>,
@@ -69,6 +74,11 @@ namespace Neon::Scene::CSG
                 .Bitangent = Vec::Forward<Vector3>,
                 .TexCoord  = Vector2(0.f, 0.f)
             };
+
+        Min = glm::min(Min, VertexBufferPtr->Position);
+        Max = glm::max(Max, VertexBufferPtr->Position);
+
+        ++VertexBufferPtr;
 
         float PhiStep   = std::numbers::pi_v<float> / RingCount;
         float ThetaStep = 2.0f * std::numbers::pi_v<float> / SectorCount;
@@ -103,11 +113,14 @@ namespace Neon::Scene::CSG
                 Vtx.TexCoord.x = Theta / (2.0f * std::numbers::pi_v<float>);
                 Vtx.TexCoord.y = Phi / std::numbers::pi_v<float>;
 
+                Min = glm::min(Min, Vtx.Position);
+                Max = glm::max(Max, Vtx.Position);
+
                 *VertexBufferPtr++ = Vtx;
             }
         }
 
-        *VertexBufferPtr++ =
+        *VertexBufferPtr =
             Mdl::MeshVertex{
                 .Position  = Vector3(0.f, -Radius, 0.f),
                 .Normal    = Vec::Down<Vector3>,
@@ -115,6 +128,17 @@ namespace Neon::Scene::CSG
                 .Bitangent = Vec::Backward<Vector3>,
                 .TexCoord  = Vector2(0.f, 1.f)
             };
+
+        Min = glm::min(Min, VertexBufferPtr->Position);
+        Max = glm::max(Max, VertexBufferPtr->Position);
+
+        ++VertexBufferPtr;
+
+        //
+
+        Submeshes[0].AABB.Extents = (Max - Min) * 0.5f;
+
+        //
 
         // Compute indices for top stack.  The top stack was written first to the vertex buffer
         // and connects the top pole to the first ring.
@@ -174,7 +198,7 @@ namespace Neon::Scene::CSG
             std::make_shared<Mdl::Model>(
                 std::move(VertexBuffer),
                 std::move(IndexBuffer),
-                true,
+                !Is32Bits,
                 std::move(Submeshes),
                 std::move(Nodes),
                 std::move(Materials)),
