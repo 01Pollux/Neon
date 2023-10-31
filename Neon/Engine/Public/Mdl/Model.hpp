@@ -142,7 +142,7 @@ namespace Neon::Mdl
         /// </summary>
         [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekVertexBuffer(
             size_t Offset,
-            size_t Size) const noexcept;
+            size_t Count) const noexcept;
 
         /// <summary>
         /// Unmap vertex buffer, must be called after PeekVertexBuffer
@@ -163,7 +163,7 @@ namespace Neon::Mdl
         /// </summary>
         [[nodiscard]] std::pair<void*, RHI::UBufferPoolHandle> PeekIndexBuffer(
             size_t Offset,
-            size_t Size) const noexcept;
+            size_t Count) const noexcept;
 
         /// <summary>
         /// Unmap index buffer, must be called after PeekVertexBuffer

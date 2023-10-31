@@ -20,8 +20,11 @@ namespace Neon::Mdl
 
     std::pair<void*, RHI::UBufferPoolHandle> Model::PeekVertexBuffer(
         size_t Offset,
-        size_t Size) const noexcept
+        size_t Count) const noexcept
     {
+        Offset      = Offset * sizeof(MeshVertex);
+        size_t Size = Count * sizeof(MeshVertex);
+
         std::pair<void*, RHI::UBufferPoolHandle> Data;
 
         const RHI::UBufferPoolHandle* FinalHandle = nullptr;
@@ -60,9 +63,9 @@ namespace Neon::Mdl
 
     std::pair<void*, RHI::UBufferPoolHandle> Model::PeekIndexBuffer() const noexcept
     {
-        if (m_VertexBuffer.index() == 0)
+        if (m_IndexBuffer.index() == 0)
         {
-            auto& Buffer = std::get<RHI::USyncGpuResource>(m_VertexBuffer).Get();
+            auto& Buffer = std::get<RHI::USyncGpuResource>(m_IndexBuffer).Get();
             return PeekIndexBuffer(0, Buffer->GetSize());
         }
         else
@@ -74,14 +77,17 @@ namespace Neon::Mdl
 
     std::pair<void*, RHI::UBufferPoolHandle> Model::PeekIndexBuffer(
         size_t Offset,
-        size_t Size) const noexcept
+        size_t Count) const noexcept
     {
+        Offset      = Offset * (HasSmallIndices() ? sizeof(uint16_t) : sizeof(uint32_t));
+        size_t Size = Count * (HasSmallIndices() ? sizeof(uint16_t) : sizeof(uint32_t));
+
         std::pair<void*, RHI::UBufferPoolHandle> Data;
 
         const RHI::UBufferPoolHandle* FinalHandle = nullptr;
         if (m_VertexBuffer.index() == 0)
         {
-            auto& Buffer = std::get<RHI::USyncGpuResource>(m_VertexBuffer).Get();
+            auto& Buffer = std::get<RHI::USyncGpuResource>(m_IndexBuffer).Get();
             Data.second  = RHI::UBufferPoolHandle(
                 Size,
                 Buffer->GetDesc().Alignment,
@@ -94,7 +100,7 @@ namespace Neon::Mdl
         }
         else
         {
-            FinalHandle = &std::get<RHI::UBufferPoolHandle>(m_VertexBuffer);
+            FinalHandle = &std::get<RHI::UBufferPoolHandle>(m_IndexBuffer);
         }
 
         Data.first = FinalHandle->AsUpload().Map() + FinalHandle->Offset + Offset;

@@ -12,10 +12,26 @@ namespace Neon::Math
     public:
         using Vector4::Vector4;
 
+        Plane() :
+            Vector4(0.f, 0.f, 0.f, 0.f)
+        {
+        }
+
+        Plane(
+            Vector3 P0,
+            Vector3 P1,
+            Vector3 P2) :
+            Vector4(glm::cross(P1 - P0, P2 - P0), 0.f)
+        {
+            Normalize();
+            w = -glm::dot(AsVec3(), P0);
+        }
+
+    public:
         /// <summary>
         /// Cast the plane to vector4
         /// </summary>
-        Vector4& AsVec4() noexcept
+        [[nodiscard]] Vector4& AsVec4() noexcept
         {
             return static_cast<Vector4&>(*this);
         }
@@ -23,7 +39,7 @@ namespace Neon::Math
         /// <summary>
         /// Cast the plane to vector4
         /// </summary>
-        const Vector4& AsVec4() const noexcept
+        [[nodiscard]] const Vector4& AsVec4() const noexcept
         {
             return static_cast<const Vector4&>(*this);
         }
@@ -31,9 +47,34 @@ namespace Neon::Math
         /// <summary>
         /// Cast the plane to vector3
         /// </summary>
-        Vector3 AsVec3() const noexcept
+        [[nodiscard]] Vector3 AsVec3() const noexcept
         {
             return static_cast<Vector3>(*this);
+        }
+
+    public:
+        /// <summary>
+        /// Get the normal of the plane
+        /// </summary>
+        [[nodiscard]] Vector3 GetNormal() const noexcept
+        {
+            return AsVec3();
+        }
+
+        /// <summary>
+        /// Get the distance of the plane
+        /// </summary>
+        [[nodiscard]] float GetDistance() const noexcept
+        {
+            return w;
+        }
+
+        /// <summary>
+        /// Flip the plane
+        /// </summary>
+        void Flip()
+        {
+            AsVec4() = -AsVec4();
         }
 
     public:
